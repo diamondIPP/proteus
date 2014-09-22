@@ -19,6 +19,7 @@ class DUTResiduals : public DualAnalyzer
 private:
   std::vector<TH1D*> _residualsX;
   std::vector<TH1D*> _residualsY;
+  std::vector<TH1D*> _distance;
   std::vector<TH2D*> _residualsXX;
   std::vector<TH2D*> _residualsXY;
   std::vector<TH2D*> _residualsYY;

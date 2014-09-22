@@ -65,8 +65,9 @@ void DUTResiduals::processEvent(const Storage::Event* refEvent,
 
         const double rx = tx - cluster->getPosX();
         const double ry = ty - cluster->getPosY();
-        _residualsX.at(nplane)->Fill(rx);
+	_residualsX.at(nplane)->Fill(rx);
         _residualsY.at(nplane)->Fill(ry);
+	_distance.at(nplane)->Fill(sqrt(pow(rx,2)+pow(ry,2)));
         _residualsXX.at(nplane)->Fill(rx, tx);
         _residualsYY.at(nplane)->Fill(ry, ty);
         _residualsXY.at(nplane)->Fill(rx, ty);
@@ -146,12 +147,32 @@ DUTResiduals::DUTResiduals(const Mechanics::Device* refDevice,
       title << sensor->getDevice()->getName() << " " << sensor->getName()
             << ((axis) ? " X" : " Y");
       TH1D* res1d = new TH1D(name.str().c_str(), title.str().c_str(),
-                             nbins, -width, width); //bilbao@cern.ch
-			     //nbins, -width / 2.0, width / 2.0);
+                             2*nbins, -width, width);
+      //bilbao@cern.ch
+      //nbins, -width / 2.0, width / 2.0);
       res1d->SetDirectory(dir1d);
       res1d->GetXaxis()->SetTitle(xAxisTitle.str().c_str());
       if (axis) _residualsX.push_back(res1d);
       else      _residualsY.push_back(res1d);
+
+
+      //bilbao@cern.ch
+      //if condition to avoid filling it twice and declaring the variables again in another loop.
+      if (axis){
+      xAxisTitle.str("");
+      xAxisTitle << "Track to cluster distance "<< " [" << _refDevice->getSpaceUnit() << "]";
+      // Generate the 1D track to cluster distance distribution for the given axis
+      name.str(""); title.str("");
+      name << sensor->getDevice()->getName() << sensor->getName() << _nameSuffix << "Dist";
+      title << sensor->getDevice()->getName() << " " << sensor->getName() << "Track to cluster distance";
+      TH1D* dist1d = new TH1D(name.str().c_str(), title.str().c_str(),
+                                2*nbins, 0, 2*width);
+      dist1d->SetDirectory(dir1d);
+      dist1d->GetXaxis()->SetTitle(xAxisTitle.str().c_str());
+      _distance.push_back(dist1d);
+      }
+      
+
 
       // Generate the XX or YY residual distribution
 

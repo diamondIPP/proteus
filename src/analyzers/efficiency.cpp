@@ -127,7 +127,7 @@ void Efficiency::processEvent(const Storage::Event* refEvent,
       {
         //_efficiencyMap.at(nsensor)->Fill(true, tx, ty); 
 	
-	//bilbao@cern.ch/ reina.camacho@cern.ch: Filling the efficiency histogram with the cluster position instead of the track position
+	//bilbao@cern.ch / reina.camacho@cern.ch: Filling the efficiency histogram with the cluster position instead of the track position
 	_efficiencyMap.at(nsensor)->Fill(true, match->getPosX(), match->getPosY());
         _matchedTracks.at(nsensor)->Fill(1);
         if (_efficiencyTime.size())
