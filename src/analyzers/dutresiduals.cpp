@@ -61,6 +61,8 @@ void DUTResiduals::processEvent(const Storage::Event* refEvent,
         bool pass = true;
         for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
           if (!_clusterCuts.at(ncut)->check(cluster)) { pass = false; break; }
+	  //Bilbao@cern.ch:Cut for cluster size (also in efficiency to affect all eff.root results) 
+          //if(cluster->getNumHits()==1){ pass = false; break;}
         if (!pass) continue;
 
         const double rx = tx - cluster->getPosX();

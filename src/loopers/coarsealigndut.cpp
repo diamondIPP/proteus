@@ -61,6 +61,11 @@ void CoarseAlignDut::loop()
 
     sensor->setOffX(sensor->getOffX() - offsetX);
     sensor->setOffY(sensor->getOffY() - offsetY);
+
+   std::cout << "DUT plane: " << nsensor << std::endl;
+   std::cout << "gaussian mean: X= " << offsetX << "  Y= " << offsetY << std::endl;
+   std::cout << "New offset: X= " << sensor->getOffX() - offsetX << "  Y= " << sensor->getOffY() - offsetY << std::endl;
+
   }
 
   _dutDevice->getAlignment()->writeFile();

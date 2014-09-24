@@ -74,6 +74,11 @@ void Efficiency::processEvent(const Storage::Event* refEvent,
 	  pass = false;
 	  break; 
 	}
+	//Bilbao@cern.ch:Cut for cluster size (also in DUTresiduals to affect all eff.root results)
+        /*if(cluster->getNumHits()==1){
+//            std::cout << cluster->getNumHits() << std::endl;
+            pass = false;
+            break;}*/
       pass = true;
       matches.at(cluster->getPlane()->getPlaneNum()) = cluster;
       }

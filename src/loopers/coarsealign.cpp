@@ -61,6 +61,11 @@ void CoarseAlign::loop()
     Processors::fitGaussian(alignY, offsetY, sigmaY, _displayFits);
     cummulativeY -= offsetY;
 
+    std::cout << "For sensor: " << nsensor << std::endl;
+    std::cout << "Gaussian mean: X= " << offsetX << "  Y= " << offsetY << std::endl;
+    std::cout << "Cummulative X= " << cummulativeX << "  Y= " << cummulativeY << std::endl;
+    std::cout << "New offset: X= " << sensor->getOffX() - offsetX << "  Y= " << sensor->getOffY() - offsetY << std::endl;
+
     sensor->setOffX(sensor->getOffX() + cummulativeX);
     sensor->setOffY(sensor->getOffY() + cummulativeY);
   }

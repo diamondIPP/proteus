@@ -123,6 +123,7 @@ void FineAlign::loop()
       sensor->setOffX(sensor->getOffX() + offsetX);
       sensor->setOffY(sensor->getOffY() + offsetY);
       sensor->setRotZ(sensor->getRotZ() + rotation);
+      std::cout << "Sensor: " << nsensor << ", Xoffset: " << sensor->getOffX() + offsetX << ", Yoffset: " << sensor->getOffY() + offsetY << ", Zoffset: " << sensor->getOffZ() + rotation << std::endl;
     }
 
     // Ajudst the device rotation using the average slopes
