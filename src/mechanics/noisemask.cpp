@@ -74,10 +74,10 @@ void NoiseMask::readMask()
 
   if (!file.is_open())
   {
-    if (VERBOSE) cout << "WARNING :: Noise mask failed to open file" << endl;
+    if (VERBOSE) cout << "WARNING :: Noise mask failed to open file while opening: " << _fileName << endl;
     return;
   }
-
+  else  if (VERBOSE) cout << "Noise mask open: " << _fileName << endl;
   while (file.good())
   {
     unsigned int nsens = 0;

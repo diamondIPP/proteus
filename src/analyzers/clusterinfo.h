@@ -22,7 +22,8 @@ private:
   std::vector<TH2D*> _totSize;
   std::vector<TH1D*> _clustersVsTime;
   std::vector<TH1D*> _totVsTime;
-
+  std::vector<TH2D*> _timingVsClusterSize;
+  std::vector<TH2D*> _timingVsHitValue;
   unsigned int _totBins;
 
 public:

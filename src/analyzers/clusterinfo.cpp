@@ -52,7 +52,13 @@ void ClusterInfo::processEvent(const Storage::Event* event)
       _clusterSize.at(nplane)->Fill(cluster->getNumHits());
       _tot.at(nplane)->Fill(cluster->getValue());
       _totSize.at(nplane)->Fill(cluster->getNumHits(), cluster->getValue());
-
+      
+      for( unsigned int nhits=0; nhits<cluster->getNumHits(); nhits++){
+	Storage::Hit* hit= cluster->getHit(nhits);
+	//std::cout << hit->getTiming() << std::endl;
+	_timingVsClusterSize.at(nplane)->Fill(cluster->getNumHits(),hit->getTiming());
+        _timingVsHitValue.at(nplane)->Fill(hit->getValue(),hit->getTiming());
+      }
       if (_clustersVsTime.size())
         _clustersVsTime.at(nplane)->Fill(_device->tsToTime(event->getTimeStamp()));
       if (_totVsTime.size())
@@ -128,6 +134,36 @@ ClusterInfo::ClusterInfo(const Mechanics::Device* device,
     tot->SetDirectory(plotDir);
     _tot.push_back(tot);
 
+
+    name.str(""); title.str("");
+    name << sensor->getDevice()->getName() << sensor->getName()
+         << "TimingVsSize" << _nameSuffix;
+    title << sensor->getDevice()->getName() << " " << sensor->getName()
+          << " Hit Timing in cluster Vs. Cluster Size"
+          << ";Pixels in cluster"
+          << ";Pixel timing [BC]"
+          << ";Hits";
+    TH2D* timing = new TH2D(name.str().c_str(), title.str().c_str(),
+                             maxClusterSize - 1, 1 - 0.5, maxClusterSize - 0.5,
+                             16, 0 - 0.5, 16 - 0.5);
+    timing->SetDirectory(plotDir);
+    _timingVsClusterSize.push_back(timing);
+
+    //Bilbao@cern.ch: Not sure if this is the best place since it concerns timing for hits
+    name.str(""); title.str("");
+    name << sensor->getDevice()->getName() << sensor->getName()
+         << "TimingVsValue" << _nameSuffix;
+    title << sensor->getDevice()->getName() << " " << sensor->getName()
+          << " Hit Timing in cluster Vs. Hit Value"
+          << ";Value in Hit"
+          << ";Pixel timing [BC]"
+          << ";Hits";
+    TH2D* timingVsValue = new TH2D(name.str().c_str(), title.str().c_str(),
+                             14, 1 - 0.5, 15 - 0.5,
+                             16, 0 - 0.5, 16 - 0.5);
+    timingVsValue->SetDirectory(plotDir);
+    _timingVsHitValue.push_back(timingVsValue);
+
     name.str(""); title.str("");
     name << sensor->getDevice()->getName() << sensor->getName()
          << "ToTVsSize" << _nameSuffix;
@@ -141,6 +177,7 @@ ClusterInfo::ClusterInfo(const Mechanics::Device* device,
                              _totBins, 0 - 0.5, _totBins - 0.5);
     totSize->SetDirectory(plotDir);
     _totSize.push_back(totSize);
+
 
     if (_device->getTimeEnd() > _device->getTimeStart()) // If not used, they are both == 0
     {
