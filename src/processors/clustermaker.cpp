@@ -105,9 +105,6 @@ void ClusterMaker::calculateCluster(Storage::Cluster* cluster)
   cogY /= weight;
 
 
-  wcogX /= wweight;
-  wcogY /= wweight;
-
   //if(cluster->getNumHits()>1){
     //std::cout << "Weighted event posotion: X= " <<  wcogX << " Y= " << wcogY << std::endl;
     //std::cout << "Non weighted event posotion: X= " << cogX  << " Y= " << cogY << std::endl;
@@ -133,9 +130,10 @@ void ClusterMaker::calculateCluster(Storage::Cluster* cluster)
 
   stdevX = sqrt(stdevX / weight2);
   stdevY = sqrt(stdevY / weight2);
-
+  
   const double errX =  pixErrX;
   const double errY =  pixErrY;
+  //avoids to do weighted cluster positioning // Digital detector
   //const double errX = (stdevX) ? stdevX : pixErrX;
   //const double errY = (stdevY) ? stdevY : pixErrY;
 

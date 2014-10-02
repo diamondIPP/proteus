@@ -35,6 +35,8 @@ void DUTResiduals::processEvent(const Storage::Event* refEvent,
   // Check if the event passes the cuts
   for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)
     if (!_eventCuts.at(ncut)->check(refEvent)) return;
+    
+  //std::cout <<"Number of tracks = "<< refEvent->getNumTracks() << std::endl;  
 
   for (unsigned int ntrack = 0; ntrack < refEvent->getNumTracks(); ntrack++)
   {
@@ -53,8 +55,13 @@ void DUTResiduals::processEvent(const Storage::Event* refEvent,
       double tx = 0, ty = 0, tz = 0;
       Processors::trackSensorIntercept(track, sensor, tx, ty, tz);
 
+      //std::cout <<"Number of clusters = "<< plane->getNumClusters() << std::endl;
+
       for (unsigned int ncluster = 0; ncluster < plane->getNumClusters(); ncluster++)
       {
+      
+        
+      
         Storage::Cluster* cluster = plane->getCluster(ncluster);
 
         // Check if the cluster passes the cuts
@@ -67,6 +74,9 @@ void DUTResiduals::processEvent(const Storage::Event* refEvent,
 
         const double rx = tx - cluster->getPosX();
         const double ry = ty - cluster->getPosY();
+	
+	//std::cout<<" for track "<< ntrack << " and cluster "<< ncluster << ", ry = "<< ry <<" and rx = "<< rx <<std::endl;
+	
 	_residualsX.at(nplane)->Fill(rx);
         _residualsY.at(nplane)->Fill(ry);
 	_distance.at(nplane)->Fill(sqrt(pow(rx,2)+pow(ry,2)));
@@ -80,6 +90,18 @@ void DUTResiduals::processEvent(const Storage::Event* refEvent,
 }
 
 void DUTResiduals::postProcessing() { } // Needs to be declared even if not used
+
+TH1D* DUTResiduals::getResidualX(unsigned int nsensor)
+{
+  validDutSensor(nsensor);
+  return _residualsX.at(nsensor);
+}
+
+TH1D* DUTResiduals::getResidualY(unsigned int nsensor)
+{
+  validDutSensor(nsensor);
+  return _residualsY.at(nsensor);
+}
 
 TH2D* DUTResiduals::getResidualXX(unsigned int nsensor)
 {
@@ -210,9 +232,11 @@ DUTResiduals::DUTResiduals(const Mechanics::Device* refDevice,
            << ((axis) ? "XvsY" : "YvsX") << _nameSuffix;
       title << sensor->getDevice()->getName() << " " << sensor->getName()
             << ((axis) ? " X vs. Y" : " Y vs. X");
+	    
       TH2D* resAB = new TH2D(name.str().c_str(), title.str().c_str(),
                              nbins, -width / 2.0, width / 2.0,
                              binsY, -height / 2.0, height / 2.0);
+            
       resAB->SetDirectory(dir2d);
       resAB->GetXaxis()->SetTitle(xAxisTitle.str().c_str());
       resAB->GetYaxis()->SetTitle(yAxisTitle.str().c_str());

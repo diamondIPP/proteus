@@ -238,12 +238,24 @@ void residualAlignment(TH2D* residualX, TH2D* residualY, double& offsetX,
 
 //    delete project;
 
+//bilbao: just a croscheck of the 2D plots residuals we are giving as imput for the 2D histo alignment
+    if(display){
+    TCanvas* c1 = new TCanvas("x","x",400, 800);
+    c1->Divide(2,1);
+    c1->cd(1);
+    residualX->Draw("colz");
+    c1->cd(2);
+    residualY->Draw("colz"); 
+    c1->WaitPrimitive();
+    if(c1!=NULL){c1->Closed();}
+    }
+
     std::vector<double> ptsX;
     std::vector<double> ptsY;
     std::vector<double> ptsErr;
 
     const unsigned int numSlices = hist->GetNbinsY();
-
+    //std::cout << "Number of slices: " << numSlices << std::endl; 
     for (Int_t row = 1; row <= (int)numSlices; row++)
     {
       TH1D* slice = hist->ProjectionX("ResidualSlice", row, row);
@@ -254,15 +266,18 @@ void residualAlignment(TH2D* residualX, TH2D* residualY, double& offsetX,
       double factor = 0;
       double background = 0;
 
-      if (slice->Integral() < 1) { delete slice; continue; }
-      fitGaussian(slice, mean, sigma, factor, background, false);
+      if (slice->Integral() < 1) {
+	delete slice;
+	continue; }
+ 
 
+      fitGaussian(slice, mean, sigma, factor, background, false);
+      //std::cout << "From gausian fit: Slice=" << row << ", mean=" << mean << ", sigma=" << sigma << std::endl;
       const double sliceMin = slice->GetBinCenter(1);
       const double sliceMax = slice->GetBinCenter(slice->GetNbinsX());
       delete slice;
 
       // Quality assurance
-
       // Sigma is contained in the slice's range
       if (sigma > (sliceMax - sliceMin)) continue;
       // Mean is contained in the slice's range
@@ -397,7 +412,7 @@ void applyAlignment(Storage::Event* event, const Mechanics::Device* device)
       double posX = 0, posY = 0, posZ = 0;
       sensor->pixelToSpace(cluster->getPixX(), cluster->getPixY(), posX, posY, posZ);
       cluster->setPos(posX, posY, posZ);
-      double errX = sensor->getPitchX() * cluster->getPixErrX();
+      double errX = sensor * cluster->getPixErrX();
       double errY = sensor->getPitchY() * cluster->getPixErrY();
       double errZ = 0;
       sensor->rotateToGlobal(errX, errY, errZ);

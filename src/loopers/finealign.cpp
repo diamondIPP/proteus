@@ -115,15 +115,26 @@ void FineAlign::loop()
       }
 
       double offsetX = 0, offsetY = 0, rotation = 0;
+
+      if(niter==0){
+      double sigmaX = 0, maxX = 0, backgroundX = 0;
+      double sigmaY = 0, maxY = 0, backgroundY = 0;
+      Processors::fitGaussian(residuals.getResidualX(nsens), offsetX, sigmaX, maxX,backgroundX, _displayFits);
+      Processors::fitGaussian(residuals.getResidualY(nsens), offsetY, sigmaY, maxX,backgroundY, _displayFits);
+
+      std::cout << "Fine alignment with residuals:" << std::endl;
+      std::cout << "   Sensor: " << nsens << ", Xcorrection: " << offsetX << ", Ycorrection: " << offsetY <<  std::endl;
+      }
+
       Processors::residualAlignment(residuals.getResidualXY(nsens),
                                     residuals.getResidualYX(nsens),
                                     offsetX, offsetY, rotation, 
                                     _relaxation, _displayFits);
-
+      std::cout << "Sensor: " << nsensor << ", Xcorrection: " << offsetX << ", Ycorrection: " << offsetY << ", Zcorrection: " << rotation << std::endl;
       sensor->setOffX(sensor->getOffX() + offsetX);
       sensor->setOffY(sensor->getOffY() + offsetY);
       sensor->setRotZ(sensor->getRotZ() + rotation);
-      std::cout << "Sensor: " << nsensor << ", Xoffset: " << sensor->getOffX() + offsetX << ", Yoffset: " << sensor->getOffY() + offsetY << ", Zoffset: " << sensor->getOffZ() + rotation << std::endl;
+      std::cout << "Sensor: " << nsensor << ", Xoffset: " << sensor->getOffX() << ", Yoffset: " << sensor->getOffY() << ", Zoffset: " << sensor->getOffZ() << std::endl;
     }
 
     // Ajudst the device rotation using the average slopes

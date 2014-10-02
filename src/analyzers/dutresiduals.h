@@ -39,6 +39,8 @@ public:
                     const Storage::Event* dutDevent);
   void postProcessing();
 
+  TH1D* getResidualX(unsigned int nsensor);
+  TH1D* getResidualY(unsigned int nsensor);
   TH2D* getResidualXX(unsigned int nsensor);
   TH2D* getResidualXY(unsigned int nsensor);
   TH2D* getResidualYY(unsigned int nsensor);

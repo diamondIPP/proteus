@@ -64,7 +64,9 @@ void DUTCorrelation::processEvent(const Storage::Event* refEvent,
         for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
           if (!_clusterCuts.at(ncut)->check(cluster1)) { pass = false; break; }
         if (!pass) continue;
-
+	//Bilbao@cern.ch : pixel clusters are properly center in the pixel for both sensors
+	//std::cout << "Plane 0   X: " <<  cluster0->getPixX() << ", Y: " << cluster0->getPixY() << std::endl;
+	//std::cout << "Plane 1   X: " <<  cluster1->getPixX() << ", Y: " << cluster1->getPixY() << std::endl;
         corrX->Fill(cluster0->getPosX(), cluster1->getPosX());
         corrY->Fill(cluster0->getPosY(), cluster1->getPosY());
         alignX->Fill(cluster1->getPosX() - cluster0->getPosX());

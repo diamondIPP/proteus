@@ -75,6 +75,19 @@ void Residuals::processEvent(const Storage::Event* refEvent)
 
 void Residuals::postProcessing() { } // Needs to be declared even if not used
 
+
+TH1D* Residuals::getResidualX(unsigned int nsensor)
+{
+  validSensor(nsensor);
+  return _residualsX.at(nsensor);
+}
+
+TH1D* Residuals::getResidualY(unsigned int nsensor)
+{
+  validSensor(nsensor);
+  return _residualsY.at(nsensor);
+}
+
 TH2D* Residuals::getResidualXX(unsigned int nsensor)
 {
   validSensor(nsensor);

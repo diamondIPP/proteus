@@ -33,7 +33,7 @@ void TrackMatcher::matchTracksToClusters(Storage::Event* trackEvent,
 
       //const double dist = sqrt(pow(x / errx, 2) + pow(y / erry, 2));
       
-      // bilbao@cern.ch: cone distance to calculate the track-cluster distance
+      // bilbao@cern.ch: circular distance to calculate the track-cluster distance
       const double dist = sqrt(pow(x, 2) + pow(y, 2)); 
 
       if (!match || dist < nearestDist)

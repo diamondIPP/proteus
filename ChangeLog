@@ -1,5 +1,10 @@
+2014-10-02 J. Bilbao de Mendizabal <bilbao@cern.ch>
+	* New extra step on DUT alignment if after first itteration the
+finealigment give 0 correction a 1D residulas fitting is used.
+
 2014-09-26 J. Bilbao de Mendizabal <bilbao@cern.ch>
-        * implementation of the pixel timing vs cluster size and hit-ToT included now in Cluster Info  
+        * implementation of the pixel timing vs cluster size and hit-ToT
+included now in Cluster Info  
 
 
 2014-09-23 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
