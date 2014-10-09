@@ -21,9 +21,12 @@ private:
   std::vector<TEfficiency*> _efficiencyMap;
   std::vector<TH1D*> _efficiencyDistribution;
   std::vector<TH1D*> _matchedTracks;
+  std::vector<TH1D*> _matchpositionX;
+  std::vector<TH1D*> _matchpositionY;
   std::vector<TEfficiency*> _efficiencyTime;
   std::vector<TEfficiency*> _inPixelEfficiency;
-
+  std::vector<TH2D*> _inPixelTiming;
+  std::vector<TH2D*> _inPixelCounting;
    // Parameters used during event processing
   const int _relativeToSensor;
 

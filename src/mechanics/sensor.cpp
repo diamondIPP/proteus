@@ -253,6 +253,7 @@ double Sensor::getPitchX() const { return _pitchX; }
 double Sensor::getPitchY() const { return _pitchY; }
 double Sensor::getDepth() const { return _depth; }
 double Sensor::getXox0() const { return _xox0; }
+bool Sensor::getDigital() const { return _digi; }
 double Sensor::getOffX() const { return _offX; }
 double Sensor::getOffY() const { return _offY; }
 double Sensor::getOffZ() const { return _offZ; }
@@ -270,11 +271,11 @@ bool Sensor::sort(const Sensor* s1, const Sensor* s2)
 }
 
 Sensor::Sensor(unsigned int numX, unsigned int numY, double pitchX, double pitchY,
-               double depth, Device* device, std::string name, double xox0,
+               double depth, Device* device, std::string name, bool digi, double xox0,
                double offX, double offY, double offZ,
                double rotX, double rotY, double rotZ) :
   _numX(numX), _numY(numY), _pitchX(pitchX), _pitchY(pitchY),
-  _depth(depth), _device(device), _name(name), _xox0(xox0),
+  _depth(depth), _device(device), _name(name), _digi(digi), _xox0(xox0),
   _offX(offX), _offY(offY), _offZ(offZ),
   _rotX(rotX), _rotY(rotY), _rotZ(rotZ),
   _sensitiveX(pitchX * numX), _sensitiveY(pitchY * numY), _numNoisyPixels(0)

@@ -50,7 +50,6 @@ void Efficiency::processEvent(const Storage::Event* refEvent,
   for (unsigned int ntrack = 0; ntrack < refEvent->getNumTracks(); ntrack++)
   {
     Storage::Track* track = refEvent->getTrack(ntrack);
-
     // Check if the track passes the cuts
     bool pass = true;
     for (unsigned int ncut = 0; ncut < _numTrackCuts; ncut++)
@@ -68,7 +67,7 @@ void Efficiency::processEvent(const Storage::Event* refEvent,
       Storage::Cluster* cluster = track->getMatchedCluster(nmatch);
 
       // Check if this cluster passes the cuts
-      bool pass = true;
+      //bool pass = true;
       for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++){
         if (!_clusterCuts.at(ncut)->check(cluster)) {
 	  pass = false;
@@ -124,9 +123,23 @@ void Efficiency::processEvent(const Storage::Event* refEvent,
       const double trackPosX = px - (int)px;
       const double trackPosY = py - (int)py;
 
-      _inPixelEfficiency.at(nsensor)->Fill((bool)match,
-                                           trackPosX * sensor->getPitchX(),
-                                           trackPosY * sensor->getPitchY());
+      // TO BE PROPERLY SET!!!!!
+      if(px >1 & px<12 & py>81 & py<94){
+	_inPixelEfficiency.at(nsensor)->Fill((bool)match,
+					     trackPosX * sensor->getPitchX(),
+					     trackPosY * sensor->getPitchY());
+	if(match){
+	  for (unsigned int nhit = 0; nhit < match->getNumHits(); nhit++){
+	    const Storage::Hit* hit = match->getHit(nhit);
+	    _inPixelTiming.at(nsensor)->Fill(trackPosX * sensor->getPitchX(),
+					     trackPosY * sensor->getPitchY(),
+					     hit->getTiming());
+
+	    _inPixelCounting.at(nsensor)->Fill(trackPosX * sensor->getPitchX(),
+					       trackPosY * sensor->getPitchY());
+	  }
+	}
+      }
 
       if (match)
       {
@@ -135,6 +148,8 @@ void Efficiency::processEvent(const Storage::Event* refEvent,
 	//bilbao@cern.ch / reina.camacho@cern.ch: Filling the efficiency histogram with the cluster position instead of the track position
 	_efficiencyMap.at(nsensor)->Fill(true, match->getPosX(), match->getPosY());
         _matchedTracks.at(nsensor)->Fill(1);
+	_matchpositionX.at(nsensor)->Fill(tx);
+	_matchpositionY.at(nsensor)->Fill(ty);
         if (_efficiencyTime.size())
           _efficiencyTime.at(nsensor)->Fill(true, _refDevice->tsToTime(refEvent->getTimeStamp()));
       }
@@ -160,6 +175,16 @@ void Efficiency::postProcessing()
     const TH1* values = efficiency->GetTotalHistogram();
     TH1D* distribution = _efficiencyDistribution.at(nsensor);
 
+    // Inpixel timing plot and renormalization
+    TH2D* inTimingMap =  _inPixelTiming.at(nsensor);
+    TH2D* count = _inPixelCounting.at(nsensor);
+    for (Int_t x = 1; x <= inTimingMap->GetNbinsX(); x++){
+	for (Int_t y = 1; y <= inTimingMap->GetNbinsY(); y++){
+	const double average = inTimingMap->GetBinContent(x, y) / count->GetBinContent(x, y);
+	    inTimingMap->SetBinContent(x, y, average);
+	}
+    }
+
     // Loop over all pixel groups
     for (Int_t binx = 1; binx <= values->GetNbinsX(); binx++)
     {
@@ -170,7 +195,6 @@ void Efficiency::postProcessing()
         const double value = efficiency->GetEfficiency(bin);
         const double sigmaLow = efficiency->GetEfficiencyErrorLow(bin);
         const double sigmaHigh = efficiency->GetEfficiencyErrorUp(bin);
-
         // Find the probability of this pixel group being found in all bins of the distribution
         double normalization = 0;
         for (Int_t distBin = 1; distBin <= distribution->GetNbinsX(); distBin++)
@@ -215,6 +239,7 @@ Efficiency::Efficiency(const Mechanics::Device* refDevice,
 
   std::stringstream name; // Build name strings for each histo
   std::stringstream title; // Build title strings for each histo
+  std::stringstream Xaxis;
 
   if (relativeToSensor >= (int)_dutDevice->getNumSensors())
     throw "Efficiency: relative sensor exceeds range";
@@ -264,6 +289,61 @@ Efficiency::Efficiency(const Mechanics::Device* refDevice,
     pixels->GetYaxis()->SetTitle("Pixel groups / 0.05");
     pixels->SetDirectory(plotDir);
     _efficiencyDistribution.push_back(pixels);
+    
+
+    // Track matched position
+    name.str(""); title.str(""); Xaxis.str("");
+    name << sensor->getDevice()->getName() << sensor->getName()
+         << "MatchedTracksPositionX" << _nameSuffix;
+    title << sensor->getDevice()->getName() << " " << sensor->getName()
+          << " Matched Tracks Position X";
+    //Xaxis << "X position" << " [" << _dutDevice->getSpaceUnit() << "]";
+    TH1D* matchedPositionX = new TH1D(name.str().c_str(), title.str().c_str(),
+				      sensor->getNumX()*1.5*3, 1.5*lowX, 1.5*uppX);
+    matchedPositionX->GetXaxis()->SetTitle("X");
+    matchedPositionX->GetZaxis()->SetTitle("Tracks");
+    matchedPositionX->SetDirectory(plotDir);
+    _matchpositionX.push_back(matchedPositionX);
+    
+
+
+    name.str(""); title.str(""); Xaxis.str("");
+    name << sensor->getDevice()->getName() << sensor->getName()
+         << "MatchedTracksPositionY" << _nameSuffix;
+    title << sensor->getDevice()->getName() << " " << sensor->getName()
+          << " Matched Tracks Position Y";
+    //bilbao@cern.ch: PROPER BINING TO BE IMPLEMENTED-
+
+    TH1D* matchedPositionY = new TH1D(name.str().c_str(), title.str().c_str(),
+				      sensor->getNumY()*1.5*3, 1.5*lowY, 1.5*uppY);
+    matchedPositionY->GetXaxis()->SetTitle("Y");
+    matchedPositionY->GetZaxis()->SetTitle("Tracks");
+    matchedPositionY->SetDirectory(plotDir);
+    _matchpositionY.push_back(matchedPositionY);
+
+    name.str(""); title.str("");
+    name << sensor->getDevice()->getName() << sensor->getName()
+         << "InPixelTiming" << _nameSuffix;
+    title << sensor->getDevice()->getName() << " " << sensor->getName()
+          << " In Pixel Timing Map";
+    TH2D* inTimingMap = new TH2D(name.str().c_str(), title.str().c_str(),
+				 pixBinsX, 0, sensor->getPitchX(),
+                                 pixBinsY, 0, sensor->getPitchY());
+    inTimingMap->SetDirectory(plotDir);
+    _inPixelTiming.push_back(inTimingMap);
+
+
+    name.str(""); title.str("");
+    name << sensor->getDevice()->getName() << sensor->getName()
+         << "InPixelTimingCnt" << _nameSuffix;
+    title << sensor->getDevice()->getName() << " " << sensor->getName()
+          << " In Pixel Timing Map counting";
+    TH2D* count = new TH2D(name.str().c_str(), title.str().c_str(),
+				 pixBinsX, 0, sensor->getPitchX(),
+                                 pixBinsY, 0, sensor->getPitchY());
+    count->SetDirectory(0);
+    _inPixelCounting.push_back(count);
+   
 
     // Track matching initialization
     name.str(""); title.str("");

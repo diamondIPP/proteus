@@ -1,6 +1,19 @@
+2014-10-09 J. Bilbao de Mendizabal <bilbao@cern.ch>
+	* New Inpixel timing resolution. Added iiiiin effeciency.cpp
+
 2014-10-02 J. Bilbao de Mendizabal <bilbao@cern.ch>
-	* New extra step on DUT alignment if after first itteration the
-finealigment give 0 correction a 1D residulas fitting is used.
+	* Including the average Lv1 timing for each pixel in dutResults.root
+	* Subpixel efficiency modification in order to only take into acount
+the active area on the DUT to be properly include in the code.
+
+2014-10-02 J. Bilbao de Mendizabal <bilbao@cern.ch>
+	* New plot of reconstructed matched tracks position on DUT projection
+on X and Y. 
+
+2014-10-02 J. Bilbao de Mendizabal <bilbao@cern.ch>
+	* New extra step on DUT alignment using the 1D residuals distributions
+fitting; if after first itteration the finealigment using the 2D plot gives 0
+correction and only one DUT is present the loop is stoped.
 
 2014-09-26 J. Bilbao de Mendizabal <bilbao@cern.ch>
         * implementation of the pixel timing vs cluster size and hit-ToT

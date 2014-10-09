@@ -84,6 +84,7 @@ void generateSensors(const ConfigParser& config, Device* device)
   double xox0 = 0;
   std::string name = "";
   bool masked = false;
+  bool digi = false;
 
   unsigned int sensorCounter = 0;
 
@@ -104,7 +105,7 @@ void generateSensors(const ConfigParser& config, Device* device)
           ss << "Plane" << sensorCounter;
           name = ss.str();
         }
-        Sensor* sensor = new Sensor(cols, rows, pitchX, pitchY, depth, device, name,
+        Sensor* sensor = new Sensor(cols, rows, pitchX, pitchY, depth, device, name, digi,
                                     xox0, offX, offY, offZ, rotX, rotY, rotZ);
         device->addSensor(sensor);
         sensorCounter++;
@@ -128,6 +129,7 @@ void generateSensors(const ConfigParser& config, Device* device)
       xox0 = 0;
       name = "";
       masked = false;
+      digi = false;
 
       continue;
     }
@@ -166,6 +168,9 @@ void generateSensors(const ConfigParser& config, Device* device)
       name = row->value;
     else if (!row->key.compare("masked"))
       masked = ConfigParser::valueToLogical(row->value);
+    else if (!row->key.compare("digital")){
+        digi = ConfigParser::valueToLogical(row->value);
+    }
     else
       throw "Mechanics: can't parse sensor row";
   }

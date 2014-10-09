@@ -29,6 +29,7 @@ private:
   const double _sensitiveY;
   unsigned int _numNoisyPixels;
   bool** _noisyPixels;
+  bool _digi;
 
   double _rotation[3][3]; // The rotation matrix for the plane
   double _unRotate[3][3]; // Invert the rotation
@@ -41,7 +42,7 @@ private:
 
 public:
   Sensor(unsigned int numX, unsigned int numY, double pitchX, double pitchY,
-         double depth, Device* device, std::string name, double xox0 = 0,
+         double depth, Device* device, std::string name, bool digi , double xox0 = 0,
          double offX = 0, double offY = 0, double offZ = 0,
          double rotX = 0, double rotY = 0, double rotZ = 0);
   ~Sensor();
@@ -71,6 +72,7 @@ public:
   void getNormalVector(double& x, double& y, double& z) const;
 
   bool** getNoiseMask() const;
+  bool getDigital() const;
   unsigned int getNumX() const;
   unsigned int getNumY() const;
   unsigned int getPosNumX() const;

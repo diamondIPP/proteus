@@ -53,7 +53,9 @@ void HitInfo::processEvent(const Storage::Event* event)
       _lvl1.at(nplane)->Fill(hit->getTiming());
       _tot.at(nplane)->Fill(hit->getValue());
       _totMap.at(nplane)->Fill(hit->getPixX(), hit->getPixY(), hit->getValue());
-      _totMapCnt.at(nplane)->Fill(hit->getPixX(), hit->getPixY());
+      _timingMap.at(nplane)->Fill(hit->getPixX(), hit->getPixY(), hit->getTiming());
+      _MapCnt.at(nplane)->Fill(hit->getPixX(), hit->getPixY());
+
     }
   }
 }
@@ -63,16 +65,31 @@ void HitInfo::postProcessing()
   for (unsigned int nsens = 0; nsens < _device->getNumSensors(); nsens++)
   {
     TH2D* map = _totMap.at(nsens);
-    TH2D* count = _totMapCnt.at(nsens);
-
+    TH2D* count = _MapCnt.at(nsens);
     for (Int_t x = 1; x <= map->GetNbinsX(); x++)
-    {
-      for (Int_t y = 1; y <= map->GetNbinsY(); y++)
       {
-        const double average = map->GetBinContent(x, y) / count->GetBinContent(x, y);
-        map->SetBinContent(x, y, average);
+	for (Int_t y = 1; y <= map->GetNbinsY(); y++)
+	  {
+	    const double average = map->GetBinContent(x, y) / count->GetBinContent(x, y);
+	    map->SetBinContent(x, y, average);
+	  }
       }
-    }
+
+    TH2D* timingMap = _timingMap.at(nsens);
+
+    for (Int_t x = 1; x <= timingMap->GetNbinsX(); x++)
+      {
+	for (Int_t y = 1; y <= timingMap->GetNbinsY(); y++)
+	  {
+	    const double average = timingMap->GetBinContent(x, y) / count->GetBinContent(x, y);
+	    timingMap->SetBinContent(x, y, average);
+	  }
+      }
+    
+
+ 
+
+
   }
 }
 
@@ -136,13 +153,27 @@ HitInfo::HitInfo(const Mechanics::Device* device,
     _totMap.push_back(totMap);
 
     name.str(""); title.str("");
+    name << sensor->getName() << "TimingMap" << _nameSuffix;
+    title << sensor->getName() << " Timing Map"
+          << ";X pixel"
+          << ";Y pixel"
+          << ";Average Lv1 Timing";
+
+    TH2D* timingMap = new TH2D(name.str().c_str(), title.str().c_str(),
+                            sensor->getNumX(), 0 - 0.5, sensor->getNumX() - 0.5,
+                            sensor->getNumY(), 0 - 0.5, sensor->getNumY() - 0.5);
+    timingMap->SetDirectory(plotDir);
+    _timingMap.push_back(timingMap);
+
+
+    name.str(""); title.str("");
     name << sensor->getName() << "ToTMapCnt" << _nameSuffix;
     title << sensor->getName() << " ToT Map Counter";
-    TH2D* totMapCnt = new TH2D(name.str().c_str(), title.str().c_str(),
+    TH2D* MapCnt = new TH2D(name.str().c_str(), title.str().c_str(),
                                sensor->getNumX(), 0 - 0.5, sensor->getNumX() - 0.5,
                                sensor->getNumY(), 0 - 0.5, sensor->getNumY() - 0.5);
-    totMapCnt->SetDirectory(0);
-    _totMapCnt.push_back(totMapCnt);
+    MapCnt->SetDirectory(0);
+    _MapCnt.push_back(MapCnt);
   }
 }
 

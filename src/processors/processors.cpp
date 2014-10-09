@@ -412,7 +412,7 @@ void applyAlignment(Storage::Event* event, const Mechanics::Device* device)
       double posX = 0, posY = 0, posZ = 0;
       sensor->pixelToSpace(cluster->getPixX(), cluster->getPixY(), posX, posY, posZ);
       cluster->setPos(posX, posY, posZ);
-      double errX = sensor * cluster->getPixErrX();
+      double errX = sensor->getPitchX() * cluster->getPixErrX();
       double errY = sensor->getPitchY() * cluster->getPixErrY();
       double errZ = 0;
       sensor->rotateToGlobal(errX, errY, errZ);

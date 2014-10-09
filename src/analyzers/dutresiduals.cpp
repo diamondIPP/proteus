@@ -58,10 +58,7 @@ void DUTResiduals::processEvent(const Storage::Event* refEvent,
       //std::cout <<"Number of clusters = "<< plane->getNumClusters() << std::endl;
 
       for (unsigned int ncluster = 0; ncluster < plane->getNumClusters(); ncluster++)
-      {
-      
-        
-      
+      { 
         Storage::Cluster* cluster = plane->getCluster(ncluster);
 
         // Check if the cluster passes the cuts
@@ -178,6 +175,9 @@ DUTResiduals::DUTResiduals(const Mechanics::Device* refDevice,
       res1d->GetXaxis()->SetTitle(xAxisTitle.str().c_str());
       if (axis) _residualsX.push_back(res1d);
       else      _residualsY.push_back(res1d);
+
+
+
 
 
       //bilbao@cern.ch

@@ -20,7 +20,9 @@ private:
   std::vector<TH1D*> _lvl1;
   std::vector<TH1D*> _tot;
   std::vector<TH2D*> _totMap;
-  std::vector<TH2D*> _totMapCnt;
+  std::vector<TH2D*> _timingMap;
+  std::vector<TH2D*> _MapCnt;
+
 
   unsigned int _lvl1Bins;
   unsigned int _totBins;
