@@ -297,10 +297,11 @@ Efficiency::Efficiency(const Mechanics::Device* refDevice,
          << "MatchedTracksPositionX" << _nameSuffix;
     title << sensor->getDevice()->getName() << " " << sensor->getName()
           << " Matched Tracks Position X";
-    //Xaxis << "X position" << " [" << _dutDevice->getSpaceUnit() << "]";
+    Xaxis << "Matched Tracks X position" << " [" << _dutDevice->getSpaceUnit() << "]";
+
     TH1D* matchedPositionX = new TH1D(name.str().c_str(), title.str().c_str(),
 				      sensor->getNumX()*1.5*3, 1.5*lowX, 1.5*uppX);
-    matchedPositionX->GetXaxis()->SetTitle("X");
+    matchedPositionX->GetXaxis()->SetTitle(Xaxis.str().c_str());
     matchedPositionX->GetZaxis()->SetTitle("Tracks");
     matchedPositionX->SetDirectory(plotDir);
     _matchpositionX.push_back(matchedPositionX);
@@ -312,11 +313,11 @@ Efficiency::Efficiency(const Mechanics::Device* refDevice,
          << "MatchedTracksPositionY" << _nameSuffix;
     title << sensor->getDevice()->getName() << " " << sensor->getName()
           << " Matched Tracks Position Y";
-    //bilbao@cern.ch: PROPER BINING TO BE IMPLEMENTED-
-
+    Xaxis << "Matched Tracks Y position" << " [" << _dutDevice->getSpaceUnit() << "]";
+ 
     TH1D* matchedPositionY = new TH1D(name.str().c_str(), title.str().c_str(),
 				      sensor->getNumY()*1.5*3, 1.5*lowY, 1.5*uppY);
-    matchedPositionY->GetXaxis()->SetTitle("Y");
+    matchedPositionY->GetXaxis()->SetTitle(Xaxis.str().c_str());
     matchedPositionY->GetZaxis()->SetTitle("Tracks");
     matchedPositionY->SetDirectory(plotDir);
     _matchpositionY.push_back(matchedPositionY);
