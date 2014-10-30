@@ -68,6 +68,12 @@ void Residuals::processEvent(const Storage::Event* refEvent)
         _residualsYY.at(nplane)->Fill(ry, ty);
         _residualsXY.at(nplane)->Fill(rx, ty);
         _residualsYX.at(nplane)->Fill(ry, tx);
+
+        //_residualsXX.at(nplane)->Fill(cluster->getPosX(), tx);
+        //_residualsYY.at(nplane)->Fill(cluster->getPosY(), ty);
+        //_residualsXY.at(nplane)->Fill(cluster->getPosX(), ty);
+        //_residualsYX.at(nplane)->Fill(cluster->getPosX(), tx);
+
       }
     }
   }

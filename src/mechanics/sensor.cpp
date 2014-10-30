@@ -41,7 +41,7 @@ void Sensor::applyRotation(double& x, double& y, double& z, bool invert) const
 {
   const double point[3] = {x, y, z};
   double* rotated[3] = {&x, &y, &z};
-
+ 
   // Use the sensor rotation matrix to transform
   for (int i = 0; i < 3; i++) {
     *(rotated[i]) = 0;
@@ -51,6 +51,14 @@ void Sensor::applyRotation(double& x, double& y, double& z, bool invert) const
       else         *(rotated[i]) += _unRotate[i][j] * point[j];
     }
   }
+  //std::cout << *(rotated[0]) << std::endl;
+  //if( _rotation[0][1]==1){ 
+  //if(*(rotated[0]) == 0){
+  //std::cout << "Coordinates were (" << x <<";"<< y <<";"<< z << ")"<< std::endl; 
+  //std::cout << "They are: (" << *(rotated[0]) <<";"<< *(rotated[1]) <<";"<< *(rotated[2]) <<")" << std::endl;
+  //    std::cout << "" << std::endl;
+      //}
+    //}
 }
 
 void Sensor::calculateRotation()
@@ -125,8 +133,10 @@ void Sensor::pixelToSpace(double pixX, double pixY,
 
   y = pixY * _pitchY;
   y -= halfY;
-
+  //std::cout << "Coordinates were : (" << x << ";" << y << ";" << z << ")" << std::endl;
   rotateToGlobal(x, y, z);
+  //std::cout << "Coordinates are  : (" << x << ";" << y << ";" << z << ")" << std::endl;
+  //std::cout << " " << std::endl;
 
   x += getOffX();
   y += getOffY();
@@ -171,11 +181,11 @@ void Sensor::getNormalVector(double& x, double& y, double& z) const
 }
 
 unsigned int Sensor::getPosNumX() const {
-  return (unsigned int)(getPosSensitiveX()/getPosPitchX());
+  return (unsigned int)((getPosSensitiveX()/getPosPitchX())+0.5);
 }
 
 unsigned int Sensor::getPosNumY() const {
-  return (unsigned int)(getPosSensitiveY()/getPosPitchY());
+  return (unsigned int)((getPosSensitiveY()/getPosPitchY())+0.5);
 }
 
 double Sensor::getPosPitchX() const { 

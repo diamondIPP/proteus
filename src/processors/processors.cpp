@@ -401,6 +401,7 @@ void applyAlignment(Storage::Event* event, const Mechanics::Device* device)
     {
       Storage::Hit* hit = plane->getHit(nhit);
       double posX = 0, posY = 0, posZ = 0;
+      //std::cout << "At plane: " << nplane << std::endl;
       sensor->pixelToSpace(hit->getPixX() + 0.5, hit->getPixY() + 0.5, posX, posY, posZ);
       hit->setPos(posX, posY, posZ);
     }
@@ -410,6 +411,7 @@ void applyAlignment(Storage::Event* event, const Mechanics::Device* device)
     {
       Storage::Cluster* cluster = plane->getCluster(ncluster);
       double posX = 0, posY = 0, posZ = 0;
+      //std::cout << "At plane: " << nplane << std::endl;
       sensor->pixelToSpace(cluster->getPixX(), cluster->getPixY(), posX, posY, posZ);
       cluster->setPos(posX, posY, posZ);
       double errX = sensor->getPitchX() * cluster->getPixErrX();

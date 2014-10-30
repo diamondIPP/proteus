@@ -155,7 +155,7 @@ ClusterInfo::ClusterInfo(const Mechanics::Device* device,
          << "TimingVsValue" << _nameSuffix;
     title << sensor->getDevice()->getName() << " " << sensor->getName()
           << " Hit Timing in cluster Vs. Hit Value"
-          << ";Value in Hit"
+          << ";ToT"
           << ";Pixel timing [BC]"
           << ";Hits";
     TH2D* timingVsValue = new TH2D(name.str().c_str(), title.str().c_str(),

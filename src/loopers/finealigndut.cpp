@@ -94,19 +94,22 @@ void FineAlignDut::loop()
 
       double offsetX = 0, offsetY = 0, rotation = 0;
 
-      //Bilbao@cern.ch: first alignment using the residuals in order to avoid a big ofset on the 2D technique. This also helps since the DUT is align with repspect to a ref plane but not consdeing the cumulative shift.
+       //Bilbao@cern.ch: first alignment using the residuals in order to avoid a big ofset on the 2D technique. This also helps since the DUT is align with repspect to a ref plane but not consdeing the cumulative shift.
  
       if(niter==0){
       double sigmaX = 0, maxX = 0, backgroundX = 0;
       double sigmaY = 0, maxY = 0, backgroundY = 0;
-      //Processors::fitGaussian(residuals.getResidualX(nsens), offsetX, sigmaX, maxX,backgroundX, _displayFits);
-      //Processors::fitGaussian(residuals.getResidualY(nsens), offsetY, sigmaY, maxX,backgroundY, _displayFits);
+      Processors::fitGaussian(residuals.getResidualX(nsens), offsetX, sigmaX, maxX,backgroundX, _displayFits);
+      Processors::fitGaussian(residuals.getResidualY(nsens), offsetY, sigmaY, maxX,backgroundY, _displayFits);
 
       std::cout << "Fine alignment with residuals:" << std::endl;
       std::cout << "   Sensor: " << nsens << ", Xcorrection: " << offsetX << ", Ycorrection: " << offsetY <<  std::endl;
-      //sensor->setOffX(sensor->getOffX() + offsetX);
-      //sensor->setOffY(sensor->getOffY() + offsetY);
-      //sensor->setRotZ(sensor->getRotZ() + rotation);
+      sensor->setOffX(sensor->getOffX() + offsetX);
+      sensor->setOffY(sensor->getOffY() + offsetY);
+      sensor->setRotZ(sensor->getRotZ() + rotation);
+      offsetX=0;
+      offsetY=0;
+      rotation=0;
       }
 
       Processors::residualAlignment(residuals.getResidualXY(nsens),

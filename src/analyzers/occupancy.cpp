@@ -62,9 +62,22 @@ void Occupancy::processEvent(const Storage::Event* event)
       for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
         if (!_clusterCuts.at(ncut)->check(cluster)) { pass = false; break; }
       if (!pass) continue;
-
-
       _clusterOcc.at(nplane)->Fill(cluster->getPosX(), cluster->getPosY());
+      _clusterOccPix.at(nplane)->Fill(cluster->getPixX(), cluster->getPixY());
+      /*for (unsigned int nsens = 0; nsens < _device->getNumSensors(); nsens++)
+	{
+	  Mechanics::Sensor* sensor = _device->getSensor(nsens);
+	  std::cout<<"sensor="<< nsens<<" Number of X pixels :"<<sensor->getPosNumX()<<" Number of Y pixels :"<<sensor->getPosNumY()<<std::endl;
+
+      std::cout << "PosSensitive X: " << sensor->getPosSensitiveX() << ", and PosPitch X: " << sensor->getPosPitchX() << std::endl;
+
+      std::cout << "PosSensitive Y: " << sensor->getPosSensitiveY() << ", and PosPitch Y: " << sensor->getPosPitchY() << std::endl;
+
+      }*/
+
+
+
+
     }
   }
 }
@@ -112,6 +125,7 @@ void Occupancy::postProcessing()
   for (unsigned int nsens = 0; nsens < _device->getNumSensors(); nsens++)
   {
     Mechanics::Sensor* sensor = _device->getSensor(nsens);
+
     TH2D* occ = _hitOcc.at(nsens);
 
     for (unsigned int x = 0; x < sensor->getNumX(); x++)
@@ -188,6 +202,20 @@ Occupancy::Occupancy(const Mechanics::Device* device,
                                sensor->getPosNumY(), lowY, uppY);
     histClust->SetDirectory(plotDir);
     _clusterOcc.push_back(histClust);
+
+
+    name.str(""); title.str("");
+    name << sensor->getName() << "ClusterOccupancyPix" << _nameSuffix;
+    title << sensor->getName() << " Cluster Occupancy Pixel"
+          << ";X pixel "
+          << ";Y pixel"
+          << ";Clusters / pixel";
+    TH2D* histClustPix = new TH2D(name.str().c_str(), title.str().c_str(),
+                               sensor->getNumX(), 0 - 0.5, sensor->getNumX() - 0.5,
+                               sensor->getNumY(), 0 - 0.5, sensor->getNumY() - 0.5);
+    histClustPix->SetDirectory(plotDir);
+    _clusterOccPix.push_back(histClustPix);
+
   }
 }
 

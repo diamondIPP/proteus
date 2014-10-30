@@ -88,9 +88,14 @@ void ClusterMaker::calculateCluster(Storage::Cluster* cluster)
   {
     const Storage::Hit* hit = cluster->getHit(nhit);
     const double value = (hit->getValue() > 0) ? hit->getValue() : 1;
-    cogX += hit->getPixX() * value;
-    cogY += hit->getPixY() * value;
-    weight += hit->getValue();   
+    //digital sensor:
+    cogX += hit->getPixX();
+    cogY += hit->getPixY();
+    weight += 1;
+
+    //    cogX += hit->getPixX() * value;
+    //    cogY += hit->getPixY() * value;
+    //    weight += hit->getValue();   
   }
 
   cogX /= weight;
@@ -116,9 +121,18 @@ void ClusterMaker::calculateCluster(Storage::Cluster* cluster)
 
   stdevX = sqrt(stdevX / weight2);
   stdevY = sqrt(stdevY / weight2);
-  
-  const double errX = (stdevX) ? stdevX : pixErrX;
-  const double errY = (stdevY) ? stdevY : pixErrY;
+
+  // std::cout << "Number of hits are: " << cluster->getNumHits() << std::endl;
+  // std::cout << "Cluster error X: " << stdevX << std::endl;
+  // std::cout << "Cluster error Y: " << stdevY << std::endl;
+  // std::cout << "" << std::endl;
+
+
+  //const double errX = (stdevX) ? stdevX : pixErrX;
+  //const double errY = (stdevY) ? stdevY : pixErrY;
+
+  const double errX = pixErrX;
+  const double errY = pixErrY;
 
   cluster->setPix(cogX, cogY);
   cluster->setPixErr(errX, errY);

@@ -58,7 +58,9 @@ void TrackInfo::processEvent(const Storage::Event* event)
       Mechanics::Sensor* sensor = _device->getSensor(nsens);
 
       double tx = 0, ty = 0, tz = 0;
+      
       Processors::trackSensorIntercept(track, sensor, tx, ty, tz);
+      //else{tz = 451000;}
 
       double errX = 0, errY = 0;
       Processors::trackError(track, tz, errX, errY);
@@ -66,6 +68,13 @@ void TrackInfo::processEvent(const Storage::Event* event)
       _resX.at(nsens)->Fill(errX);
       _resY.at(nsens)->Fill(errY);
     }
+
+    // bilbao@cern.ch: just filling histograms for X and Y at the DUT position to evaluate the resolution of the telescope.
+    double resoX = 0, resoY = 0, tz = 320000;
+    Processors::trackError(track, tz, resoX, resoY);
+    _resoX->Fill(resoX);
+    _resoY->Fill(resoY);
+
   }
 }
 
@@ -111,6 +120,25 @@ TrackInfo::TrackInfo(const Mechanics::Device* device,
       else      _resY.push_back(res);
     }
   }
+
+  name.str(""); title.str("");
+  name << "ResolutionAtDUTX";
+  title << "ResolutionAtDUTX"
+        << ";resolution [um]"
+        << ";Tracks";
+  _resoX = new TH1D(name.str().c_str(), title.str().c_str(),
+		    100, 0, 100);
+  _resoX->SetDirectory(plotDir);
+
+  name.str(""); title.str("");
+  name << "ResolutionAtDUTY";
+  title << "ResolutionAtDUTY"
+        << ";resolution [um]"
+        << ";Tracks";
+  _resoY = new TH1D(name.str().c_str(), title.str().c_str(),
+		    100, 0, 100);
+  _resoY->SetDirectory(plotDir);
+
 
   // Use DUT 0 as a reference sensor for plots axis
   assert(_device->getNumSensors() && "TrackInfo: expects device to have sensors");
