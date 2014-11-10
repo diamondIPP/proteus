@@ -33,6 +33,7 @@ void ClusterMaker::addNeighbours(const Storage::Hit* hit, const  Storage::Plane*
     }
     else
     {
+   //   std::cout<< _maxSeparationX<<std::endl;
       const int distX = compare->getPixX() - hit->getPixX();
       const int distY = compare->getPixY() - hit->getPixY();
       if (fabs(distX) > _maxSeparationX || fabs(distY) > _maxSeparationY)

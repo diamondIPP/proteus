@@ -49,6 +49,7 @@ void Sensor::applyRotation(double& x, double& y, double& z, bool invert) const
     {
       if (!invert) *(rotated[i]) += _rotation[i][j] * point[j];
       else         *(rotated[i]) += _unRotate[i][j] * point[j];
+
     }
   }
   //std::cout << *(rotated[0]) << std::endl;
@@ -66,7 +67,6 @@ void Sensor::calculateRotation()
   const double rx = _rotX;
   const double ry = _rotY;
   const double rz = _rotZ;
-
   _rotation[0][0] = cos(ry) * cos(rz);
   _rotation[0][1] = -cos(rx) * sin(rz) + sin(rx) * sin(ry) * cos(rz);
   _rotation[0][2] = sin(rx) * sin(rz) + cos(rx) * sin(ry) * cos(rz);
@@ -133,10 +133,7 @@ void Sensor::pixelToSpace(double pixX, double pixY,
 
   y = pixY * _pitchY;
   y -= halfY;
-  //std::cout << "Coordinates were : (" << x << ";" << y << ";" << z << ")" << std::endl;
   rotateToGlobal(x, y, z);
-  //std::cout << "Coordinates are  : (" << x << ";" << y << ";" << z << ")" << std::endl;
-  //std::cout << " " << std::endl;
 
   x += getOffX();
   y += getOffY();
@@ -203,7 +200,7 @@ double Sensor::getPosPitchX() const {
   y = getPitchY();
   z = 0;
   rotateToGlobal(x, y, z);
-  pitch += fabs(x);
+  pitch += fabs(x); 
   // Return the sum of the x-projection
   return pitch;
 }

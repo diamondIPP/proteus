@@ -15,6 +15,8 @@
 #include <TMath.h>
 #include <TDirectory.h>
 
+
+
 #define MAXHIT 1000
 
 //first y value
@@ -73,6 +75,7 @@ int mergeHVCMOSPixels(char * input, char * output) {
 	
 
 	int nentries = t->GetEntries();
+
 	int minY = std::numeric_limits<int>::max();
 	//cout<<"Initialising minY "<<minY<<endl;
 	

@@ -124,7 +124,7 @@ void FineAlignDut::loop()
       std::cout << "Sensor: " << nsens << ", Xoffset: " << sensor->getOffX() << ", Yoffset: " << sensor->getOffY() << ", Zoffset: " << sensor->getOffZ() << std::endl;
       std::cout << "" << std::endl;
 
-      if(niter==0 & _dutDevice->getNumSensors()== 1 & offsetX==0 & offsetY==0){
+      if(niter==0 && _dutDevice->getNumSensors()== 1 && offsetX==0 && offsetY==0){
 	std::cout << "The fine alignment was terminated!" << std::endl;
 	std::cout << "Only one DUT is present and 2D residuals is not working!" << std::endl;
 	niter=_numIterations+1;

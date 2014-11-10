@@ -20,6 +20,8 @@ class Occupancy : public SingleAnalyzer
 private:
   std::vector<TH2D*> _hitOcc;
   std::vector<TH2D*> _clusterOcc;
+  std::vector<TH2D*> _clusterOccXZ;
+  std::vector<TH2D*> _clusterOccYZ;
   std::vector<TH2D*> _clusterOccPix;
   TH1D* _occDistribution;
 

@@ -52,29 +52,38 @@ void Residuals::processEvent(const Storage::Event* refEvent)
       double tx = 0, ty = 0, tz = 0;
       Processors::trackSensorIntercept(track, sensor, tx, ty, tz);
 
+      //fdibello@cern.ch variable to select the closest cluster associated to the track
+      double rx1=0, ry1=0, dist=0, dist1=1000000;
+
       for (unsigned int ncluster = 0; ncluster < plane->getNumClusters(); ncluster++)
       {
         Storage::Cluster* cluster = plane->getCluster(ncluster);
 
+
         // Check if the cluster passes the cuts
         for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
           if (!_clusterCuts.at(ncut)->check(cluster)) continue;
-
+    
         const double rx = tx - cluster->getPosX();
         const double ry = ty - cluster->getPosY();
-        _residualsX.at(nplane)->Fill(rx);
-        _residualsY.at(nplane)->Fill(ry);
-        _residualsXX.at(nplane)->Fill(rx, tx);
-        _residualsYY.at(nplane)->Fill(ry, ty);
-        _residualsXY.at(nplane)->Fill(rx, ty);
-        _residualsYX.at(nplane)->Fill(ry, tx);
+        dist=sqrt(pow(rx/sensor->getPitchX(),2)+pow(ry/sensor->getPitchY(),2));
+        //fdibello@cern.ch only the closest cluster w.r.t. the track is taken
+        if(dist<dist1){
+        rx1=rx;
+        ry1=ry;
+        dist1=dist;
+        }
+ 
+       }
 
-        //_residualsXX.at(nplane)->Fill(cluster->getPosX(), tx);
-        //_residualsYY.at(nplane)->Fill(cluster->getPosY(), ty);
-        //_residualsXY.at(nplane)->Fill(cluster->getPosX(), ty);
-        //_residualsYX.at(nplane)->Fill(cluster->getPosX(), tx);
+        _residualsX.at(nplane)->Fill(rx1);
+        _residualsY.at(nplane)->Fill(ry1);
+        _residualsXX.at(nplane)->Fill(rx1, tx);  
+        _residualsYY.at(nplane)->Fill(ry1, ty);
+        _residualsXY.at(nplane)->Fill(rx1, ty);
+        _residualsYX.at(nplane)->Fill(ry1, tx); 
 
-      }
+
     }
   }
 }
@@ -145,11 +154,14 @@ Residuals::Residuals(const Mechanics::Device* refDevice,
     Mechanics::Sensor* sensor = _device->getSensor(nsens);
     for (unsigned int axis = 0; axis < 2; axis++)
     {
-      const double width = nPixX * 
+      double width = nPixX * 
           (axis ? sensor->getPosPitchX() : sensor->getPosPitchY());
+
       unsigned int nbins = binsPerPix * nPixX;
       if (!(nbins % 2)) nbins += 1;
       double height = 0;
+
+      
 
       // Generate the 1D residual distribution for the given axis
       name.str(""); title.str("");

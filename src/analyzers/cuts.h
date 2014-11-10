@@ -197,9 +197,10 @@ public:
 class ClusterMatch : public ClusterCut
 {
 private:
-  const unsigned int _value;
+//  const unsigned int _value;
+const double  _value;   //fdibello@cern.ch
 public:
-  ClusterMatch(unsigned int value, Type type) : ClusterCut(type), _value(value) { }
+  ClusterMatch(double  value, Type type) : ClusterCut(type), _value(value) { }
   inline bool check(const Storage::Cluster* cluster) const
   {
     // If no match, the matching distance is always greater than anything

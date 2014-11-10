@@ -206,7 +206,7 @@ void fitGaussian(
 
   delete gauss;
 }
-
+//fdibello slices in x and y in order to correct rotation for the FE14
 void residualAlignment(TH2D* residualX, TH2D* residualY, double& offsetX,
                        double& offsetY, double& rotation, 
                        double relaxation, bool display)
@@ -395,7 +395,6 @@ void applyAlignment(Storage::Event* event, const Mechanics::Device* device)
   {
     Storage::Plane* plane = event->getPlane(nplane);
     Mechanics::Sensor* sensor = device->getSensor(nplane);
-
     // Apply alignment to hits
     for (unsigned int nhit = 0; nhit < plane->getNumHits(); nhit++)
     {
@@ -404,6 +403,8 @@ void applyAlignment(Storage::Event* event, const Mechanics::Device* device)
       //std::cout << "At plane: " << nplane << std::endl;
       sensor->pixelToSpace(hit->getPixX() + 0.5, hit->getPixY() + 0.5, posX, posY, posZ);
       hit->setPos(posX, posY, posZ);
+    //  cout<<"Sensor= "<<nplane  <<"in processors,hit , set pos Z="<<posZ<<std::endl;
+
     }
 
     // Apply alignment to clusters
@@ -414,6 +415,8 @@ void applyAlignment(Storage::Event* event, const Mechanics::Device* device)
       //std::cout << "At plane: " << nplane << std::endl;
       sensor->pixelToSpace(cluster->getPixX(), cluster->getPixY(), posX, posY, posZ);
       cluster->setPos(posX, posY, posZ);
+     // cout<<"Sensor= "<<nplane  <<"in processors,cluster , set pos Z="<<posZ<<std::endl;
+
       double errX = sensor->getPitchX() * cluster->getPixErrX();
       double errY = sensor->getPitchY() * cluster->getPixErrY();
       double errZ = 0;
@@ -421,7 +424,7 @@ void applyAlignment(Storage::Event* event, const Mechanics::Device* device)
       errX = fabs(errX);
       errY = fabs(errY);
       errZ = fabs(errZ);
-      cluster->setPosErr(errX, errY, errZ);
+      cluster->setPosErr(errX, errY, errZ); 
     }
   }
 

@@ -48,7 +48,6 @@ void Occupancy::processEvent(const Storage::Event* event)
         if (!_hitCuts.at(ncut)->check(hit)) { pass = false; break; }
       if (!pass) continue;
 
-
       totalHitOccupancy++;
       _hitOcc.at(nplane)->Fill(hit->getPixX(), hit->getPixY());
     }
@@ -64,22 +63,19 @@ void Occupancy::processEvent(const Storage::Event* event)
       if (!pass) continue;
       _clusterOcc.at(nplane)->Fill(cluster->getPosX(), cluster->getPosY());
       _clusterOccPix.at(nplane)->Fill(cluster->getPixX(), cluster->getPixY());
-      /*for (unsigned int nsens = 0; nsens < _device->getNumSensors(); nsens++)
-	{
-	  Mechanics::Sensor* sensor = _device->getSensor(nsens);
-	  std::cout<<"sensor="<< nsens<<" Number of X pixels :"<<sensor->getPosNumX()<<" Number of Y pixels :"<<sensor->getPosNumY()<<std::endl;
-
-      std::cout << "PosSensitive X: " << sensor->getPosSensitiveX() << ", and PosPitch X: " << sensor->getPosPitchX() << std::endl;
-
-      std::cout << "PosSensitive Y: " << sensor->getPosSensitiveY() << ", and PosPitch Y: " << sensor->getPosPitchY() << std::endl;
-
-      }*/
-
-
-
-
+      _clusterOccXZ.at(nplane)->Fill(cluster->getPosX(), cluster->getPosY());  
+      _clusterOccYZ.at(nplane)->Fill(cluster->getPosY(), cluster->getPosZ());
     }
   }
+
+// for (unsigned int nsens = 0; nsens < _device->getNumSensors(); nsens++)
+//  {
+   
+//    Mechanics::Sensor* sensor = _device->getSensor(nsens);
+//    std::cout<<"sensor="<<nsens<<" eccolo=="<<sensor->getPosNumX()<<" eccoloY=="<<sensor->getPosNumY()<<std::endl;
+      
+//   }
+
 }
 
 void Occupancy::postProcessing()
@@ -202,6 +198,36 @@ Occupancy::Occupancy(const Mechanics::Device* device,
                                sensor->getPosNumY(), lowY, uppY);
     histClust->SetDirectory(plotDir);
     _clusterOcc.push_back(histClust);
+ 
+
+    name.str(""); title.str("");
+    name << sensor->getName() << "ClusterOccupancyXZ" << _nameSuffix;
+    title << sensor->getName() << " Cluster OccupancyXZ"
+          << ";X position [" << _device->getSpaceUnit() << "]"
+          << ";Z position [" << _device->getSpaceUnit() << "]"
+          << ";Clusters / pixel";
+    TH2D* histClustXZ = new TH2D(name.str().c_str(), title.str().c_str(),
+                            79*sensor->getPosNumX()/(uppX-lowX), 1,80 ,
+                            349*sensor->getPosNumY()/(uppY-lowY), 1,350);
+
+    histClustXZ->SetDirectory(plotDir);
+    _clusterOccXZ.push_back(histClustXZ);
+
+
+
+
+    name.str(""); title.str("");
+    name << sensor->getName() << "ClusterOccupancyYZ" << _nameSuffix;
+    title << sensor->getName() << " Cluster OccupancyYZ"
+          << ";Y position [" << _device->getSpaceUnit() << "]"
+          << ";Z position [" << _device->getSpaceUnit() << "]"
+          << ";Clusters / pixel";
+    TH2D* histClustYZ = new TH2D(name.str().c_str(), title.str().c_str(),
+                               sensor->getPosNumY(), lowY, uppY,
+                               sensor->getPosNumY()+500, sensor->getOffZ()+0.4, sensor->getOffZ()-0.4);
+    histClustYZ->SetDirectory(plotDir);
+    _clusterOccYZ.push_back(histClustYZ);
+
 
 
     name.str(""); title.str("");
@@ -217,6 +243,6 @@ Occupancy::Occupancy(const Mechanics::Device* device,
     _clusterOccPix.push_back(histClustPix);
 
   }
-}
+ }
 
 }

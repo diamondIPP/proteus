@@ -1,3 +1,20 @@
+
+2014-11-09 F.A. Di Bello <fdibello@cern.ch>
+        * Only the closest cluster w.r.t. the track is taken into account in
+	the residuals.
+
+2014-11-09 F.A. Di Bello <fdibello@cern.ch>
+        * Do not align the first plane (reference plane).
+
+2014-11-09 F.A. Di Bello <fdibello@cern.ch>
+        * New occupancy plot XZ, YZ in order to understand the rotations of
+	the sensor.
+
+
+2014-11-09 F.A. Di Bello <fdibello@cern.ch>
+        * New alignment plot added in a root file in finealign.cpp .
+
+
 2014-10-09 J. Bilbao de Mendizabal <bilbao@cern.ch>
 	* New Inpixel timing resolution. Added iiiiin effeciency.cpp
 

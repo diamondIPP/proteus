@@ -20,6 +20,9 @@
 #include "../analyzers/cuts.h"
 #include "../analyzers/residuals.h"
 
+#include "TGraphErrors.h"
+#include "TFile.h"
+
 #ifndef VERBOSE
 #define VERBOSE 1
 #endif
@@ -31,7 +34,33 @@ namespace Loopers {
 
 void FineAlign::loop()
 {
-  // Build a vector of sensor indices which will be permutated at each iteration
+  // Build a vector of sensor indices which will be permutated at eaich iteration
+  //fdibello@cern.ch convergence plot for the fine aligmenet variables, offset x=0, offset y=1, offset z=2, rotation z=3
+  TGraphErrors *convergence[4][_refDevice->getNumSensors()];  
+  float  nit[_numIterations],ofx[_numIterations][_refDevice->getNumSensors()], ofy[_numIterations][_refDevice->getNumSensors()], ofz[_numIterations][_refDevice->getNumSensors()], rotz[_numIterations][_refDevice->getNumSensors()],sigmax[_numIterations][_refDevice->getNumSensors()],sigmay[_numIterations][_refDevice->getNumSensors()];
+TFile *out_file = new TFile("aligment_convergence_DUT_C22_masking_plane0.root","RECREATE");
+TDirectory *sensordir[_refDevice->getNumSensors()];
+
+double rotation1[_refDevice->getNumSensors()]; //fdibello offset in the aligmnent plot
+
+
+
+for(unsigned int i=0;i<_refDevice->getNumSensors() ;i++){
+           for(unsigned int l=0;l< _numIterations;l++){
+   ofx[l][i]=0;
+   ofy[l][i]=0;
+   ofz[l][i]=0;
+   rotz[l][i]=0; //rotzz[l]=rotz[l][i]-rotation1[i];
+    }
+   }
+
+ 
+
+
+for (unsigned int f=0; f<_refDevice->getNumSensors(); f++){
+    sensordir[f] = out_file->mkdir(Form("sensor_%d",f));
+  }
+
   std::vector<unsigned int> sensorPermutations(_refDevice->getNumSensors(), 0);
   for (unsigned int i = 0; i < _refDevice->getNumSensors(); i++)
     sensorPermutations[i] = i;
@@ -58,6 +87,8 @@ void FineAlign::loop()
       const unsigned int nsens = sensorPermutations[nsensor];
 
       cout << "Sensor " << nsens << endl;
+
+      if(nsens==0) continue; //fdibello in trackmaker nsens is the masked plane
 
       Mechanics::Sensor* sensor = _refDevice->getSensor(nsens);
 
@@ -116,6 +147,7 @@ void FineAlign::loop()
 
       double offsetX = 0, offsetY = 0, rotation = 0;
 
+
       //Bilbao@cern.ch: first alignment using the residuals in order to avoid a big ofset on the 2D technique. This also helps since the DUT is align with repspect to a ref plane but not consdeing the cumulative shift.
 
       if(niter==0){
@@ -126,7 +158,7 @@ void FineAlign::loop()
 
       std::cout << "Fine alignment with residuals:" << std::endl;
       std::cout << "   Sensor: " << nsens << ", Xcorrection: " << offsetX << ", Ycorrection: " << offsetY <<  std::endl;
-      sensor->setOffX(sensor->getOffX() + offsetX);
+      sensor->setOffX(sensor->getOffX() + offsetX); //fdibello-->I think this is useless
       sensor->setOffY(sensor->getOffY() + offsetY);
       sensor->setRotZ(sensor->getRotZ() + rotation);
       offsetX=0;
@@ -134,17 +166,36 @@ void FineAlign::loop()
       rotation=0;      
       }
 
-      Processors::residualAlignment(residuals.getResidualXY(nsens),
+      Processors::residualAlignment(residuals.getResidualXY(nsens), //i guess this is a typo --->nsens below instead of nsensor
                                     residuals.getResidualYX(nsens),
                                     offsetX, offsetY, rotation, 
                                     _relaxation, _displayFits);
-      std::cout << "Sensor: " << nsensor << ", Xcorrection: " << offsetX << ", Ycorrection: " << offsetY << ", Zcorrection: " << rotation << std::endl;
+
+      if(niter==0){rotation1[nsens]=rotation;}  //fdibello offset for the ali. plot
+
+      std::cout << "Sensor: " << nsens << ", Xcorrection: " << offsetX<< ", Ycorrection: " << offsetY << ", Zcorrection: " << rotation << std::endl;
       sensor->setOffX(sensor->getOffX() + offsetX);
       sensor->setOffY(sensor->getOffY() + offsetY);
       sensor->setRotZ(sensor->getRotZ() + rotation);
-      std::cout << "Sensor: " << nsensor << ", Xoffset: " << sensor->getOffX() << ", Yoffset: " << sensor->getOffY() << ", Zoffset: " << sensor->getOffZ() << std::endl;
+      sensor->setRotX(sensor->getRotX()); //fdibello
+      std::cout << "Sensor: " << nsens << ", Xoffset: " << sensor->getOffX()<< ", Yoffset: " << sensor->getOffY() << ", Zoffset: " << sensor->getOffZ() <<",  RotationX="<<sensor->getRotX()<<",  RotationY="<<sensor->getRotY()<<",  RotationZ="<<sensor->getRotZ()<< std::endl;
+     
+    //fdibello  
+    ofx[niter][nsens]=sensor->getOffX();
+    ofy[niter][nsens]=sensor->getOffY();
+    ofz[niter][nsens]=sensor->getOffZ();
+    rotz[niter][nsens]=sensor->getRotZ();
+    nit[niter]=niter;
+     
+    //  double sigmaX1 = 0, maxX1 = 0, backgroundX1 = 0;
+   //   double sigmaY1 = 0, maxY1 = 0, backgroundY1 = 0;
+ 
+   // Processors::fitGaussian(residuals.getResidualX(nsens), offsetX, sigmaX1, maxX1,backgroundX1, _displayFits);
+   // Processors::fitGaussian(residuals.getResidualY(nsens), offsetY, sigmaY1, maxX1,backgroundY1, _displayFits);
+   // sigmax[niter][nsens]=sigmaX1;
+   // sigmay[niter][nsens]=sigmaY1;
+    
     }
-
     // Ajudst the device rotation using the average slopes
     avgSlopeX /= (double)numSlopes;
     avgSlopeY /= (double)numSlopes;
@@ -153,7 +204,50 @@ void FineAlign::loop()
 
     cout << endl; // Space between iterations
   }
+   //fdibello
+   for(unsigned int i=0;i<_refDevice->getNumSensors() ;i++){
+ //  float sigmaxx[_numIterations];
+ //  float sigmayy[_numIterations];
+   float ofxx[_numIterations];
+   float ofyy[_numIterations];
+   float rotzz[_numIterations];
+   float ofzz[_numIterations];
+   for(unsigned int l=0;l< _numIterations;l++){ 
+ //  sigmaxx[l]=sigmax[l][i];
+ //  sigmayy[l]=sigmay[l][i];
+   ofxx[l]=ofx[l][i];
+   ofyy[l]=ofy[l][i];
+   ofzz[l]=ofz[l][i];
+   rotzz[l]=rotz[l][i]; //rotzz[l]=rotz[l][i]-rotation1[i];
+    }
 
+    convergence[0][i] = new TGraphErrors(_numIterations,nit,ofxx,0,0); //how estimate error for the rotation?
+    convergence[1][i] = new TGraphErrors(_numIterations,nit,ofyy,0,0); //how estimate error for the rotation?
+    convergence[2][i] = new TGraphErrors(_numIterations,nit,ofzz,0,0); //how estimate error for the rotation?
+    convergence[3][i] = new TGraphErrors(_numIterations,nit,rotzz,0,0); //how estimate error for the rotation?
+
+   sensordir[i]->cd();
+   convergence[0][i]->GetYaxis()->SetTitle("offset_X [#mum]");
+   convergence[1][i]->GetYaxis()->SetTitle("offset_Y [#mum]");
+   convergence[2][i]->GetYaxis()->SetTitle("offset_Z [#mum]");
+   convergence[3][i]->GetYaxis()->SetTitle("rot_Z [#mum]");
+
+
+   convergence[0][i]->GetXaxis()->SetTitle("# iteration");
+   convergence[1][i]->GetXaxis()->SetTitle("# iteration");
+   convergence[2][i]->GetXaxis()->SetTitle("# iteration");
+   convergence[3][i]->GetXaxis()->SetTitle("# iteration");
+
+
+
+   convergence[0][i]->Write();
+   convergence[1][i]->Write();
+   convergence[2][i]->Write();
+   convergence[3][i]->Write();
+
+
+   }
+  out_file->Close();
   _refDevice->getAlignment()->writeFile();
 }
 

@@ -62,7 +62,6 @@ void TrackMaker::searchPlane(Track* track, std::vector<Track*>& candidates,
       const double dist = sqrt(pow(sigDistX, 2) + pow(sigDistY, 2));
 
       if (dist > _maxClusterDist) continue;
-
       // Found a good cluster, bifurcate the track and add the cluster
       matchedCluster = true;
       trialTrack = new Track(*track);

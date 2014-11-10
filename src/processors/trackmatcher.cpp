@@ -8,6 +8,8 @@
 #include "../storage/cluster.h"
 #include "../mechanics/device.h"
 #include "../processors/processors.h"
+//fdibello@cern.ch
+#include "../mechanics/sensor.h"
 
 namespace Processors {
 
@@ -19,6 +21,7 @@ void TrackMatcher::matchTracksToClusters(Storage::Event* trackEvent,
   for (unsigned int ntrack = 0; ntrack < trackEvent->getNumTracks(); ntrack++)
   {
     Storage::Track* track = trackEvent->getTrack(ntrack);
+
 
     // Find the nearest cluster
     double nearestDist = 0;
@@ -34,7 +37,9 @@ void TrackMatcher::matchTracksToClusters(Storage::Event* trackEvent,
       //const double dist = sqrt(pow(x / errx, 2) + pow(y / erry, 2));
       
       // bilbao@cern.ch: circular distance to calculate the track-cluster distance
-      const double dist = sqrt(pow(x, 2) + pow(y, 2)); 
+      // fdibello@cern.ch: definition of the distance that takes in account the rectangulatr shape of pixel of the DUT
+      const double dist = sqrt(pow(x/clustersSensor->getPitchX(), 2) + pow(y/clustersSensor->getPitchY(), 2)); 
+
 
       if (!match || dist < nearestDist)
       {
@@ -70,13 +75,16 @@ void TrackMatcher::matchClustersToTracks(Storage::Event* trackEvent,
     {
       Storage::Track* track = trackEvent->getTrack(ntrack);
 
+     //fdibello@cern.ch
+    // Mechanics::Sensor* sensor = device->getSensor(clustersPlane);
+
       double x = 0, y = 0, errx = 0, erry = 0;
       trackClusterDistance(track, cluster, clustersSensor, x, y, errx, erry);
 
       //const double dist = sqrt(pow(x / errx, 2) + pow(y / erry, 2));
 
       // bilbao@cern.ch: cone distance to calculate the track-cluster distance
-      const double dist = sqrt(pow(x, 2) + pow(y, 2)); 
+      const double dist = sqrt(pow(x/clustersSensor->getPitchX(), 2) + pow(y/clustersSensor->getPitchY(), 2)); 
 
       if (!match || dist < nearestDist)
       {

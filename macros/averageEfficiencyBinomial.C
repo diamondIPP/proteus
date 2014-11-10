@@ -1,7 +1,7 @@
-void averageEfficiency(char *name)
+void averageEfficiencyBinomial()
 {
-  TFile *f = new TFile(name);
-  cout << "Input file =  " << name << endl;
+  TFile *f = new TFile("effResults.root");
+ // cout << "Input file =  " << name << endl;
   TEfficiency *eff = (TEfficiency*)f->Get("Efficiency/DUTPlane0MapC");
 
   TH2F *box = new TH2F("kip", NULL, 2,-3000, 0, 2, 0, 2500);
@@ -58,7 +58,7 @@ void averageEfficiency(char *name)
   }
   
   if (totalEntries!=0){
-    eGlob= (1/ totalEntries )*TMath::Sqrt( av*(1- av/ totalEntries ) );
+    eGlob= (1/ totalEntries )*TMath::Sqrt( av*(1- av )*totalEntries);
   
   }
   
