@@ -15,6 +15,7 @@ namespace Mechanics {
 void Sensor::print()
 {
   cout << "\nSENSOR:\n"
+       << "  Name:" << _name << "\n"
        << "  Pos: " << getOffX() << " , "
                     << getOffY() << " , "
                     << getOffZ() << "\n"
@@ -277,23 +278,46 @@ bool Sensor::sort(const Sensor* s1, const Sensor* s2)
   return (s1->getOffZ() < s2->getOffZ());
 }
 
-Sensor::Sensor(unsigned int numX, unsigned int numY, double pitchX, double pitchY,
-               double depth, Device* device, std::string name, bool digi, double xox0,
-               double offX, double offY, double offZ,
-               double rotX, double rotY, double rotZ) :
-  _numX(numX), _numY(numY), _pitchX(pitchX), _pitchY(pitchY),
-  _depth(depth), _device(device), _name(name), _digi(digi), _xox0(xox0),
-  _offX(offX), _offY(offY), _offZ(offZ),
-  _rotX(rotX), _rotY(rotY), _rotZ(rotZ),
-  _sensitiveX(pitchX * numX), _sensitiveY(pitchY * numY), _numNoisyPixels(0)
+Sensor::Sensor(unsigned int numX,
+	       unsigned int numY,
+	       double pitchX,
+	       double pitchY,
+               double depth,
+	       Device* device,
+	       std::string name,
+	       bool digi,
+	       double xox0,
+               double offX,
+	       double offY,
+	       double offZ,
+               double rotX,
+	       double rotY,
+	       double rotZ) :
+  _numX(numX),
+  _numY(numY),
+  _pitchX(pitchX),
+  _pitchY(pitchY),
+  _depth(depth),
+  _device(device),
+  _name(name),
+  _digi(digi),
+  _xox0(xox0),
+  _offX(offX),
+  _offY(offY),
+  _offZ(offZ),
+  _rotX(rotX),
+  _rotY(rotY),
+  _rotZ(rotZ),
+  _sensitiveX(pitchX * numX),
+  _sensitiveY(pitchY * numY),
+  _numNoisyPixels(0)
 {
   assert(device && "Sensor: need to link the sensor back to a device.");
-
+  
   calculateRotation();
-
+  
   _noisyPixels = new bool*[_numX];
-  for (unsigned int x = 0; x < _numX; x++)
-  {
+  for (unsigned int x=0; x<_numX; x++){
     bool* row = new bool[_numY];
     _noisyPixels[x] = row;
   }

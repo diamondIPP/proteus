@@ -70,6 +70,7 @@ void InputArgs::usage()
 
   cout << "Additional options:\n";
   cout << "  -b  " << setw(w2) << "--noBar" << " : do not print the progress bar\n";
+  cout << "  -v  " << setw(w2) << "--verbose" << " : set verbosity level\n";
   cout << endl;
 
   cout << right;
@@ -85,7 +86,7 @@ void InputArgs::parseArgs(int* argc, char** argv)
 
   if (*argc > 1)
   {
-    for ( int i = 1; i < *argc; i++ )
+    for (int i=1; i<*argc; i++ )
     {
       arg = argv[i];
 
@@ -161,6 +162,11 @@ void InputArgs::parseArgs(int* argc, char** argv)
         _noBar = true;
         cout << setw(w) << "  noBar" << " : true" << endl;
       }
+      else if ( (!arg.compare("-v") || !arg.compare("--printLevel")) )
+	{
+	  _printLevel = atoi( argv[++i] );
+	  cout << setw(w) << "  printLevel" << " : " << _printLevel << endl;
+	}
       else if ( (!arg.compare("-h")) || !arg.compare("--help"))
       {
         usage();

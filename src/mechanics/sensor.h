@@ -18,6 +18,7 @@ private:
   const double _depth;
   const Device* _device;
   std::string _name;
+  bool _digi;
   const double _xox0;
   double _offX;
   double _offY;
@@ -29,7 +30,6 @@ private:
   const double _sensitiveY;
   unsigned int _numNoisyPixels;
   bool** _noisyPixels;
-  bool _digi;
 
   double _rotation[3][3]; // The rotation matrix for the plane
   double _unRotate[3][3]; // Invert the rotation

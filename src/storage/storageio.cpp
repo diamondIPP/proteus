@@ -355,7 +355,7 @@ StorageIO::StorageIO(const char* filePath, Mode fileMode, unsigned int numPlanes
         hits->SetBranchAddress("PixY", hitPixY, &bHitPixY);
         hits->SetBranchAddress("Value", hitValue, &bHitValue);
         hits->SetBranchAddress("Timing", hitTiming, &bHitTiming);
-        hits->SetBranchAddress("InCluster", hitInCluster, &bHitInCluster);
+        hits->SetBranchAddress("HitInCluster", hitInCluster, &bHitInCluster);
         hits->SetBranchAddress("PosX", hitPosX, &bHitPosX);
         hits->SetBranchAddress("PosY", hitPosY, &bHitPosY);
         hits->SetBranchAddress("PosZ", hitPosZ, &bHitPosZ);

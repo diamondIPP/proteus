@@ -74,8 +74,8 @@ ExampleLooper::ExampleLooper(Mechanics::Device* refDevice,
   Looper(refInput, dutInput, startEvent, numEvents, eventSkip),
   _refDevice(refDevice),
   _dutDevice(dutDevice),
-  _refOutput(refOutput),
-  _dutOutput(dutOutput),
+  //  _refOutput(refOutput),
+  //_dutOutput(dutOutput),
   _clusterMaker(clusterMaker),
   _trackMaker(trackMaker)
 {

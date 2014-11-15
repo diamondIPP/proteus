@@ -1,4 +1,15 @@
 2014-11-15 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
+	* fix some compilation warnings:
+  	  - unused private member '_dummyParameter' in analyzers/examplesingleanalyzer and analyzers/exampledulanalyzer
+	  - unused private member '_refOutput' and '_dutOutput' in loopers/examplelooper
+	  - initialization order in mechanics/sensor constructor
+	* change _name from const char* to std::string in mechanics/device class
+	* update in StorageIO constructor "HitInCluster" branch name
+	* add ConfigParser::print() function
+	* add printLevel option to inputargs
+	* tag JudithFEI4-00-00-03
+
+2014-11-15 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
 	* tag JudithFEI4-00-00-02
 
 2014-11-09 F.A. Di Bello <fdibello@cern.ch>

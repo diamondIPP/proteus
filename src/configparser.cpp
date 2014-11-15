@@ -6,6 +6,7 @@
 #include <fstream>
 #include <vector>
 #include <iostream>
+#include <iomanip>
 
 using std::string;
 using std::cout;
@@ -131,9 +132,21 @@ void ConfigParser::parseContents(std::ifstream& input)
   }
 }
 
-void print()
-{
-  // TODO
+void ConfigParser::print(){
+  std::cout << "[ConfigParser::print()]" << std::endl;
+  std::cout << "  - filePath = " << _filePath << std::endl;
+  std::cout << "  - nRows = " << _numRows    
+	    << ". Showing all lines according to format <header,key,value,isHeader>"
+	    << std::endl;
+  const int w = _parsedContents.size() < 100 ? 2 : 3;
+  std::vector<Row>::const_iterator cit; int cnt=0;
+  for(cit=_parsedContents.begin(); cit!=_parsedContents.end(); ++cit, cnt++){
+    Row row = (*cit);
+    std::string blank = row.isHeader ? "" : "     ";
+    std::cout  << "     [" << std::setw(w) << cnt << "] " << blank << " <"
+	       << row.header << " , " << row.key  << " , " << row.value
+	       << " , " << row.isHeader << ">" << std::endl;
+  }  
 }
 
 unsigned int ConfigParser::getNumRows() const { return _numRows; }

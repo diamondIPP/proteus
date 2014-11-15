@@ -48,9 +48,9 @@ ExampleDualAnalyzer::ExampleDualAnalyzer(const Mechanics::Device* refDevice,
                                          int dummyParameter,
                                          unsigned int histBins) :
   // Base class is initialized here and manages directory / device
-  DualAnalyzer(refDevice, dutDevice, dir, suffix),
+  DualAnalyzer(refDevice, dutDevice, dir, suffix)
   // Initialize processing parameters here
-  _dummyParameter(dummyParameter)
+  //_dummyParameter(dummyParameter)
 {
   assert(refDevice && dutDevice && "Analyzer: can't initialize with null device");
 

@@ -15,8 +15,8 @@ class ExampleLooper : public Looper
 private:
   Mechanics::Device* _refDevice;
   Mechanics::Device* _dutDevice;
-  Storage::StorageIO* _refOutput;
-  Storage::StorageIO* _dutOutput;
+  //  Storage::StorageIO* _refOutput;
+  //Storage::StorageIO* _dutOutput;
   Processors::ClusterMaker* _clusterMaker;
   Processors::TrackMaker* _trackMaker;
 

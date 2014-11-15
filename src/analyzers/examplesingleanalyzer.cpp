@@ -46,9 +46,9 @@ ExampleSingleAnalyzer::ExampleSingleAnalyzer(const Mechanics::Device* device,
                                              int dummyParameter,
                                              unsigned int histBins) :
   // Base class is initialized here and manages directory / device
-  SingleAnalyzer(device, dir, suffix),
+  SingleAnalyzer(device, dir, suffix)
   // Initialize processing parameters here
-  _dummyParameter(dummyParameter)
+  //_dummyParameter(dummyParameter)
 {
   assert(device && "Analyzer: can't initialize with null device");
 

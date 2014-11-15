@@ -18,6 +18,7 @@ private:
   ULong64_t _numEvents;
   ULong64_t _eventOffset;
   bool _noBar;
+  int _printLevel;
 
 public:
   InputArgs();

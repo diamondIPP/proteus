@@ -21,7 +21,7 @@ private:
    std::vector<TH1D*> _dummySensorHist;
 
    // Parameters used during event processing
-   int _dummyParameter;
+   //int _dummyParameter;
 
 public:
   ExampleDualAnalyzer(const Mechanics::Device* refDevice,

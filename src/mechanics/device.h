@@ -16,7 +16,7 @@ class Alignment;
 class Device
 {
 private:
-  const char* _name;
+  std::string _name;
   double _clockRate;
   unsigned int _readOutWindow;
   std::string _spaceUnit;
