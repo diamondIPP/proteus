@@ -1,3 +1,5 @@
+2014-11-15 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
+	* tag JudithFEI4-00-00-02
 
 2014-11-09 F.A. Di Bello <fdibello@cern.ch>
         * Only the closest cluster w.r.t. the track is taken into account in
@@ -25,7 +27,7 @@ the active area on the DUT to be properly include in the code.
 
 2014-10-02 J. Bilbao de Mendizabal <bilbao@cern.ch>
 	* New plot of reconstructed matched tracks position on DUT projection
-on X and Y. 
+on X and Y.
 
 2014-10-02 J. Bilbao de Mendizabal <bilbao@cern.ch>
 	* New extra step on DUT alignment using the 1D residuals distributions
@@ -34,7 +36,7 @@ correction and only one DUT is present the loop is stoped.
 
 2014-09-26 J. Bilbao de Mendizabal <bilbao@cern.ch>
         * implementation of the pixel timing vs cluster size and hit-ToT
-included now in Cluster Info  
+included now in Cluster Info
 
 
 2014-09-23 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
