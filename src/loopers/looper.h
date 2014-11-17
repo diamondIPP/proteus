@@ -36,6 +36,8 @@ protected:
 
   void progressBar(ULong64_t nevent);
 
+  virtual void print(){}
+
 public:
   static bool noBar;
 

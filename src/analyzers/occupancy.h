@@ -26,7 +26,9 @@ private:
   TH1D* _occDistribution;
 
 public:
-  ULong64_t totalHitOccupancy;
+  /* Total number of hits in Device. For the telescope,
+     this is the sum of hits in all planes. */
+  ULong64_t totalHitOccupancy; 
 
   Occupancy(const Mechanics::Device* device,
             TDirectory* dir,

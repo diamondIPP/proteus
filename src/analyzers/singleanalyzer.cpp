@@ -25,7 +25,7 @@ void SingleAnalyzer::eventDeivceAgree(const Storage::Event* event)
 TDirectory* SingleAnalyzer::makeGetDirectory(const char* dirName)
 {
   TDirectory* newDir = 0;
-  if (_dir)
+  if(_dir)
   {
     newDir = _dir->GetDirectory(dirName);
     if (!newDir) newDir = _dir->mkdir(dirName);
@@ -57,7 +57,8 @@ void SingleAnalyzer::addCut(const HitCut* cut)
   _numHitCuts++;
 }
 
-SingleAnalyzer::SingleAnalyzer(const Mechanics::Device* device, TDirectory* dir,
+SingleAnalyzer::SingleAnalyzer(const Mechanics::Device* device,
+			       TDirectory* dir,
                                const char* nameSuffix) :
   _device(device),
   _dir(dir),

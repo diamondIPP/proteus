@@ -50,7 +50,7 @@ void NoiseMask::parseLine(std::stringstream& line, unsigned int& nsens,
 void NoiseMask::writeMask()
 {
   std::fstream file;
-  file.open(_fileName, std::ios_base::out);
+  file.open(_fileName.c_str(), std::ios_base::out);
 
   if (!file.is_open())
     throw "NosieMask: unable to open file for writing";
@@ -70,7 +70,7 @@ void NoiseMask::writeMask()
 void NoiseMask::readMask()
 {
   std::fstream file;
-  file.open(_fileName, std::ios_base::in);
+  file.open(_fileName.c_str(), std::ios_base::in);
 
   if (!file.is_open())
   {
@@ -107,7 +107,7 @@ std::vector<bool**> NoiseMask::getMaskArrays() const {
   return masks;
 }
 
-const char* NoiseMask::getFileName() { return _fileName; }
+  const char* NoiseMask::getFileName() { return _fileName.c_str(); }
 
 NoiseMask::NoiseMask(const char* fileName, Device* device) :
   _fileName(fileName), _device(device)

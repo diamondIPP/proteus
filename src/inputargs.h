@@ -38,6 +38,7 @@ public:
   ULong64_t getNumEvents() const;
   ULong64_t getEventOffset() const;
   bool getNoBar() const;
+  int getPrintLevel() const;
 };
 
 #endif // INPUTARGS_H

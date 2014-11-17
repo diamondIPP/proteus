@@ -25,7 +25,7 @@ private:
   unsigned int _numPixXBroad;
   double _binsPerPixBroad;
   bool _displayFits;
-  bool _relaxation;
+  double _relaxation;
 
 public:
   FineAlignDut(/* Use if you need mechanics (noise mask, pixel arrangement ...) */

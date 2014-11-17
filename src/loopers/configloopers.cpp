@@ -106,12 +106,12 @@ void configCoarseAlign(const ConfigParser& config, CoarseAlignDut& coarseAlign)
 
 void configNoiseScan(const ConfigParser& config, NoiseScan& noiseScan)
 {
-  for (unsigned int i = 0; i < config.getNumRows(); i++)
+  for (unsigned int i=0; i<config.getNumRows(); i++)
   {
     const ConfigParser::Row* row = config.getRow(i);
 
-    if (row->isHeader) continue;
-    if (row->header.compare("Noise Scan")) continue;
+    if(row->isHeader) continue;
+    if(row->header.compare("Noise Scan")) continue;
 
     if (!row->key.compare("max factor"))
       noiseScan.setMaxFactor(ConfigParser::valueToNumerical(row->value));

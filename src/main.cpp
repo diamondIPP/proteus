@@ -445,9 +445,12 @@ void analysis(const char* inputName,
   }
 }
 
-void noiseScan(const char* inputName, const char* deviceCfg,
+void noiseScan(const char* inputName,
+	       const char* deviceCfg,
                const char* tbCfg,
-               ULong64_t startEvent, ULong64_t numEvents)
+               ULong64_t startEvent,
+	       ULong64_t numEvents,
+	       int printLevel)
 {
   try
   {
@@ -460,6 +463,8 @@ void noiseScan(const char* inputName, const char* deviceCfg,
 
     Loopers::NoiseScan looper(device, &input, startEvent, numEvents);
     Loopers::configNoiseScan(runConfig, looper);
+    if(printLevel>0) looper.print();
+    
     looper.loop();
 
     delete device;
@@ -532,7 +537,8 @@ int main(int argc, char** argv)
                 inArgs.getCfgRef().c_str(),
                 inArgs.getCfgTestbeam().c_str(),
                 inArgs.getEventOffset(),
-                inArgs.getNumEvents() );
+                inArgs.getNumEvents(),
+		inArgs.getPrintLevel());
   }
   else if ( !inArgs.getCommand().compare("applyMask") )
   {

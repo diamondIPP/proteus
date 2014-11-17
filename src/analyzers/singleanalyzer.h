@@ -21,7 +21,7 @@ class SingleAnalyzer
 protected:
   const Mechanics::Device* _device;
   TDirectory* _dir;
-  const char* _nameSuffix;
+  std::string _nameSuffix;
   bool _postProcessed;
 
   std::vector<const EventCut*> _eventCuts;
@@ -36,7 +36,8 @@ protected:
   std::vector<const HitCut*> _hitCuts;
   unsigned int _numHitCuts;
 
-  SingleAnalyzer(const Mechanics::Device* device, TDirectory* dir = 0,
+  SingleAnalyzer(const Mechanics::Device* device,
+		 TDirectory* dir = 0,
                  const char* nameSuffix = "");
 
   void validSensor(unsigned int nsensor);
@@ -56,6 +57,6 @@ public:
   void addCut(const HitCut* cut);
 };
 
-}
+} // end of namespace
 
 #endif // SINGLEANALYZER_H

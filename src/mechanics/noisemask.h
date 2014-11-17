@@ -17,11 +17,13 @@ class Device;
 class NoiseMask
 {
 private:
-  const char* _fileName;
+  std::string _fileName;
   Device* _device;
 
-  void parseLine(std::stringstream& line, unsigned int& nsens,
-                 unsigned int& x, unsigned int& y);
+  void parseLine(std::stringstream& line,
+		 unsigned int& nsens,
+                 unsigned int& x,
+		 unsigned int& y);
 
 public:
   NoiseMask(const char* fileName, Device* device);

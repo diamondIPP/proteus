@@ -165,7 +165,6 @@ void InputArgs::parseArgs(int* argc, char** argv)
       else if ( (!arg.compare("-v") || !arg.compare("--printLevel")) )
 	{
 	  _printLevel = atoi( argv[++i] );
-	  cout << setw(w) << "  printLevel" << " : " << _printLevel << endl;
 	}
       else if ( (!arg.compare("-h")) || !arg.compare("--help"))
       {
@@ -179,6 +178,7 @@ void InputArgs::parseArgs(int* argc, char** argv)
     }
   }
 
+  cout << setw(w) << "  printLevel" << " : " << _printLevel << endl;
   cout << endl; // Space before the next cout
   cout << right;
 }
@@ -195,3 +195,4 @@ string InputArgs::getCfgTestbeam() const { return _cfgTestbeam; }
 ULong64_t InputArgs::getNumEvents() const { return _numEvents; }
 ULong64_t InputArgs::getEventOffset() const { return _eventOffset; }
 bool InputArgs::getNoBar() const { return _noBar; }
+int InputArgs::getPrintLevel() const { return _printLevel; }

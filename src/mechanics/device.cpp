@@ -25,7 +25,7 @@ namespace Mechanics{
   void Device::print() const
   {
     cout << "\nDEVICE:\n"
-	 << "  Name: " << _name << "\n"
+	 << "  Name: '" << _name << "'\n"
 	 << "  Clock rate: " << _clockRate << "\n"
 	 << "  Read out window: " << _readOutWindow << "\n"
 	 << "  Sensors: " << _numSensors << endl;
