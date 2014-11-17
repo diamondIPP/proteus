@@ -1,4 +1,12 @@
 2014-11-15 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
+	* add NoiseScan::print()
+	* change _filename from const char* to std::string in NoiseMask class
+	* change _nameSuffix (is it used??) from const char* to std::string in singleanalyzer class
+	* change type of _relaxation member from bool to double in finealigndut
+	* change "max factor" from 10 to 3 in configuration of "Noise Scan" looper (global.cfg)
+	* tag JudithFEI4-00-00-04
+
+2014-11-15 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
 	* fix some compilation warnings:
   	  - unused private member '_dummyParameter' in analyzers/examplesingleanalyzer and analyzers/exampledulanalyzer
 	  - unused private member '_refOutput' and '_dutOutput' in loopers/examplelooper
