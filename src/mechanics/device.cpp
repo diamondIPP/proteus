@@ -21,19 +21,64 @@ using std::cout;
 using std::endl;
 
 namespace Mechanics{
-  
+
+  //=========================================================
+  Device::Device(const char* name,
+		 const char* alignmentName,
+		 const char* noiseMaskName,
+		 double clockRate,
+		 unsigned int readOutWindow,
+		 const char* spaceUnit,
+		 const char* timeUnit) :
+    _name(name),
+    _clockRate(clockRate),
+    _readOutWindow(readOutWindow),
+    _spaceUnit(spaceUnit),
+    _timeUnit(timeUnit),
+    _beamSlopeX(0),
+    _beamSlopeY(0),
+    _timeStart(0),
+    _timeEnd(0),
+    _syncRatio(0),
+    _numSensors(0),
+    _noiseMask(0),
+    _alignment(0)
+  {
+    if (strlen(alignmentName))
+      _alignment = new Alignment(alignmentName, this);
+    
+    if (strlen(noiseMaskName))
+      _noiseMask =  new NoiseMask(noiseMaskName, this);
+    
+    std::replace(_timeUnit.begin(), _timeUnit.end(), '\\', '#');
+    std::replace(_spaceUnit.begin(), _spaceUnit.end(), '\\', '#');
+  }
+
+  //=========================================================
+  Device::~Device(){
+    for(unsigned int nsensor=0; nsensor<_numSensors; nsensor++)
+      delete _sensors.at(nsensor);
+    if (_noiseMask) delete _noiseMask;
+    if (_alignment) delete _alignment;
+  }
+
+  //=========================================================
   void Device::print() const
   {
     cout << "\nDEVICE:\n"
 	 << "  Name: '" << _name << "'\n"
 	 << "  Clock rate: " << _clockRate << "\n"
 	 << "  Read out window: " << _readOutWindow << "\n"
-	 << "  Sensors: " << _numSensors << endl;
+	 << "  Sensors: " << _numSensors << "\n"
+	 << "  Alignment: " << _alignment->getFileName() << "\n"
+	 << "  Noisemask: " << _noiseMask->getFileName() << endl;
+    
     
     for (unsigned int nsens=0; nsens<getNumSensors(); nsens++)
       getSensor(nsens)->print();
   }
-  
+
+  //=========================================================
   void Device::addSensor(Sensor* sensor)
   {
     assert(sensor && "Device: can't add a null sensor");
@@ -89,42 +134,6 @@ namespace Mechanics{
   Alignment* Device::getAlignment() { return _alignment; }
   double Device::getSyncRatio() const { return _syncRatio; }
   
-  Device::Device(const char* name,
-		 const char* alignmentName,
-		 const char* noiseMaskName,
-		 double clockRate,
-		 unsigned int readOutWindow,
-		 const char* spaceUnit,
-		 const char* timeUnit) :
-    _name(name),
-    _clockRate(clockRate),
-    _readOutWindow(readOutWindow),
-    _spaceUnit(spaceUnit),
-    _timeUnit(timeUnit),
-    _beamSlopeX(0),
-    _beamSlopeY(0),
-    _timeStart(0),
-    _timeEnd(0),
-    _syncRatio(0),
-    _numSensors(0),
-    _noiseMask(0),
-    _alignment(0)
-  {
-    if (strlen(alignmentName))
-      _alignment = new Alignment(alignmentName, this);
-    
-    if (strlen(noiseMaskName))
-      _noiseMask =  new NoiseMask(noiseMaskName, this);
-    
-    std::replace(_timeUnit.begin(), _timeUnit.end(), '\\', '#');
-    std::replace(_spaceUnit.begin(), _spaceUnit.end(), '\\', '#');
-  }
   
-  Device::~Device(){
-    for (unsigned int nsensor = 0; nsensor < _numSensors; nsensor++)
-      delete _sensors.at(nsensor);
-    if (_noiseMask) delete _noiseMask;
-    if (_alignment) delete _alignment;
-  }
   
 } // end of namespace Mechanics

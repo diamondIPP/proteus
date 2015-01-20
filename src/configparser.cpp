@@ -12,6 +12,106 @@ using std::string;
 using std::cout;
 using std::endl;
 
+//=========================================================
+ConfigParser::ConfigParser(const char* filePath) :
+  _filePath(filePath),
+  _numRows(0)
+{
+  _inputFile.open(_filePath);
+  
+  if (!_inputFile.is_open())
+    throw "ConfigParser: input file failed to open";
+  
+  _currentHeader = "";
+  _currentValue  = "";
+  _currentKey    = "";
+  _lineBuffer    = "";
+  
+  parseContents(_inputFile);
+  
+  _inputFile.close();
+}
+
+//=========================================================
+void ConfigParser::print(){
+  std::cout << "[ConfigParser::print()]" << std::endl;
+  std::cout << "  - filePath = " << _filePath << std::endl;
+  std::cout << "  - nRows = " << _numRows    
+	    << ". Showing all lines according to format <header,key,value,isHeader>"
+	    << std::endl;
+  const int w = _parsedContents.size() < 100 ? 2 : 3;
+  std::vector<Row>::const_iterator cit; int cnt=0;
+  for(cit=_parsedContents.begin(); cit!=_parsedContents.end(); ++cit, cnt++){
+    Row row = (*cit);
+    std::string blank = row.isHeader ? "" : "     ";
+    std::cout  << "     [" << std::setw(w) << cnt << "] " << blank << " <"
+	       << row.header << " , " << row.key  << " , " << row.value
+	       << " , " << row.isHeader << ">" << std::endl;
+  }  
+}
+
+//=========================================================
+unsigned int ConfigParser::getNumRows() const {
+  return _numRows;
+}
+
+//=========================================================
+const ConfigParser::Row* ConfigParser::getRow(unsigned int n) const {
+  assert(n < _numRows &&
+         "ConfigParser: row index outside range");
+  return &(_parsedContents.at(n));
+}
+
+//=========================================================
+std::vector<ConfigParser::Row> ConfigParser::getParsedConents() const {
+  return _parsedContents;
+}
+
+//=========================================================
+const char* ConfigParser::getFilePath() const {
+  return _filePath;
+}
+
+//=========================================================
+double ConfigParser::valueToNumerical(const string& value)
+{
+  std::stringstream ss;
+  ss.str(value);
+  double num = 0;
+  ss >> num;
+  return num;
+}
+
+//=========================================================
+bool ConfigParser::valueToLogical(const string& value)
+{
+  if (!value.compare("true") || 
+      !value.compare("on") || 
+      !value.compare("yes") ||
+      !value.compare("1"))
+    return true;
+  else
+    return false;
+}
+
+//=========================================================
+void ConfigParser::valueToVec(const string& value, std::vector<double>& vec)
+{
+  std::stringstream stream;
+  stream.str(value);
+  string buffer;
+  while (stream.good())
+  {
+    getline(stream, buffer, ',');
+    std::stringstream ss;
+    ss.str(buffer);
+    double num = 0;
+    ss >> num;
+    vec.push_back(num);
+  }
+}
+
+//=========================================================
 bool ConfigParser::checkRange(size_t start, size_t end)
 {
   if (start == string::npos || end == string::npos || start > end)
@@ -20,6 +120,7 @@ bool ConfigParser::checkRange(size_t start, size_t end)
     return true;
 }
 
+//=========================================================
 int ConfigParser::readNextLine(std::ifstream& intput)
 {
   // Search for a non commented line
@@ -48,6 +149,7 @@ int ConfigParser::readNextLine(std::ifstream& intput)
   return -1;
 }
 
+//=========================================================
 int ConfigParser::parseForHeader()
 {
   size_t start = _lineBuffer.find_first_of('[');
@@ -60,6 +162,7 @@ int ConfigParser::parseForHeader()
   return 0;
 }
 
+//=========================================================
 int ConfigParser::parseForKey()
 {
   size_t separator = _lineBuffer.find_first_of(':');
@@ -88,14 +191,14 @@ int ConfigParser::parseForKey()
 
   return 0;
 }
-
+//=========================================================
 int ConfigParser::parseForLink()
 {
   if (parseForKey()) return -1;
   if (_currentKey.compare("LINK")) return -1;
   return 0;
 }
-
+//=========================================================
 void ConfigParser::parseContents(std::ifstream& input)
 {
   while (!readNextLine(input))
@@ -130,90 +233,4 @@ void ConfigParser::parseContents(std::ifstream& input)
       _numRows++;
     }
   }
-}
-
-void ConfigParser::print(){
-  std::cout << "[ConfigParser::print()]" << std::endl;
-  std::cout << "  - filePath = " << _filePath << std::endl;
-  std::cout << "  - nRows = " << _numRows    
-	    << ". Showing all lines according to format <header,key,value,isHeader>"
-	    << std::endl;
-  const int w = _parsedContents.size() < 100 ? 2 : 3;
-  std::vector<Row>::const_iterator cit; int cnt=0;
-  for(cit=_parsedContents.begin(); cit!=_parsedContents.end(); ++cit, cnt++){
-    Row row = (*cit);
-    std::string blank = row.isHeader ? "" : "     ";
-    std::cout  << "     [" << std::setw(w) << cnt << "] " << blank << " <"
-	       << row.header << " , " << row.key  << " , " << row.value
-	       << " , " << row.isHeader << ">" << std::endl;
-  }  
-}
-
-unsigned int ConfigParser::getNumRows() const { return _numRows; }
-
-const ConfigParser::Row* ConfigParser::getRow(unsigned int n) const
-{
-  assert(n < _numRows &&
-         "ConfigParser: row index outside range");
-  return &(_parsedContents.at(n));
-}
-
-std::vector<ConfigParser::Row> ConfigParser::getParsedConents() const
-{
-  return _parsedContents;
-}
-
-const char* ConfigParser::getFilePath() const { return _filePath; }
-
-double ConfigParser::valueToNumerical(const string& value)
-{
-  std::stringstream ss;
-  ss.str(value);
-  double num = 0;
-  ss >> num;
-  return num;
-}
-
-bool ConfigParser::valueToLogical(const string& value)
-{
-  if (!value.compare("true") || 
-      !value.compare("on") || 
-      !value.compare("yes") ||
-      !value.compare("1"))
-    return true;
-  else
-    return false;
-}
-
-void ConfigParser::valueToVec(const string& value, std::vector<double>& vec)
-{
-  std::stringstream stream;
-  stream.str(value);
-  string buffer;
-  while (stream.good())
-  {
-    getline(stream, buffer, ',');
-    std::stringstream ss;
-    ss.str(buffer);
-    double num = 0;
-    ss >> num;
-    vec.push_back(num);
-  }
-}
-
-ConfigParser::ConfigParser(const char* filePath) :
-  _filePath(filePath), _numRows(0)
-{
-  _inputFile.open(_filePath);
-
-  if (!_inputFile.is_open()) throw "ConfigParser: input file failed to open";
-
-  _currentHeader = "";
-  _currentValue  = "";
-  _currentKey    = "";
-  _lineBuffer    = "";
-
-  parseContents(_inputFile);
-
-  _inputFile.close();
 }

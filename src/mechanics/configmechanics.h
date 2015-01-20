@@ -6,13 +6,14 @@
 class ConfigParser;
 
 namespace Mechanics {
+  
+  class Device;
+  class Sensor;
+  
+  Device* generateDevice(const ConfigParser& config);
 
-class Device;
-class Sensor;
+  void generateSensors(const ConfigParser& config, Device* device);  
 
-Device* generateDevice(const ConfigParser& config);
-void generateSensors(const ConfigParser& config, Device* device);
-
-}
+} // end of namespace
 
 #endif // CONFIGMECHANICS_H

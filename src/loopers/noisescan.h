@@ -12,15 +12,6 @@ namespace Loopers {
   
   class NoiseScan : public Looper
   {
-  private:
-    Mechanics::Device* _refDevice;
-    double _maxFactor;
-    double _maxOccupancy;
-    int _bottomLimitX;
-    int _upperLimitX;
-    int _bottomLimitY;
-    int _upperLimitY;
-    
   public:
     NoiseScan(/* Use if you need mechanics (noise mask, pixel arrangement ...) */
 	      Mechanics::Device* refDevice,
@@ -37,9 +28,17 @@ namespace Loopers {
     void setBottomLimitX(unsigned int bottomLimitX);
     void setUpperLimitX(unsigned int upperLimitX);
     void setBottomLimitY(unsigned int bottomLimitY);
-    void setUpperLimitY(unsigned int upperLimitY);
-    
+    void setUpperLimitY(unsigned int upperLimitY);    
     void print();
+
+  private:
+    Mechanics::Device* _refDevice;
+    double _maxFactor;
+    double _maxOccupancy;
+    int _bottomLimitX;
+    int _upperLimitX;
+    int _bottomLimitY;
+    int _upperLimitY;   
 
   }; // end of class
   

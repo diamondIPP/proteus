@@ -10,31 +10,32 @@ namespace Processors { class TrackMaker; }
 
 namespace Loopers {
 
-class CoarseAlign : public Looper
-{
-private:
-  Mechanics::Device* _refDevice;
-  Processors::ClusterMaker* _clusterMaker;
+  class CoarseAlign : public Looper {
+  public:
+    CoarseAlign(/* Use if you need mechanics (noise mask, pixel arrangement ...) */
+		Mechanics::Device* refDevice,
+		/* Use if the looper needs to make clusters and/or tracks... */
+		Processors::ClusterMaker* clusterMaker,
+		/* These arguments are needed to be passed to the base looper class */
+		Storage::StorageIO* refInput,
+		ULong64_t startEvent = 0,
+		ULong64_t numEvents = 0,
+		unsigned int eventSkip = 1);
 
-  bool _displayFits; // Choose whether or not to display the fits
+    void loop();
+    
+    void setCorrPeakWidth(double value);
+    void setDisplayFits(bool value);
 
-public:
-  CoarseAlign(/* Use if you need mechanics (noise mask, pixel arrangement ...) */
-              Mechanics::Device* refDevice,
-              /* Use if the looper needs to make clusters and/or tracks... */
-              Processors::ClusterMaker* clusterMaker,
-              /* These arguments are needed to be passed to the base looper class */
-              Storage::StorageIO* refInput,
-              ULong64_t startEvent = 0,
-              ULong64_t numEvents = 0,
-              unsigned int eventSkip = 1);
+    void print();
 
-  void loop();
+  private:
+    Mechanics::Device* _refDevice;
+    Processors::ClusterMaker* _clusterMaker;    
+    bool _displayFits; // Choose whether or not to display the fits
+   
+  }; // end of class
 
-  void setCorrPeakWidth(double value);
-  void setDisplayFits(bool value);
-};
+} // end of namespace 
 
-}
-
-#endif
+#endif // COARSEALIGN_H

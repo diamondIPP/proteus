@@ -8,25 +8,27 @@ namespace Mechanics { class Device; }
 namespace Processors { class TrackMatcher; }
 
 namespace Loopers {
+  
+  class AnalysisDut : public Looper {
+  public:
+    AnalysisDut(/* These arguments are needed to be passed to the base looper class */
+		Storage::StorageIO* refInput,
+		Storage::StorageIO* dutInput,
+		/* Use if the looper needs to make clusters and/or tracks... */
+		Processors::TrackMatcher* trackMatcher,
+		ULong64_t startEvent = 0,
+		ULong64_t numEvents = 0,
+		unsigned int eventSkip = 1);
+    
+    void loop();
+    
+    void print();
 
-class AnalysisDut : public Looper
-{
-private:
-  Processors::TrackMatcher* _trackMatcher;
+  private:
+    Processors::TrackMatcher* _trackMatcher;
 
-public:
-  AnalysisDut(/* These arguments are needed to be passed to the base looper class */
-              Storage::StorageIO* refInput,
-              Storage::StorageIO* dutInput,
-              /* Use if the looper needs to make clusters and/or tracks... */
-              Processors::TrackMatcher* trackMatcher,
-              ULong64_t startEvent = 0,
-              ULong64_t numEvents = 0,
-              unsigned int eventSkip = 1);
+  }; // end of class
+  
+} // end of namespace
 
-  void loop();
-};
-
-}
-
-#endif
+#endif // ANALYSISDUT_H

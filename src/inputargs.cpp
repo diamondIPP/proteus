@@ -1,12 +1,14 @@
 #include "inputargs.h"
 
-#include <string>
 #include <stdlib.h>
 #include <iostream>
 #include <iomanip>
+#include <sstream>
+#include <algorithm>
 
 using namespace std;
 
+//=========================================================
 InputArgs::InputArgs() :
   _inFileRef(""),
   _outFileRef(""),
@@ -19,9 +21,19 @@ InputArgs::InputArgs() :
   _command(""),
   _numEvents(0),
   _eventOffset(0),
-  _noBar(false)
-{ }
+  _noBar(false),
+  _printLevel(0)
+{
+  _vruns.reserve(1000);
+  _vruns.clear();
+}
 
+//=========================================================
+InputArgs::~InputArgs(){
+  _vruns.clear();
+}
+
+//=========================================================
 void InputArgs::usage()
 {
   cout << left;
@@ -71,116 +83,171 @@ void InputArgs::usage()
   cout << "Additional options:\n";
   cout << "  -b  " << setw(w2) << "--noBar" << " : do not print the progress bar\n";
   cout << "  -v  " << setw(w2) << "--verbose" << " : set verbosity level\n";
+  cout << "      " << setw(w2) << "--runs" << " : run(s) being analyzed (single run or list). This option can be useful\n";
+  cout << "      " << setw(w2) << "" << "   for merged-runs, or when the run-number is not contained in the input file.\n";
+  cout << "      " << setw(w2) << "" << "   Can be a single-run, a list (comma-separated) and/or a sequence (dash-separated).\n";
+      
   cout << endl;
-
   cout << right;
 }
 
-void InputArgs::parseArgs(int* argc, char** argv)
+//=========================================================
+int InputArgs::parseArgs(int* argc, char** argv)
 {
   // input argument handling
   string arg;
-
-  const unsigned int w = 20;
-  cout << left;
-
-  if (*argc > 1)
-  {
+  
+  if (*argc > 1){
     for (int i=1; i<*argc; i++ )
-    {
-      arg = argv[i];
-
-      if ( (!arg.compare("-i") || !arg.compare("--input")) &&
-         !_inFileRef.compare("") )
       {
-        _inFileRef = argv[++i];
-        cout << setw(w) << "  input name" << " : " << _inFileRef << endl;
-      }
-      else if ( (!arg.compare("-o") || !arg.compare("--output")) &&
-                !_outFileRef.compare("") )
-      {
-        _outFileRef = argv[++i];
-        cout << setw(w) << "  output name" << " : " << _outFileRef << endl;
-      }
-      else if ( (!arg.compare("-I") || !arg.compare("--inputDUT")) &&
-                !_inFileDUT.compare("") )
-      {
-        _inFileDUT = argv[++i];
-        cout << setw(w) << "  input name DUT" << " : " << _inFileDUT << endl;
-      }
-      else if ( (!arg.compare("-O") || !arg.compare("--outputDUT")) &&
-                !_outFileDUT.compare("") )
-      {
-        _outFileDUT = argv[++i];
-        cout << setw(w) << "  output name DUT" << " : " << _outFileDUT << endl;
-      }
-      else if ( (!arg.compare("-R") || !arg.compare("--results")) &&
-                !_results.compare("") )
-      {
-        _results = argv[++i];
-        cout << setw(w) << "  results name" << " : " << _results << endl;
-      }
-      else if ( (!arg.compare("-c") || !arg.compare("--command")) &&
-                !_command.compare("") )
-      {
-        _command = argv[++i];
-        cout << setw(w) << "  command" << " : " << _command << endl;
-      }
-      else if ( (!arg.compare("-r") || !arg.compare("--cfgRef")) &&
-                 !_cfgRef.compare("") )
-      {
-        _cfgRef = argv[++i];
-        cout << setw(w) << "  cfgRef" << " : " << _cfgRef << endl;
-      }
-      else if ( (!arg.compare("-d") || !arg.compare("--cfgDUT")) &&
-                 !_cfgDUT.compare("") )
-      {
-        _cfgDUT = argv[++i];
-        cout << setw(w) << "  cfgDUT" << " : " << _cfgDUT << endl;
-      }
-      else if ( (!arg.compare("-t") || !arg.compare("--cfgTestbeam")) &&
-                 !_cfgTestbeam.compare("") )
-      {
-        _cfgTestbeam = argv[++i];
-        cout << setw(w) << "  cfgTestbeam" << " : " << _cfgTestbeam << endl;
-      }
-      else if ( (!arg.compare("-n") || !arg.compare("--numEvents")) &&
-                 !_numEvents )
-      {
-        _numEvents = atoi( argv[++i] );
-        cout << setw(w) << "  numEvents" << " : " << _numEvents << endl;
-      }
-      else if ( (!arg.compare("-s") || !arg.compare("--eventOffset")) &&
-                 !_eventOffset )
-      {
-        _eventOffset = atoi( argv[++i] );
-        cout << setw(w) << "  eventOffset" << " : " << _eventOffset << endl;
-      }
-      else if ( (!arg.compare("-b") || !arg.compare("--noBar")) &&
-                !_noBar)
-      {
-        _noBar = true;
-        cout << setw(w) << "  noBar" << " : true" << endl;
-      }
-      else if ( (!arg.compare("-v") || !arg.compare("--printLevel")) )
-	{
-	  _printLevel = atoi( argv[++i] );
+	arg = argv[i];
+	
+	if ( (!arg.compare("-i") || !arg.compare("--input")) &&
+	     !_inFileRef.compare("") )
+	  {
+	    _inFileRef = argv[++i];
+	  }
+	else if ( (!arg.compare("-o") || !arg.compare("--output")) &&
+		  !_outFileRef.compare("") ){
+	  _outFileRef = argv[++i];
 	}
-      else if ( (!arg.compare("-h")) || !arg.compare("--help"))
-      {
-        usage();
+	else if ( (!arg.compare("-I") || !arg.compare("--inputDUT")) &&
+		  !_inFileDUT.compare("") )
+	  {
+	    _inFileDUT = argv[++i];
+	  }
+	else if ( (!arg.compare("-O") || !arg.compare("--outputDUT")) &&
+		  !_outFileDUT.compare("") )
+	  {
+	    _outFileDUT = argv[++i];
+	  }
+	else if ( (!arg.compare("-R") || !arg.compare("--results")) &&
+		  !_results.compare("") )
+	  {
+	    _results = argv[++i];
+	  }
+	else if ( (!arg.compare("-c") || !arg.compare("--command")) &&
+		  !_command.compare("") )
+	  {
+	    _command = argv[++i];
+	  }
+	else if ( (!arg.compare("-r") || !arg.compare("--cfgRef")) &&
+		  !_cfgRef.compare("") )
+	  {
+	    _cfgRef = argv[++i];
+	  }
+	else if ( (!arg.compare("-d") || !arg.compare("--cfgDUT")) &&
+		  !_cfgDUT.compare("") )
+	  {
+	    _cfgDUT = argv[++i];
+	  }
+	else if ( (!arg.compare("-t") || !arg.compare("--cfgTestbeam")) &&
+		  !_cfgTestbeam.compare("") )
+	  {
+	    _cfgTestbeam = argv[++i];
+	  }
+	else if ( (!arg.compare("-n") || !arg.compare("--numEvents")) &&
+		  !_numEvents )
+	  {
+	    _numEvents = atoi( argv[++i] );
+	  }
+	else if ( (!arg.compare("-s") || !arg.compare("--eventOffset")) &&
+		  !_eventOffset )
+	  {
+	    _eventOffset = atoi( argv[++i] );
+	  }
+	else if ( (!arg.compare("-b") || !arg.compare("--noBar")) &&
+		  !_noBar)
+	  {
+	    _noBar = true;
+	  }
+	else if ( (!arg.compare("-v") || !arg.compare("--printLevel")) )
+	  {
+	    _printLevel = atoi( argv[++i] );
+	  }
+	else if( !arg.compare("--runs") )
+	  {
+	    extractRuns(argv[++i]);
+	  }
+	else if ( (!arg.compare("-h")) || !arg.compare("--help"))
+	  {
+	    usage();
+	    return 1;
+	  }
+	else
+	  {
+	    usage();
+	    cout << "Unknown or duplicate argument! " << arg << "\n" << endl;
+	    return 1;
+	  }
       }
-      else
-      {
-        usage();
-        cout << "Unknown or duplicate argument! " << arg << endl;
-      }
+  }
+  
+  return 0;  
+}
+
+//=========================================================
+void InputArgs::extractRuns(std::string par) {
+  std::stringstream parst(par);
+  std::string st;
+
+  while(getline(parst,st,',')) {
+    std::size_t pos = st.find("-");
+    if( st.find("-") != string::npos ){ // range of runs
+      int start = atoi( (st.substr(0,pos)).c_str() );
+      int end = atoi( (st.substr(pos+1,st.length()-pos)).c_str() );
+      for(int r=start; r<=end; r++)
+	_vruns.push_back(r);
     }
+    else
+      _vruns.push_back(atoi(st.c_str()));
   }
 
+  // order, remove duplicates and resize
+  sort(_vruns.begin(),_vruns.end());
+  std::vector<int>::iterator it = unique(_vruns.begin(),_vruns.end());
+  _vruns.resize(it-_vruns.begin());  
+}
+
+//=========================================================
+void InputArgs::printArgs() {
+  const unsigned int w = 20;
+  cout << left;
+  
+  if(!_inFileRef.empty())
+    cout << setw(w) << "  input name" << " : " << _inFileRef << endl;
+  if(!_outFileRef.empty())
+    cout << setw(w) << "  output name" << " : " << _outFileRef << endl;
+  if(!_inFileDUT.empty())
+    cout << setw(w) << "  input name DUT" << " : " << _inFileDUT << endl;
+  if(!_outFileDUT.empty())
+    cout << setw(w) << "  output name DUT" << " : " << _outFileDUT << endl;
+  if(!_results.empty())
+    cout << setw(w) << "  results name" << " : " << _results << endl;  
+  if(!_command.empty())
+    cout << setw(w) << "  command" << " : " << _command << endl;
+  if(!_cfgRef.empty())
+    cout << setw(w) << "  cfgRef" << " : " << _cfgRef << endl;
+  if(!_cfgDUT.empty())
+    cout << setw(w) << "  cfgDUT" << " : " << _cfgDUT << endl;
+  if(!_cfgTestbeam.empty())
+    cout << setw(w) << "  cfgTestbeam" << " : " << _cfgTestbeam << endl;
+  if(_numEvents!=0)
+    cout << setw(w) << "  numEvents" << " : " << _numEvents << endl;
+  if(_eventOffset!=0)
+    cout << setw(w) << "  eventOffset" << " : " << _eventOffset << endl;
+  if(_noBar)
+    cout << setw(w) << "  noBar" << " : true" << endl;
+  if(!_vruns.empty()){
+    cout << setw(w) << "  runs" << " : ";
+    std::vector<int>::const_iterator cit;
+    for(cit = _vruns.begin(); cit != _vruns.end(); ++cit)
+      cout << (*cit) << " ";
+    cout << " (total runs = " << _vruns.size() << ")" << endl;
+  }  
   cout << setw(w) << "  printLevel" << " : " << _printLevel << endl;
   cout << endl; // Space before the next cout
-  cout << right;
+  cout << right;  
 }
 
 string InputArgs::getInputRef() const { return _inFileRef; }
@@ -196,3 +263,4 @@ ULong64_t InputArgs::getNumEvents() const { return _numEvents; }
 ULong64_t InputArgs::getEventOffset() const { return _eventOffset; }
 bool InputArgs::getNoBar() const { return _noBar; }
 int InputArgs::getPrintLevel() const { return _printLevel; }
+std::vector<int> InputArgs::getRuns() const { return _vruns; }

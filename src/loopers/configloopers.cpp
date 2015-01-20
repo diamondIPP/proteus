@@ -12,152 +12,155 @@
 
 namespace Loopers {
 
-void configFineAlign(const ConfigParser& config, FineAlign& fineAlign)
-{
-  for (unsigned int i = 0; i < config.getNumRows(); i++)
+  //=========================================================
+  void configSynchronize(const ConfigParser& config, Synchronize& sync)
   {
-    const ConfigParser::Row* row = config.getRow(i);
-
-    if (row->isHeader) continue;
-    if (row->header.compare("Fine Align")) continue;
-
-    if (!row->key.compare("num iterations"))
-      fineAlign.setNumIteratioins(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("num bins y"))
-      fineAlign.setNumBinsY(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("num pixels"))
-      fineAlign.setNumPixX(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("bins per pixel"))
-      fineAlign.setBinsPerPix(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("num pixels broad"))
-      fineAlign.setNumPixXBroad(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("bins per pixel broad"))
-      fineAlign.setBinsPerPixBroad(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("display fits"))
-      fineAlign.setDisplayFits(ConfigParser::valueToLogical(row->value));
-    else if (!row->key.compare("relaxation"))
-      fineAlign.setRelaxation(ConfigParser::valueToNumerical(row->value));
-    else
-      throw "Loopers: can't parse fine align row";
+    for (unsigned int i = 0; i < config.getNumRows(); i++)
+      {
+	const ConfigParser::Row* row = config.getRow(i);
+	
+	if (row->isHeader) continue;
+	if (row->header.compare("Synchronize")) continue;
+	
+	if (!row->key.compare("sync sample"))
+	  sync.setSyncSample(ConfigParser::valueToNumerical(row->value));
+	else if (!row->key.compare("max offset"))
+	  sync.setMaxOffset(ConfigParser::valueToNumerical(row->value));
+	else if (!row->key.compare("threshold"))
+	  sync.setThreshold(ConfigParser::valueToNumerical(row->value));
+	else if (!row->key.compare("buffer size"))
+	  sync.setBufferSize(ConfigParser::valueToNumerical(row->value));
+	else if (!row->key.compare("pre discards"))
+	  sync.setPreDiscards(ConfigParser::valueToNumerical(row->value));
+	else if (!row->key.compare("max regular fails"))
+	  sync.setMaxConsecutiveFails(ConfigParser::valueToNumerical(row->value));
+	else if (!row->key.compare("max large attempts"))
+	  sync.setMaxLargeSyncAttempts(ConfigParser::valueToNumerical(row->value));
+	else if (!row->key.compare("display"))
+	  sync.setDisplayDistributions(ConfigParser::valueToLogical(row->value));
+	else
+	  throw "Loopers: can't parse synchronize row";
+      }
   }
-}
 
-void configFineAlign(const ConfigParser& config, FineAlignDut& fineAlign)
-{
-  for (unsigned int i = 0; i < config.getNumRows(); i++)
+  //=========================================================
+  void configNoiseScan(const ConfigParser& config, NoiseScan& noiseScan)
   {
-    const ConfigParser::Row* row = config.getRow(i);
-
-    if (row->isHeader) continue;
-    if (row->header.compare("Fine Align")) continue;
-
-    if (!row->key.compare("num iterations"))
-      fineAlign.setNumIteratioins(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("num bins y"))
-      fineAlign.setNumBinsY(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("num pixels"))
-      fineAlign.setNumPixX(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("bins per pixel"))
-      fineAlign.setBinsPerPix(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("num pixels broad"))
-      fineAlign.setNumPixXBroad(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("bins per pixel broad"))
-      fineAlign.setBinsPerPixBroad(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("display fits"))
-      fineAlign.setDisplayFits(ConfigParser::valueToLogical(row->value));
-    else if (!row->key.compare("relaxation"))
-      fineAlign.setRelaxation(ConfigParser::valueToNumerical(row->value));
-    else
-      throw "Loopers: can't parse fine align row";
+    for (unsigned int i=0; i<config.getNumRows(); i++)
+      {
+	const ConfigParser::Row* row = config.getRow(i);
+	
+	if(row->isHeader) continue;
+	if(row->header.compare("Noise Scan")) continue;
+	
+	if (!row->key.compare("max factor"))
+	  noiseScan.setMaxFactor(ConfigParser::valueToNumerical(row->value));
+	else if (!row->key.compare("max occupancy"))
+	  noiseScan.setMaxOccupancy(ConfigParser::valueToNumerical(row->value));
+	else if (!row->key.compare("bottom x"))
+	  noiseScan.setBottomLimitX(ConfigParser::valueToNumerical(row->value));
+	else if (!row->key.compare("upper x"))
+	  noiseScan.setUpperLimitX(ConfigParser::valueToNumerical(row->value));
+	else if (!row->key.compare("bottom y"))
+	  noiseScan.setBottomLimitY(ConfigParser::valueToNumerical(row->value));
+	else if (!row->key.compare("upper y"))
+	  noiseScan.setUpperLimitY(ConfigParser::valueToNumerical(row->value));  
+	else
+	  throw "Loopers: can't parse coarse align row";
+      }
   }
-}
+  
+  //=========================================================
+  void configCoarseAlign(const ConfigParser& config, CoarseAlign& coarseAlign){
+    for (unsigned int i=0; i<config.getNumRows(); i++) {
+      const ConfigParser::Row* row = config.getRow(i);
+      
+      if (row->isHeader) continue;
+      if (row->header.compare("Coarse Align")) continue;
+      
+      if (!row->key.compare("display fits"))
+	coarseAlign.setDisplayFits(ConfigParser::valueToLogical(row->value));
+      else
+	throw "Loopers: can't parse coarse align row";
+    }
+  }
 
-void configCoarseAlign(const ConfigParser& config, CoarseAlign& coarseAlign)
-{
-  for (unsigned int i = 0; i < config.getNumRows(); i++)
+  //=========================================================
+  void configCoarseAlign(const ConfigParser& config, CoarseAlignDut& coarseAlign) {
+    for (unsigned int i=0; i<config.getNumRows(); i++) {
+      const ConfigParser::Row* row = config.getRow(i);
+      
+      if(row->isHeader) continue;
+      if(row->header.compare("Coarse Align")) continue;
+      
+      if(!row->key.compare("display fits"))
+	coarseAlign.setDisplayFits(ConfigParser::valueToLogical(row->value));
+      else
+	throw "Loopers: can't parse coarse align row";
+    }
+  }
+
+  //=========================================================
+  void configFineAlign(const ConfigParser& config, FineAlign& fineAlign)
   {
-    const ConfigParser::Row* row = config.getRow(i);
-
-    if (row->isHeader) continue;
-    if (row->header.compare("Coarse Align")) continue;
-
-    if (!row->key.compare("display fits"))
-      coarseAlign.setDisplayFits(ConfigParser::valueToLogical(row->value));
-    else
-      throw "Loopers: can't parse coarse align row";
+    for (unsigned int i = 0; i < config.getNumRows(); i++)
+      {
+	const ConfigParser::Row* row = config.getRow(i);
+	
+	if (row->isHeader) continue;
+	if (row->header.compare("Fine Align")) continue;
+	
+	if (!row->key.compare("num iterations"))
+	  fineAlign.setNumIterations(ConfigParser::valueToNumerical(row->value));
+	else if (!row->key.compare("num bins y"))
+	  fineAlign.setNumBinsY(ConfigParser::valueToNumerical(row->value));
+	else if (!row->key.compare("num pixels"))
+	  fineAlign.setNumPixX(ConfigParser::valueToNumerical(row->value));
+	else if (!row->key.compare("bins per pixel"))
+	  fineAlign.setBinsPerPix(ConfigParser::valueToNumerical(row->value));
+	else if (!row->key.compare("num pixels broad"))
+	  fineAlign.setNumPixXBroad(ConfigParser::valueToNumerical(row->value));
+	else if (!row->key.compare("bins per pixel broad"))
+	  fineAlign.setBinsPerPixBroad(ConfigParser::valueToNumerical(row->value));
+	else if (!row->key.compare("display fits"))
+	  fineAlign.setDisplayFits(ConfigParser::valueToLogical(row->value));
+	else if (!row->key.compare("relaxation"))
+	  fineAlign.setRelaxation(ConfigParser::valueToNumerical(row->value));
+	else
+	  throw "Loopers: can't parse fine align row";
+      }
   }
-}
 
-void configCoarseAlign(const ConfigParser& config, CoarseAlignDut& coarseAlign)
-{
-  for (unsigned int i = 0; i < config.getNumRows(); i++)
+  //=========================================================
+  void configFineAlign(const ConfigParser& config, FineAlignDut& fineAlign)
   {
-    const ConfigParser::Row* row = config.getRow(i);
-
-    if (row->isHeader) continue;
-    if (row->header.compare("Coarse Align")) continue;
-
-    if (!row->key.compare("display fits"))
-      coarseAlign.setDisplayFits(ConfigParser::valueToLogical(row->value));
-    else
-      throw "Loopers: can't parse coarse align row";
+    for (unsigned int i = 0; i < config.getNumRows(); i++)
+      {
+	const ConfigParser::Row* row = config.getRow(i);
+	
+	if (row->isHeader) continue;
+	if (row->header.compare("Fine Align")) continue;
+	
+	if (!row->key.compare("num iterations"))
+	  fineAlign.setNumIterations(ConfigParser::valueToNumerical(row->value));
+	else if (!row->key.compare("num bins y"))
+	  fineAlign.setNumBinsY(ConfigParser::valueToNumerical(row->value));
+	else if (!row->key.compare("num pixels"))
+	  fineAlign.setNumPixX(ConfigParser::valueToNumerical(row->value));
+	else if (!row->key.compare("bins per pixel"))
+	  fineAlign.setBinsPerPix(ConfigParser::valueToNumerical(row->value));
+	else if (!row->key.compare("num pixels broad"))
+	  fineAlign.setNumPixXBroad(ConfigParser::valueToNumerical(row->value));
+	else if (!row->key.compare("bins per pixel broad"))
+	  fineAlign.setBinsPerPixBroad(ConfigParser::valueToNumerical(row->value));
+	else if (!row->key.compare("display fits"))
+	  fineAlign.setDisplayFits(ConfigParser::valueToLogical(row->value));
+	else if (!row->key.compare("relaxation"))
+	  fineAlign.setRelaxation(ConfigParser::valueToNumerical(row->value));
+	else
+	  throw "Loopers: can't parse fine align row";
+      }
   }
-}
-
-void configNoiseScan(const ConfigParser& config, NoiseScan& noiseScan)
-{
-  for (unsigned int i=0; i<config.getNumRows(); i++)
-  {
-    const ConfigParser::Row* row = config.getRow(i);
-
-    if(row->isHeader) continue;
-    if(row->header.compare("Noise Scan")) continue;
-
-    if (!row->key.compare("max factor"))
-      noiseScan.setMaxFactor(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("max occupancy"))
-      noiseScan.setMaxOccupancy(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("bottom x"))
-      noiseScan.setBottomLimitX(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("upper x"))
-      noiseScan.setUpperLimitX(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("bottom y"))
-      noiseScan.setBottomLimitY(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("upper y"))
-      noiseScan.setUpperLimitY(ConfigParser::valueToNumerical(row->value));  
-    else
-      throw "Loopers: can't parse coarse align row";
-  }
-}
-
-void configSynchronize(const ConfigParser& config, Synchronize& sync)
-{
-  for (unsigned int i = 0; i < config.getNumRows(); i++)
-  {
-    const ConfigParser::Row* row = config.getRow(i);
-
-    if (row->isHeader) continue;
-    if (row->header.compare("Synchronize")) continue;
-
-    if (!row->key.compare("sync sample"))
-      sync.setSyncSample(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("max offset"))
-      sync.setMaxOffset(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("threshold"))
-      sync.setThreshold(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("buffer size"))
-      sync.setBufferSize(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("pre discards"))
-      sync.setPreDiscards(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("max regular fails"))
-      sync.setMaxConsecutiveFails(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("max large attempts"))
-      sync.setMaxLargeSyncAttempts(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("display"))
-      sync.setDisplayDistributions(ConfigParser::valueToLogical(row->value));
-    else
-      throw "Loopers: can't parse synchronize row";
-  }
-}
-
-}
+  
+  
+} // end of namespace Loopers

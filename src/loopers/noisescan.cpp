@@ -25,6 +25,27 @@ using std::cout;
 using std::endl;
 using std::cin;
 
+//=========================================================
+Loopers::NoiseScan::NoiseScan(Mechanics::Device* refDevice,
+                     Storage::StorageIO* refInput,
+                     ULong64_t startEvent,
+                     ULong64_t numEvents,
+                     unsigned int eventSkip) :
+  Looper(refInput, 0, startEvent, numEvents, eventSkip),
+  _refDevice(refDevice),
+  _maxFactor(10),
+  _maxOccupancy(0),
+  _bottomLimitX(-1),
+  _upperLimitX(-1),
+  _bottomLimitY(-1),
+  _upperLimitY(-1)
+{
+  assert(refInput && refDevice && "Looper: initialized with null object(s)");
+  assert(refInput->getNumPlanes() == refDevice->getNumSensors() &&
+         "Loopers: number of planes / sensors mis-match");
+}
+
+//=========================================================
 void Loopers::NoiseScan::loop(){
 
   Analyzers::Occupancy occupancy(_refDevice, 0);
@@ -166,6 +187,7 @@ void Loopers::NoiseScan::loop(){
   _refDevice->getNoiseMask()->writeMask();
 }
 
+
 void Loopers::NoiseScan::setMaxFactor(double maxFactor) { _maxFactor = maxFactor; }
 void Loopers::NoiseScan::setMaxOccupancy(double maxOccupancy) { _maxOccupancy = maxOccupancy; }
 void Loopers::NoiseScan::setBottomLimitX(unsigned int bottomLimitX) { _bottomLimitX = bottomLimitX; }
@@ -181,24 +203,3 @@ void Loopers::NoiseScan::print(){
   cout << "  - maxOccu   : "  << _maxOccupancy << endl;
   cout << endl;
 }
-
-Loopers::NoiseScan::NoiseScan(Mechanics::Device* refDevice,
-                     Storage::StorageIO* refInput,
-                     ULong64_t startEvent,
-                     ULong64_t numEvents,
-                     unsigned int eventSkip) :
-  Looper(refInput, 0, startEvent, numEvents, eventSkip),
-  _refDevice(refDevice),
-  _maxFactor(10),
-  _maxOccupancy(0),
-  _bottomLimitX(-1),
-  _upperLimitX(-1),
-  _bottomLimitY(-1),
-  _upperLimitY(-1)
-{
-  assert(refInput && refDevice && "Looper: initialized with null object(s)");
-  assert(refInput->getNumPlanes() == refDevice->getNumSensors() &&
-         "Loopers: number of planes / sensors mis-match");
-}
-
-

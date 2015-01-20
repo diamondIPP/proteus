@@ -5,25 +5,26 @@
 
 namespace Mechanics {
 
-class Device;
-
-class Alignment
-{
-private:
-  const char* _fileName;
-  Device* _device;
-
-  unsigned int sensorFromHeader(std::string header);
-
-public:
-  Alignment(const char* fileName, Device* device);
-
-  void readFile();
-  void writeFile();
-
-  const char* getFileName();
-};
-
-}
+  class Device;
+  
+  class Alignment{
+  public:
+    Alignment(const char* fileName, Device* device);
+    
+    const char* getFileName();
+    
+    void readFile();
+    void writeFile();
+    
+  private:
+    unsigned int sensorFromHeader(std::string header);	
+    
+  private:
+    std::string _fileName;
+    Device* _device;  
+    
+  }; // end of class 
+  
+} // end of namespace 
 
 #endif // ALIGNMENT_H

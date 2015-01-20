@@ -30,37 +30,65 @@
 using std::cout;
 using std::endl;
 
-namespace Loopers {
+//=========================================================
+Loopers::FineAlign::FineAlign(Mechanics::Device* refDevice,
+			      Processors::ClusterMaker* clusterMaker,
+			      Processors::TrackMaker* trackMaker,
+			      Storage::StorageIO* refInput,
+			      ULong64_t startEvent,
+			      ULong64_t numEvents,
+			      unsigned int eventSkip) :
+  Looper(refInput, 0, startEvent, numEvents, eventSkip),
+  _refDevice(refDevice),
+  _clusterMaker(clusterMaker),
+  _trackMaker(trackMaker),
+  _numIterations(5),
+  _numBinsY(15),
+  _numPixX(5),
+  _binsPerPix(10),
+  _numPixXBroad(20),
+  _binsPerPixBroad(1),
+  _displayFits(true),
+  _relaxation(0.8)
+{
+  assert(refInput && refDevice && clusterMaker && trackMaker &&
+         "Looper: initialized with null object(s)");
+  assert(refInput->getNumPlanes() == refDevice->getNumSensors() &&
+         "Loopers: number of planes / sensors mis-match");
+}
 
-void FineAlign::loop()
+//=========================================================
+void Loopers::FineAlign::loop()
 {
   // Build a vector of sensor indices which will be permutated at eaich iteration
   //fdibello@cern.ch convergence plot for the fine aligmenet variables, offset x=0, offset y=1, offset z=2, rotation z=3
   TGraphErrors *convergence[4][_refDevice->getNumSensors()];  
-  float  nit[_numIterations],ofx[_numIterations][_refDevice->getNumSensors()], ofy[_numIterations][_refDevice->getNumSensors()], ofz[_numIterations][_refDevice->getNumSensors()], rotz[_numIterations][_refDevice->getNumSensors()],sigmax[_numIterations][_refDevice->getNumSensors()],sigmay[_numIterations][_refDevice->getNumSensors()];
-TFile *out_file = new TFile("aligment_convergence_DUT_C22_masking_plane0.root","RECREATE");
-TDirectory *sensordir[_refDevice->getNumSensors()];
+  float nit[_numIterations];
+  float ofx[_numIterations][_refDevice->getNumSensors()];
+  float ofy[_numIterations][_refDevice->getNumSensors()];
+  float ofz[_numIterations][_refDevice->getNumSensors()];
+  float rotz[_numIterations][_refDevice->getNumSensors()];
+  float sigmax[_numIterations][_refDevice->getNumSensors()];
+  float sigmay[_numIterations][_refDevice->getNumSensors()];
+  
+  TFile *out_file = new TFile("aligment_convergence_DUT_C22_masking_plane0.root","RECREATE");
+  TDirectory *sensordir[_refDevice->getNumSensors()];
+  
+  double rotation1[_refDevice->getNumSensors()]; //fdibello offset in the aligmnent plot
 
-double rotation1[_refDevice->getNumSensors()]; //fdibello offset in the aligmnent plot
-
-
-
-for(unsigned int i=0;i<_refDevice->getNumSensors() ;i++){
-           for(unsigned int l=0;l< _numIterations;l++){
-   ofx[l][i]=0;
-   ofy[l][i]=0;
-   ofz[l][i]=0;
-   rotz[l][i]=0; //rotzz[l]=rotz[l][i]-rotation1[i];
+  for(unsigned int i=0;i<_refDevice->getNumSensors() ;i++){
+    for(unsigned int l=0;l< _numIterations;l++){
+      ofx[l][i]=0;
+      ofy[l][i]=0;
+      ofz[l][i]=0;
+      rotz[l][i]=0; //rotzz[l]=rotz[l][i]-rotation1[i];
     }
-   }
-
- 
-
-
-for (unsigned int f=0; f<_refDevice->getNumSensors(); f++){
-    sensordir[f] = out_file->mkdir(Form("sensor_%d",f));
   }
 
+  for (unsigned int f=0; f<_refDevice->getNumSensors(); f++){
+    sensordir[f] = out_file->mkdir(Form("sensor_%d",f));
+  }
+  
   std::vector<unsigned int> sensorPermutations(_refDevice->getNumSensors(), 0);
   for (unsigned int i = 0; i < _refDevice->getNumSensors(); i++)
     sensorPermutations[i] = i;
@@ -251,39 +279,26 @@ for (unsigned int f=0; f<_refDevice->getNumSensors(); f++){
   _refDevice->getAlignment()->writeFile();
 }
 
-void FineAlign::setNumIteratioins(unsigned int value) { _numIterations = value; }
-void FineAlign::setNumBinsY(unsigned int value) { _numBinsY = value; }
-void FineAlign::setNumPixX(unsigned int value) { _numPixX = value; }
-void FineAlign::setBinsPerPix(double value) { _binsPerPix = value; }
-void FineAlign::setNumPixXBroad(unsigned int value) { _numPixXBroad = value; }
-void FineAlign::setBinsPerPixBroad(double value) { _binsPerPixBroad = value; }
-void FineAlign::setDisplayFits(bool value) { _displayFits = value; }
-void FineAlign::setRelaxation(double value) { _relaxation = value; }
+void Loopers::FineAlign::setNumIterations(unsigned int value) { _numIterations = value; }
+void Loopers::FineAlign::setNumBinsY(unsigned int value) { _numBinsY = value; }
+void Loopers::FineAlign::setNumPixX(unsigned int value) { _numPixX = value; }
+void Loopers::FineAlign::setBinsPerPix(double value) { _binsPerPix = value; }
+void Loopers::FineAlign::setNumPixXBroad(unsigned int value) { _numPixXBroad = value; }
+void Loopers::FineAlign::setBinsPerPixBroad(double value) { _binsPerPixBroad = value; }
+void Loopers::FineAlign::setDisplayFits(bool value) { _displayFits = value; }
+void Loopers::FineAlign::setRelaxation(double value) { _relaxation = value; }
 
-FineAlign::FineAlign(Mechanics::Device* refDevice,
-                     Processors::ClusterMaker* clusterMaker,
-                     Processors::TrackMaker* trackMaker,
-                     Storage::StorageIO* refInput,
-                     ULong64_t startEvent,
-                     ULong64_t numEvents,
-                     unsigned int eventSkip) :
-  Looper(refInput, 0, startEvent, numEvents, eventSkip),
-  _refDevice(refDevice),
-  _clusterMaker(clusterMaker),
-  _trackMaker(trackMaker),
-  _numIterations(5),
-  _numBinsY(15),
-  _numPixX(5),
-  _binsPerPix(10),
-  _numPixXBroad(20),
-  _binsPerPixBroad(1),
-  _displayFits(true),
-  _relaxation(0.8)
-{
-  assert(refInput && refDevice && clusterMaker && trackMaker &&
-         "Looper: initialized with null object(s)");
-  assert(refInput->getNumPlanes() == refDevice->getNumSensors() &&
-         "Loopers: number of planes / sensors mis-match");
+void Loopers::FineAlign::print() {
+  cout << "\n## [FineAlign::print]" << endl;
+  cout << "  - numIterations   : "  << _numIterations << endl;
+  cout << "  - numBinsY        : "  << _numBinsY << endl;
+  cout << "  - numPixX         : "  << _numPixX << endl;
+  cout << "  - binsPerPix      : "  << _binsPerPix << endl;  
+  cout << "  - numPixXBroad    : "  << _numPixXBroad << endl;
+  cout << "  - binsPerPixBroad : "  << _binsPerPixBroad << endl;
+  cout << "  - display Fits    : "  << _displayFits << endl;
+  cout << "  - relaxation      : "  << _relaxation << endl;
 }
 
-}
+
+

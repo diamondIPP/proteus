@@ -24,9 +24,29 @@ using std::cout;
 using std::endl;
 using std::flush;
 
-namespace Loopers {
+//=========================================================
+Loopers::ProcessEvents::ProcessEvents(Mechanics::Device* refDevice,
+				      Storage::StorageIO* refOutput,
+				      Processors::ClusterMaker* clusterMaker,
+				      Processors::TrackMaker* trackMaker,
+				      Storage::StorageIO* refInput,
+				      ULong64_t startEvent,
+				      ULong64_t numEvents,
+				      unsigned int eventSkip) :
+  Looper(refInput, 0, startEvent, numEvents, eventSkip),
+  _refDevice(refDevice),
+  _refOutput(refOutput),
+  _clusterMaker(clusterMaker),
+  _trackMaker(trackMaker)
+{
+  assert(refInput && refDevice && refOutput &&
+         "Looper: initialized with null object(s)");
+  assert(refInput->getNumPlanes() == refDevice->getNumSensors() &&
+         "Loopers: number of planes / sensors mis-match");
+}
 
-void ProcessEvents::loop()
+//=========================================================
+void Loopers::ProcessEvents::loop()
 {
   // Some statistics for reporting
   ULong64_t statProcessedEvents = 0;
@@ -39,8 +59,6 @@ void ProcessEvents::loop()
   unsigned int statMostClusters = 0;
   ULong64_t statMostTracksEvent = 0;
   unsigned int statMostTracks = 0;
-
-
 
   for (ULong64_t nevent = _startEvent; nevent <= _endEvent; nevent++)
   {
@@ -123,24 +141,7 @@ void ProcessEvents::loop()
   }
 }
 
-ProcessEvents::ProcessEvents(Mechanics::Device* refDevice,
-                             Storage::StorageIO* refOutput,
-                             Processors::ClusterMaker* clusterMaker,
-                             Processors::TrackMaker* trackMaker,
-                             Storage::StorageIO* refInput,
-                             ULong64_t startEvent,
-                             ULong64_t numEvents,
-                             unsigned int eventSkip) :
-  Looper(refInput, 0, startEvent, numEvents, eventSkip),
-  _refDevice(refDevice),
-  _refOutput(refOutput),
-  _clusterMaker(clusterMaker),
-  _trackMaker(trackMaker)
-{
-  assert(refInput && refDevice && refOutput &&
-         "Looper: initialized with null object(s)");
-  assert(refInput->getNumPlanes() == refDevice->getNumSensors() &&
-         "Loopers: number of planes / sensors mis-match");
-}
-
+void Loopers::ProcessEvents::print(){
+  cout << "\n## [ProcessEvents::print]" << endl;
+  // to be implemented
 }

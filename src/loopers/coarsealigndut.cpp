@@ -16,9 +16,38 @@
 #include "../analyzers/dualanalyzer.h"
 #include "../analyzers/dutcorrelation.h"
 
-namespace Loopers {
+using std::cout;
+using std::endl;
 
-void CoarseAlignDut::loop()
+//=========================================================
+Loopers::CoarseAlignDut::CoarseAlignDut(Mechanics::Device* refDevice,
+					Mechanics::Device* dutDevice,
+					Processors::ClusterMaker* clusterMaker,
+					Storage::StorageIO* refInput,
+					Storage::StorageIO* dutInput,
+					ULong64_t startEvent,
+					ULong64_t numEvents,
+					unsigned int eventSkip) :
+  Looper(refInput, dutInput, startEvent, numEvents, eventSkip),
+  _refDevice(refDevice),
+  _dutDevice(dutDevice),
+  _clusterMaker(clusterMaker),
+  _displayFits(true)
+{
+  assert(refInput && dutInput && refDevice && dutDevice && clusterMaker &&
+         "Looper: initialized with null object(s)");
+  assert(refInput->getNumPlanes() == refDevice->getNumSensors() &&
+         dutInput->getNumPlanes() == dutDevice->getNumSensors() &&
+         "Loopers: number of planes / sensors mis-match");
+}
+
+//=========================================================
+void Loopers::CoarseAlignDut::setDisplayFits(bool value) {
+  _displayFits = value;
+}
+
+//=========================================================
+void Loopers::CoarseAlignDut::loop()
 {
   Analyzers::DUTCorrelation correlation(_refDevice, _dutDevice, 0);
 
@@ -65,34 +94,12 @@ void CoarseAlignDut::loop()
    std::cout << "DUT plane: " << nsensor << std::endl;
    std::cout << "gaussian mean: X= " << offsetX << "  Y= " << offsetY << std::endl;
    std::cout << "New offset: X= " << sensor->getOffX() << "  Y= " << sensor->getOffY() << std::endl;
-
-
   }
-
   _dutDevice->getAlignment()->writeFile();
 }
 
-void CoarseAlignDut::setDisplayFits(bool value) { _displayFits = value; }
-
-CoarseAlignDut::CoarseAlignDut(Mechanics::Device* refDevice,
-                               Mechanics::Device* dutDevice,
-                               Processors::ClusterMaker* clusterMaker,
-                               Storage::StorageIO* refInput,
-                               Storage::StorageIO* dutInput,
-                               ULong64_t startEvent,
-                               ULong64_t numEvents,
-                               unsigned int eventSkip) :
-  Looper(refInput, dutInput, startEvent, numEvents, eventSkip),
-  _refDevice(refDevice),
-  _dutDevice(dutDevice),
-  _clusterMaker(clusterMaker),
-  _displayFits(true)
-{
-  assert(refInput && dutInput && refDevice && dutDevice && clusterMaker &&
-         "Looper: initialized with null object(s)");
-  assert(refInput->getNumPlanes() == refDevice->getNumSensors() &&
-         dutInput->getNumPlanes() == dutDevice->getNumSensors() &&
-         "Loopers: number of planes / sensors mis-match");
-}
-
+//=========================================================
+void Loopers::CoarseAlignDut::print(){
+  cout << "## [CoarseAlignDut::print]" << endl;
+  cout << "  - display fits: " << _displayFits << endl;
 }

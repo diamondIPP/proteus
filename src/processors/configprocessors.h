@@ -4,15 +4,15 @@
 class ConfigParser;
 
 namespace Processors {
+  
+  class TrackMaker;
+  class TrackMatcher;
+  class ClusterMaker;
+  
+  ClusterMaker* generateClusterMaker(const ConfigParser& config);
+  
+  TrackMaker* generateTrackMaker(const ConfigParser& config, bool align = false);
 
-class TrackMaker;
-class TrackMatcher;
-class ClusterMaker;
-
-TrackMaker* generateTrackMaker(const ConfigParser& config, bool align = false);
-
-ClusterMaker* generateClusterMaker(const ConfigParser& config);
-
-}
+} // end of namespace
 
 #endif // CONFIGURE_H

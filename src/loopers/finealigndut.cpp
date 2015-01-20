@@ -26,9 +26,39 @@
 using std::cout;
 using std::endl;
 
-namespace Loopers {
+//=========================================================
+Loopers::FineAlignDut::FineAlignDut(Mechanics::Device* refDevice,
+				    Mechanics::Device* dutDevice,
+				    Processors::ClusterMaker* clusterMaker,
+				    Processors::TrackMaker* trackMaker,
+				    Storage::StorageIO* refInput,
+				    Storage::StorageIO* dutInput,
+				    ULong64_t startEvent,
+				    ULong64_t numEvents,
+				    unsigned int eventSkip) :
+  Looper(refInput, dutInput, startEvent, numEvents, eventSkip),
+  _refDevice(refDevice),
+  _dutDevice(dutDevice),
+  _clusterMaker(clusterMaker),
+  _trackMaker(trackMaker),
+  _numIterations(5),
+  _numBinsY(15),
+  _numPixX(5),
+  _binsPerPix(10),
+  _numPixXBroad(20),
+  _binsPerPixBroad(1),
+  _displayFits(true),
+  _relaxation(0.8)
+{
+  assert(refInput && dutInput && refDevice && dutDevice && clusterMaker && trackMaker &&
+         "Looper: initialized with null object(s)");
+  assert(refInput->getNumPlanes() == refDevice->getNumSensors() &&
+         dutInput->getNumPlanes() == dutDevice->getNumSensors() &&
+         "Loopers: number of planes / sensors mis-match");
+}
 
-void FineAlignDut::loop()
+//=========================================================
+void Loopers::FineAlignDut::loop()
 {
   for (unsigned int niter = 0; niter < _numIterations; niter++)
   {
@@ -136,43 +166,27 @@ void FineAlignDut::loop()
   _dutDevice->getAlignment()->writeFile();
 }
 
-void FineAlignDut::setNumIteratioins(unsigned int value) { _numIterations = value; }
-void FineAlignDut::setNumBinsY(unsigned int value) { _numBinsY = value; }
-void FineAlignDut::setNumPixX(unsigned int value) { _numPixX = value; }
-void FineAlignDut::setBinsPerPix(double value) { _binsPerPix = value; }
-void FineAlignDut::setNumPixXBroad(unsigned int value) { _numPixXBroad = value; }
-void FineAlignDut::setBinsPerPixBroad(double value) { _binsPerPixBroad = value; }
-void FineAlignDut::setDisplayFits(bool value) { _displayFits = value; }
-void FineAlignDut::setRelaxation(double value) { _relaxation = value; }
+void Loopers::FineAlignDut::setNumIterations(unsigned int value) { _numIterations = value; }
+void Loopers::FineAlignDut::setNumBinsY(unsigned int value) { _numBinsY = value; }
+void Loopers::FineAlignDut::setNumPixX(unsigned int value) { _numPixX = value; }
+void Loopers::FineAlignDut::setBinsPerPix(double value) { _binsPerPix = value; }
+void Loopers::FineAlignDut::setNumPixXBroad(unsigned int value) { _numPixXBroad = value; }
+void Loopers::FineAlignDut::setBinsPerPixBroad(double value) { _binsPerPixBroad = value; }
+void Loopers::FineAlignDut::setDisplayFits(bool value) { _displayFits = value; }
+void Loopers::FineAlignDut::setRelaxation(double value) { _relaxation = value; }
 
-FineAlignDut::FineAlignDut(Mechanics::Device* refDevice,
-                           Mechanics::Device* dutDevice,
-                           Processors::ClusterMaker* clusterMaker,
-                           Processors::TrackMaker* trackMaker,
-                           Storage::StorageIO* refInput,
-                           Storage::StorageIO* dutInput,
-                           ULong64_t startEvent,
-                           ULong64_t numEvents,
-                           unsigned int eventSkip) :
-  Looper(refInput, dutInput, startEvent, numEvents, eventSkip),
-  _refDevice(refDevice),
-  _dutDevice(dutDevice),
-  _clusterMaker(clusterMaker),
-  _trackMaker(trackMaker),
-  _numIterations(5),
-  _numBinsY(15),
-  _numPixX(5),
-  _binsPerPix(10),
-  _numPixXBroad(20),
-  _binsPerPixBroad(1),
-  _displayFits(true),
-  _relaxation(0.8)
-{
-  assert(refInput && dutInput && refDevice && dutDevice && clusterMaker && trackMaker &&
-         "Looper: initialized with null object(s)");
-  assert(refInput->getNumPlanes() == refDevice->getNumSensors() &&
-         dutInput->getNumPlanes() == dutDevice->getNumSensors() &&
-         "Loopers: number of planes / sensors mis-match");
+void Loopers::FineAlignDut::print() {
+  cout << "\n## [FineAlignDut::print]" << endl;
+  cout << "  - numIterations   : "  << _numIterations << endl;
+  cout << "  - numBinsY        : "  << _numBinsY << endl;
+  cout << "  - numPixX         : "  << _numPixX << endl;
+  cout << "  - binsPerPix      : "  << _binsPerPix << endl;  
+  cout << "  - numPixXBroad    : "  << _numPixXBroad << endl;
+  cout << "  - binsPerPixBroad : "  << _binsPerPixBroad << endl;
+  cout << "  - display Fits    : "  << _displayFits << endl;
+  cout << "  - relaxation      : "  << _relaxation << endl;
 }
 
-}
+
+
+

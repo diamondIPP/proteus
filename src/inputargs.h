@@ -2,10 +2,37 @@
 #define INPUTARGS_H
 
 #include <Rtypes.h>
+#include <string>
+#include <vector>
 
-class InputArgs
-{
-private:
+class InputArgs {
+ public:
+  InputArgs();
+  ~InputArgs();
+  
+  int parseArgs(int* argc, char** argv);
+  void usage();
+  void printArgs();
+    
+  std::string getInputRef() const;
+  std::string getOutputRef() const;
+  std::string getInputDUT() const;
+  std::string getOutputDUT() const;
+  std::string getResults() const;
+  std::string getCommand() const;
+  std::string getCfgRef() const;
+  std::string getCfgDUT() const;
+  std::string getCfgTestbeam() const;
+  ULong64_t getNumEvents() const;
+  ULong64_t getEventOffset() const;
+  bool getNoBar() const;
+  int getPrintLevel() const;
+  std::vector<int> getRuns() const;
+
+ private:
+  void extractRuns(std::string);
+
+ private:
   std::string _inFileRef;
   std::string _outFileRef;
   std::string _inFileDUT;
@@ -20,25 +47,8 @@ private:
   bool _noBar;
   int _printLevel;
 
-public:
-  InputArgs();
-
-  void parseArgs(int* argc, char** argv);
-  void usage();
-
-  std::string getInputRef() const;
-  std::string getOutputRef() const;
-  std::string getInputDUT() const;
-  std::string getOutputDUT() const;
-  std::string getResults() const;
-  std::string getCommand() const;
-  std::string getCfgRef() const;
-  std::string getCfgDUT() const;
-  std::string getCfgTestbeam() const;
-  ULong64_t getNumEvents() const;
-  ULong64_t getEventOffset() const;
-  bool getNoBar() const;
-  int getPrintLevel() const;
+  std::vector<int> _vruns;
+  
 };
 
 #endif // INPUTARGS_H
