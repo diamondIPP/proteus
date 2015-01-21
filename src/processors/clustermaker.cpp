@@ -88,7 +88,7 @@ void ClusterMaker::calculateCluster(Storage::Cluster* cluster)
   for (unsigned int nhit = 0; nhit < cluster->getNumHits(); nhit++)
   {
     const Storage::Hit* hit = cluster->getHit(nhit);
-    const double value = (hit->getValue() > 0) ? hit->getValue() : 1;
+    //  const double value = (hit->getValue() > 0) ? hit->getValue() : 1;
     //digital sensor:
     cogX += hit->getPixX();
     cogY += hit->getPixY();

@@ -24,6 +24,10 @@ namespace Analyzers {
 	       const char* suffix = "",
 	       /* Additional parameters with default values */
 	       int relativeToSensor = -1, // Only consider events where this sensor has a match
+	       int pix_x_min = 1,
+	       int pix_x_max = 12,
+	       int pix_y_min = 81,
+	       int pix_y_max = 94,
 	       /* Histogram options */
 	       unsigned int rebinX = 1, // This many pixels in X are grouped
 	       unsigned int rebinY = 1,
@@ -32,10 +36,17 @@ namespace Analyzers {
     
     void processEvent(const Storage::Event* refEvent,
 		      const Storage::Event* dutDevent);
-
+    
     void postProcessing();
     
   private:
+    int _relativeToSensor;
+    int _pix_x_min; // minimum pixel (x) to be considered for in-pixel results
+    int _pix_x_max; // maximum pixel (x) to be considered for in-pixel results
+    int _pix_y_min; // minimum pixel (y) to be considered for in-pixel results
+    int _pix_y_max; // maximum pixel (y) to be considered for in-pixel results
+
+    // vector histograms 
     std::vector<TEfficiency*> _efficiencyMap;
     std::vector<TH1D*> _efficiencyDistribution;
     std::vector<TH1D*> _matchedTracks;
@@ -45,12 +56,9 @@ namespace Analyzers {
     std::vector<TEfficiency*> _inPixelEfficiency;
     std::vector<TH2D*> _inPixelTiming;
     std::vector<TH2D*> _inPixelCounting;
-
-    // Parameters used during event processing
-    const int _relativeToSensor;   
-
+    
   }; // end of class
-
+  
 } // end of namespace
 
 #endif // EFFICIENCY_H

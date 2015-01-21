@@ -48,7 +48,8 @@ using namespace std;
 void convert(const char* input,
 	     const char* output,
 	     Long64_t triggers,
-             const char* deviceCfg=""){
+             const char* deviceCfg="")
+{
   try
     {
       Mechanics::Device* device = 0;
@@ -76,7 +77,8 @@ void synchronize(const char* refInputName,
 		 ULong64_t numEvents,
                  const char* refDeviceCfg,
 		 const char* dutDeviceCfg,
-                 const char* tbCfg){
+                 const char* tbCfg)
+{
   try
     {
       ConfigParser refConfig(refDeviceCfg);
@@ -435,11 +437,10 @@ void analysis(const char* inputName,
       if(printLevel>0) looper.print();    
       looper.loop();
       
-      if (results)
-	{
-	  results->Write();
-	  delete results;
-	}
+      if (results){
+	results->Write();
+	delete results;
+      }
       
       delete device;
     }
@@ -479,7 +480,6 @@ void analysisDUT(const char* refInputName,
     if (dutDevice->getAlignment()) dutDevice->getAlignment()->readFile();
 
     Loopers::AnalysisDut looper(&refInput, &dutInput, trackMatcher, startEvent, numEvents);
-
     const Storage::Event* start = refInput.readEvent(looper.getStartEvent());
     const Storage::Event* end = refInput.readEvent(looper.getEndEvent());
     refDevice->setTimeStart(start->getTimeStamp());
@@ -494,12 +494,11 @@ void analysisDUT(const char* refInputName,
     Analyzers::configLooper(runConfig, &looper, refDevice, dutDevice, results);
     looper.loop();
 
-    if (results)
-    {
+    if (results){
       results->Write();
       delete results;
     }
-
+    
     delete trackMatcher;
     delete refDevice;
     delete dutDevice;

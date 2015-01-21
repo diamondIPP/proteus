@@ -39,14 +39,20 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device* refDevice,
 				  TDirectory* dir,
 				  const char* suffix,
 				  int relativeToSensor,
+				  int pix_x_min,
+				  int pix_x_max,
+				  int pix_y_min,
+				  int pix_y_max,
 				  unsigned int rebinX,
 				  unsigned int rebinY,
 				  unsigned int pixBinsX,
 				  unsigned int pixBinsY) :
-  // Base class is initialized here and manages directory / device
   DualAnalyzer(refDevice, dutDevice, dir, suffix),
-  // Initialize processing parameters here
-  _relativeToSensor(relativeToSensor)
+  _relativeToSensor(relativeToSensor),
+  _pix_x_min(pix_x_min),
+  _pix_x_max(pix_x_max),
+  _pix_y_min(pix_y_min),
+  _pix_y_max(pix_y_max)
 {
   assert(refDevice && dutDevice && "Analyzer: can't initialize with null device");
 
@@ -57,14 +63,13 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device* refDevice,
   std::stringstream title; // Build title strings for each histo
   std::stringstream Xaxis;
 
-  if (relativeToSensor >= (int)_dutDevice->getNumSensors())
+  if(_relativeToSensor >= (int)_dutDevice->getNumSensors())
     throw "Efficiency: relative sensor exceeds range";
-
+  
   // Generate a histogram for each sensor in the device
-  for (unsigned int nsens = 0; nsens < _dutDevice->getNumSensors(); nsens++)
-  {
+  for (unsigned int nsens=0; nsens<_dutDevice->getNumSensors(); nsens++){
     Mechanics::Sensor* sensor = _dutDevice->getSensor(nsens);
-
+    
     unsigned int nx = sensor->getNumX() / rebinX;
     unsigned int ny = sensor->getNumY() / rebinY;
     if (nx < 1) nx = 1;
@@ -271,14 +276,13 @@ void Analyzers::Efficiency::processEvent(const Storage::Event* refEvent,
     // If asking for relative efficiency to a plane, look for a match in that one first     
     if (_relativeToSensor >= 0 && !matches.at(_relativeToSensor)) continue;
 
-    for (unsigned int nsensor = 0; nsensor < _dutDevice->getNumSensors(); nsensor++)
-    {
+    for (unsigned int nsensor=0; nsensor<_dutDevice->getNumSensors(); nsensor++){
       Mechanics::Sensor* sensor = _dutDevice->getSensor(nsensor);
 
-      double tx = 0, ty = 0, tz = 0;
+      double tx=0, ty=0, tz=0;
       Processors::trackSensorIntercept(track, sensor, tx, ty, tz);
 
-      double px = 0, py = 0;
+      double px=0, py=0;
       sensor->spaceToPixel(tx, ty, tz, px, py);
 
       const Storage::Cluster* match = matches.at(nsensor);
@@ -306,17 +310,20 @@ void Analyzers::Efficiency::processEvent(const Storage::Event* refEvent,
 
       // TO BE PROPERLY SET!!!!!
       //      if(px >1 & px<12 & py>81 & py<94){
-      if(px >1 && px<6 && py>81 && py<84){
+      //      if(px >1 && px<6 && py>81 && py<84){
+      if( (px > _pix_x_min) && (px < _pix_x_max) && (py > _pix_y_min) && (py < _pix_y_max) ){
+
 	_inPixelEfficiency.at(nsensor)->Fill((bool)match,
 					     trackPosX * sensor->getPitchX(),
 					     trackPosY * sensor->getPitchY());
 	if(match){
-	  for (unsigned int nhit = 0; nhit < match->getNumHits(); nhit++){
-	    const Storage::Hit* hit = match->getHit(nhit);
+	  for (unsigned int nhit=0; nhit<match->getNumHits(); nhit++){
+	    const Storage::Hit *hit = match->getHit(nhit);
+
 	    _inPixelTiming.at(nsensor)->Fill(trackPosX * sensor->getPitchX(),
 					     trackPosY * sensor->getPitchY(),
 					     hit->getTiming());
-
+	    
 	    _inPixelCounting.at(nsensor)->Fill(trackPosX * sensor->getPitchX(),
 					       trackPosY * sensor->getPitchY());
 	  }

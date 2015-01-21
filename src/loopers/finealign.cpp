@@ -181,8 +181,8 @@ void Loopers::FineAlign::loop()
       if(niter==0){
       double sigmaX = 0, maxX = 0, backgroundX = 0;
       double sigmaY = 0, maxY = 0, backgroundY = 0;
-      Processors::fitGaussian(residuals.getResidualX(nsens), offsetX, sigmaX, maxX,backgroundX, _displayFits);
-      Processors::fitGaussian(residuals.getResidualY(nsens), offsetY, sigmaY, maxX,backgroundY, _displayFits);
+      Processors::fitGaussian(residuals.getResidualX(nsens), offsetX, sigmaX, maxX, backgroundX, _displayFits);
+      Processors::fitGaussian(residuals.getResidualY(nsens), offsetY, sigmaY, maxX, backgroundY, _displayFits);
 
       std::cout << "Fine alignment with residuals:" << std::endl;
       std::cout << "   Sensor: " << nsens << ", Xcorrection: " << offsetX << ", Ycorrection: " << offsetY <<  std::endl;

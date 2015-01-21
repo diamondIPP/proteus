@@ -444,73 +444,68 @@ namespace Storage {
     event->setInvalid(invalid);
     
     // Generate a list of track objects
-    for (int ntrack=0; ntrack<numTracks; ntrack++)
-      {
-	Track* track = event->newTrack();
-	track->setOrigin(trackOriginX[ntrack], trackOriginY[ntrack]);
-	track->setOriginErr(trackOriginErrX[ntrack], trackOriginErrY[ntrack]);
-	track->setSlope(trackSlopeX[ntrack], trackSlopeY[ntrack]);
-	track->setSlopeErr(trackSlopeErrX[ntrack], trackSlopeErrY[ntrack]);
-	track->setCovariance(trackCovarianceX[ntrack], trackCovarianceY[ntrack]);
-	track->setChi2(trackChi2[ntrack]);
-      }
+    for (int ntrack=0; ntrack<numTracks; ntrack++){
+      Track* track = event->newTrack();
+      track->setOrigin(trackOriginX[ntrack], trackOriginY[ntrack]);
+      track->setOriginErr(trackOriginErrX[ntrack], trackOriginErrY[ntrack]);
+      track->setSlope(trackSlopeX[ntrack], trackSlopeY[ntrack]);
+      track->setSlopeErr(trackSlopeErrX[ntrack], trackSlopeErrY[ntrack]);
+      track->setCovariance(trackCovarianceX[ntrack], trackCovarianceY[ntrack]);
+      track->setChi2(trackChi2[ntrack]);
+    }
     
-    for (unsigned int nplane=0; nplane<_numPlanes; nplane++)
-      {
-	if (_hits.at(nplane) && _hits.at(nplane)->GetEntry(n) <= 0)
-	  throw "StorageIO: error reading hits tree";
-	if (_clusters.at(nplane) && _clusters.at(nplane)->GetEntry(n) <= 0)
-	  throw "StorageIO: error reading clusters tree";
+    for (unsigned int nplane=0; nplane<_numPlanes; nplane++){
+
+      if (_hits.at(nplane) && _hits.at(nplane)->GetEntry(n) <= 0)
+	throw "StorageIO: error reading hits tree";
+      
+      if (_clusters.at(nplane) && _clusters.at(nplane)->GetEntry(n) <= 0)
+	throw "StorageIO: error reading clusters tree";
+      
+      // Generate the cluster objects
+      for (int ncluster=0; ncluster<numClusters; ncluster++){
+	Cluster* cluster = event->newCluster(nplane);
+	cluster->setPix(clusterPixX[ncluster], clusterPixY[ncluster]);
+	cluster->setPixErr(clusterPixErrX[ncluster], clusterPixErrY[ncluster]);
+	cluster->setPos(clusterPosX[ncluster], clusterPosY[ncluster], clusterPosZ[ncluster]);
+	cluster->setPosErr(clusterPosErrX[ncluster], clusterPosErrY[ncluster], clusterPosErrZ[ncluster]);
 	
-	// Generate the cluster objects
-	for (int ncluster = 0; ncluster < numClusters; ncluster++)
-	  {
-	    Cluster* cluster = event->newCluster(nplane);
-	    cluster->setPix(clusterPixX[ncluster], clusterPixY[ncluster]);
-	    cluster->setPixErr(clusterPixErrX[ncluster], clusterPixErrY[ncluster]);
-	    cluster->setPos(clusterPosX[ncluster], clusterPosY[ncluster], clusterPosZ[ncluster]);
-	    cluster->setPosErr(clusterPosErrX[ncluster], clusterPosErrY[ncluster], clusterPosErrZ[ncluster]);
-	    
-	    // If this cluster is in a track, mark this (and the tracks tree is active)
-	    if (_tracks && clusterInTrack[ncluster] >= 0)
-	      {
-		Track* track = event->getTrack(clusterInTrack[ncluster]);
-		track->addCluster(cluster);
-		cluster->setTrack(track);
-	      }
-	  }
-	
-	// Generate a list of all hit objects
-	for (int nhit = 0; nhit < numHits; nhit++)
-	  {
-	    if (_noiseMasks && _noiseMasks->at(nplane)[hitPixX[nhit]][hitPixY[nhit]])
-	      {
-		if (hitInCluster[nhit] >= 0)
-		  throw "StorageIO: tried to mask a hit which is already in a cluster";
-		continue;
-	      }
-	    
-	    Hit* hit = event->newHit(nplane);
-	    hit->setPix(hitPixX[nhit], hitPixY[nhit]);
-	    hit->setPos(hitPosX[nhit], hitPosY[nhit], hitPosZ[nhit]);
-	    hit->setValue(hitValue[nhit]);
-	    hit->setTiming(hitTiming[nhit]);
-	    
-	    // If this hit is in a cluster, mark this (and the clusters tree is active)
-	    if (_clusters.at(nplane) && hitInCluster[nhit] >= 0)
-	      {
-		Cluster* cluster = event->getCluster(hitInCluster[nhit]);
-		cluster->addHit(hit);
-	      }
-	  }
+	// If this cluster is in a track, mark this (and the tracks tree is active)
+	if (_tracks && clusterInTrack[ncluster] >= 0){
+	  Track* track = event->getTrack(clusterInTrack[ncluster]);
+	  track->addCluster(cluster);
+	  cluster->setTrack(track);
+	}
       }
+      
+      // Generate a list of all hit objects
+      for(int nhit=0; nhit<numHits; nhit++) {
+	if (_noiseMasks && _noiseMasks->at(nplane)[hitPixX[nhit]][hitPixY[nhit]]){
+	  if (hitInCluster[nhit] >= 0)
+	    throw "StorageIO: tried to mask a hit which is already in a cluster";
+	  continue;
+	}
+	
+	Hit* hit = event->newHit(nplane);
+	hit->setPix(hitPixX[nhit], hitPixY[nhit]);
+	hit->setPos(hitPosX[nhit], hitPosY[nhit], hitPosZ[nhit]);
+	hit->setValue(hitValue[nhit]);
+	hit->setTiming(hitTiming[nhit]);
+	
+	// If this hit is in a cluster, mark this (and the clusters tree is active)
+	if (_clusters.at(nplane) && hitInCluster[nhit] >= 0){
+	  Cluster* cluster = event->getCluster(hitInCluster[nhit]);
+	  cluster->addHit(hit);
+	}
+      }
+    } // end loop in planes
     
     return event;
   }
-
+  
   //=========================================================
   void StorageIO::writeEvent(Event* event){
-
+    
     if (_fileMode == INPUT) throw "StorageIO: can't write event in input mode";
     
     timeStamp = event->getTimeStamp();

@@ -16,41 +16,40 @@
  * should be very fast */
 
 namespace Analyzers {
-
-class Cut
-{
-public:
-  enum Type { EQ = 1, LT = 2, GT = 3 }; // EQual, Less Than, Greater Than
-protected:
-  const Type _type;
-public:
+  
+  class Cut{
+  public:
+    enum Type { EQ = 1, LT = 2, GT = 3 }; // EQual, Less Than, Greater Than
+  protected:
+    const Type _type;
+  public:
   Cut(Type type = EQ) : _type(type) { }
-  virtual ~Cut() { }
-};
-
-class EventCut : public Cut
-{
-public:
+    virtual ~Cut() { }
+  };
+  
+  class EventCut : public Cut
+  {
+  public:
   EventCut(Type type = EQ) : Cut(type) { }
-  virtual ~EventCut() { }
-  virtual bool check(const Storage::Event* event) const = 0;
-};
-
-class TrackCut : public Cut
-{
-public:
+    virtual ~EventCut() { }
+    virtual bool check(const Storage::Event* event) const = 0;
+  };
+  
+  class TrackCut : public Cut
+  {
+  public:
   TrackCut(Type type = EQ) : Cut(type) { }
-  virtual ~TrackCut() { }
-  virtual bool check(const Storage::Track* track) const = 0;
-};
-
-class ClusterCut : public Cut
-{
-public:
+    virtual ~TrackCut() { }
+    virtual bool check(const Storage::Track* track) const = 0;
+  };
+  
+  class ClusterCut : public Cut
+  {
+  public:
   ClusterCut(Type type = EQ) : Cut(type) { }
-  virtual ~ClusterCut() { }
-  virtual bool check(const Storage::Cluster* cluster) const = 0;
-};
+    virtual ~ClusterCut() { }
+    virtual bool check(const Storage::Cluster* cluster) const = 0;
+  };
 
 class HitCut : public Cut
 {

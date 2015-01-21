@@ -3,13 +3,17 @@
 
 #include <TFile.h>
 
-class ConfigParser;
+#include "../configparser.h"
+
 namespace Mechanics { class Device; }
 namespace Loopers { class Looper; }
 
 namespace Analyzers {
   
-  class EventCut;
+  class HitCut;
+  class ClusterCut;
+  class TrackCut;
+  class EventCut;  
   class SingleAnalyzer;
   class DualAnalyzer;
   class Correlation;
@@ -20,32 +24,50 @@ namespace Analyzers {
   class Occupancy;
   class DUTResiduals;
   class TrackInfo;
+
+  void parseCut(const ConfigParser::Row* row,
+		std::vector<EventCut*>& eventCuts,
+		std::vector<TrackCut*>& trackCuts,
+		std::vector<ClusterCut*>& clusterCuts,
+		std::vector<HitCut*>& hitCuts);
   
-  void configCorrelation(const ConfigParser& config,
-			 Loopers::Looper* looper,
-			 Mechanics::Device* refDevice,
-			 TFile* results);
+  void applyCuts(SingleAnalyzer* analyzer,
+		 std::vector<EventCut*>& eventCuts,
+		 std::vector<TrackCut*>& trackCuts,
+		 std::vector<ClusterCut*>& clusterCuts,
+		 std::vector<HitCut*>& hitCuts);
+  
+  void applyCuts(DualAnalyzer* analyzer,
+		 std::vector<EventCut*>& eventCuts,
+		 std::vector<TrackCut*>& trackCuts,
+		 std::vector<ClusterCut*>& clusterCuts,
+		 std::vector<HitCut*>& hitCuts);    
+  
+  void configLooper(const ConfigParser& config,
+		    Loopers::Looper* looper,
+		    Mechanics::Device* refDevice,
+		    Mechanics::Device* dutDevice,
+		    TFile* results);
+  
+  void configDepictor(const ConfigParser& config,
+		      Loopers::Looper* looper,
+		      Mechanics::Device* refDevice);
   
   void configDUTDepictor(const ConfigParser& config,
 			 Loopers::Looper* looper,
 			 Mechanics::Device* refDevice,
 			 Mechanics::Device* dutDevice);
   
-  void configDepictor(const ConfigParser& config,
-		      Loopers::Looper* looper,
-		      Mechanics::Device* refDevice);
+  void configCorrelation(const ConfigParser& config,
+			 Loopers::Looper* looper,
+			 Mechanics::Device* refDevice,
+			 TFile* results);
   
   void configDUTCorrelation(const ConfigParser& config,
 			    Loopers::Looper* looper,
 			    Mechanics::Device* refDevice,
 			    Mechanics::Device* dutDevice,
 			    TFile* results);
-  
-  void configEfficiency(const ConfigParser& config,
-			Loopers::Looper* looper,
-			Mechanics::Device* refDevice,
-			Mechanics::Device* dutDevice,
-			TFile* results);
   
   void configHitInfo(const ConfigParser& config,
 		     Loopers::Looper* looper,
@@ -57,13 +79,22 @@ namespace Analyzers {
 			 Mechanics::Device* refDevice,
 			 TFile* results);
   
-  void configMatching(const ConfigParser& config,
-		      Loopers::Looper* looper,
-		      Mechanics::Device* refDevice,
-		      Mechanics::Device* dutDevice,
-		      TFile* results);
-  
   void configOccupancy(const ConfigParser& config,
+		       Loopers::Looper* looper,
+		       Mechanics::Device* refDevice,
+		       TFile* results);
+  
+  void configTrackInfo(const ConfigParser& config,
+		       Loopers::Looper* looper,
+		       Mechanics::Device* refDevice,
+		       TFile* results);
+  
+  void configEventInfo(const ConfigParser& config,
+		       Loopers::Looper* looper,
+		       Mechanics::Device* refDevice,
+		       TFile* results);
+  
+  void configResiduals(const ConfigParser& config,
 		       Loopers::Looper* looper,
 		       Mechanics::Device* refDevice,
 		       TFile* results);
@@ -74,23 +105,18 @@ namespace Analyzers {
 		       Mechanics::Device* dutDevice,
 		       TFile* results);
   
-  void configResiduals(const ConfigParser& config,
-		       Loopers::Looper* looper,
-		       Mechanics::Device* refDevice,
-		       TFile* results);
+  void configMatching(const ConfigParser& config,
+		      Loopers::Looper* looper,
+		      Mechanics::Device* refDevice,
+		      Mechanics::Device* dutDevice,
+		      TFile* results);
   
-  void configTrackInfo(const ConfigParser& config,
-		       Loopers::Looper* looper,
-		       Mechanics::Device* refDevice,
-		       TFile* results);
-  
-  void configLooper(const ConfigParser& config,
-		    Loopers::Looper* looper,
-		    Mechanics::Device* refDevice,
-		    Mechanics::Device* dutDevice,
-		    TFile* results);
-  
-}
+  void configEfficiency(const ConfigParser& config,
+			Loopers::Looper* looper,
+			Mechanics::Device* refDevice,
+			Mechanics::Device* dutDevice,
+			TFile* results);
+} // end of namespace
 
 
 #endif // CONFIGANALYZERS_H

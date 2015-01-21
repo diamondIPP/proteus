@@ -22,73 +22,8 @@
 // This header defines all the cuts
 #include "cuts.h"
 
-namespace Analyzers {
-
-void ClusterInfo::processEvent(const Storage::Event* event)
-{
-  assert(event && "Analyzer: can't process null events");
-
-  // Throw an error for sensor / plane mismatch
-  eventDeivceAgree(event);
-
-  // Check if the event passes the cuts
-  for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)
-    if (!_eventCuts.at(ncut)->check(event)) return;
-
-  for (unsigned int nplane = 0; nplane < event->getNumPlanes(); nplane++)
-  {
-    Storage::Plane* plane = event->getPlane(nplane);
-
-    for (unsigned int ncluster = 0; ncluster < plane->getNumClusters(); ncluster++)
-    {
-      Storage::Cluster* cluster = plane->getCluster(ncluster);
-
-      // Check if the cluster passes the cuts
-      bool pass = true;
-      for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
-        if (!_clusterCuts.at(ncut)->check(cluster)) { pass = false; break; }
-      if (!pass) continue;
-
-      _clusterSize.at(nplane)->Fill(cluster->getNumHits());
-      _tot.at(nplane)->Fill(cluster->getValue());
-      _totSize.at(nplane)->Fill(cluster->getNumHits(), cluster->getValue());
-      
-      for( unsigned int nhits=0; nhits<cluster->getNumHits(); nhits++){
-	Storage::Hit* hit= cluster->getHit(nhits);
-	//std::cout << hit->getTiming() << std::endl;
-	_timingVsClusterSize.at(nplane)->Fill(cluster->getNumHits(),hit->getTiming());
-        _timingVsHitValue.at(nplane)->Fill(hit->getValue(),hit->getTiming());
-      }
-      if (_clustersVsTime.size())
-        _clustersVsTime.at(nplane)->Fill(_device->tsToTime(event->getTimeStamp()));
-      if (_totVsTime.size())
-        _totVsTime.at(nplane)->Fill(_device->tsToTime(event->getTimeStamp()), cluster->getValue());
-    }
-  }
-}
-
-void ClusterInfo::postProcessing()
-{
-  if (_postProcessed) return;
-
-  if (_clustersVsTime.size())
-  {
-    for (unsigned int nsens = 0; nsens < _device->getNumSensors(); nsens++)
-    {
-      TH1D* hist = _totVsTime.at(nsens);
-      TH1D* cnt  = _clustersVsTime.at(nsens);
-      for (Int_t bin = 1; bin <= hist->GetNbinsX(); bin++)
-      {
-        if (cnt->GetBinContent(bin) < 1) continue;
-        hist->SetBinContent(bin, hist->GetBinContent(bin) / (double)cnt->GetBinContent(bin));
-      }
-    }
-  }
-
-  _postProcessed = true;
-}
-
-ClusterInfo::ClusterInfo(const Mechanics::Device* device,
+//=========================================================
+Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
                          TDirectory* dir,
                          const char* suffix,
                          unsigned int totBins,
@@ -216,4 +151,65 @@ ClusterInfo::ClusterInfo(const Mechanics::Device* device,
   }
 }
 
+//=========================================================
+void Analyzers::ClusterInfo::processEvent(const Storage::Event* event)
+{
+  assert(event && "Analyzer: can't process null events");
+
+  // Throw an error for sensor / plane mismatch
+  eventDeivceAgree(event);
+
+  // Check if the event passes the cuts
+  for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)
+    if (!_eventCuts.at(ncut)->check(event)) return;
+
+  for (unsigned int nplane = 0; nplane < event->getNumPlanes(); nplane++)
+  {
+    Storage::Plane* plane = event->getPlane(nplane);
+
+    for (unsigned int ncluster = 0; ncluster < plane->getNumClusters(); ncluster++)
+    {
+      Storage::Cluster* cluster = plane->getCluster(ncluster);
+
+      // Check if the cluster passes the cuts
+      bool pass = true;
+      for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
+        if (!_clusterCuts.at(ncut)->check(cluster)) { pass = false; break; }
+      if (!pass) continue;
+
+      _clusterSize.at(nplane)->Fill(cluster->getNumHits());
+      _tot.at(nplane)->Fill(cluster->getValue());
+      _totSize.at(nplane)->Fill(cluster->getNumHits(), cluster->getValue());
+      
+      for( unsigned int nhits=0; nhits<cluster->getNumHits(); nhits++){
+	Storage::Hit* hit= cluster->getHit(nhits);
+	//std::cout << hit->getTiming() << std::endl;
+	_timingVsClusterSize.at(nplane)->Fill(cluster->getNumHits(),hit->getTiming());
+        _timingVsHitValue.at(nplane)->Fill(hit->getValue(),hit->getTiming());
+      }
+      if (_clustersVsTime.size())
+        _clustersVsTime.at(nplane)->Fill(_device->tsToTime(event->getTimeStamp()));
+      if (_totVsTime.size())
+        _totVsTime.at(nplane)->Fill(_device->tsToTime(event->getTimeStamp()), cluster->getValue());
+    }
+  }
 }
+
+//=========================================================
+void Analyzers::ClusterInfo::postProcessing(){
+  if (_postProcessed) return;
+  
+  if (_clustersVsTime.size()) {
+    for (unsigned int nsens=0; nsens<_device->getNumSensors(); nsens++){
+      TH1D* hist = _totVsTime.at(nsens);
+      TH1D* cnt  = _clustersVsTime.at(nsens);
+      for(Int_t bin = 1; bin <= hist->GetNbinsX(); bin++) {
+        if (cnt->GetBinContent(bin) < 1) continue;
+        hist->SetBinContent(bin, hist->GetBinContent(bin) / (double)cnt->GetBinContent(bin));
+      }
+    }
+  }
+  _postProcessed = true;
+}
+
+

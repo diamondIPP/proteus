@@ -20,15 +20,13 @@ namespace Loopers {
 		ULong64_t numEvents = 0,
 		unsigned int eventSkip = 1);
     
-    void loop();
-    
+    void loop();    
     void print();
-
+    
   private:
     Processors::TrackMatcher* _trackMatcher;
-
-  }; // end of class
-  
+    
+  }; // end of class  
 } // end of namespace
 
 #endif // ANALYSISDUT_H

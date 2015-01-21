@@ -7,7 +7,7 @@
 #include <vector>
 
 class ConfigParser{
-
+  
  public:
   struct Row {
     std::string header;

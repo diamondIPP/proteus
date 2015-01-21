@@ -3,6 +3,7 @@
 #include <cassert>
 #include <vector>
 #include <string>
+#include <iostream>
 
 #include <TFile.h>
 
@@ -24,18 +25,16 @@
 #include "eventinfo.h"
 #include "../mechanics/device.h"
 #include "../loopers/looper.h"
-#include "../configparser.h"
 
-namespace Analyzers {
-
-void parseCut(const ConfigParser::Row* row,
-              std::vector<EventCut*>& eventCuts,
-              std::vector<TrackCut*>& trackCuts,
-              std::vector<ClusterCut*>& clusterCuts,
-              std::vector<HitCut*>& hitCuts)
+//=========================================================
+void Analyzers::parseCut(const ConfigParser::Row* row,
+			 std::vector<EventCut*>& eventCuts,
+			 std::vector<TrackCut*>& trackCuts,
+			 std::vector<ClusterCut*>& clusterCuts,
+			 std::vector<HitCut*>& hitCuts)
 {
   const double value = ConfigParser::valueToNumerical(row->value);
-
+  
   std::string object = "";
   std::string variable = "";
   std::string typeName = "";
@@ -152,11 +151,12 @@ void parseCut(const ConfigParser::Row* row,
   }
 }
 
-void applyCuts(SingleAnalyzer* analyzer,
-               std::vector<EventCut*>& eventCuts,
-               std::vector<TrackCut*>& trackCuts,
-               std::vector<ClusterCut*>& clusterCuts,
-               std::vector<HitCut*>& hitCuts)
+//=========================================================
+void Analyzers::applyCuts(SingleAnalyzer* analyzer,
+			  std::vector<EventCut*>& eventCuts,
+			  std::vector<TrackCut*>& trackCuts,
+			  std::vector<ClusterCut*>& clusterCuts,
+			  std::vector<HitCut*>& hitCuts)
 {
   for (unsigned int i = 0; i < eventCuts.size(); i++)
     analyzer->addCut(eventCuts.at(i));
@@ -168,11 +168,12 @@ void applyCuts(SingleAnalyzer* analyzer,
     analyzer->addCut(hitCuts.at(i));
 }
 
-void applyCuts(DualAnalyzer* analyzer,
-               std::vector<EventCut*>& eventCuts,
-               std::vector<TrackCut*>& trackCuts,
-               std::vector<ClusterCut*>& clusterCuts,
-               std::vector<HitCut*>& hitCuts)
+//=========================================================
+void Analyzers::applyCuts(DualAnalyzer* analyzer,
+			  std::vector<EventCut*>& eventCuts,
+			  std::vector<TrackCut*>& trackCuts,
+			  std::vector<ClusterCut*>& clusterCuts,
+			  std::vector<HitCut*>& hitCuts)
 {
   for (unsigned int i = 0; i < eventCuts.size(); i++)
     analyzer->addCut(eventCuts.at(i));
@@ -184,74 +185,36 @@ void applyCuts(DualAnalyzer* analyzer,
     analyzer->addCut(hitCuts.at(i));
 }
 
-void configDUTDepictor(const ConfigParser& config,
-                       Loopers::Looper* looper,
-                       Mechanics::Device* refDevice,
-                       Mechanics::Device* dutDevice)
+//=========================================================
+void Analyzers::configLooper(const ConfigParser& config,
+			     Loopers::Looper* looper,
+			     Mechanics::Device* refDevice,
+			     Mechanics::Device* dutDevice,
+			     TFile* results)
 {
-  assert(refDevice && dutDevice && "Looper: can't configure with null device");
-
-  bool active = false;
-  std::string suffix = "";
-  std::vector<EventCut*> eventCuts;
-  std::vector<TrackCut*> trackCuts;
-  std::vector<ClusterCut*> clusterCuts;
-  std::vector<HitCut*> hitCuts;
-
-  bool depictEvent = true;
-  bool depictClusters = true;
-  bool depictTracks = true;
-  double zoom = 20.0;
-
-  for (unsigned int i = 0; i < config.getNumRows(); i++)
-  {
-    const ConfigParser::Row* row = config.getRow(i);
-
-    if (row->isHeader && !row->header.compare("End Depictor"))
-    {
-      if (!active) return;
-      DUTDepictor* analyzer =
-          new DUTDepictor(refDevice, dutDevice, 0, suffix.c_str(),
-                          depictEvent, depictClusters, depictTracks, zoom);
-      looper->addAnalyzer(analyzer); // Will be deleted by looper
-      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); // Cuts will be deleted by the analyzer
-
-      active = false;
-      suffix = "";
-      eventCuts.clear();
-      trackCuts.clear();
-      clusterCuts.clear();
-      hitCuts.clear();
-
-      depictEvent = true;
-      depictClusters = true;
-      depictTracks = true;
-      zoom = 20.0;
-    }
-
-    if (row->isHeader) continue;
-    if (row->header.compare("Depictor")) continue;
-
-    if (!row->key.compare("active"))
-      active = ConfigParser::valueToLogical(row->value);
-    else if (!row->key.compare("depict event"))
-      depictEvent = ConfigParser::valueToLogical(row->value);
-    else if (!row->key.compare("depict clusters"))
-      depictClusters = ConfigParser::valueToLogical(row->value);
-    else if (!row->key.compare("depict tracks"))
-      depictTracks = ConfigParser::valueToLogical(row->value);
-    else if (!row->key.compare("zoom"))
-      zoom = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.substr(0, 4).compare("cut "))
-      parseCut(row, eventCuts, trackCuts, clusterCuts, hitCuts);
-    else
-      throw "Analyzers: dut correlation can't parse row";
+  if(!dutDevice){
+    configDepictor(config, looper, refDevice);
+    configCorrelation(config, looper, refDevice, results);
+    configHitInfo(config, looper, refDevice, results);
+    configClusterInfo(config, looper, refDevice, results);
+    configOccupancy(config, looper, refDevice, results);
+    configTrackInfo(config, looper, refDevice, results);
+    configEventInfo(config, looper, refDevice, results);
+    configResiduals(config, looper, refDevice, results);
+  }
+  else{
+    configDUTDepictor(config, looper, refDevice, dutDevice);
+    configDUTCorrelation(config, looper, refDevice, dutDevice, results);
+    configResiduals(config, looper, refDevice, dutDevice, results);
+    configMatching(config, looper, refDevice, dutDevice, results);
+    configEfficiency(config, looper, refDevice, dutDevice, results);
   }
 }
 
-void configDepictor(const ConfigParser& config,
-                    Loopers::Looper* looper,
-                    Mechanics::Device* refDevice)
+//=========================================================
+void Analyzers::configDepictor(const ConfigParser& config,
+			       Loopers::Looper* looper,
+			       Mechanics::Device* refDevice)
 {
   assert(refDevice && "Looper: can't configure with null device");
 
@@ -313,10 +276,78 @@ void configDepictor(const ConfigParser& config,
   }
 }
 
-void configCorrelation(const ConfigParser& config,
-                       Loopers::Looper* looper,
-                       Mechanics::Device* refDevice,
-                       TFile* results)
+//=========================================================
+void Analyzers::configDUTDepictor(const ConfigParser& config,
+				  Loopers::Looper* looper,
+				  Mechanics::Device* refDevice,
+				  Mechanics::Device* dutDevice)
+{
+  assert(refDevice && dutDevice && "Looper: can't configure with null device");
+
+  bool active = false;
+  std::string suffix = "";
+  std::vector<EventCut*> eventCuts;
+  std::vector<TrackCut*> trackCuts;
+  std::vector<ClusterCut*> clusterCuts;
+  std::vector<HitCut*> hitCuts;
+
+  bool depictEvent = true;
+  bool depictClusters = true;
+  bool depictTracks = true;
+  double zoom = 20.0;
+
+  for (unsigned int i = 0; i < config.getNumRows(); i++)
+  {
+    const ConfigParser::Row* row = config.getRow(i);
+
+    if (row->isHeader && !row->header.compare("End Depictor"))
+    {
+      if (!active) return;
+      DUTDepictor* analyzer =
+          new DUTDepictor(refDevice, dutDevice, 0, suffix.c_str(),
+                          depictEvent, depictClusters, depictTracks, zoom);
+      looper->addAnalyzer(analyzer); // Will be deleted by looper
+      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); // Cuts will be deleted by the analyzer
+
+      active = false;
+      suffix = "";
+      eventCuts.clear();
+      trackCuts.clear();
+      clusterCuts.clear();
+      hitCuts.clear();
+
+      depictEvent = true;
+      depictClusters = true;
+      depictTracks = true;
+      zoom = 20.0;
+    }
+
+    if (row->isHeader) continue;
+    if (row->header.compare("Depictor")) continue;
+
+    if (!row->key.compare("active"))
+      active = ConfigParser::valueToLogical(row->value);
+    else if (!row->key.compare("depict event"))
+      depictEvent = ConfigParser::valueToLogical(row->value);
+    else if (!row->key.compare("depict clusters"))
+      depictClusters = ConfigParser::valueToLogical(row->value);
+    else if (!row->key.compare("depict tracks"))
+      depictTracks = ConfigParser::valueToLogical(row->value);
+    else if (!row->key.compare("zoom"))
+      zoom = ConfigParser::valueToNumerical(row->value);
+    else if (!row->key.substr(0, 4).compare("cut "))
+      parseCut(row, eventCuts, trackCuts, clusterCuts, hitCuts);
+    else
+      throw "Analyzers: dut correlation can't parse row";
+  }
+}
+
+
+//=========================================================
+void Analyzers::configCorrelation(const ConfigParser& config,
+				  Loopers::Looper* looper,
+				  Mechanics::Device* refDevice,
+				  TFile* results)
 {
   assert(refDevice && "Looper: can't configure with null device");
   if (!results) return;
@@ -364,11 +395,12 @@ void configCorrelation(const ConfigParser& config,
   }
 }
 
-void configDUTCorrelation(const ConfigParser& config,
-                          Loopers::Looper* looper,
-                          Mechanics::Device* refDevice,
-                          Mechanics::Device* dutDevice,
-                          TFile* results)
+//=========================================================
+void Analyzers::configDUTCorrelation(const ConfigParser& config,
+				     Loopers::Looper* looper,
+				     Mechanics::Device* refDevice,
+				     Mechanics::Device* dutDevice,
+				     TFile* results)
 {
   assert(refDevice && dutDevice && "Looper: can't configure with null device");
   if (!results) return;
@@ -414,81 +446,12 @@ void configDUTCorrelation(const ConfigParser& config,
   }
 }
 
-void configEfficiency(const ConfigParser& config,
-                      Loopers::Looper* looper,
-                      Mechanics::Device* refDevice,
-                      Mechanics::Device* dutDevice,
-                      TFile* results)
-{
-  assert(refDevice && dutDevice && "Looper: can't configure with null device");
-  if (!results) return;
 
-  bool active = false;
-  std::string suffix = "";
-  unsigned int relativeTo = -1;
-  unsigned int pixGroupX = 1;
-  unsigned int pixGroupY = 1;
-  unsigned int pixBinsX = 20;
-  unsigned int pixBinsY = 20;
-  std::vector<EventCut*> eventCuts;
-  std::vector<TrackCut*> trackCuts;
-  std::vector<ClusterCut*> clusterCuts;
-  std::vector<HitCut*> hitCuts;
-
-  for (unsigned int i = 0; i < config.getNumRows(); i++)
-  {
-    const ConfigParser::Row* row = config.getRow(i);
-
-    if (row->isHeader && !row->header.compare("End Efficiency"))
-    {
-      if (!active) return;
-      Efficiency* analyzer =
-          new Efficiency(refDevice, dutDevice, results->GetDirectory(""), suffix.c_str(),
-                         relativeTo, pixGroupX, pixGroupY, pixBinsX, pixBinsY);
-      looper->addAnalyzer(analyzer); // Will be deleted by looper
-      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); // Cuts will be deleted by the analyzer
-
-      active = false;
-      suffix = "";
-      relativeTo = -1;
-      pixGroupX = 1;
-      pixGroupY = 1;
-      pixBinsX = 20;
-      pixBinsY = 20;
-      eventCuts.clear();
-      trackCuts.clear();
-      clusterCuts.clear();
-      hitCuts.clear();
-    }
-
-    if (row->isHeader) continue;
-    if (row->header.compare("Efficiency")) continue;
-
-    if (!row->key.compare("active"))
-      active = ConfigParser::valueToLogical(row->value);
-    else if (!row->key.compare("suffix"))
-      suffix = row->value;
-    else if (!row->key.compare("relative to"))
-      relativeTo = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.compare("pix group x"))
-      pixGroupX = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.compare("pix group y"))
-      pixGroupY = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.compare("pix bins x"))
-      pixBinsX = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.compare("pix bins y"))
-      pixBinsY = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.substr(0, 4).compare("cut "))
-      parseCut(row, eventCuts, trackCuts, clusterCuts, hitCuts);
-    else
-      throw "Analyzers: efficiency can't parse row";
-  }
-}
-
-void configHitInfo(const ConfigParser& config,
-                   Loopers::Looper* looper,
-                   Mechanics::Device* refDevice,
-                   TFile* results)
+//=========================================================
+void Analyzers::configHitInfo(const ConfigParser& config,
+			      Loopers::Looper* looper,
+			      Mechanics::Device* refDevice,
+			      TFile* results)
 {
   assert(refDevice && "Looper: can't configure with null device");
   if (!results) return;
@@ -543,10 +506,11 @@ void configHitInfo(const ConfigParser& config,
   }
 }
 
-void configClusterInfo(const ConfigParser& config,
-                       Loopers::Looper* looper,
-                       Mechanics::Device* refDevice,
-                       TFile* results)
+//=========================================================
+void Analyzers::configClusterInfo(const ConfigParser& config,
+				  Loopers::Looper* looper,
+				  Mechanics::Device* refDevice,
+				  TFile* results)
 {
   assert(refDevice && "Looper: can't configure with null device");
   if (!results) return;
@@ -601,10 +565,125 @@ void configClusterInfo(const ConfigParser& config,
   }
 }
 
-void configEventInfo(const ConfigParser& config,
-                     Loopers::Looper* looper,
-                     Mechanics::Device* refDevice,
-                     TFile* results)
+//=========================================================
+void Analyzers::configOccupancy(const ConfigParser& config,
+				Loopers::Looper* looper,
+				Mechanics::Device* refDevice,
+				TFile* results)
+{
+  assert(refDevice && "Looper: can't configure with null device");
+  if (!results) return;
+
+  bool active = false;
+  std::string suffix = "";
+  std::vector<EventCut*> eventCuts;
+  std::vector<TrackCut*> trackCuts;
+  std::vector<ClusterCut*> clusterCuts;
+  std::vector<HitCut*> hitCuts;
+
+  for (unsigned int i = 0; i < config.getNumRows(); i++)
+  {
+    const ConfigParser::Row* row = config.getRow(i);
+
+    if (row->isHeader && !row->header.compare("End Occupancy"))
+    {
+      if (!active) return;
+      Occupancy* analyzer =
+          new Occupancy(refDevice, results->GetDirectory(""), suffix.c_str());
+      looper->addAnalyzer(analyzer); // Will be deleted by looper
+      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); // Cuts will be deleted by the analyzer
+
+      active = false;
+      suffix = "";
+      eventCuts.clear();
+      trackCuts.clear();
+      clusterCuts.clear();
+      hitCuts.clear();
+    }
+
+    if (row->isHeader) continue;
+    if (row->header.compare("Occupancy")) continue;
+
+    if (!row->key.compare("active"))
+      active = ConfigParser::valueToLogical(row->value);
+    else if (!row->key.compare("suffix"))
+      suffix = row->value;
+    else if (!row->key.substr(0, 4).compare("cut "))
+      parseCut(row, eventCuts, trackCuts, clusterCuts, hitCuts);
+    else
+      throw "Analyzers: can't parse row";
+  }
+}
+
+//=========================================================
+void Analyzers::configTrackInfo(const ConfigParser& config,
+				Loopers::Looper* looper,
+				Mechanics::Device* refDevice,
+				TFile* results)
+{
+  assert(refDevice && "Looper: can't configure with null device");
+  if (!results) return;
+
+  bool active = false;
+  std::string suffix = "";
+  double maxResolution = 1E-2;
+  double maxSlope = 1E-2;
+  double increaseArea = 1.2;
+  std::vector<EventCut*> eventCuts;
+  std::vector<TrackCut*> trackCuts;
+  std::vector<ClusterCut*> clusterCuts;
+  std::vector<HitCut*> hitCuts;
+
+  for (unsigned int i = 0; i < config.getNumRows(); i++)
+  {
+    const ConfigParser::Row* row = config.getRow(i);
+
+    if (row->isHeader && !row->header.compare("End Track Info"))
+    {
+      if (!active) return;
+      TrackInfo* analyzer =
+          new TrackInfo(refDevice, results->GetDirectory(""), suffix.c_str(),
+                        maxResolution, maxSlope, increaseArea);
+      looper->addAnalyzer(analyzer); // Will be deleted by looper
+      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); // Cuts will be deleted by the analyzer
+
+      active = false;
+      suffix = "";
+      maxResolution = 1E-2;
+      maxSlope = 1E-2;
+      increaseArea = 1.2;
+      eventCuts.clear();
+      trackCuts.clear();
+      clusterCuts.clear();
+      hitCuts.clear();
+    }
+
+    if (row->isHeader) continue;
+    if (row->header.compare("Track Info")) continue;
+
+    if (!row->key.compare("active"))
+      active = ConfigParser::valueToLogical(row->value);
+    else if (!row->key.compare("suffix"))
+      suffix = row->value;
+    else if (!row->key.compare("max resolution"))
+      maxResolution = ConfigParser::valueToNumerical(row->value);
+    else if (!row->key.compare("max slope"))
+      maxSlope = ConfigParser::valueToNumerical(row->value);
+    else if (!row->key.compare("increase area"))
+      increaseArea = ConfigParser::valueToNumerical(row->value);
+    else if (!row->key.substr(0, 4).compare("cut "))
+      parseCut(row, eventCuts, trackCuts, clusterCuts, hitCuts);
+    else
+      throw "Analyzers: track info can't parse row";
+  }
+}
+
+
+//=========================================================
+void Analyzers::configEventInfo(const ConfigParser& config,
+				Loopers::Looper* looper,
+				Mechanics::Device* refDevice,
+				TFile* results)
 {
   assert(refDevice && "Looper: can't configure with null device");
   if (!results) return;
@@ -655,11 +734,140 @@ void configEventInfo(const ConfigParser& config,
   }
 }
 
-void configMatching(const ConfigParser& config,
-                    Loopers::Looper* looper,
-                    Mechanics::Device* refDevice,
-                    Mechanics::Device* dutDevice,
-                    TFile* results)
+//=========================================================
+void Analyzers::configResiduals(const ConfigParser& config,
+				Loopers::Looper* looper,
+				Mechanics::Device* refDevice,
+				TFile* results)
+{
+  assert(refDevice && "Looper: can't configure with null device");
+  if (!results) return;
+
+  bool active = false;
+  std::string suffix = "";
+  unsigned int numPixels = 5;
+  double binsPerPixels = 10;
+  int numBinsY = 15;
+  std::vector<EventCut*> eventCuts;
+  std::vector<TrackCut*> trackCuts;
+  std::vector<ClusterCut*> clusterCuts;
+  std::vector<HitCut*> hitCuts;
+
+  for (unsigned int i = 0; i < config.getNumRows(); i++)
+  {
+    const ConfigParser::Row* row = config.getRow(i);
+
+    if (row->isHeader && !row->header.compare("End Residuals"))
+    {
+      if (!active) return;
+      Residuals* analyzer =
+          new Residuals(refDevice, results->GetDirectory(""), suffix.c_str(),
+                        numPixels, binsPerPixels, numBinsY);
+      looper->addAnalyzer(analyzer); // Will be deleted by looper
+      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); // Cuts will be deleted by the analyzer
+
+      active = false;
+      suffix = "";
+      numPixels = 5;
+      binsPerPixels = 10;
+      numBinsY = 15;
+      eventCuts.clear();
+      trackCuts.clear();
+      clusterCuts.clear();
+      hitCuts.clear();
+    }
+
+    if (row->isHeader) continue;
+    if (row->header.compare("Residuals")) continue;
+
+    if (!row->key.compare("active"))
+      active = ConfigParser::valueToLogical(row->value);
+    else if (!row->key.compare("suffix"))
+      suffix = row->value;
+    else if (!row->key.compare("num pixels"))
+      numPixels = ConfigParser::valueToNumerical(row->value);
+    else if (!row->key.compare("bins per pixel"))
+      binsPerPixels = ConfigParser::valueToNumerical(row->value);
+    else if (!row->key.compare("num bins y"))
+      numBinsY = ConfigParser::valueToNumerical(row->value);
+    else if (!row->key.substr(0, 4).compare("cut "))
+      parseCut(row, eventCuts, trackCuts, clusterCuts, hitCuts);
+    else
+      throw "Analyzers: residuals can't parse row";
+  }
+}
+
+
+//=========================================================
+void Analyzers::configResiduals(const ConfigParser& config,
+				Loopers::Looper* looper,
+				Mechanics::Device* refDevice,
+				Mechanics::Device* dutDevice,
+				TFile* results)
+{
+  assert(refDevice && dutDevice && "Looper: can't configure with null device");
+  if (!results) return;
+
+  bool active = false;
+  std::string suffix = "";
+  unsigned int numPixels = 5;
+  double binsPerPixels = 10;
+  int numBinsY = 15;
+  std::vector<EventCut*> eventCuts;
+  std::vector<TrackCut*> trackCuts;
+  std::vector<ClusterCut*> clusterCuts;
+  std::vector<HitCut*> hitCuts;
+
+  for (unsigned int i = 0; i < config.getNumRows(); i++)
+  {
+    const ConfigParser::Row* row = config.getRow(i);
+
+    if (row->isHeader && !row->header.compare("End Residuals"))
+    {
+      if (!active) return;
+      DUTResiduals* analyzer =
+          new DUTResiduals(refDevice, dutDevice, results->GetDirectory(""), suffix.c_str(),
+                           numPixels, binsPerPixels, numBinsY);
+      looper->addAnalyzer(analyzer); // Will be deleted by looper
+      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); // Cuts will be deleted by the analyzer
+
+      active = false;
+      suffix = "";
+      numPixels = 5;
+      binsPerPixels = 10;
+      numBinsY = 15;
+      eventCuts.clear();
+      trackCuts.clear();
+      clusterCuts.clear();
+      hitCuts.clear();
+    }
+
+    if (row->isHeader) continue;
+    if (row->header.compare("Residuals")) continue;
+
+    if (!row->key.compare("active"))
+      active = ConfigParser::valueToLogical(row->value);
+    else if (!row->key.compare("suffix"))
+      suffix = row->value;
+    else if (!row->key.compare("num pixels"))
+      numPixels = ConfigParser::valueToNumerical(row->value);
+    else if (!row->key.compare("bins per pixel"))
+      binsPerPixels = ConfigParser::valueToNumerical(row->value);
+    else if (!row->key.compare("num bins y"))
+      numBinsY = ConfigParser::valueToNumerical(row->value);
+    else if (!row->key.substr(0, 4).compare("cut "))
+      parseCut(row, eventCuts, trackCuts, clusterCuts, hitCuts);
+    else
+      throw "Analyzers: residuals can't parse row";
+  }
+}
+
+//=========================================================
+void Analyzers::configMatching(const ConfigParser& config,
+			       Loopers::Looper* looper,
+			       Mechanics::Device* refDevice,
+			       Mechanics::Device* dutDevice,
+			       TFile* results)
 {
   assert(refDevice && dutDevice && "Looper: can't configure with null device");
   if (!results) return;
@@ -726,267 +934,104 @@ void configMatching(const ConfigParser& config,
   }
 }
 
-void configOccupancy(const ConfigParser& config,
-                     Loopers::Looper* looper,
-                     Mechanics::Device* refDevice,
-                     TFile* results)
-{
-  assert(refDevice && "Looper: can't configure with null device");
-  if (!results) return;
 
-  bool active = false;
-  std::string suffix = "";
-  std::vector<EventCut*> eventCuts;
-  std::vector<TrackCut*> trackCuts;
-  std::vector<ClusterCut*> clusterCuts;
-  std::vector<HitCut*> hitCuts;
-
-  for (unsigned int i = 0; i < config.getNumRows(); i++)
-  {
-    const ConfigParser::Row* row = config.getRow(i);
-
-    if (row->isHeader && !row->header.compare("End Occupancy"))
-    {
-      if (!active) return;
-      Occupancy* analyzer =
-          new Occupancy(refDevice, results->GetDirectory(""), suffix.c_str());
-      looper->addAnalyzer(analyzer); // Will be deleted by looper
-      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); // Cuts will be deleted by the analyzer
-
-      active = false;
-      suffix = "";
-      eventCuts.clear();
-      trackCuts.clear();
-      clusterCuts.clear();
-      hitCuts.clear();
-    }
-
-    if (row->isHeader) continue;
-    if (row->header.compare("Occupancy")) continue;
-
-    if (!row->key.compare("active"))
-      active = ConfigParser::valueToLogical(row->value);
-    else if (!row->key.compare("suffix"))
-      suffix = row->value;
-    else if (!row->key.substr(0, 4).compare("cut "))
-      parseCut(row, eventCuts, trackCuts, clusterCuts, hitCuts);
-    else
-      throw "Analyzers: can't parse row";
-  }
-}
-
-void configResiduals(const ConfigParser& config,
-                     Loopers::Looper* looper,
-                     Mechanics::Device* refDevice,
-                     Mechanics::Device* dutDevice,
-                     TFile* results)
+//=========================================================
+void Analyzers::configEfficiency(const ConfigParser& config,
+				 Loopers::Looper* looper,
+				 Mechanics::Device* refDevice,
+				 Mechanics::Device* dutDevice,
+				 TFile* results)
 {
   assert(refDevice && dutDevice && "Looper: can't configure with null device");
-  if (!results) return;
-
+  if(!results){
+    std::cout << "[Analyzers::configEfficiency] "
+	      << "no results file name provided. Exit." << std::endl;
+    return;
+  }
+  
   bool active = false;
   std::string suffix = "";
-  unsigned int numPixels = 5;
-  double binsPerPixels = 10;
-  int numBinsY = 15;
+  unsigned int relativeTo = -1; // Sergio:: why unsigned and initialized to -1 ????
+  int pix_x_min = 1;
+  int pix_x_max = 12;
+  int pix_y_min = 81;
+  int pix_y_max = 94;  
+  unsigned int pixGroupX = 1;
+  unsigned int pixGroupY = 1;
+  unsigned int pixBinsX = 20;
+  unsigned int pixBinsY = 20;
   std::vector<EventCut*> eventCuts;
   std::vector<TrackCut*> trackCuts;
   std::vector<ClusterCut*> clusterCuts;
   std::vector<HitCut*> hitCuts;
 
-  for (unsigned int i = 0; i < config.getNumRows(); i++)
-  {
+  for (unsigned int i=0; i<config.getNumRows(); i++){
     const ConfigParser::Row* row = config.getRow(i);
-
-    if (row->isHeader && !row->header.compare("End Residuals"))
-    {
+    
+    if (row->isHeader && !row->header.compare("End Efficiency")){
       if (!active) return;
-      DUTResiduals* analyzer =
-          new DUTResiduals(refDevice, dutDevice, results->GetDirectory(""), suffix.c_str(),
-                           numPixels, binsPerPixels, numBinsY);
+      
+      Efficiency* analyzer = new Efficiency(refDevice,
+					    dutDevice,
+					    results->GetDirectory(""),
+					    suffix.c_str(),
+					    relativeTo,
+					    pix_x_min,
+					    pix_x_max,
+					    pix_y_min,
+					    pix_y_max,					    
+					    pixGroupX,
+					    pixGroupY,
+					    pixBinsX,
+					    pixBinsY);
       looper->addAnalyzer(analyzer); // Will be deleted by looper
       applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); // Cuts will be deleted by the analyzer
-
+      
       active = false;
       suffix = "";
-      numPixels = 5;
-      binsPerPixels = 10;
-      numBinsY = 15;
+      relativeTo = -1;
+      pix_x_min = 1;
+      pix_x_max = 12;
+      pix_y_min = 81;
+      pix_y_max = 94; 
+      pixGroupX = 1;
+      pixGroupY = 1;
+      pixBinsX = 20;
+      pixBinsY = 20;
       eventCuts.clear();
       trackCuts.clear();
       clusterCuts.clear();
       hitCuts.clear();
     }
-
+    
     if (row->isHeader) continue;
-    if (row->header.compare("Residuals")) continue;
-
+    if (row->header.compare("Efficiency")) continue;
+    
     if (!row->key.compare("active"))
       active = ConfigParser::valueToLogical(row->value);
     else if (!row->key.compare("suffix"))
       suffix = row->value;
-    else if (!row->key.compare("num pixels"))
-      numPixels = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.compare("bins per pixel"))
-      binsPerPixels = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.compare("num bins y"))
-      numBinsY = ConfigParser::valueToNumerical(row->value);
+    else if (!row->key.compare("relative to"))
+      relativeTo = ConfigParser::valueToNumerical(row->value);
+    else if (!row->key.compare("pix x min"))
+      pix_x_min = ConfigParser::valueToNumerical(row->value);
+    else if (!row->key.compare("pix x max"))
+      pix_x_max = ConfigParser::valueToNumerical(row->value);
+    else if (!row->key.compare("pix y min"))
+      pix_y_min = ConfigParser::valueToNumerical(row->value);
+    else if (!row->key.compare("pix y max"))
+      pix_y_max = ConfigParser::valueToNumerical(row->value);
+    else if (!row->key.compare("pix group x"))
+      pixGroupX = ConfigParser::valueToNumerical(row->value);
+    else if (!row->key.compare("pix group y"))
+      pixGroupY = ConfigParser::valueToNumerical(row->value);
+    else if (!row->key.compare("pix bins x"))
+      pixBinsX = ConfigParser::valueToNumerical(row->value);
+    else if (!row->key.compare("pix bins y"))
+      pixBinsY = ConfigParser::valueToNumerical(row->value);
     else if (!row->key.substr(0, 4).compare("cut "))
       parseCut(row, eventCuts, trackCuts, clusterCuts, hitCuts);
     else
-      throw "Analyzers: residuals can't parse row";
+      throw "Analyzers: efficiency can't parse row";
   }
-}
-
-void configResiduals(const ConfigParser& config,
-                     Loopers::Looper* looper,
-                     Mechanics::Device* refDevice,
-                     TFile* results)
-{
-  assert(refDevice && "Looper: can't configure with null device");
-  if (!results) return;
-
-  bool active = false;
-  std::string suffix = "";
-  unsigned int numPixels = 5;
-  double binsPerPixels = 10;
-  int numBinsY = 15;
-  std::vector<EventCut*> eventCuts;
-  std::vector<TrackCut*> trackCuts;
-  std::vector<ClusterCut*> clusterCuts;
-  std::vector<HitCut*> hitCuts;
-
-  for (unsigned int i = 0; i < config.getNumRows(); i++)
-  {
-    const ConfigParser::Row* row = config.getRow(i);
-
-    if (row->isHeader && !row->header.compare("End Residuals"))
-    {
-      if (!active) return;
-      Residuals* analyzer =
-          new Residuals(refDevice, results->GetDirectory(""), suffix.c_str(),
-                        numPixels, binsPerPixels, numBinsY);
-      looper->addAnalyzer(analyzer); // Will be deleted by looper
-      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); // Cuts will be deleted by the analyzer
-
-      active = false;
-      suffix = "";
-      numPixels = 5;
-      binsPerPixels = 10;
-      numBinsY = 15;
-      eventCuts.clear();
-      trackCuts.clear();
-      clusterCuts.clear();
-      hitCuts.clear();
-    }
-
-    if (row->isHeader) continue;
-    if (row->header.compare("Residuals")) continue;
-
-    if (!row->key.compare("active"))
-      active = ConfigParser::valueToLogical(row->value);
-    else if (!row->key.compare("suffix"))
-      suffix = row->value;
-    else if (!row->key.compare("num pixels"))
-      numPixels = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.compare("bins per pixel"))
-      binsPerPixels = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.compare("num bins y"))
-      numBinsY = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.substr(0, 4).compare("cut "))
-      parseCut(row, eventCuts, trackCuts, clusterCuts, hitCuts);
-    else
-      throw "Analyzers: residuals can't parse row";
-  }
-}
-
-void configTrackInfo(const ConfigParser& config,
-                     Loopers::Looper* looper,
-                     Mechanics::Device* refDevice,
-                     TFile* results)
-{
-  assert(refDevice && "Looper: can't configure with null device");
-  if (!results) return;
-
-  bool active = false;
-  std::string suffix = "";
-  double maxResolution = 1E-2;
-  double maxSlope = 1E-2;
-  double increaseArea = 1.2;
-  std::vector<EventCut*> eventCuts;
-  std::vector<TrackCut*> trackCuts;
-  std::vector<ClusterCut*> clusterCuts;
-  std::vector<HitCut*> hitCuts;
-
-  for (unsigned int i = 0; i < config.getNumRows(); i++)
-  {
-    const ConfigParser::Row* row = config.getRow(i);
-
-    if (row->isHeader && !row->header.compare("End Track Info"))
-    {
-      if (!active) return;
-      TrackInfo* analyzer =
-          new TrackInfo(refDevice, results->GetDirectory(""), suffix.c_str(),
-                        maxResolution, maxSlope, increaseArea);
-      looper->addAnalyzer(analyzer); // Will be deleted by looper
-      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); // Cuts will be deleted by the analyzer
-
-      active = false;
-      suffix = "";
-      maxResolution = 1E-2;
-      maxSlope = 1E-2;
-      increaseArea = 1.2;
-      eventCuts.clear();
-      trackCuts.clear();
-      clusterCuts.clear();
-      hitCuts.clear();
-    }
-
-    if (row->isHeader) continue;
-    if (row->header.compare("Track Info")) continue;
-
-    if (!row->key.compare("active"))
-      active = ConfigParser::valueToLogical(row->value);
-    else if (!row->key.compare("suffix"))
-      suffix = row->value;
-    else if (!row->key.compare("max resolution"))
-      maxResolution = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.compare("max slope"))
-      maxSlope = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.compare("increase area"))
-      increaseArea = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.substr(0, 4).compare("cut "))
-      parseCut(row, eventCuts, trackCuts, clusterCuts, hitCuts);
-    else
-      throw "Analyzers: track info can't parse row";
-  }
-}
-
-void configLooper(const ConfigParser& config,
-                  Loopers::Looper* looper,
-                  Mechanics::Device* refDevice,
-                  Mechanics::Device* dutDevice,
-                  TFile* results)
-{
-  if (!dutDevice)
-  {
-    configDepictor(config, looper, refDevice);
-    configCorrelation(config, looper, refDevice, results);
-    configHitInfo(config, looper, refDevice, results);
-    configClusterInfo(config, looper, refDevice, results);
-    configOccupancy(config, looper, refDevice, results);
-    configTrackInfo(config, looper, refDevice, results);
-    configEventInfo(config, looper, refDevice, results);
-    configResiduals(config, looper, refDevice, results);
-  }
-  else
-  {
-    configDUTDepictor(config, looper, refDevice, dutDevice);
-    configDUTCorrelation(config, looper, refDevice, dutDevice, results);
-    configResiduals(config, looper, refDevice, dutDevice, results);
-    configMatching(config, looper, refDevice, dutDevice, results);
-    configEfficiency(config, looper, refDevice, dutDevice, results);
-  }
-}
-
 }

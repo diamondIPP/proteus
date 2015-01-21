@@ -129,9 +129,9 @@ void Loopers::FineAlignDut::loop()
       if(niter==0){
       double sigmaX = 0, maxX = 0, backgroundX = 0;
       double sigmaY = 0, maxY = 0, backgroundY = 0;
-      Processors::fitGaussian(residuals.getResidualX(nsens), offsetX, sigmaX, maxX,backgroundX, _displayFits);
-      Processors::fitGaussian(residuals.getResidualY(nsens), offsetY, sigmaY, maxX,backgroundY, _displayFits);
-
+      Processors::fitGaussian(residuals.getResidualX(nsens), offsetX, sigmaX, maxX, backgroundX, _displayFits);
+      Processors::fitGaussian(residuals.getResidualY(nsens), offsetY, sigmaY, maxX, backgroundY, _displayFits);
+      
       std::cout << "Fine alignment with residuals:" << std::endl;
       std::cout << "   Sensor: " << nsens << ", Xcorrection: " << offsetX << ", Ycorrection: " << offsetY <<  std::endl;
       sensor->setOffX(sensor->getOffX() + offsetX);
@@ -141,18 +141,26 @@ void Loopers::FineAlignDut::loop()
       offsetY=0;
       rotation=0;
       }
-
+      
       Processors::residualAlignment(residuals.getResidualXY(nsens),
                                     residuals.getResidualYX(nsens),
                                     offsetX, offsetY, rotation, _displayFits);
-
+      
       std::cout << "Fine alignment with 2D slicing:" << std::endl;
-      std::cout << "   Sensor: " << nsens << ", Xcorrection: " << offsetX << ", Ycorrection: " << offsetY << ", Zcorrection: " << rotation << std::endl;
+      std::cout << "   Sensor: " << nsens << ", "
+		<< "Xcorrection: " << offsetX << ", "
+		<< "Ycorrection: " << offsetY << ", "
+		<< "Zcorrection: " << rotation
+		<< std::endl;
       sensor->setOffX(sensor->getOffX() + offsetX);
       sensor->setOffY(sensor->getOffY() + offsetY);
       sensor->setRotZ(sensor->getRotZ() + rotation);
-      std::cout << "Sensor: " << nsens << ", Xoffset: " << sensor->getOffX() << ", Yoffset: " << sensor->getOffY() << ", Zoffset: " << sensor->getOffZ() << std::endl;
-      std::cout << "" << std::endl;
+      std::cout << "Sensor: " << nsens << ", "
+		<< "Xoffset: " << sensor->getOffX() << ", "
+		<< "Yoffset: " << sensor->getOffY() << ", "
+		<< "Zoffset: " << sensor->getOffZ()
+		<< std::endl;
+      std::cout << std::endl;
 
       if(niter==0 && _dutDevice->getNumSensors()== 1 && offsetX==0 && offsetY==0){
 	std::cout << "The fine alignment was terminated!" << std::endl;
