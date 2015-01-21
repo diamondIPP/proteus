@@ -41,13 +41,16 @@ Loopers::ProcessEvents::ProcessEvents(Mechanics::Device* refDevice,
 {
   assert(refInput && refDevice && refOutput &&
          "Looper: initialized with null object(s)");
+
   assert(refInput->getNumPlanes() == refDevice->getNumSensors() &&
          "Loopers: number of planes / sensors mis-match");
+
+  _refOutput->setRuns(refInput->getRuns());
 }
 
 //=========================================================
-void Loopers::ProcessEvents::loop()
-{
+void Loopers::ProcessEvents::loop() {
+
   // Some statistics for reporting
   ULong64_t statProcessedEvents = 0;
   ULong64_t statGeneratedClusters = 0;
@@ -60,85 +63,81 @@ void Loopers::ProcessEvents::loop()
   ULong64_t statMostTracksEvent = 0;
   unsigned int statMostTracks = 0;
 
-  for (ULong64_t nevent = _startEvent; nevent <= _endEvent; nevent++)
-  {
+  for (ULong64_t nevent=_startEvent; nevent<=_endEvent; nevent++){
     Storage::Event* refEvent = _refStorage->readEvent(nevent);
-
+    
     if (refEvent->getNumClusters())
       throw "ProcessEvents: can't recluster an event, mask the tree in the input";
     for (unsigned int nplane = 0; nplane < refEvent->getNumPlanes(); nplane++)
       if (_clusterMaker) _clusterMaker->generateClusters(refEvent, nplane);
-
+    
     Processors::applyAlignment(refEvent, _refDevice);
-
+    
     if (refEvent->getNumTracks())
       throw "ProcessEvents: can't re-track an event, mask the tree in the input";
-    if (_trackMaker) _trackMaker->generateTracks(refEvent,
-                                                 _refDevice->getBeamSlopeX(),
-                                                 _refDevice->getBeamSlopeY());
 
+    if (_trackMaker)
+      _trackMaker->generateTracks(refEvent, _refDevice->getBeamSlopeX(), _refDevice->getBeamSlopeY());
+    
     // Write the event
     _refOutput->writeEvent(refEvent);
-
-    for (unsigned int i = 0; i < _numSingleAnalyzers; i++)
+    
+    for (unsigned int i=0; i<_numSingleAnalyzers; i++)
       _singleAnalyzers.at(i)->processEvent(refEvent);
-
+    
     // Fill the statistics
     statProcessedEvents++;
     statGeneratedClusters += refEvent->getNumClusters();
     statGeneratedTracks += refEvent->getNumTracks();
-    if (!refEvent->getNumClusters())
-      statNoClusterEvents++;
-    if (!refEvent->getNumTracks())
-      statNoTrackEvents++;
-    if (refEvent->getNumTracks() == 1)
-      statSingleTrackEvents++;
-    if (nevent == _startEvent || refEvent->getNumClusters() > statMostClusters)
-    {
+    if (!refEvent->getNumClusters()) statNoClusterEvents++;
+    if (!refEvent->getNumTracks()) statNoTrackEvents++;
+    if (refEvent->getNumTracks() == 1) statSingleTrackEvents++;
+    if (nevent == _startEvent || refEvent->getNumClusters() > statMostClusters){
       statMostClusters = refEvent->getNumClusters();
       statMostClustersEvent = nevent;
     }
-    if (nevent == _startEvent || refEvent->getNumTracks() > statMostTracks)
-    {
+    if (nevent == _startEvent || refEvent->getNumTracks() > statMostTracks){
       statMostTracks = refEvent->getNumTracks();
       statMostTracksEvent = nevent;
     }
-
+    
     progressBar(nevent);
-
+    
     delete refEvent;
-  }
 
-  for (unsigned int i = 0; i < _numSingleAnalyzers; i++)
+  } // end loop in events
+  
+  for (unsigned int i=0; i<_numSingleAnalyzers; i++)
     _singleAnalyzers.at(i)->postProcessing();
-  for (unsigned int i = 0; i < _numDualAnalyzers; i++)
-    _dualAnalyzers.at(i)->postProcessing();
 
+  for (unsigned int i=0; i<_numDualAnalyzers; i++)
+    _dualAnalyzers.at(i)->postProcessing();
+  
   if (VERBOSE)
-  {
-    cout << "\nPROCESS RUN STATISTICS:\n";
-    cout << "  Requested events:      " << _numEvents << "\n";
-    cout << "  Processed events:      " << statProcessedEvents << "\n";
-    cout << "  Generated clusters:    " << statGeneratedClusters << "\n";
-    cout << "  Generated tracks:      " << statGeneratedTracks << "\n";
-    cout << "  Clusters per event:    " << (double)statGeneratedClusters /
-            (double)statProcessedEvents << "\n";
-    cout << "  Clusters per sensor:   " << (double)statGeneratedClusters /
-            (double)statProcessedEvents / (double)_refDevice->getNumSensors() << "\n";
-    cout << "  Tracks per event:      " << (double)statGeneratedTracks /
-            (double)statProcessedEvents << "\n";
-    cout << "  No cluster events:     " << statNoClusterEvents /
-            (double)statProcessedEvents * 100 << "%\n";
-    cout << "  No track events:       " << statNoTrackEvents /
-            (double)statProcessedEvents * 100 << "%\n";
-    cout << "  Single track events:   " << statSingleTrackEvents /
-            (double)statProcessedEvents * 100 << "%\n";
-    cout << "  Most clusters (event): " << statMostClusters << " (" <<
-            statMostClustersEvent << ")\n";
-    cout << "  Most Tracks (event):   " << statMostTracks << " (" <<
-            statMostTracksEvent << ")\n";
-    cout << flush;
-  }
+    {
+      cout << "\nPROCESS RUN STATISTICS:\n";
+      cout << "  Requested events:      " << _numEvents << "\n";
+      cout << "  Processed events:      " << statProcessedEvents << "\n";
+      cout << "  Generated clusters:    " << statGeneratedClusters << "\n";
+      cout << "  Generated tracks:      " << statGeneratedTracks << "\n";
+      cout << "  Clusters per event:    " << (double)statGeneratedClusters /
+	(double)statProcessedEvents << "\n";
+      cout << "  Clusters per sensor:   " << (double)statGeneratedClusters /
+	(double)statProcessedEvents / (double)_refDevice->getNumSensors() << "\n";
+      cout << "  Tracks per event:      " << (double)statGeneratedTracks /
+	(double)statProcessedEvents << "\n";
+      cout << "  No cluster events:     " << statNoClusterEvents /
+	(double)statProcessedEvents * 100 << "%\n";
+      cout << "  No track events:       " << statNoTrackEvents /
+	(double)statProcessedEvents * 100 << "%\n";
+      cout << "  Single track events:   " << statSingleTrackEvents /
+	(double)statProcessedEvents * 100 << "%\n";
+      cout << "  Most clusters (event): " << statMostClusters << " (" <<
+	statMostClustersEvent << ")\n";
+      cout << "  Most Tracks (event):   " << statMostTracks << " (" <<
+	statMostTracksEvent << ")\n";
+      cout << flush;
+    }
 }
 
 void Loopers::ProcessEvents::print(){

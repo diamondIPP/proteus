@@ -32,12 +32,14 @@ namespace Storage {
 		       Mode fileMode,
 		       unsigned int numPlanes,
 		       const unsigned int treeMask,
-		       const std::vector<bool>* planeMask) :
+		       const std::vector<bool>* planeMask,
+		       int printLevel) :
     _filePath(filePath),
     _file(0),
     _fileMode(fileMode),
     _numPlanes(0),
     _numEvents(0),
+    _printLevel(printLevel),    
     _noiseMasks(0),
     _tracks(0),
     _eventInfo(0),
@@ -47,18 +49,30 @@ namespace Storage {
     else if (fileMode == OUTPUT) _file = new TFile(_filePath, "RECREATE");    
     if (!_file) throw "StorageIO: file didn't initialize";
 
+    // clear tree variables
     clearVariables();
     
     // Plane mask holds a true for masked planes
-    if (planeMask && fileMode == OUTPUT)
+    if(planeMask && fileMode == OUTPUT)
       throw "StorageIO: can't use a plane mask in output mode";
 
+    // debug info 
+    if( _printLevel > 0  ){
+      cout << "\n[StorageIO::StorageIO]" << endl;
+      cout << "  - filePath  = " << filePath  << endl;
+      cout << "  - fileMode  = " << fileMode;
+      std::string ost = fileMode ? "OUTPUT" : "INPUT";
+      cout << " (" << ost << ")"<< endl;
+      cout << "  - numPlanes = " << numPlanes << endl;
+      cout << "  - treeMask  = " << treeMask  << endl;
+    }
+    
     /****************************************************
      In OUTPUT mode,
      create the directory structure and the relevant trees
     ****************************************************/
     if (_fileMode==OUTPUT){
-      if (planeMask && VERBOSE)
+      if (planeMask && (VERBOSE || _printLevel>0) )
 	cout << "WARNING :: StorageIO: disregarding plane mask in output mode";
       
       _numPlanes = numPlanes;
@@ -125,10 +139,8 @@ namespace Storage {
       _tracks->Branch("CovarianceX", trackCovarianceX, "TrackCovarianceX[NTracks]/D");
       _tracks->Branch("CovarianceY", trackCovarianceY, "TrackCovarianceY[NTracks]/D");
       _tracks->Branch("Chi2", trackChi2, "TrackChi2[NTracks]/D");
-
+      
       // SummaryTree tree
-      dir = _file->mkdir("SummaryInfo");
-      dir->cd();      
       _summaryTree = new TTree("SummaryTree", "Summary of configuration");
       _summaryTree->Branch("NRuns", &numRuns, "NRuns/I");
       _summaryTree->Branch("Run", &run, "Run[NRuns]/I");
@@ -140,7 +152,7 @@ namespace Storage {
     *********************/
     if (_fileMode == INPUT){
 
-      if (_numPlanes && VERBOSE)
+      if (_numPlanes && (VERBOSE || _printLevel>0) )
 	cout << "WARNING :: StorageIO: disregarding specified number of planes" << endl;
 
       _numPlanes = 0; // Determine num planes from file structure
@@ -182,7 +194,7 @@ namespace Storage {
 	TTree* clusters;
 	_file->GetObject(ss.str().append("/Clusters").c_str(), clusters);
 	_clusters.push_back(clusters);
-	if (clusters){
+	if(clusters){
 	  clusters->SetBranchAddress("NClusters", &numClusters, &bNumClusters);
 	  clusters->SetBranchAddress("PixX", clusterPixX, &bClusterPixX);
 	  clusters->SetBranchAddress("PixY", clusterPixY, &bClusterPixY);
@@ -223,18 +235,18 @@ namespace Storage {
 	_tracks->SetBranchAddress("Chi2", trackChi2, &bTrackChi2);
       }
 
-      _file->GetObject("SummaryInfo/SummaryTree", _summaryTree);
+      _file->GetObject("SummaryTree", _summaryTree);
       if (_summaryTree){
 	_summaryTree->SetBranchAddress("NRuns", &numRuns, &bNumRuns);
-	_summaryTree->SetBranchAddress("Run", &run, &bRun);
+	_summaryTree->SetBranchAddress("Run", &run, &bRun);		
       }
-
     } // end if(_fileMode == INPUT)
     
-    if (_numPlanes < 1) throw "StorageIO: didn't initialize any planes";
+    if (_numPlanes < 1)
+      throw "StorageIO: didn't initialize any planes";
     
     // Delete trees as per the tree flags
-    if(treeMask){
+    if( treeMask ){
       for(unsigned int nplane=0; nplane<_numPlanes; nplane++){
 	if (treeMask & Flags::HITS) { delete _hits.at(nplane); _hits.at(nplane) = 0; }
 	if (treeMask & Flags::CLUSTERS) { delete _clusters.at(nplane); _clusters.at(nplane) = 0; }
@@ -246,7 +258,7 @@ namespace Storage {
     assert(_hits.size() == _clusters.size() && "StorageIO: varying number of planes");
     
     _numEvents = 0;    
-    if (_fileMode == INPUT){ // INPUT mode
+    if ( _fileMode == INPUT ){ // INPUT mode 
       Long64_t nEventInfo = (_eventInfo) ? _eventInfo->GetEntriesFast() : 0;
       Long64_t nTracks = (_tracks) ? _tracks->GetEntriesFast() : 0;
       Long64_t nHits = 0;
@@ -272,17 +284,36 @@ namespace Storage {
 	  (nHits && _numEvents != nHits) ||
 	  (nClusters && _numEvents != nClusters))
 	throw "StorageIO: all trees don't have the same number of events";
+
+      if( _summaryTree){
+	
+	// just to need to get single entry 
+	_summaryTree->GetEntry(0);      
+	
+	if( _printLevel>1 ){	
+	  //_summaryTree->Print();
+	  cout << "  - summaryInfo " << endl;
+	  cout << "      * nruns = " << numRuns << endl;
+	  for(int i=0; i<numRuns; i++)
+	    cout << "        o run[" << i << "] = " << run[i] << endl;
+	}
+      }
     }
+    
   } // end of StorageIO constructor
   
   //=========================================================
   StorageIO::~StorageIO(){
     if (_file && _fileMode == OUTPUT){
+      /* fill summaryTree here to ensure it 
+	 is done just once (not a per-event tree) */
+      _summaryTree->Fill();
+      
       _file->Write();
       delete _file;
     }
   }
-
+  
   //=========================================================
   void StorageIO::clearVariables(){
     timeStamp = 0;
@@ -333,11 +364,65 @@ namespace Storage {
     }
 
     numRuns = 0;
-    for(int i=0; i<MAX_RUNS; i++){
+    for(int i=0; i<MAX_RUNS; i++)
       run[i] = 0;
+  }
+
+  
+  //=========================================================
+  void StorageIO::setNoiseMasks(std::vector<bool**>* noiseMasks){
+    if (noiseMasks && _numPlanes != noiseMasks->size())
+      throw "StorageIO: noise mask has more planes than will be read in";
+    _noiseMasks = noiseMasks;
+  }
+  
+  //=========================================================
+  void StorageIO::setPrintLevel(const int printLevel){
+    _printLevel = printLevel;
+  }
+  
+  //=========================================================
+  void StorageIO::setRuns(const std::vector<int> &vruns){
+    assert( _fileMode != INPUT && "StorageIO: can't set runs in input mode" );
+    numRuns=0;
+    std::vector<int>::const_iterator cit;	    
+    for(cit=vruns.begin(); cit!=vruns.end(); ++cit){
+      run[numRuns] = (*cit);
+      numRuns++;
     }
-        
-  } 
+  }
+  
+  //=========================================================
+  Long64_t StorageIO::getNumEvents() const {
+    assert(_fileMode != OUTPUT && "StorageIO: can't get number of entries in output mode");
+    return _numEvents;
+  }
+  
+  //=========================================================
+  unsigned int StorageIO::getNumPlanes() const {
+    return _numPlanes;
+  }
+  
+  //=========================================================
+  Storage::Mode StorageIO::getMode() const {
+    return _fileMode;
+  }
+
+  //=========================================================
+  std::vector<int> StorageIO::getRuns() const {
+    cout << "\n[StorageIO::getRuns]" << endl;
+    std::vector<int> vec;
+
+    if(!_summaryTree) { cout << "??????" << endl; return vec; }
+
+    _summaryTree->GetEntry(0);
+
+    for(int i=0; i<numRuns; i++){
+      vec.push_back(run[i]);
+      cout << i << " " << run[i] << endl;      
+    }
+    return vec;
+  }
 
   //=========================================================
   Event* StorageIO::readEvent(Long64_t n)
@@ -505,70 +590,5 @@ namespace Storage {
     
     _numEvents++;
   }
-  
-  //=========================================================
-  void StorageIO::setNoiseMasks(std::vector<bool**>* noiseMasks){
-    if (noiseMasks && _numPlanes != noiseMasks->size())
-      throw "StorageIO: noise mask has more planes than will be read in";
-    _noiseMasks = noiseMasks;
-  }
-  
-  //=========================================================
-  Long64_t StorageIO::getNumEvents() const {
-    assert(_fileMode != OUTPUT && "StorageIO: can't get number of entries in output mode");
-    return _numEvents;
-  }
-  
-  //=========================================================
-  unsigned int StorageIO::getNumPlanes() const {
-    return _numPlanes;
-  }
-  
-  //=========================================================
-  Storage::Mode StorageIO::getMode() const {
-    return _fileMode;
-  }
-
-  //=========================================================
-  void StorageIO::setSummaryInfo(const ConfigParser *deviceConfig,
-				 const ConfigParser *runConfig,
-				 const std::vector<int> vruns,
-				 const char *inputName){
-
-    if( _fileMode == INPUT ) return;
-    
-    /* vector already filled from a --run argument passed to command line */
-    if( ! vruns.empty() ){
-      numRuns = vruns.size();
-      int cnt=0;
-      std::vector<int>::const_iterator cit;	    
-      for(cit=vruns.begin(); cit!=vruns.end(); ++cit, cnt++)
-	run[cnt] = (*cit);
-    }
-    else{
-      /* attempt to extract run number from input fileName 
-	 (the run is typically encoded in the raw data filename). */
-      std::string infile(inputName);
-      std::string sub1(infile.substr(infile.find_last_of("/")+1)); // file basename
-      std::string sub2(sub1.substr(0,sub1.find_last_of("."))); // above without extension
-
-      std::stringstream ss;
-      for(std::string::iterator it=sub2.begin(); it!=sub2.end(); ++it)
-	if( isdigit(*it) ) ss << *it;
-
-      int r = std::atoi(ss.str().c_str());      
-      if( r != 0 ){
-	numRuns = 1;
-	run[0] = r;
-      }
-    }
-    
-    // print summary
-    cout << "  - nRuns = " << numRuns << endl;
-    for(int i=0; i<numRuns; i++)
-      cout << "  - run[" << i << "] = " << run[i] << endl;
-    _summaryTree->Fill();
-
-  } // end of function
-  
+      
 } // end of namespace

@@ -26,31 +26,30 @@ Loopers::AnalysisDut::AnalysisDut(Storage::StorageIO* refInput,
   }
 
 //=========================================================
-void Loopers::AnalysisDut::loop()
-{
-  for (ULong64_t nevent = _startEvent; nevent <= _endEvent; nevent++)
-    {
-      Storage::Event* refEvent = _refStorage->readEvent(nevent);
-      Storage::Event* dutEvent = _dutStorage->readEvent(nevent);
-      
-      // Match ref tracks to dut clusters (information stored in event)
-      _trackMatcher->matchEvent(refEvent, dutEvent);
-      
-      for (unsigned int i = 0; i < _numSingleAnalyzers; i++)
-	_singleAnalyzers.at(i)->processEvent(refEvent);
-      for (unsigned int i = 0; i < _numDualAnalyzers; i++)
-	_dualAnalyzers.at(i)->processEvent(refEvent, dutEvent);
-      
-      progressBar(nevent);
-      
-      delete refEvent;
-      delete dutEvent;
-    }
+void Loopers::AnalysisDut::loop() {
+  for (ULong64_t nevent = _startEvent; nevent <= _endEvent; nevent++){
+    Storage::Event* refEvent = _refStorage->readEvent(nevent);
+    Storage::Event* dutEvent = _dutStorage->readEvent(nevent);
+    
+    // Match ref tracks to dut clusters (information stored in event)
+    _trackMatcher->matchEvent(refEvent, dutEvent);
+    
+    for (unsigned int i=0; i<_numSingleAnalyzers; i++)
+      _singleAnalyzers.at(i)->processEvent(refEvent);
+    
+    for (unsigned int i=0; i<_numDualAnalyzers; i++)
+      _dualAnalyzers.at(i)->processEvent(refEvent, dutEvent);
+    
+    progressBar(nevent);
+    
+    delete refEvent;
+    delete dutEvent;
+  }
   
-  for (unsigned int i = 0; i < _numSingleAnalyzers; i++)
+  for (unsigned int i=0; i<_numSingleAnalyzers; i++)
     _singleAnalyzers.at(i)->postProcessing();
-
-  for (unsigned int i = 0; i < _numDualAnalyzers; i++)
+  
+  for (unsigned int i=0; i<_numDualAnalyzers; i++)
     _dualAnalyzers.at(i)->postProcessing();
 }
 

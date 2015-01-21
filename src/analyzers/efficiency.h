@@ -14,40 +14,43 @@ namespace Storage { class Event; }
 namespace Mechanics { class Device; }
 
 namespace Analyzers {
+  
+  class Efficiency : public DualAnalyzer
+  {
+  public:
+    Efficiency(const Mechanics::Device* refDevice,
+	       const Mechanics::Device* dutDevice,
+	       TDirectory* dir = 0,
+	       const char* suffix = "",
+	       /* Additional parameters with default values */
+	       int relativeToSensor = -1, // Only consider events where this sensor has a match
+	       /* Histogram options */
+	       unsigned int rebinX = 1, // This many pixels in X are grouped
+	       unsigned int rebinY = 1,
+	       unsigned int pixBinsX = 20,
+	       unsigned int pixBinsY = 20);
+    
+    void processEvent(const Storage::Event* refEvent,
+		      const Storage::Event* dutDevent);
 
-class Efficiency : public DualAnalyzer
-{
-private:
-  std::vector<TEfficiency*> _efficiencyMap;
-  std::vector<TH1D*> _efficiencyDistribution;
-  std::vector<TH1D*> _matchedTracks;
-  std::vector<TH1D*> _matchpositionX;
-  std::vector<TH1D*> _matchpositionY;
-  std::vector<TEfficiency*> _efficiencyTime;
-  std::vector<TEfficiency*> _inPixelEfficiency;
-  std::vector<TH2D*> _inPixelTiming;
-  std::vector<TH2D*> _inPixelCounting;
-   // Parameters used during event processing
-  const int _relativeToSensor;
+    void postProcessing();
+    
+  private:
+    std::vector<TEfficiency*> _efficiencyMap;
+    std::vector<TH1D*> _efficiencyDistribution;
+    std::vector<TH1D*> _matchedTracks;
+    std::vector<TH1D*> _matchpositionX;
+    std::vector<TH1D*> _matchpositionY;
+    std::vector<TEfficiency*> _efficiencyTime;
+    std::vector<TEfficiency*> _inPixelEfficiency;
+    std::vector<TH2D*> _inPixelTiming;
+    std::vector<TH2D*> _inPixelCounting;
 
-public:
-  Efficiency(const Mechanics::Device* refDevice,
-             const Mechanics::Device* dutDevice,
-             TDirectory* dir = 0,
-             const char* suffix = "",
-             /* Additional parameters with default values */
-             int relativeToSensor = -1, // Only consider events where this sensor has a match
-             /* Histogram options */
-             unsigned int rebinX = 1, // This many pixels in X are grouped
-             unsigned int rebinY = 1,
-             unsigned int pixBinsX = 20,
-             unsigned int pixBinsY = 20);
+    // Parameters used during event processing
+    const int _relativeToSensor;   
 
-  void processEvent(const Storage::Event* refEvent,
-                    const Storage::Event* dutDevent);
-  void postProcessing();
-};
+  }; // end of class
 
-}
+} // end of namespace
 
 #endif // EFFICIENCY_H

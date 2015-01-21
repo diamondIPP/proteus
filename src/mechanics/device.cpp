@@ -54,7 +54,7 @@ namespace Mechanics{
     std::replace(_spaceUnit.begin(), _spaceUnit.end(), '\\', '#');
   }
 
-  //=========================================================
+   //=========================================================
   Device::~Device(){
     for(unsigned int nsensor=0; nsensor<_numSensors; nsensor++)
       delete _sensors.at(nsensor);
@@ -73,16 +73,15 @@ namespace Mechanics{
 	 << "  Alignment: " << _alignment->getFileName() << "\n"
 	 << "  Noisemask: " << _noiseMask->getFileName() << endl;
     
-    
     for (unsigned int nsens=0; nsens<getNumSensors(); nsens++)
       getSensor(nsens)->print();
   }
 
   //=========================================================
-  void Device::addSensor(Sensor* sensor)
-  {
+  void Device::addSensor(Sensor* sensor){
     assert(sensor && "Device: can't add a null sensor");
-    if (_numSensors > 0 && getSensor(_numSensors - 1)->getOffZ() > sensor->getOffZ())
+    
+    if (_numSensors > 0 && getSensor(_numSensors-1)->getOffZ() > sensor->getOffZ())
       throw "Device: sensors must be added in order of increazing Z position";
     _sensors.push_back(sensor);
     _sensorMask.push_back(false);
@@ -133,7 +132,5 @@ namespace Mechanics{
   NoiseMask* Device::getNoiseMask() { return _noiseMask; }
   Alignment* Device::getAlignment() { return _alignment; }
   double Device::getSyncRatio() const { return _syncRatio; }
-  
-  
-  
+    
 } // end of namespace Mechanics

@@ -43,12 +43,13 @@ namespace Loopers {
     
     if (_eventSkip < 1)
       throw "Looper: event skip can't be smaller than 1";
+
     if (_startEvent >= _totalEvents)
       throw "Looper: start event exceeds storage file";
     
     if (_numEvents == 0) _numEvents = _totalEvents - _startEvent;
     
-    _endEvent = _numEvents + _startEvent - 1;
+    _endEvent = _startEvent + _numEvents - 1;
     if (_endEvent >= _totalEvents)
       throw "Looper: end event exceeds storage file";
   }

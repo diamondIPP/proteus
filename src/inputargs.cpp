@@ -11,7 +11,7 @@ using namespace std;
 //=========================================================
 InputArgs::InputArgs() :
   _inFileRef(""),
-  _outFileRef(""),
+  _outFileRef(""),    
   _inFileDUT(""),
   _outFileDUT(""),
   _results(""),
@@ -45,10 +45,10 @@ void InputArgs::usage()
        << " : convert KarTel data (-i, -o, [-r, -n])\n";
   cout << setw(w1) << "  synchronize"
        << " : synchronize DUT and ref. files (-i, -o, -I, -O, -r, -d, -t, [-n, -s])\n";
+  cout << setw(w1) << "  applyMask"
+       << " : mask sensors and noisy pixels (-i, -o, -r, -t, [-n, -s, --runs])\n";
   cout << setw(w1) << "  noiseScan"
        << " : scan for noisy pixels (-i, -r, -t, [-n, -s])\n";
-  cout << setw(w1) << "  applyMask"
-       << " : mask sensors and noisy pixels (-i, -o, -r, -t, [-n, -s])\n";
   cout << setw(w1) << "  coarseAlign"
        << " : coarse align device planes (-i, -r, -t, [-n, -s])\n";
   cout << setw(w1) << "  fineAlign"
@@ -86,6 +86,7 @@ void InputArgs::usage()
   cout << "      " << setw(w2) << "--runs" << " : run(s) being analyzed (single run or list). This option can be useful\n";
   cout << "      " << setw(w2) << "" << "   for merged-runs, or when the run-number is not contained in the input file.\n";
   cout << "      " << setw(w2) << "" << "   Can be a single-run, a list (comma-separated) and/or a sequence (dash-separated).\n";
+  cout << "      " << setw(w2) << "" << "   Note this option is only taken into account with the 'applyMask' command.\n";
       
   cout << endl;
   cout << right;

@@ -24,7 +24,7 @@ namespace Storage {
   class Event;
   
   enum Mode {
-    INPUT,
+    INPUT=0,
     OUTPUT
   };
   
@@ -44,24 +44,23 @@ namespace Storage {
 	      Mode fileMode,
 	      unsigned int numPlanes = 0,
 	      const unsigned int treeMask = 0,
-	      const std::vector<bool>* planeMask = 0);
+	      const std::vector<bool>* planeMask = 0,
+	      int printLevel = 0);
     
     ~StorageIO();
     
-    Event* readEvent(Long64_t n); // Read an event and generate its objects
-    void writeEvent(Event* event); // Write an event at the end of the file
-    
     void setNoiseMasks(std::vector<bool**>* noiseMasks);
+    void setPrintLevel(const int printLevel);
+    void setRuns(const std::vector<int> &vruns);
     
     Long64_t getNumEvents() const;
     unsigned int getNumPlanes() const;
     Storage::Mode getMode() const;
+    std::vector<int> getRuns() const;
 
-    void setSummaryInfo(const ConfigParser *deviceConfig,
-			const ConfigParser *runConfig,
-			const std::vector<int> runs,
-			const char *inputName);
-    
+    Event* readEvent(Long64_t n); // Read an event and generate its objects
+    void writeEvent(Event* event); // Write an event at the end of the file
+
   private:
     StorageIO(const StorageIO&); // Disable the copy constructor
     StorageIO& operator=(const StorageIO&); // Disable the assignment operator
@@ -73,9 +72,11 @@ namespace Storage {
     const Mode   _fileMode; // How to open and process the file
     unsigned int _numPlanes; // This can be read from the file structure
     Long64_t     _numEvents; // Number of events in the input file
-    
+
+    int _printLevel; // verbose level
+
     const std::vector<bool**>* _noiseMasks;
-    
+
     /* NOTE: trees can easily be added and removed from a file. So each type
      * of information that might or might not be included in a file should be
      * in its own tree. */
@@ -180,8 +181,7 @@ namespace Storage {
     TBranch* bTrackChi2;
 
     TBranch* bNumRuns;
-    TBranch* bRun;
-    
+    TBranch* bRun;    
   };
 
 } // end of namespace

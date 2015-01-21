@@ -1,3 +1,7 @@
+2015-01-21 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
+	* propagate summaryTree into output files
+	* tag  JudithFEI4-00-00-06
+
 2015-01-20 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
 	* correcting for missing branchName update (HitInCluster) in StorageIO constructor...
         * change _name from const char* to std::string in mechanics/alignment class
