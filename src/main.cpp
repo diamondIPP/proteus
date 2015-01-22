@@ -2,6 +2,7 @@
 #include <vector>
 #include <string.h>
 #include <iomanip>
+#include <sys/time.h>
 
 #include <TFile.h>
 #include <TApplication.h>
@@ -128,7 +129,7 @@ void applyMask(const char* inputName,
       Mechanics::Device* device = Mechanics::generateDevice(deviceConfig);
       device->getNoiseMask()->readMask();
       
-      ConfigParser runConfig(tbCfg);
+      ConfigParser runConfig(tbCfg); // [SGS] This does not seem to be used...
       
       unsigned int inMask = Storage::Flags::TRACKS | Storage::Flags::CLUSTERS;
       Storage::StorageIO input(inputName, Storage::INPUT, 0, inMask, device->getSensorMask());      
@@ -526,8 +527,10 @@ void printDevice(const char* configName)
 }
 
 //=========================================================
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv){
+  struct timeval t0, t1;
+  gettimeofday(&t0, NULL);
+  
   TApplication app("App", 0, 0);
   gStyle->SetOptStat("mre");
   
@@ -677,7 +680,11 @@ int main(int argc, char** argv)
       inArgs.usage();
       std::cout << "Unknown command! " << inArgs.getCommand() << std::endl;
     }
-  
+
+  gettimeofday(&t1, NULL);
+  double fullTime = t1.tv_sec - t0.tv_sec + 1e-6*(t1.tv_usec-t0.tv_usec);
+  cout << "\nTotal time [s] = " << fullTime << endl;
+
   cout << "\nEnding Judith\n" << endl;
   
   return 0;

@@ -1,12 +1,18 @@
+2015-01-xx S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
+	* add warning message if --runs not given together with applyMask command
+	* add few cfg files into configs directory
+	* timer in main.cpp
+	* tag  JudithFEI4-00-00-08
+
 2015-01-21 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
-	* additional parameters to configuration of Efficiency analizer (standard.cfg)
+	* additional parameters to configuration of Efficiency analizer (standard.cfg) 
 	"pix x min", "pix x max", "pix y min", "pix y max" to define region for which in-pixel
 	results are to be considered
 	* modified configanalizers.cpp and efficiency.h/.cpp acoordingly
 	* tag  JudithFEI4-00-00-07
 
 2015-01-21 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
-	* propagate summaryTree into output files 
+	* propagate summaryTree into output files
 	* tag  JudithFEI4-00-00-06
 
 2015-01-20 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
@@ -50,7 +56,6 @@
 2014-11-09 F.A. Di Bello <fdibello@cern.ch>
         * New occupancy plot XZ, YZ in order to understand the rotations of
 	the sensor.
-
 
 2014-11-09 F.A. Di Bello <fdibello@cern.ch>
         * New alignment plot added in a root file in finealign.cpp .

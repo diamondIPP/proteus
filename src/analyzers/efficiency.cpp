@@ -369,8 +369,8 @@ void Analyzers::Efficiency::postProcessing() {
     // Inpixel timing plot and renormalization
     TH2D* inTimingMap =  _inPixelTiming.at(nsensor);
     TH2D* count = _inPixelCounting.at(nsensor);
-    for (Int_t x = 1; x <= inTimingMap->GetNbinsX(); x++){
-      for (Int_t y = 1; y <= inTimingMap->GetNbinsY(); y++){
+    for (Int_t x=1; x<=inTimingMap->GetNbinsX(); x++){
+      for (Int_t y=1; y<=inTimingMap->GetNbinsY(); y++){
 	const double average = inTimingMap->GetBinContent(x, y) / count->GetBinContent(x, y);
 	inTimingMap->SetBinContent(x, y, average);
       }

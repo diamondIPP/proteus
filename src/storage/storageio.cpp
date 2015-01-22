@@ -384,6 +384,13 @@ namespace Storage {
   //=========================================================
   void StorageIO::setRuns(const std::vector<int> &vruns){
     assert( _fileMode != INPUT && "StorageIO: can't set runs in input mode" );
+
+    if( vruns.empty() ){
+      cout << "WARNING :: no --runs option detected; "
+	   << "summaryTree saved without run info" << endl;
+      return;
+    }
+
     numRuns=0;
     std::vector<int>::const_iterator cit;	    
     for(cit=vruns.begin(); cit!=vruns.end(); ++cit){
@@ -410,20 +417,13 @@ namespace Storage {
 
   //=========================================================
   std::vector<int> StorageIO::getRuns() const {
-    cout << "\n[StorageIO::getRuns]" << endl;
     std::vector<int> vec;
-
-    if(!_summaryTree) { cout << "??????" << endl; return vec; }
-
     _summaryTree->GetEntry(0);
-
-    for(int i=0; i<numRuns; i++){
-      vec.push_back(run[i]);
-      cout << i << " " << run[i] << endl;      
-    }
+    for(int i=0; i<numRuns; i++)
+      vec.push_back(run[i]);    
     return vec;
   }
-
+  
   //=========================================================
   Event* StorageIO::readEvent(Long64_t n)
   {
