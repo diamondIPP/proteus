@@ -51,22 +51,19 @@ void convert(const char* input,
 	     Long64_t triggers,
              const char* deviceCfg="")
 {
-  try
-    {
-      Mechanics::Device* device = 0;
-      if (strlen(deviceCfg))
-	{
-	  ConfigParser config(deviceCfg);
-	  device = Mechanics::generateDevice(config);
-	  device->getNoiseMask()->readMask();
-	}
-      Converters::KartelConvert convert(input, output, device);
-      convert.processFile(triggers);
+  try {
+    Mechanics::Device* device = 0;
+    if (strlen(deviceCfg)) {
+      ConfigParser config(deviceCfg);
+      device = Mechanics::generateDevice(config);
+      device->getNoiseMask()->readMask();
     }
-  catch (const char* e)
-    {
-      cout << "ERR :: " <<  e << endl;
-    }
+    Converters::KartelConvert convert(input, output, device);
+    convert.processFile(triggers);
+  }
+  catch (const char* e){
+    cout << "ERR :: " <<  e << endl;
+  }
 }
 
 //=========================================================
@@ -80,37 +77,34 @@ void synchronize(const char* refInputName,
 		 const char* dutDeviceCfg,
                  const char* tbCfg)
 {
-  try
-    {
-      ConfigParser refConfig(refDeviceCfg);
-      Mechanics::Device* refDevice = Mechanics::generateDevice(refConfig);
-      
-      ConfigParser dutConfig(dutDeviceCfg);
-      Mechanics::Device* dutDevice = Mechanics::generateDevice(dutConfig);
-      
-      if (refDevice->getAlignment()) refDevice->getAlignment()->readFile();
-      if (dutDevice->getAlignment()) dutDevice->getAlignment()->readFile();
-      
-      ConfigParser runConfig(tbCfg);
-      
-      Storage::StorageIO refInput(refInputName, Storage::INPUT);
-      Storage::StorageIO dutInput(dutInputName, Storage::INPUT);
-
-      Storage::StorageIO refOutput(refOutputName, Storage::OUTPUT, refInput.getNumPlanes());
-      Storage::StorageIO dutOutput(dutOutputName, Storage::OUTPUT, dutInput.getNumPlanes());
+  try {
+    ConfigParser refConfig(refDeviceCfg);
+    Mechanics::Device* refDevice = Mechanics::generateDevice(refConfig);
+    if (refDevice->getAlignment()) refDevice->getAlignment()->readFile();
     
-      Loopers::Synchronize looper(refDevice, dutDevice, &refOutput, &dutOutput,
-				  &refInput, &dutInput, startEvent, numEvents);
-      Loopers::configSynchronize(runConfig, looper);
-      looper.loop();
-      
-      delete refDevice;
-      delete dutDevice;
-    }
-  catch (const char* e)
-    {
-      cout << "ERR :: " << e << endl;
-    }
+    ConfigParser dutConfig(dutDeviceCfg);
+    Mechanics::Device* dutDevice = Mechanics::generateDevice(dutConfig);      
+    if (dutDevice->getAlignment()) dutDevice->getAlignment()->readFile();
+    
+    ConfigParser runConfig(tbCfg);
+    
+    Storage::StorageIO refInput(refInputName, Storage::INPUT);
+    Storage::StorageIO dutInput(dutInputName, Storage::INPUT);
+    
+    Storage::StorageIO refOutput(refOutputName, Storage::OUTPUT, refInput.getNumPlanes());
+    Storage::StorageIO dutOutput(dutOutputName, Storage::OUTPUT, dutInput.getNumPlanes());
+    
+    Loopers::Synchronize looper(refDevice, dutDevice, &refOutput, &dutOutput,
+				&refInput, &dutInput, startEvent, numEvents);
+    Loopers::configSynchronize(runConfig, looper);
+    looper.loop();
+    
+    delete refDevice;
+    delete dutDevice;
+  }
+  catch (const char* e) {
+    cout << "ERR :: " << e << endl;
+  }
 }
 
 //=========================================================
@@ -123,35 +117,35 @@ void applyMask(const char* inputName,
 	       const std::vector<int> runs,
 	       int printLevel)
 {
-  try
-    {
-      ConfigParser deviceConfig(deviceCfg);
-      Mechanics::Device* device = Mechanics::generateDevice(deviceConfig);
-      device->getNoiseMask()->readMask();
-      
-      ConfigParser runConfig(tbCfg); // [SGS] This does not seem to be used...
-      
-      unsigned int inMask = Storage::Flags::TRACKS | Storage::Flags::CLUSTERS;
-      Storage::StorageIO input(inputName, Storage::INPUT, 0, inMask, device->getSensorMask());      
-      Storage::StorageIO output(outputName, Storage::OUTPUT, device->getNumSensors(), inMask);
-      output.setRuns(runs);
-      
-      Loopers::ApplyMask looper(device, &output, &input, startEvent, numEvents);      
-      const Storage::Event* start = input.readEvent(looper.getStartEvent());
-      const Storage::Event* end = input.readEvent(looper.getEndEvent());
-      device->setTimeStart(start->getTimeStamp());
-      device->setTimeEnd(end->getTimeStamp());
-      delete start;
-      delete end;
-      
-      looper.loop();    
-      
-      delete device;
-    }
-  catch (const char* e)
-    {
-      cout << "ERR :: " << e << endl;
-    }
+  try {
+    ConfigParser deviceConfig(deviceCfg);
+    Mechanics::Device* device = Mechanics::generateDevice(deviceConfig);
+    device->getNoiseMask()->readMask();
+    
+    // [SGS] not used... 
+    // ConfigParser runConfig(tbCfg); 
+    
+    unsigned int inMask = Storage::Flags::TRACKS | Storage::Flags::CLUSTERS;
+    Storage::StorageIO input(inputName, Storage::INPUT, 0, inMask, device->getSensorMask(), printLevel);
+    
+    Storage::StorageIO output(outputName, Storage::OUTPUT, device->getNumSensors(), inMask, 0, printLevel);
+    output.setNoiseMaskData(device->getNoiseMask());
+    output.setRuns(runs);
+    
+    Loopers::ApplyMask looper(device, &output, &input, startEvent, numEvents);      
+    const Storage::Event* start = input.readEvent(looper.getStartEvent());
+    const Storage::Event* end = input.readEvent(looper.getEndEvent());
+    device->setTimeStart(start->getTimeStamp());
+    device->setTimeEnd(end->getTimeStamp());
+    delete start;
+    delete end;
+
+    looper.loop();        
+    delete device;
+  }
+  catch (const char* e){
+    cout << "ERR :: " << e << endl;
+  }
 }
 
 //=========================================================
@@ -162,24 +156,22 @@ void noiseScan(const char* inputName,
                const char* tbCfg,
 	       int printLevel)
 {
-  try
-  {
-    ConfigParser config(deviceCfg);
-    Mechanics::Device* device = Mechanics::generateDevice(config);
+  try {
+    ConfigParser runConfig(tbCfg);    
 
-    ConfigParser runConfig(tbCfg);
-
-    Storage::StorageIO input(inputName, Storage::INPUT, device->getNumSensors());
+    ConfigParser deviceConfig(deviceCfg);
+    Mechanics::Device* device = Mechanics::generateDevice(deviceConfig);    
+    Storage::StorageIO input(inputName, Storage::INPUT, device->getNumSensors());    
 
     Loopers::NoiseScan looper(device, &input, startEvent, numEvents);
+    looper.setPrintLevel(printLevel);
+    
     Loopers::configNoiseScan(runConfig, looper);
     if(printLevel>0) looper.print();    
-    looper.loop();
-
+    looper.loop();      
     delete device;
   }
-  catch (const char* e)
-  {
+  catch (const char* e){
     cout << "ERR :: " <<  e << endl;
   }
 }
@@ -192,29 +184,27 @@ void coarseAlign(const char* inputName,
 		 const char* tbCfg,
 		 int printLevel)
 {
-  try
-    {
-      ConfigParser runConfig(tbCfg);
-      Processors::ClusterMaker* clusterMaker = Processors::generateClusterMaker(runConfig);
-      
-      ConfigParser deviceConfig(deviceCfg);
-      Mechanics::Device* device = Mechanics::generateDevice(deviceConfig);
-      
-      unsigned int treeMask = Storage::Flags::TRACKS | Storage::Flags::CLUSTERS;      
-      Storage::StorageIO input(inputName, Storage::INPUT, 0, treeMask);
-      
-      Loopers::CoarseAlign looper(device, clusterMaker, &input, startEvent, numEvents);
-      Loopers::configCoarseAlign(runConfig, looper);
-      if(printLevel>0) looper.print();    
-      looper.loop();
-      
-      delete device;
-      delete clusterMaker;
-    }
-  catch (const char* e)
-    {
-      cout << "ERR :: " << e << endl;
-    }
+  try {
+    ConfigParser runConfig(tbCfg);
+    Processors::ClusterMaker* clusterMaker = Processors::generateClusterMaker(runConfig);
+    
+    ConfigParser deviceConfig(deviceCfg);
+    Mechanics::Device* device = Mechanics::generateDevice(deviceConfig);
+    
+    unsigned int treeMask = Storage::Flags::TRACKS | Storage::Flags::CLUSTERS;      
+    Storage::StorageIO input(inputName, Storage::INPUT, 0, treeMask);
+    
+    Loopers::CoarseAlign looper(device, clusterMaker, &input, startEvent, numEvents);
+    Loopers::configCoarseAlign(runConfig, looper);
+    if(printLevel>0) looper.print();    
+    looper.loop();
+    
+    delete device;
+    delete clusterMaker;
+  }
+  catch (const char* e){
+    cout << "ERR :: " << e << endl;
+  }
 }
 
 //=========================================================
@@ -234,6 +224,7 @@ void coarseAlignDUT(const char* refInputName,
 
     ConfigParser refConfig(refDeviceCfg);
     Mechanics::Device* refDevice = Mechanics::generateDevice(refConfig);
+    if(refDevice->getAlignment()) refDevice->getAlignment()->readFile();
 
     ConfigParser dutConfig(dutDeviceCfg);
     Mechanics::Device* dutDevice = Mechanics::generateDevice(dutConfig);
@@ -241,8 +232,6 @@ void coarseAlignDUT(const char* refInputName,
     unsigned int treeMask = Storage::Flags::TRACKS | Storage::Flags::CLUSTERS;
     Storage::StorageIO refInput(refInputName, Storage::INPUT, 0, treeMask);
     Storage::StorageIO dutInput(dutInputName, Storage::INPUT, 0, treeMask);
-
-    if(refDevice->getAlignment()) refDevice->getAlignment()->readFile();
 
     Loopers::CoarseAlignDut looper(refDevice, dutDevice, clusterMaker,
                                    &refInput, &dutInput, startEvent, numEvents);
@@ -357,7 +346,7 @@ void process(const char* inputName,
   {
     ConfigParser deviceConfig(deviceCfg);
     Mechanics::Device* device = Mechanics::generateDevice(deviceConfig);
-    if (device->getAlignment()) device->getAlignment()->readFile();
+    if(device->getAlignment()) device->getAlignment()->readFile();
 
     ConfigParser runConfig(tbCfg);
     Processors::ClusterMaker* clusterMaker = Processors::generateClusterMaker(runConfig);
@@ -370,8 +359,6 @@ void process(const char* inputName,
     unsigned int outMask = 0;
     if(device->getNumSensors() <= 2) outMask = Storage::Flags::TRACKS;
     Storage::StorageIO output(outputName, Storage::OUTPUT, device->getNumSensors(), outMask, 0, printLevel);
-
-   
 
     Loopers::ProcessEvents looper(device, &output, clusterMaker, trackMaker, &input, startEvent, numEvents);
     const Storage::Event* start = input.readEvent(looper.getStartEvent());
@@ -466,19 +453,18 @@ void analysisDUT(const char* refInputName,
   {
     ConfigParser refConfig(refDeviceCfg);
     Mechanics::Device* refDevice = Mechanics::generateDevice(refConfig);
+    if (refDevice->getAlignment()) refDevice->getAlignment()->readFile();
 
     ConfigParser dutConfig(dutDeviceCfg);
     Mechanics::Device* dutDevice = Mechanics::generateDevice(dutConfig);
-
+    if (dutDevice->getAlignment()) dutDevice->getAlignment()->readFile();
+    
     ConfigParser runConfig(tbCfg);
 
     Processors::TrackMatcher* trackMatcher = new Processors::TrackMatcher(dutDevice);
-
+    
     Storage::StorageIO refInput(refInputName, Storage::INPUT);
     Storage::StorageIO dutInput(dutInputName, Storage::INPUT);
-
-    if (refDevice->getAlignment()) refDevice->getAlignment()->readFile();
-    if (dutDevice->getAlignment()) dutDevice->getAlignment()->readFile();
 
     Loopers::AnalysisDut looper(&refInput, &dutInput, trackMatcher, startEvent, numEvents);
     const Storage::Event* start = refInput.readEvent(looper.getStartEvent());
@@ -584,7 +570,7 @@ int main(int argc, char** argv){
     }
   else if ( !inArgs.getCommand().compare("noiseScan") )
     {
-      noiseScan( // produse a noise mask with a specified cut (prompted for)
+      noiseScan( // produce a noise mask with a specified cut (prompted for)
                 inArgs.getInputRef().c_str(),
 		inArgs.getEventOffset(),
                 inArgs.getNumEvents(),

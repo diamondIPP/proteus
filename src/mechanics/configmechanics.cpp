@@ -27,9 +27,13 @@ namespace Mechanics {
       const ConfigParser::Row* row = config.getRow(i);
       
       if (row->isHeader && !row->header.compare("End Device")){
-	device = new Device(name.c_str(), alignmentName.c_str(),
-			    noiseMaskName.c_str(), clockRate,
-			    readOutWindow, spaceUnit.c_str(), timeUnit.c_str());
+	device = new Device(name.c_str(),
+			    alignmentName.c_str(),
+			    noiseMaskName.c_str(),
+			    clockRate,
+			    readOutWindow,
+			    spaceUnit.c_str(),
+			    timeUnit.c_str());
 	
 	generateSensors(config, device);	
 	return device;
@@ -84,6 +88,7 @@ namespace Mechanics {
     std::string name = "";
     bool masked = false;
     bool digi = false;
+    bool alignable = true;
     
     unsigned int sensorCounter = 0;
     
@@ -102,15 +107,15 @@ namespace Mechanics {
 	      name = ss.str();
 	    }
 	    
-	    Sensor* sensor = new Sensor(cols, rows, pitchX, pitchY, depth, device, name, digi,
-					xox0, offX, offY, offZ, rotX, rotY, rotZ);
+	    Sensor* sensor = new Sensor(cols, rows, pitchX, pitchY,
+					depth, device, name, digi, alignable,
+					xox0, offX, offY, offZ,	rotX, rotY, rotZ);
 	    device->addSensor(sensor);
 	    sensorCounter++;
 	  } 
-	else
-	  {
-	    device->addMaskedSensor(); 
-	  }
+	else{
+	  device->addMaskedSensor(); 
+	}
 	
 	offX = 0;
 	offY = 0;
@@ -127,6 +132,7 @@ namespace Mechanics {
 	name = "";
 	masked = false;
 	digi = false;
+	alignable = true;
 	
 	continue;
       }
@@ -165,12 +171,18 @@ namespace Mechanics {
 	name = row->value;
       else if (!row->key.compare("masked"))
 	masked = ConfigParser::valueToLogical(row->value);
-      else if (!row->key.compare("digital")){
+      else if (!row->key.compare("digital"))
 	digi = ConfigParser::valueToLogical(row->value);
+      else if (!row->key.compare("alignable"))
+	alignable = ConfigParser::valueToLogical(row->value);
+      else{
+	std::string err("[Mechanics::generateSensors] can't parse line ");
+	std::stringstream ss; ss << i;
+	err+=ss.str()+" with [key,value]=['" + row->key + "','" + row->value + "'] in cfg file '";
+	err+=std::string(config.getFilePath())+"'";
+	throw err.c_str();
       }
-      else
-	throw "Mechanics: can't parse sensor row";
     }
   }
   
-} // end of namespace
+} // std::end of namespace

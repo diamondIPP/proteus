@@ -44,34 +44,32 @@ namespace Loopers {
   }
 
   //=========================================================
-  void configNoiseScan(const ConfigParser& config, NoiseScan& noiseScan)
-  {
-    for (unsigned int i=0; i<config.getNumRows(); i++)
-      {
-	const ConfigParser::Row* row = config.getRow(i);
-	
-	if(row->isHeader) continue;
-	if(row->header.compare("Noise Scan")) continue;
-	
-	if (!row->key.compare("max factor"))
-	  noiseScan.setMaxFactor(ConfigParser::valueToNumerical(row->value));
-	else if (!row->key.compare("max occupancy"))
-	  noiseScan.setMaxOccupancy(ConfigParser::valueToNumerical(row->value));
-	else if (!row->key.compare("bottom x"))
-	  noiseScan.setBottomLimitX(ConfigParser::valueToNumerical(row->value));
-	else if (!row->key.compare("upper x"))
-	  noiseScan.setUpperLimitX(ConfigParser::valueToNumerical(row->value));
-	else if (!row->key.compare("bottom y"))
-	  noiseScan.setBottomLimitY(ConfigParser::valueToNumerical(row->value));
-	else if (!row->key.compare("upper y"))
-	  noiseScan.setUpperLimitY(ConfigParser::valueToNumerical(row->value));  
-	else
-	  throw "Loopers: can't parse coarse align row";
-      }
+  void configNoiseScan(const ConfigParser& config, NoiseScan& noiseScan) {
+    for (unsigned int i=0; i<config.getNumRows(); i++){
+      const ConfigParser::Row* row = config.getRow(i);
+      
+      if(row->isHeader) continue;
+      if(row->header.compare("Noise Scan")) continue;
+      
+      if (!row->key.compare("max factor"))
+	noiseScan.setMaxFactor(ConfigParser::valueToNumerical(row->value));
+      else if (!row->key.compare("max occupancy"))
+	noiseScan.setMaxOccupancy(ConfigParser::valueToNumerical(row->value));
+      else if (!row->key.compare("bottom x"))
+	noiseScan.setBottomLimitX(ConfigParser::valueToNumerical(row->value));
+      else if (!row->key.compare("upper x"))
+	noiseScan.setUpperLimitX(ConfigParser::valueToNumerical(row->value));
+      else if (!row->key.compare("bottom y"))
+	noiseScan.setBottomLimitY(ConfigParser::valueToNumerical(row->value));
+      else if (!row->key.compare("upper y"))
+	noiseScan.setUpperLimitY(ConfigParser::valueToNumerical(row->value));  
+      else
+	throw "Loopers: can't parse coarse align row";
+    }
   }
   
   //=========================================================
-  void configCoarseAlign(const ConfigParser& config, CoarseAlign& coarseAlign){
+  void configCoarseAlign(const ConfigParser& config, CoarseAlign& coarseAlign) { 
     for (unsigned int i=0; i<config.getNumRows(); i++) {
       const ConfigParser::Row* row = config.getRow(i);
       
@@ -84,7 +82,7 @@ namespace Loopers {
 	throw "Loopers: can't parse coarse align row";
     }
   }
-
+  
   //=========================================================
   void configCoarseAlign(const ConfigParser& config, CoarseAlignDut& coarseAlign) {
     for (unsigned int i=0; i<config.getNumRows(); i++) {

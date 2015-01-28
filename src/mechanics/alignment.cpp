@@ -20,115 +20,108 @@ using std::fstream;
 using std::cout;
 using std::endl;
 
-namespace Mechanics {
+//=========================================================
+Mechanics::Alignment::Alignment(const char* fileName,
+				Device* device) :
+  _fileName(fileName),
+  _device(device)
+{
+  assert(device && "Alignment: can't initialize with a null device");
+}
 
-  //=========================================================
-  Alignment::Alignment(const char* fileName,
-		       Device* device) :
-    _fileName(fileName),
-    _device(device)
-  {
-    assert(device && "Alignment: can't initialize with a null device");
-  }
+//=========================================================
+const char* Mechanics::Alignment::getFileName() {
+  return _fileName.c_str();
+}
+
+//=========================================================
+unsigned int Mechanics::Alignment::sensorFromHeader(std::string header) {
+  if (header.size() <= 7 || header.substr(0, 7).compare("Sensor "))
+    throw "AlignmentFile: parsed an incorrect header";
   
-  //=========================================================
-  const char* Alignment::getFileName() {
-    return _fileName.c_str();
-  }
+  std::stringstream ss;
+  ss << header.substr(7);
+  
+  unsigned int sensorNum = 0;
+  ss >> sensorNum;
+  
+  if (sensorNum >= _device->getNumSensors())
+    throw "AlignmentFile: sensor exceeds device range";
+  
+  return sensorNum;
+}
 
-  //=========================================================
-  unsigned int Alignment::sensorFromHeader(std::string header)
-  {
-    if (header.size() <= 7 || header.substr(0, 7).compare("Sensor "))
-      throw "AlignmentFile: parsed an incorrect header";
-    
-    std::stringstream ss;
-    ss << header.substr(7);
-    
-    unsigned int sensorNum = 0;
-    ss >> sensorNum;
-    
-    if (sensorNum >= _device->getNumSensors())
-      throw "AlignmentFile: sensor exceeds device range";
-    
-    return sensorNum;
-  }
-
-  //=========================================================
-  void Alignment::readFile()
-  {
-    try
-      {
-	ConfigParser config(_fileName.c_str());
+//=========================================================
+void Mechanics::Alignment::readFile() {
+  try
+    {
+      ConfigParser config(_fileName.c_str());
+      
+      for (unsigned int nrow=0; nrow<config.getNumRows(); nrow++){
+	const ConfigParser::Row* row=config.getRow(nrow);
 	
-	for (unsigned int nrow=0; nrow<config.getNumRows(); nrow++){
-	  const ConfigParser::Row* row=config.getRow(nrow);
-	  
-	  // No action to take when encoutering a header
-	  if (row->isHeader) continue;
-	  
-	  if (!row->header.compare("Device"))
-	    {
-	      const double value = ConfigParser::valueToNumerical(row->value);
-	      if (!row->key.compare("slope x"))
-		_device->setBeamSlopeX(value);
-	      else if (!row->key.compare("slope y"))
-		_device->setBeamSlopeY(value);
-	      else if (!row->key.compare("sync ratio"))
-		_device->setSyncRatio(value);
-	      else
-		throw "Alignment: can't parse config row";
-	      
-	      continue;
-	    }
-	  
-	  if (!row->header.compare("End Sensor")) continue;
-	  
-	  unsigned int nsens = sensorFromHeader(row->header);
-	  Sensor* sensor = _device->getSensor(nsens);
-	  const double value = ConfigParser::valueToNumerical(row->value);
-	  if (!row->key.compare("offset x"))
-	    sensor->setOffX(value);
-	  else if (!row->key.compare("offset y"))
-	    sensor->setOffY(value);
-	  else if (!row->key.compare("offset z"))
-	    sensor->setOffZ(value);
-	  else if (!row->key.compare("rotation x"))
-	    sensor->setRotX(value);
-	  else if (!row->key.compare("rotation y"))
-	    sensor->setRotY(value);
-	  else if (!row->key.compare("rotation z"))
-	    sensor->setRotZ(value);
-	  else
-	    throw "Alignment: can't parse config row";
-	}
+	// No action to take when encoutering a header
+	if (row->isHeader) continue;
+	
+	if (!row->header.compare("Device"))
+	  {
+	    const double value = ConfigParser::valueToNumerical(row->value);
+	    if (!row->key.compare("slope x"))
+	      _device->setBeamSlopeX(value);
+	    else if (!row->key.compare("slope y"))
+	      _device->setBeamSlopeY(value);
+	    else if (!row->key.compare("sync ratio"))
+	      _device->setSyncRatio(value);
+	    else
+	      throw "Alignment: can't parse config row";
+	    
+	    continue;
+	  }
+	
+	if (!row->header.compare("End Sensor")) continue;
+	
+	unsigned int nsens = sensorFromHeader(row->header);
+	Sensor* sensor = _device->getSensor(nsens);
+	const double value = ConfigParser::valueToNumerical(row->value);
+	if (!row->key.compare("offset x"))
+	  sensor->setOffX(value);
+	else if (!row->key.compare("offset y"))
+	  sensor->setOffY(value);
+	else if (!row->key.compare("offset z"))
+	  sensor->setOffZ(value);
+	else if (!row->key.compare("rotation x"))
+	  sensor->setRotX(value);
+	else if (!row->key.compare("rotation y"))
+	  sensor->setRotY(value);
+	else if (!row->key.compare("rotation z"))
+	  sensor->setRotZ(value);
+	else
+	  throw "Alignment: can't parse config row";
       }
-    catch (const char* e)
-      {
-	if (VERBOSE) cout << "WARNING :: Alignment file failed :: " << e << endl;
-      }
+    }
+  catch (const char* e){
+    if (VERBOSE) cout << "WARNING :: Alignment file failed :: " << e << endl;
+  }
+}
+
+//=========================================================
+void Mechanics::Alignment::writeFile() {
+  std::ofstream file;
+  file.open(_fileName);
+  
+  if (!file.is_open()){
+    std::string err="[Alignment::writeFile] ERROR unable to open '"	
+      +std::string(_fileName)+"' for writting";
+    throw err.c_str();
   }
   
-  //=========================================================
-  void Alignment::writeFile()
-  {
-    std::ofstream file;
-    file.open(_fileName);
-
-    std::string errstr="AlignmentFile: unable to open '" \
-      +std::string(_fileName)+"' for writting";
-    
-    if (!file.is_open())
-      //      throw errstr;
-      throw "AlignmentFile: unable to open file for writing";
-    
-    file << std::setprecision(9);
-    file << std::fixed;
-    
-    for(unsigned int nsens=0; nsens<_device->getNumSensors(); nsens++){
-      Sensor* sensor = _device->getSensor(nsens);
-      file << "[Sensor " << nsens << "]" << endl;
-      file << "offset x   : " << sensor->getOffX() << endl;
+  file << std::setprecision(9);
+  file << std::fixed;
+  
+  for(unsigned int nsens=0; nsens<_device->getNumSensors(); nsens++){
+    Sensor* sensor = _device->getSensor(nsens);
+    file << "[Sensor " << nsens << "]" << endl;
+    file << "offset x   : " << sensor->getOffX() << endl;
       file << "offset y   : " << sensor->getOffY() << endl;
       file << "offset z   : " << sensor->getOffZ() << endl;
       file << "rotation x : " << sensor->getRotX() << endl;
@@ -145,10 +138,6 @@ namespace Mechanics {
     file << "[End Device]\n" << endl;
     
     file.close();
-
-    std::cout << "\nAlignment file '" << _fileName
-	      << "' created OK\n" << std::endl;
-  }
-
     
-} // end of namespace
+    std::cout << "\nAlignment file '" << _fileName << "' created OK\n" << std::endl;
+}    

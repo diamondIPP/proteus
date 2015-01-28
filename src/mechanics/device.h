@@ -16,47 +16,47 @@ namespace Mechanics {
   class Device {
   public:
     Device(const char* name,
-	   const char* alignmentName = "",
-	   const char* noiseMaskName = "",
-	   double clockRate = 0,
-	   unsigned int readOutWindow = 0,
-	   const char* spaceUnit = "",
-	   const char* timeUnit = "");
+	   const char* alignmentName="",
+	   const char* noiseMaskName="",
+	   double clockRate=0,
+	   unsigned int readOutWindow=0,
+	   const char* spaceUnit="",
+	   const char* timeUnit="");
 
     ~Device();
-    
-    void print() const;
     
     void addSensor(Sensor* sensor);
     void addMaskedSensor();
     double tsToTime(ULong64_t timeStamp) const;
     
-    void setBeamSlopeX(double rotation);
-    void setBeamSlopeY(double rotation);
+    void setBeamSlopeX(double rotation) { _beamSlopeX = rotation; }
+    void setBeamSlopeY(double rotation) { _beamSlopeY = rotation; }     
+    void setTimeStart(ULong64_t timeStamp) { _timeStart = timeStamp; }
+    void setTimeEnd(ULong64_t timeStamp) { _timeEnd = timeStamp; }
+    void setSyncRatio(double ratio) { _syncRatio = ratio; }
     
-    void setTimeStart(ULong64_t timeStamp);
-    void setTimeEnd(ULong64_t timeStamp);
-    
-    void setSyncRatio(double ratio);
-    
-    unsigned int getNumSensors() const;
+    unsigned int getNumSensors() const { return _numSensors; }
     Sensor* getSensor(unsigned int n) const;
     
     unsigned int getNumPixels() const;
     
-    const std::vector<bool>* getSensorMask() const;
-    const char* getName() const;
-    const char* getSpaceUnit() const;
-    const char* getTimeUnit() const;
-    double getClockRate() const;
-    unsigned int getReadOutWindow() const;
-    NoiseMask* getNoiseMask();
-    Alignment* getAlignment();
-    double getBeamSlopeX() const;
-    double getBeamSlopeY() const;
-    ULong64_t getTimeStart() const;
-    ULong64_t getTimeEnd() const;
-    double getSyncRatio() const;
+    const std::vector<bool>* getSensorMask() const { return &_sensorMask; }
+
+    const char* getName() const { return _name.c_str(); }
+    double getClockRate() const { return _clockRate; }
+    unsigned int getReadOutWindow() const { return _readOutWindow; }
+    const char* getSpaceUnit() const { return _spaceUnit.c_str(); }
+    const char* getTimeUnit() const { return _timeUnit.c_str(); }
+    double getBeamSlopeX() const { return _beamSlopeX; }
+    double getBeamSlopeY() const { return _beamSlopeY; }
+    ULong64_t getTimeStart() const { return _timeStart; }
+    ULong64_t getTimeEnd() const { return _timeEnd; }
+    double getSyncRatio() const { return _syncRatio; }
+    
+    NoiseMask* getNoiseMask() {  return _noiseMask; }
+    Alignment* getAlignment() { return _alignment; }
+
+    void print() const;
 
   private:
     std::string _name;

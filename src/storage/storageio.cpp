@@ -17,6 +17,10 @@
 #include "plane.h"
 #include "cluster.h"
 #include "hit.h"
+#include "../mechanics/noisemask.h"
+#include "../mechanics/device.h"
+#include "../mechanics/sensor.h"
+#include "../loopers/noisescan.h"
 
 #ifndef VERBOSE
 #define VERBOSE 1
@@ -56,22 +60,11 @@ namespace Storage {
     if(planeMask && fileMode == OUTPUT)
       throw "StorageIO: can't use a plane mask in output mode";
 
-    // debug info 
-    if( _printLevel > 0  ){
-      cout << "\n[StorageIO::StorageIO]" << endl;
-      cout << "  - filePath  = " << filePath  << endl;
-      cout << "  - fileMode  = " << fileMode;
-      std::string ost = fileMode ? "OUTPUT" : "INPUT";
-      cout << " (" << ost << ")"<< endl;
-      cout << "  - numPlanes = " << numPlanes << endl;
-      cout << "  - treeMask  = " << treeMask  << endl;
-    }
-    
     /****************************************************
      In OUTPUT mode,
      create the directory structure and the relevant trees
     ****************************************************/
-    if (_fileMode==OUTPUT){
+    if ( _fileMode == OUTPUT ){
       if (planeMask && (VERBOSE || _printLevel>0) )
 	cout << "WARNING :: StorageIO: disregarding plane mask in output mode";
       
@@ -142,8 +135,21 @@ namespace Storage {
       
       // SummaryTree tree
       _summaryTree = new TTree("SummaryTree", "Summary of configuration");
-      _summaryTree->Branch("NRuns", &numRuns, "NRuns/I");
-      _summaryTree->Branch("Run", &run, "Run[NRuns]/I");
+      _summaryTree->Branch("NRuns", &st_numRuns, "NRuns/I");
+      _summaryTree->Branch("Run", st_run, "Run[NRuns]/I");
+
+      _summaryTree->Branch("nscan_NRuns", &st_nscan_numRuns, "nscan_NRuns/I");
+      _summaryTree->Branch("nscan_Run", st_nscan_run, "nscan_Run[nscan_NRuns]/I");
+      _summaryTree->Branch("nscan_maxFactor", &st_nscan_maxFactor, "nscan_maxFactor/D");
+      _summaryTree->Branch("nscan_maxOccupancy", &st_nscan_maxOccupancy, "nscan_maxOccupancy/D");
+      _summaryTree->Branch("nscan_bottomX", &st_nscan_bottom_x, "nscan_bottomX/I");
+      _summaryTree->Branch("nscan_upperX", &st_nscan_upper_x, "nscan_upperX/I");
+      _summaryTree->Branch("nscan_bottomY", &st_nscan_bottom_y, "nscan_bottomY/I");
+      _summaryTree->Branch("nscan_upperY", &st_nscan_upper_y, "nscan_upperY/I");
+      _summaryTree->Branch("nscan_NNoisyPixels",  &st_nscan_numNoisyPixels, "nscan_NNoisyPixels/I");
+      _summaryTree->Branch("nscan_noisyPixel_plane", st_nscan_noisyPixel_plane, "nscan_noisyPixel_Plane[nscan_NNoisyPixels]/I");
+      _summaryTree->Branch("nscan_noisyPixel_x", st_nscan_noisyPixel_x, "nscan_noisyPixel_X[nscan_NNoisyPixels]/I");
+      _summaryTree->Branch("nscan_noisyPixel_y", st_nscan_noisyPixel_y, "nscan_noisyPixel_Y[nscan_NNoisyPixels]/I");
       
     } // end if (_fileMode == OUTPUT)
     
@@ -236,11 +242,37 @@ namespace Storage {
       }
 
       _file->GetObject("SummaryTree", _summaryTree);
-      if (_summaryTree){
-	_summaryTree->SetBranchAddress("NRuns", &numRuns, &bNumRuns);
-	_summaryTree->SetBranchAddress("Run", &run, &bRun);		
+      if( _summaryTree ){
+	_summaryTree->SetBranchAddress("NRuns", &st_numRuns, &b_NumRuns);
+	_summaryTree->SetBranchAddress("Run", st_run, &b_Run);	
+
+	_summaryTree->SetBranchAddress("nscan_NRuns", &st_nscan_numRuns, &b_NoiseScan_NumRuns);
+	_summaryTree->SetBranchAddress("nscan_run", st_nscan_run, &b_NoiseScan_Run);	
+	_summaryTree->SetBranchAddress("nscan_maxFactor", &st_nscan_maxFactor, &b_NoiseScan_MaxFactor);
+	_summaryTree->SetBranchAddress("nscan_maxOccupancy", &st_nscan_maxOccupancy, &b_NoiseScan_MaxOccupancy);
+	_summaryTree->SetBranchAddress("nscan_bottomX", &st_nscan_bottom_x, &b_NoiseScan_BottomX);
+	_summaryTree->SetBranchAddress("nscan_upperX", &st_nscan_upper_x, &b_NoiseScan_UpperX);
+	_summaryTree->SetBranchAddress("nscan_bottomY", &st_nscan_bottom_y, &b_NoiseScan_BottomY);
+	_summaryTree->SetBranchAddress("nscan_upperY", &st_nscan_upper_y, &b_NoiseScan_UpperY);
+	_summaryTree->SetBranchAddress("nscan_NNoisyPixels", &st_nscan_numNoisyPixels, &b_NoiseScan_NumNoisyPixels);
+	_summaryTree->SetBranchAddress("nscan_noisyPixel_plane", st_nscan_noisyPixel_plane, &b_NoiseScan_NoisyPixelPlane);
+	_summaryTree->SetBranchAddress("nscan_noisyPixel_x", st_nscan_noisyPixel_x, &b_NoiseScan_NoisyPixelX); 
+	_summaryTree->SetBranchAddress("nscan_noisyPixel_y", st_nscan_noisyPixel_y, &b_NoiseScan_NoisyPixelY);
+
       }
     } // end if(_fileMode == INPUT)
+
+    // debug info 
+    if( _printLevel > 0  ){
+      cout << "\n[StorageIO::StorageIO]" << endl;
+      cout << "  - filePath  = " << _filePath  << endl;
+      cout << "  - fileMode  = " << _fileMode;
+      std::string ost = _fileMode ? "OUTPUT" : "INPUT";
+      cout << " (" << ost << ")"<< endl;
+      cout << "  - numPlanes = " << _numPlanes << endl;
+      cout << "  - treeMask  = " << treeMask  << endl;
+      cout << printSummaryTree() << endl;
+    }
     
     if (_numPlanes < 1)
       throw "StorageIO: didn't initialize any planes";
@@ -285,30 +317,27 @@ namespace Storage {
 	  (nClusters && _numEvents != nClusters))
 	throw "StorageIO: all trees don't have the same number of events";
 
-      if( _summaryTree){
-	
-	// just to need to get single entry 
-	_summaryTree->GetEntry(0);      
-	
-	if( _printLevel>1 ){	
-	  //_summaryTree->Print();
-	  cout << "  - summaryInfo " << endl;
-	  cout << "      * nruns = " << numRuns << endl;
-	  for(int i=0; i<numRuns; i++)
-	    cout << "        o run[" << i << "] = " << run[i] << endl;
-	}
-      }
-    }
-    
+    } // end if (_fileMode == INPUT)
+     
   } // end of StorageIO constructor
   
   //=========================================================
   StorageIO::~StorageIO(){
     if (_file && _fileMode == OUTPUT){
+      
       /* fill summaryTree here to ensure it 
 	 is done just once (not a per-event tree) */
       _summaryTree->Fill();
       
+      if( _printLevel>1 ){
+	cout << "\n[Storage::~Storage]"<< endl;
+	cout << "  - filePath  = " << _filePath  << endl;
+	cout << "  - fileMode  = " << _fileMode;
+	std::string ost = _fileMode ? "OUTPUT" : "INPUT";
+	cout << " (" << ost << ")"<< endl;
+	cout << "  - numPlanes = " << _numPlanes << endl;
+	cout << printSummaryTree() << endl;
+      }
       _file->Write();
       delete _file;
     }
@@ -363,11 +392,66 @@ namespace Storage {
       trackChi2[i]        = 0;
     }
 
-    numRuns = 0;
-    for(int i=0; i<MAX_RUNS; i++)
-      run[i] = 0;
+    st_numRuns       = 0;
+    st_nscan_numRuns = 0;
+    for(int i=0; i<MAX_RUNS; i++){
+      st_run[i]       = -1;
+      st_nscan_run[i] = -1;
+    }
+    st_nscan_maxFactor    =  0;
+    st_nscan_maxOccupancy =  0;
+    st_nscan_bottom_x     = -1;
+    st_nscan_upper_x      = -1;
+    st_nscan_bottom_y     = -1;
+    st_nscan_upper_y      = -1;
+    st_nscan_numNoisyPixels = 0;
+    for(int i=0; i<MAX_NOISY; i++){
+      st_nscan_noisyPixel_plane[i] = -1;
+      st_nscan_noisyPixel_x[i]     = -1;
+      st_nscan_noisyPixel_y[i]     = -1;
+    }    
   }
+  
+  //=========================================================
+  const std::string StorageIO::printSummaryTree(){
+    std::ostringstream out;
+    
+    if( _summaryTree == 0 ){
+      out << "[StorageIO::printSummaryTree] WARNING :: "
+	  << "no summaryTree found  " << endl;    
+      return out.str();
+    }
 
+    // just to need to get single entry 
+    _summaryTree->GetEntry(0);    
+
+    //_summaryTree->Print();
+    
+    out << "  - summaryInfo " << endl;
+    out << "      * nruns = " << st_numRuns << endl;
+    for(int i=0; i<st_numRuns; i++)
+      out << "        o run[" << i << "] = " << st_run[i] << endl;
+    
+    out << "      * NoiseScan info" << endl;
+      out << "        o runs = ";
+      for(int i=0; i<st_nscan_numRuns; i++) out << st_nscan_run[i] << " ";
+      out << endl;
+      out << "        o maxFactor = " << st_nscan_maxFactor << endl;
+      out << "        o maxOccupancy = " << st_nscan_maxOccupancy << endl;
+      out << "        o bottomX = " << st_nscan_bottom_x << endl;
+      out << "        o upperX = " << st_nscan_upper_x << endl;
+      out << "        o bottomY = " << st_nscan_bottom_y << endl;
+      out << "        o upperY = " << st_nscan_upper_y << endl;
+      out << "        o nNoisyPixels = " << st_nscan_numNoisyPixels << endl;
+      for(int i=0; i<st_nscan_numNoisyPixels; i++){
+	out << "          -> pixel["
+	     << st_nscan_noisyPixel_plane[i] << ","
+	     << st_nscan_noisyPixel_x[i] << ","
+	     << st_nscan_noisyPixel_y[i] << "]" << endl;	
+    }
+      out << endl;
+      return out.str();
+  }
   
   //=========================================================
   void StorageIO::setNoiseMasks(std::vector<bool**>* noiseMasks){
@@ -391,11 +475,50 @@ namespace Storage {
       return;
     }
 
-    numRuns=0;
+    st_numRuns=0;
     std::vector<int>::const_iterator cit;	    
     for(cit=vruns.begin(); cit!=vruns.end(); ++cit){
-      run[numRuns] = (*cit);
-      numRuns++;
+      st_run[st_numRuns] = (*cit);
+      st_numRuns++;
+    }
+  }
+
+  //=========================================================
+  void StorageIO::setNoiseMaskData(const Mechanics::NoiseMask* noisemask){
+    const Loopers::NoiseScanConfig* config = noisemask->getConfig();
+    if(!config){
+      cout << "[StoraheIO::setNoiseMaskData] WARNING: no NoiseScanConfig info found" << endl;
+      return;
+    }
+
+    st_nscan_numRuns=0;
+    const std::vector<int> runs = config->getRuns();
+    for(std::vector<int>::const_iterator cit=runs.begin();
+	cit!=runs.end(); ++cit, st_nscan_numRuns++)
+      st_nscan_run[st_nscan_numRuns] = *cit;
+
+    st_nscan_maxFactor = config->getMaxFactor();
+    st_nscan_maxOccupancy = config->getMaxOccupancy();
+    st_nscan_bottom_x = config->getBottomLimitX();
+    st_nscan_upper_x = config->getUpperLimitX();
+    st_nscan_bottom_y = config->getBottomLimitY();
+    st_nscan_upper_y = config->getUpperLimitY();
+
+    st_nscan_numNoisyPixels=0;
+    std::vector<bool**> maskArrays = noisemask->getMaskArrays();
+    const Mechanics::Device *device = noisemask->getDevice();
+    for(unsigned int nsens=0; nsens<device->getNumSensors(); nsens++){
+      const Mechanics::Sensor *sensor = device->getSensor(nsens);
+      for(unsigned int x=0; x<sensor->getNumX(); x++){
+	for(unsigned int y=0; y<sensor->getNumY(); y++){
+	  if( sensor->isPixelNoisy(x,y) ){
+	    st_nscan_noisyPixel_plane[st_nscan_numNoisyPixels] = nsens;
+	    st_nscan_noisyPixel_x[st_nscan_numNoisyPixels] = x;
+	    st_nscan_noisyPixel_y[st_nscan_numNoisyPixels] = y;
+	    st_nscan_numNoisyPixels++;
+	  }
+	}
+      }
     }
   }
   
@@ -406,21 +529,16 @@ namespace Storage {
   }
   
   //=========================================================
-  unsigned int StorageIO::getNumPlanes() const {
-    return _numPlanes;
-  }
-  
-  //=========================================================
-  Storage::Mode StorageIO::getMode() const {
-    return _fileMode;
-  }
-
-  //=========================================================
   std::vector<int> StorageIO::getRuns() const {
     std::vector<int> vec;
-    _summaryTree->GetEntry(0);
-    for(int i=0; i<numRuns; i++)
-      vec.push_back(run[i]);    
+    if(!_summaryTree){
+      cout << "[StorageIO::getRuns()] WARNING no summaryTree, can't get run info" << endl;     
+    }
+    else{    
+      _summaryTree->GetEntry(0);
+      for(int i=0; i<st_numRuns; i++)
+	vec.push_back(st_run[i]);
+    }
     return vec;
   }
   

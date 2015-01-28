@@ -6,6 +6,11 @@
 #include <fstream>
 #include <vector>
 
+/** @class ConfigParser
+ **    
+ ** @brief A class to parse configuration files.
+ **
+ */
 class ConfigParser{
   
  public:
@@ -19,16 +24,30 @@ class ConfigParser{
  public:
   ConfigParser(const char* filePath);
   
-  void print();
-  
-  unsigned int getNumRows() const;
   const Row* getRow(unsigned int n) const;
-  std::vector<Row> getParsedConents() const;
-  const char* getFilePath() const;
+  unsigned int getNumRows() const { return _numRows; }
+  std::vector<Row> getParsedConents() const { return _parsedContents; }
+  const char* getFilePath() const { return _filePath; }
   
   static double valueToNumerical(const std::string& value);
   static bool   valueToLogical(const std::string& value);
-  static void   valueToVec(const std::string& value, std::vector<double>& vec);
+  
+  template <typename T>
+    static void valueToVec(const std::string& value, std::vector<T>& vec){
+    std::stringstream stream;
+    stream.str(value);
+    std::string buffer;
+    while (stream.good()) {
+      getline(stream, buffer, ',');
+      std::stringstream ss;
+      ss.str(buffer);
+      T num;
+      ss >> num;
+      vec.push_back(num);
+    }
+  }
+
+  void print();
   
  private:
   ConfigParser(const ConfigParser&); // Disable the copy constructor
@@ -53,6 +72,7 @@ class ConfigParser{
   
   unsigned int _numRows;
   std::vector<Row> _parsedContents; 
-};
+
+}; // end of class
 
 #endif // CONFIGPARSER_H
