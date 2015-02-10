@@ -581,18 +581,15 @@ void Analyzers::configOccupancy(const ConfigParser& config,
   std::vector<ClusterCut*> clusterCuts;
   std::vector<HitCut*> hitCuts;
 
-  for (unsigned int i = 0; i < config.getNumRows(); i++)
-  {
+  for(unsigned int i=0; i<config.getNumRows(); i++){
     const ConfigParser::Row* row = config.getRow(i);
-
-    if (row->isHeader && !row->header.compare("End Occupancy"))
-    {
+    
+    if (row->isHeader && !row->header.compare("End Occupancy")){
       if (!active) return;
-      Occupancy* analyzer =
-          new Occupancy(refDevice, results->GetDirectory(""), suffix.c_str());
+      Occupancy* analyzer = new Occupancy(refDevice, results->GetDirectory(""), suffix.c_str());
       looper->addAnalyzer(analyzer); // Will be deleted by looper
       applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); // Cuts will be deleted by the analyzer
-
+      
       active = false;
       suffix = "";
       eventCuts.clear();
@@ -600,10 +597,10 @@ void Analyzers::configOccupancy(const ConfigParser& config,
       clusterCuts.clear();
       hitCuts.clear();
     }
-
+    
     if (row->isHeader) continue;
     if (row->header.compare("Occupancy")) continue;
-
+    
     if (!row->key.compare("active"))
       active = ConfigParser::valueToLogical(row->value);
     else if (!row->key.compare("suffix"))

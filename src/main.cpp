@@ -353,9 +353,11 @@ void process(const char* inputName,
     Processors::TrackMaker* trackMaker = 0;
     if(device->getNumSensors() > 2) trackMaker = Processors::generateTrackMaker(runConfig);
 
+    // input file
     unsigned int inMask = Storage::Flags::TRACKS | Storage::Flags::CLUSTERS;
     Storage::StorageIO input(inputName, Storage::INPUT, 0, inMask, 0, printLevel);
-    
+
+    // output file
     unsigned int outMask = 0;
     if(device->getNumSensors() <= 2) outMask = Storage::Flags::TRACKS;
     Storage::StorageIO output(outputName, Storage::OUTPUT, device->getNumSensors(), outMask, 0, printLevel);
@@ -368,6 +370,7 @@ void process(const char* inputName,
     delete start;
     delete end;
 
+    // output results file
     TFile* results = 0;
     if(strlen(resultsName))
       results = new TFile(resultsName, "RECREATE");
@@ -376,7 +379,7 @@ void process(const char* inputName,
     if(printLevel>0) looper.print();    
     looper.loop();
 
-    if (results){
+    if(results){
       results->Write();
       delete results;
     }

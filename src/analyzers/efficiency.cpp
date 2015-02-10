@@ -83,11 +83,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device* refDevice,
 
     // Efficiency map initialization
     name.str(""); title.str("");
-    name << sensor->getDevice()->getName() << sensor->getName()
-         << "Map" << _nameSuffix;
-    // Special titel includes axis
-    title << sensor->getDevice()->getName() << " " << sensor->getName()
-          << " Efficiency Map"
+    name << sensor->getDevice()->getName() << sensor->getName() << "Map" << _nameSuffix;
+    title << sensor->getDevice()->getName() << " - " << sensor->getName()
+	  << " [Efficiency Map]"
           << ";X position" << " [" << _dutDevice->getSpaceUnit() << "]"
           << ";Y position" << " [" << _dutDevice->getSpaceUnit() << "]"
           << ";Efficiency";
@@ -102,8 +100,8 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device* refDevice,
     name.str(""); title.str("");
     name << sensor->getDevice()->getName() << sensor->getName()
          << "GroupedDistribution" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " " << sensor->getName()
-          << " Grouped Efficiency";
+    title << sensor->getDevice()->getName() << " - " << sensor->getName()
+          << " [Grouped Efficiency]";
     TH1D* pixels = new TH1D(name.str().c_str(), title.str().c_str(),
                             20, 0, 1.001);
     pixels->GetXaxis()->SetTitle("Pixel group efficiency");
@@ -111,75 +109,165 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device* refDevice,
     pixels->SetDirectory(plotDir);
     _efficiencyDistribution.push_back(pixels);
     
-
-    // Track matched position
+    // Track matched position (X)
     name.str(""); title.str(""); Xaxis.str("");
     name << sensor->getDevice()->getName() << sensor->getName()
          << "MatchedTracksPositionX" << _nameSuffix;
     title << sensor->getDevice()->getName() << " " << sensor->getName()
-          << " Matched Tracks Position X";
-    Xaxis << "Matched Tracks X position" << " [" << _dutDevice->getSpaceUnit() << "]";
-
+          << " [Matched tracks : Position-X]";
     TH1D* matchedPositionX = new TH1D(name.str().c_str(), title.str().c_str(),
 				      sensor->getNumX()*1.5*3, 1.5*lowX, 1.5*uppX);
+    Xaxis << "X-position" << " [" << _dutDevice->getSpaceUnit() << "]";
     matchedPositionX->GetXaxis()->SetTitle(Xaxis.str().c_str());
-    matchedPositionX->GetZaxis()->SetTitle("Tracks");
     matchedPositionX->SetDirectory(plotDir);
-    _matchpositionX.push_back(matchedPositionX);
+    _matchPositionX.push_back(matchedPositionX);
     
-
-
+    // Track matched position (Y)
     name.str(""); title.str(""); Xaxis.str("");
     name << sensor->getDevice()->getName() << sensor->getName()
          << "MatchedTracksPositionY" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " " << sensor->getName()
-          << " Matched Tracks Position Y";
-    Xaxis << "Matched Tracks Y position" << " [" << _dutDevice->getSpaceUnit() << "]";
- 
+    title << sensor->getDevice()->getName() << " - " << sensor->getName()
+          << " [Matched tracks : Position-Y]"; 
     TH1D* matchedPositionY = new TH1D(name.str().c_str(), title.str().c_str(),
 				      sensor->getNumY()*1.5*3, 1.5*lowY, 1.5*uppY);
+    Xaxis << "Y-position" << " [" << _dutDevice->getSpaceUnit() << "]";
     matchedPositionY->GetXaxis()->SetTitle(Xaxis.str().c_str());
-    matchedPositionY->GetZaxis()->SetTitle("Tracks");
     matchedPositionY->SetDirectory(plotDir);
-    _matchpositionY.push_back(matchedPositionY);
+    _matchPositionY.push_back(matchedPositionY);
 
+    //-----------------------------------------------------------
+    name.str(""); title.str(""); Xaxis.str("");
+    name << sensor->getDevice()->getName() << sensor->getName() << "MatchedTiming" << _nameSuffix;
+    title << sensor->getDevice()->getName() << " - " << sensor->getName()
+	  << " [Matched tracks : Timing]";
+    TH1D* matchTiming = new TH1D(name.str().c_str(), title.str().c_str(),
+				 16, 0, 16);
+    matchTiming->GetXaxis()->SetTitle("Timing [BC]");
+    matchTiming->GetYaxis()->SetTitle("# hits");
+    matchTiming->SetDirectory(plotDir);
+    _matchTime.push_back(matchTiming);
+
+    //-----------------------------------------------------------
+    name.str(""); title.str(""); Xaxis.str("");
+    name << sensor->getDevice()->getName() << sensor->getName() << "Matched_ToT" << _nameSuffix;
+    title << sensor->getDevice()->getName() << " - " << sensor->getName() << " [ToT distribution]";
+    TH1D* matchToT = new TH1D(name.str().c_str(), title.str().c_str(),
+			      18, 0,18);
+    matchToT->GetXaxis()->SetTitle("ToT [BC]");
+    matchToT->SetDirectory(plotDir);
+    _matchToT.push_back(matchToT);
+
+    //-----------------------------------------------------------
     name.str(""); title.str("");
     name << sensor->getDevice()->getName() << sensor->getName()
-         << "InPixelTiming" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " " << sensor->getName()
-          << " In Pixel Timing Map";
+	 << "lvl1_vs_ToT" << _nameSuffix;
+    title << sensor->getDevice()->getName() << " - " << sensor->getName()
+	  << " [Timing vs ToT]";
+    TH2D* lvl1vsToT = new TH2D(name.str().c_str(), title.str().c_str(),
+			       16, 0, 16, // LVL1
+			       18, 0, 18); // ToT
+    lvl1vsToT->GetXaxis()->SetTitle("LVL1 [BC]");
+    lvl1vsToT->GetYaxis()->SetTitle("ToT [BC]");
+    lvl1vsToT->SetDirectory(plotDir);
+    _lvl1vsToT.push_back(lvl1vsToT);
+
+    //-----------------------------------------------------------
+    name.str(""); title.str("");
+    name << sensor->getDevice()->getName() << sensor->getName()
+	 << "InPixelTiming" << _nameSuffix;
+    title << sensor->getDevice()->getName() << " - " << sensor->getName()
+	  << " [InPixel Timing Map]";
     TH2D* inTimingMap = new TH2D(name.str().c_str(), title.str().c_str(),
 				 pixBinsX, 0, sensor->getPitchX(),
                                  pixBinsY, 0, sensor->getPitchY());
     inTimingMap->SetDirectory(plotDir);
     _inPixelTiming.push_back(inTimingMap);
 
+    //==================================================
+    TDirectory* plotDir1 = makeGetDirectory("Efficiency/InpixelLvl1");
 
+    std::vector<TH2D*> tmp;    
+    for(int bc=0; bc<16; bc++){
+      name.str(""); title.str("");
+      name << sensor->getDevice()->getName() << sensor->getName()
+	   << Form("InPixelTiming_bc_%d",bc) << _nameSuffix;
+      title << sensor->getDevice()->getName() << " " << sensor->getName()
+	    << Form(" InPixel Timing Map for lvl= %d bc", bc);
+      TH2D* inTimingMap1 = new TH2D(name.str().c_str(), title.str().c_str(),
+				    pixBinsX, 0, sensor->getPitchX(),
+				    pixBinsY, 0, sensor->getPitchY());
+      inTimingMap1->SetDirectory(plotDir1);     
+      tmp.push_back(inTimingMap1);
+    }
+    _inPixelTimingLVL1.push_back(tmp);
+    tmp.clear();   
+
+    // InPixel efficiency : all LVL1 
     name.str(""); title.str("");
     name << sensor->getDevice()->getName() << sensor->getName()
-         << "InPixelTimingCnt" << _nameSuffix;
+         << "total" << _nameSuffix;
     title << sensor->getDevice()->getName() << " " << sensor->getName()
-          << " In Pixel Timing Map counting";
+          << " InPixel Efficiency Map for lvl=  bc";
+    TH2D* inPixel_LVL1_total = new TH2D(name.str().c_str(), title.str().c_str(),
+					pixBinsX, 0, sensor->getPitchX(),
+					pixBinsY, 0, sensor->getPitchY());
+    inPixel_LVL1_total->SetDirectory(plotDir);
+    _inPixelEfficiencyLVL1_total.push_back(inPixel_LVL1_total);
+
+    //-----------------------------------------------------------
+    std::vector<TH2D*> tmp2;
+    for(int bc=0; bc<16; bc++){
+      name.str(""); title.str("");
+      name << sensor->getDevice()->getName() << sensor->getName()
+	   << Form("InPixelEfficiencypa_bc_%d",bc) << _nameSuffix;
+      title << sensor->getDevice()->getName() << " " << sensor->getName()
+	    << Form(" In Pixel Efficiency Map for lvl= %d bc",bc);      
+      TH2D* inPixel_LVL1_passed = new TH2D(name.str().c_str(), title.str().c_str(),
+						    pixBinsX, 0, sensor->getPitchX(),
+						    pixBinsY, 0, sensor->getPitchY());
+      inPixel_LVL1_passed->SetDirectory(plotDir);
+      tmp2.push_back(inPixel_LVL1_passed);
+    }
+    _inPixelEfficiencyLVL1_passed.push_back(tmp2);
+    tmp2.clear();
+    
+    //-----------------------------------------------------------
+    name.str(""); title.str("");
+    name << sensor->getDevice()->getName() << sensor->getName()
+         << "InPixelToT" << _nameSuffix;
+    title << sensor->getDevice()->getName() << " " << sensor->getName()
+          << " In Pixel ToT Map";
+    TH2D* inToTMap = new TH2D(name.str().c_str(), title.str().c_str(),
+			      pixBinsX, 0, sensor->getPitchX(),
+			      pixBinsY, 0, sensor->getPitchY());
+    inToTMap->SetDirectory(plotDir);
+    _inPixelToT.push_back(inToTMap);
+    
+    //-----------------------------------------------------------
+    name.str(""); title.str("");
+    name << sensor->getDevice()->getName() << sensor->getName()
+	 << "InPixelTimingCnt" << _nameSuffix;
+    title << sensor->getDevice()->getName() << " - " << sensor->getName()
+          << " [InPixel Timing Map counting]";
     TH2D* count = new TH2D(name.str().c_str(), title.str().c_str(),
 				 pixBinsX, 0, sensor->getPitchX(),
                                  pixBinsY, 0, sensor->getPitchY());
     count->SetDirectory(0);
     _inPixelCounting.push_back(count);
-   
 
-    // Track matching initialization
+    // Track matching information
     name.str(""); title.str("");
     name << sensor->getDevice()->getName() << sensor->getName()
          << "MatchedTracks" << _nameSuffix;
     title << sensor->getDevice()->getName() << " " << sensor->getName()
-          << " Matched Tracks";
+          << " [Matched Tracks]";
     TH1D* matched = new TH1D(name.str().c_str(), title.str().c_str(),
-                             2, 0 - 0.5, 2 - 0.5);
+                             2, -0.5, 1.5);
     matched->GetXaxis()->SetTitle("0 : unmatched tracks | 1 : matched tracks");
-    matched->GetZaxis()->SetTitle("Tracks");
     matched->SetDirectory(plotDir);
     _matchedTracks.push_back(matched);
 
+    //-----------------------------------------------------------
     name.str(""); title.str("");
     name << sensor->getDevice()->getName() << sensor->getName()
          <<  "InPixelEfficiency" << _nameSuffix;
@@ -187,13 +275,14 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device* refDevice,
           << " In Pixel Efficiency"
           << ";X position [" << _dutDevice->getSpaceUnit() << "]"
           << ";Y position [" << _dutDevice->getSpaceUnit() << "]"
-          << ";Tracks";
+          << "";
     TEfficiency* inPixelEfficiency = new TEfficiency(name.str().c_str(), title.str().c_str(),
                                                      pixBinsX, 0, sensor->getPitchX(),
                                                      pixBinsY, 0, sensor->getPitchY());
     inPixelEfficiency->SetDirectory(plotDir);
     _inPixelEfficiency.push_back(inPixelEfficiency);
-
+    
+    //-----------------------------------------------------------
     if (_refDevice->getTimeEnd() > _refDevice->getTimeStart()) // If not used, they are both == 0
     {
       // Prevent aliasing
@@ -227,45 +316,46 @@ void Analyzers::Efficiency::processEvent(const Storage::Event* refEvent,
   assert(refEvent && dutEvent && "Analyzer: can't process null events");
   
   // Throw an error for sensor / plane mismatch
-  eventDeivceAgree(refEvent, dutEvent);
+  eventDeviceAgree(refEvent, dutEvent);
   
   // Check if the event passes the cuts
-  for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)
+  for(unsigned int ncut=0; ncut<_numEventCuts; ncut++)
     if (!_eventCuts.at(ncut)->check(refEvent)) return;
   
-  for (unsigned int ntrack = 0; ntrack < refEvent->getNumTracks(); ntrack++)
-  {
+  for (unsigned int ntrack=0; ntrack<refEvent->getNumTracks(); ntrack++){
     Storage::Track* track = refEvent->getTrack(ntrack);
+
     // Check if the track passes the cuts
     bool pass = true;
-    for (unsigned int ncut = 0; ncut < _numTrackCuts; ncut++)
+    for (unsigned int ncut=0; ncut<_numTrackCuts; ncut++)
       if (!_trackCuts.at(ncut)->check(track)) { pass = false; break; }
     if (!pass) continue;
-
+    
     // Make a list of the planes with their matched cluster
     std::vector<Storage::Cluster*> matches;
-    for (unsigned int nplane = 0; nplane < dutEvent->getNumPlanes(); nplane++)
+    for(unsigned int nplane=0; nplane<dutEvent->getNumPlanes(); nplane++)
       matches.push_back(0); // No matches
-
+    
     // Get the matches from the track
-    for (unsigned int nmatch = 0; nmatch < track->getNumMatchedClusters(); nmatch++)
-    {
+    for(unsigned int nmatch=0; nmatch<track->getNumMatchedClusters(); nmatch++){
       Storage::Cluster* cluster = track->getMatchedCluster(nmatch);
-
+      
       // Check if this cluster passes the cuts
-      //bool pass = true;
-      for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++){
+      //bool pass = true; // <--------- [SGS] WHY COMMENTED ????
+      for (unsigned int ncut=0; ncut<_numClusterCuts; ncut++){
         if (!_clusterCuts.at(ncut)->check(cluster)) {
 	  pass = false;
 	  break; 
 	}
+	
 	//Bilbao@cern.ch:Cut for cluster size (also in DUTresiduals to affect all eff.root results)
         /*if(cluster->getNumHits()==1){
-//            std::cout << cluster->getNumHits() << std::endl;
+	  std::cout << cluster->getNumHits() << std::endl;
             pass = false;
             break;}*/
-      pass = true;
-      matches.at(cluster->getPlane()->getPlaneNum()) = cluster;
+
+	pass = true;
+	matches.at(cluster->getPlane()->getPlaneNum()) = cluster;
       }
     }
 
@@ -311,34 +401,59 @@ void Analyzers::Efficiency::processEvent(const Storage::Event* refEvent,
       // TO BE PROPERLY SET!!!!!
       //      if(px >1 & px<12 & py>81 & py<94){
       //      if(px >1 && px<6 && py>81 && py<84){
+      //  if(px>1 && px<5  && py>85 && py<87   ){
       if( (px > _pix_x_min) && (px < _pix_x_max) && (py > _pix_y_min) && (py < _pix_y_max) ){
 
 	_inPixelEfficiency.at(nsensor)->Fill((bool)match,
 					     trackPosX * sensor->getPitchX(),
 					     trackPosY * sensor->getPitchY());
+
+	_inPixelEfficiencyLVL1_total.at(nsensor)->Fill(trackPosX * sensor->getPitchX(),
+						       trackPosY * sensor->getPitchY());
+	
 	if(match){
-	  for (unsigned int nhit=0; nhit<match->getNumHits(); nhit++){
+	  for(unsigned int nhit=0; nhit<match->getNumHits(); nhit++){
 	    const Storage::Hit *hit = match->getHit(nhit);
 
 	    _inPixelTiming.at(nsensor)->Fill(trackPosX * sensor->getPitchX(),
 					     trackPosY * sensor->getPitchY(),
 					     hit->getTiming());
 	    
+	    _inPixelToT.at(nsensor)->Fill(trackPosX * sensor->getPitchX(),
+					  trackPosY * sensor->getPitchY(),
+					  hit->getValue());
+	    
 	    _inPixelCounting.at(nsensor)->Fill(trackPosX * sensor->getPitchX(),
 					       trackPosY * sensor->getPitchY());
+
+
+	    int lvl1 = (int)hit->getTiming();
+	    
+	    (_inPixelEfficiencyLVL1_passed.at(nsensor))[lvl1]->Fill(trackPosX * sensor->getPitchX(),
+								    trackPosY * sensor->getPitchY());
+	    
+	    (_inPixelTimingLVL1.at(nsensor))[lvl1]->Fill(trackPosX * sensor->getPitchX(),
+							 trackPosY * sensor->getPitchY());
 	  }
 	}
       }
 
       if (match)
       {
-        //_efficiencyMap.at(nsensor)->Fill(true, tx, ty); 
+        //_efficiencyMap.at(nsensor)->Fill(true, tx, ty);
+
+	for (unsigned int nhit=0; nhit<match->getNumHits(); nhit++){
+	  const Storage::Hit *hit = match->getHit(nhit);
+	  _matchTime.at(nsensor)->Fill(hit->getTiming());
+	  _matchToT.at(nsensor)->Fill(hit->getValue());
+	  _lvl1vsToT.at(nsensor)->Fill(hit->getTiming(),hit->getValue());
+        } 
 	
 	//bilbao@cern.ch / reina.camacho@cern.ch: Filling the efficiency histogram with the cluster position instead of the track position
 	_efficiencyMap.at(nsensor)->Fill(true, match->getPosX(), match->getPosY());
         _matchedTracks.at(nsensor)->Fill(1);
-	_matchpositionX.at(nsensor)->Fill(tx);
-	_matchpositionY.at(nsensor)->Fill(ty);
+	_matchPositionX.at(nsensor)->Fill(tx);
+	_matchPositionY.at(nsensor)->Fill(ty);
         if (_efficiencyTime.size())
           _efficiencyTime.at(nsensor)->Fill(true, _refDevice->tsToTime(refEvent->getTimeStamp()));
       }
@@ -366,13 +481,33 @@ void Analyzers::Efficiency::postProcessing() {
     const TH1* values = efficiency->GetTotalHistogram();
     TH1D* distribution = _efficiencyDistribution.at(nsensor);
     
-    // Inpixel timing plot and renormalization
+    // InPixel timing plot and renormalization
     TH2D* inTimingMap =  _inPixelTiming.at(nsensor);
+    TH2D* inToTMap =  _inPixelToT.at(nsensor);
     TH2D* count = _inPixelCounting.at(nsensor);
     for (Int_t x=1; x<=inTimingMap->GetNbinsX(); x++){
       for (Int_t y=1; y<=inTimingMap->GetNbinsY(); y++){
-	const double average = inTimingMap->GetBinContent(x, y) / count->GetBinContent(x, y);
+	const double average = inTimingMap->GetBinContent(x,y) / count->GetBinContent(x,y);
 	inTimingMap->SetBinContent(x, y, average);
+
+	const double averageToT = inToTMap->GetBinContent(x,y) / count->GetBinContent(x,y);
+	inToTMap->SetBinContent(x, y, averageToT);
+
+	for(int bc=0; bc<16; bc++){
+
+	  double averageTime=0;
+	  TH2D *hist = _inPixelTimingLVL1.at(nsensor)[bc];
+	  if( hist->GetBinContent(x,y) > 10 ) averageTime = hist->GetBinContent(x,y) / count->GetBinContent(x,y);
+	  if( hist->GetBinContent(x,y) < 51 ) averageTime = 0;	  	  
+	  hist->SetBinContent(x,y,averageTime);
+	  
+	  double val=0;
+	  TH2D *htot = _inPixelEfficiencyLVL1_total[nsensor];
+	  TH2D *hpass = _inPixelEfficiencyLVL1_passed.at(nsensor)[bc];	  
+	  if( hpass->GetBinContent(x,y) > 10 ) val = hpass->GetBinContent(x,y) / htot->GetBinContent(x,y);	  
+	  if( hpass->GetBinContent(x,y) < 11 ) val = hpass->GetBinContent(x,y) / htot->GetBinContent(x,y);   	  
+	  hpass->SetBinContent(x,y,val);
+	}	
       }
     }
     

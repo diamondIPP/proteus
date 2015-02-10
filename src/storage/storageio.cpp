@@ -247,7 +247,7 @@ namespace Storage {
 	_summaryTree->SetBranchAddress("Run", st_run, &b_Run);	
 
 	_summaryTree->SetBranchAddress("nscan_NRuns", &st_nscan_numRuns, &b_NoiseScan_NumRuns);
-	_summaryTree->SetBranchAddress("nscan_run", st_nscan_run, &b_NoiseScan_Run);	
+	_summaryTree->SetBranchAddress("nscan_Run", st_nscan_run, &b_NoiseScan_Run);	
 	_summaryTree->SetBranchAddress("nscan_maxFactor", &st_nscan_maxFactor, &b_NoiseScan_MaxFactor);
 	_summaryTree->SetBranchAddress("nscan_maxOccupancy", &st_nscan_maxOccupancy, &b_NoiseScan_MaxOccupancy);
 	_summaryTree->SetBranchAddress("nscan_bottomX", &st_nscan_bottom_x, &b_NoiseScan_BottomX);

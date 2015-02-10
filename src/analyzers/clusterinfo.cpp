@@ -157,7 +157,7 @@ void Analyzers::ClusterInfo::processEvent(const Storage::Event* event)
   assert(event && "Analyzer: can't process null events");
 
   // Throw an error for sensor / plane mismatch
-  eventDeivceAgree(event);
+  eventDeviceAgree(event);
 
   // Check if the event passes the cuts
   for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)

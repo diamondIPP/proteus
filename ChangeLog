@@ -1,4 +1,9 @@
-2015-01-xx S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
+2015-02-10 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
+	* occupancy distributions per plane instead of just one for whole device
+	* timing plots vs LVL1 from Javier and Francesco
+	* tag  JudithFEI4-00-00-10
+
+	2015-01-27 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
 	* add alignable boolean private member to sensor class
 	* more informative message in exception thrown in generateSensors
 	* NoiseScanConfig class in noisescan.h

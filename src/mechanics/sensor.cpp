@@ -337,6 +337,7 @@ bool Mechanics::Sensor::getDigital() const { return _digi; }
 bool Mechanics::Sensor::getAlignable() const { return _alignable; }
 unsigned int Mechanics::Sensor::getNumX() const { return _numX; }
 unsigned int Mechanics::Sensor::getNumY() const { return _numY; }
+unsigned int Mechanics::Sensor::getNumPixels() const { return _numX * _numY; }
 unsigned int Mechanics::Sensor::getNumNoisyPixels() const { return _numNoisyPixels; }
 double Mechanics::Sensor::getPitchX() const { return _pitchX; }
 double Mechanics::Sensor::getPitchY() const { return _pitchY; }

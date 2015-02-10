@@ -73,6 +73,7 @@ namespace Mechanics {
     bool getAlignable() const;
     unsigned int getNumX() const;
     unsigned int getNumY() const;
+    unsigned int getNumPixels() const;
     unsigned int getPosNumX() const;
     unsigned int getPosNumY() const;
     unsigned int getNumNoisyPixels() const;

@@ -11,19 +11,16 @@ namespace Analyzers { class DualAnalyzer; }
 
 namespace Loopers {
   
-  class Looper
-  {
+  class Looper {
   protected:
     Looper(Storage::StorageIO* refStorage,
 	   Storage::StorageIO* dutStorage = 0,
 	   ULong64_t startEvent = 0,
 	   ULong64_t numEvents = 0,
 	   unsigned int eventSkip = 1);
-
-    virtual ~Looper();
     
-    void progressBar(ULong64_t nevent);    
-    
+    virtual ~Looper();    
+    void progressBar(ULong64_t nevent);        
     virtual void print(){}
     
   public:

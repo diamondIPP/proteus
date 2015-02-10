@@ -29,7 +29,7 @@ void HitInfo::processEvent(const Storage::Event* event)
   assert(event && "Analyzer: can't process null events");
 
   // Throw an error for sensor / plane mismatch
-  eventDeivceAgree(event);
+  eventDeviceAgree(event);
 
   // Check if the event passes the cuts
   for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)
@@ -124,7 +124,7 @@ HitInfo::HitInfo(const Mechanics::Device* device,
           << ";Level 1 bin number"
           << ";Hits";
     TH1D* lvl1 = new TH1D(name.str().c_str(), title.str().c_str(),
-                          _lvl1Bins, 0 - 0.5, _lvl1Bins - 0.5);
+                          _lvl1Bins, -0.5, _lvl1Bins - 0.5);
     lvl1->SetDirectory(plotDir);
     _lvl1.push_back(lvl1);
 
@@ -136,7 +136,7 @@ HitInfo::HitInfo(const Mechanics::Device* device,
           << ";ToT bin number"
           << ";Hits";
     TH1D* tot = new TH1D(name.str().c_str(), title.str().c_str(),
-                         _totBins, 0 - 0.5, _totBins - 0.5);
+                         _totBins, -0.5, _totBins - 0.5);
     tot->SetDirectory(plotDir);
     _tot.push_back(tot);
 
@@ -147,8 +147,8 @@ HitInfo::HitInfo(const Mechanics::Device* device,
           << ";Y pixel"
           << ";Average ToT";
     TH2D* totMap = new TH2D(name.str().c_str(), title.str().c_str(),
-                            sensor->getNumX(), 0 - 0.5, sensor->getNumX() - 0.5,
-                            sensor->getNumY(), 0 - 0.5, sensor->getNumY() - 0.5);
+                            sensor->getNumX(), -0.5, sensor->getNumX() - 0.5,
+                            sensor->getNumY(), -0.5, sensor->getNumY() - 0.5);
     totMap->SetDirectory(plotDir);
     _totMap.push_back(totMap);
 
@@ -160,8 +160,8 @@ HitInfo::HitInfo(const Mechanics::Device* device,
           << ";Average Lv1 Timing";
 
     TH2D* timingMap = new TH2D(name.str().c_str(), title.str().c_str(),
-                            sensor->getNumX(), 0 - 0.5, sensor->getNumX() - 0.5,
-                            sensor->getNumY(), 0 - 0.5, sensor->getNumY() - 0.5);
+                            sensor->getNumX(), -0.5, sensor->getNumX() - 0.5,
+                            sensor->getNumY(), -0.5, sensor->getNumY() - 0.5);
     timingMap->SetDirectory(plotDir);
     _timingMap.push_back(timingMap);
 
@@ -170,8 +170,8 @@ HitInfo::HitInfo(const Mechanics::Device* device,
     name << sensor->getName() << "ToTMapCnt" << _nameSuffix;
     title << sensor->getName() << " ToT Map Counter";
     TH2D* MapCnt = new TH2D(name.str().c_str(), title.str().c_str(),
-                               sensor->getNumX(), 0 - 0.5, sensor->getNumX() - 0.5,
-                               sensor->getNumY(), 0 - 0.5, sensor->getNumY() - 0.5);
+                               sensor->getNumX(), -0.5, sensor->getNumX() - 0.5,
+                               sensor->getNumY(), -0.5, sensor->getNumY() - 0.5);
     MapCnt->SetDirectory(0);
     _MapCnt.push_back(MapCnt);
   }

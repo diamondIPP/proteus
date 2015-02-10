@@ -68,7 +68,8 @@ void Loopers::ProcessEvents::loop() {
     
     if (refEvent->getNumClusters())
       throw "ProcessEvents: can't recluster an event, mask the tree in the input";
-    for (unsigned int nplane = 0; nplane < refEvent->getNumPlanes(); nplane++)
+
+    for (unsigned int nplane=0; nplane<refEvent->getNumPlanes(); nplane++)
       if (_clusterMaker) _clusterMaker->generateClusters(refEvent, nplane);
     
     Processors::applyAlignment(refEvent, _refDevice);
@@ -81,7 +82,9 @@ void Loopers::ProcessEvents::loop() {
     
     // Write the event
     _refOutput->writeEvent(refEvent);
-    
+
+    // loop in vector of SingleAnalyzers (in base class Looper) and
+    // make each of them to process the current event
     for (unsigned int i=0; i<_numSingleAnalyzers; i++)
       _singleAnalyzers.at(i)->processEvent(refEvent);
     

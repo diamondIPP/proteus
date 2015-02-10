@@ -89,9 +89,9 @@ Mechanics::Sensor* Mechanics::Device::getSensor(unsigned int n) const {
 
 //=========================================================
 unsigned int Mechanics::Device::getNumPixels() const {
-  unsigned int numPixels = 0;
-  for (unsigned int nsens = 0; nsens < getNumSensors(); nsens++)
-    numPixels += getSensor(nsens)->getNumX() * getSensor(nsens)->getNumY();
+  unsigned int numPixels=0;
+  for (unsigned int nsens=0; nsens<getNumSensors(); nsens++)
+    numPixels += getSensor(nsens)->getNumPixels();
   return numPixels;
 }
 

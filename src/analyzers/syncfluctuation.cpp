@@ -36,7 +36,7 @@ void SyncFluctuation::processEvent(const Storage::Event* refEvent,
   assert(refEvent && dutEvent && "Analyzer: can't process null events");
 
   // Throw an error for sensor / plane mismatch
-  eventDeivceAgree(refEvent, dutEvent);
+  eventDeviceAgree(refEvent, dutEvent);
 
   // Check if the event passes the cuts
   for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)

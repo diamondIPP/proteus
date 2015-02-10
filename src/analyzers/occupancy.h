@@ -19,27 +19,39 @@ namespace Analyzers {
   public:
     Occupancy(const Mechanics::Device* device,
 	      TDirectory* dir,
-	      const char* suffix = "");
-    
+	      const char* suffix="");
+
     void processEvent(const Storage::Event* event);
+
+    /** Creates and fills the 1D occupancy histograms.*/
     void postProcessing();
-    
-    TH1D* getOccDistribution();
+
+    /** Returns Hit occupancy 2D-map for given sensor. */
     TH2D* getHitOcc(unsigned int nsensor);
-    
-  public:
-    /* Total number of hits in Device. For the telescope,
-       this is the sum of hits in all planes. */
-    ULong64_t totalHitOccupancy; 
+
+    /** Returns Hit occupancy 1D-dist for given sensor. 
+	postProcessing() must have been called beforehand. */
+    TH1D* getHitOccDist(unsigned int nsensors);
+
+    /** Returns total number of hits for given sensor. */
+    ULong64_t getTotalHitOccupancy(unsigned int sensor);
     
   private:
-    std::vector<TH2D*> _hitOcc;
-    std::vector<TH2D*> _clusterOcc;
-    std::vector<TH2D*> _clusterOccXZ;
-    std::vector<TH2D*> _clusterOccYZ;
-    std::vector<TH2D*> _clusterOccPix;
-    TH1D* _occDistribution;
-
+    void bookHistos(TDirectory *plotdir);
+    
+  private:
+    std::vector<ULong64_t> _totalHitOccupancy; /*!< Total number of hits in each plane
+						 (sum of hits for all events). */
+    
+    std::vector<TH2D*> _hitOcc; //!< pixel hitmaps
+    
+    std::vector<TH2D*> _clusterOcc; //!< cluster positions (XY) 2D-histos.
+    //std::vector<TH2D*> _clusterOccXZ;
+    //std::vector<TH2D*> _clusterOccYZ;
+    std::vector<TH2D*> _clusterOccPix;//!< cluster positions (pixel units) 2D-histos.
+    
+    std::vector<TH1D*> _occDist; //!< Occupancy 1D-distributions (number of hits/trigger).
+    
   }; // end of class
   
 } // end of namespace
