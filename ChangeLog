@@ -1,3 +1,6 @@
+2015-02-11 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
+	* fix normalization in noiseScan
+
 2015-02-10 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
 	* occupancy distributions per plane instead of just one for whole device
 	* timing plots vs LVL1 from Javier and Francesco

@@ -144,8 +144,6 @@ void Loopers::NoiseScan::loop(){
 
   // output file
   TFile *fout = new TFile("occupancies.root","RECREATE");
-  //  TH1D* hist = occupancy.getOccDistribution();
-  //  hist->Write();
   for(unsigned int i=0; i<_refDevice->getNumSensors(); i++){
     occupancy.getHitOcc(i)->Write();
     occupancy.getHitOccDist(i)->Write();
@@ -174,14 +172,13 @@ void Loopers::NoiseScan::loop(){
     unsigned int noisyPixels=0;
     unsigned int numEmpty=0;
     
-    //double totOcc = (double)occupancy.getTotalHitOccupancy();
-    //double totOcc = (double)occupancy.getTotalHitOccPlane(nsens);
-    double totOcc = 1;
-
+    double totOcc = (double)occupancy.getTotalHitOccupancy(nsens);
+    //double totOcc = 1;
+    
     TH2D* occupancyPlot = occupancy.getHitOcc(nsens);    
     for(unsigned int x=_config->getBottomLimitX(); x<_config->getUpperLimitX(); x++){
       for(unsigned int y=_config->getBottomLimitY(); y<_config->getUpperLimitY(); y++){
-
+	
 	// single pixel occupancy
 	double pixelOcc = totOcc!=0 ? occupancyPlot->GetBinContent(x+1,y+1) / totOcc : 0;
 	
@@ -197,7 +194,7 @@ void Loopers::NoiseScan::loop(){
     }
     
     // If a max occupancy is specified, don't try to use max factor
-    if (_config->getMaxOccupancy()) continue;
+    if( _config->getMaxOccupancy() ) continue;
     
     // sort vector. Dead pixels (occupancy=0) will be placed at front.
     std::sort(occupancies.begin(),occupancies.end());

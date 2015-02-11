@@ -220,8 +220,9 @@ void Analyzers::Occupancy::postProcessing(){
 
     sprintf(hname,"%s%s_OccDist", _device->getName(), sensor->getName());
     sprintf(htitle, "%s - %s [Occupancy distribution]", _device->getName(), sensor->getName());    
-    //float xmax = vTotalHits[nsens] != 0 ? (double)vMaxHits[nsens]/(double)vTotalHits[nsens] : 100;
-    TH1D *h = new TH1D(hname, htitle, vMaxHits[nsens]+1, 0, vMaxHits[nsens]+1); // rebin offline if needed
+    float xmax = vTotalHits[nsens] != 0 ? (double)vMaxHits[nsens]/(double)vTotalHits[nsens] : vMaxHits[nsens];
+    TH1D *h = new TH1D(hname, htitle, 100, 0, xmax);
+    //TH1D *h = new TH1D(hname, htitle, vMaxHits[nsens]+1, 0, vMaxHits[nsens]+1); // rebin offline if needed
     h->GetXaxis()->SetTitle("Hits per trigger");
     h->SetDirectory(plotDir);
         
@@ -229,8 +230,8 @@ void Analyzers::Occupancy::postProcessing(){
     for(int bx=1; bx<=occ->GetNbinsX(); ++bx){
       for(int by=1; by<=occ->GetNbinsY(); ++by){
 	const unsigned int numHits = occ->GetBinContent(bx,by);
-	if( vTotalHits[nsens] != 0 )
-	  h->Fill( (double)numHits / (double)vTotalHits[nsens] );
+	if( vTotalHits[nsens] != 0 ) h->Fill( (double)numHits / (double)vTotalHits[nsens] );
+	//h->Fill( (double)numHits );
       }
     }
     _occDist.push_back(h);
