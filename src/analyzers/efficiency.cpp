@@ -43,6 +43,8 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device* refDevice,
 				  int pix_x_max,
 				  int pix_y_min,
 				  int pix_y_max,
+				  int min_entries_lvl1,
+				  int min_entries_lvl1_matchedTracks,
 				  unsigned int rebinX,
 				  unsigned int rebinY,
 				  unsigned int pixBinsX,
@@ -52,7 +54,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device* refDevice,
   _pix_x_min(pix_x_min),
   _pix_x_max(pix_x_max),
   _pix_y_min(pix_y_min),
-  _pix_y_max(pix_y_max)
+  _pix_y_max(pix_y_max),
+  _min_entries_lvl1(min_entries_lvl1),
+  _min_entries_lvl1_matchedTracks(min_entries_lvl1_matchedTracks)
 {
   assert(refDevice && dutDevice && "Analyzer: can't initialize with null device");
 
@@ -476,38 +480,47 @@ void Analyzers::Efficiency::postProcessing() {
   
   for (unsigned int nsensor=0; nsensor<_dutDevice->getNumSensors(); nsensor++){
 
-    // Get efficiency per pixel
     TEfficiency* efficiency = _efficiencyMap.at(nsensor);
     const TH1* values = efficiency->GetTotalHistogram();
     TH1D* distribution = _efficiencyDistribution.at(nsensor);
     
-    // InPixel timing plot and renormalization
+    // InPixel timing/ToT plots and renormalization
     TH2D* inTimingMap =  _inPixelTiming.at(nsensor);
     TH2D* inToTMap =  _inPixelToT.at(nsensor);
     TH2D* count = _inPixelCounting.at(nsensor);
-    for (Int_t x=1; x<=inTimingMap->GetNbinsX(); x++){
-      for (Int_t y=1; y<=inTimingMap->GetNbinsY(); y++){
-	const double average = inTimingMap->GetBinContent(x,y) / count->GetBinContent(x,y);
-	inTimingMap->SetBinContent(x, y, average);
 
-	const double averageToT = inToTMap->GetBinContent(x,y) / count->GetBinContent(x,y);
-	inToTMap->SetBinContent(x, y, averageToT);
+    double val=0;
+    for(int x=1; x<=inTimingMap->GetNbinsX(); x++){
+      for(int y=1; y<=inTimingMap->GetNbinsY(); y++){
+	
+	val = count->GetBinContent(x,y) != 0 ? inTimingMap->GetBinContent(x,y) / count->GetBinContent(x,y) : 0;
+	// [SGS] why overwritting the original histo instead of filling a new one ???
+	inTimingMap->SetBinContent(x,y,val);
+	
+	val = count->GetBinContent(x,y) != 0 ? inToTMap->GetBinContent(x,y) / count->GetBinContent(x,y) : 0;
+	// [SGS] why overwritting the original histo instead of filling a new one ???
+	inToTMap->SetBinContent(x,y,val);
 
+	// loop in the 16 LVL1 bunch-crossings
 	for(int bc=0; bc<16; bc++){
-
-	  double averageTime=0;
 	  TH2D *hist = _inPixelTimingLVL1.at(nsensor)[bc];
-	  if( hist->GetBinContent(x,y) > 10 ) averageTime = hist->GetBinContent(x,y) / count->GetBinContent(x,y);
-	  if( hist->GetBinContent(x,y) < 51 ) averageTime = 0;	  	  
-	  hist->SetBinContent(x,y,averageTime);
-	  
-	  double val=0;
-	  TH2D *htot = _inPixelEfficiencyLVL1_total[nsensor];
+
+	  if( hist->GetBinContent(x,y) > _min_entries_lvl1 ){	  
+	    val = count->GetBinContent(x,y) != 0 ? hist->GetBinContent(x,y) / count->GetBinContent(x,y) : 0;
+	    // [SGS] why overwritting the original histo instead of filling a new one ???
+	    hist->SetBinContent(x,y,val);
+	  }
+
+	  // for matched tracks
 	  TH2D *hpass = _inPixelEfficiencyLVL1_passed.at(nsensor)[bc];	  
-	  if( hpass->GetBinContent(x,y) > 10 ) val = hpass->GetBinContent(x,y) / htot->GetBinContent(x,y);	  
-	  if( hpass->GetBinContent(x,y) < 11 ) val = hpass->GetBinContent(x,y) / htot->GetBinContent(x,y);   	  
-	  hpass->SetBinContent(x,y,val);
-	}	
+	  TH2D *htot = _inPixelEfficiencyLVL1_total[nsensor];	  
+	  if( hpass->GetBinContent(x,y) > _min_entries_lvl1_matchedTracks ){
+	    val = htot->GetBinContent(x,y) != 0 ?  hpass->GetBinContent(x,y) / htot->GetBinContent(x,y) : 0;
+	    // [SGS] why overwritting the original histo instead of filling a new one ???
+	    hpass->SetBinContent(x,y,val);
+	  }
+	} // end loop in BC	
+
       }
     }
     

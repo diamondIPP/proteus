@@ -1,5 +1,9 @@
 2015-02-11 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
 	* fix normalization in noiseScan
+	* new configuration fields for Efficiency analyzer: "min entries lvl1" and "min entries lvl1 matchedTracks"
+	- added in configs/standard.cfg
+	* minor fixes / sanity-checks in efficiency.cpp
+	* tag  JudithFEI4-00-00-11
 
 2015-02-10 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
 	* occupancy distributions per plane instead of just one for whole device

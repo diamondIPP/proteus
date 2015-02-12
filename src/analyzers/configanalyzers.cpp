@@ -952,7 +952,10 @@ void Analyzers::configEfficiency(const ConfigParser& config,
   int pix_x_min = 1;
   int pix_x_max = 12;
   int pix_y_min = 81;
-  int pix_y_max = 94;  
+  int pix_y_max = 94;
+  int min_entries_lvl1 = 51;
+  int min_entries_lvl1_matchedTracks = 0;
+  
   unsigned int pixGroupX = 1;
   unsigned int pixGroupY = 1;
   unsigned int pixBinsX = 20;
@@ -976,7 +979,9 @@ void Analyzers::configEfficiency(const ConfigParser& config,
 					    pix_x_min,
 					    pix_x_max,
 					    pix_y_min,
-					    pix_y_max,					    
+					    pix_y_max,
+					    min_entries_lvl1,
+					    min_entries_lvl1_matchedTracks,
 					    pixGroupX,
 					    pixGroupY,
 					    pixBinsX,
@@ -990,7 +995,9 @@ void Analyzers::configEfficiency(const ConfigParser& config,
       pix_x_min = 1;
       pix_x_max = 12;
       pix_y_min = 81;
-      pix_y_max = 94; 
+      pix_y_max = 94;
+      min_entries_lvl1 = 51;
+      min_entries_lvl1_matchedTracks = 0;
       pixGroupX = 1;
       pixGroupY = 1;
       pixBinsX = 20;
@@ -1026,6 +1033,10 @@ void Analyzers::configEfficiency(const ConfigParser& config,
       pixBinsX = ConfigParser::valueToNumerical(row->value);
     else if (!row->key.compare("pix bins y"))
       pixBinsY = ConfigParser::valueToNumerical(row->value);
+    else if (!row->key.compare("min entries lvl1"))
+      min_entries_lvl1 = ConfigParser::valueToNumerical(row->value);
+    else if (!row->key.compare("min entries lvl1 matchedTracks"))
+      min_entries_lvl1_matchedTracks = ConfigParser::valueToNumerical(row->value);
     else if (!row->key.substr(0, 4).compare("cut "))
       parseCut(row, eventCuts, trackCuts, clusterCuts, hitCuts);
     else

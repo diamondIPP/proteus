@@ -27,6 +27,8 @@ namespace Analyzers {
 	       int pix_x_max = 12,
 	       int pix_y_min = 81,
 	       int pix_y_max = 94,
+	       int min_entries_lvl1 = 51,
+	       int min_entries_lvl1_matchedTracks = 0,
 	       /* Histogram options */
 	       unsigned int rebinX = 1, // This many pixels in X are grouped
 	       unsigned int rebinY = 1,
@@ -43,7 +45,10 @@ namespace Analyzers {
     int _pix_x_min; //!< minimum pixel (x) to be considered for in-pixel results
     int _pix_x_max; //!< maximum pixel (x) to be considered for in-pixel results
     int _pix_y_min; //!< minimum pixel (y) to be considered for in-pixel results
-    int _pix_y_max; //!< maximum pixel (y) to be considered for in-pixel results
+    int _pix_y_max; //!< maximum pixel (y) to be considered for in-pixel resultsa
+
+    int _min_entries_lvl1; //!< minimum number of entries in LVL1-vs-BC timing map
+    int _min_entries_lvl1_matchedTracks;  //!< minimum number of entries in LVL1-vs-BC timing map (matched tracks)
 
     std::vector<TEfficiency*> _efficiencyMap;
     std::vector<TH1D*> _efficiencyDistribution; // name to be changed
