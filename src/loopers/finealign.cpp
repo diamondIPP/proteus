@@ -288,7 +288,7 @@ void Loopers::FineAlign::setBinsPerPixBroad(double value) { _binsPerPixBroad = v
 void Loopers::FineAlign::setDisplayFits(bool value) { _displayFits = value; }
 void Loopers::FineAlign::setRelaxation(double value) { _relaxation = value; }
 
-void Loopers::FineAlign::print() {
+void Loopers::FineAlign::print() const {
   cout << "\n## [FineAlign::print]" << endl;
   cout << "  - numIterations   : "  << _numIterations << endl;
   cout << "  - numBinsY        : "  << _numBinsY << endl;

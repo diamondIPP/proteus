@@ -1,3 +1,11 @@
+2015-02-xx S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
+	* fix branch name "HitInCluster" in macros/mergeHVCMOSPixels; added copy of SummaryTree
+	* add printLevel argument to ConfigParser constructor
+	* add Excepion class (exception.h/cpp)
+	* new class baseanalyzer, parent of singleanalyzer and dualanalyzer classes
+	* just one applyCuts function in configanalyzers (using now BaseAnalyzer* as function argument)
+	* tag  JudithFEI4-00-00-12
+
 2015-02-11 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
 	* fix normalization in noiseScan
 	* new configuration fields for Efficiency analyzer: "min entries lvl1" and "min entries lvl1 matchedTracks"

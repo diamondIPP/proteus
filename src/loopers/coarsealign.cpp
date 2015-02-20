@@ -103,7 +103,7 @@ void Loopers::CoarseAlign::loop(){
 } 
 
 //=========================================================
-void Loopers::CoarseAlign::print(){
+void Loopers::CoarseAlign::print() const {
   cout << "## [CoarseAlign::print]" << endl;
   cout << "  - display fits: " << _displayFits << endl;
 }

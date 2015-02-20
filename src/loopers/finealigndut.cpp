@@ -183,7 +183,7 @@ void Loopers::FineAlignDut::setBinsPerPixBroad(double value) { _binsPerPixBroad 
 void Loopers::FineAlignDut::setDisplayFits(bool value) { _displayFits = value; }
 void Loopers::FineAlignDut::setRelaxation(double value) { _relaxation = value; }
 
-void Loopers::FineAlignDut::print() {
+void Loopers::FineAlignDut::print() const {
   cout << "\n## [FineAlignDut::print]" << endl;
   cout << "  - numIterations   : "  << _numIterations << endl;
   cout << "  - numBinsY        : "  << _numBinsY << endl;

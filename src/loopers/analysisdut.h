@@ -20,8 +20,9 @@ namespace Loopers {
 		ULong64_t numEvents = 0,
 		unsigned int eventSkip = 1);
     
-    void loop();    
-    void print();
+    void loop();
+
+    void print() const;
     
   private:
     Processors::TrackMatcher* _trackMatcher;

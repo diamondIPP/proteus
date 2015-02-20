@@ -27,132 +27,9 @@
 #include <iostream>
 #include <iomanip>
 
-namespace Analyzers {
 
-void Matching::processEvent(const Storage::Event* refEvent,
-                            const Storage::Event* dutEvent)
-{
-  assert(refEvent && dutEvent && "Analyzer: can't process null events");
-
-  // Throw an error for sensor / plane mismatch
-  eventDeviceAgree(refEvent, dutEvent);
-
-  // Check if the event passes the cuts
-  for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)
-    if (!_eventCuts.at(ncut)->check(refEvent)) return;
-
-  for (unsigned int ntrack = 0; ntrack < refEvent->getNumTracks(); ntrack++)
-  {
-    Storage::Track* track = refEvent->getTrack(ntrack);
-
-    // Check if the track passes the cuts
-    bool pass = true;
-    for (unsigned int ncut = 0; ncut < _numTrackCuts; ncut++)
-      if (!_trackCuts.at(ncut)->check(track)) { pass = false; break; }
-    if (!pass) continue;
-
-    // Make a list of the planes with their matched cluster
-    std::vector<Storage::Cluster*> matches;
-    for (unsigned int nplane = 0; nplane < dutEvent->getNumPlanes(); nplane++)
-      matches.push_back(0); // No matches
-
-    // Get the matches from the track
-    for (unsigned int nmatch = 0; nmatch < track->getNumMatchedClusters(); nmatch++)
-    {
-      Storage::Cluster* cluster = track->getMatchedCluster(nmatch);
-
-      // Check if this cluster passes the cuts
-      bool pass = true;
-      for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
-        if (!_clusterCuts.at(ncut)->check(cluster)) { pass = false; break; }
-      if (!pass) continue;
-
-      matches.at(cluster->getPlane()->getPlaneNum()) = cluster;
-    }
-
-    for (unsigned int nsens = 0; nsens < _dutDevice->getNumSensors(); nsens++)
-    {
-      Mechanics::Sensor* sensor = _dutDevice->getSensor(nsens);
-      Storage::Cluster* match = matches.at(nsens);
-
-      if (!match) continue;
-
-      _matchDist.at(nsens)->Fill(match->getMatchDistance());
-
-      double tx = 0, ty = 0, tz = 0;
-      Processors::trackSensorIntercept(track, sensor, tx, ty, tz);
-
-      const double distX = tx - match->getPosX();
-      const double distY = ty - match->getPosY();
-
-      _matchDistX.at(nsens)->Fill(distX);
-      _matchDistY.at(nsens)->Fill(distY);
-
-      double px = 0, py = 0;
-      sensor->spaceToPixel(tx, ty, tz, px, py);
-
-      // Find the distance of this track to all pixels in its matched cluster
-      for (unsigned int nhit = 0; nhit < match->getNumHits(); nhit++)
-      {
-        const Storage::Hit* hit = match->getHit(nhit);
-        const double hitX = hit->getPixX() + 0.5;
-        const double hitY = hit->getPixY() + 0.5;
-
-        const double pixDistX = sensor->getPitchX() * (px - hitX);
-        const double pixDistY = sensor->getPitchY() * (py - hitY);
-
-        _inPixelTracks.at(nsens)->Fill(pixDistX, pixDistY);
-        _inPixelTot.at(nsens)->Fill(pixDistX, pixDistY, hit->getValue());
-      }
-    }
-  }
-}
-
-void Matching::postProcessing()
-{
-  for (unsigned int nsens = 0; nsens < _dutDevice->getNumSensors(); nsens++)
-  {
-    Mechanics::Sensor* sensor = _dutDevice->getSensor(nsens);
-
-    TH2D* tot = _inPixelTot.at(nsens);
-    TH2D* hits = _inPixelTracks.at(nsens);
-
-    assert(hits->GetNbinsX() == tot->GetNbinsX() &&
-           hits->GetNbinsY() == tot->GetNbinsY() &&
-           "Matching: histograms should have the same number of bins");
-
-    for (int nx = 1; nx <= tot->GetNbinsX(); nx++)
-    {
-      for (int ny = 1; ny <= tot->GetNbinsY(); ny++)
-      {
-        const unsigned int num = hits->GetBinContent(nx, ny);
-        if (num == 0) continue;
-        const double average = tot->GetBinContent(nx, ny) / (double)num;
-        tot->SetBinContent(nx, ny, average);
-      }
-    }
-
-    for (unsigned int axis = 0; axis < 2; axis++)
-    {
-      TH1D* dist = axis ? _matchDistX.at(nsens) :
-                          _matchDistY.at(nsens);
-
-      double pixelWidth = axis ? sensor->getPitchX() :
-                                 sensor->getPitchY();
-      double beamSigma = axis ? _refDevice->getSensor(0)->getPitchX() :
-                                _refDevice->getSensor(0)->getPitchY();
-
-      TF1* fit = Processors::fitPixelBeam(dist, pixelWidth, beamSigma, false);
-
-      std::stringstream ss;
-      ss << _dutDevice->getName() << sensor->getName() << "PixelBeamFit"
-         << ( axis ? "X" : "Y") << _nameSuffix;
-      _plotDir->WriteObject(fit, ss.str().c_str());
-    }
-  }
-}
-
-Matching::Matching(const Mechanics::Device* refDevice,
+//=========================================================
+Analyzers::Matching::Matching(const Mechanics::Device* refDevice,
                    const Mechanics::Device* dutDevice,
                    TDirectory* dir,
                    const char* suffix,
@@ -161,7 +38,6 @@ Matching::Matching(const Mechanics::Device* refDevice,
                    double sigmaBins,
                    unsigned int pixBinsX,
                    unsigned int pixBinsY) :
-  // Base class is initialized here and manages directory / device
   DualAnalyzer(refDevice, dutDevice, dir, suffix),
   _plotDir(0)
 {
@@ -177,7 +53,7 @@ Matching::Matching(const Mechanics::Device* refDevice,
   if (!numBins) numBins = 1;
 
   // Generate a histogram for each sensor in the device
-  for (unsigned int nsens = 0; nsens < _dutDevice->getNumSensors(); nsens++)
+  for (unsigned int nsens=0; nsens<_dutDevice->getNumSensors(); nsens++)
   {
     Mechanics::Sensor* sensor = _dutDevice->getSensor(nsens);
 
@@ -260,4 +136,126 @@ Matching::Matching(const Mechanics::Device* refDevice,
   }
 }
 
+//=========================================================
+void Analyzers::Matching::processEvent(const Storage::Event* refEvent,
+				       const Storage::Event* dutEvent)
+{
+  assert(refEvent && dutEvent && "Analyzer: can't process null events");
+
+  // Throw an error for sensor / plane mismatch
+  eventDeviceAgree(refEvent, dutEvent);
+
+  // Check if the event passes the cuts
+  for (unsigned int ncut=0; ncut<_numEventCuts; ncut++)
+    if (!_eventCuts.at(ncut)->check(refEvent)) return;
+
+  /** Loop in all reconstructed tracls*/
+  for(unsigned int ntrack=0; ntrack<refEvent->getNumTracks(); ntrack++) {
+    Storage::Track* track = refEvent->getTrack(ntrack);
+    
+    // Check if the track passes the cuts
+    bool pass = true;
+    for (unsigned int ncut=0; ncut<_numTrackCuts; ncut++)
+      if (!_trackCuts.at(ncut)->check(track)) { pass = false; break; }
+    if (!pass) continue;
+
+    // Make a list of the planes with their matched cluster
+    std::vector<Storage::Cluster*> matches;
+    for (unsigned int nplane = 0; nplane < dutEvent->getNumPlanes(); nplane++)
+      matches.push_back(0); // No matches
+
+    // Get the matches from the track
+    for(unsigned int nmatch=0; nmatch<track->getNumMatchedClusters(); nmatch++){
+      Storage::Cluster* cluster = track->getMatchedCluster(nmatch);
+      
+      // Check if this cluster passes the cuts
+      bool pass = true;
+      for(unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
+        if (!_clusterCuts.at(ncut)->check(cluster)) { pass = false; break; }
+      if (!pass) continue;
+
+      matches.at(cluster->getPlane()->getPlaneNum()) = cluster;
+    }
+
+    for (unsigned int nsens=0; nsens<_dutDevice->getNumSensors(); nsens++){
+      Mechanics::Sensor* sensor = _dutDevice->getSensor(nsens);
+      Storage::Cluster* match = matches.at(nsens);
+
+      if (!match) continue;
+
+      _matchDist.at(nsens)->Fill(match->getMatchDistance());
+
+      double tx = 0, ty = 0, tz = 0;
+      Processors::trackSensorIntercept(track, sensor, tx, ty, tz);
+
+      const double distX = tx - match->getPosX();
+      const double distY = ty - match->getPosY();
+
+      _matchDistX.at(nsens)->Fill(distX);
+      _matchDistY.at(nsens)->Fill(distY);
+
+      double px = 0, py = 0;
+      sensor->spaceToPixel(tx, ty, tz, px, py);
+
+      // Find the distance of this track to all pixels in its matched cluster
+      for (unsigned int nhit = 0; nhit < match->getNumHits(); nhit++)
+      {
+        const Storage::Hit* hit = match->getHit(nhit);
+        const double hitX = hit->getPixX() + 0.5;
+        const double hitY = hit->getPixY() + 0.5;
+
+        const double pixDistX = sensor->getPitchX() * (px - hitX);
+        const double pixDistY = sensor->getPitchY() * (py - hitY);
+
+        _inPixelTracks.at(nsens)->Fill(pixDistX, pixDistY);
+        _inPixelTot.at(nsens)->Fill(pixDistX, pixDistY, hit->getValue());
+      }
+    } // loop in sensors
+    
+  } // end loop in tracks
+}
+
+  //=========================================================
+void Analyzers::Matching::postProcessing()
+{
+  for (unsigned int nsens = 0; nsens < _dutDevice->getNumSensors(); nsens++)
+  {
+    Mechanics::Sensor* sensor = _dutDevice->getSensor(nsens);
+
+    TH2D* tot = _inPixelTot.at(nsens);
+    TH2D* hits = _inPixelTracks.at(nsens);
+
+    assert(hits->GetNbinsX() == tot->GetNbinsX() &&
+           hits->GetNbinsY() == tot->GetNbinsY() &&
+           "Matching: histograms should have the same number of bins");
+
+    for (int nx = 1; nx <= tot->GetNbinsX(); nx++)
+    {
+      for (int ny = 1; ny <= tot->GetNbinsY(); ny++)
+      {
+        const unsigned int num = hits->GetBinContent(nx, ny);
+        if (num == 0) continue;
+        const double average = tot->GetBinContent(nx, ny) / (double)num;
+        tot->SetBinContent(nx, ny, average);
+      }
+    }
+
+    for (unsigned int axis = 0; axis < 2; axis++)
+    {
+      TH1D* dist = axis ? _matchDistX.at(nsens) :
+                          _matchDistY.at(nsens);
+
+      double pixelWidth = axis ? sensor->getPitchX() :
+                                 sensor->getPitchY();
+      double beamSigma = axis ? _refDevice->getSensor(0)->getPitchX() :
+                                _refDevice->getSensor(0)->getPitchY();
+
+      TF1* fit = Processors::fitPixelBeam(dist, pixelWidth, beamSigma, false);
+
+      std::stringstream ss;
+      ss << _dutDevice->getName() << sensor->getName() << "PixelBeamFit"
+         << ( axis ? "X" : "Y") << _nameSuffix;
+      _plotDir->WriteObject(fit, ss.str().c_str());
+    }
+  }
 }

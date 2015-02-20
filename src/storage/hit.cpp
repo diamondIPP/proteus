@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <sstream>
 
 #include "cluster.h"
 #include "plane.h"
@@ -9,32 +10,47 @@
 using std::cout;
 using std::endl;
 
-namespace Storage {
+Storage::Hit::Hit() :
+  _plane(NULL),
+  _pixX(0),
+  _pixY(0),
+  _posX(0),
+  _posY(0),
+  _posZ(0),
+  _value(0),
+  _timing(0),
+  _cluster(NULL)
+{ }
 
-void Hit::print()
-{
-  cout << "\nHIT:\n"
-       << "  Pix: (" << getPixX() << " , " << getPixY() << ")\n"
-       << "  Pos: (" << getPosX() << " , " << getPosY() << " , " << getPosZ() << ")\n"
-       << "  Value: " << getValue() << "\n"
-       << "  Timing: " << getTiming() << "\n"
-       << "  Cluster: " << getCluster() << "\n"
-       << "  Plane: "  << getPlane() << endl;
-}
-
-void Hit::setCluster(Cluster *cluster)
-{
+void Storage::Hit::setCluster(Storage::Cluster *cluster){
   assert(!_cluster && "Hit: can't cluster an already clustered hit.");
   _cluster = cluster;
 }
 
-Cluster* Hit::getCluster() const { return _cluster; }
+Storage::Cluster* Storage::Hit::getCluster() const { 
+  return _cluster;
+}
 
-Plane* Hit::getPlane() const { return _plane; }
+Storage::Plane* Storage::Hit::getPlane() const {
+  return _plane;
+}
 
-Hit::Hit() :
-  _pixX(0), _pixY(0), _posX(0), _posY(0), _posZ(0),
-  _value(0), _timing(0), _cluster(0), _plane(0)
-{ }
+void Storage::Hit::print() const {
+  cout << "\nHIT\n" << printStr() << endl;
+}
 
+const std::string Storage::Hit::printStr(int blankWidth) const {
+  std::ostringstream out;
+
+  std::string blank(" ");
+  for(int i=1; i<=blankWidth; i++) blank += " ";
+  
+  out << blank << "  Pix: (" << getPixX() << " , " << getPixY() << ")\n"
+      << blank << "  Pos: (" << getPosX() << " , " << getPosY() << " , " << getPosZ() << ")\n"
+      << blank << "  Value: " << getValue() << "\n"
+      << blank << "  Timing: " << getTiming() << "\n"
+      << blank << "  Cluster: " << getCluster() << "\n"
+      << blank << "  Plane: "  << getPlane();
+
+  return out.str();
 }

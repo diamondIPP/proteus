@@ -8,6 +8,7 @@
 #include <TFile.h>
 
 #include "cuts.h"
+#include "baseanalyzer.h"
 #include "singleanalyzer.h"
 #include "dualanalyzer.h"
 #include "dutdepiction.h"
@@ -152,36 +153,19 @@ void Analyzers::parseCut(const ConfigParser::Row* row,
 }
 
 //=========================================================
-void Analyzers::applyCuts(SingleAnalyzer* analyzer,
+void Analyzers::applyCuts(BaseAnalyzer* analyzer,
 			  std::vector<EventCut*>& eventCuts,
 			  std::vector<TrackCut*>& trackCuts,
 			  std::vector<ClusterCut*>& clusterCuts,
 			  std::vector<HitCut*>& hitCuts)
 {
-  for (unsigned int i = 0; i < eventCuts.size(); i++)
+  for (unsigned int i=0; i<eventCuts.size(); i++)
     analyzer->addCut(eventCuts.at(i));
-  for (unsigned int i = 0; i < trackCuts.size(); i++)
+  for (unsigned int i=0; i<trackCuts.size(); i++)
     analyzer->addCut(trackCuts.at(i));
-  for (unsigned int i = 0; i < clusterCuts.size(); i++)
+  for (unsigned int i=0; i<clusterCuts.size(); i++)
     analyzer->addCut(clusterCuts.at(i));
-  for (unsigned int i = 0; i < hitCuts.size(); i++)
-    analyzer->addCut(hitCuts.at(i));
-}
-
-//=========================================================
-void Analyzers::applyCuts(DualAnalyzer* analyzer,
-			  std::vector<EventCut*>& eventCuts,
-			  std::vector<TrackCut*>& trackCuts,
-			  std::vector<ClusterCut*>& clusterCuts,
-			  std::vector<HitCut*>& hitCuts)
-{
-  for (unsigned int i = 0; i < eventCuts.size(); i++)
-    analyzer->addCut(eventCuts.at(i));
-  for (unsigned int i = 0; i < trackCuts.size(); i++)
-    analyzer->addCut(trackCuts.at(i));
-  for (unsigned int i = 0; i < clusterCuts.size(); i++)
-    analyzer->addCut(clusterCuts.at(i));
-  for (unsigned int i = 0; i < hitCuts.size(); i++)
+  for (unsigned int i=0; i<hitCuts.size(); i++)
     analyzer->addCut(hitCuts.at(i));
 }
 
@@ -192,7 +176,7 @@ void Analyzers::configLooper(const ConfigParser& config,
 			     Mechanics::Device* dutDevice,
 			     TFile* results)
 {
-  if(!dutDevice){
+  if( !dutDevice ){
     configDepictor(config, looper, refDevice);
     configCorrelation(config, looper, refDevice, results);
     configHitInfo(config, looper, refDevice, results);
@@ -203,11 +187,14 @@ void Analyzers::configLooper(const ConfigParser& config,
     configResiduals(config, looper, refDevice, results);
   }
   else{
-    configDUTDepictor(config, looper, refDevice, dutDevice);
-    configDUTCorrelation(config, looper, refDevice, dutDevice, results);
+    configClusterInfo(config, looper, dutDevice, results);
+    //    configDUTDepictor(config, looper, refDevice, dutDevice);
+    //    configDUTCorrelation(config, looper, refDevice, dutDevice, results);
     configResiduals(config, looper, refDevice, dutDevice, results);
     configMatching(config, looper, refDevice, dutDevice, results);
     configEfficiency(config, looper, refDevice, dutDevice, results);
+
+    std::cout << "ok 20" << std::endl;
   }
 }
 
@@ -230,7 +217,7 @@ void Analyzers::configDepictor(const ConfigParser& config,
   bool depictTracks = true;
   double zoom = 20.0;
 
-  for (unsigned int i = 0; i < config.getNumRows(); i++)
+  for (unsigned int i=0; i<config.getNumRows(); i++)
   {
     const ConfigParser::Row* row = config.getRow(i);
 
@@ -240,6 +227,7 @@ void Analyzers::configDepictor(const ConfigParser& config,
       Depictor* analyzer =
           new Depictor(refDevice, 0, suffix.c_str(),
                        depictEvent, depictClusters, depictTracks, zoom);
+      analyzer->setAnalyzerName("Depictor");
       looper->addAnalyzer(analyzer); // Will be deleted by looper
       applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); // Cuts will be deleted by the analyzer
 
@@ -306,8 +294,9 @@ void Analyzers::configDUTDepictor(const ConfigParser& config,
       DUTDepictor* analyzer =
           new DUTDepictor(refDevice, dutDevice, 0, suffix.c_str(),
                           depictEvent, depictClusters, depictTracks, zoom);
-      looper->addAnalyzer(analyzer); // Will be deleted by looper
-      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); // Cuts will be deleted by the analyzer
+      analyzer->setAnalyzerName("DUTDepictor");
+      looper->addAnalyzer(analyzer); 
+      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); 
 
       active = false;
       suffix = "";
@@ -359,18 +348,16 @@ void Analyzers::configCorrelation(const ConfigParser& config,
   std::vector<ClusterCut*> clusterCuts;
   std::vector<HitCut*> hitCuts;
 
-  for (unsigned int i = 0; i < config.getNumRows(); i++)
+  for (unsigned int i=0; i<config.getNumRows(); i++)
   {
     const ConfigParser::Row* row = config.getRow(i);
 
     if (row->isHeader && !row->header.compare("End Correlation"))
     {
       if (!active) return;
-      Correlation* analyzer =
-          new Correlation(refDevice, results->GetDirectory(""), suffix.c_str());
-      // Will be deleted by looper
+      Correlation* analyzer =  new Correlation(refDevice, results->GetDirectory(""), suffix.c_str());
+      analyzer->setAnalyzerName("Correlation");
       looper->addAnalyzer(analyzer);
-      // Cuts will be deleted by the analyzer
       applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts);
 
       active = false;
@@ -412,7 +399,7 @@ void Analyzers::configDUTCorrelation(const ConfigParser& config,
   std::vector<ClusterCut*> clusterCuts;
   std::vector<HitCut*> hitCuts;
 
-  for (unsigned int i = 0; i < config.getNumRows(); i++)
+  for (unsigned int i=0; i<config.getNumRows(); i++)
   {
     const ConfigParser::Row* row = config.getRow(i);
 
@@ -421,6 +408,7 @@ void Analyzers::configDUTCorrelation(const ConfigParser& config,
       if (!active) return;
       DUTCorrelation* analyzer =
           new DUTCorrelation(refDevice, dutDevice, results->GetDirectory(""), suffix.c_str());
+      analyzer->setAnalyzerName("DUTCorrelation");
       looper->addAnalyzer(analyzer); // Will be deleted by looper
       applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); // Cuts will be deleted by the analyzer
 
@@ -465,7 +453,7 @@ void Analyzers::configHitInfo(const ConfigParser& config,
   std::vector<ClusterCut*> clusterCuts;
   std::vector<HitCut*> hitCuts;
 
-  for (unsigned int i = 0; i < config.getNumRows(); i++)
+  for (unsigned int i=0; i<config.getNumRows(); i++)
   {
     const ConfigParser::Row* row = config.getRow(i);
 
@@ -473,8 +461,9 @@ void Analyzers::configHitInfo(const ConfigParser& config,
     {
       if (!active) return;
       HitInfo* analyzer =
-          new HitInfo(refDevice, results->GetDirectory(""), suffix.c_str(),
-                      lvl1bins, totBins);
+	new HitInfo(refDevice, results->GetDirectory(""), suffix.c_str(),
+		    lvl1bins, totBins);
+      analyzer->setAnalyzerName("HitInfo");
       looper->addAnalyzer(analyzer); // Will be deleted by looper
       applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); // Cuts will be deleted by the analyzer
 
@@ -499,7 +488,7 @@ void Analyzers::configHitInfo(const ConfigParser& config,
       lvl1bins = ConfigParser::valueToNumerical(row->value);
     else if (!row->key.compare("tot bins"))
       totBins = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.substr(0, 4).compare("cut "))
+    else if (!row->key.substr(0,4).compare("cut "))
       parseCut(row, eventCuts, trackCuts, clusterCuts, hitCuts);
     else
       throw "Analyzers: hit info can't parse row";
@@ -524,17 +513,18 @@ void Analyzers::configClusterInfo(const ConfigParser& config,
   std::vector<ClusterCut*> clusterCuts;
   std::vector<HitCut*> hitCuts;
 
-  for (unsigned int i = 0; i < config.getNumRows(); i++)
+  for(unsigned int i=0; i<config.getNumRows(); i++)
   {
     const ConfigParser::Row* row = config.getRow(i);
 
     if (row->isHeader && !row->header.compare("End Cluster Info"))
-    {
+      {
       if (!active) return;
       ClusterInfo* analyzer =
-          new ClusterInfo(refDevice, results->GetDirectory(""), suffix.c_str(),
-                          totBins, maxSize);
-      looper->addAnalyzer(analyzer); // Will be deleted by looper
+	new ClusterInfo(refDevice, results->GetDirectory(""), suffix.c_str(),
+			totBins, maxSize);
+      analyzer->setAnalyzerName("ClusterInfo");
+      looper->addAnalyzer(analyzer);
       applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts);
 
       active = false;
@@ -558,7 +548,7 @@ void Analyzers::configClusterInfo(const ConfigParser& config,
       totBins = ConfigParser::valueToNumerical(row->value);
     else if (!row->key.compare("max size"))
       maxSize = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.substr(0, 4).compare("cut "))
+    else if (!row->key.substr(0,4).compare("cut "))
       parseCut(row, eventCuts, trackCuts, clusterCuts, hitCuts);
     else
       throw "Analyzers: cluster info can't parse row";
@@ -587,8 +577,9 @@ void Analyzers::configOccupancy(const ConfigParser& config,
     if (row->isHeader && !row->header.compare("End Occupancy")){
       if (!active) return;
       Occupancy* analyzer = new Occupancy(refDevice, results->GetDirectory(""), suffix.c_str());
-      looper->addAnalyzer(analyzer); // Will be deleted by looper
-      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); // Cuts will be deleted by the analyzer
+      analyzer->setAnalyzerName("Occupancy");
+      looper->addAnalyzer(analyzer); 
+      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); 
       
       active = false;
       suffix = "";
@@ -641,8 +632,9 @@ void Analyzers::configTrackInfo(const ConfigParser& config,
       TrackInfo* analyzer =
           new TrackInfo(refDevice, results->GetDirectory(""), suffix.c_str(),
                         maxResolution, maxSlope, increaseArea);
-      looper->addAnalyzer(analyzer); // Will be deleted by looper
-      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); // Cuts will be deleted by the analyzer
+      analyzer->setAnalyzerName("TrackInfo");
+      looper->addAnalyzer(analyzer); 
+      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); 
 
       active = false;
       suffix = "";
@@ -700,9 +692,8 @@ void Analyzers::configEventInfo(const ConfigParser& config,
     if (row->isHeader && !row->header.compare("End Event Info"))
     {
       if (!active) return;
-      EventInfo* analyzer =
-          new EventInfo(refDevice, results->GetDirectory(""), suffix.c_str(),
-                        maxTracks);
+      EventInfo* analyzer = new EventInfo(refDevice, results->GetDirectory(""), suffix.c_str(), maxTracks);
+      analyzer->setAnalyzerName("EventInfo");
       looper->addAnalyzer(analyzer); // Will be deleted by looper
       applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts);
 
@@ -750,7 +741,7 @@ void Analyzers::configResiduals(const ConfigParser& config,
   std::vector<ClusterCut*> clusterCuts;
   std::vector<HitCut*> hitCuts;
 
-  for (unsigned int i = 0; i < config.getNumRows(); i++)
+  for (unsigned int i=0; i<config.getNumRows(); i++)
   {
     const ConfigParser::Row* row = config.getRow(i);
 
@@ -758,8 +749,9 @@ void Analyzers::configResiduals(const ConfigParser& config,
     {
       if (!active) return;
       Residuals* analyzer =
-          new Residuals(refDevice, results->GetDirectory(""), suffix.c_str(),
-                        numPixels, binsPerPixels, numBinsY);
+	new Residuals(refDevice, results->GetDirectory(""), suffix.c_str(),
+		      numPixels, binsPerPixels, numBinsY);
+      analyzer->setAnalyzerName("Residuals");
       looper->addAnalyzer(analyzer); // Will be deleted by looper
       applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); // Cuts will be deleted by the analyzer
 
@@ -825,6 +817,7 @@ void Analyzers::configResiduals(const ConfigParser& config,
       DUTResiduals* analyzer =
           new DUTResiduals(refDevice, dutDevice, results->GetDirectory(""), suffix.c_str(),
                            numPixels, binsPerPixels, numBinsY);
+      analyzer->setAnalyzerName("DUTResiduals");
       looper->addAnalyzer(analyzer); // Will be deleted by looper
       applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); // Cuts will be deleted by the analyzer
 
@@ -881,7 +874,7 @@ void Analyzers::configMatching(const ConfigParser& config,
   std::vector<ClusterCut*> clusterCuts;
   std::vector<HitCut*> hitCuts;
 
-  for (unsigned int i = 0; i < config.getNumRows(); i++)
+  for (unsigned int i=0; i<config.getNumRows(); i++)
   {
     const ConfigParser::Row* row = config.getRow(i);
 
@@ -889,11 +882,12 @@ void Analyzers::configMatching(const ConfigParser& config,
     {
       if (!active) return;
       Matching* analyzer =
-          new Matching(refDevice, dutDevice, results->GetDirectory(""), suffix.c_str(),
-                       pixelExtension, maxDist, sigmaBins, pixBinsX, pixBinsY);
+	new Matching(refDevice, dutDevice, results->GetDirectory(""), suffix.c_str(),
+		     pixelExtension, maxDist, sigmaBins, pixBinsX, pixBinsY);
+      analyzer->setAnalyzerName("Matching");
       looper->addAnalyzer(analyzer); // Will be deleted by looper
       applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); // Cuts will be deleted by the analyzer
-
+      
       active = false;
       suffix = "";
       maxDist = 20;
@@ -930,7 +924,6 @@ void Analyzers::configMatching(const ConfigParser& config,
       throw "Analyzers: matching can't parse row";
   }
 }
-
 
 //=========================================================
 void Analyzers::configEfficiency(const ConfigParser& config,
@@ -986,8 +979,9 @@ void Analyzers::configEfficiency(const ConfigParser& config,
 					    pixGroupY,
 					    pixBinsX,
 					    pixBinsY);
-      looper->addAnalyzer(analyzer); // Will be deleted by looper
-      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); // Cuts will be deleted by the analyzer
+      analyzer->setAnalyzerName("Efficiency");
+      looper->addAnalyzer(analyzer); 
+      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); 
       
       active = false;
       suffix = "";

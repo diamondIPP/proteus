@@ -20,44 +20,79 @@ Loopers::AnalysisDut::AnalysisDut(Storage::StorageIO* refInput,
 				  ULong64_t numEvents,
 				  unsigned int eventSkip) :
   Looper(refInput, dutInput, startEvent, numEvents, eventSkip),
-  _trackMatcher(trackMatcher){
+  _trackMatcher(trackMatcher)
+{
   assert(refInput && dutInput && trackMatcher &&
 	 "Looper: initialized with null object(s)");
-  }
+}
+
+
+//=========================================================
+void Loopers::AnalysisDut::print() const {
+  std::cout << "\n=== AnalysisDut === looper details: " << std::endl;
+  Looper::print();
+}
 
 //=========================================================
 void Loopers::AnalysisDut::loop() {
-  for (ULong64_t nevent = _startEvent; nevent <= _endEvent; nevent++){
+  if( _printLevel > 0 )
+    std::cout << "## [AnalysisDut::loop]" << std::endl;
+
+  // loop in events
+  for (ULong64_t nevent=_startEvent; nevent<=_endEvent; nevent++){
     Storage::Event* refEvent = _refStorage->readEvent(nevent);
     Storage::Event* dutEvent = _dutStorage->readEvent(nevent);
+
+    if( _printLevel > 0 ){
+      std::cout << "\n========================" << std::endl
+		<< " Event " << nevent << std::endl
+		<< "========================\n";
+      
+      std::cout << "\n**** refEvent *** " << std::endl;
+      refEvent->print();
+      
+      std::cout << "\n**** dutEvent **** " << std::endl;
+      dutEvent->print();
+    }
+
+    std::cout << "fine" << std::endl;
     
     // Match ref tracks to dut clusters (information stored in event)
     _trackMatcher->matchEvent(refEvent, dutEvent);
+
+    std::cout << "trackmatcher done" << std::endl;
     
-    for (unsigned int i=0; i<_numSingleAnalyzers; i++)
-      _singleAnalyzers.at(i)->processEvent(refEvent);
+    // make single analyzers to process event
+    for (unsigned int i=0; i<_numSingleAnalyzers; i++){
+      if( _printLevel > 0 ){
+	std::cout << "Single analyzer " << i << " processing ... " << std::endl;
+	_singleAnalyzers.at(i)->print();
+      }
+      _singleAnalyzers.at(i)->processEvent(dutEvent);
+    }
     
-    for (unsigned int i=0; i<_numDualAnalyzers; i++)
-      _dualAnalyzers.at(i)->processEvent(refEvent, dutEvent);
+    // make dual analyzers to process event
+    for (unsigned int i=0; i<_numDualAnalyzers; i++){
+      if( _printLevel > 0 ){
+	std::cout << "Dual analyzer " << i << " processing ... " << std::endl;
+	_dualeAnalyzers.at(i)->print();
+      }
+      _dualAnalyzers.at(i)->processEvent(refEvent,dutEvent);
+    }
     
     progressBar(nevent);
     
     delete refEvent;
     delete dutEvent;
-  }
-  
+
+  } // end loop in events
+
+  // single analyzers post-processing 
   for (unsigned int i=0; i<_numSingleAnalyzers; i++)
     _singleAnalyzers.at(i)->postProcessing();
   
+  // dual analyzers post-processing
   for (unsigned int i=0; i<_numDualAnalyzers; i++)
     _dualAnalyzers.at(i)->postProcessing();
 }
-
-//=========================================================
-void Loopers::AnalysisDut::print(){
-  std::cout << "\n## [AnalysisDut::print]" << std::endl;
-  // to be implemented
-}
-
-
 

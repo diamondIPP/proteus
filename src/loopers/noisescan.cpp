@@ -264,7 +264,7 @@ void Loopers::NoiseScan::loop(){
 }
 
 //=========================================================
-void Loopers::NoiseScan::print(){
+void Loopers::NoiseScan::print() const {
   cout << "[NoiseScan::print]" << endl;
   if( _config->getMaxOccupancy() ) cout << " - maxOccu   : "  << _config->getMaxOccupancy() << endl;
   else                             cout << " - maxFactor : "  << _config->getMaxFactor() << endl;

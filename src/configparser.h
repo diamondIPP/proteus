@@ -22,7 +22,7 @@ class ConfigParser{
   };
   
  public:
-  ConfigParser(const char* filePath);
+  ConfigParser(const char* filePath, int prinLEvel=0);
   
   const Row* getRow(unsigned int n) const;
   unsigned int getNumRows() const { return _numRows; }
@@ -55,12 +55,12 @@ class ConfigParser{
 
   bool checkRange(size_t start, size_t end);
   
-  // These functions return -1 if they can't find the desired element
-  int readNextLine(std::ifstream& input); // Fill line buffer with next line
-  int parseForHeader(); // Parse the line buffer for a header
-  int parseForKey(); // Parse the line buffer for a key
-  int parseForLink(); // Parse the line for a link to another config
-  void parseContents(std::ifstream& input); // Parse the entire file's contents
+  /** These functions return -1 if they can't find the desired element */
+  int readNextLine(std::ifstream& input); //<! Fill line buffer with next line
+  int parseForHeader(); //<! Parse the line buffer for a header
+  int parseForKey(); //<! Parse the line buffer for a key
+  int parseForLink(); //<! Parse the line for a link to another config
+  void parseContents(std::ifstream& input); //<! Parse the entire file's contents
   
  private:
   const char*   _filePath;
@@ -71,7 +71,9 @@ class ConfigParser{
   std::string   _currentValue;
   
   unsigned int _numRows;
-  std::vector<Row> _parsedContents; 
+  std::vector<Row> _parsedContents;
+
+  int _printLevel; 
 
 }; // end of class
 

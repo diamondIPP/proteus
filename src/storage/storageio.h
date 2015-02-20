@@ -43,13 +43,15 @@ namespace Storage {
   
   class StorageIO {
   public:
+    /** Constructor. */
     StorageIO(const char* filePath,
 	      Mode fileMode,
 	      unsigned int numPlanes = 0,
 	      const unsigned int treeMask = 0,
 	      const std::vector<bool>* planeMask = 0,
 	      int printLevel = 0);
-    
+
+    /** Destructor */
     ~StorageIO();
     
     void setNoiseMasks(std::vector<bool**>* noiseMasks);

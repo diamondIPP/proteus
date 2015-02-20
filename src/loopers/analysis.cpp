@@ -38,7 +38,7 @@ void Loopers::Analysis::loop() {
 }
 
 //=========================================================
-void Loopers::Analysis::print(){
+void Loopers::Analysis::print() const {
   std::cout << "\n## [Analysis::print]" << std::endl;
   // to be implemented
 }

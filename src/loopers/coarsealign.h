@@ -27,7 +27,7 @@ namespace Loopers {
     void setCorrPeakWidth(double value);
     void setDisplayFits(bool value);
 
-    void print();
+    void print() const;
 
   private:
     Mechanics::Device* _refDevice;

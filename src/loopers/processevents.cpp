@@ -143,7 +143,8 @@ void Loopers::ProcessEvents::loop() {
     }
 }
 
-void Loopers::ProcessEvents::print(){
+//=========================================================
+void Loopers::ProcessEvents::print() const {
   cout << "\n## [ProcessEvents::print]" << endl;
   // to be implemented
 }

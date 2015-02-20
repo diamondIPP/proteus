@@ -10,25 +10,27 @@ namespace Mechanics { class Sensor; }
 
 namespace Processors {
 
-class TrackMatcher
-{
-private:
-  const Mechanics::Device* _device;
+  class TrackMatcher {
+  public:
+    TrackMatcher(const Mechanics::Device* device);
+    
+    void matchEvent(Storage::Event* refEvent,
+		    Storage::Event* dutEvent);
+    
+  private:    
+    void matchTracksToClusters(Storage::Event* trackEvent,
+			       Storage::Plane* clustersPlane,
+			       const Mechanics::Sensor* clustersSensor);
 
-  void matchTracksToClusters(Storage::Event* trackEvent,
-                             Storage::Plane* clustersPlane,
-                             const Mechanics::Sensor* clustersSensor);
-  void matchClustersToTracks(Storage::Event* trackEvent,
-                             Storage::Plane* clustersPlane,
-                             const Mechanics::Sensor* clustersSensor);
+    void matchClustersToTracks(Storage::Event* trackEvent,
+			       Storage::Plane* clustersPlane,
+			       const Mechanics::Sensor* clustersSensor);
 
-public:
-  TrackMatcher(const Mechanics::Device* device);
-
-  void matchEvent(Storage::Event* refEvent,
-                  Storage::Event* dutEvent);
-};
-
-}
+  private:
+    const Mechanics::Device* _device;
+  
+  }; // end of class
+  
+} // end of namespace
 
 #endif // TRACKMATCHING_H

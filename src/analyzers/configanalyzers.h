@@ -13,7 +13,8 @@ namespace Analyzers {
   class HitCut;
   class ClusterCut;
   class TrackCut;
-  class EventCut;  
+  class EventCut;
+  class BaseAnalyzer;
   class SingleAnalyzer;
   class DualAnalyzer;
   class Correlation;
@@ -31,17 +32,11 @@ namespace Analyzers {
 		std::vector<ClusterCut*>& clusterCuts,
 		std::vector<HitCut*>& hitCuts);
   
-  void applyCuts(SingleAnalyzer* analyzer,
+  void applyCuts(BaseAnalyzer* analyzer,
 		 std::vector<EventCut*>& eventCuts,
 		 std::vector<TrackCut*>& trackCuts,
 		 std::vector<ClusterCut*>& clusterCuts,
-		 std::vector<HitCut*>& hitCuts);
-  
-  void applyCuts(DualAnalyzer* analyzer,
-		 std::vector<EventCut*>& eventCuts,
-		 std::vector<TrackCut*>& trackCuts,
-		 std::vector<ClusterCut*>& clusterCuts,
-		 std::vector<HitCut*>& hitCuts);    
+		 std::vector<HitCut*>& hitCuts);  
   
   void configLooper(const ConfigParser& config,
 		    Loopers::Looper* looper,

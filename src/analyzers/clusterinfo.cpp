@@ -152,31 +152,28 @@ Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
 }
 
 //=========================================================
-void Analyzers::ClusterInfo::processEvent(const Storage::Event* event)
-{
+void Analyzers::ClusterInfo::processEvent(const Storage::Event* event) {
   assert(event && "Analyzer: can't process null events");
 
   // Throw an error for sensor / plane mismatch
   eventDeviceAgree(event);
-
+  
   // Check if the event passes the cuts
   for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)
     if (!_eventCuts.at(ncut)->check(event)) return;
 
-  for (unsigned int nplane = 0; nplane < event->getNumPlanes(); nplane++)
-  {
+  for(unsigned int nplane=0; nplane<event->getNumPlanes(); nplane++) {
     Storage::Plane* plane = event->getPlane(nplane);
-
-    for (unsigned int ncluster = 0; ncluster < plane->getNumClusters(); ncluster++)
-    {
+    
+    for(unsigned int ncluster=0; ncluster<plane->getNumClusters(); ncluster++){
       Storage::Cluster* cluster = plane->getCluster(ncluster);
-
+      
       // Check if the cluster passes the cuts
       bool pass = true;
       for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
         if (!_clusterCuts.at(ncut)->check(cluster)) { pass = false; break; }
       if (!pass) continue;
-
+      
       _clusterSize.at(nplane)->Fill(cluster->getNumHits());
       _tot.at(nplane)->Fill(cluster->getValue());
       _totSize.at(nplane)->Fill(cluster->getNumHits(), cluster->getValue());
@@ -187,8 +184,10 @@ void Analyzers::ClusterInfo::processEvent(const Storage::Event* event)
 	_timingVsClusterSize.at(nplane)->Fill(cluster->getNumHits(),hit->getTiming());
         _timingVsHitValue.at(nplane)->Fill(hit->getValue(),hit->getTiming());
       }
+
       if (_clustersVsTime.size())
         _clustersVsTime.at(nplane)->Fill(_device->tsToTime(event->getTimeStamp()));
+
       if (_totVsTime.size())
         _totVsTime.at(nplane)->Fill(_device->tsToTime(event->getTimeStamp()), cluster->getValue());
     }

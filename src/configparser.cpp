@@ -1,32 +1,34 @@
 #include "configparser.h"
+#include "exception.h"
 
 #include <cassert>
 #include <string>
 #include <iostream>
 #include <iomanip>
+#include <stdexcept>
 
 using std::string;
 using std::cout;
 using std::endl;
 
 //=========================================================
-ConfigParser::ConfigParser(const char* filePath) :
+ConfigParser::ConfigParser(const char* filePath,
+			   int printLevel) :
   _filePath(filePath),
-  _numRows(0)
+  _numRows(0),
+  _printLevel(printLevel)
 {
   _inputFile.open(_filePath);
-  
-  if (!_inputFile.is_open()){
-    std::string err("ConfigParser: input file failed to open '");
-    err+=std::string(filePath)+"'";
-    throw err.c_str();    
+
+  if(!_inputFile.is_open()){
+    throw Exception("ConfigParser: failed to open file'"+std::string(filePath)+"'");
   }
   
   _currentHeader = "";
   _currentValue  = "";
   _currentKey    = "";
   _lineBuffer    = "";
-  
+
   parseContents(_inputFile);
   
   _inputFile.close();
@@ -46,12 +48,15 @@ void ConfigParser::parseContents(std::ifstream& input) {
 	_numRows++;
       }
     // Look for a link to another configuration file
-    else if (!parseForLink())
+    else if( !parseForLink() )
       {
 	std::ifstream linked;
 	linked.open(_currentValue.c_str());
-	if (!linked.is_open())
-	  throw "ConfigParser: unable to opened linked configuration";
+	if (!linked.is_open()){
+	  std::string err("ConfigParser: unable to opened linked configuration '");
+	  err+=_currentValue+"'";
+	  throw Exception(err);
+	}
 	parseContents(linked);
       }
     else if (!parseForKey())

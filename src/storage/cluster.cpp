@@ -3,6 +3,7 @@
 #include <cassert>
 #include <vector>
 #include <iostream>
+#include <sstream>
 
 #include "hit.h"
 #include "track.h"
@@ -11,36 +12,37 @@
 using std::cout;
 using std::endl;
 
-namespace Storage {
+using Storage::Cluster;
+using Storage::Hit;
+using Storage::Track;
 
-void Cluster::print()
-{
-  cout << "\nCluster:\n"
-       << "  Address: " << this << "\n"
-       << "  Pix: (" << getPixX() << " , " << getPixY() << ")\n"
-       << "  Pix err: (" << getPixErrX() << " , " << getPixErrY() << ")\n"
-       << "  Pos: (" << getPosX() << " , " << getPosY() << " , " << getPosZ() << ")\n"
-       << "  Pos err: (" << getPosErrX() << " , " << getPosErrY() << " , " << getPosErrZ() << ")\n"
-       << "  Num hits: " << getNumHits() << "\n"
-       << "  Plane: "  << getPlane() << endl;
-}
+Storage::Cluster::Cluster() :
+  _plane(0),
+  _index(-1),
+  _posX(0),
+  _posY(0),
+  _posZ(0),
+  _posErrX(0),
+  _posErrY(0),
+  _posErrZ(0),
+  _timing(0),
+  _value(0),
+  _matchDistance(0),
+  _track(0),
+  _matchedTrack(0),
+  _numHits(0)
+{}
 
-void Cluster::setTrack(Track* track)
-{
+void Storage::Cluster::setTrack(Storage::Track* track){
   assert(!_track && "Cluster: can't use a cluster for more than one track");
   _track = track;
 }
 
-void Cluster::setMatchedTrack(Track* track)
-{
+void Storage::Cluster::setMatchedTrack(Storage::Track* track){
   _matchedTrack = track;
 }
 
-Track* Cluster::getTrack() const { return _track; }
-Track* Cluster::getMatchedTrack() const { return _matchedTrack; }
-
-void Cluster::addHit(Hit* hit)
-{
+void Storage::Cluster::addHit(Storage::Hit* hit){
   hit->setCluster(this);
   _hits.push_back(hit);
   // Fill the value and timing from this hit
@@ -49,18 +51,40 @@ void Cluster::addHit(Hit* hit)
   _numHits++;
 }
 
-Hit* Cluster::getHit(unsigned int n) const
-{
+Hit* Storage::Cluster::getHit(unsigned int n) const {
   assert(n < getNumHits() && "Cluster: hit index exceeds vector range");
   return _hits.at(n);
 }
 
-Plane* Cluster::getPlane() const { return _plane; }
+Track* Storage::Cluster::getTrack() const {
+  return _track;
+}
 
-Cluster::Cluster() :
-  _posX(0), _posY(0), _posZ(0), _posErrX(0), _posErrY(0), _posErrZ(0),
-  _timing(0), _value(0), _matchDistance(0), _track(0), _matchedTrack(0),
-  _numHits(0), _index(-1), _plane(0)
-{ }
+Track* Storage::Cluster::getMatchedTrack() const {
+  return _matchedTrack;
+}
 
+Storage::Plane* Storage::Cluster::getPlane() const {
+  return _plane;
+}
+
+void Storage::Cluster::print() const {
+  cout << "\nCLUSTER\n" << printStr() << endl;
+}
+  
+const std::string Storage::Cluster::printStr(int blankWidth) const {
+  std::ostringstream out;
+  
+  std::string blank(" ");
+  for(int i=1; i<=blankWidth; i++) blank += " ";
+  
+  out << blank << "Address: " << this << "\n";
+  out    << blank << "Pix: (" << getPixX() << " , " << getPixY() << ")\n";
+  out    << blank << "Pix err: (" << getPixErrX() << " , " << getPixErrY() << ")\n";
+  out      << blank << "Pos: (" << getPosX() << " , " << getPosY() << " , " << getPosZ() << ")\n";
+  out      << blank << "Pos err: (" << getPosErrX() << " , " << getPosErrY() << " , " << getPosErrZ() << ")\n";
+  out      << blank << "Num hits: " << getNumHits() << "\n";
+out      << blank << "Plane: "  << getPlane();
+
+  return out.str();
 }

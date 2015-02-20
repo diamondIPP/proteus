@@ -27,7 +27,7 @@ namespace Loopers {
     
     void loop();
     
-    void print();
+    void print() const;
     
   private:
     Mechanics::Device* _refDevice;

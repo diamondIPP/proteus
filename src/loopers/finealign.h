@@ -34,7 +34,7 @@ namespace Loopers {
     void setDisplayFits(bool value);
     void setRelaxation(double value);
     
-    void print();
+    void print() const;
     
   private:
     Mechanics::Device* _refDevice;

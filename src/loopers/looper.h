@@ -2,7 +2,6 @@
 #define LOOPER_H
 
 #include <vector>
-
 #include <Rtypes.h>
 
 namespace Storage { class StorageIO; }
@@ -17,11 +16,16 @@ namespace Loopers {
 	   Storage::StorageIO* dutStorage = 0,
 	   ULong64_t startEvent = 0,
 	   ULong64_t numEvents = 0,
-	   unsigned int eventSkip = 1);
+	   unsigned int eventSkip = 1,
+	   int printLevel=0);
     
     virtual ~Looper();    
     void progressBar(ULong64_t nevent);        
-    virtual void print(){}
+    virtual void print() const;
+    
+    /** Pure virtual function (derived classes must 
+	implement this function) */
+    virtual void loop() = 0;
     
   public:
     void addAnalyzer(Analyzers::SingleAnalyzer* analyzer);
@@ -29,6 +33,8 @@ namespace Loopers {
     
     ULong64_t getStartEvent() const { return _startEvent; }
     ULong64_t getEndEvent() const { return _endEvent; }
+
+    void setPrintLevel(int printLevel) { _printLevel = printLevel; }
     
     static bool noBar;
       
@@ -46,6 +52,8 @@ namespace Loopers {
     
     unsigned int _numDualAnalyzers;    
     std::vector<Analyzers::DualAnalyzer*> _dualAnalyzers;
+
+    int _printLevel;
 
   };  // end of class
 } // end of namespace

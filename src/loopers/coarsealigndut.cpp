@@ -99,7 +99,7 @@ void Loopers::CoarseAlignDut::loop()
 }
 
 //=========================================================
-void Loopers::CoarseAlignDut::print(){
+void Loopers::CoarseAlignDut::print() const {
   cout << "## [CoarseAlignDut::print]" << endl;
   cout << "  - display fits: " << _displayFits << endl;
 }

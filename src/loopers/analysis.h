@@ -20,7 +20,7 @@ namespace Loopers {
     
     void loop();
 
-    void print();
+    void print() const;
 
   }; // end of class
   

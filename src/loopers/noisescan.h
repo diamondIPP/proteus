@@ -72,7 +72,7 @@ namespace Loopers {
 	The output mask file is also created here. */
     void loop();
     
-    void print(); 
+    void print() const; 
     
     void setMaxFactor(double maxFactor) { _config->setMaxFactor(maxFactor); }
     void setMaxOccupancy(double maxOccupancy) { _config->setMaxOccupancy(maxOccupancy); }
