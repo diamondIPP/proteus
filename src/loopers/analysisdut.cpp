@@ -75,7 +75,7 @@ void Loopers::AnalysisDut::loop() {
     for (unsigned int i=0; i<_numDualAnalyzers; i++){
       if( _printLevel > 0 ){
 	std::cout << "Dual analyzer " << i << " processing ... " << std::endl;
-	_dualeAnalyzers.at(i)->print();
+	_dualAnalyzers.at(i)->print();
       }
       _dualAnalyzers.at(i)->processEvent(refEvent,dutEvent);
     }

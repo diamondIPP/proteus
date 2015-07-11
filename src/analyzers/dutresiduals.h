@@ -25,7 +25,14 @@ private:
   std::vector<TH2D*> _residualsYY;
   std::vector<TH2D*> _residualsYX;
 
+
+  typedef std::vector<TH1D *> vecTH1D;
+  std::vector<vecTH1D> _residualsX_cluster;
+  std::vector<vecTH1D> _residualsY_cluster;
+  
 public:
+  int _maxclustersize; //Max Dimension of cluster size
+
   DUTResiduals(const Mechanics::Device* refDevice,
                const Mechanics::Device* dutDevice,
                TDirectory* dir = 0,

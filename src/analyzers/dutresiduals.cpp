@@ -24,59 +24,77 @@
 
 namespace Analyzers {
 
-void DUTResiduals::processEvent(const Storage::Event* refEvent,
-                                const Storage::Event* dutEvent)
+void DUTResiduals::processEvent(const Storage::Event *refEvent,
+                                const Storage::Event *dutEvent)
 {
   assert(refEvent && dutEvent && "Analyzer: can't process null events");
 
   // Throw an error for sensor / plane mismatch
   eventDeviceAgree(refEvent, dutEvent);
 
+  //Max Cluster Size
+  _maxclustersize = 5;
   // Check if the event passes the cuts
   for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)
     if (!_eventCuts.at(ncut)->check(refEvent)) return;
-    
-  //std::cout <<"Number of tracks = "<< refEvent->getNumTracks() << std::endl;  
+
+  //std::cout <<"Number of tracks = "<< refEvent->getNumTracks() << std::endl;
 
   for (unsigned int ntrack = 0; ntrack < refEvent->getNumTracks(); ntrack++)
   {
-    Storage::Track* track = refEvent->getTrack(ntrack);
+    Storage::Track *track = refEvent->getTrack(ntrack);
 
     // Check if the track passes the cuts
     bool pass = true;
     for (unsigned int ncut = 0; ncut < _numTrackCuts; ncut++)
-      if (!_trackCuts.at(ncut)->check(track)) { pass = false; break; }
+      if (!_trackCuts.at(ncut)->check(track)) {
+        pass = false;
+        break;
+      }
     if (!pass) continue;
 
     for (unsigned int nplane = 0; nplane < dutEvent->getNumPlanes(); nplane++)
     {
-      Storage::Plane* plane = dutEvent->getPlane(nplane);
-      Mechanics::Sensor* sensor = _dutDevice->getSensor(nplane);
+      Storage::Plane *plane = dutEvent->getPlane(nplane);
+      Mechanics::Sensor *sensor = _dutDevice->getSensor(nplane);
       double tx = 0, ty = 0, tz = 0;
       Processors::trackSensorIntercept(track, sensor, tx, ty, tz);
 
       //std::cout <<"Number of clusters = "<< plane->getNumClusters() << std::endl;
 
       for (unsigned int ncluster = 0; ncluster < plane->getNumClusters(); ncluster++)
-      { 
-        Storage::Cluster* cluster = plane->getCluster(ncluster);
+      {
+        Storage::Cluster *cluster = plane->getCluster(ncluster);
 
         // Check if the cluster passes the cuts
         bool pass = true;
         for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
-          if (!_clusterCuts.at(ncut)->check(cluster)) { pass = false; break; }
-	  //Bilbao@cern.ch:Cut for cluster size (also in efficiency to affect all eff.root results) 
-          //if(cluster->getNumHits()==1){ pass = false; break;}
+          if (!_clusterCuts.at(ncut)->check(cluster)) {
+            pass = false;
+            break;
+          }
+        //Bilbao@cern.ch:Cut for cluster size (also in efficiency to affect all eff.root results)
+        //if(cluster->getNumHits()==1){ pass = false; break;}
         if (!pass) continue;
 
         const double rx = tx - cluster->getPosX();
         const double ry = ty - cluster->getPosY();
-	
-	//std::cout<<" for track "<< ntrack << " and cluster "<< ncluster << ", ry = "<< ry <<" and rx = "<< rx <<std::endl;
-	
-	_residualsX.at(nplane)->Fill(rx);
+        //if(ry>100){ std::cout<<"Cluster rotto "<<cluster->getPixX()<<" "<<cluster->getPixY()<<std::endl;}
+        //std::cout<<" for track "<< ntrack << " and cluster "<< ncluster << ", ry = "<< ry <<" and rx = "<< rx <<std::endl;
+
+        //marco.rimoldi@cern.ch
+        int clustersize = cluster->getNumHits();
+        if (clustersize >= _maxclustersize) {
+          clustersize = _maxclustersize;
+        }
+        //std::cout<<clustersize<<std::endl;
+        (_residualsX_cluster.at(nplane))[clustersize-1]->Fill(rx);
+        (_residualsY_cluster.at(nplane))[clustersize-1]->Fill(ry);
+        //
+
+        _residualsX.at(nplane)->Fill(rx);
         _residualsY.at(nplane)->Fill(ry);
-	_distance.at(nplane)->Fill(sqrt(pow(rx,2)+pow(ry,2)));
+        _distance.at(nplane)->Fill(sqrt(pow(rx, 2) + pow(ry, 2)));
         _residualsXX.at(nplane)->Fill(rx, tx);
         _residualsYY.at(nplane)->Fill(ry, ty);
         _residualsXY.at(nplane)->Fill(rx, ty);
@@ -88,46 +106,46 @@ void DUTResiduals::processEvent(const Storage::Event* refEvent,
 
 void DUTResiduals::postProcessing() { } // Needs to be declared even if not used
 
-TH1D* DUTResiduals::getResidualX(unsigned int nsensor)
+TH1D *DUTResiduals::getResidualX(unsigned int nsensor)
 {
   validDutSensor(nsensor);
   return _residualsX.at(nsensor);
 }
 
-TH1D* DUTResiduals::getResidualY(unsigned int nsensor)
+TH1D *DUTResiduals::getResidualY(unsigned int nsensor)
 {
   validDutSensor(nsensor);
   return _residualsY.at(nsensor);
 }
 
-TH2D* DUTResiduals::getResidualXX(unsigned int nsensor)
+TH2D *DUTResiduals::getResidualXX(unsigned int nsensor)
 {
   validDutSensor(nsensor);
   return _residualsXX.at(nsensor);
 }
 
-TH2D* DUTResiduals::getResidualXY(unsigned int nsensor)
+TH2D *DUTResiduals::getResidualXY(unsigned int nsensor)
 {
   validDutSensor(nsensor);
   return _residualsXY.at(nsensor);
 }
 
-TH2D* DUTResiduals::getResidualYY(unsigned int nsensor)
+TH2D *DUTResiduals::getResidualYY(unsigned int nsensor)
 {
   validDutSensor(nsensor);
   return _residualsYY.at(nsensor);
 }
 
-TH2D* DUTResiduals::getResidualYX(unsigned int nsensor)
+TH2D *DUTResiduals::getResidualYX(unsigned int nsensor)
 {
   validDutSensor(nsensor);
   return _residualsYX.at(nsensor);
 }
 
-DUTResiduals::DUTResiduals(const Mechanics::Device* refDevice,
-                           const Mechanics::Device* dutDevice,
-                           TDirectory* dir,
-                           const char* suffix,
+DUTResiduals::DUTResiduals(const Mechanics::Device *refDevice,
+                           const Mechanics::Device *dutDevice,
+                           TDirectory *dir,
+                           const char *suffix,
                            unsigned int nPixX,
                            double binsPerPix,
                            unsigned int binsY) :
@@ -135,10 +153,10 @@ DUTResiduals::DUTResiduals(const Mechanics::Device* refDevice,
   DualAnalyzer(refDevice, dutDevice, dir, suffix)
 {
   assert(refDevice && dutDevice && "Analyzer: can't initialize with null device");
-
+  _maxclustersize = 5;
   // Makes or gets a directory called from inside _dir with this name
-  TDirectory* dir1d = makeGetDirectory("DUTResiduals1D");
-  TDirectory* dir2d = makeGetDirectory("DUTResiduals2D");
+  TDirectory *dir1d = makeGetDirectory("DUTResiduals1D");
+  TDirectory *dir2d = makeGetDirectory("DUTResiduals2D");
 
   std::stringstream name; // Build name strings for each histo
   std::stringstream title; // Build title strings for each histo
@@ -149,7 +167,7 @@ DUTResiduals::DUTResiduals(const Mechanics::Device* refDevice,
   // Generate a histogram for each sensor in the device
   for (unsigned int nsens = 0; nsens < _dutDevice->getNumSensors(); nsens++)
   {
-    Mechanics::Sensor* sensor = _dutDevice->getSensor(nsens);
+    Mechanics::Sensor *sensor = _dutDevice->getSensor(nsens);
     for (unsigned int axis = 0; axis < 2; axis++)
     {
       const double width = nPixX * (axis ? sensor->getPosPitchX() : sensor->getPosPitchY());
@@ -167,8 +185,7 @@ DUTResiduals::DUTResiduals(const Mechanics::Device* refDevice,
            << ((axis) ? "X" : "Y") << _nameSuffix;
       title << sensor->getDevice()->getName() << " " << sensor->getName()
             << ((axis) ? " X" : " Y");
-      TH1D* res1d = new TH1D(name.str().c_str(), title.str().c_str(),
-                             2*nbins, -width, width);
+      TH1D *res1d = new TH1D(name.str().c_str(), title.str().c_str(), 2 * nbins, -width, width);
       //bilbao@cern.ch
       //nbins, -width / 2.0, width / 2.0);
       res1d->SetDirectory(dir1d);
@@ -176,26 +193,50 @@ DUTResiduals::DUTResiduals(const Mechanics::Device* refDevice,
       if (axis) _residualsX.push_back(res1d);
       else      _residualsY.push_back(res1d);
 
+      //marco.rimoldi@cern.ch
+      std::vector<TH1D *> tmp_x;
+      std::vector<TH1D *> tmp_y;
+      for (int cl_size = 1; cl_size <= _maxclustersize; cl_size++) {
+        name.str(""); title.str("");
+        name << sensor->getDevice()->getName() << sensor->getName()
+             << ((axis) ? "X" : "Y") << _nameSuffix << Form("_%d", cl_size);
+        title << sensor->getDevice()->getName() << " " << sensor->getName()
+              << ((axis) ? " X" : " Y") << Form("_Cluster_Size_%d", cl_size);
+        //std::cout<<name.str()<<std::endl;
+        TH1D *res1d_cl = new TH1D(name.str().c_str(), title.str().c_str(), 2 * nbins, -width, width);
+        if (!cl_size==0) res1d_cl->SetDirectory(dir1d);
+        res1d_cl->GetXaxis()->SetTitle(xAxisTitle.str().c_str());
+        if (axis) tmp_x.push_back(res1d_cl);
+        else      tmp_y.push_back(res1d_cl);
+      }
 
+      if (axis) {
+        _residualsX_cluster.push_back(tmp_x);
+        tmp_x.clear();
+      }
+      else      {
+        _residualsY_cluster.push_back(tmp_y);
+        tmp_y.clear();
+      }
 
 
 
       //bilbao@cern.ch
       //if condition to avoid filling it twice and declaring the variables again in another loop.
-      if (axis){
-      xAxisTitle.str("");
-      xAxisTitle << "Track to cluster distance "<< " [" << _refDevice->getSpaceUnit() << "]";
-      // Generate the 1D track to cluster distance distribution for the given axis
-      name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName() << _nameSuffix << "Dist";
-      title << sensor->getDevice()->getName() << " " << sensor->getName() << "Track to cluster distance";
-      TH1D* dist1d = new TH1D(name.str().c_str(), title.str().c_str(),
-                                2*nbins, 0, 2*width);
-      dist1d->SetDirectory(dir1d);
-      dist1d->GetXaxis()->SetTitle(xAxisTitle.str().c_str());
-      _distance.push_back(dist1d);
+      if (axis) {
+        xAxisTitle.str("");
+        xAxisTitle << "Track to cluster distance " << " [" << _refDevice->getSpaceUnit() << "]";
+        // Generate the 1D track to cluster distance distribution for the given axis
+        name.str(""); title.str("");
+        name << sensor->getDevice()->getName() << sensor->getName() << _nameSuffix << "Dist";
+        title << sensor->getDevice()->getName() << " " << sensor->getName() << "Track to cluster distance";
+        TH1D *dist1d = new TH1D(name.str().c_str(), title.str().c_str(),
+                                2 * nbins, 0, 2 * width);
+        dist1d->SetDirectory(dir1d);
+        dist1d->GetXaxis()->SetTitle(xAxisTitle.str().c_str());
+        _distance.push_back(dist1d);
       }
-      
+
 
 
       // Generate the XX or YY residual distribution
@@ -211,7 +252,7 @@ DUTResiduals::DUTResiduals(const Mechanics::Device* refDevice,
            << ((axis) ? "XvsX" : "YvsY") << _nameSuffix;
       title << sensor->getDevice()->getName() << " " << sensor->getName()
             << ((axis) ? " X vs. X" : " Y vs. Y");
-      TH2D* resAA = new TH2D(name.str().c_str(), title.str().c_str(),
+      TH2D *resAA = new TH2D(name.str().c_str(), title.str().c_str(),
                              nbins, -width / 2.0, width / 2.0,
                              binsY, -height / 2.0, height / 2.0);
       resAA->SetDirectory(dir2d);
@@ -232,11 +273,11 @@ DUTResiduals::DUTResiduals(const Mechanics::Device* refDevice,
            << ((axis) ? "XvsY" : "YvsX") << _nameSuffix;
       title << sensor->getDevice()->getName() << " " << sensor->getName()
             << ((axis) ? " X vs. Y" : " Y vs. X");
-	    
-      TH2D* resAB = new TH2D(name.str().c_str(), title.str().c_str(),
+
+      TH2D *resAB = new TH2D(name.str().c_str(), title.str().c_str(),
                              nbins, -width / 2.0, width / 2.0,
                              binsY, -height / 2.0, height / 2.0);
-            
+
       resAB->SetDirectory(dir2d);
       resAB->GetXaxis()->SetTitle(xAxisTitle.str().c_str());
       resAB->GetYaxis()->SetTitle(yAxisTitle.str().c_str());

@@ -1,3 +1,12 @@
+2015-07-xx M. Rimoldi <marco.rimoldi@cern.ch>
+	*Bug Fixed in loopers/analysisdut.cpp
+	*In Analyzers/dutresidual add residual calculation in function of the cluster size. Plot name = "X_numcluster" or "Y_numcluster"
+	*Add new folder called Timing_Efficiency.
+	*Reorganized the folder in effresult.root
+	*Add plot timing vs tot for each clustersize ( _TimingTOT_cluster)
+	*Add cluster distribution (_matchCluster)
+	*Add Pixel Efficiency in function of the cluster size (InPixelEfficiencyCluster)
+
 2015-02-xx S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
 	* fix branch name "HitInCluster" in macros/mergeHVCMOSPixels; added copy of SummaryTree
 	* add printLevel argument to ConfigParser constructor
