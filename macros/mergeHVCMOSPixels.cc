@@ -42,8 +42,10 @@ int mergeHVCMOSPixels(char *input, char *output) {
     return 1;
   }
   TTree *t = (TTree*)f->Get("Plane0/Hits");
-  TTree *tsumIn = (TTree*)f->Get("SummaryTree");  
+  TTree *tsumIn = (TTree*)f->Get("SummaryTree");
+  TTree *tEventIn = (TTree*)f->Get("Event");  
   if(!tsumIn) cout << "WARNING: no SummaryTree found in input file..." << endl; 
+  if(!tEventIn) cout << "WARNING: no EventTree found in input file..." << endl; 
   
   //
   // open output file
@@ -57,7 +59,8 @@ int mergeHVCMOSPixels(char *input, char *output) {
   dnew->cd();
   TTree *m_pltree = new TTree("Hits", "Hits");
   TTree *tsumOut = tsumIn!=0 ? tsumIn->CloneTree() : NULL;
-  
+  TTree *tEventOut = tEventIn!=0 ? tEventIn->CloneTree() : NULL;
+
   _hits unmerged;
   _hits merged;
 
@@ -115,6 +118,7 @@ int mergeHVCMOSPixels(char *input, char *output) {
   dnew->cd();
   m_pltree->Write();
   if(tsumOut!=0){ fnew->cd(); tsumOut->Write(); }
+  if(tEventOut!=0){ fnew->cd(); tEventOut->Write(); }
   fnew->Print();
   fnew->Close();
   cout << "Merging done." << endl;

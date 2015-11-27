@@ -1,3 +1,6 @@
+2015-11-xx M. Rimoldi <marco.rimoldi@cern.ch>
+	*Add Information about the trigger phase that is propagated in the analysis
+	
 2015-07-xx M. Rimoldi <marco.rimoldi@cern.ch>
 	*Bug Fixed in loopers/analysisdut.cpp
 	*In Analyzers/dutresidual add residual calculation in function of the cluster size. Plot name = "X_numcluster" or "Y_numcluster"
