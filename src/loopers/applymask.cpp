@@ -66,6 +66,7 @@ namespace Loopers {
       maskedEvent->setFrameNumber(refEvent->getFrameNumber());
       maskedEvent->setTriggerOffset(refEvent->getTriggerOffset());
       maskedEvent->setTriggerInfo(refEvent->getTriggerInfo());
+      maskedEvent->setTriggerPhase(refEvent->getTriggerPhase());
       maskedEvent->setInvalid(refEvent->getInvalid());
       
       // Write the event

@@ -116,6 +116,7 @@ namespace Storage {
       _eventInfo->Branch("FrameNumber", &frameNumber, "FrameNumber/l");
       _eventInfo->Branch("TriggerOffset", &triggerOffset, "TriggerOffset/I");
       _eventInfo->Branch("TriggerInfo", &triggerInfo, "TriggerInfo/I");
+      _eventInfo->Branch("TriggerPhase", &triggerPhase, "TriggerPhase/I");
       _eventInfo->Branch("Invalid", &invalid, "Invalid/O");
 
       // Tracks tree
@@ -222,6 +223,7 @@ namespace Storage {
 	_eventInfo->SetBranchAddress("FrameNumber", &frameNumber, &bFrameNumber);
 	_eventInfo->SetBranchAddress("TriggerOffset", &triggerOffset, &bTriggerOffset);
 	_eventInfo->SetBranchAddress("TriggerInfo", &triggerInfo, &bTriggerInfo);
+  _eventInfo->SetBranchAddress("TriggerPhase", &triggerPhase, &bTriggerPhase);
 	_eventInfo->SetBranchAddress("Invalid", &invalid, &bInvalid);
       }
       
@@ -559,8 +561,10 @@ namespace Storage {
     event->setFrameNumber(frameNumber);
     event->setTriggerOffset(triggerOffset);
     event->setTriggerInfo(triggerInfo);
+    event->setTriggerPhase(triggerPhase);
+
     event->setInvalid(invalid);
-    
+
     // Generate a list of track objects
     for (int ntrack=0; ntrack<numTracks; ntrack++){
       Track* track = event->newTrack();
@@ -630,6 +634,8 @@ namespace Storage {
     frameNumber = event->getFrameNumber();
     triggerOffset = event->getTriggerOffset();
     triggerInfo = event->getTriggerInfo();
+    triggerPhase = event->getTriggerPhase();
+    //cout<<triggerPhase<<endl;
     invalid = event->getInvalid();
     
     numTracks = event->getNumTracks();

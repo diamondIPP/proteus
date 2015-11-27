@@ -1,5 +1,5 @@
 #include "efficiency.h"
-
+#include <algorithm>    // std::sort
 #include <cassert>
 #include <sstream>
 #include <math.h>
@@ -64,6 +64,8 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
   TDirectory *plotDir_Efficiency = makeGetDirectory("Efficiency");
   TDirectory *plotDir_Timing = makeGetDirectory("Timing_Efficiency");
   TDirectory *plotDir_ClusterEfficiency = makeGetDirectory("Cluster_Efficiency");
+  TDirectory *plotDir_PhaseTrigger = makeGetDirectory("PhaseTrigger");
+
 
   std::stringstream name; // Build name strings for each histo
   std::stringstream title; // Build title strings for each histo
@@ -139,7 +141,8 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     title << sensor->getDevice()->getName() << " " << sensor->getName()
           << " [Matched tracks : Position-X]";
     TH1D *matchedPositionX = new TH1D(name.str().c_str(), title.str().c_str(),
-                                      sensor->getNumX() * 1.5 * 3, 1.5 * lowX, 1.5 * uppX);
+                                      // sensor->getNumX() * 1.5 * 3, 1.5 * lowX, 1.5 * uppX);
+                                      200, 0, 100);
     Xaxis << "X-position" << " [" << _dutDevice->getSpaceUnit() << "]";
     matchedPositionX->GetXaxis()->SetTitle(Xaxis.str().c_str());
     matchedPositionX->SetDirectory(plotDir_Efficiency);
@@ -169,9 +172,77 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     matchTiming->GetYaxis()->SetTitle("# hits");
     matchTiming->SetDirectory(plotDir_Efficiency);
     _matchTime.push_back(matchTiming);
-
-
     //-----------------------------------------------------------
+    // DUT TDC start
+    std::vector<TH1D *> tmp700;
+    name.str(""); title.str(""); Xaxis.str("");
+    for (int BC = 0; BC <= 16; BC++) {
+      name.str(""); title.str("");
+      name << sensor->getDevice()->getName() << sensor->getName() << "TDC_DUT_BC_" << BC << _nameSuffix;
+      title << sensor->getDevice()->getName() << " - " << sensor->getName() << " [Matched tracks : TDC_DUT_BC_" << BC << "]";
+      TH1D *triggerPhaseDUT = new TH1D(name.str().c_str(), title.str().c_str(), 65, -0.5, 63.5);
+      triggerPhaseDUT->GetXaxis()->SetTitle("TriggerPhase");
+      triggerPhaseDUT->GetYaxis()->SetTitle("# hits");
+      triggerPhaseDUT->SetDirectory(plotDir_PhaseTrigger);
+      tmp700.push_back(triggerPhaseDUT);
+    }
+    _triggerPhaseDUT.push_back(tmp700);
+//TDC Altri piani
+
+    std::vector<TH1D *> tmp800;
+    name.str(""); title.str(""); Xaxis.str("");
+    for (int NUM_PLANE = 0; NUM_PLANE < 6; NUM_PLANE++) {
+      for (int BC = 0; BC < 4; BC++) {
+        name.str(""); title.str("");
+        name << sensor->getDevice()->getName() << sensor->getName() << "TDC_PLANE_" << NUM_PLANE << "_BC_" << BC << _nameSuffix;
+        title << sensor->getDevice()->getName() << " - " << sensor->getName() << " [Matched tracks : TDC_PLANE_" << NUM_PLANE << "_BC_" << BC << "]";
+        TH1D *triggerPhaseREF = new TH1D(name.str().c_str(), title.str().c_str(), 65, -0.5, 63.5);
+        triggerPhaseREF->GetXaxis()->SetTitle("TriggerPhase");
+        triggerPhaseREF->GetYaxis()->SetTitle("# hits");
+        triggerPhaseREF->SetDirectory(plotDir_PhaseTrigger);
+        tmp800.push_back(triggerPhaseREF);
+      }
+      _triggerPhaseREF.push_back(tmp800);
+      tmp800.clear();
+    }
+/*
+    name.str(""); title.str(""); Xaxis.str("");
+    for (int NUM_PLANE = 0; NUM_PLANE < 6; NUM_PLANE++) {
+      name.str(""); title.str("");
+      name << sensor->getDevice()->getName() << sensor->getName() << "_LVL1TriggerREF_" << NUM_PLANE <<"_"<<  _nameSuffix;
+      title << sensor->getDevice()->getName() << " - LVL1 - " << sensor->getName() << " [Matched tracks : Timing]";
+      TH1D *matchTiming_LV1_REF = new TH1D(name.str().c_str(), title.str().c_str(),5, -0.5, 4.5);
+      matchTiming_LV1_REF->GetXaxis()->SetTitle("Timing [BC]");
+      matchTiming_LV1_REF->GetYaxis()->SetTitle("# hits");
+      matchTiming_LV1_REF->SetDirectory(plotDir_PhaseTrigger);
+      _LVL1TriggerREF.push_back(matchTiming_LV1_REF);
+    }
+    name.str(""); title.str("");
+    */
+    /*
+        std::vector<TH1D *> tmp7;
+        for (int cl_size = 0; cl_size <= _maxclustersize; cl_size++) {
+          name.str(""); title.str("");
+          name << sensor->getDevice()->getName() << sensor->getName()
+               << Form("Timing_Cluster_%d", cl_size+1) << _nameSuffix;
+          title << sensor->getDevice()->getName() << " " << sensor->getName()
+                << Form("Timing for cluster = %d ", cl_size+1);
+          TH1D *timing_cluster = new TH1D(name.str().c_str(), title.str().c_str(),16, 0, 16);
+          timing_cluster->SetDirectory(plotDir_ClusterEfficiency);
+          tmp7.push_back(timing_cluster);
+        }
+        _TimingCluster.push_back(tmp7);
+        tmp7.clear();
+
+
+
+    */
+
+    //DUT TDC END
+    //-----------------------------------------------------------
+
+
+
     name.str(""); title.str(""); Xaxis.str("");
     name << sensor->getDevice()->getName() << sensor->getName() << "Matchedcluster" << _nameSuffix;
     title << sensor->getDevice()->getName() << " - " << sensor->getName()
@@ -218,10 +289,10 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
       TH2D *TimingTOT_cluster = new TH2D(name.str().c_str(), title.str().c_str(),
                                          16, 0, 16, // LVL1
                                          18, 0, 18); // ToT
-    TimingTOT_cluster->GetXaxis()->SetTitle("LVL1 [BC]");
-    TimingTOT_cluster->GetYaxis()->SetTitle("ToT [BC]");
-    TimingTOT_cluster->SetDirectory(plotDir_ClusterEfficiency);
-    tmp4.push_back(TimingTOT_cluster);
+      TimingTOT_cluster->GetXaxis()->SetTitle("LVL1 [BC]");
+      TimingTOT_cluster->GetYaxis()->SetTitle("ToT [BC]");
+      TimingTOT_cluster->SetDirectory(plotDir_ClusterEfficiency);
+      tmp4.push_back(TimingTOT_cluster);
     }
     _TimingTOT_cluster.push_back(tmp4);
     tmp4.clear();
@@ -288,22 +359,48 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     _inPixelEfficiencyLVL1_passed.push_back(tmp2);
     tmp2.clear();
 
+
     std::vector<TH1D *> tmp7;
     for (int cl_size = 0; cl_size <= _maxclustersize; cl_size++) {
       name.str(""); title.str("");
       name << sensor->getDevice()->getName() << sensor->getName()
-           << Form("Timing_Cluster_%d", cl_size+1) << _nameSuffix;
+           << Form("Timing_Cluster_%d", cl_size + 1) << _nameSuffix;
       title << sensor->getDevice()->getName() << " " << sensor->getName()
-            << Form(" Timing for cluster = %d ", cl_size+1);
-      TH1D *timing_cluster = new TH1D(name.str().c_str(), title.str().c_str(),16, 0, 16);
+            << Form("Timing for cluster = %d ", cl_size + 1);
+      TH1D *timing_cluster = new TH1D(name.str().c_str(), title.str().c_str(), 16, 0, 16);
       timing_cluster->SetDirectory(plotDir_ClusterEfficiency);
       tmp7.push_back(timing_cluster);
     }
-    cout<<"Ciao"<<endl;
     _TimingCluster.push_back(tmp7);
     tmp7.clear();
 
+    //std::vector<TH1D *> tmp7;
+    for (int cl_size = 0; cl_size <= _maxclustersize; cl_size++) {
+      name.str(""); title.str("");
+      name << sensor->getDevice()->getName() << sensor->getName()
+           << Form("_Fast_Timing_Cluster_%d", cl_size + 1) << _nameSuffix;
+      title << sensor->getDevice()->getName() << " " << sensor->getName()
+            << Form("Fast Timing for cluster = %d ", cl_size + 1);
+      TH1D *timing_cluster_fast = new TH1D(name.str().c_str(), title.str().c_str(), 16, 0, 16);
+      timing_cluster_fast->SetDirectory(plotDir_ClusterEfficiency);
+      tmp7.push_back(timing_cluster_fast);
+    }
+    _TimingCluster_fast.push_back(tmp7);
+    tmp7.clear();
 
+    std::vector<TH1D *> tmp9;
+    for (int cl_size = 0; cl_size <= _maxclustersize; cl_size++) {
+      name.str(""); title.str("");
+      name << sensor->getDevice()->getName() << sensor->getName()
+           << Form("_Slow_Timing_Cluster_%d", cl_size + 1) << _nameSuffix;
+      title << sensor->getDevice()->getName() << " " << sensor->getName()
+            << Form("Slow Timing for cluster = %d ", cl_size + 1);
+      TH1D *timing_cluster_slow = new TH1D(name.str().c_str(), title.str().c_str(), 16, 0, 16);
+      timing_cluster_slow->SetDirectory(plotDir_ClusterEfficiency);
+      tmp9.push_back(timing_cluster_slow);
+    }
+    _TimingCluster_slow.push_back(tmp9);
+    tmp9.clear();
 
     //-----------------------------------------------------------
     // Clusterefficiency
@@ -317,8 +414,8 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
       title << sensor->getDevice()->getName() << " " << sensor->getName()
             << Form("Total Cluster Efficiency Map for cluster = %d ", cl_size);
       TH2D *cluster_total = new TH2D(name.str().c_str(), title.str().c_str(),
-                                      pixBinsX, 0, sensor->getPitchX(),
-                                      pixBinsY, 0, sensor->getPitchY());
+                                     pixBinsX, 0, sensor->getPitchX(),
+                                     pixBinsY, 0, sensor->getPitchY());
       cluster_total->SetDirectory(plotDir_ClusterEfficiency);
       tmp5.push_back(cluster_total);
     }
@@ -331,16 +428,15 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     for (int cl_size = 0; cl_size <= _maxclustersize; cl_size++) {
       name.str(""); title.str("");
       name << sensor->getDevice()->getName() << sensor->getName()
-           << Form("InPixelEfficiencyCluster_%d", cl_size+1) << _nameSuffix;
+           << Form("InPixelEfficiencyCluster_%d", cl_size + 1) << _nameSuffix;
       title << sensor->getDevice()->getName() << " " << sensor->getName()
-            << Form(" Cluster Efficiency Map for cluster = %d ", cl_size+1);
+            << Form(" Cluster Efficiency Map for cluster = %d ", cl_size + 1);
       TH2D *cluster_passed = new TH2D(name.str().c_str(), title.str().c_str(),
                                       pixBinsX, 0, sensor->getPitchX(),
                                       pixBinsY, 0, sensor->getPitchY());
       cluster_passed->SetDirectory(plotDir_ClusterEfficiency);
       tmp3.push_back(cluster_passed);
     }
-    cout<<"Ciao"<<endl;
     _cluster_passed.push_back(tmp3);
     tmp3.clear();
 
@@ -518,11 +614,14 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
 
 
 
+
       // TO BE PROPERLY SET!!!!!
       //if (px > 1 & px<6 & py>86 & py <94) {
       //if (px > 1 && px < 5 && py > 82 && py < 84) { //402
       //if (px > 1 && px < 6 && py > 81 && py < 84) { //404 STIME
-      if (px > 1 && px < 6 && py > 75 && py < 78) { //404 ANALOG
+      //if (px > 1 && px < 6 && py > 86 && py < 95) { //CAribou01
+      if ((px > 1 && px < 6) && (py > 78 && py < 86)) { //CAribou02 batch4
+
         //  if(px>1 && px<5  && py>85 && py<87   ){
         //if ( (px > _pix_x_min) && (px < _pix_x_max) && (py > _pix_y_min) && (py < _pix_y_max) ) {
         /*  if(match){
@@ -540,12 +639,38 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
 
 
         (_cluster_total.at(nsensor))[0]->Fill(trackPosX * sensor->getPitchX(),
-                trackPosY * sensor->getPitchY());
+                                              trackPosY * sensor->getPitchY());
 
-        
+
         if (match) {
+//*
+          double Tfast = 0;
+          double Tslow = 0;
+          double max = 0;
+          const unsigned int Dim = match->getNumHits();
+          double timing[Dim]; //*/
           for (unsigned int nhit = 0; nhit < match->getNumHits(); nhit++) {
             const Storage::Hit *hit = match->getHit(nhit);
+
+            _matchTime.at(nsensor)->Fill(hit->getTiming());
+
+            //  /*
+            if (nhit == 0) {
+              for (unsigned int nhit1 = 0; nhit1 < match->getNumHits(); nhit1++) {
+                const Storage::Hit *hit1 = match->getHit(nhit1);
+                timing[nhit1] = (hit1->getTiming());
+              }
+              if (nhit == 0) max = timing[0];
+              if (match->getNumHits() == 1) max = timing[0];
+              else
+                for (unsigned int y = 0; y < match->getNumHits(); y++) {
+                  if (max > timing[y + 1]) max = timing[y + 1];
+                }
+            }
+
+            //  std::sort(time.begin(), time.end());
+
+            //if (nhit!=0){
 
             _inPixelTiming.at(nsensor)->Fill(trackPosX * sensor->getPitchX(),
                                              trackPosY * sensor->getPitchY(),
@@ -560,8 +685,43 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
 
 
             int lvl1 = (int)hit->getTiming();
+// /*
+            (_triggerPhaseDUT.at(nsensor))[lvl1]->Fill(dutEvent->getTriggerPhase());
+
+            const unsigned int npoints = track->getNumClusters();
+            for (unsigned int k = 0; k < npoints; k++) { //loop over the plane
+              const Storage::Cluster *cluster_TDC_ref = track->getCluster(k);
+              cluster_TDC_ref->getPlane();
+              int lvl1_ref = cluster_TDC_ref->getTiming();
+              //cout<<k<<" "<<cluster_TDC_ref->getTiming()<<endl;
+              (_triggerPhaseREF.at(k))[lvl1_ref]->Fill(refEvent->getTriggerPhase());
+            //  _LVL1TriggerREF.at(k)->Fill(lvl1_ref);
+            }
+
+            /*
+                     const unsigned int npoints = track->getNumClusters();
+                     const unsigned int npoints = track->getNumClusters();
+                //   if(npoints>6)continue;
+
+                      for(unsigned int k=0;k<npoints;k++){ //loop over the plane
+                      const Storage::Cluster *cluster = track->getCluster(k);
+                      //puoi fare anche loop sui cluster per vedere i timing delle hit
+                      cluster->getPlane()->AZIONE
+                      }
 
 
+            */
+
+            if (nhit == 0) Tfast = hit->getTiming();
+            if (nhit > 0) {
+              if (Tfast > hit->getTiming()) Tfast = hit->getTiming(); //only the fastest is kept
+            }
+            if (nhit == 0) Tslow = hit->getTiming();
+            if (nhit > 0) {
+              if (Tslow < hit->getTiming()) Tslow = hit->getTiming(); //only the fastest is kept
+            }
+
+//*/
 
             (_inPixelEfficiencyLVL1_passed.at(nsensor))[lvl1]->Fill(trackPosX * sensor->getPitchX(),
                 trackPosY * sensor->getPitchY());
@@ -569,39 +729,118 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
             (_inPixelTimingLVL1.at(nsensor))[lvl1]->Fill(trackPosX * sensor->getPitchX(),
                 trackPosY * sensor->getPitchY());
 
-            int clustersize = nhit;
+
+            int clustersize = match->getNumHits() - 1;
             if (clustersize > _maxclustersize) {
-              clustersize = _maxclustersize-1;
+              clustersize = _maxclustersize - 1;
             }
+
+
+            double ttime = timing[nhit];
+
             (_TimingCluster.at(nsensor))[clustersize]->Fill(hit->getTiming());
-             
+            if (nhit == match->getNumHits() - 1) (_TimingCluster_fast.at(nsensor))[clustersize]->Fill(Tfast);
+            if ( nhit > 0) {
+
+              if (max < hit->getTiming()) (_TimingCluster_slow.at(nsensor))[clustersize]->Fill(ttime);
+
+            }
+            if (match->getNumHits() == 1) (_TimingCluster_slow.at(nsensor))[clustersize]->Fill(ttime);
+
+
+
             (_cluster_passed.at(nsensor))[clustersize]->Fill(trackPosX * sensor->getPitchX(),
                 trackPosY * sensor->getPitchY());
-            
+
             (_TimingTOT_cluster.at(nsensor))[clustersize]->Fill(hit->getTiming(), hit->getValue());
+            // cout<<dutEvent->getTriggerPhase()<<endl;
           }
+
         }
       }
 
+
+
       if (match)
       {
-        //_efficiencyMap.at(nsensor)->Fill(true, tx, ty);
 
+        //_efficiencyMap.at(nsensor)->Fill(true, tx, ty);
+        /*
+            double Tfast=0;
+            double Tslow=0;
+            double max=0;
+            const unsigned int Dim=match->getNumHits();
+            double timing[Dim];
+         */
         for (unsigned int nhit = 0; nhit < match->getNumHits(); nhit++) {
           const Storage::Hit *hit = match->getHit(nhit);
-          _matchTime.at(nsensor)->Fill(hit->getTiming());
+//          _matchTime.at(nsensor)->Fill(hit->getTiming());
           _matchToT.at(nsensor)->Fill(hit->getValue());
           _lvl1vsToT.at(nsensor)->Fill(hit->getTiming(), hit->getValue());
+
+
+          /*       if(nhit==0){
+                 for (unsigned int nhit1 = 0; nhit1 < match->getNumHits(); nhit1++) {
+                   const Storage::Hit *hit1 = match->getHit(nhit1);
+                   timing[nhit1]=(hit1->getTiming());
+                    }
+                 if(nhit==0) max=timing[0];
+                 if(match->getNumHits()==1) max=timing[0];
+                 else
+                 for(unsigned int y = 0; y < match->getNumHits(); y++){
+                  if(max>timing[y+1]) max=timing[y+1];
+                   }
+                  }
+
+                   if(nhit==0) Tfast=hit->getTiming();
+                   if(nhit>0){
+                    if(Tfast>hit->getTiming()) Tfast=hit->getTiming();  //only the fastest is kept
+                   }
+                   if(nhit==0) Tslow=hit->getTiming();
+                   if(nhit>0){
+                    if(Tslow<hit->getTiming()) Tslow=hit->getTiming();  //only the fastest is kept
+                   }
+
+
+                   int clustersize = nhit match->getNumHits()-1;
+                   if (clustersize > _maxclustersize) {
+                     clustersize = _maxclustersize-1;
+                   }
+
+                  double ttime=timing[nhit];
+
+            (_TimingCluster.at(nsensor))[clustersize]->Fill(hit->getTiming());
+                   if(nhit==match->getNumHits()-1) (_TimingCluster_fast.at(nsensor))[clustersize]->Fill(Tfast);
+                   if( nhit>0) {
+
+                   if(max<hit->getTiming()) (_TimingCluster_slow.at(nsensor))[clustersize]->Fill(ttime);
+
+                   }
+                   if(match->getNumHits()==1) (_TimingCluster_slow.at(nsensor))[clustersize]->Fill(ttime);
+          */
         }
 
 
+
+
+
         //bilbao@cern.ch / reina.camacho@cern.ch: Filling the efficiency histogram with the cluster position instead of the track position
-       
+
         _matchCluster.at(nsensor)->Fill(match->getNumHits());
         _efficiencyMap.at(nsensor)->Fill(true, match->getPosX(), match->getPosY());
         _matchedTracks.at(nsensor)->Fill(1);
-        _matchPositionX.at(nsensor)->Fill(tx);
+        _matchPositionX.at(nsensor)->Fill(std::sqrt(std::pow((tx - match->getPosX()) / 100., 2) + std::pow((ty - match->getPosY()) / 250., 2)));
         _matchPositionY.at(nsensor)->Fill(ty);
+
+
+
+
+
+
+
+
+
+
         if (_efficiencyTime.size())
           _efficiencyTime.at(nsensor)->Fill(true, _refDevice->tsToTime(refEvent->getTimeStamp()));
       }
@@ -612,6 +851,7 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
         if (_efficiencyTime.size())
           _efficiencyTime.at(nsensor)->Fill(false, _refDevice->tsToTime(refEvent->getTimeStamp()));
       }
+
     }
   }
 }

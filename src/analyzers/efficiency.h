@@ -78,6 +78,8 @@ private:
     typedef std::vector<TH2D *> vecTH2D;
 
     std::vector<vecTH1D> _TimingCluster;
+    std::vector<vecTH1D> _TimingCluster_slow;
+    std::vector<vecTH1D> _TimingCluster_fast;
 
     std::vector<vecTH2D> _inPixelTimingLVL1; // name to be changed
     std::vector<vecTH2D> _TimingTOT_cluster; // name to be changed
@@ -85,6 +87,11 @@ private:
     std::vector<TH2D *>  _inPixelEfficiencyLVL1_total; // name to be changed
     std::vector<vecTH2D> _inPixelEfficiencyLVL1; // name to be changed
     std::vector<vecTH2D> _inPixelEfficiencyLVL1_passed; // name to be changed
+
+    std::vector<vecTH1D> _triggerPhaseDUT;
+    std::vector<vecTH1D> _triggerPhaseREF;
+    std::vector<TH1D *>  _LVL1TriggerREF;
+
 
     
     std::vector<vecTH2D> _cluster_total; 

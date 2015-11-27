@@ -35,7 +35,9 @@ namespace Storage
     void setFrameNumber(ULong64_t frameNumber) { _frameNumber = frameNumber; }
     void setTriggerOffset(unsigned int triggerOffset) { _triggerOffset = triggerOffset; }
     void setTriggerInfo(unsigned int triggerInfo) { _triggerInfo = triggerInfo; }
+    void setTriggerPhase(unsigned int triggerPhase) { _triggerPhase = triggerPhase; }
     
+
     unsigned int getNumHits() const { return _numHits; }
     unsigned int getNumClusters() const { return _numClusters; }
     unsigned int getNumPlanes() const { return _numPlanes; }
@@ -45,7 +47,8 @@ namespace Storage
     ULong64_t getFrameNumber() const { return _frameNumber; }
     unsigned int getTriggerOffset() const { return _triggerOffset; }
     unsigned int getTriggerInfo() const { return _triggerInfo; }
-    
+    unsigned int getTriggerPhase() const { return _triggerPhase; }
+
     friend class Processors::TrackMaker;
 
   protected:
@@ -56,6 +59,7 @@ namespace Storage
     ULong64_t _frameNumber;
     unsigned int _triggerOffset;
     unsigned int _triggerInfo; // Dammit Andrej!
+    unsigned int _triggerPhase;
     bool _invalid;
     
     unsigned int _numHits;

@@ -131,6 +131,7 @@ namespace Storage {
     ULong64_t frameNumber;
     Int_t     triggerOffset;
     Int_t     triggerInfo;
+    Int_t     triggerPhase;
     Bool_t    invalid;
 
     // TRACKS
@@ -192,6 +193,7 @@ namespace Storage {
     TBranch* bFrameNumber;
     TBranch* bTriggerOffset;
     TBranch* bTriggerInfo;
+    TBranch* bTriggerPhase;
     TBranch* bInvalid;
     
     TBranch* bNumTracks;
