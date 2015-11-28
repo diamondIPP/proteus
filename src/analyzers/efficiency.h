@@ -63,9 +63,12 @@ private:
     std::vector<TH1D *> _matchedTracks;
     std::vector<TH1D *> _matchPositionX;
     std::vector<TH1D *> _matchPositionY;
+    std::vector<TH1D *> _ResY;
+    std::vector<TH1D *> _ResX;
     std::vector<TH1D *> _matchTime;
     std::vector<TH1D *> _matchCluster;
     std::vector<TH1D *> _matchToT;
+    std::vector<TH1D *> _timing_diff;
 
     std::vector<TEfficiency *> _efficiencyTime;
     std::vector<TEfficiency *> _inPixelEfficiency;
@@ -83,6 +86,9 @@ private:
 
     std::vector<vecTH2D> _inPixelTimingLVL1; // name to be changed
     std::vector<vecTH2D> _TimingTOT_cluster; // name to be changed
+    
+    std::vector<vecTH2D> _TimingCorr; 
+    std::vector<vecTH1D> _TimingPlot;
     
     std::vector<TH2D *>  _inPixelEfficiencyLVL1_total; // name to be changed
     std::vector<vecTH2D> _inPixelEfficiencyLVL1; // name to be changed

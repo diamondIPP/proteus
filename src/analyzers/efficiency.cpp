@@ -117,6 +117,33 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     _maxclustersize = 5;
     //-----------------------------------------------------------
 
+
+
+//---------Residual plot
+      name.str(""); title.str("");
+      name << 
+            "ResX";
+      title << "ResX ";
+      TH1D* resX1d = new TH1D(name.str().c_str(), title.str().c_str(),
+                             200,-400, 400);
+      resX1d->SetDirectory(plotDir_Efficiency);
+      _ResX.push_back(resX1d);
+
+
+
+      name.str(""); title.str("");
+      name  <<  "ResY";
+      title << "ResY";
+      TH1D* resY1d = new TH1D(name.str().c_str(), title.str().c_str(),
+                             500,-1000, 1000);
+      resY1d->SetDirectory(plotDir_Efficiency);
+      _ResY.push_back(resY1d);
+
+
+
+
+
+
     map->SetDirectory(plotDir_Efficiency);
     map->SetStatisticOption(TEfficiency::kFWilson);
     _efficiencyMap.push_back(map);
@@ -141,8 +168,8 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     title << sensor->getDevice()->getName() << " " << sensor->getName()
           << " [Matched tracks : Position-X]";
     TH1D *matchedPositionX = new TH1D(name.str().c_str(), title.str().c_str(),
-                                      // sensor->getNumX() * 1.5 * 3, 1.5 * lowX, 1.5 * uppX);
-                                      200, 0, 100);
+                                      sensor->getNumX() * 1.5 * 3, 1.5 * lowX, 1.5 * uppX);
+                                     // 200, 0, 100);
     Xaxis << "X-position" << " [" << _dutDevice->getSpaceUnit() << "]";
     matchedPositionX->GetXaxis()->SetTitle(Xaxis.str().c_str());
     matchedPositionX->SetDirectory(plotDir_Efficiency);
@@ -359,6 +386,63 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     _inPixelEfficiencyLVL1_passed.push_back(tmp2);
     tmp2.clear();
 
+    //telescpe correlation_plot
+    std::vector<TH2D *> tmppp;
+    for (int plane = 0; plane < 6; plane++) {
+      name.str(""); title.str("");
+      name << sensor->getDevice()->getName() << sensor->getName()
+           << Form("Correlation_plot_plane_%d_%d", plane,plane+1) << _nameSuffix;
+      title << sensor->getDevice()->getName() << " " << sensor->getName()
+            << Form(" Correlation plane %d and %d", plane, plane+1);
+      TH2D *correlation_plane = new TH2D(name.str().c_str(), title.str().c_str(),
+                                           16, 0, 16,
+                                           16, 0, 16);
+      correlation_plane->SetDirectory(plotDir_ClusterEfficiency);
+      tmppp.push_back(correlation_plane);
+    }
+    _TimingCorr.push_back(tmppp);
+    tmppp.clear();
+
+
+
+    std::vector<TH1D *> tmpp;
+    for (int plane = 0; plane < 6; plane++) {
+      name.str(""); title.str("");
+      name << sensor->getDevice()->getName() << sensor->getName()
+           << Form("Timing_Plane_%d", plane) << _nameSuffix;
+      title << sensor->getDevice()->getName() << " " << sensor->getName()
+            << Form("Timing distribution plane= %d ", plane);
+      TH1D *correlation_plane = new TH1D(name.str().c_str(), title.str().c_str(),
+                                           16, 0, 16);
+      correlation_plane->SetDirectory(plotDir_ClusterEfficiency);
+      tmpp.push_back(correlation_plane);
+    }
+    _TimingPlot.push_back(tmpp);
+    tmpp.clear();
+
+
+
+
+
+
+
+      name.str(""); title.str("");
+      name << sensor->getDevice()->getName() << sensor->getName()
+           << "Timing_diff" << _nameSuffix;
+      title << sensor->getDevice()->getName() << " " << sensor->getName()
+            << "Timing_diff"<<_nameSuffix;
+      TH1D *TimeDif = new TH1D(name.str().c_str(), title.str().c_str(),
+                                           16, 0, 16);
+     TimeDif->SetDirectory(plotDir_Efficiency);
+    _timing_diff.push_back(TimeDif);
+
+
+
+
+
+
+
+
 
     std::vector<TH1D *> tmp7;
     for (int cl_size = 0; cl_size <= _maxclustersize; cl_size++) {
@@ -366,14 +450,27 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
       name << sensor->getDevice()->getName() << sensor->getName()
            << Form("Timing_Cluster_%d", cl_size + 1) << _nameSuffix;
       title << sensor->getDevice()->getName() << " " << sensor->getName()
-            << Form("Timing for cluster = %d ", cl_size + 1);
-      TH1D *timing_cluster = new TH1D(name.str().c_str(), title.str().c_str(), 16, 0, 16);
+            << Form("Timing for cluster = %d ", cl_size+1);
+      TH1D *timing_cluster = new TH1D(name.str().c_str(), title.str().c_str(),16, 0, 16);
       timing_cluster->SetDirectory(plotDir_ClusterEfficiency);
       tmp7.push_back(timing_cluster);
     }
     _TimingCluster.push_back(tmp7);
     tmp7.clear();
 
+    //std::vector<TH1D *> tmp7;
+    for (int cl_size = 0; cl_size <= _maxclustersize; cl_size++) {
+      name.str(""); title.str("");
+      name << sensor->getDevice()->getName() << sensor->getName()
+           << Form("_Fast_Timing_Cluster_%d", cl_size+1) << _nameSuffix;
+      title << sensor->getDevice()->getName() << " " << sensor->getName()
+            << Form("Fast Timing for cluster = %d ", cl_size+1);
+      TH1D *timing_cluster_fast = new TH1D(name.str().c_str(), title.str().c_str(),16, 0, 16);
+      timing_cluster_fast->SetDirectory(plotDir_ClusterEfficiency);
+      tmp7.push_back(timing_cluster_fast);
+    }
+    _TimingCluster_fast.push_back(tmp7);
+    tmp7.clear();
     //std::vector<TH1D *> tmp7;
     for (int cl_size = 0; cl_size <= _maxclustersize; cl_size++) {
       name.str(""); title.str("");
@@ -392,17 +489,18 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     for (int cl_size = 0; cl_size <= _maxclustersize; cl_size++) {
       name.str(""); title.str("");
       name << sensor->getDevice()->getName() << sensor->getName()
-           << Form("_Slow_Timing_Cluster_%d", cl_size + 1) << _nameSuffix;
+           << Form("_Slow_Timing_Cluster_%d", cl_size+1) << _nameSuffix;
       title << sensor->getDevice()->getName() << " " << sensor->getName()
-            << Form("Slow Timing for cluster = %d ", cl_size + 1);
-      TH1D *timing_cluster_slow = new TH1D(name.str().c_str(), title.str().c_str(), 16, 0, 16);
+            << Form("Slow Timing for cluster = %d ", cl_size+1);
+      TH1D *timing_cluster_slow = new TH1D(name.str().c_str(), title.str().c_str(),16, 0, 16);
       timing_cluster_slow->SetDirectory(plotDir_ClusterEfficiency);
       tmp9.push_back(timing_cluster_slow);
     }
     _TimingCluster_slow.push_back(tmp9);
     tmp9.clear();
 
-    //-----------------------------------------------------------
+
+
     // Clusterefficiency
     //-----------------------------------------------------------
 
@@ -589,7 +687,24 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
       double px = 0, py = 0;
       sensor->spaceToPixel(tx, ty, tz, px, py);
 
+
+
+
       const Storage::Cluster *match = matches.at(nsensor);
+
+
+  if(match){
+       _ResX.at(nsensor)->Fill(tx-match->getPosX());
+       _ResY.at(nsensor)->Fill(ty-match->getPosY());
+       }
+  if(!match){
+       _ResX.at(nsensor)->Fill(tx);
+       _ResY.at(nsensor)->Fill(ty);
+       }
+
+
+
+
 
       // Check if the intercepted pixel is hit
       //      bool trackMatchesPixel = false;
@@ -615,12 +730,14 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
 
 
 
+
+
       // TO BE PROPERLY SET!!!!!
       //if (px > 1 & px<6 & py>86 & py <94) {
       //if (px > 1 && px < 5 && py > 82 && py < 84) { //402
       //if (px > 1 && px < 6 && py > 81 && py < 84) { //404 STIME
       //if (px > 1 && px < 6 && py > 86 && py < 95) { //CAribou01
-      if ((px > 1 && px < 6) && (py > 78 && py < 86)) { //CAribou02 batch4
+      if ((px > 1 && px < 6) && (py > 87 && py < 93)) { //CAribou02 batch4
 
         //  if(px>1 && px<5  && py>85 && py<87   ){
         //if ( (px > _pix_x_min) && (px < _pix_x_max) && (py > _pix_y_min) && (py < _pix_y_max) ) {
@@ -629,8 +746,11 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
         std::cout << "pitchX is: " << sensor->getPitchX() << "[pixels] AND pitchY is: " << sensor->getPitchY() << std::endl;
         std::cout << "positionX is: " << sensor->getPitchX()*px << "[] AND positionY is: " << sensor->getPitchY()*py<< std::endl;
         std::cout << " "<< std::endl;}*/
+      
 
-        _inPixelEfficiency.at(nsensor)->Fill((bool)match,
+
+
+          _inPixelEfficiency.at(nsensor)->Fill((bool)match,
                                              trackPosX * sensor->getPitchX(),
                                              trackPosY * sensor->getPitchY());
 
@@ -643,32 +763,93 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
 
 
         if (match) {
+//*        
+        double Tfast=0;
+        double Tslow=0;
+        double max=0;
+        const unsigned int Dim=match->getNumHits();
+        double timing[Dim]; //*/
+        Storage::Cluster *cluster0;
+        const Storage::Hit *hit1;
+
+        int fflag=0;
+        int fl=0,fl1=0;
+	const unsigned int npoints = track->getNumClusters();
+    //   if(npoints>6)continue;
+
+          for(unsigned int k=0;k<npoints;k++){ //loop over the plane
+          const Storage::Cluster *cluster = track->getCluster(k);
+          if(cluster->getNumHits()!=1)fflag=100;
+
+          
+          hit1 = cluster->getHit(0);
+          for(unsigned int nhit = 0; nhit < cluster->getNumHits(); nhit++){
+         const Storage::Hit *hit0 = cluster->getHit(nhit);
+         if(cluster->getNumHits()==1 && npoints==6){
+          fl=0;
+          if(cluster->getNumHits()==1 && hit0->getTiming()==1)fl1=fl1+1;
+          for(unsigned int j=0;j<npoints;j++){ //loop over the plane
+          const Storage::Cluster *cluster3 = track->getCluster(j);
+          if(cluster3->getNumHits()==1)fl=fl+1;
+           //Want all the plane to have CL=1
+         }
+         if(fl==6){_TimingPlot.at(nsensor)[k]->Fill(hit0->getTiming());
+         if(match->getNumHits()==1){ const Storage::Hit *hitmatch = match->getHit(0);
+           _TimingCorr.at(nsensor)[k]->Fill(hitmatch->getTiming(), hit0->getTiming());}}
+
+         if(k<5) {
+         const Storage::Cluster *clusternext = track->getCluster(k+1);
+         for(unsigned int nhitnext = 0; nhitnext < clusternext->getNumHits(); nhitnext++){
+         const Storage::Hit *hitnext = clusternext->getHit(nhitnext);
+         if(clusternext->getNumHits()==1){
+        //  if(fl==6)_TimingCorr.at(nsensor)[k]->Fill(hit0->getTiming(), hitnext->getTiming());
+
+            }
+           }
+          }
+            }//close if
+          } //close loop per track
+
+          if(hit1->getTiming()==1)fflag=fflag+1;  //asking for get plane
+       //   cout<<cluster->getPlane()->getPlaneNum()<<endl;
+          if(cluster->getPlane()->getPlaneNum()==2) cluster0 = track->getCluster(k);
+          }
+
+
+        const unsigned int Dim0=cluster0->getNumHits(); //fastest_hit_plane0
+        double timing0=0;
+          for (unsigned int nhit = 0; nhit < cluster0->getNumHits(); nhit++) {
+          const Storage::Hit *hit0 = cluster0->getHit(nhit);
+          if(timing0==0) timing0=hit0->getTiming();
+          if((timing0>hit0->getTiming()) &&  (hit0->getTiming()!=0) ) timing0=hit0->getTiming();  //take the fastest time
+           }
+         
+
+        //  if(fl!=6 || fl1!=6)continue; //want to select single hit in all plane
+
+
 //*
-          double Tfast = 0;
-          double Tslow = 0;
-          double max = 0;
-          const unsigned int Dim = match->getNumHits();
-          double timing[Dim]; //*/
           for (unsigned int nhit = 0; nhit < match->getNumHits(); nhit++) {
             const Storage::Hit *hit = match->getHit(nhit);
+            
 
             _matchTime.at(nsensor)->Fill(hit->getTiming());
-
-            //  /*
-            if (nhit == 0) {
-              for (unsigned int nhit1 = 0; nhit1 < match->getNumHits(); nhit1++) {
-                const Storage::Hit *hit1 = match->getHit(nhit1);
-                timing[nhit1] = (hit1->getTiming());
-              }
-              if (nhit == 0) max = timing[0];
-              if (match->getNumHits() == 1) max = timing[0];
-              else
-                for (unsigned int y = 0; y < match->getNumHits(); y++) {
-                  if (max > timing[y + 1]) max = timing[y + 1];
-                }
+      if(nhit==0){
+          for (unsigned int nhit1 = 0; nhit1 < match->getNumHits(); nhit1++) {
+            const Storage::Hit *hit1 = match->getHit(nhit1);
+            timing[nhit1]=(hit1->getTiming());
+             }
+          if(nhit==0) max=timing[0];
+          if(match->getNumHits()==1) max=timing[0];
+          else
+          for(unsigned int y = 0; y < match->getNumHits(); y++){
+           if(max>timing[y+1]) max=timing[y+1];
             }
+           }
+           
+         //  std::sort(time.begin(), time.end());
+          
 
-            //  std::sort(time.begin(), time.end());
 
             //if (nhit!=0){
 
@@ -684,8 +865,11 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
                                                trackPosY * sensor->getPitchY());
 
 
+   
+          //-----lvl1 correlation plot
+// /
+
             int lvl1 = (int)hit->getTiming();
-// /*
             (_triggerPhaseDUT.at(nsensor))[lvl1]->Fill(dutEvent->getTriggerPhase());
 
             const unsigned int npoints = track->getNumClusters();
@@ -703,11 +887,12 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
                      const unsigned int npoints = track->getNumClusters();
                 //   if(npoints>6)continue;
 
-                      for(unsigned int k=0;k<npoints;k++){ //loop over the plane
-                      const Storage::Cluster *cluster = track->getCluster(k);
-                      //puoi fare anche loop sui cluster per vedere i timing delle hit
-                      cluster->getPlane()->AZIONE
-                      }
+
+
+            if(nhit==0) Tfast=hit->getTiming();
+            if(nhit>0){
+
+
 
 
             */
@@ -730,33 +915,38 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
                 trackPosY * sensor->getPitchY());
 
 
-            int clustersize = match->getNumHits() - 1;
+            int clustersize = match->getNumHits()-1;
             if (clustersize > _maxclustersize) {
               clustersize = _maxclustersize - 1;
             }
+	    
 
+           double ttime=timing[nhit];
 
-            double ttime = timing[nhit];
+	   (_TimingCluster.at(nsensor))[clustersize]->Fill(hit->getTiming());
+            
+            if(nhit==match->getNumHits()-1) (_TimingCluster_fast.at(nsensor))[clustersize]->Fill(std::abs(Tfast));
+            if(nhit==match->getNumHits()-1) (_timing_diff.at(nsensor))->Fill(std::abs(Tfast-timing0));
+            if( nhit>0) { 
 
-            (_TimingCluster.at(nsensor))[clustersize]->Fill(hit->getTiming());
-            if (nhit == match->getNumHits() - 1) (_TimingCluster_fast.at(nsensor))[clustersize]->Fill(Tfast);
-            if ( nhit > 0) {
-
-              if (max < hit->getTiming()) (_TimingCluster_slow.at(nsensor))[clustersize]->Fill(ttime);
+            if(max<hit->getTiming()) (_TimingCluster_slow.at(nsensor))[clustersize]->Fill(ttime);
 
             }
-            if (match->getNumHits() == 1) (_TimingCluster_slow.at(nsensor))[clustersize]->Fill(ttime);
+            if(match->getNumHits()==1) (_TimingCluster_slow.at(nsensor))[clustersize]->Fill(ttime);
+           
+            
+
 
 
 
             (_cluster_passed.at(nsensor))[clustersize]->Fill(trackPosX * sensor->getPitchX(),
                 trackPosY * sensor->getPitchY());
-
-            (_TimingTOT_cluster.at(nsensor))[clustersize]->Fill(hit->getTiming(), hit->getValue());
-            // cout<<dutEvent->getTriggerPhase()<<endl;
-          }
-
-        }
+          
+  
+            (_TimingTOT_cluster.at(nsensor))[clustersize]->Fill(hit->getTiming(), hit->getValue()); 
+           }
+          
+        } 
       }
 
 
@@ -765,6 +955,13 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
       {
 
         //_efficiencyMap.at(nsensor)->Fill(true, tx, ty);
+/*
+	  double Tfast=0;
+	  double Tslow=0;
+	  double max=0;
+	  const unsigned int Dim=match->getNumHits();
+	  double timing[Dim];
+ */
         /*
             double Tfast=0;
             double Tslow=0;
@@ -777,6 +974,47 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
 //          _matchTime.at(nsensor)->Fill(hit->getTiming());
           _matchToT.at(nsensor)->Fill(hit->getValue());
           _lvl1vsToT.at(nsensor)->Fill(hit->getTiming(), hit->getValue());
+
+          
+   /*       if(nhit==0){
+          for (unsigned int nhit1 = 0; nhit1 < match->getNumHits(); nhit1++) {
+            const Storage::Hit *hit1 = match->getHit(nhit1);
+            timing[nhit1]=(hit1->getTiming());
+             }
+          if(nhit==0) max=timing[0];
+          if(match->getNumHits()==1) max=timing[0];
+          else
+          for(unsigned int y = 0; y < match->getNumHits(); y++){
+           if(max>timing[y+1]) max=timing[y+1];
+            }
+           } 
+
+            if(nhit==0) Tfast=hit->getTiming();
+            if(nhit>0){
+             if(Tfast>hit->getTiming()) Tfast=hit->getTiming();  //only the fastest is kept          
+            }
+            if(nhit==0) Tslow=hit->getTiming();
+            if(nhit>0){
+             if(Tslow<hit->getTiming()) Tslow=hit->getTiming();  //only the fastest is kept          
+            }
+
+
+            int clustersize = nhit match->getNumHits()-1;
+            if (clustersize > _maxclustersize) {
+              clustersize = _maxclustersize-1;
+            }
+
+           double ttime=timing[nhit];
+
+	   (_TimingCluster.at(nsensor))[clustersize]->Fill(hit->getTiming());
+            if(nhit==match->getNumHits()-1) (_TimingCluster_fast.at(nsensor))[clustersize]->Fill(Tfast);
+            if( nhit>0) { 
+
+            if(max<hit->getTiming()) (_TimingCluster_slow.at(nsensor))[clustersize]->Fill(ttime);
+
+            }
+            if(match->getNumHits()==1) (_TimingCluster_slow.at(nsensor))[clustersize]->Fill(ttime);
+   */
 
 
           /*       if(nhit==0){
@@ -826,11 +1064,24 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
 
         //bilbao@cern.ch / reina.camacho@cern.ch: Filling the efficiency histogram with the cluster position instead of the track position
 
+
         _matchCluster.at(nsensor)->Fill(match->getNumHits());
-        _efficiencyMap.at(nsensor)->Fill(true, match->getPosX(), match->getPosY());
+    
+          int flag=0;
+          for (unsigned int nhit = 0; nhit < match->getNumHits(); nhit++) {
+          const Storage::Hit *hit = match->getHit(nhit);
+          if(hit->getTiming()<4) flag=1;
+         }
+        //fare un efficienza per il fastest hit, dare un taglio sul fastest hit: cioè un reclustering al vol. fai copia e incolla dal clustermaker. 
+       /* if(flag==1)*/_efficiencyMap.at(nsensor)->Fill(true, match->getPosX(), match->getPosY());
+       /* if(flag==0)_efficiencyMap.at(nsensor)->Fill(false, tx, ty);*/
         _matchedTracks.at(nsensor)->Fill(1);
         _matchPositionX.at(nsensor)->Fill(std::sqrt(std::pow((tx - match->getPosX()) / 100., 2) + std::pow((ty - match->getPosY()) / 250., 2)));
         _matchPositionY.at(nsensor)->Fill(ty);
+
+
+      //  if (_efficiencyTime.size())
+       //   _efficiencyTime.at(nsensor)->Fill(true, _refDevice->tsToTime(refEvent->getTimeStamp()));
 
 
 

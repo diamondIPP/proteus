@@ -1,3 +1,12 @@
+2015-11-27 F. Di Bello <fdibello@cern.ch>
+	*Fixed bug in efficiency.cpp
+	*Add plot: correlation planes and DUT
+	*Add plot for different cluster size
+	*Add plot to study the lvl1 distribution of the DUT 
+	*Change the clustermaker to select the fastest hit
+	
+
+
 2015-11-xx M. Rimoldi <marco.rimoldi@cern.ch>
 	*Add Information about the trigger phase that is propagated in the analysis
 	

@@ -84,23 +84,34 @@ void ClusterMaker::calculateCluster(Storage::Cluster* cluster)
   double cogX = 0;
   double cogY = 0;
   double weight = 0;
+  double fastest_timing = 100;
+  double fastest_hitX=0, fastest_hitY=0;
 
   for (unsigned int nhit = 0; nhit < cluster->getNumHits(); nhit++)
   {
     const Storage::Hit* hit = cluster->getHit(nhit);
     //  const double value = (hit->getValue() > 0) ? hit->getValue() : 1;
+    //taking the fastest hit to build the cluster 
     //digital sensor:
     cogX += hit->getPixX();
     cogY += hit->getPixY();
     weight += 1;
 
-    //    cogX += hit->getPixX() * value;
+    if(fastest_timing>hit->getTiming()){fastest_timing=hit->getTiming(); fastest_hitX=hit->getPixX(); fastest_hitY=hit->getPixY();    }  
+
+
+  //    cogX += hit->getPixX() * value;
     //    cogY += hit->getPixY() * value;
     //    weight += hit->getValue();   
   }
 
-  cogX /= weight;
-  cogY /= weight;
+  
+
+
+ // cogX /= weight;
+ // cogY /= weight;
+ cogX=fastest_hitX;
+ cogY=fastest_hitY;
 
   double stdevX = 0;
   double stdevY = 0;
@@ -115,6 +126,7 @@ void ClusterMaker::calculateCluster(Storage::Cluster* cluster)
     weight2 += value*value;
   }
 
+//come mai??? vedere domani!!
   cogX += 0.5;
   cogY += 0.5;
 
