@@ -55,12 +55,10 @@ void Loopers::AnalysisDut::loop() {
       dutEvent->print();
     }
 
-    std::cout << "fine" << std::endl;
     
     // Match ref tracks to dut clusters (information stored in event)
     _trackMatcher->matchEvent(refEvent, dutEvent);
 
-    std::cout << "trackmatcher done" << std::endl;
     
     // make single analyzers to process event
     for (unsigned int i=0; i<_numSingleAnalyzers; i++){

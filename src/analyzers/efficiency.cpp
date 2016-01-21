@@ -136,6 +136,7 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
       title << "ResY";
       TH1D* resY1d = new TH1D(name.str().c_str(), title.str().c_str(),
                              500,-1000, 1000);
+     //                        50,-5, 5);
       resY1d->SetDirectory(plotDir_Efficiency);
       _ResY.push_back(resY1d);
 
@@ -168,8 +169,8 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     title << sensor->getDevice()->getName() << " " << sensor->getName()
           << " [Matched tracks : Position-X]";
     TH1D *matchedPositionX = new TH1D(name.str().c_str(), title.str().c_str(),
-                                      sensor->getNumX() * 1.5 * 3, 1.5 * lowX, 1.5 * uppX);
-                                     // 200, 0, 100);
+                //                      sensor->getNumX() * 1.5 * 3, 1.5 * lowX, 1.5 * uppX);
+                                      200, 0, 100);
     Xaxis << "X-position" << " [" << _dutDevice->getSpaceUnit() << "]";
     matchedPositionX->GetXaxis()->SetTitle(Xaxis.str().c_str());
     matchedPositionX->SetDirectory(plotDir_Efficiency);
@@ -695,6 +696,7 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
 
   if(match){
        _ResX.at(nsensor)->Fill(tx-match->getPosX());
+      // _ResY.at(nsensor)->Fill(ty-match->getPosY());
        _ResY.at(nsensor)->Fill(ty-match->getPosY());
        }
   if(!match){
@@ -737,7 +739,7 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
       //if (px > 1 && px < 5 && py > 82 && py < 84) { //402
       //if (px > 1 && px < 6 && py > 81 && py < 84) { //404 STIME
       //if (px > 1 && px < 6 && py > 86 && py < 95) { //CAribou01
-      if ((px > 1 && px < 6) && (py > 87 && py < 93)) { //CAribou02 batch4
+      if ((px > 5 && px < 10) && (py > 89 && py < 94)) { //CAribou02 batch4
 
         //  if(px>1 && px<5  && py>85 && py<87   ){
         //if ( (px > _pix_x_min) && (px < _pix_x_max) && (py > _pix_y_min) && (py < _pix_y_max) ) {
@@ -764,6 +766,32 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
 
         if (match) {
 //*        
+//
+//
+//
+//
+//
+
+   int clustersize = match->getNumHits()-1;
+            if (clustersize > _maxclustersize) {
+              clustersize = _maxclustersize - 1;
+            }
+
+            (_cluster_passed.at(nsensor))[clustersize]->Fill(trackPosX * sensor->getPitchX(),
+                trackPosY * sensor->getPitchY());
+
+
+            _inPixelCounting.at(nsensor)->Fill(trackPosX * sensor->getPitchX(),
+                                               trackPosY * sensor->getPitchY());
+
+
+
+
+
+
+
+
+
         double Tfast=0;
         double Tslow=0;
         double max=0;
@@ -807,8 +835,8 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
             }
            }
           }
-            }//close if
-          } //close loop per track
+         }//close if
+        } //close loop per track
 
           if(hit1->getTiming()==1)fflag=fflag+1;  //asking for get plane
        //   cout<<cluster->getPlane()->getPlaneNum()<<endl;
@@ -861,9 +889,6 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
                                           trackPosY * sensor->getPitchY(),
                                           hit->getValue());
 
-            _inPixelCounting.at(nsensor)->Fill(trackPosX * sensor->getPitchX(),
-                                               trackPosY * sensor->getPitchY());
-
 
    
           //-----lvl1 correlation plot
@@ -871,6 +896,16 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
 
             int lvl1 = (int)hit->getTiming();
             (_triggerPhaseDUT.at(nsensor))[lvl1]->Fill(dutEvent->getTriggerPhase());
+
+
+
+            (_inPixelEfficiencyLVL1_passed.at(nsensor))[lvl1]->Fill(trackPosX * sensor->getPitchX(),
+                trackPosY * sensor->getPitchY());
+
+            (_inPixelTimingLVL1.at(nsensor))[lvl1]->Fill(trackPosX * sensor->getPitchX(),
+                trackPosY * sensor->getPitchY());
+
+
 
             const unsigned int npoints = track->getNumClusters();
             for (unsigned int k = 0; k < npoints; k++) { //loop over the plane
@@ -908,12 +943,6 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
 
 //*/
 
-            (_inPixelEfficiencyLVL1_passed.at(nsensor))[lvl1]->Fill(trackPosX * sensor->getPitchX(),
-                trackPosY * sensor->getPitchY());
-
-            (_inPixelTimingLVL1.at(nsensor))[lvl1]->Fill(trackPosX * sensor->getPitchX(),
-                trackPosY * sensor->getPitchY());
-
 
             int clustersize = match->getNumHits()-1;
             if (clustersize > _maxclustersize) {
@@ -939,8 +968,8 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
 
 
 
-            (_cluster_passed.at(nsensor))[clustersize]->Fill(trackPosX * sensor->getPitchX(),
-                trackPosY * sensor->getPitchY());
+            //(_cluster_passed.at(nsensor))[clustersize]->Fill(trackPosX * sensor->getPitchX(),
+             //   trackPosY * sensor->getPitchY());
           
   
             (_TimingTOT_cluster.at(nsensor))[clustersize]->Fill(hit->getTiming(), hit->getValue()); 
@@ -1076,7 +1105,7 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
        /* if(flag==1)*/_efficiencyMap.at(nsensor)->Fill(true, match->getPosX(), match->getPosY());
        /* if(flag==0)_efficiencyMap.at(nsensor)->Fill(false, tx, ty);*/
         _matchedTracks.at(nsensor)->Fill(1);
-        _matchPositionX.at(nsensor)->Fill(std::sqrt(std::pow((tx - match->getPosX()) / 100., 2) + std::pow((ty - match->getPosY()) / 250., 2)));
+        _matchPositionX.at(nsensor)->Fill(std::sqrt(std::pow((tx - match->getPosX()) / 100., 2) + std::pow((ty - match->getPosY()) / 125., 2)));
         _matchPositionY.at(nsensor)->Fill(ty);
 
 
