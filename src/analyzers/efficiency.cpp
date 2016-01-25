@@ -565,6 +565,22 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     count->SetDirectory(0);
     _inPixelCounting.push_back(count);
 
+
+
+
+
+    name.str(""); title.str("");
+    name << sensor->getDevice()->getName() << sensor->getName()
+         << "InPixelTimingCnt1" << _nameSuffix;
+    title << sensor->getDevice()->getName() << " - " << sensor->getName()
+          << " [InPixel Timing Map counting1]";
+    TH2D *count_intiming = new TH2D(name.str().c_str(), title.str().c_str(),
+                           pixBinsX, 0, sensor->getPitchX(),
+                           pixBinsY, 0, sensor->getPitchY());
+    count->SetDirectory(0);
+    _inPixelCountingtiming.push_back(count_intiming);
+
+
     // Track matching information
     name.str(""); title.str("");
     name << sensor->getDevice()->getName() << sensor->getName()
@@ -739,7 +755,7 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
       //if (px > 1 && px < 5 && py > 82 && py < 84) { //402
       //if (px > 1 && px < 6 && py > 81 && py < 84) { //404 STIME
       //if (px > 1 && px < 6 && py > 86 && py < 95) { //CAribou01
-      if ((px > 5 && px < 10) && (py > 89 && py < 94)) { //CAribou02 batch4
+      if ((px > 4 && px < 10) && (py>87 && py < 94)) { //CAribou02 batch4
 
         //  if(px>1 && px<5  && py>85 && py<87   ){
         //if ( (px > _pix_x_min) && (px < _pix_x_max) && (py > _pix_y_min) && (py < _pix_y_max) ) {
@@ -764,6 +780,11 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
                                               trackPosY * sensor->getPitchY());
 
 
+
+	_inPixelCounting.at(nsensor)->Fill(trackPosX * sensor->getPitchX(),
+                                               trackPosY * sensor->getPitchY());
+
+
         if (match) {
 //*        
 //
@@ -771,6 +792,8 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
 //
 //
 //
+	_inPixelCountingtiming.at(nsensor)->Fill(trackPosX * sensor->getPitchX(),
+                                               trackPosY * sensor->getPitchY());
 
    int clustersize = match->getNumHits()-1;
             if (clustersize > _maxclustersize) {
@@ -781,12 +804,24 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
                 trackPosY * sensor->getPitchY());
 
 
-            _inPixelCounting.at(nsensor)->Fill(trackPosX * sensor->getPitchX(),
-                                               trackPosY * sensor->getPitchY());
+           // _inPixelCounting.at(nsensor)->Fill(trackPosX * sensor->getPitchX(),
+             //                                  trackPosY * sensor->getPitchY());
 
 
+          float fast_match=0;
+          for (unsigned int nhit = 0; nhit < match->getNumHits(); nhit++) {
+          const Storage::Hit *hit = match->getHit(nhit);
+          if(fast_match==0) fast_match=match->getTiming();
+          if((match->getTiming()) &&  (match->getTiming()!=0) ) fast_match=match->getTiming();  //take the fastest time
+           }
+ 
 
+      
+ 
 
+            _inPixelTiming.at(nsensor)->Fill(trackPosX * sensor->getPitchX(),
+                                             trackPosY * sensor->getPitchY(),
+                                             fast_match);
 
 
 
@@ -880,11 +915,11 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
 
 
             //if (nhit!=0){
-
+/*
             _inPixelTiming.at(nsensor)->Fill(trackPosX * sensor->getPitchX(),
                                              trackPosY * sensor->getPitchY(),
                                              hit->getTiming());
-
+*/
             _inPixelToT.at(nsensor)->Fill(trackPosX * sensor->getPitchX(),
                                           trackPosY * sensor->getPitchY(),
                                           hit->getValue());
@@ -1152,16 +1187,17 @@ void Analyzers::Efficiency::postProcessing() {
     TH2D *inTimingMap =  _inPixelTiming.at(nsensor);
     TH2D *inToTMap =  _inPixelToT.at(nsensor);
     TH2D *count = _inPixelCounting.at(nsensor);
+    TH2D *count_intiming = _inPixelCountingtiming.at(nsensor);
 
     double val = 0;
     for (int x = 1; x <= inTimingMap->GetNbinsX(); x++) {
       for (int y = 1; y <= inTimingMap->GetNbinsY(); y++) {
 
-        val = count->GetBinContent(x, y) != 0 ? inTimingMap->GetBinContent(x, y) / count->GetBinContent(x, y) : 0;
+        val = count->GetBinContent(x, y) != 0 ? inTimingMap->GetBinContent(x, y) / count_intiming->GetBinContent(x, y) : 0;
         // [SGS] why overwritting the original histo instead of filling a new one ???
         inTimingMap->SetBinContent(x, y, val);
 
-        val = count->GetBinContent(x, y) != 0 ? inToTMap->GetBinContent(x, y) / count->GetBinContent(x, y) : 0;
+        val = count->GetBinContent(x, y) != 0 ? inToTMap->GetBinContent(x, y) / count_intiming->GetBinContent(x, y) : 0;
         // [SGS] why overwritting the original histo instead of filling a new one ???
         inToTMap->SetBinContent(x, y, val);
 

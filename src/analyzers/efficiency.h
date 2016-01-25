@@ -74,6 +74,7 @@ private:
     std::vector<TEfficiency *> _inPixelEfficiency;
     std::vector<TH2D *> _inPixelTiming;
     std::vector<TH2D *> _inPixelCounting;
+    std::vector<TH2D *> _inPixelCountingtiming;
     std::vector<TH2D *> _inPixelToT;
     std::vector<TH2D *> _lvl1vsToT;
     
@@ -104,6 +105,9 @@ private:
     std::vector<vecTH2D> _cluster;
     std::vector<vecTH2D> _cluster_passed;
 
+    std::vector<vecTH2D> _timing_cluster_total; 
+    std::vector<vecTH2D> _timing_cluster;
+    std::vector<vecTH2D> _timing_cluster_passed;
 }; // end of class
 
 } // end of namespace
