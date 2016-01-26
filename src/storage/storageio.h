@@ -91,6 +91,7 @@ namespace Storage {
     // Trees containing event-by-event data for each plane
     std::vector<TTree*> _hits;
     std::vector<TTree*> _clusters;
+    std::vector<TTree*> _intercepts;
     // Trees global to the entire event
     TTree*  _tracks;
     TTree*  _eventInfo;
@@ -125,6 +126,11 @@ namespace Storage {
     Double_t clusterPosErrY[MAX_CLUSTERS];
     Double_t clusterPosErrZ[MAX_CLUSTERS];
     Int_t    clusterInTrack[MAX_CLUSTERS];
+    
+    // INTERCEPTS (LOCAL HIT POSITIONS)
+	Int_t numIntercepts;
+	Double_t interceptX[MAX_TRACKS];
+	Double_t interceptY[MAX_TRACKS];
 
     // EVENT INFO
     ULong64_t timeStamp;
@@ -188,6 +194,11 @@ namespace Storage {
     TBranch* bClusterPosErrY;
     TBranch* bClusterPosErrZ;
     TBranch* bClusterInTrack;
+
+	TBranch* bNumIntercepts;
+    TBranch* bInterceptX;
+    TBranch* bInterceptY; 
+    
     
     TBranch* bTimeStamp;
     TBranch* bFrameNumber;

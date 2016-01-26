@@ -10,6 +10,9 @@
 #include "../storage/plane.h"
 #include "../storage/track.h"
 #include "../storage/cluster.h"
+#include "../mechanics/device.h"
+#include "../mechanics/sensor.h"
+#include "../processors/processors.h"
 
 #ifndef VERBOSE
 #define VERBOSE 1
@@ -376,12 +379,13 @@ void TrackMaker::fitTrackToClusters(Track* track)
 
 TrackMaker::TrackMaker(double maxClusterDist,
                        unsigned int numSeedPlanes,
-                       unsigned int minClusters) :
+                       unsigned int minClusters, bool calcIntercepts) :
   _maxClusterDist(maxClusterDist),
   _numSeedPlanes(numSeedPlanes),
   _minClusters(minClusters),
   _event(0),
-  _maskedPlane(-1)
+  _maskedPlane(-1),
+  _calcIntercepts(calcIntercepts)
 {
   if (minClusters < 3)
     throw "TrackMaker: min clusters needs to be at least 3";
@@ -389,4 +393,33 @@ TrackMaker::TrackMaker(double maxClusterDist,
     throw "TrackMaker: needs at least one seed plane";
 }
 
+// to convert global track position to local (lmeng@cern.ch, bristic@cern.ch)
+void TrackMaker::calculateIntercepts(Storage::Event* event, Mechanics::Device* device) {
+	// loop over each track and each plane
+	for (int ntrack = 0; ntrack < event->getNumTracks(); ntrack++) {
+		for (unsigned int nplane = 0; nplane < event->getNumPlanes(); nplane++) {
+			
+			Storage::Track* track = event->getTrack(ntrack);
+			Mechanics::Sensor* sensor = device->getSensor(nplane);
+			
+			double tx = 0, ty = 0, tz = 0;
+			Processors::trackSensorIntercept(track, sensor, tx, ty, tz);
+
+			double px = 0, py = 0;
+			sensor->spaceToPixel(tx, ty, tz, px, py);
+					
+			
+			// calculate distances from pixel position
+			double posX = px*sensor->getPitchX();
+			double posY = py*sensor->getPitchY();
+			
+			Storage::Plane *plane = event->getPlane(nplane);
+			plane->addIntercept(posX, posY);
+			
+		}
+	}	
+}	
+	
+	
+	
 }

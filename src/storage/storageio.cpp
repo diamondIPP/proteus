@@ -106,8 +106,15 @@ namespace Storage {
 	clusters->Branch("PosErrX", clusterPosErrX, "ClusterPosErrX[NClusters]/D");
 	clusters->Branch("PosErrY", clusterPosErrY, "ClusterPosErrY[NClusters]/D");
 	clusters->Branch("PosErrZ", clusterPosErrZ, "ClusterPosErrZ[NClusters]/D");
-      }
-      
+
+	// Local track position tree
+	TTree* intercepts = new TTree("Intercepts", "Intercepts");
+	_intercepts.push_back(intercepts);
+	intercepts->Branch("NIntercepts", &numIntercepts, "NIntercepts/I");
+	intercepts->Branch("interceptX", interceptX, "interceptX[NIntercepts]/D");
+	intercepts->Branch("interceptY", interceptY, "interceptY[NIntercepts]/D");
+ }
+  
       _file->cd();
 
       // EventInfo tree
@@ -215,15 +222,26 @@ namespace Storage {
 	  clusters->SetBranchAddress("PosErrY", clusterPosErrY, &bClusterPosErrY);
 	  clusters->SetBranchAddress("PosErrZ", clusterPosErrZ, &bClusterPosErrZ);
 	}
-      }
+	
+	TTree* intercepts;
+	_file->GetObject(ss.str().append("/Intercepts").c_str(), intercepts);
+	_intercepts.push_back(intercepts);
+	if(intercepts){
+	  intercepts->SetBranchAddress("NIntercepts", &numIntercepts, &bNumIntercepts);
+	  intercepts->SetBranchAddress("interceptX", interceptX, &bInterceptX);
+	  intercepts->SetBranchAddress("interceptY", interceptY, &bInterceptY);
+	}
+	
+
+}
       
-      _file->GetObject("Event", _eventInfo);      
+      _file->GetObject("Event", _eventInfo);
       if (_eventInfo){
 	_eventInfo->SetBranchAddress("TimeStamp", &timeStamp, &bTimeStamp);
 	_eventInfo->SetBranchAddress("FrameNumber", &frameNumber, &bFrameNumber);
 	_eventInfo->SetBranchAddress("TriggerOffset", &triggerOffset, &bTriggerOffset);
 	_eventInfo->SetBranchAddress("TriggerInfo", &triggerInfo, &bTriggerInfo);
-  _eventInfo->SetBranchAddress("TriggerPhase", &triggerPhase, &bTriggerPhase);
+	_eventInfo->SetBranchAddress("TriggerPhase", &triggerPhase, &bTriggerPhase);
 	_eventInfo->SetBranchAddress("Invalid", &invalid, &bInvalid);
       }
       
@@ -378,6 +396,13 @@ namespace Storage {
       clusterPosErrZ[i] = 0;
       clusterInTrack[i] = 0;
     }
+    
+    numIntercepts = 0;
+    for (int i = 0; i<MAX_HITS; i++){
+		interceptX[i] = 0;
+		interceptY[i] = 0;
+		
+	}
         
     numTracks = 0;
     for(int i=0; i<MAX_HITS; i++){
@@ -584,6 +609,16 @@ namespace Storage {
       if (_clusters.at(nplane) && _clusters.at(nplane)->GetEntry(n) <= 0)
 	throw "StorageIO: error reading clusters tree";
       
+      if (_intercepts.at(nplane) && _intercepts.at(nplane)->GetEntry(n) <= 0)
+    throw "StorageIO: error reading intercepts tree";
+      
+      
+      // Generate the intercept objects
+      for(int nintercept=0; nintercept < numIntercepts; nintercept++) {
+		std::pair<double, double> intercept = event->getPlane(nplane)->getIntercept(nintercept);
+      }
+      
+      
       // Generate the cluster objects
       for (int ncluster=0; ncluster<numClusters; ncluster++){
 	Cluster* cluster = event->newCluster(nplane);
@@ -655,10 +690,20 @@ namespace Storage {
       trackCovarianceX[ntrack] = track->getCovarianceX();
       trackCovarianceY[ntrack] = track->getCovarianceY();
       trackChi2[ntrack] = track->getChi2();
+
     }
     
     for (unsigned int nplane=0; nplane<_numPlanes; nplane++){
       Plane* plane = event->getPlane(nplane);
+      
+      // fill intercepts
+		numIntercepts = plane->getNumIntercepts();
+		if (numIntercepts > MAX_TRACKS) throw "StorageIO: event exceeds MAX_Tracks";
+		for (int nintercept = 0; nintercept < numIntercepts; nintercept++) {
+			std::pair<double, double> intercept = plane->getIntercept(nintercept);
+			interceptX[nintercept] = intercept.first;
+			interceptY[nintercept] = intercept.second;
+		}
       
       numClusters = plane->getNumClusters();
       if (numClusters > MAX_CLUSTERS) throw "StorageIO: event exceeds MAX_CLUSTERS";
@@ -700,14 +745,18 @@ namespace Storage {
       
       // Fill the plane by plane trees for this plane
       if (_hits.at(nplane)) _hits.at(nplane)->Fill();
-      if (_clusters.at(nplane)) _clusters.at(nplane)->Fill();
-    }
+      if (_clusters.at(nplane)) _clusters.at(nplane)->Fill();  
+      if (_intercepts.at(nplane)) _intercepts.at(nplane)->Fill();
+    
+    
+    }//end of nplane loop
     
     // Write the track and event info here so that if any errors occured they won't be desynchronized
     if (_tracks) _tracks->Fill();
     if (_eventInfo) _eventInfo->Fill();
     
     _numEvents++;
-  }
+    
+  }// end of writeEvent
       
 } // end of namespace

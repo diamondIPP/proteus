@@ -24,22 +24,27 @@ namespace Storage {
     inline unsigned int getPlaneNum() const { return _planeNum; }
     inline unsigned int getNumHits() const { return _numHits; }
     inline unsigned int getNumClusters() const { return _numClusters; }
+    inline unsigned int getNumIntercepts() const { return _numIntercepts; }
 
     Hit* getHit(unsigned int n) const;
     Cluster* getCluster(unsigned int n) const;
-
-    void print() const;
+    std::pair<double, double> getIntercept(unsigned int n) const;
     
+    void addIntercept(double posX, double posY);
+    void print() const;
+  
   protected:
     void addHit(Hit* hit);
     void addCluster(Cluster* cluster);
-    
+   
   private:
     unsigned int _planeNum;
     unsigned int _numHits;
     std::vector<Hit*> _hits;
     unsigned int _numClusters;
-    std::vector<Cluster*> _clusters;    
+    std::vector<Cluster*> _clusters;
+    unsigned int _numIntercepts;
+    std::vector<std::pair<double, double>> _intercepts;  
   };  
 }
 

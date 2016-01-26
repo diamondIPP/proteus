@@ -77,8 +77,11 @@ void Loopers::ProcessEvents::loop() {
     if (refEvent->getNumTracks())
       throw "ProcessEvents: can't re-track an event, mask the tree in the input";
 
-    if (_trackMaker)
+    if (_trackMaker){
       _trackMaker->generateTracks(refEvent, _refDevice->getBeamSlopeX(), _refDevice->getBeamSlopeY());
+      //to convert global track pos to local (lmeng@cern.ch, bristic@cern.ch)
+      _trackMaker->calculateIntercepts(refEvent, _refDevice);
+	}
     
     // Write the event
     _refOutput->writeEvent(refEvent);
