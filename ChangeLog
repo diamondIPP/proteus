@@ -1,6 +1,11 @@
+2016-01-26 L. Meng <lmeng@cern.ch>
+	*Added Intercepts tree to each plane with local track positions, switch "calculate intercepts : true/false" in global.cfg
+	*Fixed small Mac feature in alignment (_filename.c_str())
+
 2015-11-27 F. Di Bello <fdibello@cern.ch>
 	*added macro for mapping
 	*fixed a bug in the Inpixel
+	
 2015-11-27 F. Di Bello <fdibello@cern.ch>
 	*Fixed bug in efficiency.cpp
 	*Add plot: correlation planes and DUT
@@ -8,8 +13,6 @@
 	*Add plot to study the lvl1 distribution of the DUT 
 	*Change the clustermaker to select the fastest hit
 	
-
-
 2015-11-xx M. Rimoldi <marco.rimoldi@cern.ch>
 	*Add Information about the trigger phase that is propagated in the analysis
 	
