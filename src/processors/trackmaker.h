@@ -19,10 +19,10 @@ private:
   const unsigned int _minClusters;
   double _beamAngleX;
   double _beamAngleY;
-  bool _calcIntercepts;
 
   Storage::Event* _event;
   int _maskedPlane;
+  bool _calcIntercepts;
 
   void searchPlane(Storage::Track* track, std::vector<Storage::Track*>& candidates,
                    unsigned int nplane);
@@ -44,7 +44,9 @@ public:
                        double& interceptErr, double& chi2, double& covariance);
 
   static void fitTrackToClusters(Storage::Track* track);
-  void calculateIntercepts(Storage::Event* event, Mechanics::Device* device);
+  static void calculateIntercepts(Storage::Event* event, Mechanics::Device* device);
+
+  bool getCalcIntercepts(){return _calcIntercepts;}
 };
 
 }

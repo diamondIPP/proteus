@@ -609,23 +609,24 @@ namespace Storage {
       if (_clusters.at(nplane) && _clusters.at(nplane)->GetEntry(n) <= 0)
 	throw "StorageIO: error reading clusters tree";
       
-      if (_intercepts.at(nplane) && _intercepts.at(nplane)->GetEntry(n) <= 0)
-    throw "StorageIO: error reading intercepts tree";
+      if (_intercepts.at(nplane)){
+         if(_intercepts.at(nplane)->GetEntry(n) <= 0){
+            throw "StorageIO: error reading intercepts tree";
+         }
+         // Add intercepts
+         for(int nintercept=0; nintercept < numIntercepts; nintercept++) {
+            event->getPlane(nplane)->addIntercept(interceptX[nintercept],
+                   interceptY[nintercept]);
+         }
+      } 
       
-      
-      // Generate the intercept objects
-      for(int nintercept=0; nintercept < numIntercepts; nintercept++) {
-		std::pair<double, double> intercept = event->getPlane(nplane)->getIntercept(nintercept);
-      }
-      
-      
-      // Generate the cluster objects
-      for (int ncluster=0; ncluster<numClusters; ncluster++){
-	Cluster* cluster = event->newCluster(nplane);
-	cluster->setPix(clusterPixX[ncluster], clusterPixY[ncluster]);
-	cluster->setPixErr(clusterPixErrX[ncluster], clusterPixErrY[ncluster]);
-	cluster->setPos(clusterPosX[ncluster], clusterPosY[ncluster], clusterPosZ[ncluster]);
-	cluster->setPosErr(clusterPosErrX[ncluster], clusterPosErrY[ncluster], clusterPosErrZ[ncluster]);
+   // Generate the cluster objects
+   for (int ncluster=0; ncluster<numClusters; ncluster++){
+	   Cluster* cluster = event->newCluster(nplane);
+      cluster->setPix(clusterPixX[ncluster], clusterPixY[ncluster]);
+	   cluster->setPixErr(clusterPixErrX[ncluster], clusterPixErrY[ncluster]);
+	   cluster->setPos(clusterPosX[ncluster], clusterPosY[ncluster], clusterPosZ[ncluster]);
+	   cluster->setPosErr(clusterPosErrX[ncluster], clusterPosErrY[ncluster], clusterPosErrZ[ncluster]);
 	
 	// If this cluster is in a track, mark this (and the tracks tree is active)
 	if (_tracks && clusterInTrack[ncluster] >= 0){
@@ -633,7 +634,7 @@ namespace Storage {
 	  track->addCluster(cluster);
 	  cluster->setTrack(track);
 	}
-      }
+   }
       
       // Generate a list of all hit objects
       for(int nhit=0; nhit<numHits; nhit++) {

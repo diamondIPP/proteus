@@ -107,7 +107,7 @@ void Mechanics::Alignment::readFile() {
 //=========================================================
 void Mechanics::Alignment::writeFile() {
   std::ofstream file;
-  file.open(_fileName.c_str()); // something with filename and Mac --> bristic@cern.ch
+  file.open(_fileName.c_str());
   
   if (!file.is_open()){
     std::string err="[Alignment::writeFile] ERROR unable to open '"	

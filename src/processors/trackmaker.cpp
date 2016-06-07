@@ -396,7 +396,7 @@ TrackMaker::TrackMaker(double maxClusterDist,
 // to convert global track position to local (lmeng@cern.ch, bristic@cern.ch)
 void TrackMaker::calculateIntercepts(Storage::Event* event, Mechanics::Device* device) {
 	// loop over each track and each plane
-	for (int ntrack = 0; ntrack < event->getNumTracks(); ntrack++) {
+	for (unsigned int ntrack = 0; ntrack < event->getNumTracks(); ntrack++) {
 		for (unsigned int nplane = 0; nplane < event->getNumPlanes(); nplane++) {
 			
 			Storage::Track* track = event->getTrack(ntrack);

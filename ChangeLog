@@ -1,3 +1,8 @@
+2016-03-06 B. Ristic <bristic@cern.ch>
+	* bugfix: ProcessEvent now respects calcIntercepts setting
+	* bugfix: intercepts tree readback
+	* TrackMaker::calculateIntercepts is now static
+
 2016-01-26 L. Meng <lmeng@cern.ch>
 	*Added Intercepts tree to each plane with local track positions, switch "calculate intercepts : true/false" in global.cfg
 	*Fixed small Mac feature in alignment (_filename.c_str())
