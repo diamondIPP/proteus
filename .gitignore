@@ -35,6 +35,7 @@ configs/*
 *.exe
 *.out
 *.app
+Judith
 
 # SVN directories
 .svn
