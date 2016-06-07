@@ -156,16 +156,20 @@ void Loopers::NoiseScan::loop(){
     
     /** define boundary region to look for noisy pixels: if no values have been defined,
 	or if out-of bounds, use the whole sensor region */
-    if( (_config->getBottomLimitX() < 0) || (_config->getBottomLimitX() > sensor->getNumX()) )
+    if( (_config->getBottomLimitX() < 0) ||
+          (static_cast<unsigned int>(_config->getBottomLimitX()) > sensor->getNumX()) )
       _config->setBottomLimitX(0);
     
-    if( (_config->getUpperLimitX() < 0) || (_config->getUpperLimitX() > sensor->getNumX()) )
+    if( (_config->getUpperLimitX() < 0) ||
+          (static_cast<unsigned int>(_config->getUpperLimitX()) > sensor->getNumX()) )
       _config->setUpperLimitX(sensor->getNumX());
     
-    if( (_config->getBottomLimitY() < 0) || (_config->getBottomLimitY() > sensor->getNumY()) )
+    if( (_config->getBottomLimitY() < 0) ||
+          (static_cast<unsigned int>(_config->getBottomLimitY()) > sensor->getNumY()) )
       _config->setBottomLimitY(0);
     
-    if( (_config->getUpperLimitY() < 0) || (_config->getUpperLimitY() > sensor->getNumY()) )
+    if( (_config->getUpperLimitY() < 0) ||
+          (static_cast<unsigned int>(_config->getUpperLimitY()) > sensor->getNumY()) )
       _config->setUpperLimitY(sensor->getNumY());
     
     std::vector<double> occupancies;
@@ -176,8 +180,8 @@ void Loopers::NoiseScan::loop(){
     //double totOcc = 1;
     
     TH2D* occupancyPlot = occupancy.getHitOcc(nsens);    
-    for(unsigned int x=_config->getBottomLimitX(); x<_config->getUpperLimitX(); x++){
-      for(unsigned int y=_config->getBottomLimitY(); y<_config->getUpperLimitY(); y++){
+    for(int x=_config->getBottomLimitX(); x<_config->getUpperLimitX(); x++){
+      for(int y=_config->getBottomLimitY(); y<_config->getUpperLimitY(); y++){
 	
 	// single pixel occupancy
 	double pixelOcc = totOcc!=0 ? occupancyPlot->GetBinContent(x+1,y+1) / totOcc : 0;
