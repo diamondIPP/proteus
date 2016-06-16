@@ -407,7 +407,12 @@ void TrackMaker::calculateIntercepts(Storage::Event* event, Mechanics::Device* d
 
 			double px = 0, py = 0;
 			sensor->spaceToPixel(tx, ty, tz, px, py);
-					
+			
+			// move origin to center of sensor
+			const double halfX = sensor->getSensitiveX() / 2.0;
+			const double halfY = sensor->getSensitiveY() / 2.0;				
+			px += halfX;
+			py += halfY;
 			
 			// calculate distances from pixel position
 			double posX = px*sensor->getPitchX();
