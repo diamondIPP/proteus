@@ -37,6 +37,6 @@ configs/*
 *.app
 Judith
 
-# SVN directories
+# SVN directories and others
 .svn
-
+Makefile
