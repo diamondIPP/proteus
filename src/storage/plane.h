@@ -44,7 +44,7 @@ namespace Storage {
     unsigned int _numClusters;
     std::vector<Cluster*> _clusters;
     unsigned int _numIntercepts;
-    std::vector<std::pair<double, double>> _intercepts;  
+    std::vector< std::pair<double, double> > _intercepts;  
   };  
 }
 
