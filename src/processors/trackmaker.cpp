@@ -403,20 +403,21 @@ void TrackMaker::calculateIntercepts(Storage::Event* event, Mechanics::Device* d
 			Mechanics::Sensor* sensor = device->getSensor(nplane);
 			
 			double tx = 0, ty = 0, tz = 0;
-			Processors::trackSensorIntercept(track, sensor, tx, ty, tz);
+			Processors::trackSensorIntercept(track, sensor, tx, ty, tz); // getting this global intercepts (origin at centre of sensor)
 
 			double px = 0, py = 0;
-			sensor->spaceToPixel(tx, ty, tz, px, py);
-			
-			// move origin to center of sensor
-			const double halfX = sensor->getSensitiveX() / 2.0;
-			const double halfY = sensor->getSensitiveY() / 2.0;				
-			px += halfX;
-			py += halfY;
+			sensor->spaceToPixel(tx, ty, tz, px, py);	// this function adds halfX and halfY
 			
 			// calculate distances from pixel position
 			double posX = px*sensor->getPitchX();
 			double posY = py*sensor->getPitchY();
+			
+			// restore origin to center of sensor
+			const double halfX = sensor->getSensitiveX() / 2.0;
+			const double halfY = sensor->getSensitiveY() / 2.0;	
+			
+			posX -= halfX;
+			posY -= halfY;
 			
 			Storage::Plane *plane = event->getPlane(nplane);
 			plane->addIntercept(posX, posY);
