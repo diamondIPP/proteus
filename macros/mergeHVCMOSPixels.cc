@@ -5,7 +5,6 @@
 #include <fstream>
 #include <math.h>
 #include <limits>
-//#include <typeinfo>
 
 //root headers
 #include <TROOT.h>
@@ -63,9 +62,6 @@ int mergeHVCMOSPixels(char *input, char *output) {
 	if(!tEventIn) cout << "WARNING: no EventTree found in input file..." << endl;
 	else ntrees += 1;
   
-	//int nplanes = f->GetNkeys()-ntrees;
-	//cout << nplanes << endl;
-	
 	//
 	//loop over all DUT planes
 	//
@@ -73,8 +69,7 @@ int mergeHVCMOSPixels(char *input, char *output) {
 		TKey *key =  (TKey*)f->GetKey(Form("Plane%i",plane), 1);
 		
 		TString name = key->GetName();
-		//cout << name << " with type " << typeid(name).name() << endl;
-				
+
 		TTree *t = (TTree*)f->Get(Form("%s/Hits",name.Data()));
 
 		TDirectory *dnew = fnew->mkdir(name.Data());
