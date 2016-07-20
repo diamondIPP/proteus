@@ -67,6 +67,10 @@ int mergeHVCMOSPixels(char *input, char *output) {
 	//
 	for (int plane = 0; plane < (f->GetNkeys()-ntrees); plane++) {
 		TKey *key =  (TKey*)f->GetKey(Form("Plane%i",plane), 1);
+		if (!key) {
+			cout << "Unknown key." << endl;
+			continue;			
+		}
 		
 		TString name = key->GetName();
 
