@@ -1,9 +1,10 @@
 # Example configs (Can be added manually with git add -f)
 configs/*
 
-# Data files
-*.root
+# Data files and logs
 *.dat
+*.log
+*.root
 
 # Plots and other images
 *.png
@@ -11,6 +12,7 @@ configs/*
 *.pdf
 
 # Compiled Object files
+build/
 *.slo
 *.lo
 *.o
@@ -32,11 +34,15 @@ configs/*
 *.lib
 
 # Executables
+Judith
 *.exe
 *.out
 *.app
-Judith
 
 # SVN directories and others
 .svn
 Makefile
+
+# ROOT temporary files
+*.d
+*_ACLiC_dict_rdict.pcm
