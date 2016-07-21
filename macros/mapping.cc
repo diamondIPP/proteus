@@ -190,6 +190,7 @@ int mapping(char *input, char *output, const char *mapput = "mapping.root") {
 		mapping_corY->Write();
 	}//end loop over all DUT planes
 	
+	fnew->cd();
 	TTree *tsumOut = tsumIn!=0 ? tsumIn->CloneTree() : NULL;
 	TTree *tEventOut = tEventIn!=0 ? tEventIn->CloneTree() : NULL;
 	if(tsumOut!=0){ fnew->cd(); tsumOut->Write(); }
