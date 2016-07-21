@@ -11,3 +11,6 @@ find_package(ROOT REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXX_FLAGS}")
 
 add_subdirectory(src)
+
+# activation script to use direclty use the build products
+configure_file(activate.sh.in activate.sh @ONLY)
