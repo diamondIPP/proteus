@@ -42,7 +42,7 @@ Mechanics::NoiseMask::~NoiseMask(){
 void Mechanics::NoiseMask::writeMask(const Loopers::NoiseScanConfig *config){
   std::fstream file;
   file.open(_fileName.c_str(), std::ios_base::out);
-  
+
   if (!file.is_open()){
     std::string err("[NoiseMask::writeMask] ");
     err+"unable to open file '"+_fileName+"' for writting";
@@ -59,7 +59,7 @@ void Mechanics::NoiseMask::writeMask(const Loopers::NoiseScanConfig *config){
   }
 
   // update config info and write looper metadata
-  delete _config;    
+  delete _config;
   _config = new Loopers::NoiseScanConfig(*config);
   file << _config->print() << endl;
 
@@ -67,43 +67,57 @@ void Mechanics::NoiseMask::writeMask(const Loopers::NoiseScanConfig *config){
 }
 
 //=========================================================
-void Mechanics::NoiseMask::readMask() {
-  std::fstream file;
-  file.open(_fileName.c_str(), std::ios_base::in);
-  
-  if (!file.is_open()){
+void Mechanics::NoiseMask::readMask()
+{
+  std::fstream file(_fileName.c_str(), std::ios_base::in);
+
+  if (!file.is_open()) {
     cout << "[NoiseMask::readMask] WARNING :: Noise mask failed to open file '"
-	 << _fileName << "'" << endl;
+         << _fileName << "'" << endl;
     return;
   }
   cout << "Noise mask file '" << _fileName << "' opened OK" << endl;
 
   std::stringstream comments;
-  while (file.good()){
-    unsigned int nsens=0;
-    unsigned int x=0;
-    unsigned int y=0;
+  while (file.good()) {
+    unsigned int nsens = 0;
+    unsigned int x = 0;
+    unsigned int y = 0;
     std::string line;
     std::getline(file, line);
-    if(!line.size()) continue;
-    if(line[0] == '#') { comments << line << "\n"; continue; }
+    if (!line.size()) continue;
+    if (line[0] == '#') {
+      comments << line << "\n";
+      continue;
+    }
     std::stringstream lineStream(line);
     parseLine(lineStream, nsens, x, y);
-    if(nsens >= _device->getNumSensors())
+    if (nsens >= _device->getNumSensors())
       throw "NoiseMask: specified sensor outside device range";
-    if(x >= _device->getSensor(nsens)->getNumX())
+    if (x >= _device->getSensor(nsens)->getNumX())
       throw "NoiseMask: specified x position outside sensor range";
-    if(y >= _device->getSensor(nsens)->getNumY())
+    if (y >= _device->getSensor(nsens)->getNumY())
       throw "NoiseMask: specified y position outside sensor range";
-    _device->getSensor(nsens)->addNoisyPixel(x,y);
+    _masked_indices[nsens].emplace(x, y);
   }
 
   file.close();
 
-  if( !comments.str().empty() )
-    parseComments(comments);
-}
+  if (!comments.str().empty()) parseComments(comments);
 
+  // fill device masks
+  for (const auto& mask : _masked_indices) {
+    const auto& sensor_id = mask.first;
+    const auto& indices = mask.second;
+
+    auto& sensor = *_device->getSensor(sensor_id);
+    sensor.clearNoisyPixels();
+
+    for (const auto& pixel : indices) {
+      sensor.addNoisyPixel(pixel.first, pixel.second);
+    }
+  }
+}
 
 //=========================================================
 void Mechanics::NoiseMask::parseLine(std::stringstream& line,
@@ -129,7 +143,7 @@ void Mechanics::NoiseMask::parseLine(std::stringstream& line,
     counter++;
   }
   if (counter != 3)
-    throw "[NoiseMask::parseLine] bad line found in file";  
+    throw "[NoiseMask::parseLine] bad line found in file";
 }
 
 //=========================================================
@@ -142,7 +156,7 @@ void Mechanics::NoiseMask::parseComments(std::stringstream& comments){
   // remove '#' characters from input string
   std::string str(comments.str());
   str.erase(std::remove(str.begin(),str.end(),'#'),str.end());
-  
+
   // create temporary file to write metadata
   char nameBuff[] = "/tmp/noiseMask.XXXXXX";
   int fd = mkstemp(nameBuff);
@@ -160,8 +174,8 @@ void Mechanics::NoiseMask::parseComments(std::stringstream& comments){
   if(VERBOSE) parser.print();
 
   for (unsigned int i=0; i<parser.getNumRows(); i++){
-    const ConfigParser::Row* row = parser.getRow(i);    
-    
+    const ConfigParser::Row* row = parser.getRow(i);
+
     if(row->isHeader) continue;
     if(row->header.compare("Noise Scan")) continue;
 
@@ -182,23 +196,42 @@ void Mechanics::NoiseMask::parseComments(std::stringstream& comments){
     else if (!row->key.compare("bottom y"))
       _config->setBottomLimitY(ConfigParser::valueToNumerical(row->value));
     else if (!row->key.compare("upper y"))
-      _config->setUpperLimitY(ConfigParser::valueToNumerical(row->value));  
+      _config->setUpperLimitY(ConfigParser::valueToNumerical(row->value));
     else{
       cout << "[NoiseMask::parseComments] WARNING can't parse row with key '"
 	   << row->key << endl;
     }
   }
-  
+
   // delete temporary file
   unlink(nameBuff);
 }
 
-
-//=========================================================
-std::vector<bool**> Mechanics::NoiseMask::getMaskArrays() const {
-  std::vector<bool**> masks;
-  for(unsigned int nsens=0; nsens<_device->getNumSensors(); nsens++)
-    masks.push_back(_device->getSensor(nsens)->getNoiseMask());
-  return masks;  
+size_t Mechanics::NoiseMask::getNumMaskedPixels() const
+{
+  size_t n = 0;
+  for (const auto& masked : _masked_indices) n += masked.second.size();
+  return n;
 }
 
+const Mechanics::NoiseMask::RowColSet& Mechanics::NoiseMask::getMaskedPixels(
+    unsigned int sensor) const
+{
+  static const RowColSet EMPTY_SET;
+
+  auto masked = _masked_indices.find(sensor);
+  if (masked != _masked_indices.end()) {
+    return masked->second;
+  }
+  return EMPTY_SET;
+}
+
+//=========================================================
+std::vector<bool**> Mechanics::NoiseMask::getMaskArrays() const
+{
+  std::vector<bool**> masks;
+  for (unsigned int nsens = 0; nsens < _device->getNumSensors(); nsens++) {
+    masks.push_back(_device->getSensor(nsens)->getNoiseMask());
+	}
+  return masks;
+}
