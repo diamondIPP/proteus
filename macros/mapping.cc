@@ -83,19 +83,15 @@ int mapping(char *input, char *output, const char *mapput = "mapping.root") {
 		}
 		
 		TString name = key->GetName();
-
-		//new Plane directories
-		TDirectory *dnew = fnew->mkdir(name.Data());
-		TDirectory *dmap = fmap->mkdir(name.Data());
 		
-		//get old Plane/Hits tree and clone Plane/Intercepts tree
 		TTree *t = (TTree*)f->Get(Form("%s/Hits",name.Data()));		
-		TTree *intercepts = ( (TTree*)f->Get(Form("%s/Intercepts",name.Data())) )->CloneTree();
 
-		//new Hits tree
+		//new Plane directory, new Hits tree, new Intercepts tree by cloning Plane/Intercepts tree
+		TDirectory *dnew = fnew->mkdir(name.Data());
 		dnew->cd();
 		TTree *m_pltree = new TTree("Hits", "Hits");
-	
+		TTree *intercepts = ( (TTree*)f->Get(Form("%s/Intercepts",name.Data())) )->CloneTree();
+		
 		_hits unmapped;
 		_hits mapped;
 
@@ -121,6 +117,16 @@ int mapping(char *input, char *output, const char *mapput = "mapping.root") {
 		m_pltree->Branch("PosX", unmapped.PosX, "HitPosX[NHits]/D"); // same as input
 		m_pltree->Branch("PosY", unmapped.PosY, "HitPosY[NHits]/D"); // same as input
 		m_pltree->Branch("PosZ", unmapped.PosZ, "HitPosZ[NHits]/D"); // same as input
+		
+		
+		// new Plane directory for mapping histograms
+		// someone please add axis title
+		TDirectory *dmap = fmap->mkdir(name.Data());
+		dmap->cd();
+		TH2D *mapping_old=new TH2D("mapping_old","mapping_old",6,-0.5,6.5,16,-0.5,15.5);
+		TH2D *mapping_new=new TH2D("mapping_new","mapping_new",12,-0.5,11.5,8,-0.5,7.5);
+		TH2D *mapping_corX=new TH2D("mapping_corX","mapping_corX",6,-0.5,5.5,12,-0.5,11.5); 
+		TH2D *mapping_corY=new TH2D("mapping_corY","mapping_corY",16,-0.5,15.5,8,-0.5,7.5); 
 			
 		//	int minY = std::numeric_limits<int>::max();
 		int minY = 1000000; // allow to run macro non-compiled
@@ -135,13 +141,6 @@ int mapping(char *input, char *output, const char *mapput = "mapping.root") {
 			}
 		} //cout<<"Minimum PixY "<<minY<<endl;
 		
-		// someone please add axis title
-		dmap->cd();
-		TH2D *mapping_old=new TH2D("mapping_old","mapping_old",6,-0.5,6.5,16,-0.5,15.5);
-		TH2D *mapping_new=new TH2D("mapping_new","mapping_new",12,-0.5,11.5,8,-0.5,7.5);
-		TH2D *mapping_corX=new TH2D("mapping_corX","mapping_corX",6,-0.5,5.5,12,-0.5,11.5); 
-		TH2D *mapping_corY=new TH2D("mapping_corY","mapping_corY",16,-0.5,15.5,8,-0.5,7.5); 
-
 		for (int i=0; i<nentries; ++i) { //loop over entries
 			t->GetEntry(i);
 			for (int j=0; j<unmapped.NHits; ++j) { //loop over NHits
@@ -191,6 +190,7 @@ int mapping(char *input, char *output, const char *mapput = "mapping.root") {
 		mapping_corY->Write();
 	}//end loop over all DUT planes
 	
+	fnew->cd();
 	TTree *tsumOut = tsumIn!=0 ? tsumIn->CloneTree() : NULL;
 	TTree *tEventOut = tEventIn!=0 ? tEventIn->CloneTree() : NULL;
 	if(tsumOut!=0){ fnew->cd(); tsumOut->Write(); }
