@@ -43,19 +43,19 @@ namespace Storage {
     _fileMode(fileMode),
     _numPlanes(0),
     _numEvents(0),
-    _printLevel(printLevel),    
+    _printLevel(printLevel),
     _noiseMasks(0),
     _tracks(0),
     _eventInfo(0),
     _summaryTree(0)
   {
     if      (fileMode == INPUT)  _file = new TFile(_filePath, "READ");
-    else if (fileMode == OUTPUT) _file = new TFile(_filePath, "RECREATE");    
+    else if (fileMode == OUTPUT) _file = new TFile(_filePath, "RECREATE");
     if (!_file) throw "StorageIO: file didn't initialize";
 
     // clear tree variables
     clearVariables();
-    
+
     // Plane mask holds a true for masked planes
     if(planeMask && fileMode == OUTPUT)
       throw "StorageIO: can't use a plane mask in output mode";
@@ -67,20 +67,20 @@ namespace Storage {
     if ( _fileMode == OUTPUT ){
       if (planeMask && (VERBOSE || _printLevel>0) )
 	cout << "WARNING :: StorageIO: disregarding plane mask in output mode";
-      
+
       _numPlanes = numPlanes;
 
       TDirectory* dir = 0;
       for(unsigned int nplane=0; nplane<_numPlanes; nplane++){
 	std::stringstream ss;
 	ss << "Plane" << nplane;
-	
+
 	dir = _file->mkdir(ss.str().c_str());
 	dir->cd();
-	
+
 	// Hits tree
-	TTree* hits = new TTree("Hits", "Hits");	
-	_hits.push_back(hits);	
+	TTree* hits = new TTree("Hits", "Hits");
+	_hits.push_back(hits);
 	hits->Branch("NHits", &numHits, "NHits/I");
 	hits->Branch("PixX", hitPixX, "HitPixX[NHits]/I");
 	hits->Branch("PixY", hitPixY, "HitPixY[NHits]/I");
@@ -93,7 +93,7 @@ namespace Storage {
 
 	// Clusters tree
 	TTree* clusters = new TTree("Clusters", "Clusters");
-	_clusters.push_back(clusters);		
+	_clusters.push_back(clusters);
 	clusters->Branch("NClusters", &numClusters, "NClusters/I");
 	clusters->Branch("PixX", clusterPixX, "ClusterPixX[NClusters]/D");
 	clusters->Branch("PixY", clusterPixY, "ClusterPixY[NClusters]/D");
@@ -114,7 +114,7 @@ namespace Storage {
 	intercepts->Branch("interceptX", interceptX, "interceptX[NIntercepts]/D");
 	intercepts->Branch("interceptY", interceptY, "interceptY[NIntercepts]/D");
  }
-  
+
       _file->cd();
 
       // EventInfo tree
@@ -140,7 +140,7 @@ namespace Storage {
       _tracks->Branch("CovarianceX", trackCovarianceX, "TrackCovarianceX[NTracks]/D");
       _tracks->Branch("CovarianceY", trackCovarianceY, "TrackCovarianceY[NTracks]/D");
       _tracks->Branch("Chi2", trackChi2, "TrackChi2[NTracks]/D");
-      
+
       // SummaryTree tree
       _summaryTree = new TTree("SummaryTree", "Summary of configuration");
       _summaryTree->Branch("NRuns", &st_numRuns, "NRuns/I");
@@ -158,9 +158,9 @@ namespace Storage {
       _summaryTree->Branch("nscan_noisyPixel_plane", st_nscan_noisyPixel_plane, "nscan_noisyPixel_Plane[nscan_NNoisyPixels]/I");
       _summaryTree->Branch("nscan_noisyPixel_x", st_nscan_noisyPixel_x, "nscan_noisyPixel_X[nscan_NNoisyPixels]/I");
       _summaryTree->Branch("nscan_noisyPixel_y", st_nscan_noisyPixel_y, "nscan_noisyPixel_Y[nscan_NNoisyPixels]/I");
-      
+
     } // end if (_fileMode == OUTPUT)
-    
+
     /*********************
      In input mode
     *********************/
@@ -170,24 +170,24 @@ namespace Storage {
 	cout << "WARNING :: StorageIO: disregarding specified number of planes" << endl;
 
       _numPlanes = 0; // Determine num planes from file structure
-      
+
       unsigned int planeCount = 0;
       while (true){
 	std::stringstream ss;
 	ss << "Plane" << planeCount;
-	
+
 	// Try to get this plane's directory
 	TDirectory* dir = 0;
 	_file->GetObject(ss.str().c_str(), dir);
 	if (!dir) break;
-	
+
 	planeCount++;
-	
+
 	if (planeMask && planeCount > planeMask->size())
 	  throw "StorageIO: plane mask is too small";
-	
+
 	if (planeMask && planeMask->at(planeCount - 1)) continue;
-	
+
 	_numPlanes++;
 
 	TTree* hits;
@@ -222,7 +222,7 @@ namespace Storage {
 	  clusters->SetBranchAddress("PosErrY", clusterPosErrY, &bClusterPosErrY);
 	  clusters->SetBranchAddress("PosErrZ", clusterPosErrZ, &bClusterPosErrZ);
 	}
-	
+
 	TTree* intercepts;
 	_file->GetObject(ss.str().append("/Intercepts").c_str(), intercepts);
 	_intercepts.push_back(intercepts);
@@ -231,10 +231,10 @@ namespace Storage {
 	  intercepts->SetBranchAddress("interceptX", interceptX, &bInterceptX);
 	  intercepts->SetBranchAddress("interceptY", interceptY, &bInterceptY);
 	}
-	
+
 
 }
-      
+
       _file->GetObject("Event", _eventInfo);
       if (_eventInfo){
 	_eventInfo->SetBranchAddress("TimeStamp", &timeStamp, &bTimeStamp);
@@ -244,7 +244,7 @@ namespace Storage {
 	_eventInfo->SetBranchAddress("TriggerPhase", &triggerPhase, &bTriggerPhase);
 	_eventInfo->SetBranchAddress("Invalid", &invalid, &bInvalid);
       }
-      
+
       _file->GetObject("Tracks", _tracks);
       if (_tracks){
 	_tracks->SetBranchAddress("NTracks", &numTracks, &bNumTracks);
@@ -264,10 +264,10 @@ namespace Storage {
       _file->GetObject("SummaryTree", _summaryTree);
       if( _summaryTree ){
 	_summaryTree->SetBranchAddress("NRuns", &st_numRuns, &b_NumRuns);
-	_summaryTree->SetBranchAddress("Run", st_run, &b_Run);	
+	_summaryTree->SetBranchAddress("Run", st_run, &b_Run);
 
 	_summaryTree->SetBranchAddress("nscan_NRuns", &st_nscan_numRuns, &b_NoiseScan_NumRuns);
-	_summaryTree->SetBranchAddress("nscan_Run", st_nscan_run, &b_NoiseScan_Run);	
+	_summaryTree->SetBranchAddress("nscan_Run", st_nscan_run, &b_NoiseScan_Run);
 	_summaryTree->SetBranchAddress("nscan_maxFactor", &st_nscan_maxFactor, &b_NoiseScan_MaxFactor);
 	_summaryTree->SetBranchAddress("nscan_maxOccupancy", &st_nscan_maxOccupancy, &b_NoiseScan_MaxOccupancy);
 	_summaryTree->SetBranchAddress("nscan_bottomX", &st_nscan_bottom_x, &b_NoiseScan_BottomX);
@@ -276,13 +276,13 @@ namespace Storage {
 	_summaryTree->SetBranchAddress("nscan_upperY", &st_nscan_upper_y, &b_NoiseScan_UpperY);
 	_summaryTree->SetBranchAddress("nscan_NNoisyPixels", &st_nscan_numNoisyPixels, &b_NoiseScan_NumNoisyPixels);
 	_summaryTree->SetBranchAddress("nscan_noisyPixel_plane", st_nscan_noisyPixel_plane, &b_NoiseScan_NoisyPixelPlane);
-	_summaryTree->SetBranchAddress("nscan_noisyPixel_x", st_nscan_noisyPixel_x, &b_NoiseScan_NoisyPixelX); 
+	_summaryTree->SetBranchAddress("nscan_noisyPixel_x", st_nscan_noisyPixel_x, &b_NoiseScan_NoisyPixelX);
 	_summaryTree->SetBranchAddress("nscan_noisyPixel_y", st_nscan_noisyPixel_y, &b_NoiseScan_NoisyPixelY);
 
       }
     } // end if(_fileMode == INPUT)
 
-    // debug info 
+    // debug info
     if( _printLevel > 0  ){
       cout << "\n[StorageIO::StorageIO]" << endl;
       cout << "  - filePath  = " << _filePath  << endl;
@@ -293,10 +293,10 @@ namespace Storage {
       cout << "  - treeMask  = " << treeMask  << endl;
       cout << printSummaryTree() << endl;
     }
-    
+
     if (_numPlanes < 1)
       throw "StorageIO: didn't initialize any planes";
-    
+
     // Delete trees as per the tree flags
     if( treeMask ){
       for(unsigned int nplane=0; nplane<_numPlanes; nplane++){
@@ -306,11 +306,11 @@ namespace Storage {
       if (treeMask & Flags::TRACKS) { delete _tracks; _tracks = 0; }
       if (treeMask & Flags::EVENTINFO) { delete _eventInfo; _eventInfo = 0; }
     }
-    
+
     assert(_hits.size() == _clusters.size() && "StorageIO: varying number of planes");
-    
-    _numEvents = 0;    
-    if ( _fileMode == INPUT ){ // INPUT mode 
+
+    _numEvents = 0;
+    if ( _fileMode == INPUT ){ // INPUT mode
       Long64_t nEventInfo = (_eventInfo) ? _eventInfo->GetEntriesFast() : 0;
       Long64_t nTracks = (_tracks) ? _tracks->GetEntriesFast() : 0;
       Long64_t nHits = 0;
@@ -319,18 +319,18 @@ namespace Storage {
 	if (_hits.at(nplane)) nHits += _hits.at(nplane)->GetEntriesFast();
 	if (_clusters.at(nplane)) nClusters += _clusters.at(nplane)->GetEntriesFast();
       }
-      
+
       if (nHits % _numPlanes || nClusters % _numPlanes)
 	throw "StorageIO: number of events in different planes mismatch";
-      
+
       nHits /= _numPlanes;
       nClusters /= _numPlanes;
-      
+
       if (!_numEvents && nEventInfo) _numEvents = nEventInfo;
       if (!_numEvents && nTracks) _numEvents = nTracks;
       if (!_numEvents && nHits) _numEvents = nHits;
       if (!_numEvents && nClusters) _numEvents = nClusters;
-      
+
       if ((nEventInfo && _numEvents != nEventInfo) ||
 	  (nTracks && _numEvents != nTracks) ||
 	  (nHits && _numEvents != nHits) ||
@@ -338,17 +338,17 @@ namespace Storage {
 	throw "StorageIO: all trees don't have the same number of events";
 
     } // end if (_fileMode == INPUT)
-     
+
   } // end of StorageIO constructor
-  
+
   //=========================================================
   StorageIO::~StorageIO(){
     if (_file && _fileMode == OUTPUT){
-      
-      /* fill summaryTree here to ensure it 
+
+      /* fill summaryTree here to ensure it
 	 is done just once (not a per-event tree) */
       _summaryTree->Fill();
-      
+
       if( _printLevel>1 ){
 	cout << "\n[Storage::~Storage]"<< endl;
 	cout << "  - filePath  = " << _filePath  << endl;
@@ -362,7 +362,7 @@ namespace Storage {
       delete _file;
     }
   }
-  
+
   //=========================================================
   void StorageIO::clearVariables(){
     timeStamp = 0;
@@ -381,7 +381,7 @@ namespace Storage {
       hitTiming[i]    = 0;
       hitInCluster[i] = 0;
     }
-    
+
     numClusters = 0;
     for(int i=0; i<MAX_HITS; i++){
       clusterPixX[i]    = 0;
@@ -396,14 +396,14 @@ namespace Storage {
       clusterPosErrZ[i] = 0;
       clusterInTrack[i] = 0;
     }
-    
+
     numIntercepts = 0;
     for (int i = 0; i<MAX_HITS; i++){
 		interceptX[i] = 0;
 		interceptY[i] = 0;
-		
+
 	}
-        
+
     numTracks = 0;
     for(int i=0; i<MAX_HITS; i++){
       trackSlopeX[i]      = 0;
@@ -436,29 +436,29 @@ namespace Storage {
       st_nscan_noisyPixel_plane[i] = -1;
       st_nscan_noisyPixel_x[i]     = -1;
       st_nscan_noisyPixel_y[i]     = -1;
-    }    
+    }
   }
-  
+
   //=========================================================
   const std::string StorageIO::printSummaryTree(){
     std::ostringstream out;
-    
+
     if( _summaryTree == 0 ){
       out << "[StorageIO::printSummaryTree] WARNING :: "
-	  << "no summaryTree found  " << endl;    
+	  << "no summaryTree found  " << endl;
       return out.str();
     }
 
-    // just to need to get single entry 
-    _summaryTree->GetEntry(0);    
+    // just to need to get single entry
+    _summaryTree->GetEntry(0);
 
     //_summaryTree->Print();
-    
+
     out << "  - summaryInfo " << endl;
     out << "      * nruns = " << st_numRuns << endl;
     for(int i=0; i<st_numRuns; i++)
       out << "        o run[" << i << "] = " << st_run[i] << endl;
-    
+
     out << "      * NoiseScan info" << endl;
       out << "        o runs = ";
       for(int i=0; i<st_nscan_numRuns; i++) out << st_nscan_run[i] << " ";
@@ -474,24 +474,24 @@ namespace Storage {
 	out << "          -> pixel["
 	     << st_nscan_noisyPixel_plane[i] << ","
 	     << st_nscan_noisyPixel_x[i] << ","
-	     << st_nscan_noisyPixel_y[i] << "]" << endl;	
+	     << st_nscan_noisyPixel_y[i] << "]" << endl;
     }
       out << endl;
       return out.str();
   }
-  
+
   //=========================================================
   void StorageIO::setNoiseMasks(std::vector<bool**>* noiseMasks){
     if (noiseMasks && _numPlanes != noiseMasks->size())
       throw "StorageIO: noise mask has more planes than will be read in";
     _noiseMasks = noiseMasks;
   }
-  
+
   //=========================================================
   void StorageIO::setPrintLevel(const int printLevel){
     _printLevel = printLevel;
   }
-  
+
   //=========================================================
   void StorageIO::setRuns(const std::vector<int> &vruns){
     assert( _fileMode != INPUT && "StorageIO: can't set runs in input mode" );
@@ -503,7 +503,7 @@ namespace Storage {
     }
 
     st_numRuns=0;
-    std::vector<int>::const_iterator cit;	    
+    std::vector<int>::const_iterator cit;
     for(cit=vruns.begin(); cit!=vruns.end(); ++cit){
       st_run[st_numRuns] = (*cit);
       st_numRuns++;
@@ -511,17 +511,20 @@ namespace Storage {
   }
 
   //=========================================================
-  void StorageIO::setNoiseMaskData(const Mechanics::NoiseMask* noisemask){
+  void StorageIO::setNoiseMaskData(const Mechanics::NoiseMask* noisemask)
+  {
     const Loopers::NoiseScanConfig* config = noisemask->getConfig();
-    if(!config){
-      cout << "[StoraheIO::setNoiseMaskData] WARNING: no NoiseScanConfig info found" << endl;
+    if (!config) {
+      cout << "[StorageIO::setNoiseMaskData] WARNING: no NoiseScanConfig "
+              "info found"
+           << endl;
       return;
     }
 
-    st_nscan_numRuns=0;
+    st_nscan_numRuns = 0;
     const std::vector<int> runs = config->getRuns();
-    for(std::vector<int>::const_iterator cit=runs.begin();
-	cit!=runs.end(); ++cit, st_nscan_numRuns++)
+    for (std::vector<int>::const_iterator cit = runs.begin();
+         cit != runs.end(); ++cit, st_nscan_numRuns++)
       st_nscan_run[st_nscan_numRuns] = *cit;
 
     st_nscan_maxFactor = config->getMaxFactor();
@@ -531,56 +534,61 @@ namespace Storage {
     st_nscan_bottom_y = config->getBottomLimitY();
     st_nscan_upper_y = config->getUpperLimitY();
 
-    st_nscan_numNoisyPixels=0;
+    st_nscan_numNoisyPixels = 0;
     std::vector<bool**> maskArrays = noisemask->getMaskArrays();
-    const Mechanics::Device *device = noisemask->getDevice();
-    for(unsigned int nsens=0; nsens<device->getNumSensors(); nsens++){
-      const Mechanics::Sensor *sensor = device->getSensor(nsens);
-      for(unsigned int x=0; x<sensor->getNumX(); x++){
-	for(unsigned int y=0; y<sensor->getNumY(); y++){
-	  if( sensor->isPixelNoisy(x,y) ){
-	    st_nscan_noisyPixel_plane[st_nscan_numNoisyPixels] = nsens;
-	    st_nscan_noisyPixel_x[st_nscan_numNoisyPixels] = x;
-	    st_nscan_noisyPixel_y[st_nscan_numNoisyPixels] = y;
-	    st_nscan_numNoisyPixels++;
-	  }
-	}
+    const Mechanics::Device* device = noisemask->getDevice();
+    for (unsigned int nsens = 0; nsens < device->getNumSensors(); nsens++) {
+      const Mechanics::Sensor* sensor = device->getSensor(nsens);
+      for (unsigned int x = 0; x < sensor->getNumX(); x++) {
+        for (unsigned int y = 0; y < sensor->getNumY(); y++) {
+          if (!(st_nscan_numNoisyPixels < MAX_NOISY)) {
+            cout << "[StorageIO::setNoiseMaskData] ERROR: too many noisy pixels"
+                 << " (MAX_NOISY = " << MAX_NOISY << ")\n";
+            continue;
+          }
+          if (sensor->isPixelNoisy(x, y)) {
+            st_nscan_noisyPixel_plane[st_nscan_numNoisyPixels] = nsens;
+            st_nscan_noisyPixel_x[st_nscan_numNoisyPixels] = x;
+            st_nscan_noisyPixel_y[st_nscan_numNoisyPixels] = y;
+            st_nscan_numNoisyPixels++;
+          }
+        }
       }
     }
   }
-  
+
   //=========================================================
   Long64_t StorageIO::getNumEvents() const {
     assert(_fileMode != OUTPUT && "StorageIO: can't get number of entries in output mode");
     return _numEvents;
   }
-  
+
   //=========================================================
   std::vector<int> StorageIO::getRuns() const {
     std::vector<int> vec;
     if(!_summaryTree){
-      cout << "[StorageIO::getRuns()] WARNING no summaryTree, can't get run info" << endl;     
+      cout << "[StorageIO::getRuns()] WARNING no summaryTree, can't get run info" << endl;
     }
-    else{    
+    else{
       _summaryTree->GetEntry(0);
       for(int i=0; i<st_numRuns; i++)
 	vec.push_back(st_run[i]);
     }
     return vec;
   }
-  
+
   //=========================================================
   Event* StorageIO::readEvent(Long64_t n)
   {
     /* Note: fill in reversed order: tracks first, hits last. This is so that
      * once a hit is produced, it can immediately recieve the address of its
      * parent cluster, likewise for clusters and track. */
-    
+
     if (n >= _numEvents) throw "StorageIO: requested event outside range";
-    
+
     if (_eventInfo &&_eventInfo->GetEntry(n) <= 0) throw "StorageIO: error reading event tree";
     if (_tracks && _tracks->GetEntry(n) <= 0) throw "StorageIO: error reading tracks tree";
-    
+
     Event* event = new Event(_numPlanes);
     event->setTimeStamp(timeStamp);
     event->setFrameNumber(frameNumber);
@@ -600,15 +608,15 @@ namespace Storage {
       track->setCovariance(trackCovarianceX[ntrack], trackCovarianceY[ntrack]);
       track->setChi2(trackChi2[ntrack]);
     }
-    
+
     for (unsigned int nplane=0; nplane<_numPlanes; nplane++){
 
       if (_hits.at(nplane) && _hits.at(nplane)->GetEntry(n) <= 0)
 	throw "StorageIO: error reading hits tree";
-      
+
       if (_clusters.at(nplane) && _clusters.at(nplane)->GetEntry(n) <= 0)
 	throw "StorageIO: error reading clusters tree";
-      
+
       if (_intercepts.at(nplane)){
          if(_intercepts.at(nplane)->GetEntry(n) <= 0){
             throw "StorageIO: error reading intercepts tree";
@@ -618,8 +626,8 @@ namespace Storage {
             event->getPlane(nplane)->addIntercept(interceptX[nintercept],
                    interceptY[nintercept]);
          }
-      } 
-      
+      }
+
    // Generate the cluster objects
    for (int ncluster=0; ncluster<numClusters; ncluster++){
 	   Cluster* cluster = event->newCluster(nplane);
@@ -627,7 +635,7 @@ namespace Storage {
 	   cluster->setPixErr(clusterPixErrX[ncluster], clusterPixErrY[ncluster]);
 	   cluster->setPos(clusterPosX[ncluster], clusterPosY[ncluster], clusterPosZ[ncluster]);
 	   cluster->setPosErr(clusterPosErrX[ncluster], clusterPosErrY[ncluster], clusterPosErrZ[ncluster]);
-	
+
 	// If this cluster is in a track, mark this (and the tracks tree is active)
 	if (_tracks && clusterInTrack[ncluster] >= 0){
 	  Track* track = event->getTrack(clusterInTrack[ncluster]);
@@ -635,7 +643,7 @@ namespace Storage {
 	  cluster->setTrack(track);
 	}
    }
-      
+
       // Generate a list of all hit objects
       for(int nhit=0; nhit<numHits; nhit++) {
 	if (_noiseMasks && _noiseMasks->at(nplane)[hitPixX[nhit]][hitPixY[nhit]]){
@@ -643,13 +651,13 @@ namespace Storage {
 	    throw "StorageIO: tried to mask a hit which is already in a cluster";
 	  continue;
 	}
-	
+
 	Hit* hit = event->newHit(nplane);
 	hit->setPix(hitPixX[nhit], hitPixY[nhit]);
 	hit->setPos(hitPosX[nhit], hitPosY[nhit], hitPosZ[nhit]);
 	hit->setValue(hitValue[nhit]);
 	hit->setTiming(hitTiming[nhit]);
-	
+
 	// If this hit is in a cluster, mark this (and the clusters tree is active)
 	if (_clusters.at(nplane) && hitInCluster[nhit] >= 0){
 	  Cluster* cluster = event->getCluster(hitInCluster[nhit]);
@@ -657,15 +665,15 @@ namespace Storage {
 	}
       }
     } // end loop in planes
-    
+
     return event;
   }
-  
+
   //=========================================================
   void StorageIO::writeEvent(Event* event){
-    
+
     if (_fileMode == INPUT) throw "StorageIO: can't write event in input mode";
-    
+
     timeStamp = event->getTimeStamp();
     frameNumber = event->getFrameNumber();
     triggerOffset = event->getTriggerOffset();
@@ -673,10 +681,10 @@ namespace Storage {
     triggerPhase = event->getTriggerPhase();
     //cout<<triggerPhase<<endl;
     invalid = event->getInvalid();
-    
+
     numTracks = event->getNumTracks();
     if (numTracks > MAX_TRACKS) throw "StorageIO: event exceeds MAX_TRACKS";
-    
+
     // Set the object track values into the arrays for writing to the root file
     for (int ntrack=0; ntrack<numTracks; ntrack++){
       Track* track = event->getTrack(ntrack);
@@ -693,10 +701,10 @@ namespace Storage {
       trackChi2[ntrack] = track->getChi2();
 
     }
-    
+
     for (unsigned int nplane=0; nplane<_numPlanes; nplane++){
       Plane* plane = event->getPlane(nplane);
-      
+
       // fill intercepts
 		numIntercepts = plane->getNumIntercepts();
 		if (numIntercepts > MAX_TRACKS) throw "StorageIO: event exceeds MAX_Tracks";
@@ -705,10 +713,10 @@ namespace Storage {
 			interceptX[nintercept] = intercept.first;
 			interceptY[nintercept] = intercept.second;
 		}
-      
+
       numClusters = plane->getNumClusters();
       if (numClusters > MAX_CLUSTERS) throw "StorageIO: event exceeds MAX_CLUSTERS";
-      
+
       // Set the object cluster values into the arrays for writig into the root file
       for (int ncluster=0; ncluster<numClusters; ncluster++)
 	{
@@ -725,10 +733,10 @@ namespace Storage {
 	  clusterPosErrZ[ncluster] = cluster->getPosErrZ();
 	  clusterInTrack[ncluster] = cluster->getTrack() ? cluster->getTrack()->getIndex() : -1;
 	}
-      
+
       numHits = plane->getNumHits();
       if (numHits > MAX_HITS) throw "StorageIO: event exceeds MAX_HITS";
-      
+
       // Set the object hit values into the arrays for writing into the root file
       for (int nhit=0; nhit<numHits; nhit++){
 	Hit* hit = plane->getHit(nhit);
@@ -741,23 +749,23 @@ namespace Storage {
 	hitTiming[nhit] = hit->getTiming();
 	hitInCluster[nhit] = hit->getCluster() ? hit->getCluster()->getIndex() : -1;
       }
-      
+
       if (nplane >= _hits.size()) throw "StorageIO: event has too many planes for the storage";
-      
+
       // Fill the plane by plane trees for this plane
       if (_hits.at(nplane)) _hits.at(nplane)->Fill();
-      if (_clusters.at(nplane)) _clusters.at(nplane)->Fill();  
+      if (_clusters.at(nplane)) _clusters.at(nplane)->Fill();
       if (_intercepts.at(nplane)) _intercepts.at(nplane)->Fill();
-    
-    
+
+
     }//end of nplane loop
-    
+
     // Write the track and event info here so that if any errors occured they won't be desynchronized
     if (_tracks) _tracks->Fill();
     if (_eventInfo) _eventInfo->Fill();
-    
+
     _numEvents++;
-    
+
   }// end of writeEvent
-      
+
 } // end of namespace
