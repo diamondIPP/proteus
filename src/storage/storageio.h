@@ -17,7 +17,7 @@
 #define MAX_HITS 1000
 
 #define MAX_RUNS 1000
-#define MAX_NOISY 10000
+#define MAX_NOISY 20000
 
 class ConfigParser;
 namespace Mechanics { class NoiseMask; }
@@ -25,12 +25,12 @@ namespace Mechanics { class NoiseMask; }
 namespace Storage {
 
   class Event;
-  
+
   enum Mode {
     INPUT=0,
     OUTPUT
   };
-  
+
   namespace Flags {
     enum TreeFlags{
       NONE      = 0x0,
@@ -40,7 +40,7 @@ namespace Storage {
       EVENTINFO = 0x8
     };
   }
-  
+
   class StorageIO {
   public:
     /** Constructor. */
@@ -53,12 +53,12 @@ namespace Storage {
 
     /** Destructor */
     ~StorageIO();
-    
+
     void setNoiseMasks(std::vector<bool**>* noiseMasks);
     void setPrintLevel(const int printLevel);
     void setRuns(const std::vector<int> &vruns);
     void setNoiseMaskData(const Mechanics::NoiseMask* noisemask);
-    
+
     Long64_t getNumEvents() const;
     unsigned int getNumPlanes() const { return _numPlanes; }
     Storage::Mode getMode() const {  return _fileMode; }
@@ -87,7 +87,7 @@ namespace Storage {
     /* NOTE: trees can easily be added and removed from a file. So each type
      * of information that might or might not be included in a file should be
      * in its own tree. */
-    
+
     // Trees containing event-by-event data for each plane
     std::vector<TTree*> _hits;
     std::vector<TTree*> _clusters;
@@ -126,7 +126,7 @@ namespace Storage {
     Double_t clusterPosErrY[MAX_CLUSTERS];
     Double_t clusterPosErrZ[MAX_CLUSTERS];
     Int_t    clusterInTrack[MAX_CLUSTERS];
-    
+
     // INTERCEPTS (LOCAL HIT POSITIONS)
 	Int_t numIntercepts;
 	Double_t interceptX[MAX_TRACKS];
@@ -166,12 +166,12 @@ namespace Storage {
     Int_t st_nscan_upper_x;
     Int_t st_nscan_bottom_y;
     Int_t st_nscan_upper_y;
-    Int_t st_nscan_numNoisyPixels;              // total number of noisy pixels 
+    Int_t st_nscan_numNoisyPixels;              // total number of noisy pixels
     Int_t st_nscan_noisyPixel_plane[MAX_NOISY]; // noisy pixel plane number
-    Int_t st_nscan_noisyPixel_x[MAX_NOISY];     // noisy pixel x (col number) 
+    Int_t st_nscan_noisyPixel_x[MAX_NOISY];     // noisy pixel x (col number)
     Int_t st_nscan_noisyPixel_y[MAX_NOISY];     // noisy pixel y (row number)
 
-    // Branches corresponding to the above variables    
+    // Branches corresponding to the above variables
     TBranch* bNumHits;
     TBranch* bHitPixX;
     TBranch* bHitPixY;
@@ -181,7 +181,7 @@ namespace Storage {
     TBranch* bHitValue;
     TBranch* bHitTiming;
     TBranch* bHitInCluster;
-    
+
     TBranch* bNumClusters;
     TBranch* bClusterPixX;
     TBranch* bClusterPixY;
@@ -197,16 +197,16 @@ namespace Storage {
 
 	TBranch* bNumIntercepts;
     TBranch* bInterceptX;
-    TBranch* bInterceptY; 
-    
-    
+    TBranch* bInterceptY;
+
+
     TBranch* bTimeStamp;
     TBranch* bFrameNumber;
     TBranch* bTriggerOffset;
     TBranch* bTriggerInfo;
     TBranch* bTriggerPhase;
     TBranch* bInvalid;
-    
+
     TBranch* bNumTracks;
     TBranch* bTrackSlopeX;
     TBranch* bTrackSlopeY;
