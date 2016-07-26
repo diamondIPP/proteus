@@ -87,9 +87,9 @@ const std::string Loopers::NoiseScanConfig::print() const {
   for(std::vector<int>::const_iterator cit=_vruns.begin();
       cit!=_vruns.end(); ++cit){
     out << (*cit);
-    if( cit < _vruns.end()-1 ) out << ", ";      
+    if( cit < _vruns.end()-1 ) out << ", ";
   }
-  out << endl;  
+  out << endl;
   out << "#  max factor : " << _maxFactor << endl;
   out << "#  max occupancy : " << _maxOccupancy << endl;
   out << "#  bottom x : " << _bottomLimitX << endl;
@@ -134,9 +134,9 @@ void Loopers::NoiseScan::loop(){
 
   int totEvt=0;
   for (ULong64_t nevent=_startEvent; nevent<=_endEvent; nevent++, totEvt++){
-    Storage::Event* refEvent = _refStorage->readEvent(nevent);    
-    occupancy.processEvent(refEvent);    
-    progressBar(nevent);    
+    Storage::Event* refEvent = _refStorage->readEvent(nevent);
+    occupancy.processEvent(refEvent);
+    progressBar(nevent);
     delete refEvent;
   }
   cout << "\nnevents = "<< totEvt << endl;
@@ -147,56 +147,64 @@ void Loopers::NoiseScan::loop(){
   for(unsigned int i=0; i<_refDevice->getNumSensors(); i++){
     occupancy.getHitOcc(i)->Write();
     occupancy.getHitOccDist(i)->Write();
-  } 
+  }
   
-  // loop in planes and determine noisy pixels  
-  for(unsigned int nsens=0; nsens<_refDevice->getNumSensors(); nsens++){
+  // new noisymask calculated from this Scan
+  Mechanics::NoiseMask newMask(_config);
+
+  // loop in planes and determine noisy pixels
+  for (unsigned int nsens = 0; nsens < _refDevice->getNumSensors(); nsens++) {
     Mechanics::Sensor* sensor = _refDevice->getSensor(nsens);
-    sensor->clearNoisyPixels();
-    
-    /** define boundary region to look for noisy pixels: if no values have been defined,
-	or if out-of bounds, use the whole sensor region */
-    if( (_config->getBottomLimitX() < 0) ||
-          (static_cast<unsigned int>(_config->getBottomLimitX()) > sensor->getNumX()) )
+
+    /** define boundary region to look for noisy pixels: if no values have been
+       defined,
+        or if out-of bounds, use the whole sensor region */
+    if ((_config->getBottomLimitX() < 0) ||
+        (static_cast<unsigned int>(_config->getBottomLimitX()) >
+         sensor->getNumX()))
       _config->setBottomLimitX(0);
-    
-    if( (_config->getUpperLimitX() < 0) ||
-          (static_cast<unsigned int>(_config->getUpperLimitX()) > sensor->getNumX()) )
+
+    if ((_config->getUpperLimitX() < 0) ||
+        (static_cast<unsigned int>(_config->getUpperLimitX()) >
+         sensor->getNumX()))
       _config->setUpperLimitX(sensor->getNumX());
-    
-    if( (_config->getBottomLimitY() < 0) ||
-          (static_cast<unsigned int>(_config->getBottomLimitY()) > sensor->getNumY()) )
+
+    if ((_config->getBottomLimitY() < 0) ||
+        (static_cast<unsigned int>(_config->getBottomLimitY()) >
+         sensor->getNumY()))
       _config->setBottomLimitY(0);
-    
-    if( (_config->getUpperLimitY() < 0) ||
-          (static_cast<unsigned int>(_config->getUpperLimitY()) > sensor->getNumY()) )
+
+    if ((_config->getUpperLimitY() < 0) ||
+        (static_cast<unsigned int>(_config->getUpperLimitY()) >
+         sensor->getNumY()))
       _config->setUpperLimitY(sensor->getNumY());
-    
+
     std::vector<double> occupancies;
-    unsigned int noisyPixels=0;
-    unsigned int numEmpty=0;
-    
+    unsigned int noisyPixels = 0;
+    unsigned int numEmpty = 0;
+
     double totOcc = (double)occupancy.getTotalHitOccupancy(nsens);
-    //double totOcc = 1;
-    
-    TH2D* occupancyPlot = occupancy.getHitOcc(nsens);    
-    for(int x=_config->getBottomLimitX(); x<_config->getUpperLimitX(); x++){
-      for(int y=_config->getBottomLimitY(); y<_config->getUpperLimitY(); y++){
-	
-	// single pixel occupancy
-	double pixelOcc = totOcc!=0 ? occupancyPlot->GetBinContent(x+1,y+1) / totOcc : 0;
-	
-	occupancies.push_back(pixelOcc);
-	if(pixelOcc==0)
-	  numEmpty++;
-	
-	if(_config->getMaxOccupancy() && (pixelOcc > _config->getMaxOccupancy()) ){
-	  sensor->addNoisyPixel(x,y);
-	  noisyPixels++;
-	}
+
+    TH2D* occupancyPlot = occupancy.getHitOcc(nsens);
+    for (int x = _config->getBottomLimitX(); x < _config->getUpperLimitX();
+         x++) {
+      for (int y = _config->getBottomLimitY(); y < _config->getUpperLimitY();
+           y++) {
+        // single pixel occupancy
+        double pixelOcc =
+            totOcc != 0 ? occupancyPlot->GetBinContent(x + 1, y + 1) / totOcc
+                        : 0;
+
+        occupancies.push_back(pixelOcc);
+        if (pixelOcc == 0) numEmpty++;
+        if (_config->getMaxOccupancy() &&
+            (pixelOcc > _config->getMaxOccupancy())) {
+          newMask.maskPixel(nsens, x, y);
+          noisyPixels++;
+        }
       }
     }
-    
+
     // If a max occupancy is specified, don't try to use max factor
     if( _config->getMaxOccupancy() ) continue;
     
@@ -211,13 +219,15 @@ void Loopers::NoiseScan::loop(){
     
     double maxOcc = (_config->getMaxFactor()) * average;
 
-    for(unsigned int x=0; x<sensor->getNumX(); x++){
-      for(unsigned int y=0; y<sensor->getNumY(); y++){
-	double pixelOcc = totOcc!=0 ? occupancyPlot->GetBinContent(x+1,y+1) / totOcc : 0;
-	if( pixelOcc > maxOcc ) {
-	  sensor->addNoisyPixel(x,y);
-	  noisyPixels++;
-	}
+    for (unsigned int x = 0; x < sensor->getNumX(); x++) {
+      for (unsigned int y = 0; y < sensor->getNumY(); y++) {
+        double pixelOcc =
+            totOcc != 0 ? occupancyPlot->GetBinContent(x + 1, y + 1) / totOcc
+                        : 0;
+        if (pixelOcc > maxOcc) {
+          newMask.maskPixel(nsens, x, y);
+          noisyPixels++;
+        }
       }
     }
 
@@ -232,39 +242,42 @@ void Loopers::NoiseScan::loop(){
 	   << "% of pixels (ammount: " << noisyPixels << ")" << endl;
     }
 
-    occupancies.clear();    
+    occupancies.clear();
     
   } // end loop in planes
 
   fout->Close();
     
   // show masked pixels for the different planes
-  if( _printLevel > 0 ){
-    cout << "\nNoiseScan summary" << endl;
-    for(unsigned int nsens=0; nsens<_refDevice->getNumSensors(); nsens++){
+  if (_printLevel > 0) {
+    cout << "\nNoiseScan summary\n";
+    for (unsigned int nsens = 0; nsens < _refDevice->getNumSensors();
+         nsens++) {
       Mechanics::Sensor* sensor = _refDevice->getSensor(nsens);
+      const auto& maskedIndices = newMask.getMaskedPixels(nsens);
       cout << " - Sensor '" << sensor->getName() << "' has "
-	   << sensor->getNumNoisyPixels() << " noisy pixels ("
-	   << 100*sensor->getNumNoisyPixels() / (double)(sensor->getNumPixels())
-	   << " %)";      
-      if( sensor->getNumNoisyPixels() == 0 ) { cout << endl; continue; }
-      if( _printLevel > 2 ){
-	cout << " These are (col,row):" << endl;
-	for(unsigned int i=0; i<sensor->getNumX(); i++){
-	  for(unsigned int j=0; j<sensor->getNumY(); j++){
-	    if( sensor->isPixelNoisy(i,j) ){
-	      cout << " (" << std::setw(2) << i << " , " << std::setw(3) << j << ") " << endl;
-	    }
-	  }
-	}
+           << maskedIndices.size() << " noisy pixels ("
+           << 100 * maskedIndices.size() / (double)(sensor->getNumPixels())
+           << " %)";
+      if (maskedIndices.empty()) {
+        cout << endl;
+        continue;
+      }
+      if (_printLevel > 2) {
+        cout << " These are (col,row):" << endl;
+        for (const auto& index : maskedIndices) {
+          auto col = std::get<0>(index);
+          auto row = std::get<1>(index);
+          cout << " (" << std::setw(2) << col << ", " << std::setw(3) << row
+               << ")\n";
+        }
       }
       else
-	cout << endl;
+        cout << endl;
     }
   }
 
-  // write mask, including metadata from this looper
-  _refDevice->getNoiseMask()->writeMask(_config);
+  newMask.writeFile(_refDevice->getNoiseMask()->getFileName());
 }
 
 //=========================================================
@@ -277,4 +290,3 @@ void Loopers::NoiseScan::print() const {
   cout << " - printLevel: " << _printLevel << endl;
   cout << endl;
 }
-
