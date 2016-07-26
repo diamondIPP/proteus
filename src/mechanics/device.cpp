@@ -44,10 +44,10 @@ Mechanics::Device::Device(const char* name,
 {
   if(strlen(alignmentName))
     _alignment = new Alignment(alignmentName, this);
-  
+
   if(strlen(noiseMaskName))
-    _noiseMask =  new NoiseMask(noiseMaskName, this);
-  
+    _noiseMask =  new NoiseMask(noiseMaskName);
+
   std::replace(_timeUnit.begin(), _timeUnit.end(), '\\', '#');
   std::replace(_spaceUnit.begin(), _spaceUnit.end(), '\\', '#');
 }
@@ -67,6 +67,7 @@ void Mechanics::Device::addSensor(Mechanics::Sensor* sensor){
   if (_numSensors > 0 && getSensor(_numSensors-1)->getOffZ() > sensor->getOffZ())
     throw "[Device::addSensor] sensors must be added in order of increazing Z position";
   _sensors.push_back(sensor);
+	_sensors.back()->setNoisyPixels(*_noiseMask, _numSensors);
   _sensorMask.push_back(false);
   _numSensors++;
 }
@@ -88,9 +89,10 @@ Mechanics::Sensor* Mechanics::Device::getSensor(unsigned int n) const {
 }
 
 //=========================================================
-unsigned int Mechanics::Device::getNumPixels() const {
-  unsigned int numPixels=0;
-  for (unsigned int nsens=0; nsens<getNumSensors(); nsens++)
+unsigned int Mechanics::Device::getNumPixels() const
+{
+  unsigned int numPixels = 0;
+  for (unsigned int nsens = 0; nsens < getNumSensors(); nsens++)
     numPixels += getSensor(nsens)->getNumPixels();
   return numPixels;
 }
@@ -108,4 +110,3 @@ void Mechanics::Device::print() const {
   for (unsigned int nsens=0; nsens<getNumSensors(); nsens++)
     getSensor(nsens)->print();
 }
-
