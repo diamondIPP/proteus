@@ -1,4 +1,4 @@
-set(JudithCommon_SRC
+set(JUDITH_COMMON_SRC
     analyzers/baseanalyzer.cpp
     analyzers/clusterinfo.cpp
     analyzers/configanalyzers.cpp
@@ -20,7 +20,6 @@ set(JudithCommon_SRC
     analyzers/efficiency.cpp
     analyzers/residuals.cpp
     converters/kartelconvert.cpp
-    exception.cpp
     loopers/analysis.cpp
     loopers/applymask.cpp
     loopers/coarsealign.cpp
@@ -52,12 +51,12 @@ set(JudithCommon_SRC
     storage/hit.cpp
     storage/track.cpp
     storage/plane.cpp
-    storage/storageio.cpp)
-set(Judith_SRC main.cpp configparser.cpp inputargs.cpp)
+    storage/storageio.cpp
+    exception.cpp
+    configparser.cpp)
+add_library(judith-common STATIC ${JUDITH_COMMON_SRC})
+target_include_directories(judith-common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})
+target_link_libraries(judith-common PUBLIC ${ROOT_LIBRARIES})
 
-add_library(JudithCommon STATIC ${JudithCommon_SRC})
-target_include_directories(JudithCommon PUBLIC ${ROOT_INCLUDE_DIRS})
-target_link_libraries(JudithCommon PUBLIC ${ROOT_LIBRARIES})
-
-add_executable(Judith ${Judith_SRC})
-target_link_libraries(Judith JudithCommon)
+add_executable(Judith main.cpp inputargs.cpp)
+target_link_libraries(Judith judith-common)
