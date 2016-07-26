@@ -3,6 +3,7 @@
 #include <cassert>
 #include <algorithm>
 #include <iostream>
+#include <stdexcept>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -22,69 +23,66 @@ using std::cout;
 using std::endl;
 using std::string;
 
-//=========================================================
-Mechanics::NoiseMask::NoiseMask(const char* fileName,
-				Device* device) :
-  _fileName(fileName),
-  _device(device),
-  _config(0)
+Mechanics::NoiseMask::NoiseMask(const Loopers::NoiseScanConfig* config)
+    : _config(new Loopers::NoiseScanConfig(*config)), _fileName("<transient>")
 {
-  assert(device && "NoiseMask can't initialize with a null device");
-  _config = new Loopers::NoiseScanConfig();
 }
 
 //=========================================================
-Mechanics::NoiseMask::~NoiseMask(){
-  delete _config;
+Mechanics::NoiseMask::NoiseMask(const std::string& path)
+    : _config(new Loopers::NoiseScanConfig()), _fileName(path)
+{
+  readFile(path);
 }
 
 //=========================================================
-void Mechanics::NoiseMask::writeMask(const Loopers::NoiseScanConfig *config){
-  std::fstream file;
-  file.open(_fileName.c_str(), std::ios_base::out);
+Mechanics::NoiseMask::~NoiseMask() { delete _config; }
 
-  if (!file.is_open()){
-    std::string err("[NoiseMask::writeMask] ");
-    err+"unable to open file '"+_fileName+"' for writting";
-    throw err;
+//=========================================================
+void Mechanics::NoiseMask::writeFile(const std::string& path) const
+{
+	std::fstream out(path, std::ios_base::out);
+
+  if (!out.is_open()) {
+    std::string msg("[NoiseMask::writeMask]");
+    msg += "unable to open file '" + path + "' for writting";
+    throw std::runtime_error(msg);
   }
 
-  // write noisy pixel information
-  for (unsigned int nsens=0; nsens<_device->getNumSensors(); nsens++){
-    Sensor* sensor = _device->getSensor(nsens);
-    for (unsigned int x=0; x<sensor->getNumX(); x++)
-      for (unsigned int y=0; y<sensor->getNumY(); y++)
-	if (sensor->isPixelNoisy(x,y))
-	  file << nsens << ", " << x << ", " << y << endl;
-  }
+	for (const auto& mask : _masks) {
+		auto id = mask.first;
+		for (const auto& index : mask.second) {
+			auto col = std::get<0>(index);
+			auto row = std::get<1>(index);
+			out << id << ", " << col << ", " << row << '\n';
+		}
+	}
 
-  // update config info and write looper metadata
-  delete _config;
-  _config = new Loopers::NoiseScanConfig(*config);
-  file << _config->print() << endl;
-
-  file.close();
+	out << _config->print() << '\n';
+	out.close();
+	
+	cout << "Wrote noise mask to '" << path << "'\n";
 }
 
 //=========================================================
-void Mechanics::NoiseMask::readMask()
+void Mechanics::NoiseMask::readFile(const std::string& path)
 {
-  std::fstream file(_fileName.c_str(), std::ios_base::in);
+  std::fstream input(path, std::ios_base::in);
 
-  if (!file.is_open()) {
+  if (!input.is_open()) {
     cout << "[NoiseMask::readMask] WARNING :: Noise mask failed to open file '"
-         << _fileName << "'" << endl;
+         << path << "'" << endl;
     return;
   }
-  cout << "Noise mask file '" << _fileName << "' opened OK" << endl;
+  cout << "Read noise mask from '" << path << "'\n";
 
   std::stringstream comments;
-  while (file.good()) {
+  while (input) {
     unsigned int nsens = 0;
     unsigned int x = 0;
     unsigned int y = 0;
     std::string line;
-    std::getline(file, line);
+    std::getline(input, line);
     if (!line.size()) continue;
     if (line[0] == '#') {
       comments << line << "\n";
@@ -92,39 +90,17 @@ void Mechanics::NoiseMask::readMask()
     }
     std::stringstream lineStream(line);
     parseLine(lineStream, nsens, x, y);
-    if (nsens >= _device->getNumSensors())
-      throw "NoiseMask: specified sensor outside device range";
-    if (x >= _device->getSensor(nsens)->getNumX())
-      throw "NoiseMask: specified x position outside sensor range";
-    if (y >= _device->getSensor(nsens)->getNumY())
-      throw "NoiseMask: specified y position outside sensor range";
-    _masked_indices[nsens].emplace(x, y);
+    _masks[nsens].emplace(x, y);
   }
-
-  file.close();
 
   if (!comments.str().empty()) parseComments(comments);
-
-  // fill device masks
-  for (const auto& mask : _masked_indices) {
-    const auto& sensor_id = mask.first;
-    const auto& indices = mask.second;
-
-    auto& sensor = *_device->getSensor(sensor_id);
-    sensor.clearNoisyPixels();
-
-    for (const auto& pixel : indices) {
-      sensor.addNoisyPixel(pixel.first, pixel.second);
-    }
-  }
 }
 
 //=========================================================
-void Mechanics::NoiseMask::parseLine(std::stringstream& line,
-				     unsigned int& nsens,
-				     unsigned int& x,
-				     unsigned int& y) {
-  unsigned int counter = 0;
+void Mechanics::NoiseMask::parseLine(std::stringstream& line, Index& nsens,
+                                     Index& x, Index& y)
+{
+  Index counter = 0;
   while(line.good()){
     std::string value;
     std::getline(line, value, ',');
@@ -207,31 +183,24 @@ void Mechanics::NoiseMask::parseComments(std::stringstream& comments){
   unlink(nameBuff);
 }
 
-size_t Mechanics::NoiseMask::getNumMaskedPixels() const
+void Mechanics::NoiseMask::maskPixel(Index sensor, Index col, Index row)
+{
+  _masks[sensor].emplace(col, row);
+}
+
+const Mechanics::NoiseMask::ColRowSet& Mechanics::NoiseMask::getMaskedPixels(
+    Index sensor) const
+{
+	static const ColRowSet EMPTY;
+	
+  auto mask = _masks.find(sensor);
+  if (mask != _masks.end()) return mask->second;
+  return EMPTY;
+}
+
+const size_t Mechanics::NoiseMask::getNumMaskedPixels() const
 {
   size_t n = 0;
-  for (const auto& masked : _masked_indices) n += masked.second.size();
+  for (const auto& mask : _masks) n += mask.second.size();
   return n;
-}
-
-const Mechanics::NoiseMask::RowColSet& Mechanics::NoiseMask::getMaskedPixels(
-    unsigned int sensor) const
-{
-  static const RowColSet EMPTY_SET;
-
-  auto masked = _masked_indices.find(sensor);
-  if (masked != _masked_indices.end()) {
-    return masked->second;
-  }
-  return EMPTY_SET;
-}
-
-//=========================================================
-std::vector<bool**> Mechanics::NoiseMask::getMaskArrays() const
-{
-  std::vector<bool**> masks;
-  for (unsigned int nsens = 0; nsens < _device->getNumSensors(); nsens++) {
-    masks.push_back(_device->getSensor(nsens)->getNoiseMask());
-	}
-  return masks;
 }
