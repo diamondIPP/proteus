@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 
+#include "mechanics/noisemask.h"
 #include "device.h"
 
 using std::cout;
@@ -51,7 +52,7 @@ Mechanics::Sensor::Sensor(unsigned int numX,
   calculateRotation();
   
   _noisyPixels = new bool*[_numX];
-  for(unsigned int x=0; x<_numX; x++){ 
+  for(unsigned int x=0; x<_numX; x++){
     bool *row = new bool[_numY];
     _noisyPixels[x] = row;
   }
@@ -93,14 +94,14 @@ void Mechanics::Sensor::applyRotation(double& x,
     *(rotated[i]) = 0;
     for (int j=0; j<3; j++){
       if (!invert) *(rotated[i]) += _rotation[i][j] * point[j];
-      else         *(rotated[i]) += _unRotate[i][j] * point[j];      
+      else         *(rotated[i]) += _unRotate[i][j] * point[j];
     }
   }
 
   //std::cout << *(rotated[0]) << std::endl;
-  //if( _rotation[0][1]==1){ 
+  //if( _rotation[0][1]==1){
   //if(*(rotated[0]) == 0){
-  //std::cout << "Coordinates were (" << x <<";"<< y <<";"<< z << ")"<< std::endl; 
+  //std::cout << "Coordinates were (" << x <<";"<< y <<";"<< z << ")"<< std::endl;
   //std::cout << "They are: (" << *(rotated[0]) <<";"<< *(rotated[1]) <<";"<< *(rotated[2]) <<")" << std::endl;
   //    std::cout << "" << std::endl;
   //}
@@ -190,17 +191,28 @@ void Mechanics::Sensor::spaceToPixel(double x, double y, double z,
 // noisy-pixels functions
 //
 //=========================================================
-void Mechanics::Sensor::addNoisyPixel(unsigned int x, unsigned int y){
-  assert(x < _numX && y < _numY && "Storage: tried to add noisy pixel outside sensor");
-  _noisyPixels[x][y] = true;
-  _numNoisyPixels++;
-}
 
 void Mechanics::Sensor::clearNoisyPixels(){
   _numNoisyPixels=0;
   for(unsigned int x=0; x<_numX; x++)
     for(unsigned int y=0; y<_numY; y++)
       _noisyPixels[x][y] = false;
+}
+
+void Mechanics::Sensor::setNoisyPixels(const NoiseMask& masks,
+                                       unsigned int sensor_id)
+{
+  clearNoisyPixels();
+  for (const auto& index : masks.getMaskedPixels(sensor_id)) {
+    auto col = std::get<0>(index);
+    auto row = std::get<1>(index);
+
+    if (_numX <= col) throw std::runtime_error("column index is out of range");
+    if (_numY <= row) throw std::runtime_error("row index is out of range");
+
+    _noisyPixels[col][row] = true;
+		_numNoisyPixels += 1;
+  }
 }
 
 //=========================================================
@@ -262,7 +274,7 @@ unsigned int Mechanics::Sensor::getPosNumY() const {
   return (unsigned int)((getPosSensitiveY()/getPosPitchY())+0.5);
 }
 
-double Mechanics::Sensor::getPosPitchX() const { 
+double Mechanics::Sensor::getPosPitchX() const {
   double pitch = 0;
   double x, y, z;
   // Make a vector pointing along the pixel's x-axis
@@ -277,12 +289,12 @@ double Mechanics::Sensor::getPosPitchX() const {
   y = getPitchY();
   z = 0;
   rotateToGlobal(x, y, z);
-  pitch += fabs(x); 
+  pitch += fabs(x);
   // Return the sum of the x-projection
   return pitch;
 }
 
-double Mechanics::Sensor::getPosPitchY() const { 
+double Mechanics::Sensor::getPosPitchY() const {
   double pitch = 0;
   double x, y, z;
   x = getPitchX();
@@ -353,4 +365,3 @@ double Mechanics::Sensor::getSensitiveX() const { return _sensitiveX; }
 double Mechanics::Sensor::getSensitiveY() const { return _sensitiveY; }
 const Mechanics::Device* Mechanics::Sensor::getDevice() const { return _device; }
 const char* Mechanics::Sensor::getName() const { return _name.c_str(); }
-

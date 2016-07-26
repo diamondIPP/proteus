@@ -7,6 +7,7 @@
 namespace Mechanics {
   
   class Device;
+  class NoiseMask;
   
   class Sensor {
   public:
@@ -18,7 +19,7 @@ namespace Mechanics {
 	   Device* device,
 	   std::string name,
 	   bool digi,
-	   bool alignable=true,	   
+	   bool alignable=true,
 	   double xox0=0,
 	   double offX=0,
 	   double offY=0,
@@ -52,9 +53,7 @@ namespace Mechanics {
     //
     // noise-pixels functions
     //
-    void addNoisyPixel(unsigned int x, unsigned int y);
-    void clearNoisyPixels();    
-
+    void setNoisyPixels(const NoiseMask& masks, unsigned int sensor_id);
     inline bool isPixelNoisy(unsigned int x, unsigned int y) const {
       return _noisyPixels[x][y];
     }
@@ -99,6 +98,7 @@ namespace Mechanics {
     void getNormalVector(double& x, double& y, double& z) const;
    
   private:
+    void clearNoisyPixels();
     void applyRotation(double& x, double& y, double& z, bool invert=false) const;
     void calculateRotation(); // Calculates the rotation matricies and normal vector
     
@@ -113,7 +113,7 @@ namespace Mechanics {
     bool _digi;
     const double _xox0; // X/X0
     double _offX; // translation in X
-    double _offY; // translation in Y 
+    double _offY; // translation in Y
     double _offZ; // translation in Z
     double _rotX; // rotation angle (rad) around Global X-axis
     double _rotY; // rotation angle (rad) around Global Y-axis
@@ -128,7 +128,7 @@ namespace Mechanics {
     double _unRotate[3][3]; // Invert the rotation
     double _normalX;
     double _normalY;
-    double _normalZ;   
+    double _normalZ;
     
   }; // end of class
   
