@@ -155,9 +155,9 @@ namespace Storage {
       _summaryTree->Branch("nscan_bottomY", &st_nscan_bottom_y, "nscan_bottomY/I");
       _summaryTree->Branch("nscan_upperY", &st_nscan_upper_y, "nscan_upperY/I");
       _summaryTree->Branch("nscan_NNoisyPixels",  &st_nscan_numNoisyPixels, "nscan_NNoisyPixels/I");
-      _summaryTree->Branch("nscan_noisyPixel_plane", st_nscan_noisyPixel_plane, "nscan_noisyPixel_Plane[nscan_NNoisyPixels]/I");
-      _summaryTree->Branch("nscan_noisyPixel_x", st_nscan_noisyPixel_x, "nscan_noisyPixel_X[nscan_NNoisyPixels]/I");
-      _summaryTree->Branch("nscan_noisyPixel_y", st_nscan_noisyPixel_y, "nscan_noisyPixel_Y[nscan_NNoisyPixels]/I");
+      _summaryTree->Branch("nscan_noisyPixel_plane", st_nscan_noisyPixel_plane.data(), "nscan_noisyPixel_Plane[nscan_NNoisyPixels]/I");
+      _summaryTree->Branch("nscan_noisyPixel_x", st_nscan_noisyPixel_x.data(), "nscan_noisyPixel_X[nscan_NNoisyPixels]/I");
+      _summaryTree->Branch("nscan_noisyPixel_y", st_nscan_noisyPixel_y.data(), "nscan_noisyPixel_Y[nscan_NNoisyPixels]/I");
 
     } // end if (_fileMode == OUTPUT)
 
@@ -265,7 +265,6 @@ namespace Storage {
       if( _summaryTree ){
 	_summaryTree->SetBranchAddress("NRuns", &st_numRuns, &b_NumRuns);
 	_summaryTree->SetBranchAddress("Run", st_run, &b_Run);
-
 	_summaryTree->SetBranchAddress("nscan_NRuns", &st_nscan_numRuns, &b_NoiseScan_NumRuns);
 	_summaryTree->SetBranchAddress("nscan_Run", st_nscan_run, &b_NoiseScan_Run);
 	_summaryTree->SetBranchAddress("nscan_maxFactor", &st_nscan_maxFactor, &b_NoiseScan_MaxFactor);
@@ -275,10 +274,16 @@ namespace Storage {
 	_summaryTree->SetBranchAddress("nscan_bottomY", &st_nscan_bottom_y, &b_NoiseScan_BottomY);
 	_summaryTree->SetBranchAddress("nscan_upperY", &st_nscan_upper_y, &b_NoiseScan_UpperY);
 	_summaryTree->SetBranchAddress("nscan_NNoisyPixels", &st_nscan_numNoisyPixels, &b_NoiseScan_NumNoisyPixels);
-	_summaryTree->SetBranchAddress("nscan_noisyPixel_plane", st_nscan_noisyPixel_plane, &b_NoiseScan_NoisyPixelPlane);
-	_summaryTree->SetBranchAddress("nscan_noisyPixel_x", st_nscan_noisyPixel_x, &b_NoiseScan_NoisyPixelX);
-	_summaryTree->SetBranchAddress("nscan_noisyPixel_y", st_nscan_noisyPixel_y, &b_NoiseScan_NoisyPixelY);
-
+  // ensure enough space is available for the maximum number of possible
+  // noise pixels, i.e. #planes * #pixels_per_plane
+  // use Mimosa26 (1152 cols x 576 rows) as upper limit
+  size_t max_size = _numPlanes * 1152 * 576;
+  st_nscan_noisyPixel_plane.resize(max_size);
+  st_nscan_noisyPixel_x.resize(max_size);
+  st_nscan_noisyPixel_y.resize(max_size);
+	_summaryTree->SetBranchAddress("nscan_noisyPixel_plane", st_nscan_noisyPixel_plane.data(), &b_NoiseScan_NoisyPixelPlane);
+	_summaryTree->SetBranchAddress("nscan_noisyPixel_x", st_nscan_noisyPixel_x.data(), &b_NoiseScan_NoisyPixelX);
+	_summaryTree->SetBranchAddress("nscan_noisyPixel_y", st_nscan_noisyPixel_y.data(), &b_NoiseScan_NoisyPixelY);
       }
     } // end if(_fileMode == INPUT)
 
@@ -432,11 +437,9 @@ namespace Storage {
     st_nscan_bottom_y     = -1;
     st_nscan_upper_y      = -1;
     st_nscan_numNoisyPixels = 0;
-    for(int i=0; i<MAX_NOISY; i++){
-      st_nscan_noisyPixel_plane[i] = -1;
-      st_nscan_noisyPixel_x[i]     = -1;
-      st_nscan_noisyPixel_y[i]     = -1;
-    }
+    st_nscan_noisyPixel_plane.clear();
+    st_nscan_noisyPixel_x.clear();
+    st_nscan_noisyPixel_y.clear();
   }
 
   //=========================================================
@@ -479,13 +482,13 @@ namespace Storage {
       out << endl;
       return out.str();
   }
-
-  //=========================================================
-  void StorageIO::setNoiseMasks(std::vector<bool**>* noiseMasks){
-    if (noiseMasks && _numPlanes != noiseMasks->size())
-      throw "StorageIO: noise mask has more planes than will be read in";
-    _noiseMasks = noiseMasks;
-  }
+  //
+  // //=========================================================
+  // void StorageIO::setNoiseMasks(std::vector<bool**>* noiseMasks){
+  //   if (noiseMasks && _numPlanes != noiseMasks->size())
+  //     throw "StorageIO: noise mask has more planes than will be read in";
+  //   _noiseMasks = noiseMasks;
+  // }
 
   //=========================================================
   void StorageIO::setPrintLevel(const int printLevel){
@@ -535,26 +538,23 @@ namespace Storage {
     st_nscan_upper_y = config->getUpperLimitY();
 
     st_nscan_numNoisyPixels = 0;
-    std::vector<bool**> maskArrays = noisemask->getMaskArrays();
-    const Mechanics::Device* device = noisemask->getDevice();
-    for (unsigned int nsens = 0; nsens < device->getNumSensors(); nsens++) {
-      const Mechanics::Sensor* sensor = device->getSensor(nsens);
-      for (unsigned int x = 0; x < sensor->getNumX(); x++) {
-        for (unsigned int y = 0; y < sensor->getNumY(); y++) {
-          if (!(st_nscan_numNoisyPixels < MAX_NOISY)) {
-            cout << "[StorageIO::setNoiseMaskData] ERROR: too many noisy pixels"
-                 << " (MAX_NOISY = " << MAX_NOISY << ")\n";
-            continue;
-          }
-          if (sensor->isPixelNoisy(x, y)) {
-            st_nscan_noisyPixel_plane[st_nscan_numNoisyPixels] = nsens;
-            st_nscan_noisyPixel_x[st_nscan_numNoisyPixels] = x;
-            st_nscan_noisyPixel_y[st_nscan_numNoisyPixels] = y;
-            st_nscan_numNoisyPixels++;
-          }
-        }
+    st_nscan_noisyPixel_plane.clear();
+    st_nscan_noisyPixel_x.clear();
+    st_nscan_noisyPixel_y.clear();
+    for (unsigned int isensor = 0; isensor < _numPlanes; ++isensor) {
+      const auto& maskedIndices = noisemask->getMaskedPixels(isensor);
+      for (const auto& index : maskedIndices) {
+        st_nscan_noisyPixel_plane.push_back(isensor);
+        st_nscan_noisyPixel_x.push_back(std::get<0>(index));
+        st_nscan_noisyPixel_y.push_back(std::get<1>(index));
+        st_nscan_numNoisyPixels += 1;
       }
     }
+    // changing the sizes of the vectors can lead to reallocated memory
+    // ensure the correct values are stored
+    _summaryTree->SetBranchAddress("nscan_noisyPixel_plane", st_nscan_noisyPixel_plane.data(), &b_NoiseScan_NoisyPixelPlane);
+    _summaryTree->SetBranchAddress("nscan_noisyPixel_x", st_nscan_noisyPixel_x.data(), &b_NoiseScan_NoisyPixelX);
+    _summaryTree->SetBranchAddress("nscan_noisyPixel_y", st_nscan_noisyPixel_y.data(), &b_NoiseScan_NoisyPixelY);
   }
 
   //=========================================================
