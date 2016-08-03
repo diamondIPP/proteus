@@ -1,6 +1,6 @@
 // C(++) headers
-#include <math.h>
-#include <stdio.h>
+#include <cmath>
+#include <cstdio>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -14,11 +14,10 @@
 #include <TSystem.h>
 #include <TTree.h>
 
-#define MAXHIT 10000
-
 using namespace std;
 
-struct _hits {
+struct Hits {
+    static constexpr int MAXHIT = 10000;
     int NHits;
     int PixX[MAXHIT];
     int PixY[MAXHIT];
@@ -30,36 +29,35 @@ struct _hits {
     double PosZ[MAXHIT];
 };
 
-// int merge(char * input, char * output) {
-int Regions(std::string input, int bx0, int bx1, int Sy0, int Sy1, int Sa0,
-            int Sa1)
+int Regions(const std::string &base, int bx0, int bx1, int Sy0, int Sy1,
+            int Sa0, int Sa1)
 {
-    string output = input;
-    string output1 = input;
+    std::string path_input = base + ".root";
+    std::string path_stime = base + "_Stime.root";
+    std::string path_analog = base + "_Analog.root";
 
-    output += "_Stime.root";
-    output1 += "_Analog.root";
-    input += ".root";
-    _hits read;
-    _hits out_ana0;
-    _hits out_ana;
-    const char *in = input.c_str();
+    Hits read;
+    Hits write_stime;
+    Hits write_analog;
 
-    TFile *f = TFile::Open(in);
-    if (f == 0) {
-        cout << "Cannot open, N.B. --No .root needed as input file--" << in
-             << endl;
+    TFile *f = TFile::Open(path_input.c_str());
+    TFile *fstime = TFile::Open(path_stime.c_str(), "RECREATE");
+    TFile *fanalog = TFile::Open(path_analog.c_str(), "RECREATE");
+
+    if (!f) {
+        std::cerr << "Cannot open input file " << path_input << std::endl;
+        return EXIT_FAILURE;
     }
-    else {
-        cout << "opening " << in << endl;
+    if (!fstime) {
+        std::cerr << "Cannot open Stime output file " << path_stime
+                  << std::endl;
+        return EXIT_FAILURE;
     }
-
-    const char *ou = output.c_str();
-    TFile *fnew = new TFile(ou, "RECREATE");
-    if (fnew != 0) cout << "creating Stime file..." << endl;
-    const char *out = output1.c_str();
-    TFile *fnew1 = new TFile(out, "RECREATE");
-    if (fnew1 != 0) cout << "creating Analog file..." << endl;
+    if (!fanalog) {
+        std::cerr << "Cannot open Analog output file " << path_analog
+                  << std::endl;
+        return EXIT_FAILURE;
+    }
 
     TDirectory *d = (TDirectory *)f->Get("Plane0");
     TTree *t = (TTree *)d->Get("Hits");
@@ -68,7 +66,7 @@ int Regions(std::string input, int bx0, int bx1, int Sy0, int Sy1, int Sa0,
     t->SetBranchAddress("PixY", read.PixY);
     t->SetBranchAddress("Value", read.Value);
     t->SetBranchAddress("Timing", read.Timing);
-    t->SetBranchAddress("InCluster", read.HitInCluster);
+    t->SetBranchAddress("HitInCluster", read.HitInCluster);
     t->SetBranchAddress("PosX", read.PosX);
     t->SetBranchAddress("PosY", read.PosY);
     t->SetBranchAddress("PosZ", read.PosZ);
@@ -76,103 +74,105 @@ int Regions(std::string input, int bx0, int bx1, int Sy0, int Sy1, int Sa0,
     if (!tEventIn)
         cout << "WARNING: no EventTree found in input file..." << endl;
 
-    TDirectory *dir = fnew->mkdir("Plane0");
-    dir->cd();
+    TDirectory *dstime = fstime->mkdir("Plane0");
+    dstime->cd();
 
-    TTree *tnew = new TTree("Hits", "Hits");
-    tnew->Branch("NHits", &out_ana0.NHits, "NHits/I");
-    tnew->Branch("PixX", out_ana0.PixX, "HitPixX[NHits]/I");
-    tnew->Branch("PixY", out_ana0.PixY, "HitPixY[NHits]/I");
-    tnew->Branch("Value", out_ana0.Value, "HitValue[NHits]/I");
-    tnew->Branch("Timing", out_ana0.Timing, "HitTiming[NHits]/I");
-    tnew->Branch("InCluster", out_ana0.HitInCluster, "InCluster[NHits]/I");
-    tnew->Branch("PosX", out_ana0.PosX, "HitPosX[NHits]/D");
-    tnew->Branch("PosY", out_ana0.PosY, "HitPosY[NHits]/D");
-    tnew->Branch("PosZ", out_ana0.PosZ, "HitPosZ[NHits]/D");
+    TTree *tstime = new TTree("Hits", "Hits");
+    tstime->Branch("NHits", &write_stime.NHits, "NHits/I");
+    tstime->Branch("PixX", write_stime.PixX, "HitPixX[NHits]/I");
+    tstime->Branch("PixY", write_stime.PixY, "HitPixY[NHits]/I");
+    tstime->Branch("Value", write_stime.Value, "HitValue[NHits]/I");
+    tstime->Branch("Timing", write_stime.Timing, "HitTiming[NHits]/I");
+    tstime->Branch("InCluster", write_stime.HitInCluster,
+                   "InCluster[NHits]/I");
+    tstime->Branch("PosX", write_stime.PosX, "HitPosX[NHits]/D");
+    tstime->Branch("PosY", write_stime.PosY, "HitPosY[NHits]/D");
+    tstime->Branch("PosZ", write_stime.PosZ, "HitPosZ[NHits]/D");
     TTree *tEventOut = tEventIn != 0 ? tEventIn->CloneTree() : NULL;
 
-    TDirectory *dir1 = fnew1->mkdir("Plane0");
-    dir1->cd();
+    TDirectory *danalog = fanalog->mkdir("Plane0");
+    danalog->cd();
 
-    TTree *tnew1 = new TTree("Hits", "Hits");
-    tnew1->Branch("NHits", &out_ana.NHits, "NHits/I");
-    tnew1->Branch("PixX", out_ana.PixX, "HitPixX[NHits]/I");
-    tnew1->Branch("PixY", out_ana.PixY, "HitPixY[NHits]/I");
-    tnew1->Branch("Value", out_ana.Value, "HitValue[NHits]/I");
-    tnew1->Branch("Timing", out_ana.Timing, "HitTiming[NHits]/I");
-    tnew1->Branch("InCluster", out_ana.HitInCluster, "InCluster[NHits]/I");
-    tnew1->Branch("PosX", out_ana.PosX, "HitPosX[NHits]/D");
-    tnew1->Branch("PosY", out_ana.PosY, "HitPosY[NHits]/D");
-    tnew1->Branch("PosZ", out_ana.PosZ, "HitPosZ[NHits]/D");
+    TTree *tanalog = new TTree("Hits", "Hits");
+    tanalog->Branch("NHits", &write_analog.NHits, "NHits/I");
+    tanalog->Branch("PixX", write_analog.PixX, "HitPixX[NHits]/I");
+    tanalog->Branch("PixY", write_analog.PixY, "HitPixY[NHits]/I");
+    tanalog->Branch("Value", write_analog.Value, "HitValue[NHits]/I");
+    tanalog->Branch("Timing", write_analog.Timing, "HitTiming[NHits]/I");
+    tanalog->Branch("InCluster", write_analog.HitInCluster,
+                    "InCluster[NHits]/I");
+    tanalog->Branch("PosX", write_analog.PosX, "HitPosX[NHits]/D");
+    tanalog->Branch("PosY", write_analog.PosY, "HitPosY[NHits]/D");
+    tanalog->Branch("PosZ", write_analog.PosZ, "HitPosZ[NHits]/D");
 
     int nentries = t->GetEntries();
     cout << "Number of entries: " << nentries << endl;
-    int flag = 0, flag1 = 0;
 
     for (int i = 0; i < nentries; ++i) {
-        flag = 0;
-        flag1 = 0;
+        int n_stime = 0;
+        int n_analog = 0;
         t->GetEntry(i);
-        out_ana0.NHits = read.NHits;
-        out_ana.NHits = read.NHits;
+        write_stime.NHits = read.NHits;
+        write_analog.NHits = read.NHits;
         for (int k = 0; k < read.NHits; ++k) {
             if (read.PixX[k] >= bx0 && read.PixX[k] <= bx1 &&
                 read.PixY[k] >= Sy0 && read.PixY[k] <= Sy1) {
-                flag += 1;
-                out_ana0.PixX[k] = read.PixX[k];
-                out_ana0.PixY[k] = read.PixY[k];
-                out_ana0.Value[k] = read.Value[k];
-                out_ana0.Timing[k] = read.Timing[k];
-                out_ana0.HitInCluster[k] = read.HitInCluster[k];
-                out_ana0.PosX[k] = read.PosX[k];
-                out_ana0.PosY[k] = read.PosY[k];
-                out_ana0.PosZ[k] = read.PosZ[k];
+                n_stime += 1;
+                write_stime.PixX[k] = read.PixX[k];
+                write_stime.PixY[k] = read.PixY[k];
+                write_stime.Value[k] = read.Value[k];
+                write_stime.Timing[k] = read.Timing[k];
+                write_stime.HitInCluster[k] = read.HitInCluster[k];
+                write_stime.PosX[k] = read.PosX[k];
+                write_stime.PosY[k] = read.PosY[k];
+                write_stime.PosZ[k] = read.PosZ[k];
             }
             if (read.PixX[k] >= bx0 && read.PixX[k] <= bx1 &&
                 read.PixY[k] >= Sa0 && read.PixY[k] <= Sa1) {
-                flag1 += 1;
-                out_ana.PixX[k] = read.PixX[k];
-                out_ana.PixY[k] = read.PixY[k];
-                out_ana.Value[k] = read.Value[k];
-                out_ana.Timing[k] = read.Timing[k];
-                out_ana.HitInCluster[k] = read.HitInCluster[k];
-                out_ana.PosX[k] = read.PosX[k];
-                out_ana.PosY[k] = read.PosY[k];
-                out_ana.PosZ[k] = read.PosZ[k];
+                n_analog += 1;
+                write_analog.PixX[k] = read.PixX[k];
+                write_analog.PixY[k] = read.PixY[k];
+                write_analog.Value[k] = read.Value[k];
+                write_analog.Timing[k] = read.Timing[k];
+                write_analog.HitInCluster[k] = read.HitInCluster[k];
+                write_analog.PosX[k] = read.PosX[k];
+                write_analog.PosY[k] = read.PosY[k];
+                write_analog.PosZ[k] = read.PosZ[k];
             }
         }
-        out_ana0.NHits = flag;
-        out_ana.NHits = flag1;
+        // TODO this should be wrong since each k if either analog or stime
+        write_stime.NHits = n_stime;
+        write_analog.NHits = n_analog;
 
-        fnew->cd();
-        dir->cd();
-        tnew->Fill();
+        fstime->cd();
+        dstime->cd();
+        tstime->Fill();
 
-        fnew1->cd();
-        dir1->cd();
-        tnew1->Fill();
+        fanalog->cd();
+        danalog->cd();
+        tanalog->Fill();
     }
 
-    dir->cd();
-    tnew->Write();
+    dstime->cd();
+    tstime->Write();
     if (tEventOut != 0) {
-        fnew->cd();
+        fstime->cd();
         tEventOut->Write();
     }
-    dir1->cd();
-    tnew1->Write();
+    danalog->cd();
+    tanalog->Write();
     if (tEventOut != 0) {
-        fnew->cd();
+        fstime->cd();
         tEventOut->Write();
     }
 
-    cout << "Number of entries output: " << tnew->GetEntries() << endl;
-    cout << "Number of entries output1: " << tnew1->GetEntries() << endl;
+    cout << "Number of Stime entries: " << tstime->GetEntries() << endl;
+    cout << "Number of Analog entries: " << tanalog->GetEntries() << endl;
 
     f->Close();
-    fnew->Close();
-    fnew1->Close();
-    // new->Print();
+    fstime->Close();
+    fanalog->Close();
+
     cout << "Analog and Stime pixels separated." << endl;
     return EXIT_SUCCESS;
 }

@@ -1,12 +1,13 @@
 // THIS MACRO IS USED ONLY FOR CCPD Version 4+
 
 // C(++) headers
-#include <math.h>
-#include <stdio.h>
+#include <cmath>
+#include <cstdio>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <string>
 
 // root headers
 #include <TDirectory.h>
@@ -18,11 +19,10 @@
 #include <TSystem.h>
 #include <TTree.h>
 
-#define MAXHIT 1000
-
 using namespace std;
 
-struct _hits {
+struct Hits {
+    static constexpr int MAXHIT = 10000;
     int NHits;
     int PixX[MAXHIT];
     int PixY[MAXHIT];
@@ -34,14 +34,14 @@ struct _hits {
     double PosZ[MAXHIT];
 };
 
-int mapping(char *input, char *output, const char *mapput = "mapping.root")
+int mapping(const std::string& input, const std::string& output, const std::string& mapput = "mapping.root")
 {
     gROOT->Reset();
 
     //
     // open input file and get TTrees
     //
-    TFile *f = TFile::Open(input);
+    TFile *f = TFile::Open(input.c_str());
     if (f->IsZombie()) {
         cout << "Cannot open '" << input << "' for reading. Exit." << endl;
         return 1;
@@ -49,7 +49,7 @@ int mapping(char *input, char *output, const char *mapput = "mapping.root")
     //
     // open output file
     //
-    TFile *fnew = new TFile(output, "RECREATE");
+    TFile *fnew = new TFile(output.c_str(), "RECREATE");
     if (fnew->IsZombie()) {
         cout << "Cannot open '" << output << "' for writting. Exit." << endl;
         return 2;
@@ -57,7 +57,7 @@ int mapping(char *input, char *output, const char *mapput = "mapping.root")
     //
     // open mapping file
     //
-    TFile *fmap = new TFile(mapput, "RECREATE");
+    TFile *fmap = new TFile(mapput.c_str(), "RECREATE");
     if (fmap->IsZombie()) {
         cout << "Cannot open '" << mapput << "' for writting. Exit." << endl;
         return 3;
@@ -98,8 +98,8 @@ int mapping(char *input, char *output, const char *mapput = "mapping.root")
         // TTree *intercepts = (
         // (TTree*)f->Get(Form("%s/Intercepts",name.Data())) )->CloneTree();
 
-        _hits unmapped;
-        _hits mapped;
+        Hits unmapped;
+        Hits mapped;
 
         //
         // set branches
