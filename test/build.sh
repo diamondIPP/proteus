@@ -1,6 +1,6 @@
 #!/bin/sh -x
 #
-# build a fresh copy of the software; set up clean data directories
+# build a fresh copy of the software
 
 rm -rf build
 mkdir build
