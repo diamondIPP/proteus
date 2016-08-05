@@ -57,6 +57,9 @@ Use 2 spaces for indentation, with the following brace placement
       ...
     };
 
+A `clang-format <http://clang.llvm.org/docs/ClangFormat.html>`_
+configuration file is provided to automatically format code in the
+defined style.
 
 Coding Guideline
 ----------------
@@ -66,6 +69,8 @@ be compatible with Scientific Linux 6.x. A good general guideline for
 modern C++ usage is the `CppCoreGuidelines
 <https://github.com/isocpp/CppCoreGuidelines>`_ and a few other
 anecdotal tips are listed here.
+
+.. note:: **TODO** Discuss semantics of pointer / object ownership
 
 *   Write code that is easy to understand for humans instead of code that
     you hope is easier for the compiler to optimize. It's usually not

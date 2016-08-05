@@ -1,0 +1,13 @@
+---
+BasedOnStyle: LLVM
+IndentWidth: 2
+ColumnLimit: 80
+---
+Language: Cpp
+Standard: Cpp11
+AccessModifierOffset: -2
+BinPackArguments: false
+BinPackParameters: false
+BreakConstructorInitializersBeforeComma: true
+PointerAlignment: Left
+---
