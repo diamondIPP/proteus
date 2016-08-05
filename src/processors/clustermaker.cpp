@@ -157,4 +157,11 @@ ClusterMaker::ClusterMaker(unsigned int maxSeparationX, unsigned int maxSeparati
     throw "ClusterMaker: max separation must be positive";
 }
 
+void ClusterMaker::processEvent(Storage::Event* event)
+{
+  for (unsigned int i = 0; i < event->getNumPlanes(); ++i)
+    generateClusters(event, i);
 }
+void ClusterMaker::finalize() {}
+
+} // namespace Processors

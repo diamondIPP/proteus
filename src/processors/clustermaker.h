@@ -1,15 +1,18 @@
 #ifndef CLUSTERMAKER_H
 #define CLUSTERMAKER_H
 
-namespace Storage { class Hit; }
-namespace Storage { class Cluster; }
-namespace Storage { class Plane; }
-namespace Storage { class Event; }
+#include "processors.h"
+
+namespace Storage {
+class Hit;
+class Cluster;
+class Plane;
+class Event;
+}
 
 namespace Processors {
 
-class ClusterMaker
-{
+class ClusterMaker : public Processor {
 private:
   const unsigned int _maxSeparationX;
   const unsigned int _maxSeparationY;
@@ -24,8 +27,10 @@ public:
                double maxSeparation);
 
   void generateClusters(Storage::Event* event, unsigned int planeNum);
-};
 
+  void processEvent(Storage::Event* event);
+  void finalize();
+};
 }
 
-#endif // CLUSTERMAKER_H
+#endif  // CLUSTERMAKER_H
