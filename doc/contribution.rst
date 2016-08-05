@@ -5,14 +5,12 @@ Development
 -----------
 
 The development happens `here
-<https://gitlab.cern.ch/unige-fei4tel/judith>`. New features,
-bugfixes, and changes should always be developed in separate
-(user-specific) branches. Features that are ready to be made available
-to all users are merged to the master branch with a merge request.
-
-Developments should start with opening an issue to discuss the problem
-and end with a merge request that fixes the issue. For the part
-in-between, try to organize your development into atomic commits,
+<https://gitlab.cern.ch/unige-fei4tel/judith>`_. The development of
+new features, bugfixes, and other changes should start with opening an
+issue in the issue tracker. Development for each issue should happen
+in a separate (user-specific) branche. Features that are ready to be
+made available to all users are merged to the master branch with a
+merge request. Try to organize your development into atomic commits,
 i.e. change only one thing at a time to simplify review.
 
 Coding Style
@@ -65,7 +63,7 @@ Coding Guideline
 ROOT macros must be compatible with ROOT 5.34. The compiled code must
 be compatible with Scientific Linux 6.x. A good general guideline for
 modern C++ usage is the `CppCoreGuidelines
-<https://github.com/isocpp/CppCoreGuidelines>` and a few other
+<https://github.com/isocpp/CppCoreGuidelines>`_ and a few other
 anecdotal tips are listed here.
 
 *   Write code that is easy to understand for humans instead of code that
