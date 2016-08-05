@@ -46,6 +46,7 @@ Use 2 spaces for indentation, with the following brace placement
         ...
       }
     }
+
     // use also for struct's
     class Thing {
     public:
@@ -76,13 +77,13 @@ anecdotal tips are listed here.
 
     .. code-block:: cpp
 
-       class Foo {
-       public:
-        int bar() const { return _bar; }
-        int calculateX() const { return 2 * _bar + 42; }
-      private:
-        int _bar;
-      }
+        class Foo {
+        public:
+          int bar() const { return _bar; }
+          int calculateX() const { return 2 * _bar + 42; }
+        private:
+          int _bar;
+        }
 
 *   Unrecoverable errors should be reported by throwing and
     exception. Always throw an object derived from
