@@ -36,6 +36,8 @@ using std::endl;
 
 namespace Processors {
 
+Processor::~Processor() {}
+
 TF1* fitPixelBeam(TH1D* hist, double pixelWidth, double beamSigma, bool display)
 {
   TF1* conv = new TF1("conv",

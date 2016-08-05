@@ -107,7 +107,7 @@ void Loopers::Looper::print() const {
     int cnt=1;
     for(std::vector<Analyzers::SingleAnalyzer*>::const_iterator cit=_singleAnalyzers.begin();
 	cit!=_singleAnalyzers.end(); ++cit, cnt++)
-      std::cout << "    * SingleAnalyzer #" << cnt << " => " << (*cit)->printStr() << std::endl;        
+      std::cout << "    * SingleAnalyzer #" << cnt << " => " << (*cit)->printStr() << std::endl;
     cnt=1;
     for(std::vector<Analyzers::DualAnalyzer*>::const_iterator cit=_dualAnalyzers.begin();
 	cit!=_dualAnalyzers.end(); ++cit, cnt++)
@@ -115,4 +115,3 @@ void Loopers::Looper::print() const {
   }
   
 }
-
