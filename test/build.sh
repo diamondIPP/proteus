@@ -1,4 +1,4 @@
-#!/bin/sh -x
+#!/bin/sh -ex
 #
 # build a fresh copy of the software
 
