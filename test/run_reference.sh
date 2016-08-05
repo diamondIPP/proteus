@@ -5,16 +5,18 @@
 CFG=configs/global.cfg
 REF=configs/device-ref.cfg
 RUN=1066
-FLAGS="--numEvents 10000 --printLevel 1"
+# FLAGS="--numEvents 10000--printLevel 1"
+FLAGS=
 
 RAWFILE=$(realpath $(printf "raw/cosmic_%06d.root" $RUN))
 RUNDIR=$(printf "run%06d" $RUN)
-PREFIX=$(printf "trees/run%06d-" $RUN)
+PREFIX=$(printf "output/run%06d-" $RUN)
 
 source build/activate.sh
 cd $RUNDIR
 
 cp -f comparison/unaligned-ref.dat alignment-ref.dat
+mkdir -p output
 
 # assume noise-free telescope; no noise mask
 # Judith $FLAGS -c applyMask -i $RAWFILE -o ${PREFIX}ref.root -t $CFG -r $REF
