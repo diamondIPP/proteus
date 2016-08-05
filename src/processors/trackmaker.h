@@ -3,16 +3,21 @@
 
 #include <vector>
 
-namespace Storage { class Event; }
-namespace Storage { class Cluster; }
-namespace Storage { class Track; }
-namespace Mechanics { class Device; }
-namespace Mechanics { class Sensor; }
+#include "processors.h"
+
+namespace Storage {
+class Event;
+class Cluster;
+class Track;
+}
+namespace Mechanics {
+class Device;
+class Sensor;
+}
 
 namespace Processors {
 
-class TrackMaker
-{
+class TrackMaker : public Processor {
 private:
   const double _maxClusterDist;
   const unsigned int _numSeedPlanes;
@@ -24,7 +29,8 @@ private:
   int _maskedPlane;
   bool _calcIntercepts;
 
-  void searchPlane(Storage::Track* track, std::vector<Storage::Track*>& candidates,
+  void searchPlane(Storage::Track* track,
+                   std::vector<Storage::Track*>& candidates,
                    unsigned int nplane);
 
 public:
@@ -33,10 +39,8 @@ public:
              unsigned int minClusters = 3,
              bool calcIntercepts = false);
 
-  void generateTracks(Storage::Event* event,
-                      double beamAngleX = 0,
-                      double beamAngleY = 0,
-                      int maskedPlane = -1);
+  void generateTracks(Storage::Event* event, double beamAngleX = 0,
+                      double beamAngleY = 0, int maskedPlane = -1);
 
   static int linearFit(const unsigned int npoints, const double* independant,
                        const double* dependant, const double* uncertainty,
@@ -45,9 +49,11 @@ public:
 
   static void fitTrackToClusters(Storage::Track* track);
 
-  bool getCalcIntercepts(){return _calcIntercepts;}
+  bool getCalcIntercepts() { return _calcIntercepts; }
+  void processEvent(Storage::Event* event);
+  void finalize();
 };
 
-}
+}  // namespace Processors
 
-#endif // TRACKMAKER_H
+#endif  // TRACKMAKER_H
