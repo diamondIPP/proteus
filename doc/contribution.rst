@@ -4,7 +4,8 @@ Contribution Guide
 Development
 -----------
 
-The development happens `here <gitlab-judith_>`. New features,
+The development happens `here
+<https://gitlab.cern.ch/unige-fei4tel/judith>`. New features,
 bugfixes, and changes should always be developed in separate
 (user-specific) branches. Features that are ready to be made available
 to all users are merged to the master branch with a merge request.
@@ -13,8 +14,6 @@ Developments should start with opening an issue to discuss the problem
 and end with a merge request that fixes the issue. For the part
 in-between, try to organize your development into atomic commits,
 i.e. change only one thing at a time to simplify review.
-
-.. gitlab-judith:: https://gitlab.cern.ch/unige-fei4tel/judith
 
 Coding Style
 ------------
@@ -65,10 +64,9 @@ Coding Guideline
 
 ROOT macros must be compatible with ROOT 5.34. The compiled code must
 be compatible with Scientific Linux 6.x. A good general guideline for
-modern C++ usage is the CppCoreGuidelines_ and a few other
+modern C++ usage is the `CppCoreGuidelines
+<https://github.com/isocpp/CppCoreGuidelines>` and a few other
 anecdotal tips are listed here.
-
-.. CppCoreGuidelines:: https://github.com/isocpp/CppCoreGuidelines
 
 *   Write code that is easy to understand for humans instead of code that
     you hope is easier for the compiler to optimize. It's usually not
