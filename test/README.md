@@ -1,4 +1,4 @@
-Test configurations
+Test Configurations
 ===================
 
 A set of example runs with configuration files and preconfigured analysis chain.
@@ -13,3 +13,19 @@ The following commands will build the software and run a full analysis chain.
     ./build.sh
     ./run_reference.sh
     ./run_dut.sh
+
+
+Run 875
+-------
+
+*   Part of the previously published 2015 data
+*   Composition?
+*   Device-under-tests?
+
+Run 1066
+--------
+
+*   Unpublished data from the July 2016 campaign at SPS
+*   Six layer FEI4 telescope
+*   Two irradiated CCPDv4 device-under-tests
+*   Around 100k events with mostly one track per event
