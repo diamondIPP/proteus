@@ -18,9 +18,8 @@ The following commands will build the software and run a full analysis chain.
 Run 875
 -------
 
-*   Part of the previously published 2015 data
-*   Composition?
-*   Device-under-tests?
+*   Part of the published 2015 data
+*   Setup, device-under-test?
 
 Run 1066
 --------

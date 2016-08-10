@@ -18,5 +18,8 @@ environment. By sourcing it via
 the `Judith` binary can be called directly without specifying its location
 explicitely.
 
+The `test` directory contains example configurations and additional information
+on how to use them.
+
 
 [cmake]: http://www.cmake.org
