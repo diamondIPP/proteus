@@ -52,8 +52,10 @@ set(JUDITH_COMMON_SRC
     storage/track.cpp
     storage/plane.cpp
     storage/storageio.cpp
+    utils/logger.cpp
     exception.cpp
     configparser.cpp)
+
 add_library(judith-common STATIC ${JUDITH_COMMON_SRC})
 target_include_directories(judith-common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})
 target_link_libraries(judith-common PUBLIC ${ROOT_LIBRARIES})
