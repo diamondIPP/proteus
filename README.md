@@ -16,7 +16,9 @@ environment. By sourcing it via
     source build/activate.sh
 
 the `Judith` binary can be called directly without specifying its location
-explicitely.
+explicitly.
+
+Additional information can be found in the `doc/` directory.
 
 
 [cmake]: http://www.cmake.org

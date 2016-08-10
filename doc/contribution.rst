@@ -4,11 +4,11 @@ Contribution Guide
 Development
 -----------
 
-The development happens `here
-<https://gitlab.cern.ch/unige-fei4tel/judith>`_. The development of
+The development happens at the `Judith Gitlab Repository
+<https://gitlab.cern.ch/unige-fei4tel/judith>`_. Development of
 new features, bugfixes, and other changes should start with opening an
-issue in the issue tracker. Development for each issue should happen
-in a separate (user-specific) branche. Features that are ready to be
+issue in the issue tracker. The progress for each issue should be tracked
+in a separate (user-specific) branch. Features that are ready to be
 made available to all users are merged to the master branch with a
 merge request. Try to organize your development into atomic commits,
 i.e. change only one thing at a time to simplify review.
@@ -28,13 +28,13 @@ would like as follows:
 *   ``MACRO_THAT_DOES_SOMETHING(...)``
 
 Using the same style for macros, constant, and enums could be
-problematic, but is kept for now due to historical choices. In any case,
+problematic, but is kept to be konsistent with historical choices. In any case,
 you do not plan to use macros, right?
 
-Use 2 spaces for indentation, with the following brace placement
+Use 2 spaces for indentation, with the following brace placement:
 
 .. code-block:: cpp
-
+    
     void doSomething()
     {
       if (...) {
@@ -46,7 +46,7 @@ Use 2 spaces for indentation, with the following brace placement
         ...
       }
     }
-
+    
     // use also for struct's
     class Thing {
     public:
@@ -59,7 +59,7 @@ Use 2 spaces for indentation, with the following brace placement
 
 A `clang-format <http://clang.llvm.org/docs/ClangFormat.html>`_
 configuration file is provided to automatically format code in the
-defined style.
+described style.
 
 Coding Guideline
 ----------------
@@ -106,7 +106,7 @@ anecdotal tips are listed here.
 *   Use smaller-than relates, i.e. ``<`` or ``<=``, to check for
     inequalities. This clarifies bound checks since the range boundaries
     are written to the left and right of the argument as follows:
-
+    
     .. code-block:: cpp
 
         (0 < x) && (x < 10)
