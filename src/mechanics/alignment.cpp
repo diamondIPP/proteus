@@ -20,6 +20,15 @@ using std::fstream;
 using std::cout;
 using std::endl;
 
+Mechanics::Alignable::Alignable(const Transform3& l2g) : _local2global(l2g) {}
+Mechanics::Alignable::Alignable(double offsetX, double offsetY, double offsetZ,
+                                double rotationX, double rotationY,
+                                double rotationZ)
+    : Alignable({RotationZYX(rotationZ, rotationY, rotationZ),
+                 Vector3(offsetX, offsetY, offsetZ)})
+{
+}
+
 //=========================================================
 Mechanics::Alignment::Alignment(const char* fileName,
 				Device* device) :
@@ -110,7 +119,7 @@ void Mechanics::Alignment::writeFile() {
   file.open(_fileName.c_str());
   
   if (!file.is_open()){
-    std::string err="[Alignment::writeFile] ERROR unable to open '"	
+    std::string err="[Alignment::writeFile] ERROR unable to open '"
       +std::string(_fileName)+"' for writting";
     throw err.c_str();
   }
@@ -140,4 +149,4 @@ void Mechanics::Alignment::writeFile() {
     file.close();
     
     std::cout << "\nAlignment file '" << _fileName << "' created OK\n" << std::endl;
-}    
+}
