@@ -20,12 +20,17 @@ using std::fstream;
 using std::cout;
 using std::endl;
 
-Mechanics::Alignable::Alignable(const Transform3& l2g) : _local2global(l2g) {}
+Mechanics::Alignable::Alignable(const Transform3& localToGlobal_)
+    : _l2g(localToGlobal_), _g2l(localToGlobal_.Inverse())
+{
+}
+
 Mechanics::Alignable::Alignable(double offsetX, double offsetY, double offsetZ,
                                 double rotationX, double rotationY,
                                 double rotationZ)
-    : Alignable({RotationZYX(rotationZ, rotationY, rotationZ),
-                 Vector3(offsetX, offsetY, offsetZ)})
+    : _l2g(RotationZYX(rotationZ, rotationY, rotationX),
+           Translation3(offsetX, offsetY, offsetZ))
+    , _g2l(_l2g.Inverse())
 {
 }
 

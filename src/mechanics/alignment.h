@@ -9,14 +9,18 @@ namespace Mechanics {
 
   class Device;
 
+  /** A geometric object with defined local coordinates. */
   class Alignable {
   public:
-      Alignable(const Transform3& l2g);
+      Alignable(const Transform3& localToGlobal_);
       Alignable(double offsetX, double offsetY, double offsetZ,
                 double rotationX, double rotationY, double rotationZ);
 
+      const Transform3& localToGlobal() const { return _l2g; }
+      const Transform3& globalToLocal() const { return _g2l; }
+
   private:
-      Transform3 _local2global;
+      Transform3 _l2g, _g2l;
   };
 
   class Alignment {
