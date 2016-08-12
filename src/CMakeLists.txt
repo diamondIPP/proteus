@@ -54,6 +54,7 @@ set(COMMON_SRC
     utils/config.cpp
     utils/configparser.cpp
     utils/logger.cpp
+    utils/statistics.cpp
     exception.cpp)
 
 add_library(pt-common STATIC ${COMMON_SRC})
