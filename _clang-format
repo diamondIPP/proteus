@@ -8,6 +8,7 @@ Standard: Cpp11
 AccessModifierOffset: -2
 BinPackArguments: false
 BinPackParameters: false
+BreakBeforeBraces: WebKit
 BreakConstructorInitializersBeforeComma: true
 PointerAlignment: Left
 ---
