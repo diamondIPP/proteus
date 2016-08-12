@@ -76,3 +76,7 @@ target_link_libraries(pt-analysis pt-common)
 
 add_executable(pt-cfg pt-cfg.cpp)
 target_link_libraries(pt-cfg pt-common)
+
+add_executable(pt-noise pt-noise.cpp)
+target_include_directories(pt-noise PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries(pt-noise pt-common ${Boost_PROGRAM_OPTIONS_LIBRARY})
