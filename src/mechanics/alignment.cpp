@@ -162,12 +162,12 @@ void Mechanics::Alignment::writeFile(const std::string& path)
             << std::endl;
 }
 
-bool Mechanics::Alignment::hasAlignment(unsigned int sensor_id) const
+bool Mechanics::Alignment::hasAlignment(Index sensor_id) const
 {
   return (0 < _geo.count(sensor_id));
 }
 
-Transform3 Mechanics::Alignment::getLocalToGlobal(unsigned int sensor_id) const
+Transform3 Mechanics::Alignment::getLocalToGlobal(Index sensor_id) const
 {
   auto it = _geo.find(sensor_id);
   if (it == _geo.cend())

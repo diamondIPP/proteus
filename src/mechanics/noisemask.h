@@ -36,8 +36,8 @@ namespace Mechanics {
     /** Write the current noise masks and configuration to a file. */
     void writeFile(const std::string& path) const;
 
-    void maskPixel(Index sensor, Index col, Index row);
-    const ColumnRowSet& getMaskedPixels(Index sensor) const;
+    void maskPixel(Index sensor_id, Index col, Index row);
+    const ColumnRowSet& getMaskedPixels(Index sensor_id) const;
     const size_t getNumMaskedPixels() const;
 
     const char* getFileName() { return _fileName.c_str(); }

@@ -183,17 +183,17 @@ void Mechanics::NoiseMask::parseComments(std::stringstream& comments){
   unlink(nameBuff);
 }
 
-void Mechanics::NoiseMask::maskPixel(Index sensor, Index col, Index row)
+void Mechanics::NoiseMask::maskPixel(Index sensor_id, Index col, Index row)
 {
-  _masks[sensor].emplace(col, row);
+  _masks[sensor_id].emplace(col, row);
 }
 
 const Mechanics::NoiseMask::ColumnRowSet& Mechanics::NoiseMask::getMaskedPixels(
-    Index sensor) const
+    Index sensor_id) const
 {
 	static const ColumnRowSet EMPTY;
 	
-  auto mask = _masks.find(sensor);
+  auto mask = _masks.find(sensor_id);
   if (mask != _masks.end()) return mask->second;
   return EMPTY;
 }

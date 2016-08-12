@@ -37,8 +37,8 @@ namespace Mechanics {
     void readFile() { readFile(_fileName); }
     void writeFile() { writeFile(_fileName); }
 
-    bool hasAlignment(unsigned int sensor_id) const;
-    Transform3 getLocalToGlobal(unsigned int sensor_id) const;
+    bool hasAlignment(Index sensor_id) const;
+    Transform3 getLocalToGlobal(Index sensor_id) const;
 
   private:
     struct Geometry {
@@ -47,7 +47,7 @@ namespace Mechanics {
 
       Geometry() : offsetX(0), offsetY(0), offsetZ(0), rotationX(0), rotationY(0), rotationZ(0) {}
     };
-    typedef std::map<unsigned int,Geometry> Geometries;
+    typedef std::map<Index,Geometry> Geometries;
 
     void parse(const ConfigParser& config);
 
