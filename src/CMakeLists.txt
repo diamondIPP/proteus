@@ -9,6 +9,7 @@ set(COMMON_SRC
     analyzers/dutcorrelation.cpp
     analyzers/dutdepiction.cpp
     analyzers/eventinfo.cpp
+    analyzers/eventprinter.cpp
     analyzers/exampledualanalyzer.cpp
     analyzers/examplesingleanalyzer.cpp
     analyzers/hitinfo.cpp
