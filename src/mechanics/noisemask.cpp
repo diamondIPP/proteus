@@ -188,10 +188,10 @@ void Mechanics::NoiseMask::maskPixel(Index sensor, Index col, Index row)
   _masks[sensor].emplace(col, row);
 }
 
-const Mechanics::NoiseMask::ColRowSet& Mechanics::NoiseMask::getMaskedPixels(
+const Mechanics::NoiseMask::ColumnRowSet& Mechanics::NoiseMask::getMaskedPixels(
     Index sensor) const
 {
-	static const ColRowSet EMPTY;
+	static const ColumnRowSet EMPTY;
 	
   auto mask = _masks.find(sensor);
   if (mask != _masks.end()) return mask->second;

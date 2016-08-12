@@ -1,6 +1,8 @@
 #ifndef __JUDITH__DEFINITIONS_H__
 #define __JUDITH__DEFINITIONS_H__
 
+#include <utility>
+
 #include <Math/GenVector/Rotation3D.h>
 #include <Math/GenVector/RotationZYX.h>
 #include <Math/GenVector/Transform3D.h>
@@ -9,6 +11,10 @@
 #include <Math/Point3D.h>
 #include <Math/Vector2D.h>
 #include <Math/Vector3D.h>
+
+using Index = unsigned int;
+// Digital matrix position defined by column and row index
+using ColumnRow = std::pair<Index,Index>;
 
 // commonly used vector and geometry types
 using Point2 = ROOT::Math::XYPoint;

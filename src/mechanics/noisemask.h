@@ -9,6 +9,8 @@
 #include <utility>
 #include <vector>
 
+#include "utils/definitions.h"
+
 namespace Loopers { class NoiseScanConfig; }
 
 namespace Mechanics {
@@ -23,11 +25,7 @@ namespace Mechanics {
    */
   class NoiseMask {
   public:
-    using Index = unsigned int;
-    /** Pixel position defined by column and row index. */
-    using ColRow = std::pair<Index,Index>;
-    /** A set of pixel indices. */
-    using ColRowSet = std::set<ColRow>;
+    using ColumnRowSet = std::set<ColumnRow>;
 
     /** Create an empty noise mask with the given scan config. */
     explicit NoiseMask(const Loopers::NoiseScanConfig* config);
@@ -39,7 +37,7 @@ namespace Mechanics {
     void writeFile(const std::string& path) const;
 
     void maskPixel(Index sensor, Index col, Index row);
-    const ColRowSet& getMaskedPixels(Index sensor) const;
+    const ColumnRowSet& getMaskedPixels(Index sensor) const;
     const size_t getNumMaskedPixels() const;
 
     const char* getFileName() { return _fileName.c_str(); }
@@ -51,7 +49,7 @@ namespace Mechanics {
     void parseComments(std::stringstream& comments);
 
   private:
-    std::map<Index,ColRowSet> _masks;
+    std::map<Index,ColumnRowSet> _masks;
     Loopers::NoiseScanConfig* _config;
     std::string _fileName;
 
