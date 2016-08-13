@@ -53,6 +53,7 @@ set(COMMON_SRC
     storage/storageio.cpp
     utils/config.cpp
     utils/configparser.cpp
+    utils/eventloop.cpp
     utils/logger.cpp
     utils/statistics.cpp
     exception.cpp)
