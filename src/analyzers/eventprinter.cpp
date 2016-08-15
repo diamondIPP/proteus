@@ -6,6 +6,11 @@
 
 #include "eventprinter.h"
 
+std::unique_ptr<Analyzers::EventPrinter> Analyzers::EventPrinter::make()
+{
+  return std::unique_ptr<EventPrinter>(new EventPrinter());
+}
+
 Analyzers::EventPrinter::EventPrinter()
     : SingleAnalyzer(NULL)
     , _events(0)
