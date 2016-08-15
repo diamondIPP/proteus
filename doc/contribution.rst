@@ -134,8 +134,8 @@ are listed here.
 
         class Foo {
         public:
-          int bar() const { return _bar; }
-          int calculateX() const { return 2 * _bar + 42; }
+          int bar() const { return m_bar; }
+          int calculateX() const { return 2 * m_bar + 42; }
         private:
           int m_bar;
         }
