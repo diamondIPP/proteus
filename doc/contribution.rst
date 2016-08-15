@@ -137,7 +137,7 @@ are listed here.
           int bar() const { return _bar; }
           int calculateX() const { return 2 * _bar + 42; }
         private:
-          int _bar;
+          int m_bar;
         }
 
 *   The ``inline`` statement is *not* needed when defining a class
