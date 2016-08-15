@@ -17,20 +17,22 @@
 #include "processors/clustermaker.h"
 #include "storage/storageio.h"
 #include "utils/logger.h"
+#include "utils/eventloop.h"
 
 void run_noise(const std::string& input_path,
                const std::string& output_path)
 {
   Storage::StorageIO input(input_path.c_str(), Storage::INPUT);
-  Loopers::EventLooper looper(&input, 0, 10);
+  Utils::EventLoop loop(&input);
   
   Processors::Processor* clusterer = new Processors::ClusterMaker(1, 1, 2);
+  Analyzers::SingleAnalyzer* printer = new Analyzers::EventPrinter();
   
-  looper.addProcessor(std::unique_ptr<Processors::Processor>(clusterer));
-  looper.addAnalyzer(new Analyzers::EventPrinter());
+  loop.addProcessor(std::unique_ptr<Processors::Processor>(clusterer));
+  loop.addAnalyzer(std::unique_ptr<Analyzers::SingleAnalyzer>(printer));
   
   Utils::globalLogger().setLevel(Utils::Logger::DEBUG);
-  looper.loop();
+  loop.run();
 }
 
 int main(int argc, char const* argv[])
