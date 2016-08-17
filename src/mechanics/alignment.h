@@ -10,40 +10,48 @@ class ConfigParser;
 
 namespace Mechanics {
 
-  class Device;
+class Device;
 
-  class Alignment {
-  public:
-    Alignment(const char* fileName, Device* device);
+class Alignment {
+public:
+  Alignment(const char* fileName, Device* device);
 
-    const char* getFileName() { return _fileName.c_str(); }
-    
-    void readFile(const std::string& path);
-    void writeFile(const std::string& path);
-    void readFile() { readFile(_fileName); }
-    void writeFile() { writeFile(_fileName); }
+  const char* getFileName() { return _fileName.c_str(); }
 
-    bool hasAlignment(Index sensorId) const;
-    Transform3 getLocalToGlobal(Index sensorId) const;
+  void readFile(const std::string& path);
+  void writeFile(const std::string& path);
+  void readFile() { readFile(_fileName); }
+  void writeFile() { writeFile(_fileName); }
 
-  private:
-    struct Geometry {
-      double offsetX, offsetY, offsetZ;
-      double rotationX, rotationY, rotationZ;
+  bool hasAlignment(Index sensorId) const;
+  Transform3 getLocalToGlobal(Index sensorId) const;
 
-      Geometry() : offsetX(0), offsetY(0), offsetZ(0), rotationX(0), rotationY(0), rotationZ(0) {}
-    };
-    typedef std::map<Index,Geometry> Geometries;
+private:
+  struct Geometry {
+    double offsetX, offsetY, offsetZ;
+    double rotationX, rotationY, rotationZ;
 
-    void parse(const ConfigParser& config);
+    Geometry()
+        : offsetX(0)
+        , offsetY(0)
+        , offsetZ(0)
+        , rotationX(0)
+        , rotationY(0)
+        , rotationZ(0)
+    {
+    }
+  };
+  typedef std::map<Index, Geometry> Geometries;
 
-    Geometries _geo;
-    double _beamSlopeX, _beamSlopeY, _syncRatio;
-    std::string _fileName;
-    Device* _device;
-    
-  }; // end of class
-  
+  void parse(const ConfigParser& config);
+
+  Geometries _geo;
+  double _beamSlopeX, _beamSlopeY, _syncRatio;
+  std::string _fileName;
+  Device* _device;
+
+}; // end of class
+
 } // end of namespace
 
 #endif // ALIGNMENT_H
