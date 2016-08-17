@@ -1,5 +1,5 @@
-Judith --- beam telescope reconstruction and analysis
-=====================================================
+<TO BE RENAMED> --- beam telescope reconstruction and analysis
+==============================================================
 
 Use the following commands to build the software using [CMake][cmake] in a
 separate build directory:
@@ -16,7 +16,10 @@ environment. By sourcing it via
     source build/activate.sh
 
 the `Judith` binary can be called directly without specifying its location
-explicitely.
+explicitly.
+
+Additional information including the coding and contribution guide can be found
+in the `doc/` directory.
 
 The `test` directory contains example configurations and additional information
 on how to use them.
