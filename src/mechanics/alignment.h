@@ -16,22 +16,28 @@ class Alignment {
 public:
   Alignment(const char* fileName, Device* device);
 
-  const char* getFileName() { return _fileName.c_str(); }
+  const char* getFileName() { return m_fileName.c_str(); }
 
   void readFile(const std::string& path);
   void writeFile(const std::string& path);
-  void readFile() { readFile(_fileName); }
-  void writeFile() { writeFile(_fileName); }
+  void readFile() { readFile(m_fileName); }
+  void writeFile() { writeFile(m_fileName); }
 
+  /** Check if alignment information exsists for the given sensor. */
   bool hasAlignment(Index sensorId) const;
   Transform3 getLocalToGlobal(Index sensorId) const;
+  void setOffset(Index sensorId, const Point3& offset);
+  void setRotationAngles(Index sensorId, double rotX, double rotY, double rotZ);
+
+  /** Beam direction in the global coordinate system. */
+  Vector3 beamDirection() const;
 
 private:
-  struct Geometry {
+  struct GeoParams {
     double offsetX, offsetY, offsetZ;
     double rotationX, rotationY, rotationZ;
-
-    Geometry()
+    // ensure parameters have sensible defaults
+    GeoParams()
         : offsetX(0)
         , offsetY(0)
         , offsetZ(0)
@@ -41,17 +47,15 @@ private:
     {
     }
   };
-  typedef std::map<Index, Geometry> Geometries;
 
   void parse(const ConfigParser& config);
 
-  Geometries _geo;
-  double _beamSlopeX, _beamSlopeY, _syncRatio;
-  std::string _fileName;
-  Device* _device;
+  std::map<Index, GeoParams> m_geo;
+  double m_beamSlopeX, m_beamSlopeY, m_syncRatio;
+  std::string m_fileName;
+  Device* m_device;
+};
 
-}; // end of class
-
-} // end of namespace
+} // namespace Mechanics
 
 #endif // ALIGNMENT_H
