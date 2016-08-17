@@ -30,7 +30,7 @@ namespace Mechanics {
     double tsToTime(ULong64_t timeStamp) const;
     
     void setBeamSlopeX(double rotation) { _beamSlopeX = rotation; }
-    void setBeamSlopeY(double rotation) { _beamSlopeY = rotation; }     
+    void setBeamSlopeY(double rotation) { _beamSlopeY = rotation; }
     void setTimeStart(ULong64_t timeStamp) { _timeStart = timeStamp; }
     void setTimeEnd(ULong64_t timeStamp) { _timeEnd = timeStamp; }
     void setSyncRatio(double ratio) { _syncRatio = ratio; }
@@ -59,6 +59,8 @@ namespace Mechanics {
     void print() const;
 
   private:
+    void setAlignment(const Alignment& alignment);
+
     std::string _name;
     double _clockRate;
     unsigned int _readOutWindow;
@@ -77,7 +79,7 @@ namespace Mechanics {
     NoiseMask* _noiseMask;
     Alignment* _alignment;
     
-  }; // end of class  
+  }; // end of class
 } // end of namespace Mechanics
 
 #endif // DEVICE_H

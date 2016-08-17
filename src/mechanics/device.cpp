@@ -9,6 +9,7 @@
 
 #include <Rtypes.h>
 
+#include "utils/definitions.h"
 #include "sensor.h"
 #include "noisemask.h"
 #include "alignment.h"
@@ -42,11 +43,13 @@ Mechanics::Device::Device(const char* name,
   _noiseMask(0),
   _alignment(0)
 {
-  if(strlen(alignmentName))
-    _alignment = new Alignment(alignmentName, this);
+  if (strlen(alignmentName)) {
+    _alignment = new Alignment(alignmentName);
+    setAlignment(*_alignment);
+  }
 
-  if(strlen(noiseMaskName))
-    _noiseMask =  new NoiseMask(noiseMaskName);
+  if (strlen(noiseMaskName))
+    _noiseMask = new NoiseMask(noiseMaskName);
 
   std::replace(_timeUnit.begin(), _timeUnit.end(), '\\', '#');
   std::replace(_spaceUnit.begin(), _spaceUnit.end(), '\\', '#');
@@ -109,4 +112,23 @@ void Mechanics::Device::print() const {
   
   for (unsigned int nsens=0; nsens<getNumSensors(); nsens++)
     getSensor(nsens)->print();
+}
+
+void Mechanics::Device::setAlignment(const Alignment& alignment)
+{
+  for (Index sensorId = 0; sensorId < getNumSensors(); ++sensorId) {
+    Sensor* sensor = getSensor(sensorId);
+    const Alignment::GeoParams& params = alignment.m_geo.at(sensorId);
+
+    sensor->setOffX(params.offsetX);
+    sensor->setOffY(params.offsetY);
+    sensor->setOffZ(params.offsetZ);
+    sensor->setRotX(params.rotationX);
+    sensor->setRotY(params.rotationY);
+    sensor->setRotZ(params.rotationZ);
+  }
+
+  _beamSlopeX = alignment.m_beamSlopeX;
+  _beamSlopeY = alignment.m_beamSlopeY;
+  _syncRatio = alignment.m_syncRatio;
 }
