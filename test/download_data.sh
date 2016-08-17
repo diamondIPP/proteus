@@ -1,13 +1,15 @@
 #!/bin/sh -ex
 #
-# get a copies of the raw data files
+# get copies of the raw data files
 
-GET="rsync -ah --progress"
+get()
+{
+    source=https://unigetb.web.cern.ch/unigetb/tbdata/raw/$1
+    target=$2
 
-mkdir -p raw
-$GET \
-    lxplus.cern.ch:/afs/cern.ch/work/f/fdibello/public/JTraining/cosmic_85_0875.root \
-    raw/cosmic_000875.root
-$GET \
-    caribou@pccariboudaq:/data/rcedata/cern_sps_2016_07/raw/cosmic_001066/cosmic_001066.root \
-    raw/cosmic_001066.root
+    curl -o ${target} ${source}
+}
+
+get cosmic_85_0875.root raw/run000875.root
+get cosmic_001066.root raw/run001066.root
+(cd raw; sha256sum --check sha256sum.txt)
