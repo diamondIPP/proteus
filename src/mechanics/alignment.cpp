@@ -20,36 +20,14 @@ using std::fstream;
 using std::cout;
 using std::endl;
 
-Mechanics::Alignment::Alignment(const char* fileName, Device* device)
+Mechanics::Alignment::Alignment(const char* fileName)
     : m_fileName(fileName)
-    , m_device(device)
 {
-  assert(device && "Alignment: can't initialize with a null device");
 }
 
 void Mechanics::Alignment::readFile(const std::string& path)
 {
-  ConfigParser config(path.c_str());
-  parse(config);
-
-  m_device->setBeamSlopeX(m_beamSlopeX);
-  m_device->setBeamSlopeY(m_beamSlopeY);
-  m_device->setSyncRatio(m_syncRatio);
-  for (auto it = m_geo.cbegin(); it != m_geo.cend(); ++it) {
-    unsigned int sensorId = it->first;
-    const GeoParams& params = it->second;
-
-    if (!(sensorId < m_device->getNumSensors()))
-      throw std::runtime_error("Sensor id exceeds number of sensors");
-
-    Sensor* sensor = m_device->getSensor(it->first);
-    sensor->setOffX(params.offsetX);
-    sensor->setOffY(params.offsetY);
-    sensor->setOffZ(params.offsetZ);
-    sensor->setRotX(params.rotationX);
-    sensor->setRotY(params.rotationY);
-    sensor->setRotZ(params.rotationZ);
-  }
+  parse(ConfigParser(path.c_str()));
 }
 
 void Mechanics::Alignment::parse(const ConfigParser& config)
@@ -119,23 +97,24 @@ void Mechanics::Alignment::writeFile(const std::string& path)
   file << std::setprecision(9);
   file << std::fixed;
 
-  for (unsigned int nsens = 0; nsens < m_device->getNumSensors(); nsens++) {
-    Sensor* sensor = m_device->getSensor(nsens);
-    file << "[Sensor " << nsens << "]" << endl;
-    file << "offset x   : " << sensor->getOffX() << endl;
-    file << "offset y   : " << sensor->getOffY() << endl;
-    file << "offset z   : " << sensor->getOffZ() << endl;
-    file << "rotation x : " << sensor->getRotX() << endl;
-    file << "rotation y : " << sensor->getRotY() << endl;
-    file << "rotation z : " << sensor->getRotZ() << endl;
+  for (auto it = m_geo.begin(); it != m_geo.end(); ++it) {
+    Index sensorId = it->first;
+    const GeoParams& params = it->second;
+
+    file << "[Sensor " << sensorId << "]" << endl;
+    file << "offset x   : " << params.offsetX << endl;
+    file << "offset y   : " << params.offsetY << endl;
+    file << "offset z   : " << params.offsetZ << endl;
+    file << "rotation x : " << params.rotationX << endl;
+    file << "rotation y : " << params.rotationY << endl;
+    file << "rotation z : " << params.rotationZ << endl;
     file << "[End Sensor]\n" << endl;
   }
 
   file << "[Device]" << endl;
-  file << "slope x    : " << m_device->getBeamSlopeX() << endl;
-  file << "slope y    : " << m_device->getBeamSlopeY() << endl;
-  if (m_device->getSyncRatio() > 0)
-    file << "sync ratio : " << m_device->getSyncRatio() << endl;
+  file << "slope x    : " << m_beamSlopeX << endl;
+  file << "slope y    : " << m_beamSlopeY << endl;
+  file << "sync ratio : " << m_syncRatio << endl;
   file << "[End Device]\n" << endl;
 
   file.close();

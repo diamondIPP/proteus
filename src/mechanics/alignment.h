@@ -14,7 +14,7 @@ class Device;
 
 class Alignment {
 public:
-  Alignment(const char* fileName, Device* device);
+  Alignment(const char* fileName);
 
   const char* getFileName() { return m_fileName.c_str(); }
 
@@ -53,7 +53,8 @@ private:
   std::map<Index, GeoParams> m_geo;
   double m_beamSlopeX, m_beamSlopeY, m_syncRatio;
   std::string m_fileName;
-  Device* m_device;
+  // only temporarily until Sensor is using Transform3;
+  friend class Device;
 };
 
 } // namespace Mechanics
