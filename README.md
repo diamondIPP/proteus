@@ -1,6 +1,13 @@
 <TO BE RENAMED> --- beam telescope reconstruction and analysis
 ==============================================================
 
+<TO BE RENAMED> is a software to reconstruct and analyze beam telescope
+measurements. It started as a fork of the [Judith][judith] software but
+has since then evolved into an independent package.
+
+Building
+--------
+
 Use the following commands to build the software using [CMake][cmake] in a
 separate build directory:
 
@@ -24,5 +31,66 @@ in the `doc/` directory.
 The `test` directory contains example configurations and additional information
 on how to use them.
 
+Authors
+-------
+
+The original Judith software was written by
+
+*   Garrin McGoldrick
+*   Matevž Červ
+*   Andrej Gorišek
+
+The fork has seen contributions from (in alphabetical order):
+
+*   Javier Bilbao
+*   Reina Camacho
+*   Francesco Di Bello
+*   Moritz Kiehn
+*   Lingxin Meng
+*   Marco Rimoldi
+*   Branislav Ristic
+*   Sergio Gonzalez Sevilla
+
+Citations
+---------
+
+Users of the software are expected to respect the rules of good
+scientific practice. Publications that use this software should cite the
+relevant publications:
+
+*   G. McGoldrick et al, [NIM A765 140--145, Nov. 2014][paper2014]
+
+License
+-------
+
+This software is distributed under the terms of the MIT license.
+
+    Copyright (c) 201x-2014 The Judith authors
+    Copyright (c) 2014-2016 The <TO BE RENAMED> authors
+
+    Permission is hereby granted, free of charge, to any person
+    obtaining a copy of this software and associated documentation files
+    (the "Software"), to deal in the Software without restriction,
+    including without limitation the rights to use, copy, modify, merge,
+    publish, distribute, sublicense, and/or sell copies of the Software,
+    and to permit persons to whom the Software is furnished to do so,
+    subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+    BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+    ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+    CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+Contributions are expected to be submitted under the same license terms.
+
 
 [cmake]: http://www.cmake.org
+[judith]: https://github.com/gmcgoldr/judith
+[paper2014]: http://dx.doi.org/10.1016/j.nima.2014.05.033
