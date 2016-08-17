@@ -21,5 +21,8 @@ explicitly.
 Additional information including the coding and contribution guide can be found
 in the `doc/` directory.
 
+The `test` directory contains example configurations and additional information
+on how to use them.
+
 
 [cmake]: http://www.cmake.org
