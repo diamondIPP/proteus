@@ -32,8 +32,10 @@ root -l -q "${MACROS}/Regions.cc+(\"${PREFIX}dut0\",0,5,157,173,165,168)"
 root -l -q "${MACROS}/mapping.cc+(\"${PREFIX}dut0_Stime.root\",\"${PREFIX}dut0_Stime-m.root\")"
 # alignment and final analysis
 
-# TODO 2016-08-08 msmk: dut alignment and analysis does not work due to
-# hard-coded region-of-interest cuts in the code base.
+# TODO 2016-08-08 msmk:
+# dut alignment and analysis does not work due to hard-coded
+# region-of-interest cuts in the code base.
+# needs to be updated when issues #11 and #12 are fixed.
 
 # Judith $FLAGS -c coarseAlignDUT -t $CFG -r $REF -d $DUT \
 #     -i ${PREFIX}ref-p.root -I ${PREFIX}dut0_Stime-m.root
