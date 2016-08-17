@@ -23,8 +23,8 @@ namespace Mechanics {
     void readFile() { readFile(_fileName); }
     void writeFile() { writeFile(_fileName); }
 
-    bool hasAlignment(Index sensor_id) const;
-    Transform3 getLocalToGlobal(Index sensor_id) const;
+    bool hasAlignment(Index sensorId) const;
+    Transform3 getLocalToGlobal(Index sensorId) const;
 
   private:
     struct Geometry {
