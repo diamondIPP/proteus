@@ -12,51 +12,52 @@
 
 #include "utils/definitions.h"
 
-namespace Loopers { class NoiseScanConfig; }
+namespace Loopers {
+class NoiseScanConfig;
+}
 
 namespace Mechanics {
 
-  /** @class NoiseMask
-   **
-   ** @brief Store masked pixels for multiple sensors
-   **
-   ** Writes and reads from a textfile of all noisy pixels
-   ** in the format:
-   **      sensor, x, y
-   */
-  class NoiseMask {
-  public:
-    using ColumnRowSet = std::set<ColumnRow>;
-    
-    /** Create empty noise masks with the default config. */
-    NoiseMask();
-    /** Create an empty noise mask with the given scan config. */
-    explicit NoiseMask(const Loopers::NoiseScanConfig* config);
-    ~NoiseMask();
+/** @class NoiseMask
+ **
+ ** @brief Store masked pixels for multiple sensors
+ **
+ ** Writes and reads from a textfile of all noisy pixels
+ ** in the format:
+ **      sensor, x, y
+ */
+class NoiseMask {
+public:
+  using ColumnRowSet = std::set<ColumnRow>;
 
-    /** Read noise masks and configuration from a file. */
-    void readFile(const std::string& path);
-    /** Write the current noise masks and configuration to a file. */
-    void writeFile(const std::string& path) const;
+  /** Create empty noise masks with the default config. */
+  NoiseMask();
+  /** Create an empty noise mask with the given scan config. */
+  explicit NoiseMask(const Loopers::NoiseScanConfig* config);
+  ~NoiseMask();
 
-    void maskPixel(Index sensor_id, Index col, Index row);
-    const ColumnRowSet& getMaskedPixels(Index sensor_id) const;
-    const size_t getNumMaskedPixels() const;
+  /** Read noise masks and configuration from a file. */
+  void readFile(const std::string& path);
+  /** Write the current noise masks and configuration to a file. */
+  void writeFile(const std::string& path) const;
 
-    const char* getFileName() { return _fileName.c_str(); }
-    const Loopers::NoiseScanConfig* getConfig() const { return _config.get(); }
+  void maskPixel(Index sensor_id, Index col, Index row);
+  const ColumnRowSet& getMaskedPixels(Index sensor_id) const;
+  const size_t getNumMaskedPixels() const;
 
-  private:
-    void parseLine(std::stringstream& line, Index& nsens, Index& x, Index& y);
-    void parseComments(std::stringstream& comments);
+  const char* getFileName() { return _fileName.c_str(); }
+  const Loopers::NoiseScanConfig* getConfig() const { return _config.get(); }
 
-  private:
-    std::map<Index,ColumnRowSet> _masks;
-    std::unique_ptr<Loopers::NoiseScanConfig> _config;
-    std::string _fileName;
+private:
+  void parseLine(std::stringstream& line, Index& nsens, Index& x, Index& y);
+  void parseComments(std::stringstream& comments);
 
-  }; // end of class
+private:
+  std::map<Index, ColumnRowSet> _masks;
+  std::unique_ptr<Loopers::NoiseScanConfig> _config;
+  std::string _fileName;
+};
 
-} // end of namespace
+} // namespace Mechanics
 
 #endif // NOISEMASK_H

@@ -1,18 +1,15 @@
 #include "noisemask.h"
 
-#include <cassert>
 #include <algorithm>
+#include <cassert>
+#include <cstdlib>
 #include <iostream>
 #include <stdexcept>
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-
-#include "device.h"
-#include "sensor.h"
-#include "../loopers/noisescan.h"
-#include "../configparser.h"
+#include "configparser.h"
+#include "loopers/noisescan.h"
+#include "mechanics/device.h"
+#include "mechanics/sensor.h"
 
 #ifndef VERBOSE
 #define VERBOSE 0
@@ -30,7 +27,8 @@ Mechanics::NoiseMask::NoiseMask()
 }
 
 Mechanics::NoiseMask::NoiseMask(const Loopers::NoiseScanConfig* config)
-    : _config(new Loopers::NoiseScanConfig(*config)), _fileName("<TRANSIENT>")
+    : _config(new Loopers::NoiseScanConfig(*config))
+    , _fileName("<TRANSIENT>")
 {
 }
 
@@ -55,7 +53,8 @@ void Mechanics::NoiseMask::readFile(const std::string& path)
     unsigned int y = 0;
     std::string line;
     std::getline(input, line);
-    if (!line.size()) continue;
+    if (!line.size())
+      continue;
     if (line[0] == '#') {
       comments << line << "\n";
       continue;
@@ -65,14 +64,15 @@ void Mechanics::NoiseMask::readFile(const std::string& path)
     _masks[nsens].emplace(x, y);
   }
 
-  if (!comments.str().empty()) parseComments(comments);
+  if (!comments.str().empty())
+    parseComments(comments);
 
   _fileName = path;
 }
 
 void Mechanics::NoiseMask::writeFile(const std::string& path) const
 {
-	std::fstream out(path, std::ios_base::out);
+  std::fstream out(path, std::ios_base::out);
 
   if (!out.is_open()) {
     std::string msg("[NoiseMask::writeMask]");
@@ -80,31 +80,33 @@ void Mechanics::NoiseMask::writeFile(const std::string& path) const
     throw std::runtime_error(msg);
   }
 
-	for (const auto& mask : _masks) {
-		auto id = mask.first;
-		for (const auto& index : mask.second) {
-			auto col = std::get<0>(index);
-			auto row = std::get<1>(index);
-			out << id << ", " << col << ", " << row << '\n';
-		}
-	}
+  for (const auto& mask : _masks) {
+    auto id = mask.first;
+    for (const auto& index : mask.second) {
+      auto col = std::get<0>(index);
+      auto row = std::get<1>(index);
+      out << id << ", " << col << ", " << row << '\n';
+    }
+  }
 
-	out << _config->print() << '\n';
-	out.close();
-	
-	cout << "Wrote noise mask to '" << path << "'\n";
+  out << _config->print() << '\n';
+  out.close();
+
+  cout << "Wrote noise mask to '" << path << "'\n";
 }
 
 //=========================================================
-void Mechanics::NoiseMask::parseLine(std::stringstream& line, Index& nsens,
-                                     Index& x, Index& y)
+void Mechanics::NoiseMask::parseLine(std::stringstream& line,
+                                     Index& nsens,
+                                     Index& x,
+                                     Index& y)
 {
   Index counter = 0;
-  while(line.good()){
+  while (line.good()) {
     std::string value;
     std::getline(line, value, ',');
     std::stringstream convert(value);
-    switch (counter){
+    switch (counter) {
     case 0:
       convert >> nsens;
       break;
@@ -122,45 +124,49 @@ void Mechanics::NoiseMask::parseLine(std::stringstream& line, Index& nsens,
 }
 
 //=========================================================
-void Mechanics::NoiseMask::parseComments(std::stringstream& comments){
-  if(VERBOSE){
-    cout << "\n[NoiseMask::parseComments] input string:"  << endl;
+void Mechanics::NoiseMask::parseComments(std::stringstream& comments)
+{
+  if (VERBOSE) {
+    cout << "\n[NoiseMask::parseComments] input string:" << endl;
     cout << comments.str() << endl;
   }
 
   // remove '#' characters from input string
   std::string str(comments.str());
-  str.erase(std::remove(str.begin(),str.end(),'#'),str.end());
+  str.erase(std::remove(str.begin(), str.end(), '#'), str.end());
 
   // create temporary file to write metadata
   char nameBuff[] = "/tmp/noiseMask.XXXXXX";
   int fd = mkstemp(nameBuff);
-  if(fd == -1){
+  if (fd == -1) {
     std::string err("[NoiseMask::parseComments] ERROR can't create temp file");
-    err+=string(nameBuff)+"'";
+    err += string(nameBuff) + "'";
     throw err.c_str();
   }
-  if(VERBOSE) cout << "temp file '" << nameBuff << "' created OK" << endl;
+  if (VERBOSE)
+    cout << "temp file '" << nameBuff << "' created OK" << endl;
   write(fd, str.c_str(), strlen(str.c_str()));
   close(fd);
 
   // use ConfigParser to parse contents
   ConfigParser parser(nameBuff);
-  if(VERBOSE) parser.print();
+  if (VERBOSE)
+    parser.print();
 
-  for (unsigned int i=0; i<parser.getNumRows(); i++){
+  for (unsigned int i = 0; i < parser.getNumRows(); i++) {
     const ConfigParser::Row* row = parser.getRow(i);
 
-    if(row->isHeader) continue;
-    if(row->header.compare("Noise Scan")) continue;
+    if (row->isHeader)
+      continue;
+    if (row->header.compare("Noise Scan"))
+      continue;
 
-    if (!row->key.compare("runs")){
+    if (!row->key.compare("runs")) {
       std::vector<int> runs;
       ConfigParser::valueToVec(row->value, runs);
       _config->setRuns(runs);
       runs.clear();
-    }
-    else if (!row->key.compare("max factor"))
+    } else if (!row->key.compare("max factor"))
       _config->setMaxFactor(ConfigParser::valueToNumerical(row->value));
     else if (!row->key.compare("max occupancy"))
       _config->setMaxOccupancy(ConfigParser::valueToNumerical(row->value));
@@ -172,9 +178,9 @@ void Mechanics::NoiseMask::parseComments(std::stringstream& comments){
       _config->setBottomLimitY(ConfigParser::valueToNumerical(row->value));
     else if (!row->key.compare("upper y"))
       _config->setUpperLimitY(ConfigParser::valueToNumerical(row->value));
-    else{
+    else {
       cout << "[NoiseMask::parseComments] WARNING can't parse row with key '"
-	   << row->key << endl;
+           << row->key << endl;
     }
   }
 
@@ -187,19 +193,21 @@ void Mechanics::NoiseMask::maskPixel(Index sensor_id, Index col, Index row)
   _masks[sensor_id].emplace(col, row);
 }
 
-const Mechanics::NoiseMask::ColumnRowSet& Mechanics::NoiseMask::getMaskedPixels(
-    Index sensor_id) const
+const Mechanics::NoiseMask::ColumnRowSet&
+Mechanics::NoiseMask::getMaskedPixels(Index sensor_id) const
 {
-	static const ColumnRowSet EMPTY;
-	
+  static const ColumnRowSet EMPTY;
+
   auto mask = _masks.find(sensor_id);
-  if (mask != _masks.end()) return mask->second;
+  if (mask != _masks.end())
+    return mask->second;
   return EMPTY;
 }
 
 const size_t Mechanics::NoiseMask::getNumMaskedPixels() const
 {
   size_t n = 0;
-  for (const auto& mask : _masks) n += mask.second.size();
+  for (const auto& mask : _masks)
+    n += mask.second.size();
   return n;
 }
