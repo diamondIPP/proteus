@@ -44,7 +44,8 @@ Mechanics::Device::Device(const char* name,
   _alignment(0)
 {
   if (strlen(alignmentName)) {
-    _alignment = new Alignment(alignmentName);
+    _alignment = new Alignment();
+	  _alignment->readFile(alignmentName);
     setAlignment(*_alignment);
   }
 
@@ -107,7 +108,7 @@ void Mechanics::Device::print() const {
        << "  Clock rate: " << _clockRate << "\n"
        << "  Read out window: " << _readOutWindow << "\n"
        << "  Sensors: " << _numSensors << "\n"
-       << "  Alignment: " << _alignment->getFileName() << "\n"
+       << "  Alignment: " << _alignment->m_path << "\n"
        << "  Noisemask: " << _noiseMask->getFileName() << endl;
   
   for (unsigned int nsens=0; nsens<getNumSensors(); nsens++)

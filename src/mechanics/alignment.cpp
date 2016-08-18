@@ -20,13 +20,17 @@ using std::fstream;
 using std::cout;
 using std::endl;
 
-Mechanics::Alignment::Alignment(const std::string& fileName)
-    : m_fileName(fileName)
+Mechanics::Alignment::Alignment()
+    : m_beamSlopeX(0)
+    , m_beamSlopeY(0)
+    , m_syncRatio(0)
+    , m_path("<TRANSIENT>")
 {
 }
 
 void Mechanics::Alignment::readFile(const std::string& path)
 {
+  m_path = path;
   parse(ConfigParser(path.c_str()));
 }
 
@@ -90,7 +94,7 @@ void Mechanics::Alignment::writeFile(const std::string& path) const
 
   if (!file.is_open()) {
     std::string err = "[Alignment::writeFile] ERROR unable to open '" +
-                      m_fileName + "' for writting";
+                      m_path + "' for writting";
     throw err.c_str();
   }
 
@@ -119,7 +123,7 @@ void Mechanics::Alignment::writeFile(const std::string& path) const
 
   file.close();
 
-  std::cout << "\nAlignment file '" << m_fileName << "' created OK\n"
+  std::cout << "\nAlignment file '" << m_path << "' created OK\n"
             << std::endl;
 }
 
@@ -150,7 +154,10 @@ void Mechanics::Alignment::setOffset(Index sensorId, const Point3& offset)
   params.offsetZ = offset.z();
 }
 
-void Mechanics::Alignment::setRotationAngles(Index sensorId, double rotX, double rotY, double rotZ)
+void Mechanics::Alignment::setRotationAngles(Index sensorId,
+                                             double rotX,
+                                             double rotY,
+                                             double rotZ)
 {
   // will automatically create a missing GeoParams
   auto& params = m_geo[sensorId];
@@ -163,4 +170,10 @@ Vector3 Mechanics::Alignment::beamDirection() const
 {
   double f = 1 / std::hypot(1, std::hypot(m_beamSlopeX, m_beamSlopeY));
   return Vector3(f * m_beamSlopeX, f * m_beamSlopeY, f);
+}
+
+void Mechanics::Alignment::setBeamSlope(double slopeX, double slopeY)
+{
+  m_beamSlopeX = slopeX;
+  m_beamSlopeY = slopeY;
 }

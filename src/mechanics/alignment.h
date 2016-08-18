@@ -14,13 +14,12 @@ class Device;
 
 class Alignment {
 public:
-  Alignment(const std::string& fileName);
-
-  const std::string& getFileName() const { return m_fileName; }
+  Alignment();
 
   void readFile(const std::string& path);
   void writeFile(const std::string& path) const;
-  void writeFile() const { writeFile(m_fileName); }
+  /** \deprecated Alignment object should know nothing about file paths. */
+  void writeFile() const { writeFile(m_path); }
 
   /** Check if alignment information exsists for the given sensor. */
   bool hasAlignment(Index sensorId) const;
@@ -30,6 +29,7 @@ public:
 
   /** Beam direction in the global coordinate system. */
   Vector3 beamDirection() const;
+  void setBeamSlope(double slopeX, double slopeY);
 
 private:
   struct GeoParams {
@@ -51,7 +51,8 @@ private:
 
   std::map<Index, GeoParams> m_geo;
   double m_beamSlopeX, m_beamSlopeY, m_syncRatio;
-  std::string m_fileName;
+  std::string m_path;
+
   // only temporarily until Sensor is using Transform3;
   friend class Device;
 };
