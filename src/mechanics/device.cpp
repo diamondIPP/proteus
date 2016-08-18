@@ -119,14 +119,7 @@ void Mechanics::Device::setAlignment(const Alignment& alignment)
 {
   for (Index sensorId = 0; sensorId < getNumSensors(); ++sensorId) {
     Sensor* sensor = getSensor(sensorId);
-    const Alignment::GeoParams& params = alignment.m_geo.at(sensorId);
-
-    sensor->setOffX(params.offsetX);
-    sensor->setOffY(params.offsetY);
-    sensor->setOffZ(params.offsetZ);
-    sensor->setRotX(params.rotationX);
-    sensor->setRotY(params.rotationY);
-    sensor->setRotZ(params.rotationZ);
+    sensor->setLocalToGlobal(alignment.getLocalToGlobal(sensorId));
   }
 
   _beamSlopeX = alignment.m_beamSlopeX;
