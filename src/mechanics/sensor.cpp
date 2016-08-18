@@ -25,7 +25,8 @@ Mechanics::Sensor::Sensor(const std::string& name,
     , m_depth(depth)
     , m_xox0(xX0)
     , m_name(name)
-		, m_device(nullptr)
+    , m_noiseMask(numCols * numRows, false)
+    , m_device(nullptr)
 {
 }
 
@@ -50,28 +51,14 @@ Mechanics::Sensor::Sensor(unsigned int numX,
     , m_pitchCol(pitchX)
     , m_pitchRow(pitchY)
     , m_depth(depth)
-		, m_xox0(xox0)
-		, m_name(name)
+    , m_xox0(xox0)
+    , m_name(name)
     , m_device(device)
+    , m_noiseMask(numX * numY, false)
     , m_digi(digi)
     , m_alignable(alignable)
-    , m_numNoisyPixels(0)
 {
   assert(device && "Sensor: need to link the sensor back to a device.");
-
-  m_noisyPixels = new bool*[m_numCols];
-  for (unsigned int x = 0; x < m_numCols; x++) {
-    bool* row = new bool[m_numRows];
-    m_noisyPixels[x] = row;
-  }
-  clearNoisyPixels();
-}
-
-Mechanics::Sensor::~Sensor()
-{
-  for (unsigned int x = 0; x < m_numCols; x++)
-    delete[] m_noisyPixels[x];
-  delete[] m_noisyPixels;
 }
 
 // geometry related methods
@@ -160,29 +147,21 @@ void Mechanics::Sensor::spaceToPixel(
 //
 //=========================================================
 
-void Mechanics::Sensor::clearNoisyPixels()
+void Mechanics::Sensor::setNoisyPixels(const std::set<ColumnRow>& pixels)
 {
-  m_numNoisyPixels = 0;
-  for (unsigned int x = 0; x < m_numCols; x++)
-    for (unsigned int y = 0; y < m_numRows; y++)
-      m_noisyPixels[x][y] = false;
-}
+	// reset possible existing mask
+	std::fill(m_noiseMask.begin(), m_noiseMask.end(), false);
 
-void Mechanics::Sensor::setNoisyPixels(const NoiseMask& masks,
-                                       unsigned int sensor_id)
-{
-  clearNoisyPixels();
-  for (const auto& index : masks.getMaskedPixels(sensor_id)) {
-    auto col = std::get<0>(index);
-    auto row = std::get<1>(index);
+  for (auto it = pixels.begin(); it != pixels.end(); ++it) {
+    auto col = std::get<0>(*it);
+    auto row = std::get<1>(*it);
 
     if (m_numCols <= col)
       throw std::runtime_error("column index is out of range");
     if (m_numRows <= row)
       throw std::runtime_error("row index is out of range");
 
-    m_noisyPixels[col][row] = true;
-    m_numNoisyPixels += 1;
+		m_noiseMask[linearPixelIndex(col, row)] = true;
   }
 }
 
@@ -210,13 +189,14 @@ void Mechanics::Sensor::print()
        << "  PosNumY: " << getPosNumY() << "\n"
        << "  Alignable: " << m_alignable << endl;
 
-  cout << "  Noisy pixels (" << m_numNoisyPixels << ")" << endl;
-  if (m_numNoisyPixels < 20) {
-    for (unsigned int nx = 0; nx < getNumX(); nx++)
-      for (unsigned int ny = 0; ny < getNumY(); ny++)
-        if (m_noisyPixels[nx][ny])
-          cout << "    " << nx << " : " << ny << endl;
-  }
+  // TODO 2016-08-18 msmk: how to print?
+  // cout << "  Noisy pixels (" << m_numNoisyPixels << ")" << endl;
+  // if (m_numNoisyPixels < 20) {
+  //   for (unsigned int nx = 0; nx < getNumX(); nx++)
+  //     for (unsigned int ny = 0; ny < getNumY(); ny++)
+  //       if (m_noisyPixels[nx][ny])
+  //         cout << "    " << nx << " : " << ny << endl;
+  // }
 }
 
 bool Mechanics::Sensor::sort(const Sensor* s1, const Sensor* s2)
@@ -314,7 +294,6 @@ double Mechanics::Sensor::getPosSensitiveY() const
   return size;
 }
 
-bool** Mechanics::Sensor::getNoiseMask() const { return m_noisyPixels; }
 bool Mechanics::Sensor::getDigital() const { return m_digi; }
 bool Mechanics::Sensor::getAlignable() const { return m_alignable; }
 unsigned int Mechanics::Sensor::getNumX() const { return m_numCols; }
@@ -322,10 +301,6 @@ unsigned int Mechanics::Sensor::getNumY() const { return m_numRows; }
 unsigned int Mechanics::Sensor::getNumPixels() const
 {
   return m_numCols * m_numRows;
-}
-unsigned int Mechanics::Sensor::getNumNoisyPixels() const
-{
-  return m_numNoisyPixels;
 }
 double Mechanics::Sensor::getPitchX() const { return m_pitchCol; }
 double Mechanics::Sensor::getPitchY() const { return m_pitchRow; }

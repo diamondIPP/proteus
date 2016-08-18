@@ -1,6 +1,8 @@
 #ifndef SENSOR_H
 #define SENSOR_H
 
+#include <cstdint>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -9,7 +11,6 @@
 namespace Mechanics {
 
 class Device;
-class NoiseMask;
 
 class Sensor {
 public:
@@ -36,7 +37,6 @@ public:
          double rotX = 0,
          double rotY = 0,
          double rotZ = 0);
-  ~Sensor();
 
   //
   // geometry related
@@ -63,11 +63,11 @@ public:
   //
   // noise-pixels functions
   //
-  void setNoisyPixels(const NoiseMask& masks, unsigned int sensor_id);
-  inline bool isPixelNoisy(unsigned int x, unsigned int y) const
+  bool isPixelNoisy(Index col, Index row) const
   {
-    return m_noisyPixels[x][y];
+    return m_noiseMask[linearPixelIndex(col, row)];
   }
+  void setNoisyPixels(const std::set<ColumnRow>& pixels);
 
   //
   // Misc functions
@@ -78,7 +78,6 @@ public:
   //
   // Get functions
   //
-  bool** getNoiseMask() const;
   bool getDigital() const;
   bool getAlignable() const;
   unsigned int getNumX() const;
@@ -86,7 +85,6 @@ public:
   unsigned int getNumPixels() const;
   unsigned int getPosNumX() const;
   unsigned int getPosNumY() const;
-  unsigned int getNumNoisyPixels() const;
   double getPitchX() const;
   double getPitchY() const;
   double getPosPitchX() const;
@@ -103,20 +101,23 @@ public:
 private:
   void rotateToGlobal(double& x, double& y, double& z) const;
   void rotateToSensor(double& x, double& y, double& z) const;
-  void clearNoisyPixels();
+  // row major indices for the pixel masks
+  size_t linearPixelIndex(Index col, Index row) const
+  {
+    return m_numCols * col + row;
+  }
 
 private:
   Transform3D m_l2g;
-  const Index m_numCols, m_numRows; // number of columns and rows
+  const Index m_numCols, m_numRows;    // number of columns and rows
   const double m_pitchCol, m_pitchRow; // pitch along column and row direction
-  const double m_depth; // sensor thickness
-  const double m_xox0; // X/X0 (thickness in radiation lengths)
+  const double m_depth;                // sensor thickness
+  const double m_xox0;                 // X/X0 (thickness in radiation lengths)
   const std::string m_name;
+  std::vector<bool> m_noiseMask;
   const Device* m_device;
   bool m_digi;
-  bool m_alignable;    // if sensor is to be aligned
-  unsigned int m_numNoisyPixels; // total number of noisy pixels
-  bool** m_noisyPixels;          // 2D array of noisy-pixels
+  bool m_alignable;              // if sensor is to be aligned
 };
 
 } // namespace Mechanics

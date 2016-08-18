@@ -71,7 +71,7 @@ void Mechanics::Device::addSensor(Mechanics::Sensor* sensor){
   if (_numSensors > 0 && getSensor(_numSensors-1)->getOffZ() > sensor->getOffZ())
     throw "[Device::addSensor] sensors must be added in order of increazing Z position";
   _sensors.push_back(sensor);
-	_sensors.back()->setNoisyPixels(*_noiseMask, _numSensors);
+	_sensors.back()->setNoisyPixels(_noiseMask->getMaskedPixels(_numSensors));
   _sensorMask.push_back(false);
   _numSensors++;
 }
