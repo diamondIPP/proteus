@@ -45,7 +45,7 @@ public:
   const ColumnRowSet& getMaskedPixels(Index sensorId) const;
   const size_t getNumMaskedPixels() const;
 
-  const std::string& getFileName() { return m_path; }
+  const std::string& getFileName() const { return m_path; }
   const Loopers::NoiseScanConfig* getConfig() const { return m_cfg.get(); }
 
 private:
