@@ -88,8 +88,10 @@ void Loopers::CoarseAlignDut::loop()
     double sigmaY = 0;
     Processors::fitGaussian(alignY, offsetY, sigmaY, _displayFits);
    std::cout << "Old offset: X= " << sensor->getOffX() << "  Y= " << sensor->getOffY() << std::endl;
-    sensor->setOffX(sensor->getOffX() - offsetX);
-    sensor->setOffY(sensor->getOffY() - offsetY);
+    
+		// TODO msmk 2016-08-18 switch to new alignment
+		// sensor->setOffX(sensor->getOffX() - offsetX);
+    // sensor->setOffY(sensor->getOffY() - offsetY);
 
    std::cout << "DUT plane: " << nsensor << std::endl;
    std::cout << "gaussian mean: X= " << offsetX << "  Y= " << offsetY << std::endl;

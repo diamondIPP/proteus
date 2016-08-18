@@ -134,9 +134,10 @@ void Loopers::FineAlignDut::loop()
       
       std::cout << "Fine alignment with residuals:" << std::endl;
       std::cout << "   Sensor: " << nsens << ", Xcorrection: " << offsetX << ", Ycorrection: " << offsetY <<  std::endl;
-      sensor->setOffX(sensor->getOffX() + offsetX);
-      sensor->setOffY(sensor->getOffY() + offsetY);
-      sensor->setRotZ(sensor->getRotZ() + rotation);
+			// TODO msmk 2016-08-18 switch to new alignment
+      // sensor->setOffX(sensor->getOffX() + offsetX);
+      // sensor->setOffY(sensor->getOffY() + offsetY);
+      // sensor->setRotZ(sensor->getRotZ() + rotation);
       offsetX=0;
       offsetY=0;
       rotation=0;
@@ -152,9 +153,10 @@ void Loopers::FineAlignDut::loop()
 		<< "Ycorrection: " << offsetY << ", "
 		<< "Zcorrection: " << rotation
 		<< std::endl;
-      sensor->setOffX(sensor->getOffX() + offsetX);
-      sensor->setOffY(sensor->getOffY() + offsetY);
-      sensor->setRotZ(sensor->getRotZ() + rotation);
+			// TODO msmk 2016-08-18 switch to new alignment
+      // sensor->setOffX(sensor->getOffX() + offsetX);
+      // sensor->setOffY(sensor->getOffY() + offsetY);
+      // sensor->setRotZ(sensor->getRotZ() + rotation);
       std::cout << "Sensor: " << nsens << ", "
 		<< "Xoffset: " << sensor->getOffX() << ", "
 		<< "Yoffset: " << sensor->getOffY() << ", "
@@ -166,7 +168,7 @@ void Loopers::FineAlignDut::loop()
 	std::cout << "The fine alignment was terminated!" << std::endl;
 	std::cout << "Only one DUT is present and 2D residuals is not working!" << std::endl;
 	niter=_numIterations+1;
-      } 
+      }
     }
 
   }
@@ -188,13 +190,9 @@ void Loopers::FineAlignDut::print() const {
   cout << "  - numIterations   : "  << _numIterations << endl;
   cout << "  - numBinsY        : "  << _numBinsY << endl;
   cout << "  - numPixX         : "  << _numPixX << endl;
-  cout << "  - binsPerPix      : "  << _binsPerPix << endl;  
+  cout << "  - binsPerPix      : "  << _binsPerPix << endl;
   cout << "  - numPixXBroad    : "  << _numPixXBroad << endl;
   cout << "  - binsPerPixBroad : "  << _binsPerPixBroad << endl;
   cout << "  - display Fits    : "  << _displayFits << endl;
   cout << "  - relaxation      : "  << _relaxation << endl;
 }
-
-
-
-

@@ -91,16 +91,17 @@ void Loopers::CoarseAlign::loop(){
     std::cout << "For sensor: " << nsensor << std::endl;
     std::cout << "Gaussian mean: X= " << offsetX << "  Y= " << offsetY << std::endl;
     std::cout << "Cummulative    X= " << cummulativeX << "  Y= " << cummulativeY << std::endl;
-    
-    sensor->setOffX(sensor->getOffX() + cummulativeX);
-    sensor->setOffY(sensor->getOffY() + cummulativeY);
+
+    // TODO msmk 2016-08-18 switch to new alignment
+    // sensor->setOffX(sensor->getOffX() + cummulativeX);
+    // sensor->setOffY(sensor->getOffY() + cummulativeY);
     
     std::cout << "New offset: X= " << sensor->getOffX() << "  Y= " << sensor->getOffY() << std::endl;
   }
   
   // create output alignment file
   _refDevice->getAlignment()->writeFile();
-} 
+}
 
 //=========================================================
 void Loopers::CoarseAlign::print() const {
