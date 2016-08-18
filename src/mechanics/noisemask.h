@@ -41,21 +41,21 @@ public:
   /** Write the current noise masks and configuration to a file. */
   void writeFile(const std::string& path) const;
 
-  void maskPixel(Index sensor_id, Index col, Index row);
-  const ColumnRowSet& getMaskedPixels(Index sensor_id) const;
+  void maskPixel(Index sensorId, Index col, Index row);
+  const ColumnRowSet& getMaskedPixels(Index sensorId) const;
   const size_t getNumMaskedPixels() const;
 
-  const char* getFileName() { return _fileName.c_str(); }
-  const Loopers::NoiseScanConfig* getConfig() const { return _config.get(); }
+  const std::string& getFileName() { return m_path; }
+  const Loopers::NoiseScanConfig* getConfig() const { return m_cfg.get(); }
 
 private:
   void parseLine(std::stringstream& line, Index& nsens, Index& x, Index& y);
   void parseComments(std::stringstream& comments);
 
 private:
-  std::map<Index, ColumnRowSet> _masks;
-  std::unique_ptr<Loopers::NoiseScanConfig> _config;
-  std::string _fileName;
+  std::map<Index, ColumnRowSet> m_maskedPixels;
+  std::unique_ptr<Loopers::NoiseScanConfig> m_cfg;
+  std::string m_path;
 };
 
 } // namespace Mechanics
