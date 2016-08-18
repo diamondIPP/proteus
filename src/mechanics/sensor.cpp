@@ -60,9 +60,9 @@ Mechanics::Sensor::~Sensor()
 
 // geometry related methods
 
-Vector3 Mechanics::Sensor::normal() const
+XYZVector Mechanics::Sensor::normal() const
 {
-  Vector3 W, U, V;
+  XYZVector W, U, V;
   m_l2g.Rotation().GetComponents(U, V, W);
   return W;
 }
@@ -94,8 +94,8 @@ void Mechanics::Sensor::getNormalVector(double& x, double& y, double& z) const
 
 void Mechanics::Sensor::rotateToGlobal(double& x, double& y, double& z) const
 {
-  Vector3 uvw(x, y, z);
-  Vector3 xyz = m_l2g * uvw;
+  XYZVector uvw(x, y, z);
+  XYZVector xyz = m_l2g * uvw;
   x = xyz.x();
   y = xyz.y();
   z = xyz.z();
@@ -103,8 +103,8 @@ void Mechanics::Sensor::rotateToGlobal(double& x, double& y, double& z) const
 
 void Mechanics::Sensor::rotateToSensor(double& x, double& y, double& z) const
 {
-  Vector3 xyz(x, y, z);
-  Vector3 uvw = m_l2g.Inverse() * xyz;
+  XYZVector xyz(x, y, z);
+  XYZVector uvw = m_l2g.Inverse() * xyz;
   x = uvw.x();
   y = uvw.y();
   z = uvw.z();
@@ -117,8 +117,8 @@ void Mechanics::Sensor::pixelToSpace(
   const double halfV = getSensitiveY() / 2.0;
   // convert digital position in pixels to local metric coordinates with its
   // origin at the center of the sensitive area.
-  Point3 uvw(col * m_pitchX - halfU, row * m_pitchY - halfV, 0);
-  Point3 xyz = m_l2g * uvw;
+  XYZPoint uvw(col * m_pitchX - halfU, row * m_pitchY - halfV, 0);
+  XYZPoint xyz = m_l2g * uvw;
   x = xyz.x();
   y = xyz.y();
   z = xyz.z();
@@ -130,8 +130,8 @@ void Mechanics::Sensor::spaceToPixel(
   const double halfU = getSensitiveX() / 2.0;
   const double halfV = getSensitiveY() / 2.0;
   // global to local metric coordinates
-  Point3 xyz(x, y, z);
-  Point3 uvw = m_l2g.Inverse() * xyz;
+  XYZPoint xyz(x, y, z);
+  XYZPoint uvw = m_l2g.Inverse() * xyz;
   // convert local metric coordinates back to digital pixel colums and rows
   // local origin is at the center of the sensitive area
   col = (uvw.x() + halfU) / m_pitchX;

@@ -23,12 +23,12 @@ public:
 
   /** Check if alignment information exsists for the given sensor. */
   bool hasAlignment(Index sensorId) const;
-  Transform3 getLocalToGlobal(Index sensorId) const;
-  void setOffset(Index sensorId, const Point3& offset);
+  Transform3D getLocalToGlobal(Index sensorId) const;
+  void setOffset(Index sensorId, const XYZPoint& offset);
   void setRotationAngles(Index sensorId, double rotX, double rotY, double rotZ);
 
   /** Beam direction in the global coordinate system. */
-  Vector3 beamDirection() const;
+  XYZVector beamDirection() const;
   void setBeamSlope(double slopeX, double slopeY);
 
 private:
@@ -53,7 +53,7 @@ private:
   double m_beamSlopeX, m_beamSlopeY, m_syncRatio;
   std::string m_path;
 
-  // only temporarily until Sensor is using Transform3;
+  // only temporarily until Sensor is using Transform3D;
   friend class Device;
 };
 

@@ -35,10 +35,10 @@ public:
   //
   // geometry related
   //
-  const Transform3& localToGlobal() const { return m_l2g; }
-  Point3 origin() const { return Point3(m_l2g.Translation().Vect()); }
-  Vector3 normal() const;
-  void setLocalToGlobal(const Transform3& l2g) { m_l2g = l2g; }
+  const Transform3D& localToGlobal() const { return m_l2g; }
+  XYZPoint origin() const { return XYZPoint(m_l2g.Translation().Vect()); }
+  XYZVector normal() const;
+  void setLocalToGlobal(const Transform3D& l2g) { m_l2g = l2g; }
   // \deprecated For backward compatibility.
   double getOffX() const;
   double getOffY() const;
@@ -100,7 +100,7 @@ private:
   void clearNoisyPixels();
 
 private:
-  Transform3 m_l2g;
+  Transform3D m_l2g;
   const unsigned int m_numX; // number of columns (local x-direction)
   const unsigned int m_numY; // number of rows (local y-direction)
   const double m_pitchX;     // pitch along x (col) (250 um for FEI4)

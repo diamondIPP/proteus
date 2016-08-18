@@ -132,20 +132,20 @@ bool Mechanics::Alignment::hasAlignment(Index sensorId) const
   return (0 < m_geo.count(sensorId));
 }
 
-Transform3 Mechanics::Alignment::getLocalToGlobal(Index sensorId) const
+Transform3D Mechanics::Alignment::getLocalToGlobal(Index sensorId) const
 {
   auto it = m_geo.find(sensorId);
   if (it == m_geo.cend())
-    return Transform3();
+    return Transform3D();
 
   const GeoParams& params = it->second;
 
-  Vector3 off(params.offsetX, params.offsetY, params.offsetZ);
+  XYZVector off(params.offsetX, params.offsetY, params.offsetZ);
   RotationZYX rot(params.rotationZ, params.rotationY, params.rotationX);
-  return Transform3(rot, off);
+  return Transform3D(rot, off);
 }
 
-void Mechanics::Alignment::setOffset(Index sensorId, const Point3& offset)
+void Mechanics::Alignment::setOffset(Index sensorId, const XYZPoint& offset)
 {
   // will automatically create a missing GeoParams
   auto& params = m_geo[sensorId];
@@ -166,10 +166,10 @@ void Mechanics::Alignment::setRotationAngles(Index sensorId,
   params.rotationZ = rotZ;
 }
 
-Vector3 Mechanics::Alignment::beamDirection() const
+XYZVector Mechanics::Alignment::beamDirection() const
 {
   double f = 1 / std::hypot(1, std::hypot(m_beamSlopeX, m_beamSlopeY));
-  return Vector3(f * m_beamSlopeX, f * m_beamSlopeY, f);
+  return XYZVector(f * m_beamSlopeX, f * m_beamSlopeY, f);
 }
 
 void Mechanics::Alignment::setBeamSlope(double slopeX, double slopeY)

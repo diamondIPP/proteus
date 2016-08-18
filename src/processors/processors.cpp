@@ -418,9 +418,9 @@ void applyAlignment(Storage::Event* event, const Mechanics::Device* device)
       cluster->setPos(posX, posY, posZ);
      // cout<<"Sensor= "<<nplane  <<"in processors,cluster , set pos Z="<<posZ<<std::endl;
 
-      Vector3 errLocal(sensor->getPitchX() * cluster->getPixErrX(),
+      XYZVector errLocal(sensor->getPitchX() * cluster->getPixErrX(),
                        sensor->getPitchY() * cluster->getPixErrY(), 0);
-      Vector3 errGlobal = sensor->localToGlobal() * errLocal;
+      XYZVector errGlobal = sensor->localToGlobal() * errLocal;
       cluster->setPosErr(fabs(errGlobal.x()),
                          fabs(errGlobal.y()),
                          fabs(errGlobal.z()));

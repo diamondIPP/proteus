@@ -17,13 +17,13 @@ using Index = unsigned int;
 using ColumnRow = std::pair<Index,Index>;
 
 // commonly used vector and geometry types
-using Point2 = ROOT::Math::XYPoint;
-using Point3 = ROOT::Math::XYZPoint;
-using Vector2 = ROOT::Math::XYVector;
-using Vector3 = ROOT::Math::XYZVector;
-using Translation3 = ROOT::Math::Translation3D;
-using Rotation3 = ROOT::Math::Rotation3D;
+using XYPoint = ROOT::Math::XYPoint;
+using XYZPoint = ROOT::Math::XYZPoint;
+using XYVector = ROOT::Math::XYVector;
+using XYZVector = ROOT::Math::XYZVector;
+using Translation3D = ROOT::Math::Translation3D;
+using Rotation3D = ROOT::Math::Rotation3D;
 using RotationZYX = ROOT::Math::RotationZYX;
-using Transform3 = ROOT::Math::Transform3D;
+using Transform3D = ROOT::Math::Transform3D;
 
 #endif /* end of include guard: __JUDITH__DEFINITIONS_H__ */
