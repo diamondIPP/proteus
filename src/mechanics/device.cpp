@@ -83,7 +83,7 @@ void Mechanics::Device::addMaskedSensor() {
 }
 
 //=========================================================
-double Mechanics::Device::tsToTime(ULong64_t timeStamp) const {
+double Mechanics::Device::tsToTime(uint64_t timeStamp) const {
   return (double)((timeStamp - getTimeStart()) / (double)getClockRate());
 }
 

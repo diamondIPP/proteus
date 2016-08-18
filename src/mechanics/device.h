@@ -1,11 +1,10 @@
 #ifndef DEVICE_H
 #define DEVICE_H
 
+#include <cstdint>
 #include <vector>
-#include <math.h>
+#include <cmath>
 #include <string>
-
-#include <Rtypes.h>
 
 namespace Mechanics {
 
@@ -27,12 +26,12 @@ namespace Mechanics {
     
     void addSensor(Sensor* sensor);
     void addMaskedSensor();
-    double tsToTime(ULong64_t timeStamp) const;
+    double tsToTime(uint64_t timeStamp) const;
     
     void setBeamSlopeX(double rotation) { _beamSlopeX = rotation; }
     void setBeamSlopeY(double rotation) { _beamSlopeY = rotation; }
-    void setTimeStart(ULong64_t timeStamp) { _timeStart = timeStamp; }
-    void setTimeEnd(ULong64_t timeStamp) { _timeEnd = timeStamp; }
+    void setTimeStart(uint64_t timeStamp) { _timeStart = timeStamp; }
+    void setTimeEnd(uint64_t timeStamp) { _timeEnd = timeStamp; }
     void setSyncRatio(double ratio) { _syncRatio = ratio; }
     
     unsigned int getNumSensors() const { return _numSensors; }
@@ -49,8 +48,8 @@ namespace Mechanics {
     const char* getTimeUnit() const { return _timeUnit.c_str(); }
     double getBeamSlopeX() const { return _beamSlopeX; }
     double getBeamSlopeY() const { return _beamSlopeY; }
-    ULong64_t getTimeStart() const { return _timeStart; }
-    ULong64_t getTimeEnd() const { return _timeEnd; }
+    uint64_t getTimeStart() const { return _timeStart; }
+    uint64_t getTimeEnd() const { return _timeEnd; }
     double getSyncRatio() const { return _syncRatio; }
     
     NoiseMask* getNoiseMask() {  return _noiseMask; }
@@ -68,8 +67,8 @@ namespace Mechanics {
     std::string _timeUnit;
     double _beamSlopeX;
     double _beamSlopeY;
-    ULong64_t _timeStart;
-    ULong64_t _timeEnd;
+    uint64_t _timeStart;
+    uint64_t _timeEnd;
     double _syncRatio;
     
     unsigned int _numSensors;
