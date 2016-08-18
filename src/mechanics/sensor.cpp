@@ -36,20 +36,12 @@ Mechanics::Sensor::Sensor(unsigned int numX,
     , m_name(name)
     , m_digi(digi)
     , m_xox0(xox0)
-    , m_offX(offX)
-    , m_offY(offY)
-    , m_offZ(offZ)
-    , m_rotX(rotX)
-    , m_rotY(rotY)
-    , m_rotZ(rotZ)
     , m_alignable(alignable)
     , m_sensitiveX(pitchX * numX)
     , m_sensitiveY(pitchY * numY)
     , m_numNoisyPixels(0)
 {
   assert(device && "Sensor: need to link the sensor back to a device.");
-
-  calculateRotation();
 
   m_noisyPixels = new bool*[m_numX];
   for (unsigned int x = 0; x < m_numX; x++) {
@@ -66,144 +58,82 @@ Mechanics::Sensor::~Sensor()
   delete[] m_noisyPixels;
 }
 
-//=========================================================
-//
-// Set functions
-//
-//=========================================================
-void Mechanics::Sensor::setOffX(double offset) { m_offX = offset; }
-void Mechanics::Sensor::setOffY(double offset) { m_offY = offset; }
-void Mechanics::Sensor::setOffZ(double offset) { m_offZ = offset; }
-void Mechanics::Sensor::setRotX(double rotation)
+// geometry related methods
+
+double Mechanics::Sensor::getOffX() const
 {
-  m_rotX = rotation;
-  calculateRotation();
-}
-void Mechanics::Sensor::setRotY(double rotation)
-{
-  m_rotY = rotation;
-  calculateRotation();
-}
-void Mechanics::Sensor::setRotZ(double rotation)
-{
-  m_rotZ = rotation;
-  calculateRotation();
+  return m_l2g.Translation().Vect().x();
 }
 
-//=========================================================
-//
-// geometry functions
-//
-//=========================================================
-void Mechanics::Sensor::applyRotation(double& x,
-                                      double& y,
-                                      double& z,
-                                      bool invert) const
+double Mechanics::Sensor::getOffY() const
 {
-  const double point[3] = {x, y, z};
-  double* rotated[3] = {&x, &y, &z};
-
-  // Use the sensor rotation matrix to transform
-  for (int i = 0; i < 3; i++) {
-    *(rotated[i]) = 0;
-    for (int j = 0; j < 3; j++) {
-      if (!invert)
-        *(rotated[i]) += m_rotation[i][j] * point[j];
-      else
-        *(rotated[i]) += m_unRotate[i][j] * point[j];
-    }
-  }
-
-  // std::cout << *(rotated[0]) << std::endl;
-  // if( m_rotation[0][1]==1){
-  // if(*(rotated[0]) == 0){
-  // std::cout << "Coordinates were (" << x <<";"<< y <<";"<< z << ")"<<
-  // std::endl;
-  // std::cout << "They are: (" << *(rotated[0]) <<";"<< *(rotated[1]) <<";"<<
-  // *(rotated[2]) <<")" << std::endl;
-  //    std::cout << "" << std::endl;
-  //}
-  //}
+  return m_l2g.Translation().Vect().y();
 }
 
-void Mechanics::Sensor::calculateRotation()
+double Mechanics::Sensor::getOffZ() const
 {
-  const double rx = m_rotX;
-  const double ry = m_rotY;
-  const double rz = m_rotZ;
-  m_rotation[0][0] = cos(ry) * cos(rz);
-  m_rotation[0][1] = -cos(rx) * sin(rz) + sin(rx) * sin(ry) * cos(rz);
-  m_rotation[0][2] = sin(rx) * sin(rz) + cos(rx) * sin(ry) * cos(rz);
-  m_rotation[1][0] = cos(ry) * sin(rz);
-  m_rotation[1][1] = cos(rx) * cos(rz) + sin(rx) * sin(ry) * sin(rz);
-  m_rotation[1][2] = -sin(rx) * cos(rz) + cos(rx) * sin(ry) * sin(rz);
-  m_rotation[2][0] = -sin(ry);
-  m_rotation[2][1] = sin(rx) * cos(ry);
-  m_rotation[2][2] = cos(rx) * cos(ry);
+  return m_l2g.Translation().Vect().z();
+}
 
-  // Transpose of a rotation matrix is its inverse
-  for (unsigned int i = 0; i < 3; i++)
-    for (unsigned int j = 0; j < 3; j++)
-      m_unRotate[i][j] = m_rotation[j][i];
+void Mechanics::Sensor::getGlobalOrigin(double& x, double& y, double& z) const
+{
+  m_l2g.Translation().GetComponents(x, y, z);
+}
 
-  m_normalX = 0, m_normalY = 0, m_normalZ = 1;
-  applyRotation(m_normalX, m_normalY, m_normalZ);
+void Mechanics::Sensor::getNormalVector(double& x, double& y, double& z) const
+{
+  Vector3 U, V, W;
+  // split rotation into its unit column vectors
+  m_l2g.Rotation().GetComponents(U, V, W);
+  x = U.x();
+  y = U.y();
+  z = U.z();
 }
 
 void Mechanics::Sensor::rotateToGlobal(double& x, double& y, double& z) const
 {
-  applyRotation(x, y, z);
+  Vector3 uvw(x, y, z);
+  Vector3 xyz = m_l2g * uvw;
+  x = xyz.x();
+  y = xyz.y();
+  z = xyz.z();
 }
 
 void Mechanics::Sensor::rotateToSensor(double& x, double& y, double& z) const
 {
-  applyRotation(x, y, z, true);
+  Vector3 xyz(x, y, z);
+  Vector3 uvw = m_l2g.Inverse() * xyz;
+  x = uvw.x();
+  y = uvw.y();
+  z = uvw.z();
 }
 
 void Mechanics::Sensor::pixelToSpace(
-    double pixX, double pixY, double& x, double& y, double& z) const
+    double col, double row, double& x, double& y, double& z) const
 {
-  if (pixX >= m_numX && pixY >= m_numY)
-    throw "Sensor: requested pixel out of range";
-
-  x = 0, y = 0, z = 0;
-
-  const double halfX = getSensitiveX() / 2.0;
-  const double halfY = getSensitiveY() / 2.0;
-
-  x = pixX * m_pitchX; // To the middle of the pixel
-  x -= halfX;         // Origin on center of sensor
-
-  y = pixY * m_pitchY;
-  y -= halfY;
-  rotateToGlobal(x, y, z);
-
-  x += getOffX();
-  y += getOffY();
-  z += getOffZ();
+  const double halfU = getSensitiveX() / 2.0;
+  const double halfV = getSensitiveY() / 2.0;
+  // convert digital position in pixels to local metric coordinates with its
+  // origin at the center of the sensitive area.
+  Point3 uvw(col * m_pitchX - halfU, row * m_pitchY - halfV, 0);
+  Point3 xyz = m_l2g * uvw;
+  x = xyz.x();
+  y = xyz.y();
+  z = xyz.z();
 }
 
 void Mechanics::Sensor::spaceToPixel(
-    double x, double y, double z, double& pixX, double& pixY) const
+    double x, double y, double z, double& col, double& row) const
 {
-  const double halfX = getSensitiveX() / 2.0;
-  const double halfY = getSensitiveY() / 2.0;
-
-  // Subtract sensor offsets
-  x -= getOffX();
-  y -= getOffY();
-  z -= getOffZ();
-
-  rotateToSensor(x, y, z);
-
-  x += halfX;
-  y += halfY;
-
-  double mapX = x / m_pitchX;
-  double mapY = y / m_pitchY;
-
-  pixX = mapX;
-  pixY = mapY;
+  const double halfU = getSensitiveX() / 2.0;
+  const double halfV = getSensitiveY() / 2.0;
+  // global to local metric coordinates
+  Point3 xyz(x, y, z);
+  Point3 uvw = m_l2g.Inverse() * xyz;
+  // convert local metric coordinates back to digital pixel colums and rows
+  // local origin is at the center of the sensitive area
+  col = (uvw.x() + halfU) / m_pitchX;
+  row = (uvw.y() + halfV) / m_pitchY;
 }
 
 //=========================================================
@@ -247,8 +177,9 @@ void Mechanics::Sensor::print()
 {
   cout << "\nSENSOR:\n"
        << "  Name: '" << m_name << "'\n"
-       << "  Pos: " << m_offX << " , " << m_offY << " , " << m_offZ << "\n"
-       << "  Rot: " << m_rotX << " , " << m_rotY << " , " << m_rotZ << "\n"
+			 << "  Transform: " << m_l2g << '\n'
+      //  << "  Pos: " << m_offX << " , " << m_offY << " , " << m_offZ << "\n"
+      //  << "  Rot: " << m_rotX << " , " << m_rotY << " , " << m_rotZ << "\n"
        << "  Cols: " << getNumX() << "\n"
        << "  Rows: " << getNumY() << "\n"
        << "  Pitch-x: " << m_pitchX << "\n"
@@ -280,19 +211,6 @@ bool Mechanics::Sensor::sort(const Sensor* s1, const Sensor* s2)
 // get functions
 //
 //=========================================================
-void Mechanics::Sensor::getGlobalOrigin(double& x, double& y, double& z) const
-{
-  x = getOffX();
-  y = getOffY();
-  z = getOffZ();
-}
-
-void Mechanics::Sensor::getNormalVector(double& x, double& y, double& z) const
-{
-  x = m_normalX;
-  y = m_normalY;
-  z = m_normalZ;
-}
 
 unsigned int Mechanics::Sensor::getPosNumX() const
 {
@@ -392,12 +310,6 @@ double Mechanics::Sensor::getPitchX() const { return m_pitchX; }
 double Mechanics::Sensor::getPitchY() const { return m_pitchY; }
 double Mechanics::Sensor::getDepth() const { return m_depth; }
 double Mechanics::Sensor::getXox0() const { return m_xox0; }
-double Mechanics::Sensor::getOffX() const { return m_offX; }
-double Mechanics::Sensor::getOffY() const { return m_offY; }
-double Mechanics::Sensor::getOffZ() const { return m_offZ; }
-double Mechanics::Sensor::getRotX() const { return m_rotX; }
-double Mechanics::Sensor::getRotY() const { return m_rotY; }
-double Mechanics::Sensor::getRotZ() const { return m_rotZ; }
 double Mechanics::Sensor::getSensitiveX() const { return m_sensitiveX; }
 double Mechanics::Sensor::getSensitiveY() const { return m_sensitiveY; }
 const Mechanics::Device* Mechanics::Sensor::getDevice() const

@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include "utils/definitions.h"
+
 namespace Mechanics {
 
 class Device;
@@ -30,15 +32,14 @@ public:
 
   ~Sensor();
 
-  //
-  // Set functions
-  //
-  void setOffX(double offset);
-  void setOffY(double offset);
-  void setOffZ(double offset);
-  void setRotX(double rotation);
-  void setRotY(double rotation);
-  void setRotZ(double rotation);
+  // geometry related
+  const Transform3& localToGlobal() const { return m_l2g; }
+  double getOffX() const;
+  double getOffY() const;
+  double getOffZ() const;
+  void getGlobalOrigin(double& x, double& y, double& z) const;
+  void getNormalVector(double& x, double& y, double& z) const;
+  void setLocalToGlobal(const Transform3& l2g) { m_l2g = l2g; }
 
   //
   // Geometry functions
@@ -83,29 +84,18 @@ public:
   double getPosPitchY() const;
   double getDepth() const;
   double getXox0() const;
-  double getOffX() const;
-  double getOffY() const;
-  double getOffZ() const;
-  double getRotX() const;
-  double getRotY() const;
-  double getRotZ() const;
   double getSensitiveX() const;
   double getSensitiveY() const;
   double getPosSensitiveX() const;
   double getPosSensitiveY() const;
   const Device* getDevice() const;
   const char* getName() const;
-  void getGlobalOrigin(double& x, double& y, double& z) const;
-  void getNormalVector(double& x, double& y, double& z) const;
 
 private:
   void clearNoisyPixels();
-  void
-  applyRotation(double& x, double& y, double& z, bool invert = false) const;
-  void
-  calculateRotation(); // Calculates the rotation matricies and normal vector
 
 private:
+  Transform3 m_l2g;
   const unsigned int m_numX; // number of columns (local x-direction)
   const unsigned int m_numY; // number of rows (local y-direction)
   const double m_pitchX;     // pitch along x (col) (250 um for FEI4)
@@ -115,23 +105,11 @@ private:
   std::string m_name;
   bool m_digi;
   const double m_xox0; // X/X0
-  double m_offX;       // translation in X
-  double m_offY;       // translation in Y
-  double m_offZ;       // translation in Z
-  double m_rotX;       // rotation angle (rad) around Global X-axis
-  double m_rotY;       // rotation angle (rad) around Global Y-axis
-  double m_rotZ;       // rotation angle (rad) around Global Z-axis
   bool m_alignable;    // if sensor is to be aligned
   const double m_sensitiveX;
   const double m_sensitiveY;
   unsigned int m_numNoisyPixels; // total number of noisy pixels
   bool** m_noisyPixels;          // 2D array of noisy-pixels
-
-  double m_rotation[3][3]; // The rotation matrix for the plane
-  double m_unRotate[3][3]; // Invert the rotation
-  double m_normalX;
-  double m_normalY;
-  double m_normalZ;
 };
 
 } // namespace Mechanics
