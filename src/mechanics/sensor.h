@@ -32,20 +32,23 @@ public:
 
   ~Sensor();
 
+  //
   // geometry related
+  //
   const Transform3& localToGlobal() const { return m_l2g; }
+  Point3 origin() const { return Point3(m_l2g.Translation().Vect()); }
+  Vector3 normal() const;
+  void setLocalToGlobal(const Transform3& l2g) { m_l2g = l2g; }
+  // \deprecated For backward compatibility.
   double getOffX() const;
   double getOffY() const;
   double getOffZ() const;
   void getGlobalOrigin(double& x, double& y, double& z) const;
   void getNormalVector(double& x, double& y, double& z) const;
-  void setLocalToGlobal(const Transform3& l2g) { m_l2g = l2g; }
 
   //
   // Geometry functions
   //
-  void rotateToGlobal(double& x, double& y, double& z) const;
-  void rotateToSensor(double& x, double& y, double& z) const;
   void
   pixelToSpace(double pixX, double pixY, double& x, double& y, double& z) const;
   void
@@ -92,6 +95,8 @@ public:
   const char* getName() const;
 
 private:
+  void rotateToGlobal(double& x, double& y, double& z) const;
+  void rotateToSensor(double& x, double& y, double& z) const;
   void clearNoisyPixels();
 
 private:

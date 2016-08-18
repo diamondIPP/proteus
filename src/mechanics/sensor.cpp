@@ -60,6 +60,13 @@ Mechanics::Sensor::~Sensor()
 
 // geometry related methods
 
+Vector3 Mechanics::Sensor::normal() const
+{
+  Vector3 W, U, V;
+  m_l2g.Rotation().GetComponents(U, V, W);
+  return W;
+}
+
 double Mechanics::Sensor::getOffX() const
 {
   return m_l2g.Translation().Vect().x();
@@ -77,17 +84,12 @@ double Mechanics::Sensor::getOffZ() const
 
 void Mechanics::Sensor::getGlobalOrigin(double& x, double& y, double& z) const
 {
-  m_l2g.Translation().GetComponents(x, y, z);
+  origin().GetCoordinates(x, y, z);
 }
 
 void Mechanics::Sensor::getNormalVector(double& x, double& y, double& z) const
 {
-  Vector3 U, V, W;
-  // split rotation into its unit column vectors
-  m_l2g.Rotation().GetComponents(U, V, W);
-  x = U.x();
-  y = U.y();
-  z = U.z();
+  normal().GetCoordinates(x, y, z);
 }
 
 void Mechanics::Sensor::rotateToGlobal(double& x, double& y, double& z) const
@@ -177,9 +179,9 @@ void Mechanics::Sensor::print()
 {
   cout << "\nSENSOR:\n"
        << "  Name: '" << m_name << "'\n"
-			 << "  Transform: " << m_l2g << '\n'
-      //  << "  Pos: " << m_offX << " , " << m_offY << " , " << m_offZ << "\n"
-      //  << "  Rot: " << m_rotX << " , " << m_rotY << " , " << m_rotZ << "\n"
+       << "  Transform: " << m_l2g << '\n'
+       //  << "  Pos: " << m_offX << " , " << m_offY << " , " << m_offZ << "\n"
+       //  << "  Rot: " << m_rotX << " , " << m_rotY << " , " << m_rotZ << "\n"
        << "  Cols: " << getNumX() << "\n"
        << "  Rows: " << getNumY() << "\n"
        << "  Pitch-x: " << m_pitchX << "\n"
