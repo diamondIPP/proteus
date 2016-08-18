@@ -11,6 +11,24 @@
 using std::cout;
 using std::endl;
 
+Mechanics::Sensor::Sensor(const std::string& name,
+                          Index numCols,
+                          Index numRows,
+                          double pitchCol,
+                          double pitchRow,
+                          double depth,
+                          double xX0)
+    : m_numCols(numCols)
+    , m_numRows(numRows)
+    , m_pitchCol(pitchCol)
+    , m_pitchRow(pitchRow)
+    , m_depth(depth)
+    , m_xox0(xX0)
+    , m_name(name)
+		, m_device(nullptr)
+{
+}
+
 Mechanics::Sensor::Sensor(unsigned int numX,
                           unsigned int numY,
                           double pitchX,
@@ -32,10 +50,10 @@ Mechanics::Sensor::Sensor(unsigned int numX,
     , m_pitchCol(pitchX)
     , m_pitchRow(pitchY)
     , m_depth(depth)
+		, m_xox0(xox0)
+		, m_name(name)
     , m_device(device)
-    , m_name(name)
     , m_digi(digi)
-    , m_xox0(xox0)
     , m_alignable(alignable)
     , m_numNoisyPixels(0)
 {
@@ -301,7 +319,10 @@ bool Mechanics::Sensor::getDigital() const { return m_digi; }
 bool Mechanics::Sensor::getAlignable() const { return m_alignable; }
 unsigned int Mechanics::Sensor::getNumX() const { return m_numCols; }
 unsigned int Mechanics::Sensor::getNumY() const { return m_numRows; }
-unsigned int Mechanics::Sensor::getNumPixels() const { return m_numCols * m_numRows; }
+unsigned int Mechanics::Sensor::getNumPixels() const
+{
+  return m_numCols * m_numRows;
+}
 unsigned int Mechanics::Sensor::getNumNoisyPixels() const
 {
   return m_numNoisyPixels;
@@ -310,8 +331,14 @@ double Mechanics::Sensor::getPitchX() const { return m_pitchCol; }
 double Mechanics::Sensor::getPitchY() const { return m_pitchRow; }
 double Mechanics::Sensor::getDepth() const { return m_depth; }
 double Mechanics::Sensor::getXox0() const { return m_xox0; }
-double Mechanics::Sensor::getSensitiveX() const { return m_numCols * m_pitchCol; }
-double Mechanics::Sensor::getSensitiveY() const { return m_numRows * m_pitchRow; }
+double Mechanics::Sensor::getSensitiveX() const
+{
+  return m_numCols * m_pitchCol;
+}
+double Mechanics::Sensor::getSensitiveY() const
+{
+  return m_numRows * m_pitchRow;
+}
 const Mechanics::Device* Mechanics::Sensor::getDevice() const
 {
   return m_device;

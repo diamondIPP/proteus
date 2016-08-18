@@ -13,6 +13,13 @@ class NoiseMask;
 
 class Sensor {
 public:
+  Sensor(const std::string& name,
+         Index numCols,
+         Index numRows,
+         double pitchCol,
+         double pitchRow,
+         double depth = 0,
+         double xX0 = 0);
   Sensor(unsigned int numX,
          unsigned int numY,
          double pitchX,
@@ -29,7 +36,6 @@ public:
          double rotX = 0,
          double rotY = 0,
          double rotZ = 0);
-
   ~Sensor();
 
   //
@@ -103,11 +109,11 @@ private:
   Transform3D m_l2g;
   const Index m_numCols, m_numRows; // number of columns and rows
   const double m_pitchCol, m_pitchRow; // pitch along column and row direction
-  const double m_depth;      // sensor thickness
+  const double m_depth; // sensor thickness
+  const double m_xox0; // X/X0 (thickness in radiation lengths)
+  const std::string m_name;
   const Device* m_device;
-  std::string m_name;
   bool m_digi;
-  const double m_xox0; // X/X0
   bool m_alignable;    // if sensor is to be aligned
   unsigned int m_numNoisyPixels; // total number of noisy pixels
   bool** m_noisyPixels;          // 2D array of noisy-pixels
