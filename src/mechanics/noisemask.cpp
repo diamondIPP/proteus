@@ -23,48 +23,20 @@ using std::cout;
 using std::endl;
 using std::string;
 
+Mechanics::NoiseMask::NoiseMask()
+    : _config(new Loopers::NoiseScanConfig())
+    , _fileName("<TRANSIENT>")
+{
+}
+
 Mechanics::NoiseMask::NoiseMask(const Loopers::NoiseScanConfig* config)
-    : _config(new Loopers::NoiseScanConfig(*config)), _fileName("<transient>")
+    : _config(new Loopers::NoiseScanConfig(*config)), _fileName("<TRANSIENT>")
 {
 }
 
-//=========================================================
-Mechanics::NoiseMask::NoiseMask(const std::string& path)
-    : _config(new Loopers::NoiseScanConfig()), _fileName(path)
-{
-  readFile(path);
-}
+// only needed to allow std::unique_ptr with forward-declared class
+Mechanics::NoiseMask::~NoiseMask() {}
 
-//=========================================================
-Mechanics::NoiseMask::~NoiseMask() { delete _config; }
-
-//=========================================================
-void Mechanics::NoiseMask::writeFile(const std::string& path) const
-{
-	std::fstream out(path, std::ios_base::out);
-
-  if (!out.is_open()) {
-    std::string msg("[NoiseMask::writeMask]");
-    msg += "unable to open file '" + path + "' for writting";
-    throw std::runtime_error(msg);
-  }
-
-	for (const auto& mask : _masks) {
-		auto id = mask.first;
-		for (const auto& index : mask.second) {
-			auto col = std::get<0>(index);
-			auto row = std::get<1>(index);
-			out << id << ", " << col << ", " << row << '\n';
-		}
-	}
-
-	out << _config->print() << '\n';
-	out.close();
-	
-	cout << "Wrote noise mask to '" << path << "'\n";
-}
-
-//=========================================================
 void Mechanics::NoiseMask::readFile(const std::string& path)
 {
   std::fstream input(path, std::ios_base::in);
@@ -94,6 +66,33 @@ void Mechanics::NoiseMask::readFile(const std::string& path)
   }
 
   if (!comments.str().empty()) parseComments(comments);
+
+  _fileName = path;
+}
+
+void Mechanics::NoiseMask::writeFile(const std::string& path) const
+{
+	std::fstream out(path, std::ios_base::out);
+
+  if (!out.is_open()) {
+    std::string msg("[NoiseMask::writeMask]");
+    msg += "unable to open file '" + path + "' for writting";
+    throw std::runtime_error(msg);
+  }
+
+	for (const auto& mask : _masks) {
+		auto id = mask.first;
+		for (const auto& index : mask.second) {
+			auto col = std::get<0>(index);
+			auto row = std::get<1>(index);
+			out << id << ", " << col << ", " << row << '\n';
+		}
+	}
+
+	out << _config->print() << '\n';
+	out.close();
+	
+	cout << "Wrote noise mask to '" << path << "'\n";
 }
 
 //=========================================================

@@ -49,9 +49,10 @@ Mechanics::Device::Device(const char* name,
     setAlignment(*_alignment);
   }
 
-  if (strlen(noiseMaskName))
-    _noiseMask = new NoiseMask(noiseMaskName);
-
+  if (strlen(noiseMaskName)) {
+    _noiseMask = new NoiseMask();
+		_noiseMask->readFile(noiseMaskName);
+	}
   std::replace(_timeUnit.begin(), _timeUnit.end(), '\\', '#');
   std::replace(_spaceUnit.begin(), _spaceUnit.end(), '\\', '#');
 }

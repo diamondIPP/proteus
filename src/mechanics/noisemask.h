@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <map>
+#include <memory>
 #include <set>
 #include <sstream>
 #include <string>
@@ -26,13 +27,15 @@ namespace Mechanics {
   class NoiseMask {
   public:
     using ColumnRowSet = std::set<ColumnRow>;
-
+    
+    /** Create empty noise masks with the default config. */
+    NoiseMask();
     /** Create an empty noise mask with the given scan config. */
     explicit NoiseMask(const Loopers::NoiseScanConfig* config);
-    /** Create a noise mask by reading from a noise mask file. */
-    NoiseMask(const std::string& path);
     ~NoiseMask();
 
+    /** Read noise masks and configuration from a file. */
+    void readFile(const std::string& path);
     /** Write the current noise masks and configuration to a file. */
     void writeFile(const std::string& path) const;
 
@@ -41,16 +44,15 @@ namespace Mechanics {
     const size_t getNumMaskedPixels() const;
 
     const char* getFileName() { return _fileName.c_str(); }
-    const Loopers::NoiseScanConfig* getConfig() const { return _config; }
+    const Loopers::NoiseScanConfig* getConfig() const { return _config.get(); }
 
   private:
-    void readFile(const std::string& path);
     void parseLine(std::stringstream& line, Index& nsens, Index& x, Index& y);
     void parseComments(std::stringstream& comments);
 
   private:
     std::map<Index,ColumnRowSet> _masks;
-    Loopers::NoiseScanConfig* _config;
+    std::unique_ptr<Loopers::NoiseScanConfig> _config;
     std::string _fileName;
 
   }; // end of class
