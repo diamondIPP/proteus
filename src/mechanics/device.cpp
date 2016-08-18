@@ -1,18 +1,18 @@
 #include "device.h"
 
+#include <algorithm>
 #include <cassert>
-#include <vector>
 #include <iostream>
 #include <string.h>
 #include <string>
-#include <algorithm>
+#include <vector>
 
 #include <Rtypes.h>
 
-#include "utils/definitions.h"
-#include "sensor.h"
-#include "noisemask.h"
 #include "alignment.h"
+#include "noisemask.h"
+#include "sensor.h"
+#include "utils/definitions.h"
 
 #ifndef VERBOSE
 #define VERBOSE 1
@@ -23,72 +23,78 @@ using std::endl;
 
 //=========================================================
 Mechanics::Device::Device(const char* name,
-			  const char* alignmentName,
-			  const char* noiseMaskName,
-			  double clockRate,
-			  unsigned int readOutWindow,
-			  const char* spaceUnit,
-			  const char* timeUnit) :
-  _name(name),
-  _clockRate(clockRate),
-  _readOutWindow(readOutWindow),
-  _spaceUnit(spaceUnit),
-  _timeUnit(timeUnit),
-  _beamSlopeX(0),
-  _beamSlopeY(0),
-  _timeStart(0),
-  _timeEnd(0),
-  _syncRatio(0),
-  _numSensors(0),
-  _noiseMask(0),
-  _alignment(0)
+                          const char* alignmentName,
+                          const char* noiseMaskName,
+                          double clockRate,
+                          unsigned int readOutWindow,
+                          const char* spaceUnit,
+                          const char* timeUnit)
+    : _name(name)
+    , _clockRate(clockRate)
+    , _readOutWindow(readOutWindow)
+    , _spaceUnit(spaceUnit)
+    , _timeUnit(timeUnit)
+    , _beamSlopeX(0)
+    , _beamSlopeY(0)
+    , _timeStart(0)
+    , _timeEnd(0)
+    , _syncRatio(0)
+    , _numSensors(0)
+    , _noiseMask(0)
+    , _alignment(0)
 {
   if (strlen(alignmentName)) {
     _alignment = new Alignment();
-	  _alignment->readFile(alignmentName);
+    _alignment->readFile(alignmentName);
     setAlignment(*_alignment);
   }
 
   if (strlen(noiseMaskName)) {
     _noiseMask = new NoiseMask();
-		_noiseMask->readFile(noiseMaskName);
-	}
+    _noiseMask->readFile(noiseMaskName);
+  }
   std::replace(_timeUnit.begin(), _timeUnit.end(), '\\', '#');
   std::replace(_spaceUnit.begin(), _spaceUnit.end(), '\\', '#');
 }
 
 //=========================================================
-Mechanics::Device::~Device(){
-  for(unsigned int nsensor=0; nsensor<_numSensors; nsensor++)
+Mechanics::Device::~Device()
+{
+  for (unsigned int nsensor = 0; nsensor < _numSensors; nsensor++)
     delete _sensors.at(nsensor);
-  if (_noiseMask) delete _noiseMask;
-  if (_alignment) delete _alignment;
+  if (_noiseMask)
+    delete _noiseMask;
+  if (_alignment)
+    delete _alignment;
 }
 
 //=========================================================
-void Mechanics::Device::addSensor(Mechanics::Sensor* sensor){
+void Mechanics::Device::addSensor(Mechanics::Sensor* sensor)
+{
   assert(sensor && "Device: can't add a null sensor");
-  
-  if (_numSensors > 0 && getSensor(_numSensors-1)->getOffZ() > sensor->getOffZ())
-    throw "[Device::addSensor] sensors must be added in order of increazing Z position";
+
+  if (_numSensors > 0 &&
+      getSensor(_numSensors - 1)->getOffZ() > sensor->getOffZ())
+    throw "[Device::addSensor] sensors must be added in order of increazing Z "
+          "position";
   _sensors.push_back(sensor);
-	_sensors.back()->setNoisyPixels(_noiseMask->getMaskedPixels(_numSensors));
+  _sensors.back()->setNoisyPixels(_noiseMask->getMaskedPixels(_numSensors));
   _sensorMask.push_back(false);
   _numSensors++;
 }
 
 //=========================================================
-void Mechanics::Device::addMaskedSensor() {
-  _sensorMask.push_back(true);
-}
+void Mechanics::Device::addMaskedSensor() { _sensorMask.push_back(true); }
 
 //=========================================================
-double Mechanics::Device::tsToTime(uint64_t timeStamp) const {
+double Mechanics::Device::tsToTime(uint64_t timeStamp) const
+{
   return (double)((timeStamp - getTimeStart()) / (double)getClockRate());
 }
 
 //=========================================================
-Mechanics::Sensor* Mechanics::Device::getSensor(unsigned int n) const {
+Mechanics::Sensor* Mechanics::Device::getSensor(unsigned int n) const
+{
   assert(n < _numSensors && "Device: sensor index outside range");
   return _sensors.at(n);
 }
@@ -103,7 +109,8 @@ unsigned int Mechanics::Device::getNumPixels() const
 }
 
 //=========================================================
-void Mechanics::Device::print() const {
+void Mechanics::Device::print() const
+{
   cout << "\nDEVICE:\n"
        << "  Name: '" << _name << "'\n"
        << "  Clock rate: " << _clockRate << "\n"
@@ -111,8 +118,8 @@ void Mechanics::Device::print() const {
        << "  Sensors: " << _numSensors << "\n"
        << "  Alignment: " << _alignment->m_path << "\n"
        << "  Noisemask: " << _noiseMask->getFileName() << endl;
-  
-  for (unsigned int nsens=0; nsens<getNumSensors(); nsens++)
+
+  for (unsigned int nsens = 0; nsens < getNumSensors(); nsens++)
     getSensor(nsens)->print();
 }
 
