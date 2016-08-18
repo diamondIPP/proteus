@@ -101,18 +101,14 @@ private:
 
 private:
   Transform3D m_l2g;
-  const unsigned int m_numX; // number of columns (local x-direction)
-  const unsigned int m_numY; // number of rows (local y-direction)
-  const double m_pitchX;     // pitch along x (col) (250 um for FEI4)
-  const double m_pitchY;     // pitch along y (row) ( 50 um for FEI4)
+  const Index m_numCols, m_numRows; // number of columns and rows
+  const double m_pitchCol, m_pitchRow; // pitch along column and row direction
   const double m_depth;      // sensor thickness
   const Device* m_device;
   std::string m_name;
   bool m_digi;
   const double m_xox0; // X/X0
   bool m_alignable;    // if sensor is to be aligned
-  const double m_sensitiveX;
-  const double m_sensitiveY;
   unsigned int m_numNoisyPixels; // total number of noisy pixels
   bool** m_noisyPixels;          // 2D array of noisy-pixels
 };

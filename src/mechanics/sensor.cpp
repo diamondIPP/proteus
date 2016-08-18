@@ -27,25 +27,23 @@ Mechanics::Sensor::Sensor(unsigned int numX,
                           double rotX,
                           double rotY,
                           double rotZ)
-    : m_numX(numX)
-    , m_numY(numY)
-    , m_pitchX(pitchX)
-    , m_pitchY(pitchY)
+    : m_numCols(numX)
+    , m_numRows(numY)
+    , m_pitchCol(pitchX)
+    , m_pitchRow(pitchY)
     , m_depth(depth)
     , m_device(device)
     , m_name(name)
     , m_digi(digi)
     , m_xox0(xox0)
     , m_alignable(alignable)
-    , m_sensitiveX(pitchX * numX)
-    , m_sensitiveY(pitchY * numY)
     , m_numNoisyPixels(0)
 {
   assert(device && "Sensor: need to link the sensor back to a device.");
 
-  m_noisyPixels = new bool*[m_numX];
-  for (unsigned int x = 0; x < m_numX; x++) {
-    bool* row = new bool[m_numY];
+  m_noisyPixels = new bool*[m_numCols];
+  for (unsigned int x = 0; x < m_numCols; x++) {
+    bool* row = new bool[m_numRows];
     m_noisyPixels[x] = row;
   }
   clearNoisyPixels();
@@ -53,7 +51,7 @@ Mechanics::Sensor::Sensor(unsigned int numX,
 
 Mechanics::Sensor::~Sensor()
 {
-  for (unsigned int x = 0; x < m_numX; x++)
+  for (unsigned int x = 0; x < m_numCols; x++)
     delete[] m_noisyPixels[x];
   delete[] m_noisyPixels;
 }
@@ -117,7 +115,7 @@ void Mechanics::Sensor::pixelToSpace(
   const double halfV = getSensitiveY() / 2.0;
   // convert digital position in pixels to local metric coordinates with its
   // origin at the center of the sensitive area.
-  XYZPoint uvw(col * m_pitchX - halfU, row * m_pitchY - halfV, 0);
+  XYZPoint uvw(col * m_pitchCol - halfU, row * m_pitchRow - halfV, 0);
   XYZPoint xyz = m_l2g * uvw;
   x = xyz.x();
   y = xyz.y();
@@ -134,8 +132,8 @@ void Mechanics::Sensor::spaceToPixel(
   XYZPoint uvw = m_l2g.Inverse() * xyz;
   // convert local metric coordinates back to digital pixel colums and rows
   // local origin is at the center of the sensitive area
-  col = (uvw.x() + halfU) / m_pitchX;
-  row = (uvw.y() + halfV) / m_pitchY;
+  col = (uvw.x() + halfU) / m_pitchCol;
+  row = (uvw.y() + halfV) / m_pitchRow;
 }
 
 //=========================================================
@@ -147,8 +145,8 @@ void Mechanics::Sensor::spaceToPixel(
 void Mechanics::Sensor::clearNoisyPixels()
 {
   m_numNoisyPixels = 0;
-  for (unsigned int x = 0; x < m_numX; x++)
-    for (unsigned int y = 0; y < m_numY; y++)
+  for (unsigned int x = 0; x < m_numCols; x++)
+    for (unsigned int y = 0; y < m_numRows; y++)
       m_noisyPixels[x][y] = false;
 }
 
@@ -160,9 +158,9 @@ void Mechanics::Sensor::setNoisyPixels(const NoiseMask& masks,
     auto col = std::get<0>(index);
     auto row = std::get<1>(index);
 
-    if (m_numX <= col)
+    if (m_numCols <= col)
       throw std::runtime_error("column index is out of range");
-    if (m_numY <= row)
+    if (m_numRows <= row)
       throw std::runtime_error("row index is out of range");
 
     m_noisyPixels[col][row] = true;
@@ -184,8 +182,8 @@ void Mechanics::Sensor::print()
        //  << "  Rot: " << m_rotX << " , " << m_rotY << " , " << m_rotZ << "\n"
        << "  Cols: " << getNumX() << "\n"
        << "  Rows: " << getNumY() << "\n"
-       << "  Pitch-x: " << m_pitchX << "\n"
-       << "  Pitch-y: " << m_pitchY << "\n"
+       << "  Pitch-x: " << m_pitchCol << "\n"
+       << "  Pitch-y: " << m_pitchRow << "\n"
        << "  Depth: " << m_depth << "\n"
        << "  X / X0: " << m_xox0 << "\n"
        << "  Sensitive X: " << getSensitiveX() << "\n"
@@ -301,19 +299,19 @@ double Mechanics::Sensor::getPosSensitiveY() const
 bool** Mechanics::Sensor::getNoiseMask() const { return m_noisyPixels; }
 bool Mechanics::Sensor::getDigital() const { return m_digi; }
 bool Mechanics::Sensor::getAlignable() const { return m_alignable; }
-unsigned int Mechanics::Sensor::getNumX() const { return m_numX; }
-unsigned int Mechanics::Sensor::getNumY() const { return m_numY; }
-unsigned int Mechanics::Sensor::getNumPixels() const { return m_numX * m_numY; }
+unsigned int Mechanics::Sensor::getNumX() const { return m_numCols; }
+unsigned int Mechanics::Sensor::getNumY() const { return m_numRows; }
+unsigned int Mechanics::Sensor::getNumPixels() const { return m_numCols * m_numRows; }
 unsigned int Mechanics::Sensor::getNumNoisyPixels() const
 {
   return m_numNoisyPixels;
 }
-double Mechanics::Sensor::getPitchX() const { return m_pitchX; }
-double Mechanics::Sensor::getPitchY() const { return m_pitchY; }
+double Mechanics::Sensor::getPitchX() const { return m_pitchCol; }
+double Mechanics::Sensor::getPitchY() const { return m_pitchRow; }
 double Mechanics::Sensor::getDepth() const { return m_depth; }
 double Mechanics::Sensor::getXox0() const { return m_xox0; }
-double Mechanics::Sensor::getSensitiveX() const { return m_sensitiveX; }
-double Mechanics::Sensor::getSensitiveY() const { return m_sensitiveY; }
+double Mechanics::Sensor::getSensitiveX() const { return m_numCols * m_pitchCol; }
+double Mechanics::Sensor::getSensitiveY() const { return m_numRows * m_pitchRow; }
 const Mechanics::Device* Mechanics::Sensor::getDevice() const
 {
   return m_device;
