@@ -95,50 +95,49 @@ void Mechanics::Sensor::getNormalVector(double& x, double& y, double& z) const
   normal().GetCoordinates(x, y, z);
 }
 
-void Mechanics::Sensor::rotateToGlobal(double& x, double& y, double& z) const
+XYPoint Mechanics::Sensor::transformLocalToPixel(const XYZPoint& uvw) const
 {
-  XYZVector uvw(x, y, z);
-  XYZVector xyz = m_l2g * uvw;
-  x = xyz.x();
-  y = xyz.y();
-  z = xyz.z();
+  return {(uvw.x() / m_pitchCol) + (m_numCols / 2),
+          (uvw.y() / m_pitchRow) + (m_numRows / 2)};
 }
 
-void Mechanics::Sensor::rotateToSensor(double& x, double& y, double& z) const
+XYPoint Mechanics::Sensor::transformGlobalToPixel(const XYZPoint& xyz) const
 {
-  XYZVector xyz(x, y, z);
-  XYZVector uvw = m_l2g.Inverse() * xyz;
-  x = uvw.x();
-  y = uvw.y();
-  z = uvw.z();
+  return transformLocalToPixel(globalToLocal() * xyz);
+}
+
+XYZPoint Mechanics::Sensor::transformPixelToLocal(double col, double row) const
+{
+  return {m_pitchCol * (col - (m_numCols / 2)),
+          m_pitchRow * (row - (m_numRows / 2)),
+          0};
+}
+
+XYZPoint Mechanics::Sensor::transformGlobalToLocal(const XYZPoint& xyz) const
+{
+  return globalToLocal() * xyz;
+}
+
+XYZPoint Mechanics::Sensor::transformPixelToGlobal(double col, double row) const
+{
+  return localToGlobal() * transformPixelToLocal(col, row);
+}
+
+XYZPoint Mechanics::Sensor::transformLocalToGlobal(const XYZPoint& uvw) const
+{
+  return localToGlobal() * uvw;
 }
 
 void Mechanics::Sensor::pixelToSpace(
     double col, double row, double& x, double& y, double& z) const
 {
-  const double halfU = getSensitiveX() / 2.0;
-  const double halfV = getSensitiveY() / 2.0;
-  // convert digital position in pixels to local metric coordinates with its
-  // origin at the center of the sensitive area.
-  XYZPoint uvw(col * m_pitchCol - halfU, row * m_pitchRow - halfV, 0);
-  XYZPoint xyz = m_l2g * uvw;
-  x = xyz.x();
-  y = xyz.y();
-  z = xyz.z();
+  transformPixelToGlobal(col, row).GetCoordinates(x, y, z);
 }
 
 void Mechanics::Sensor::spaceToPixel(
     double x, double y, double z, double& col, double& row) const
 {
-  const double halfU = getSensitiveX() / 2.0;
-  const double halfV = getSensitiveY() / 2.0;
-  // global to local metric coordinates
-  XYZPoint xyz(x, y, z);
-  XYZPoint uvw = m_l2g.Inverse() * xyz;
-  // convert local metric coordinates back to digital pixel colums and rows
-  // local origin is at the center of the sensitive area
-  col = (uvw.x() + halfU) / m_pitchCol;
-  row = (uvw.y() + halfV) / m_pitchRow;
+  transformGlobalToPixel({x, y, z}).GetCoordinates(col, row);
 }
 
 //=========================================================
@@ -149,8 +148,8 @@ void Mechanics::Sensor::spaceToPixel(
 
 void Mechanics::Sensor::setNoisyPixels(const std::set<ColumnRow>& pixels)
 {
-	// reset possible existing mask
-	std::fill(m_noiseMask.begin(), m_noiseMask.end(), false);
+  // reset possible existing mask
+  std::fill(m_noiseMask.begin(), m_noiseMask.end(), false);
 
   for (auto it = pixels.begin(); it != pixels.end(); ++it) {
     auto col = std::get<0>(*it);
@@ -161,7 +160,7 @@ void Mechanics::Sensor::setNoisyPixels(const std::set<ColumnRow>& pixels)
     if (m_numRows <= row)
       throw std::runtime_error("row index is out of range");
 
-		m_noiseMask[linearPixelIndex(col, row)] = true;
+    m_noiseMask[linearPixelIndex(col, row)] = true;
   }
 }
 
@@ -222,76 +221,28 @@ unsigned int Mechanics::Sensor::getPosNumY() const
 
 double Mechanics::Sensor::getPosPitchX() const
 {
-  double pitch = 0;
-  double x, y, z;
-  // Make a vector pointing along the pixel's x-axis
-  x = getPitchX();
-  y = 0;
-  z = 0;
-  // Get it's x-projection
-  rotateToGlobal(x, y, z);
-  pitch += fabs(x);
-  // Again with the pixel's y-axis
-  x = 0;
-  y = getPitchY();
-  z = 0;
-  rotateToGlobal(x, y, z);
-  pitch += fabs(x);
-  // Return the sum of the x-projection
-  return pitch;
+  XYZVector pitch = localToGlobal() * XYZVector(m_pitchCol, m_pitchRow, 0);
+  return std::abs(pitch.x());
 }
 
 double Mechanics::Sensor::getPosPitchY() const
 {
-  double pitch = 0;
-  double x, y, z;
-  x = getPitchX();
-  y = 0;
-  z = 0;
-  rotateToGlobal(x, y, z);
-  pitch += fabs(y);
-  x = 0;
-  y = getPitchY();
-  z = 0;
-  rotateToGlobal(x, y, z);
-  pitch += fabs(y);
-  return pitch;
+  XYZVector pitch = localToGlobal() * XYZVector(m_pitchCol, m_pitchRow, 0);
+  return std::abs(pitch.y());
 }
 
 double Mechanics::Sensor::getPosSensitiveX() const
 {
-  double size = 0;
-  double x, y, z;
-  x = getSensitiveX();
-  y = 0;
-  z = 0;
-  rotateToGlobal(x, y, z);
-  size += fabs(x);
-
-  x = 0;
-  y = getSensitiveY();
-  z = 0;
-  rotateToGlobal(x, y, z);
-  size += fabs(x);
-
-  return size;
+  XYZVector size =
+      localToGlobal() * XYZVector(getSensitiveX(), getSensitiveY(), 0);
+  return std::abs(size.x());
 }
 
 double Mechanics::Sensor::getPosSensitiveY() const
 {
-  double size = 0;
-  double x, y, z;
-  x = getSensitiveX();
-  y = 0;
-  z = 0;
-  rotateToGlobal(x, y, z);
-  size += fabs(y);
-  x = 0;
-  y = getSensitiveY();
-  z = 0;
-  rotateToGlobal(x, y, z);
-  size += fabs(y);
-  return size;
+  XYZVector size =
+      localToGlobal() * XYZVector(getSensitiveX(), getSensitiveY(), 0);
+  return std::abs(size.y());
 }
 
 bool Mechanics::Sensor::getDigital() const { return m_digi; }

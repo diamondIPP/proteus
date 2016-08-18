@@ -12,6 +12,28 @@ namespace Mechanics {
 
 class Device;
 
+/** Pixel sensor with digital and geometry information.
+ *
+ * To define the sensor its local coordinate and its orientation in space
+ * three different coordinate systems are defined:
+ *
+ * 1.  The digital pixel coordinates are defined along the column and row
+ *     axis of the pixel matrix. Coordinates are measured in digital pixel
+ *     addresses, i.e. columns and rows. The sensitive sensor area is located
+ *     from [0,numberCols) and [0,numberRows). Each has unit area, e.g.
+ *     the positions inside the pixel at (0,0) have a column and row position
+ *     in the [0,1) range.
+ * 2.  The local metric coordinates are also defined along the column and row
+ *     axis of the pixel matrix but scaled with the pixel pitch to have the
+ *     same units as the global coordinates. Local coordinates (u,v,w)
+ *     correspond to the column, row, and normal axis, where the normal axis
+ *     is defined such that the coordinate system is right-handed. The origin
+ *     is located at the center of the sensitive area but always on a pixel
+ *     boundary.
+ * 3.  The global coordinate system has the same units as the local coordinate
+ *     system with coordinates (x,y,z);
+ *
+ */
 class Sensor {
 public:
   Sensor(const std::string& name,
@@ -42,6 +64,7 @@ public:
   // geometry related
   //
   const Transform3D& localToGlobal() const { return m_l2g; }
+  Transform3D globalToLocal() const { return m_l2g.Inverse(); }
   XYZPoint origin() const { return XYZPoint(m_l2g.Translation().Vect()); }
   XYZVector normal() const;
   void setLocalToGlobal(const Transform3D& l2g) { m_l2g = l2g; }
@@ -53,8 +76,14 @@ public:
   void getNormalVector(double& x, double& y, double& z) const;
 
   //
-  // Geometry functions
+  // transformations between different coordinate systems
   //
+  XYPoint transformLocalToPixel(const XYZPoint& uvw) const;
+  XYPoint transformGlobalToPixel(const XYZPoint& xyz) const;
+  XYZPoint transformPixelToLocal(double col, double row) const;
+  XYZPoint transformGlobalToLocal(const XYZPoint& xyz) const;
+  XYZPoint transformPixelToGlobal(double col, double row) const;
+  XYZPoint transformLocalToGlobal(const XYZPoint& uvw) const;
   void
   pixelToSpace(double pixX, double pixY, double& x, double& y, double& z) const;
   void
@@ -99,8 +128,6 @@ public:
   const char* getName() const;
 
 private:
-  void rotateToGlobal(double& x, double& y, double& z) const;
-  void rotateToSensor(double& x, double& y, double& z) const;
   // row major indices for the pixel masks
   size_t linearPixelIndex(Index col, Index row) const
   {
