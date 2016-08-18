@@ -14,14 +14,13 @@ class Device;
 
 class Alignment {
 public:
-  Alignment(const char* fileName);
+  Alignment(const std::string& fileName);
 
-  const char* getFileName() { return m_fileName.c_str(); }
+  const std::string& getFileName() const { return m_fileName; }
 
   void readFile(const std::string& path);
-  void writeFile(const std::string& path);
-  void readFile() { readFile(m_fileName); }
-  void writeFile() { writeFile(m_fileName); }
+  void writeFile(const std::string& path) const;
+  void writeFile() const { writeFile(m_fileName); }
 
   /** Check if alignment information exsists for the given sensor. */
   bool hasAlignment(Index sensorId) const;

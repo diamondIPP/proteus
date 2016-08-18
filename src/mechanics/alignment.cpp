@@ -20,7 +20,7 @@ using std::fstream;
 using std::cout;
 using std::endl;
 
-Mechanics::Alignment::Alignment(const char* fileName)
+Mechanics::Alignment::Alignment(const std::string& fileName)
     : m_fileName(fileName)
 {
 }
@@ -84,7 +84,7 @@ void Mechanics::Alignment::parse(const ConfigParser& config)
   }
 }
 
-void Mechanics::Alignment::writeFile(const std::string& path)
+void Mechanics::Alignment::writeFile(const std::string& path) const
 {
   std::ofstream file(path);
 

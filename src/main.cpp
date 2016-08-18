@@ -83,11 +83,9 @@ void synchronize(const char* refInputName,
   try {
     ConfigParser refConfig(refDeviceCfg);
     Mechanics::Device* refDevice = Mechanics::generateDevice(refConfig);
-    if (refDevice->getAlignment()) refDevice->getAlignment()->readFile();
 
     ConfigParser dutConfig(dutDeviceCfg);
     Mechanics::Device* dutDevice = Mechanics::generateDevice(dutConfig);
-    if (dutDevice->getAlignment()) dutDevice->getAlignment()->readFile();
 
     ConfigParser runConfig(tbCfg);
 
@@ -239,25 +237,17 @@ void coarseAlignDUT(const char* refInputName,
 
     ConfigParser refConfig(refDeviceCfg,printLevel);
 
-    cout << "uff0" << endl;
     Mechanics::Device* refDevice = Mechanics::generateDevice(refConfig);
-    cout << "uff1" << endl;
-    if(refDevice->getAlignment()) refDevice->getAlignment()->readFile();
-    else cout << "what's gong on" << endl;
-    cout << "ok2" << endl;
 
     ConfigParser dutConfig(dutDeviceCfg);
     Mechanics::Device* dutDevice = Mechanics::generateDevice(dutConfig);
-    cout << "ok3" << endl;
 
     unsigned int treeMask = Storage::Flags::TRACKS | Storage::Flags::CLUSTERS;
     Storage::StorageIO refInput(refInputName, Storage::INPUT, 0, treeMask);
     Storage::StorageIO dutInput(dutInputName, Storage::INPUT, 0, treeMask);
-    cout << "ok4" << endl;
 
     Loopers::CoarseAlignDut looper(refDevice, dutDevice, clusterMaker,
                                    &refInput, &dutInput, startEvent, numEvents);
-    cout << "ok5" << endl;
     Loopers::configCoarseAlign(runConfig, looper);
     if(printLevel>0) looper.print();
     looper.loop();
@@ -289,7 +279,6 @@ void fineAlign(const char* inputName,
 
     ConfigParser deviceConfig(deviceCfg);
     Mechanics::Device* device = Mechanics::generateDevice(deviceConfig);
-    if (device->getAlignment()) device->getAlignment()->readFile();
 
     unsigned int treeMask = Storage::Flags::TRACKS | Storage::Flags::CLUSTERS;
     Storage::StorageIO input(inputName, Storage::INPUT, 0, treeMask, 0);
@@ -338,10 +327,6 @@ void fineAlignDUT(const char* refInputName,
     Storage::StorageIO refInput(refInputName, Storage::INPUT, 0, treeMask);
     Storage::StorageIO dutInput(dutInputName, Storage::INPUT, 0, treeMask);
 
-    // Get the current alignment (coarse alignment should have been performed)
-    if (refDevice->getAlignment()) refDevice->getAlignment()->readFile();
-    if (dutDevice->getAlignment()) dutDevice->getAlignment()->readFile();
-
     Loopers::FineAlignDut looper(refDevice, dutDevice, clusterMaker, trackMaker,
                                  &refInput, &dutInput, startEvent, numEvents);
     Loopers::configFineAlign(runConfig, looper);
@@ -375,7 +360,6 @@ void process(const char* inputName,
   {
     ConfigParser deviceConfig(deviceCfg);
     Mechanics::Device* device = Mechanics::generateDevice(deviceConfig);
-    if(device->getAlignment()) device->getAlignment()->readFile();
 
     ConfigParser runConfig(tbCfg);
     Processors::ClusterMaker* clusterMaker = Processors::generateClusterMaker(runConfig);
@@ -439,7 +423,6 @@ void analysis(const char* inputName,
     {
       ConfigParser deviceConfig(deviceCfg);
       Mechanics::Device* device = Mechanics::generateDevice(deviceConfig);
-      if (device->getAlignment()) device->getAlignment()->readFile();
 
       ConfigParser runConfig(tbCfg);
 
@@ -493,11 +476,9 @@ void analysisDUT(const char* refInputName,
       ConfigParser refConfig(refDeviceCfg);
 
       Mechanics::Device* refDevice = Mechanics::generateDevice(refConfig);
-      if (refDevice->getAlignment()) refDevice->getAlignment()->readFile();
 
       ConfigParser dutConfig(dutDeviceCfg);
       Mechanics::Device* dutDevice = Mechanics::generateDevice(dutConfig);
-      if (dutDevice->getAlignment()) dutDevice->getAlignment()->readFile();
 
       ConfigParser runConfig(tbCfg);
 
