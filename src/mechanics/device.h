@@ -6,14 +6,20 @@
 #include <string>
 #include <vector>
 
+#include "alignment.h"
+#include "noisemask.h"
+
 namespace Mechanics {
 
 class Sensor;
-class NoiseMask;
-class Alignment;
 
 class Device {
 public:
+  Device(const std::string& name,
+         double clockRate,
+         unsigned int readoutWindow,
+         const std::string& spaceUnit = std::string(),
+         const std::string& timeUnit = std::string());
   Device(const char* name,
          const char* alignmentName = "",
          const char* noiseMaskName = "",
@@ -21,12 +27,18 @@ public:
          unsigned int readOutWindow = 0,
          const char* spaceUnit = "",
          const char* timeUnit = "");
-
   ~Device();
+  /** Construct device from a configuration file. */
+  static Device fromFile(const std::string& path);
 
   void addSensor(Sensor* sensor);
   void addMaskedSensor();
   double tsToTime(uint64_t timeStamp) const;
+
+  /** Store the alignment and apply it to all configured sensors. */
+  void applyAlignment(const Alignment& alignment);
+  /** Store the noise mask and apply to all configured sensors. */
+  void applyNoiseMask(const NoiseMask& noiseMask);
 
   void setBeamSlopeX(double rotation) { _beamSlopeX = rotation; }
   void setBeamSlopeY(double rotation) { _beamSlopeY = rotation; }
@@ -52,14 +64,12 @@ public:
   uint64_t getTimeEnd() const { return _timeEnd; }
   double getSyncRatio() const { return _syncRatio; }
 
-  NoiseMask* getNoiseMask() { return _noiseMask; }
-  Alignment* getAlignment() { return _alignment; }
+  NoiseMask* getNoiseMask() { return &_noiseMask; }
+  Alignment* getAlignment() { return &_alignment; }
 
   void print() const;
 
 private:
-  void setAlignment(const Alignment& alignment);
-
   std::string _name;
   double _clockRate;
   unsigned int _readOutWindow;
@@ -75,10 +85,10 @@ private:
   std::vector<Sensor*> _sensors;
   std::vector<bool> _sensorMask;
 
-  NoiseMask* _noiseMask;
-  Alignment* _alignment;
+  Alignment _alignment;
+  NoiseMask _noiseMask;
+};
 
-}; // end of class
-} // end of namespace Mechanics
+} // namespace Mechanics
 
 #endif // DEVICE_H
