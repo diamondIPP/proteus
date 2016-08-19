@@ -10,8 +10,6 @@
 
 namespace Mechanics {
 
-class Device;
-
 /** Pixel sensor with digital and geometry information.
  *
  * To define the sensor its local coordinate and its orientation in space
@@ -45,24 +43,9 @@ public:
          Index numRows,
          double pitchCol,
          double pitchRow,
+         bool isDigital,
          double depth = 0,
          double xX0 = 0);
-  Sensor(unsigned int numX,
-         unsigned int numY,
-         double pitchX,
-         double pitchY,
-         double depth,
-         Device* device,
-         std::string name,
-         bool digi,
-         bool alignable = true,
-         double xox0 = 0,
-         double offX = 0,
-         double offY = 0,
-         double offZ = 0,
-         double rotX = 0,
-         double rotY = 0,
-         double rotZ = 0);
 
   //
   // geometry related
@@ -111,25 +94,24 @@ public:
   //
   // Get functions
   //
-  bool getDigital() const;
-  bool getAlignable() const;
-  unsigned int getNumX() const;
-  unsigned int getNumY() const;
-  unsigned int getNumPixels() const;
+  bool getDigital() const { return m_isDigital; }
+  bool getAlignable() const { return true; }
+  unsigned int getNumX() const { return m_numCols; }
+  unsigned int getNumY() const { return m_numRows; }
+  unsigned int getNumPixels() const { return m_numCols * m_numRows; }
   unsigned int getPosNumX() const;
   unsigned int getPosNumY() const;
-  double getPitchX() const;
-  double getPitchY() const;
+  double getPitchX() const { return m_pitchCol; }
+  double getPitchY() const { return m_pitchRow; }
   double getPosPitchX() const;
   double getPosPitchY() const;
-  double getDepth() const;
-  double getXox0() const;
-  double getSensitiveX() const;
-  double getSensitiveY() const;
+  double getDepth() const { return m_depth; }
+  double getXox0() const { return m_xX0; }
+  double getSensitiveX() const { return m_numCols * m_pitchCol; }
+  double getSensitiveY() const { return m_numRows * m_pitchRow; }
   double getPosSensitiveX() const;
   double getPosSensitiveY() const;
-  const Device* getDevice() const;
-  const char* getName() const;
+  const std::string& getName() const { return m_name; }
 
 private:
   // row major indices for the pixel masks
@@ -143,12 +125,10 @@ private:
   const Index m_numCols, m_numRows;    // number of columns and rows
   const double m_pitchCol, m_pitchRow; // pitch along column and row direction
   const double m_depth;                // sensor thickness
-  const double m_xox0;                 // X/X0 (thickness in radiation lengths)
+  const double m_xX0;                 // X/X0 (thickness in radiation lengths)
   const std::string m_name;
   std::vector<bool> m_noiseMask;
-  const Device* m_device;
-  bool m_digi;
-  bool m_alignable;              // if sensor is to be aligned
+  bool m_isDigital;
 };
 
 } // namespace Mechanics

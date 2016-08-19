@@ -1,12 +1,9 @@
 #include "sensor.h"
 
 #include <cassert>
+#include <cmath>
 #include <iostream>
-#include <math.h>
 #include <string>
-
-#include "mechanics/device.h"
-#include "mechanics/noisemask.h"
 
 using std::cout;
 using std::endl;
@@ -16,6 +13,7 @@ Mechanics::Sensor::Sensor(const std::string& name,
                           Index numRows,
                           double pitchCol,
                           double pitchRow,
+                          bool isDigital,
                           double depth,
                           double xX0)
     : m_numCols(numCols)
@@ -23,42 +21,11 @@ Mechanics::Sensor::Sensor(const std::string& name,
     , m_pitchCol(pitchCol)
     , m_pitchRow(pitchRow)
     , m_depth(depth)
-    , m_xox0(xX0)
+    , m_xX0(xX0)
     , m_name(name)
     , m_noiseMask(numCols * numRows, false)
-    , m_device(nullptr)
+    , m_isDigital(isDigital)
 {
-}
-
-Mechanics::Sensor::Sensor(unsigned int numX,
-                          unsigned int numY,
-                          double pitchX,
-                          double pitchY,
-                          double depth,
-                          Device* device,
-                          std::string name,
-                          bool digi,
-                          bool alignable,
-                          double xox0,
-                          double offX,
-                          double offY,
-                          double offZ,
-                          double rotX,
-                          double rotY,
-                          double rotZ)
-    : m_numCols(numX)
-    , m_numRows(numY)
-    , m_pitchCol(pitchX)
-    , m_pitchRow(pitchY)
-    , m_depth(depth)
-    , m_xox0(xox0)
-    , m_name(name)
-    , m_device(device)
-    , m_noiseMask(numX * numY, false)
-    , m_digi(digi)
-    , m_alignable(alignable)
-{
-  assert(device && "Sensor: need to link the sensor back to a device.");
 }
 
 // geometry related methods
@@ -181,12 +148,11 @@ void Mechanics::Sensor::print() const
        << "  Pitch-x: " << m_pitchCol << "\n"
        << "  Pitch-y: " << m_pitchRow << "\n"
        << "  Depth: " << m_depth << "\n"
-       << "  X / X0: " << m_xox0 << "\n"
+       << "  X / X0: " << m_xX0 << "\n"
        << "  Sensitive X: " << getSensitiveX() << "\n"
        << "  Sensitive Y: " << getSensitiveY() << "\n"
        << "  PosNumX: " << getPosNumX() << "\n"
-       << "  PosNumY: " << getPosNumY() << "\n"
-       << "  Alignable: " << m_alignable << endl;
+       << "  PosNumY: " << getPosNumY() << "\n";
 
   // TODO 2016-08-18 msmk: how to print?
   // cout << "  Noisy pixels (" << m_numNoisyPixels << ")" << endl;
@@ -244,29 +210,3 @@ double Mechanics::Sensor::getPosSensitiveY() const
       localToGlobal() * XYZVector(getSensitiveX(), getSensitiveY(), 0);
   return std::abs(size.y());
 }
-
-bool Mechanics::Sensor::getDigital() const { return m_digi; }
-bool Mechanics::Sensor::getAlignable() const { return m_alignable; }
-unsigned int Mechanics::Sensor::getNumX() const { return m_numCols; }
-unsigned int Mechanics::Sensor::getNumY() const { return m_numRows; }
-unsigned int Mechanics::Sensor::getNumPixels() const
-{
-  return m_numCols * m_numRows;
-}
-double Mechanics::Sensor::getPitchX() const { return m_pitchCol; }
-double Mechanics::Sensor::getPitchY() const { return m_pitchRow; }
-double Mechanics::Sensor::getDepth() const { return m_depth; }
-double Mechanics::Sensor::getXox0() const { return m_xox0; }
-double Mechanics::Sensor::getSensitiveX() const
-{
-  return m_numCols * m_pitchCol;
-}
-double Mechanics::Sensor::getSensitiveY() const
-{
-  return m_numRows * m_pitchRow;
-}
-const Mechanics::Device* Mechanics::Sensor::getDevice() const
-{
-  return m_device;
-}
-const char* Mechanics::Sensor::getName() const { return m_name.c_str(); }
