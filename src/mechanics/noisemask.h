@@ -1,14 +1,9 @@
 #ifndef NOISEMASK_H
 #define NOISEMASK_H
 
-#include <fstream>
 #include <map>
-#include <memory>
 #include <set>
-#include <sstream>
 #include <string>
-#include <utility>
-#include <vector>
 
 #include "loopers/noisescan.h"
 #include "utils/definitions.h"
