@@ -6,12 +6,11 @@
 #include <string>
 #include <vector>
 
-#include "alignment.h"
-#include "noisemask.h"
+#include "mechanics/alignment.h"
+#include "mechanics/noisemask.h"
+#include "mechanics/sensor.h"
 
 namespace Mechanics {
-
-class Sensor;
 
 class Device {
 public:
@@ -27,11 +26,10 @@ public:
          unsigned int readOutWindow = 0,
          const char* spaceUnit = "",
          const char* timeUnit = "");
-  ~Device();
   /** Construct device from a configuration file. */
   static Device fromFile(const std::string& path);
 
-  void addSensor(Sensor* sensor);
+  void addSensor(const Sensor& sensor);
   void addMaskedSensor();
   double tsToTime(uint64_t timeStamp) const;
 
@@ -47,7 +45,8 @@ public:
   void setSyncRatio(double ratio) { m_syncRatio = ratio; }
 
   unsigned int getNumSensors() const { return m_sensors.size(); }
-  Sensor* getSensor(unsigned int n) const;
+  Sensor* getSensor(unsigned int i) { return &m_sensors.at(i); }
+  const Sensor* getSensor(unsigned int i) const { return &m_sensors.at(i); }
 
   unsigned int getNumPixels() const;
 
@@ -81,7 +80,7 @@ private:
   uint64_t m_timeEnd;
   double m_syncRatio;
 
-  std::vector<Sensor*> m_sensors;
+  std::vector<Sensor> m_sensors;
   std::vector<bool> m_sensorMask;
 
   Alignment m_alignment;

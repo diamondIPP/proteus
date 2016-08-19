@@ -57,8 +57,7 @@ static void parseSensors(const ConfigParser& config,
         if (name.empty())
           name = "Plane" + std::to_string(sensorCounter);
 
-        Mechanics::Sensor* sensor = new Mechanics::Sensor(
-            name, cols, rows, pitchX, pitchY, depth, xox0);
+        Mechanics::Sensor sensor(name, cols, rows, pitchX, pitchY, depth, xox0);
         device.addSensor(sensor);
         alignment.setOffset(sensorCounter, offX, offY, offZ);
         alignment.setRotationAngles(sensorCounter, rotX, rotY, rotZ);
@@ -126,7 +125,7 @@ static void parseSensors(const ConfigParser& config,
     else if (!row->key.compare("alignable"))
       alignable = ConfigParser::valueToLogical(row->value);
     else {
-      std::string err("[Mechanics::generateSensors] can't parse line ");
+      std::string err("Device: can't parse line ");
       std::stringstream ss;
       ss << i;
       err += ss.str() + " with [key,value]=['" + row->key + "','" + row->value +
@@ -250,29 +249,12 @@ Mechanics::Device::Device(const char* name,
   std::replace(m_spaceUnit.begin(), m_spaceUnit.end(), '\\', '#');
 }
 
-//=========================================================
-Mechanics::Device::~Device()
+void Mechanics::Device::addSensor(const Mechanics::Sensor& sensor)
 {
-  for (unsigned int nsensor = 0; nsensor < getNumSensors(); nsensor++)
-    delete m_sensors.at(nsensor);
-}
-
-//=========================================================
-void Mechanics::Device::addSensor(Mechanics::Sensor* sensor)
-{
-  assert(sensor && "Device: can't add a null sensor");
-
-  Index sensorId = m_sensors.size();
-
-  if (!m_sensors.empty() && m_sensors.back()->getOffZ() > sensor->getOffZ())
-    throw "[Device::addSensor] sensors must be added in order of increazing Z "
-          "position";
-  m_sensors.push_back(sensor);
-  m_sensors.back()->setNoisyPixels(m_noiseMask.getMaskedPixels(sensorId));
+  m_sensors.emplace_back(sensor);
   m_sensorMask.push_back(false);
 }
 
-//=========================================================
 void Mechanics::Device::addMaskedSensor() { m_sensorMask.push_back(true); }
 
 void Mechanics::Device::applyAlignment(const Alignment& alignment)
@@ -304,12 +286,6 @@ void Mechanics::Device::applyNoiseMask(const NoiseMask& noiseMask)
 double Mechanics::Device::tsToTime(uint64_t timeStamp) const
 {
   return (double)((timeStamp - getTimeStart()) / (double)getClockRate());
-}
-
-//=========================================================
-Mechanics::Sensor* Mechanics::Device::getSensor(unsigned int n) const
-{
-  return m_sensors.at(n);
 }
 
 //=========================================================
