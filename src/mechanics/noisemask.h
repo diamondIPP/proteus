@@ -10,11 +10,8 @@
 #include <utility>
 #include <vector>
 
+#include "loopers/noisescan.h"
 #include "utils/definitions.h"
-
-namespace Loopers {
-class NoiseScanConfig;
-}
 
 namespace Mechanics {
 
@@ -46,7 +43,7 @@ public:
   const size_t getNumMaskedPixels() const;
 
   const std::string& getFileName() const { return m_path; }
-  const Loopers::NoiseScanConfig* getConfig() const { return m_cfg.get(); }
+  const Loopers::NoiseScanConfig* getConfig() const { return &m_cfg; }
 
 private:
   void parseLine(std::stringstream& line, Index& nsens, Index& x, Index& y);
@@ -54,7 +51,7 @@ private:
 
 private:
   std::map<Index, ColumnRowSet> m_maskedPixels;
-  std::unique_ptr<Loopers::NoiseScanConfig> m_cfg;
+  Loopers::NoiseScanConfig m_cfg;
   std::string m_path;
 };
 

@@ -21,13 +21,12 @@ using std::endl;
 using std::string;
 
 Mechanics::NoiseMask::NoiseMask()
-    : m_cfg(new Loopers::NoiseScanConfig())
-    , m_path("<TRANSIENT>")
+    : m_path("<TRANSIENT>")
 {
 }
 
 Mechanics::NoiseMask::NoiseMask(const Loopers::NoiseScanConfig* config)
-    : m_cfg(new Loopers::NoiseScanConfig(*config))
+    : m_cfg(*config)
     , m_path("<TRANSIENT>")
 {
 }
@@ -90,7 +89,7 @@ void Mechanics::NoiseMask::writeFile(const std::string& path) const
     }
   }
 
-  out << m_cfg->print() << '\n';
+  out << m_cfg.print() << '\n';
   out.close();
 
   cout << "Wrote noise mask to '" << path << "'\n";
@@ -165,20 +164,20 @@ void Mechanics::NoiseMask::parseComments(std::stringstream& comments)
     if (!row->key.compare("runs")) {
       std::vector<int> runs;
       ConfigParser::valueToVec(row->value, runs);
-      m_cfg->setRuns(runs);
+      m_cfg.setRuns(runs);
       runs.clear();
     } else if (!row->key.compare("max factor"))
-      m_cfg->setMaxFactor(ConfigParser::valueToNumerical(row->value));
+      m_cfg.setMaxFactor(ConfigParser::valueToNumerical(row->value));
     else if (!row->key.compare("max occupancy"))
-      m_cfg->setMaxOccupancy(ConfigParser::valueToNumerical(row->value));
+      m_cfg.setMaxOccupancy(ConfigParser::valueToNumerical(row->value));
     else if (!row->key.compare("bottom x"))
-      m_cfg->setBottomLimitX(ConfigParser::valueToNumerical(row->value));
+      m_cfg.setBottomLimitX(ConfigParser::valueToNumerical(row->value));
     else if (!row->key.compare("upper x"))
-      m_cfg->setUpperLimitX(ConfigParser::valueToNumerical(row->value));
+      m_cfg.setUpperLimitX(ConfigParser::valueToNumerical(row->value));
     else if (!row->key.compare("bottom y"))
-      m_cfg->setBottomLimitY(ConfigParser::valueToNumerical(row->value));
+      m_cfg.setBottomLimitY(ConfigParser::valueToNumerical(row->value));
     else if (!row->key.compare("upper y"))
-      m_cfg->setUpperLimitY(ConfigParser::valueToNumerical(row->value));
+      m_cfg.setUpperLimitY(ConfigParser::valueToNumerical(row->value));
     else {
       cout << "[NoiseMask::parseComments] WARNING can't parse row with key '"
            << row->key << endl;
