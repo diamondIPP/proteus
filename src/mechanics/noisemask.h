@@ -32,9 +32,9 @@ public:
   /** Create an empty noise mask with the given scan config. */
   explicit NoiseMask(const Loopers::NoiseScanConfig* config);
   ~NoiseMask();
+  /** Construct a noise mask from a configuration file. */
+  static NoiseMask fromFile(const std::string& path);
 
-  /** Read noise masks and configuration from a file. */
-  void readFile(const std::string& path);
   /** Write the current noise masks and configuration to a file. */
   void writeFile(const std::string& path) const;
 
@@ -44,10 +44,6 @@ public:
 
   const std::string& getFileName() const { return m_path; }
   const Loopers::NoiseScanConfig* getConfig() const { return &m_cfg; }
-
-private:
-  void parseLine(std::stringstream& line, Index& nsens, Index& x, Index& y);
-  void parseComments(std::stringstream& comments);
 
 private:
   std::map<Index, ColumnRowSet> m_maskedPixels;

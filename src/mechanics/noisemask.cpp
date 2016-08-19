@@ -34,72 +34,7 @@ Mechanics::NoiseMask::NoiseMask(const Loopers::NoiseScanConfig* config)
 // only needed to allow std::unique_ptr with forward-declared class
 Mechanics::NoiseMask::~NoiseMask() {}
 
-void Mechanics::NoiseMask::readFile(const std::string& path)
-{
-  std::fstream input(path, std::ios_base::in);
-
-  if (!input.is_open()) {
-    cout << "[NoiseMask::readMask] WARNING :: Noise mask failed to open file '"
-         << path << "'" << endl;
-    return;
-  }
-  cout << "Read noise mask from '" << path << "'\n";
-
-  std::stringstream comments;
-  while (input) {
-    unsigned int nsens = 0;
-    unsigned int x = 0;
-    unsigned int y = 0;
-    std::string line;
-    std::getline(input, line);
-    if (!line.size())
-      continue;
-    if (line[0] == '#') {
-      comments << line << "\n";
-      continue;
-    }
-    std::stringstream lineStream(line);
-    parseLine(lineStream, nsens, x, y);
-    m_maskedPixels[nsens].emplace(x, y);
-  }
-
-  if (!comments.str().empty())
-    parseComments(comments);
-
-  m_path = path;
-}
-
-void Mechanics::NoiseMask::writeFile(const std::string& path) const
-{
-  std::fstream out(path, std::ios_base::out);
-
-  if (!out.is_open()) {
-    std::string msg("[NoiseMask::writeMask]");
-    msg += "unable to open file '" + path + "' for writting";
-    throw std::runtime_error(msg);
-  }
-
-  for (auto it = m_maskedPixels.begin(); it != m_maskedPixels.end(); ++it) {
-    Index sensorId = it->first;
-    const ColumnRowSet& pixels = it->second;
-    for (auto jt = pixels.begin(); jt != pixels.end(); ++jt) {
-      auto col = std::get<0>(*jt);
-      auto row = std::get<1>(*jt);
-      out << sensorId << ", " << col << ", " << row << '\n';
-    }
-  }
-
-  out << m_cfg.print() << '\n';
-  out.close();
-
-  cout << "Wrote noise mask to '" << path << "'\n";
-}
-
-//=========================================================
-void Mechanics::NoiseMask::parseLine(std::stringstream& line,
-                                     Index& nsens,
-                                     Index& x,
-                                     Index& y)
+static void parseLine(std::stringstream& line, Index& nsens, Index& x, Index& y)
 {
   Index counter = 0;
   while (line.good()) {
@@ -123,8 +58,8 @@ void Mechanics::NoiseMask::parseLine(std::stringstream& line,
     throw "[NoiseMask::parseLine] bad line found in file";
 }
 
-//=========================================================
-void Mechanics::NoiseMask::parseComments(std::stringstream& comments)
+static void parseComments(std::stringstream& comments,
+                          Loopers::NoiseScanConfig& cfg)
 {
   if (VERBOSE) {
     cout << "\n[NoiseMask::parseComments] input string:" << endl;
@@ -164,20 +99,20 @@ void Mechanics::NoiseMask::parseComments(std::stringstream& comments)
     if (!row->key.compare("runs")) {
       std::vector<int> runs;
       ConfigParser::valueToVec(row->value, runs);
-      m_cfg.setRuns(runs);
+      cfg.setRuns(runs);
       runs.clear();
     } else if (!row->key.compare("max factor"))
-      m_cfg.setMaxFactor(ConfigParser::valueToNumerical(row->value));
+      cfg.setMaxFactor(ConfigParser::valueToNumerical(row->value));
     else if (!row->key.compare("max occupancy"))
-      m_cfg.setMaxOccupancy(ConfigParser::valueToNumerical(row->value));
+      cfg.setMaxOccupancy(ConfigParser::valueToNumerical(row->value));
     else if (!row->key.compare("bottom x"))
-      m_cfg.setBottomLimitX(ConfigParser::valueToNumerical(row->value));
+      cfg.setBottomLimitX(ConfigParser::valueToNumerical(row->value));
     else if (!row->key.compare("upper x"))
-      m_cfg.setUpperLimitX(ConfigParser::valueToNumerical(row->value));
+      cfg.setUpperLimitX(ConfigParser::valueToNumerical(row->value));
     else if (!row->key.compare("bottom y"))
-      m_cfg.setBottomLimitY(ConfigParser::valueToNumerical(row->value));
+      cfg.setBottomLimitY(ConfigParser::valueToNumerical(row->value));
     else if (!row->key.compare("upper y"))
-      m_cfg.setUpperLimitY(ConfigParser::valueToNumerical(row->value));
+      cfg.setUpperLimitY(ConfigParser::valueToNumerical(row->value));
     else {
       cout << "[NoiseMask::parseComments] WARNING can't parse row with key '"
            << row->key << endl;
@@ -186,6 +121,68 @@ void Mechanics::NoiseMask::parseComments(std::stringstream& comments)
 
   // delete temporary file
   unlink(nameBuff);
+}
+
+Mechanics::NoiseMask Mechanics::NoiseMask::fromFile(const std::string& path)
+{
+  NoiseMask noise;
+  std::fstream input(path, std::ios_base::in);
+
+  if (!input) {
+    cout << "[NoiseMask::readMask] WARNING :: Noise mask failed to open file '"
+         << path << "'" << endl;
+    return noise;
+  }
+  cout << "Read noise mask from '" << path << "'\n";
+
+  std::stringstream comments;
+  while (input) {
+    unsigned int nsens = 0;
+    unsigned int x = 0;
+    unsigned int y = 0;
+    std::string line;
+    std::getline(input, line);
+    if (!line.size())
+      continue;
+    if (line[0] == '#') {
+      comments << line << "\n";
+      continue;
+    }
+    std::stringstream lineStream(line);
+    parseLine(lineStream, nsens, x, y);
+    noise.maskPixel(nsens, x, y);
+  }
+
+  if (!comments.str().empty())
+    parseComments(comments, noise.m_cfg);
+
+  noise.m_path = path;
+}
+
+void Mechanics::NoiseMask::writeFile(const std::string& path) const
+{
+  std::fstream out(path, std::ios_base::out);
+
+  if (!out.is_open()) {
+    std::string msg("[NoiseMask::writeMask]");
+    msg += "unable to open file '" + path + "' for writting";
+    throw std::runtime_error(msg);
+  }
+
+  for (auto it = m_maskedPixels.begin(); it != m_maskedPixels.end(); ++it) {
+    Index sensorId = it->first;
+    const ColumnRowSet& pixels = it->second;
+    for (auto jt = pixels.begin(); jt != pixels.end(); ++jt) {
+      auto col = std::get<0>(*jt);
+      auto row = std::get<1>(*jt);
+      out << sensorId << ", " << col << ", " << row << '\n';
+    }
+  }
+
+  out << m_cfg.print() << '\n';
+  out.close();
+
+  cout << "Wrote noise mask to '" << path << "'\n";
 }
 
 void Mechanics::NoiseMask::maskPixel(Index sensorId, Index col, Index row)
