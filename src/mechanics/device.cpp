@@ -200,16 +200,16 @@ Mechanics::Device::Device(const std::string& name,
                           unsigned int readoutWindow,
                           const std::string& spaceUnit,
                           const std::string& timeUnit)
-    : _name(name)
-    , _clockRate(clockRate)
-    , _readOutWindow(readoutWindow)
-    , _beamSlopeX(0)
-    , _beamSlopeY(0)
-    , _timeStart(0)
-    , _timeEnd(0)
-    , _syncRatio(0)
-    , _spaceUnit(spaceUnit)
-    , _timeUnit(timeUnit)
+    : m_name(name)
+    , m_clockRate(clockRate)
+    , m_readOutWindow(readoutWindow)
+    , m_beamSlopeX(0)
+    , m_beamSlopeY(0)
+    , m_timeStart(0)
+    , m_timeEnd(0)
+    , m_syncRatio(0)
+    , m_spaceUnit(spaceUnit)
+    , m_timeUnit(timeUnit)
 {
 }
 
@@ -226,16 +226,16 @@ Mechanics::Device::Device(const char* name,
                           unsigned int readOutWindow,
                           const char* spaceUnit,
                           const char* timeUnit)
-    : _name(name)
-    , _clockRate(clockRate)
-    , _readOutWindow(readOutWindow)
-    , _spaceUnit(spaceUnit)
-    , _timeUnit(timeUnit)
-    , _beamSlopeX(0)
-    , _beamSlopeY(0)
-    , _timeStart(0)
-    , _timeEnd(0)
-    , _syncRatio(0)
+    : m_name(name)
+    , m_clockRate(clockRate)
+    , m_readOutWindow(readOutWindow)
+    , m_spaceUnit(spaceUnit)
+    , m_timeUnit(timeUnit)
+    , m_beamSlopeX(0)
+    , m_beamSlopeY(0)
+    , m_timeStart(0)
+    , m_timeEnd(0)
+    , m_syncRatio(0)
 {
   if (strlen(alignmentName)) {
     // Alignment a;
@@ -244,17 +244,17 @@ Mechanics::Device::Device(const char* name,
   }
 
   if (strlen(noiseMaskName)) {
-    // _noiseMask.readFile(noiseMaskName);
+    // m_noiseMask.readFile(noiseMaskName);
   }
-  std::replace(_timeUnit.begin(), _timeUnit.end(), '\\', '#');
-  std::replace(_spaceUnit.begin(), _spaceUnit.end(), '\\', '#');
+  std::replace(m_timeUnit.begin(), m_timeUnit.end(), '\\', '#');
+  std::replace(m_spaceUnit.begin(), m_spaceUnit.end(), '\\', '#');
 }
 
 //=========================================================
 Mechanics::Device::~Device()
 {
   for (unsigned int nsensor = 0; nsensor < getNumSensors(); nsensor++)
-    delete _sensors.at(nsensor);
+    delete m_sensors.at(nsensor);
 }
 
 //=========================================================
@@ -262,41 +262,40 @@ void Mechanics::Device::addSensor(Mechanics::Sensor* sensor)
 {
   assert(sensor && "Device: can't add a null sensor");
 
-  Index sensorId = _sensors.size();
+  Index sensorId = m_sensors.size();
 
-  if (!_sensors.empty() &&
-      _sensors.back()->getOffZ() > sensor->getOffZ())
+  if (!m_sensors.empty() && m_sensors.back()->getOffZ() > sensor->getOffZ())
     throw "[Device::addSensor] sensors must be added in order of increazing Z "
           "position";
-  _sensors.push_back(sensor);
-  _sensors.back()->setNoisyPixels(_noiseMask.getMaskedPixels(sensorId));
-  _sensorMask.push_back(false);
+  m_sensors.push_back(sensor);
+  m_sensors.back()->setNoisyPixels(m_noiseMask.getMaskedPixels(sensorId));
+  m_sensorMask.push_back(false);
 }
 
 //=========================================================
-void Mechanics::Device::addMaskedSensor() { _sensorMask.push_back(true); }
+void Mechanics::Device::addMaskedSensor() { m_sensorMask.push_back(true); }
 
 void Mechanics::Device::applyAlignment(const Alignment& alignment)
 {
-  _alignment = alignment;
+  m_alignment = alignment;
 
   for (Index sensorId = 0; sensorId < getNumSensors(); ++sensorId) {
     Sensor* sensor = getSensor(sensorId);
-    sensor->setLocalToGlobal(_alignment.getLocalToGlobal(sensorId));
+    sensor->setLocalToGlobal(m_alignment.getLocalToGlobal(sensorId));
   }
   // TODO 2016-08-18 msmk: check number of sensors / id consistency
-  _beamSlopeX = _alignment.m_beamSlopeX;
-  _beamSlopeY = _alignment.m_beamSlopeY;
-  _syncRatio = _alignment.m_syncRatio;
+  m_beamSlopeX = m_alignment.m_beamSlopeX;
+  m_beamSlopeY = m_alignment.m_beamSlopeY;
+  m_syncRatio = m_alignment.m_syncRatio;
 }
 
 void Mechanics::Device::applyNoiseMask(const NoiseMask& noiseMask)
 {
-  _noiseMask = noiseMask;
+  m_noiseMask = noiseMask;
 
   for (Index sensorId = 0; sensorId < getNumSensors(); ++sensorId) {
     Sensor* sensor = getSensor(sensorId);
-    sensor->setNoisyPixels(_noiseMask.getMaskedPixels(sensorId));
+    sensor->setNoisyPixels(m_noiseMask.getMaskedPixels(sensorId));
   }
   // TODO 2016-08-18 msmk: check number of sensors / id consistency
 }
@@ -310,7 +309,7 @@ double Mechanics::Device::tsToTime(uint64_t timeStamp) const
 //=========================================================
 Mechanics::Sensor* Mechanics::Device::getSensor(unsigned int n) const
 {
-  return _sensors.at(n);
+  return m_sensors.at(n);
 }
 
 //=========================================================
@@ -326,12 +325,12 @@ unsigned int Mechanics::Device::getNumPixels() const
 void Mechanics::Device::print() const
 {
   cout << "\nDEVICE:\n"
-       << "  Name: '" << _name << "'\n"
-       << "  Clock rate: " << _clockRate << "\n"
-       << "  Read out window: " << _readOutWindow << "\n"
+       << "  Name: '" << m_name << "'\n"
+       << "  Clock rate: " << m_clockRate << "\n"
+       << "  Read out window: " << m_readOutWindow << "\n"
        << "  Sensors: " << getNumSensors() << "\n"
-       << "  Alignment: " << _alignment.m_path << "\n"
-       << "  Noisemask: " << _noiseMask.getFileName() << endl;
+       << "  Alignment: " << m_alignment.m_path << "\n"
+       << "  Noisemask: " << m_noiseMask.getFileName() << endl;
 
   for (unsigned int nsens = 0; nsens < getNumSensors(); nsens++)
     getSensor(nsens)->print();

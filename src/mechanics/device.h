@@ -40,52 +40,52 @@ public:
   /** Store the noise mask and apply to all configured sensors. */
   void applyNoiseMask(const NoiseMask& noiseMask);
 
-  void setBeamSlopeX(double rotation) { _beamSlopeX = rotation; }
-  void setBeamSlopeY(double rotation) { _beamSlopeY = rotation; }
-  void setTimeStart(uint64_t timeStamp) { _timeStart = timeStamp; }
-  void setTimeEnd(uint64_t timeStamp) { _timeEnd = timeStamp; }
-  void setSyncRatio(double ratio) { _syncRatio = ratio; }
+  void setBeamSlopeX(double rotation) { m_beamSlopeX = rotation; }
+  void setBeamSlopeY(double rotation) { m_beamSlopeY = rotation; }
+  void setTimeStart(uint64_t timeStamp) { m_timeStart = timeStamp; }
+  void setTimeEnd(uint64_t timeStamp) { m_timeEnd = timeStamp; }
+  void setSyncRatio(double ratio) { m_syncRatio = ratio; }
 
-  unsigned int getNumSensors() const { return _sensors.size(); }
+  unsigned int getNumSensors() const { return m_sensors.size(); }
   Sensor* getSensor(unsigned int n) const;
 
   unsigned int getNumPixels() const;
 
-  const std::vector<bool>* getSensorMask() const { return &_sensorMask; }
+  const std::vector<bool>* getSensorMask() const { return &m_sensorMask; }
 
-  const char* getName() const { return _name.c_str(); }
-  double getClockRate() const { return _clockRate; }
-  unsigned int getReadOutWindow() const { return _readOutWindow; }
-  const char* getSpaceUnit() const { return _spaceUnit.c_str(); }
-  const char* getTimeUnit() const { return _timeUnit.c_str(); }
-  double getBeamSlopeX() const { return _beamSlopeX; }
-  double getBeamSlopeY() const { return _beamSlopeY; }
-  uint64_t getTimeStart() const { return _timeStart; }
-  uint64_t getTimeEnd() const { return _timeEnd; }
-  double getSyncRatio() const { return _syncRatio; }
+  const char* getName() const { return m_name.c_str(); }
+  double getClockRate() const { return m_clockRate; }
+  unsigned int getReadOutWindow() const { return m_readOutWindow; }
+  const char* getSpaceUnit() const { return m_spaceUnit.c_str(); }
+  const char* getTimeUnit() const { return m_timeUnit.c_str(); }
+  double getBeamSlopeX() const { return m_beamSlopeX; }
+  double getBeamSlopeY() const { return m_beamSlopeY; }
+  uint64_t getTimeStart() const { return m_timeStart; }
+  uint64_t getTimeEnd() const { return m_timeEnd; }
+  double getSyncRatio() const { return m_syncRatio; }
 
-  NoiseMask* getNoiseMask() { return &_noiseMask; }
-  Alignment* getAlignment() { return &_alignment; }
+  NoiseMask* getNoiseMask() { return &m_noiseMask; }
+  Alignment* getAlignment() { return &m_alignment; }
 
   void print() const;
 
 private:
-  std::string _name;
-  double _clockRate;
-  unsigned int _readOutWindow;
-  std::string _spaceUnit;
-  std::string _timeUnit;
-  double _beamSlopeX;
-  double _beamSlopeY;
-  uint64_t _timeStart;
-  uint64_t _timeEnd;
-  double _syncRatio;
+  std::string m_name;
+  double m_clockRate;
+  unsigned int m_readOutWindow;
+  std::string m_spaceUnit;
+  std::string m_timeUnit;
+  double m_beamSlopeX;
+  double m_beamSlopeY;
+  uint64_t m_timeStart;
+  uint64_t m_timeEnd;
+  double m_syncRatio;
 
-  std::vector<Sensor*> _sensors;
-  std::vector<bool> _sensorMask;
+  std::vector<Sensor*> m_sensors;
+  std::vector<bool> m_sensorMask;
 
-  Alignment _alignment;
-  NoiseMask _noiseMask;
+  Alignment m_alignment;
+  NoiseMask m_noiseMask;
 };
 
 } // namespace Mechanics
