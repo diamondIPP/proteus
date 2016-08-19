@@ -125,8 +125,8 @@ void EventDepictor::depictEventSensor(const Storage::Plane* plane,
   std::stringstream name;
   std::stringstream title;
 
-  name << sensor->getDevice()->getName() << sensor->getName() << "Depiction";
-  title << sensor->getDevice()->getName() << " " << sensor->getName() << "Depiction";
+  name << sensor->getName() << "Depiction";
+  title << sensor->getName() << "Depiction";
 
   TH2D* depiction = new TH2D(name.str().c_str(), title.str().c_str(),
                              sensor->getNumX(), 0 - 0.5, sensor->getNumX() + 0.5,

@@ -193,9 +193,9 @@ DUTResiduals::DUTResiduals(const Mechanics::Device *refDevice,
 
       // Generate the 1D residual distribution for the given axis
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName()
+      name << sensor->getName()
            << ((axis) ? "X" : "Y") << _nameSuffix;
-      title << sensor->getDevice()->getName() << " " << sensor->getName()
+      title << sensor->getName()
             << ((axis) ? " X" : " Y");
       TH1D *res1d = new TH1D(name.str().c_str(), title.str().c_str(), 2 * nbins, -width, width);
       //bilbao@cern.ch
@@ -210,9 +210,9 @@ DUTResiduals::DUTResiduals(const Mechanics::Device *refDevice,
       std::vector<TH1D *> tmp_y;
       for (int cl_size = 1; cl_size <= _maxclustersize; cl_size++) {
         name.str(""); title.str("");
-        name << sensor->getDevice()->getName() << sensor->getName()
+        name << sensor->getName()
              << ((axis) ? "X" : "Y") << _nameSuffix << Form("_%d", cl_size);
-        title << sensor->getDevice()->getName() << " " << sensor->getName()
+        title << sensor->getName()
               << ((axis) ? " X" : " Y") << Form("_Cluster_Size_%d", cl_size);
         //std::cout<<name.str()<<std::endl;
        TH1D *res1d_cl = new TH1D(name.str().c_str(), title.str().c_str(), 2 * nbins, -width, width);
@@ -242,8 +242,8 @@ DUTResiduals::DUTResiduals(const Mechanics::Device *refDevice,
         xAxisTitle << "Track to cluster distance " << " [" << _refDevice->getSpaceUnit() << "]";
         // Generate the 1D track to cluster distance distribution for the given axis
         name.str(""); title.str("");
-        name << sensor->getDevice()->getName() << sensor->getName() << _nameSuffix << "Dist";
-        title << sensor->getDevice()->getName() << " " << sensor->getName() << "Track to cluster distance";
+        name << sensor->getName() << _nameSuffix << "Dist";
+        title << sensor->getName() << "Track to cluster distance";
         TH1D *dist1d = new TH1D(name.str().c_str(), title.str().c_str(),
                                 2 * nbins, 0, 2 * width);
         dist1d->SetDirectory(dir1d);
@@ -262,9 +262,9 @@ DUTResiduals::DUTResiduals(const Mechanics::Device *refDevice,
                  << " [" << _refDevice->getSpaceUnit() << "]";
 
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName()
+      name << sensor->getName()
            << ((axis) ? "XvsX" : "YvsY") << _nameSuffix;
-      title << sensor->getDevice()->getName() << " " << sensor->getName()
+      title << sensor->getName()
             << ((axis) ? " X vs. X" : " Y vs. Y");
       TH2D *resAA = new TH2D(name.str().c_str(), title.str().c_str(),
                              nbins, -width / 2.0, width / 2.0,
@@ -283,9 +283,9 @@ DUTResiduals::DUTResiduals(const Mechanics::Device *refDevice,
                  << " [" << _refDevice->getSpaceUnit() << "]";
 
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName()
+      name << sensor->getName()
            << ((axis) ? "XvsY" : "YvsX") << _nameSuffix;
-      title << sensor->getDevice()->getName() << " " << sensor->getName()
+      title << sensor->getName()
             << ((axis) ? " X vs. Y" : " Y vs. X");
 
       TH2D *resAB = new TH2D(name.str().c_str(), title.str().c_str(),

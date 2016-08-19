@@ -108,11 +108,11 @@ void DUTCorrelation::initializeHist(const Mechanics::Sensor* sensor0,
 
     // Generate the name and title of the DUTCorrelation plot for this sensor and axis
     name.str(""); title.str("");
-    name << sensor1->getDevice()->getName() << sensor1->getName()
-         << "To" << sensor0->getDevice()->getName() << sensor0->getName()
+    name << sensor1->getName()
+         << "To" << sensor0->getName()
          << ((axis) ? "X" : "Y") << _nameSuffix;
-    title << sensor1->getDevice()->getName() << " " << sensor1->getName()
-          << " To " << sensor0->getDevice()->getName() << " " << sensor0->getName()
+    title << sensor1->getName()
+          << " To " << sensor0->getName()
           << ((axis) ? " X" : " Y");
     TH2D* corr = new TH2D(name.str().c_str(), title.str().c_str(),
                           npix0, sens0Low, sens0Upp,
@@ -136,11 +136,11 @@ void DUTCorrelation::initializeHist(const Mechanics::Sensor* sensor0,
 
     // Repeat for the alignment histograms
     name.str(""); title.str("");
-    name << sensor1->getDevice()->getName() << sensor1->getName()
-         << "To" << sensor0->getDevice()->getName() << sensor0->getName()
+    name << sensor1->getName()
+         << "To" << sensor0->getName()
          << ((axis) ? "X" : "Y") << _nameSuffix;
-    title << sensor1->getDevice()->getName() << " " << sensor1->getName()
-          << " To " << sensor0->getDevice()->getName() << " " << sensor0->getName()
+    title << " " << sensor1->getName()
+          << " To " << sensor0->getName()
           << ((axis) ? " X" : " Y");
     TH1D* align = new TH1D(name.str().c_str(), title.str().c_str(),
                            2 * npix1 - 1, -sens1Size, sens1Size);

@@ -58,9 +58,9 @@ Analyzers::Matching::Matching(const Mechanics::Device* refDevice,
     const Mechanics::Sensor* sensor = _dutDevice->getSensor(nsens);
 
     name.str(""); title.str("");
-    name << sensor->getDevice()->getName() << sensor->getName()
+    name << sensor->getName()
          << "Distance" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " " << sensor->getName()
+    title << sensor->getName()
           << " Matched Cluster Distance"
           << ";Radial distance [standard deviation]"
           << ";Tracks / " << std::setprecision(2) << maxMatchingDist / (double)numBins << " standard deviation";
@@ -77,9 +77,9 @@ Analyzers::Matching::Matching(const Mechanics::Device* refDevice,
                                   pow(_refDevice->getSensor(0)->getPitchY() / sqrt(12.0), 2));
 
     name.str(""); title.str("");
-    name << sensor->getDevice()->getName() << sensor->getName()
+    name << sensor->getName()
          << "DistanceX" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " " << sensor->getName()
+    title << sensor->getName()
           << " Matched Cluster Distance"
           << ";Distance in X [" << _dutDevice->getSpaceUnit() << "]"
           << ";Tracks / " << std::setprecision(2) << 2 * maxDistX / (2 * numBins) << " " << _dutDevice->getSpaceUnit();
@@ -89,9 +89,9 @@ Analyzers::Matching::Matching(const Mechanics::Device* refDevice,
     _matchDistX.push_back(matchDistX);
 
     name.str(""); title.str("");
-    name << sensor->getDevice()->getName() << sensor->getName()
+    name << sensor->getName()
          << "DistanceY" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " " << sensor->getName()
+    title << sensor->getName()
           << " Matched Cluster Distance"
           << ";Distance in Y [" << _dutDevice->getSpaceUnit() << "]"
           << ";Tracks / " << std::setprecision(2) << 2 * maxDistY / (2 * numBins) << " " << _dutDevice->getSpaceUnit();
@@ -107,9 +107,9 @@ Analyzers::Matching::Matching(const Mechanics::Device* refDevice,
     const double pixHalfHeight = sensor->getPitchY() / 2.0 * pixelExtension;
 
     name.str(""); title.str("");
-    name << sensor->getDevice()->getName() << sensor->getName()
+    name << sensor->getName()
          <<  "InPixelTracks" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " " << sensor->getName()
+    title << sensor->getName()
           << " In Pixel Track Occupancy"
           << ";X position [" << _dutDevice->getSpaceUnit() << "]"
           << ";Y position [" << _dutDevice->getSpaceUnit() << "]"
@@ -121,9 +121,9 @@ Analyzers::Matching::Matching(const Mechanics::Device* refDevice,
     _inPixelTracks.push_back(inPixTracks);
 
     name.str(""); title.str("");
-    name << sensor->getDevice()->getName() << sensor->getName()
+    name << sensor->getName()
          <<  "InPixelTot" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " " << sensor->getName()
+    title << sensor->getName()
           << " In Pixel Average Cluster ToT"
           << ";X position [" << _dutDevice->getSpaceUnit() << "]"
           << ";Y position [" << _dutDevice->getSpaceUnit() << "]"

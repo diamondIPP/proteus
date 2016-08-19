@@ -165,9 +165,9 @@ Residuals::Residuals(const Mechanics::Device* refDevice,
 
       // Generate the 1D residual distribution for the given axis
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName()
+      name << sensor->getName()
            << ((axis) ? "X" : "Y") << _nameSuffix;
-      title << sensor->getDevice()->getName() << " " << sensor->getName()
+      title << sensor->getName()
             << ((axis) ? " X" : " Y")
             << ";Track cluster difference " << (axis ? "X" : "Y")
             << " [" << _device->getSpaceUnit() << "]"
@@ -184,9 +184,9 @@ Residuals::Residuals(const Mechanics::Device* refDevice,
       height = axis ? sensor->getPosSensitiveX() : sensor->getPosSensitiveY();
 
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName()
+      name << sensor->getName()
            << ((axis) ? "XvsX" : "YvsY") << _nameSuffix;
-      title << sensor->getDevice()->getName() << " " << sensor->getName()
+      title << sensor->getName()
             << ((axis) ? " X vs. X" : " Y vs. Y")
             << ";Track cluster difference " << (axis ? "X" : "Y")
             << " [" << _device->getSpaceUnit() << "]"
@@ -205,9 +205,9 @@ Residuals::Residuals(const Mechanics::Device* refDevice,
       height = axis ? sensor->getSensitiveY() : sensor->getSensitiveX();
 
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName()
+      name << sensor->getName()
            << ((axis) ? "XvsY" : "YvsX") << _nameSuffix;
-      title << sensor->getDevice()->getName() << " " << sensor->getName()
+      title << sensor->getName()
             << ((axis) ? " X vs. Y" : " Y vs. X")
             << ";Track cluster difference " << (axis ? "X" : "Y")
             << " [" << _device->getSpaceUnit() << "]"

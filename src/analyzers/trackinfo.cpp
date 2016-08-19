@@ -107,9 +107,9 @@ TrackInfo::TrackInfo(const Mechanics::Device* device,
           (axis ? sensor->getPosPitchX() : sensor->getPosPitchY());
 
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName()
+      name << sensor->getName()
            <<  "Resolution" << (axis ? "X" : "Y") << _nameSuffix;
-      title << sensor->getDevice()->getName() << " " << sensor->getName()
+      title << sensor->getName()
             << " Track Resolution" << (axis ? " X" : " Y")
             << ";Track resolution [" << _device->getSpaceUnit() << "]"
             << ";Tracks";
