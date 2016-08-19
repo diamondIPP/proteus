@@ -15,8 +15,9 @@ class Device;
 class Alignment {
 public:
   Alignment();
+  /** Construct alignment from a configuration file. */
+  static Alignment fromFile(const std::string& path);
 
-  void readFile(const std::string& path);
   void writeFile(const std::string& path) const;
   /** \deprecated Alignment object should know nothing about file paths. */
   void writeFile() const { writeFile(m_path); }
@@ -25,6 +26,7 @@ public:
   bool hasAlignment(Index sensorId) const;
   Transform3D getLocalToGlobal(Index sensorId) const;
   void setOffset(Index sensorId, const XYZPoint& offset);
+  void setOffset(Index sensorId, double x, double y, double z);
   void setRotationAngles(Index sensorId, double rotX, double rotY, double rotZ);
 
   /** Beam direction in the global coordinate system. */

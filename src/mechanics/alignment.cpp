@@ -28,10 +28,12 @@ Mechanics::Alignment::Alignment()
 {
 }
 
-void Mechanics::Alignment::readFile(const std::string& path)
+Mechanics::Alignment Mechanics::Alignment::fromFile(const std::string& path)
 {
-  m_path = path;
-  parse(ConfigParser(path.c_str()));
+  Alignment a;
+  a.parse(ConfigParser(path.c_str()));
+  a.m_path = path;
+  return a;
 }
 
 void Mechanics::Alignment::parse(const ConfigParser& config)
@@ -67,7 +69,7 @@ void Mechanics::Alignment::parse(const ConfigParser& config)
     // header format should be "Sensor <#sensor_id>"
     if ((row->header.size() <= 7) ||
         row->header.substr(0, 7).compare("Sensor "))
-      throw std::runtime_error("AlignmentFile: parsed an incorrect header");
+      throw std::runtime_error("Alignment: parsed an incorrect header");
 
     unsigned int isens = std::stoi(row->header.substr(7));
     const double value = ConfigParser::valueToNumerical(row->value);
@@ -92,11 +94,9 @@ void Mechanics::Alignment::writeFile(const std::string& path) const
 {
   std::ofstream file(path);
 
-  if (!file.is_open()) {
-    std::string err = "[Alignment::writeFile] ERROR unable to open '" +
-                      m_path + "' for writting";
-    throw err.c_str();
-  }
+  if (!file.is_open())
+    throw std::runtime_error("Alignment: unable to open '" + m_path +
+                             "' for writing");
 
   file << std::setprecision(9);
   file << std::fixed;
@@ -123,8 +123,7 @@ void Mechanics::Alignment::writeFile(const std::string& path) const
 
   file.close();
 
-  std::cout << "\nAlignment file '" << m_path << "' created OK\n"
-            << std::endl;
+  std::cout << "\nAlignment file '" << m_path << "' created OK\n" << std::endl;
 }
 
 bool Mechanics::Alignment::hasAlignment(Index sensorId) const
@@ -147,11 +146,19 @@ Transform3D Mechanics::Alignment::getLocalToGlobal(Index sensorId) const
 
 void Mechanics::Alignment::setOffset(Index sensorId, const XYZPoint& offset)
 {
+  setOffset(sensorId, offset.x(), offset.y(), offset.z());
+}
+
+void Mechanics::Alignment::setOffset(Index sensorId,
+                                     double x,
+                                     double y,
+                                     double z)
+{
   // will automatically create a missing GeoParams
   auto& params = m_geo[sensorId];
-  params.offsetX = offset.x();
-  params.offsetY = offset.y();
-  params.offsetZ = offset.z();
+  params.offsetX = x;
+  params.offsetY = y;
+  params.offsetZ = z;
 }
 
 void Mechanics::Alignment::setRotationAngles(Index sensorId,
