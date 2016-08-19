@@ -19,13 +19,6 @@ public:
          unsigned int readoutWindow,
          const std::string& spaceUnit = std::string(),
          const std::string& timeUnit = std::string());
-  Device(const char* name,
-         const char* alignmentName = "",
-         const char* noiseMaskName = "",
-         double clockRate = 0,
-         unsigned int readOutWindow = 0,
-         const char* spaceUnit = "",
-         const char* timeUnit = "");
   /** Construct device from a configuration file. */
   static Device fromFile(const std::string& path);
 
@@ -54,7 +47,7 @@ public:
 
   const char* getName() const { return m_name.c_str(); }
   double getClockRate() const { return m_clockRate; }
-  unsigned int getReadOutWindow() const { return m_readOutWindow; }
+  unsigned int getReadOutWindow() const { return m_readoutWindow; }
   const char* getSpaceUnit() const { return m_spaceUnit.c_str(); }
   const char* getTimeUnit() const { return m_timeUnit.c_str(); }
   double getBeamSlopeX() const { return m_beamSlopeX; }
@@ -70,21 +63,17 @@ public:
 
 private:
   std::string m_name;
-  double m_clockRate;
-  unsigned int m_readOutWindow;
-  std::string m_spaceUnit;
-  std::string m_timeUnit;
-  double m_beamSlopeX;
-  double m_beamSlopeY;
-  uint64_t m_timeStart;
-  uint64_t m_timeEnd;
-  double m_syncRatio;
-
   std::vector<Sensor> m_sensors;
-  std::vector<bool> m_sensorMask;
-
   Alignment m_alignment;
   NoiseMask m_noiseMask;
+  double m_clockRate;
+  unsigned int m_readoutWindow;
+  uint64_t m_timeStart, m_timeEnd;
+  double m_syncRatio;
+  double m_beamSlopeX, m_beamSlopeY;
+  std::string m_spaceUnit;
+  std::string m_timeUnit;
+  std::vector<bool> m_sensorMask;
 };
 
 } // namespace Mechanics

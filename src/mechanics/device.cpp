@@ -7,17 +7,8 @@
 #include <string>
 #include <vector>
 
-#include <Rtypes.h>
-
 #include "configparser.h"
-#include "mechanics/alignment.h"
-#include "mechanics/noisemask.h"
-#include "mechanics/sensor.h"
 #include "utils/definitions.h"
-
-#ifndef VERBOSE
-#define VERBOSE 1
-#endif
 
 using std::cout;
 using std::endl;
@@ -131,7 +122,7 @@ static void parseSensors(const ConfigParser& config,
       err += ss.str() + " with [key,value]=['" + row->key + "','" + row->value +
              "'] in cfg file '";
       err += std::string(config.getFilePath()) + "'";
-      throw err.c_str();
+      throw std::runtime_error(err);
     }
   }
 }
@@ -201,52 +192,22 @@ Mechanics::Device::Device(const std::string& name,
                           const std::string& timeUnit)
     : m_name(name)
     , m_clockRate(clockRate)
-    , m_readOutWindow(readoutWindow)
-    , m_beamSlopeX(0)
-    , m_beamSlopeY(0)
+    , m_readoutWindow(readoutWindow)
     , m_timeStart(0)
     , m_timeEnd(0)
     , m_syncRatio(0)
+    , m_beamSlopeX(0)
+    , m_beamSlopeY(0)
     , m_spaceUnit(spaceUnit)
     , m_timeUnit(timeUnit)
 {
+  std::replace(m_timeUnit.begin(), m_timeUnit.end(), '\\', '#');
+  std::replace(m_spaceUnit.begin(), m_spaceUnit.end(), '\\', '#');
 }
 
 Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
 {
   return parseDevice(ConfigParser(path.c_str()));
-}
-
-//=========================================================
-Mechanics::Device::Device(const char* name,
-                          const char* alignmentName,
-                          const char* noiseMaskName,
-                          double clockRate,
-                          unsigned int readOutWindow,
-                          const char* spaceUnit,
-                          const char* timeUnit)
-    : m_name(name)
-    , m_clockRate(clockRate)
-    , m_readOutWindow(readOutWindow)
-    , m_spaceUnit(spaceUnit)
-    , m_timeUnit(timeUnit)
-    , m_beamSlopeX(0)
-    , m_beamSlopeY(0)
-    , m_timeStart(0)
-    , m_timeEnd(0)
-    , m_syncRatio(0)
-{
-  if (strlen(alignmentName)) {
-    // Alignment a;
-    // a.readFile(alignmentName);
-    // applyAlignment(a);
-  }
-
-  if (strlen(noiseMaskName)) {
-    // m_noiseMask.readFile(noiseMaskName);
-  }
-  std::replace(m_timeUnit.begin(), m_timeUnit.end(), '\\', '#');
-  std::replace(m_spaceUnit.begin(), m_spaceUnit.end(), '\\', '#');
 }
 
 void Mechanics::Device::addSensor(const Mechanics::Sensor& sensor)
@@ -260,15 +221,15 @@ void Mechanics::Device::addMaskedSensor() { m_sensorMask.push_back(true); }
 void Mechanics::Device::applyAlignment(const Alignment& alignment)
 {
   m_alignment = alignment;
+  m_beamSlopeX = m_alignment.m_beamSlopeX;
+  m_beamSlopeY = m_alignment.m_beamSlopeY;
+  m_syncRatio = m_alignment.m_syncRatio;
 
   for (Index sensorId = 0; sensorId < getNumSensors(); ++sensorId) {
     Sensor* sensor = getSensor(sensorId);
     sensor->setLocalToGlobal(m_alignment.getLocalToGlobal(sensorId));
   }
   // TODO 2016-08-18 msmk: check number of sensors / id consistency
-  m_beamSlopeX = m_alignment.m_beamSlopeX;
-  m_beamSlopeY = m_alignment.m_beamSlopeY;
-  m_syncRatio = m_alignment.m_syncRatio;
 }
 
 void Mechanics::Device::applyNoiseMask(const NoiseMask& noiseMask)
@@ -303,7 +264,7 @@ void Mechanics::Device::print() const
   cout << "\nDEVICE:\n"
        << "  Name: '" << m_name << "'\n"
        << "  Clock rate: " << m_clockRate << "\n"
-       << "  Read out window: " << m_readOutWindow << "\n"
+       << "  Read out window: " << m_readoutWindow << "\n"
        << "  Sensors: " << getNumSensors() << "\n"
        << "  Alignment: " << m_alignment.m_path << "\n"
        << "  Noisemask: " << m_noiseMask.getFileName() << endl;
