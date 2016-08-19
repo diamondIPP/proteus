@@ -10,8 +10,6 @@ class ConfigParser;
 
 namespace Mechanics {
 
-class Device;
-
 class Alignment {
 public:
   Alignment();

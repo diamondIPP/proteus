@@ -1,4 +1,4 @@
-#include "mechanics/alignment.h"
+#include "alignment.h"
 
 #include <cassert>
 #include <fstream>
@@ -9,8 +9,6 @@
 #include <string>
 
 #include "configparser.h"
-#include "mechanics/device.h"
-#include "mechanics/sensor.h"
 
 #ifndef VERBOSE
 #define VERBOSE 1
