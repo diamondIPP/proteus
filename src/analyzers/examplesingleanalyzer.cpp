@@ -61,7 +61,7 @@ ExampleSingleAnalyzer::ExampleSingleAnalyzer(const Mechanics::Device* device,
   // Generate a histogram for each sensor in the device
   for (unsigned int nsens = 0; nsens < _device->getNumSensors(); nsens++)
   {
-    Mechanics::Sensor* sensor = _device->getSensor(nsens);
+    const Mechanics::Sensor* sensor = _device->getSensor(nsens);
     name.str(""); title.str("");
     name << _device->getName() << sensor->getName() << "DummySensorHist" << _nameSuffix;
     title << _device->getName() << " " << sensor->getName() << " Dummy Sensor Hist";

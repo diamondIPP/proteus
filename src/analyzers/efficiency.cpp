@@ -76,7 +76,7 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
 
   // Generate a histogram for each sensor in the device
   for (unsigned int nsens = 0; nsens < _dutDevice->getNumSensors(); nsens++) {
-    Mechanics::Sensor *sensor = _dutDevice->getSensor(nsens);
+    const Mechanics::Sensor *sensor = _dutDevice->getSensor(nsens);
 
     unsigned int nx = sensor->getPosNumX() / rebinX;
     unsigned int ny = sensor->getPosNumY() / rebinY;
@@ -121,7 +121,7 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
 
 //---------Residual plot
       name.str(""); title.str("");
-      name << 
+      name <<
             "ResX";
       title << "ResX ";
       TH1D* resX1d = new TH1D(name.str().c_str(), title.str().c_str(),
@@ -696,7 +696,7 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
     if (_relativeToSensor >= 0 && !matches.at(_relativeToSensor)) continue;
 
     for (unsigned int nsensor = 0; nsensor < _dutDevice->getNumSensors(); nsensor++) {
-      Mechanics::Sensor *sensor = _dutDevice->getSensor(nsensor);
+      const Mechanics::Sensor *sensor = _dutDevice->getSensor(nsensor);
 
       double tx = 0, ty = 0, tz = 0;
       Processors::trackSensorIntercept(track, sensor, tx, ty, tz);
@@ -786,7 +786,7 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
 
 
         if (match) {
-//*        
+//*
 //
 //
 //
@@ -991,7 +991,7 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
             
             if(nhit==match->getNumHits()-1) (_TimingCluster_fast.at(nsensor))[clustersize]->Fill(std::abs(Tfast));
             if(nhit==match->getNumHits()-1) (_timing_diff.at(nsensor))->Fill(std::abs(Tfast-timing0));
-            if( nhit>0) { 
+            if( nhit>0) {
 
             if(max<hit->getTiming()) (_TimingCluster_slow.at(nsensor))[clustersize]->Fill(ttime);
 
@@ -1007,10 +1007,10 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
              //   trackPosY * sensor->getPitchY());
           
   
-            (_TimingTOT_cluster.at(nsensor))[clustersize]->Fill(hit->getTiming(), hit->getValue()); 
+            (_TimingTOT_cluster.at(nsensor))[clustersize]->Fill(hit->getTiming(), hit->getValue());
            }
           
-        } 
+        }
       }
 
 
@@ -1051,15 +1051,15 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
           for(unsigned int y = 0; y < match->getNumHits(); y++){
            if(max>timing[y+1]) max=timing[y+1];
             }
-           } 
+           }
 
             if(nhit==0) Tfast=hit->getTiming();
             if(nhit>0){
-             if(Tfast>hit->getTiming()) Tfast=hit->getTiming();  //only the fastest is kept          
+             if(Tfast>hit->getTiming()) Tfast=hit->getTiming();  //only the fastest is kept
             }
             if(nhit==0) Tslow=hit->getTiming();
             if(nhit>0){
-             if(Tslow<hit->getTiming()) Tslow=hit->getTiming();  //only the fastest is kept          
+             if(Tslow<hit->getTiming()) Tslow=hit->getTiming();  //only the fastest is kept
             }
 
 
@@ -1072,7 +1072,7 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
 
 	   (_TimingCluster.at(nsensor))[clustersize]->Fill(hit->getTiming());
             if(nhit==match->getNumHits()-1) (_TimingCluster_fast.at(nsensor))[clustersize]->Fill(Tfast);
-            if( nhit>0) { 
+            if( nhit>0) {
 
             if(max<hit->getTiming()) (_TimingCluster_slow.at(nsensor))[clustersize]->Fill(ttime);
 
@@ -1136,7 +1136,7 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
           const Storage::Hit *hit = match->getHit(nhit);
           if(hit->getTiming()<4) flag=1;
          }
-        //fare un efficienza per il fastest hit, dare un taglio sul fastest hit: cioè un reclustering al vol. fai copia e incolla dal clustermaker. 
+        //fare un efficienza per il fastest hit, dare un taglio sul fastest hit: cioè un reclustering al vol. fai copia e incolla dal clustermaker.
        /* if(flag==1)*/_efficiencyMap.at(nsensor)->Fill(true, match->getPosX(), match->getPosY());
        /* if(flag==0)_efficiencyMap.at(nsensor)->Fill(false, tx, ty);*/
         _matchedTracks.at(nsensor)->Fill(1);

@@ -395,7 +395,7 @@ void applyAlignment(Storage::Event* event, const Mechanics::Device* device)
   for (unsigned int nplane = 0; nplane < event->getNumPlanes(); nplane++)
   {
     Storage::Plane* plane = event->getPlane(nplane);
-    Mechanics::Sensor* sensor = device->getSensor(nplane);
+    const Mechanics::Sensor* sensor = device->getSensor(nplane);
     // Apply alignment to hits
     for (unsigned int nhit = 0; nhit < plane->getNumHits(); nhit++)
     {

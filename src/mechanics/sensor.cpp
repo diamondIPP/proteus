@@ -169,7 +169,7 @@ void Mechanics::Sensor::setNoisyPixels(const std::set<ColumnRow>& pixels)
 // Misc functions
 //
 //=========================================================
-void Mechanics::Sensor::print()
+void Mechanics::Sensor::print() const
 {
   cout << "\nSENSOR:\n"
        << "  Name: '" << m_name << "'\n"

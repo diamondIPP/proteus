@@ -63,7 +63,7 @@ ExampleDualAnalyzer::ExampleDualAnalyzer(const Mechanics::Device* refDevice,
   // Generate a histogram for each sensor in the device
   for (unsigned int nsens = 0; nsens < _dutDevice->getNumSensors(); nsens++)
   {
-    Mechanics::Sensor* sensor = _dutDevice->getSensor(nsens);
+    const Mechanics::Sensor* sensor = _dutDevice->getSensor(nsens);
     name.str(""); title.str("");
     name << _dutDevice->getName() << sensor->getName() << "DummySensorHist" << _nameSuffix;
     title << _dutDevice->getName() << " " << sensor->getName() << " Dummy Sensor Hist";

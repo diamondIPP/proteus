@@ -183,13 +183,13 @@ DUTCorrelation::DUTCorrelation(const Mechanics::Device* refDevice,
 
   assert(_dutDevice->getNumSensors() > 0 && "DUTCorrelations: device should have planes");
 
-  Mechanics::Sensor* firstDut = _dutDevice->getSensor(0);
-  Mechanics::Sensor* nearest = 0;
+  const Mechanics::Sensor* firstDut = _dutDevice->getSensor(0);
+  const Mechanics::Sensor* nearest = 0;
 
   // Determine which is the nearest ref plane
   for (unsigned int nsens = 0; nsens < _refDevice->getNumSensors(); nsens++)
   {
-    Mechanics::Sensor* compareRef = _refDevice->getSensor(nsens);
+    const Mechanics::Sensor* compareRef = _refDevice->getSensor(nsens);
     if (!nearest || fabs(compareRef->getOffZ() - firstDut->getOffZ()) <
         fabs(nearest->getOffZ() - firstDut->getOffZ()))
     {

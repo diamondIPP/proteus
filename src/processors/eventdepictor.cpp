@@ -164,7 +164,7 @@ void EventDepictor::depictClusters(std::vector<const Storage::Cluster*>& refClus
         << "Y Axis [" << _refDevice->getSpaceUnit() << "];";
 
   const double sizeFactor = 1.5;
-  Mechanics::Sensor* refSensor = _refDevice->getSensor(0);
+  const Mechanics::Sensor* refSensor = _refDevice->getSensor(0);
   const unsigned int nbinsX = sizeFactor * refSensor->getNumX();
   const unsigned int nbinsY = sizeFactor * refSensor->getNumY();
   const double halfX = sizeFactor * refSensor->getSensitiveX() / 2.0;
@@ -385,7 +385,7 @@ void EventDepictor::depictEvent(const Storage::Event* refEvent,
     for (unsigned int nsens = 0; nsens < _refDevice->getNumSensors(); nsens++)
     {
       Storage::Cluster* cluster = refClusters[nsens];
-      Mechanics::Sensor* sensor = _refDevice->getSensor(nsens);
+      const Mechanics::Sensor* sensor = _refDevice->getSensor(nsens);
       can->cd(nsens + 1);
       drawEventTrackIntercepts(track, cluster, sensor);
     }
@@ -397,7 +397,7 @@ void EventDepictor::depictEvent(const Storage::Event* refEvent,
     {
       for (unsigned int nsens = 0; nsens < _dutDevice->getNumSensors(); nsens++)
       {
-        Mechanics::Sensor* sensor = _dutDevice->getSensor(nsens);
+        const Mechanics::Sensor* sensor = _dutDevice->getSensor(nsens);
         can->cd(nsens + _refDevice->getNumSensors() + 1);
         drawEventTrackIntercepts(track, 0, sensor);
       }

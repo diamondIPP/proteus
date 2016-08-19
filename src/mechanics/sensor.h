@@ -105,7 +105,7 @@ public:
   //
   // Misc functions
   //
-  void print();
+  void print() const;
   static bool sort(const Sensor* s1, const Sensor* s2);
 
   //

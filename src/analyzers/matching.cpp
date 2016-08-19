@@ -55,7 +55,7 @@ Analyzers::Matching::Matching(const Mechanics::Device* refDevice,
   // Generate a histogram for each sensor in the device
   for (unsigned int nsens=0; nsens<_dutDevice->getNumSensors(); nsens++)
   {
-    Mechanics::Sensor* sensor = _dutDevice->getSensor(nsens);
+    const Mechanics::Sensor* sensor = _dutDevice->getSensor(nsens);
 
     name.str(""); title.str("");
     name << sensor->getDevice()->getName() << sensor->getName()
@@ -178,7 +178,7 @@ void Analyzers::Matching::processEvent(const Storage::Event* refEvent,
     }
 
     for (unsigned int nsens=0; nsens<_dutDevice->getNumSensors(); nsens++){
-      Mechanics::Sensor* sensor = _dutDevice->getSensor(nsens);
+      const Mechanics::Sensor* sensor = _dutDevice->getSensor(nsens);
       Storage::Cluster* match = matches.at(nsens);
 
       if (!match) continue;
@@ -220,7 +220,7 @@ void Analyzers::Matching::postProcessing()
 {
   for (unsigned int nsens = 0; nsens < _dutDevice->getNumSensors(); nsens++)
   {
-    Mechanics::Sensor* sensor = _dutDevice->getSensor(nsens);
+    const Mechanics::Sensor* sensor = _dutDevice->getSensor(nsens);
 
     TH2D* tot = _inPixelTot.at(nsens);
     TH2D* hits = _inPixelTracks.at(nsens);

@@ -55,7 +55,7 @@ void TrackInfo::processEvent(const Storage::Event* event)
 
     for (unsigned int nsens = 0; nsens < _device->getNumSensors(); nsens++)
     {
-      Mechanics::Sensor* sensor = _device->getSensor(nsens);
+      const Mechanics::Sensor* sensor = _device->getSensor(nsens);
 
       double tx = 0, ty = 0, tz = 0;
       
@@ -100,7 +100,7 @@ TrackInfo::TrackInfo(const Mechanics::Device* device,
   // Generate a histogram for each sensor in the device
   for (unsigned int nsens = 0; nsens < _device->getNumSensors(); nsens++)
   {
-    Mechanics::Sensor* sensor = _device->getSensor(nsens);
+    const Mechanics::Sensor* sensor = _device->getSensor(nsens);
     for (unsigned int axis = 0; axis < 2; axis++)
     {
       const double width = resWidth *
@@ -142,7 +142,7 @@ TrackInfo::TrackInfo(const Mechanics::Device* device,
 
   // Use DUT 0 as a reference sensor for plots axis
   assert(_device->getNumSensors() && "TrackInfo: expects device to have sensors");
-  Mechanics::Sensor* sensor = _device->getSensor(0);
+  const Mechanics::Sensor* sensor = _device->getSensor(0);
 
   const double deviceLength =
       device->getSensor(device->getNumSensors() - 1)->getOffZ() -
