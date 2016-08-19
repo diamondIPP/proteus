@@ -33,7 +33,6 @@ set(JUDITH_COMMON_SRC
     loopers/finealigndut.cpp
     loopers/noisescan.cpp
     loopers/processevents.cpp
-    mechanics/configmechanics.cpp
     mechanics/device.cpp
     mechanics/noisemask.cpp
     mechanics/alignment.cpp

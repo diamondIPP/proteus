@@ -17,11 +17,7 @@
 #include "storage/cluster.h"
 #include "storage/hit.h"
 #include "converters/kartelconvert.h"
-#include "mechanics/configmechanics.h"
-#include "mechanics/sensor.h"
 #include "mechanics/device.h"
-#include "mechanics/noisemask.h"
-#include "mechanics/alignment.h"
 #include "processors/configprocessors.h"
 #include "processors/eventdepictor.h"
 #include "processors/clustermaker.h"
@@ -53,13 +49,14 @@ void convert(const char* input,
              const char* deviceCfg="")
 {
   try {
-    Mechanics::Device* device = 0;
-    if (strlen(deviceCfg)) {
-      ConfigParser config(deviceCfg);
-      device = Mechanics::generateDevice(config);
-    }
-    Converters::KartelConvert convert(input, output, device);
-    convert.processFile(triggers);
+		if (strlen(deviceCfg)) {
+			auto device = Mechanics::Device::fromFile(deviceCfg);
+			Converters::KartelConvert convert(input, output, &device);
+			convert.processFile(triggers);
+		} else {
+			Converters::KartelConvert convert(input, output, nullptr);
+			convert.processFile(triggers);
+		}
   }
    catch(Exception &e){
     cout << e.what() << endl;
@@ -81,11 +78,8 @@ void synchronize(const char* refInputName,
                  const char* tbCfg)
 {
   try {
-    ConfigParser refConfig(refDeviceCfg);
-    Mechanics::Device* refDevice = Mechanics::generateDevice(refConfig);
-
-    ConfigParser dutConfig(dutDeviceCfg);
-    Mechanics::Device* dutDevice = Mechanics::generateDevice(dutConfig);
+    Mechanics::Device refDevice = Mechanics::Device::fromFile(refDeviceCfg);
+    Mechanics::Device dutDevice = Mechanics::Device::fromFile(dutDeviceCfg);
 
     ConfigParser runConfig(tbCfg);
 
@@ -95,13 +89,10 @@ void synchronize(const char* refInputName,
     Storage::StorageIO refOutput(refOutputName, Storage::OUTPUT, refInput.getNumPlanes());
     Storage::StorageIO dutOutput(dutOutputName, Storage::OUTPUT, dutInput.getNumPlanes());
 
-    Loopers::Synchronize looper(refDevice, dutDevice, &refOutput, &dutOutput,
+    Loopers::Synchronize looper(&refDevice, &dutDevice, &refOutput, &dutOutput,
 				&refInput, &dutInput, startEvent, numEvents);
     Loopers::configSynchronize(runConfig, looper);
     looper.loop();
-
-    delete refDevice;
-    delete dutDevice;
   }
   catch(Exception &e){
     cout << e.what() << endl;
@@ -122,29 +113,27 @@ void applyMask(const char* inputName,
 	       int printLevel)
 {
   try {
-    ConfigParser deviceConfig(deviceCfg);
-    Mechanics::Device* device = Mechanics::generateDevice(deviceConfig);
+    Mechanics::Device device = Mechanics::Device::fromFile(deviceCfg);
 
     // [SGS] not used...
     // ConfigParser runConfig(tbCfg);
 
     unsigned int inMask = Storage::Flags::TRACKS | Storage::Flags::CLUSTERS;
-    Storage::StorageIO input(inputName, Storage::INPUT, 0, inMask, device->getSensorMask(), printLevel);
+    Storage::StorageIO input(inputName, Storage::INPUT, 0, inMask, device.getSensorMask(), printLevel);
 
-    Storage::StorageIO output(outputName, Storage::OUTPUT, device->getNumSensors(), inMask, 0, printLevel);
-    output.setNoiseMaskData(device->getNoiseMask());
+    Storage::StorageIO output(outputName, Storage::OUTPUT, device.getNumSensors(), inMask, 0, printLevel);
+    output.setNoiseMaskData(device.getNoiseMask());
     output.setRuns(runs);
 
-    Loopers::ApplyMask looper(device, &output, &input, startEvent, numEvents);
+    Loopers::ApplyMask looper(&device, &output, &input, startEvent, numEvents);
     const Storage::Event* start = input.readEvent(looper.getStartEvent());
     const Storage::Event* end = input.readEvent(looper.getEndEvent());
-    device->setTimeStart(start->getTimeStamp());
-    device->setTimeEnd(end->getTimeStamp());
+    device.setTimeStart(start->getTimeStamp());
+    device.setTimeEnd(end->getTimeStamp());
     delete start;
     delete end;
 
     looper.loop();
-    delete device;
   }
   catch(Exception &e){
     cout << e.what() << endl;
@@ -165,17 +154,15 @@ void noiseScan(const char* inputName,
   try {
     ConfigParser runConfig(tbCfg);
 
-    ConfigParser deviceConfig(deviceCfg);
-    Mechanics::Device* device = Mechanics::generateDevice(deviceConfig);
-    Storage::StorageIO input(inputName, Storage::INPUT, device->getNumSensors());
+    Mechanics::Device device = Mechanics::Device::fromFile(deviceCfg);
+    Storage::StorageIO input(inputName, Storage::INPUT, device.getNumSensors());
 
-    Loopers::NoiseScan looper(device, &input, startEvent, numEvents);
+    Loopers::NoiseScan looper(&device, &input, startEvent, numEvents);
     looper.setPrintLevel(printLevel);
 
     Loopers::configNoiseScan(runConfig, looper);
     if(printLevel>0) looper.print();
     looper.loop();
-    delete device;
   }
   catch(Exception &e){
     cout << e.what() << endl;
@@ -196,19 +183,16 @@ void coarseAlign(const char* inputName,
   try {
     ConfigParser runConfig(tbCfg);
     Processors::ClusterMaker* clusterMaker = Processors::generateClusterMaker(runConfig);
-
-    ConfigParser deviceConfig(deviceCfg);
-    Mechanics::Device* device = Mechanics::generateDevice(deviceConfig);
+    Mechanics::Device device = Mechanics::Device::fromFile(deviceCfg);
 
     unsigned int treeMask = Storage::Flags::TRACKS | Storage::Flags::CLUSTERS;
     Storage::StorageIO input(inputName, Storage::INPUT, 0, treeMask);
 
-    Loopers::CoarseAlign looper(device, clusterMaker, &input, startEvent, numEvents);
+    Loopers::CoarseAlign looper(&device, clusterMaker, &input, startEvent, numEvents);
     Loopers::configCoarseAlign(runConfig, looper);
     if(printLevel>0) looper.print();
     looper.loop();
 
-    delete device;
     delete clusterMaker;
   }
   catch(Exception &e){
@@ -235,25 +219,18 @@ void coarseAlignDUT(const char* refInputName,
     ConfigParser runConfig(tbCfg);
     Processors::ClusterMaker* clusterMaker = Processors::generateClusterMaker(runConfig);
 
-    ConfigParser refConfig(refDeviceCfg,printLevel);
-
-    Mechanics::Device* refDevice = Mechanics::generateDevice(refConfig);
-
-    ConfigParser dutConfig(dutDeviceCfg);
-    Mechanics::Device* dutDevice = Mechanics::generateDevice(dutConfig);
+    Mechanics::Device refDevice = Mechanics::Device::fromFile(refDeviceCfg);
+    Mechanics::Device dutDevice = Mechanics::Device::fromFile(dutDeviceCfg);
 
     unsigned int treeMask = Storage::Flags::TRACKS | Storage::Flags::CLUSTERS;
     Storage::StorageIO refInput(refInputName, Storage::INPUT, 0, treeMask);
     Storage::StorageIO dutInput(dutInputName, Storage::INPUT, 0, treeMask);
 
-    Loopers::CoarseAlignDut looper(refDevice, dutDevice, clusterMaker,
+    Loopers::CoarseAlignDut looper(&refDevice, &dutDevice, clusterMaker,
                                    &refInput, &dutInput, startEvent, numEvents);
     Loopers::configCoarseAlign(runConfig, looper);
     if(printLevel>0) looper.print();
     looper.loop();
-
-    delete refDevice;
-    delete dutDevice;
   }
    catch(Exception &e){
     cout << e.what() << endl;
@@ -276,21 +253,18 @@ void fineAlign(const char* inputName,
     ConfigParser runConfig(tbCfg);
     Processors::ClusterMaker* clusterMaker = Processors::generateClusterMaker(runConfig);
     Processors::TrackMaker* trackMaker = Processors::generateTrackMaker(runConfig, true);
-
-    ConfigParser deviceConfig(deviceCfg);
-    Mechanics::Device* device = Mechanics::generateDevice(deviceConfig);
+    Mechanics::Device device = Mechanics::Device::fromFile(deviceCfg);
 
     unsigned int treeMask = Storage::Flags::TRACKS | Storage::Flags::CLUSTERS;
     Storage::StorageIO input(inputName, Storage::INPUT, 0, treeMask, 0);
 
-    Loopers::FineAlign looper(device, clusterMaker, trackMaker, &input,
+    Loopers::FineAlign looper(&device, clusterMaker, trackMaker, &input,
                               startEvent, numEvents);
     Loopers::configFineAlign(runConfig, looper);
     if(printLevel>0) looper.print();
     looper.loop();
 
     delete trackMaker;
-    delete device;
     delete clusterMaker;
   }
    catch(Exception &e){
@@ -316,26 +290,20 @@ void fineAlignDUT(const char* refInputName,
     ConfigParser runConfig(tbCfg);
     Processors::ClusterMaker* clusterMaker = Processors::generateClusterMaker(runConfig);
     Processors::TrackMaker* trackMaker = Processors::generateTrackMaker(runConfig, true);
-
-    ConfigParser refConfig(refDeviceCfg);
-    Mechanics::Device* refDevice = Mechanics::generateDevice(refConfig);
-
-    ConfigParser dutConfig(dutDeviceCfg);
-    Mechanics::Device* dutDevice = Mechanics::generateDevice(dutConfig);
+    Mechanics::Device refDevice = Mechanics::Device::fromFile(refDeviceCfg);
+    Mechanics::Device dutDevice = Mechanics::Device::fromFile(dutDeviceCfg);
 
     unsigned int treeMask = Storage::Flags::TRACKS | Storage::Flags::CLUSTERS;
     Storage::StorageIO refInput(refInputName, Storage::INPUT, 0, treeMask);
     Storage::StorageIO dutInput(dutInputName, Storage::INPUT, 0, treeMask);
 
-    Loopers::FineAlignDut looper(refDevice, dutDevice, clusterMaker, trackMaker,
+    Loopers::FineAlignDut looper(&refDevice, &dutDevice, clusterMaker, trackMaker,
                                  &refInput, &dutInput, startEvent, numEvents);
     Loopers::configFineAlign(runConfig, looper);
     if(printLevel>0) looper.print();
     looper.loop();
 
     delete trackMaker;
-    delete refDevice;
-    delete dutDevice;
     delete clusterMaker;
   }
   catch(Exception &e){
@@ -358,13 +326,12 @@ void process(const char* inputName,
 {
   try
   {
-    ConfigParser deviceConfig(deviceCfg);
-    Mechanics::Device* device = Mechanics::generateDevice(deviceConfig);
+    Mechanics::Device device = Mechanics::Device::fromFile(deviceCfg);
 
     ConfigParser runConfig(tbCfg);
     Processors::ClusterMaker* clusterMaker = Processors::generateClusterMaker(runConfig);
     Processors::TrackMaker* trackMaker=0;
-    if(device->getNumSensors() > 2)
+    if(device.getNumSensors() > 2)
       trackMaker = Processors::generateTrackMaker(runConfig);
 
     // input file
@@ -373,14 +340,14 @@ void process(const char* inputName,
 
     // output file
     unsigned int outMask = 0;
-    if(device->getNumSensors() <= 2) outMask = Storage::Flags::TRACKS;
-    Storage::StorageIO output(outputName, Storage::OUTPUT, device->getNumSensors(), outMask, 0, printLevel);
+    if(device.getNumSensors() <= 2) outMask = Storage::Flags::TRACKS;
+    Storage::StorageIO output(outputName, Storage::OUTPUT, device.getNumSensors(), outMask, 0, printLevel);
 
-    Loopers::ProcessEvents looper(device, &output, clusterMaker, trackMaker, &input, startEvent, numEvents);
+    Loopers::ProcessEvents looper(&device, &output, clusterMaker, trackMaker, &input, startEvent, numEvents);
     const Storage::Event* start = input.readEvent(looper.getStartEvent());
     const Storage::Event* end = input.readEvent(looper.getEndEvent());
-    device->setTimeStart(start->getTimeStamp());
-    device->setTimeEnd(end->getTimeStamp());
+    device.setTimeStart(start->getTimeStamp());
+    device.setTimeEnd(end->getTimeStamp());
     delete start;
     delete end;
 
@@ -390,7 +357,7 @@ void process(const char* inputName,
       results = new TFile(resultsName, "RECREATE");
 
     // add analyzers to looper and then loop
-    Analyzers::configLooper(runConfig, &looper, device, 0, results);
+    Analyzers::configLooper(runConfig, &looper, &device, 0, results);
     if(printLevel>0) looper.print();
     looper.loop();
 
@@ -399,7 +366,6 @@ void process(const char* inputName,
       delete results;
     }
 
-    delete device;
     delete clusterMaker;
     if(trackMaker) delete trackMaker;
   }
@@ -421,8 +387,7 @@ void analysis(const char* inputName,
 	      int printLevel){
   try
     {
-      ConfigParser deviceConfig(deviceCfg);
-      Mechanics::Device* device = Mechanics::generateDevice(deviceConfig);
+      Mechanics::Device device = Mechanics::Device::fromFile(deviceCfg);
 
       ConfigParser runConfig(tbCfg);
 
@@ -431,8 +396,8 @@ void analysis(const char* inputName,
       Loopers::Analysis looper(&input, startEvent, numEvents);
       const Storage::Event* start = input.readEvent(looper.getStartEvent());
       const Storage::Event* end = input.readEvent(looper.getEndEvent());
-      device->setTimeStart(start->getTimeStamp());
-      device->setTimeEnd(end->getTimeStamp());
+      device.setTimeStart(start->getTimeStamp());
+      device.setTimeEnd(end->getTimeStamp());
       delete start;
       delete end;
 
@@ -441,7 +406,7 @@ void analysis(const char* inputName,
 	results = new TFile(resultsName, "RECREATE");
 
       // add analyzers to looper and then loop
-      Analyzers::configLooper(runConfig, &looper, device, 0, results);
+      Analyzers::configLooper(runConfig, &looper, &device, 0, results);
       if(printLevel>0) looper.print();
       looper.loop();
 
@@ -449,8 +414,6 @@ void analysis(const char* inputName,
 	results->Write();
 	delete results;
       }
-
-      delete device;
     }
    catch(Exception &e){
     cout << e.what() << endl;
@@ -473,16 +436,12 @@ void analysisDUT(const char* refInputName,
 {
   try
     {
-      ConfigParser refConfig(refDeviceCfg);
-
-      Mechanics::Device* refDevice = Mechanics::generateDevice(refConfig);
-
-      ConfigParser dutConfig(dutDeviceCfg);
-      Mechanics::Device* dutDevice = Mechanics::generateDevice(dutConfig);
+      Mechanics::Device refDevice = Mechanics::Device::fromFile(refDeviceCfg);
+      Mechanics::Device dutDevice = Mechanics::Device::fromFile(dutDeviceCfg);
 
       ConfigParser runConfig(tbCfg);
 
-      Processors::TrackMatcher* trackMatcher = new Processors::TrackMatcher(dutDevice);
+      Processors::TrackMatcher* trackMatcher = new Processors::TrackMatcher(&dutDevice);
 
       Storage::StorageIO refInput(refInputName, Storage::INPUT);
       Storage::StorageIO dutInput(dutInputName, Storage::INPUT);
@@ -493,8 +452,8 @@ void analysisDUT(const char* refInputName,
 
       const Storage::Event* start = refInput.readEvent(looper.getStartEvent());
       const Storage::Event* end = refInput.readEvent(looper.getEndEvent());
-      refDevice->setTimeStart(start->getTimeStamp());
-      refDevice->setTimeEnd(end->getTimeStamp());
+      refDevice.setTimeStart(start->getTimeStamp());
+      refDevice.setTimeEnd(end->getTimeStamp());
       delete start;
       delete end;
 
@@ -503,7 +462,7 @@ void analysisDUT(const char* refInputName,
 	results = new TFile(resultsName, "RECREATE");
 
       // add analyzers to looper and then loop
-      Analyzers::configLooper(runConfig, &looper, refDevice, dutDevice, results);
+      Analyzers::configLooper(runConfig, &looper, &refDevice, &dutDevice, results);
       if(printLevel>1) looper.print();
       looper.loop();
 
@@ -513,8 +472,6 @@ void analysisDUT(const char* refInputName,
       }
 
       delete trackMatcher;
-      delete refDevice;
-      delete dutDevice;
     }
   catch(Exception &e){
     cout << e.what() << endl;
@@ -529,10 +486,8 @@ void printDevice(const char* configName)
 {
   try
   {
-    ConfigParser config(configName);
-    Mechanics::Device* device = Mechanics::generateDevice(config);
-    device->print();
-    delete device;
+    Mechanics::Device device = Mechanics::Device::fromFile(configName);
+    device.print();
   }
   catch (const char* e)
   {
