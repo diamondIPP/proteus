@@ -213,7 +213,7 @@ Mechanics::Device::Device(const std::string& name,
 {
 }
 
-Mechanics::Device fromFile(const std::string& path)
+Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
 {
   return parseDevice(ConfigParser(path.c_str()));
 }
