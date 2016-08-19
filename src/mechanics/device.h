@@ -46,7 +46,7 @@ public:
   void setTimeEnd(uint64_t timeStamp) { _timeEnd = timeStamp; }
   void setSyncRatio(double ratio) { _syncRatio = ratio; }
 
-  unsigned int getNumSensors() const { return _numSensors; }
+  unsigned int getNumSensors() const { return _sensors.size(); }
   Sensor* getSensor(unsigned int n) const;
 
   unsigned int getNumPixels() const;
@@ -81,7 +81,6 @@ private:
   uint64_t _timeEnd;
   double _syncRatio;
 
-  unsigned int _numSensors;
   std::vector<Sensor*> _sensors;
   std::vector<bool> _sensorMask;
 

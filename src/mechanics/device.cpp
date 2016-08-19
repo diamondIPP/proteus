@@ -208,7 +208,6 @@ Mechanics::Device::Device(const std::string& name,
     , _timeStart(0)
     , _timeEnd(0)
     , _syncRatio(0)
-    , _numSensors(0)
     , _spaceUnit(spaceUnit)
     , _timeUnit(timeUnit)
 {
@@ -237,7 +236,6 @@ Mechanics::Device::Device(const char* name,
     , _timeStart(0)
     , _timeEnd(0)
     , _syncRatio(0)
-    , _numSensors(0)
 {
   if (strlen(alignmentName)) {
     // Alignment a;
@@ -255,7 +253,7 @@ Mechanics::Device::Device(const char* name,
 //=========================================================
 Mechanics::Device::~Device()
 {
-  for (unsigned int nsensor = 0; nsensor < _numSensors; nsensor++)
+  for (unsigned int nsensor = 0; nsensor < getNumSensors(); nsensor++)
     delete _sensors.at(nsensor);
 }
 
@@ -264,14 +262,15 @@ void Mechanics::Device::addSensor(Mechanics::Sensor* sensor)
 {
   assert(sensor && "Device: can't add a null sensor");
 
-  if (_numSensors > 0 &&
-      getSensor(_numSensors - 1)->getOffZ() > sensor->getOffZ())
+  Index sensorId = _sensors.size();
+
+  if (!_sensors.empty() &&
+      _sensors.back()->getOffZ() > sensor->getOffZ())
     throw "[Device::addSensor] sensors must be added in order of increazing Z "
           "position";
   _sensors.push_back(sensor);
-  _sensors.back()->setNoisyPixels(_noiseMask.getMaskedPixels(_numSensors));
+  _sensors.back()->setNoisyPixels(_noiseMask.getMaskedPixels(sensorId));
   _sensorMask.push_back(false);
-  _numSensors++;
 }
 
 //=========================================================
@@ -311,7 +310,6 @@ double Mechanics::Device::tsToTime(uint64_t timeStamp) const
 //=========================================================
 Mechanics::Sensor* Mechanics::Device::getSensor(unsigned int n) const
 {
-  assert(n < _numSensors && "Device: sensor index outside range");
   return _sensors.at(n);
 }
 
@@ -331,7 +329,7 @@ void Mechanics::Device::print() const
        << "  Name: '" << _name << "'\n"
        << "  Clock rate: " << _clockRate << "\n"
        << "  Read out window: " << _readOutWindow << "\n"
-       << "  Sensors: " << _numSensors << "\n"
+       << "  Sensors: " << getNumSensors() << "\n"
        << "  Alignment: " << _alignment.m_path << "\n"
        << "  Noisemask: " << _noiseMask.getFileName() << endl;
 
