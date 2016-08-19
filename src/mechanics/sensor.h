@@ -36,6 +36,10 @@ class Device;
  */
 class Sensor {
 public:
+  /** Construct with an empty transformation (local = global) and no noise.
+   *
+   * This is the minimal configuration required to have a usable Sensor.
+   */
   Sensor(const std::string& name,
          Index numCols,
          Index numRows,
