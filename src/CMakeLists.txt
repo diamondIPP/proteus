@@ -51,6 +51,7 @@ set(Common_SRC
     storage/track.cpp
     storage/plane.cpp
     storage/storageio.cpp
+    utils/config.cpp
     utils/logger.cpp
     exception.cpp
     configparser.cpp)
