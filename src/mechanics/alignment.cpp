@@ -9,10 +9,15 @@
 #include <string>
 
 #include "configparser.h"
+#include "utils/logger.h"
+
+using Utils::logger;
 
 Mechanics::Alignment Mechanics::Alignment::fromFile(const std::string& path)
 {
-  return fromConfig(ConfigParser(path.c_str()));
+  auto alignment = fromConfig(ConfigParser(path.c_str()));
+  INFO("read alignment configuration from '", path, "'\n");
+  return alignment;
 }
 
 Mechanics::Alignment
@@ -110,7 +115,7 @@ void Mechanics::Alignment::writeFile(const std::string& path) const
 
   file.close();
 
-  std::cout << "\nAlignment file '" << path << "' created OK\n" << std::endl;
+  INFO("wrote alignment configuration to '", path, "'\n");
 }
 
 bool Mechanics::Alignment::hasAlignment(Index sensorId) const
