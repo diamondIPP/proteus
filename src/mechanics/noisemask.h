@@ -22,13 +22,13 @@ class NoiseMask {
 public:
   using ColumnRowSet = std::set<ColumnRow>;
 
+  /** Construct a noise mask from a configuration file. */
+  static NoiseMask fromFile(const std::string& path);
+
   /** Create empty noise masks with the default config. */
   NoiseMask();
   /** Create an empty noise mask with the given scan config. */
   explicit NoiseMask(const Loopers::NoiseScanConfig* config);
-  ~NoiseMask();
-  /** Construct a noise mask from a configuration file. */
-  static NoiseMask fromFile(const std::string& path);
 
   /** Write the current noise masks and configuration to a file. */
   void writeFile(const std::string& path) const;
