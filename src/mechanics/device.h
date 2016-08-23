@@ -9,6 +9,7 @@
 #include "mechanics/alignment.h"
 #include "mechanics/noisemask.h"
 #include "mechanics/sensor.h"
+#include "utils/definitions.h"
 
 namespace Mechanics {
 
@@ -31,11 +32,9 @@ public:
   /** Store the noise mask and apply to all configured sensors. */
   void applyNoiseMask(const NoiseMask& noiseMask);
 
-  void setBeamSlopeX(double rotation) { m_beamSlopeX = rotation; }
-  void setBeamSlopeY(double rotation) { m_beamSlopeY = rotation; }
   void setTimeStart(uint64_t timeStamp) { m_timeStart = timeStamp; }
   void setTimeEnd(uint64_t timeStamp) { m_timeEnd = timeStamp; }
-  void setSyncRatio(double ratio) { m_syncRatio = ratio; }
+  void setSyncRatio(double ratio) { m_alignment.setSyncRatio(ratio); }
 
   unsigned int getNumSensors() const { return m_sensors.size(); }
   Sensor* getSensor(unsigned int i) { return &m_sensors.at(i); }
@@ -50,11 +49,12 @@ public:
   unsigned int getReadOutWindow() const { return m_readoutWindow; }
   const char* getSpaceUnit() const { return m_spaceUnit.c_str(); }
   const char* getTimeUnit() const { return m_timeUnit.c_str(); }
-  double getBeamSlopeX() const { return m_beamSlopeX; }
-  double getBeamSlopeY() const { return m_beamSlopeY; }
+  XYZVector beamDirection() const { return m_alignment.beamDirection(); }
+  double getBeamSlopeX() const;
+  double getBeamSlopeY() const;
   uint64_t getTimeStart() const { return m_timeStart; }
   uint64_t getTimeEnd() const { return m_timeEnd; }
-  double getSyncRatio() const { return m_syncRatio; }
+  double getSyncRatio() const { return m_alignment.syncRatio(); }
 
   NoiseMask* getNoiseMask() { return &m_noiseMask; }
   Alignment* getAlignment() { return &m_alignment; }
@@ -69,8 +69,6 @@ private:
   double m_clockRate;
   unsigned int m_readoutWindow;
   uint64_t m_timeStart, m_timeEnd;
-  double m_syncRatio;
-  double m_beamSlopeX, m_beamSlopeY;
   std::string m_spaceUnit;
   std::string m_timeUnit;
   std::vector<bool> m_sensorMask;

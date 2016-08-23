@@ -195,9 +195,6 @@ Mechanics::Device::Device(const std::string& name,
     , m_readoutWindow(readoutWindow)
     , m_timeStart(0)
     , m_timeEnd(0)
-    , m_syncRatio(0)
-    , m_beamSlopeX(0)
-    , m_beamSlopeY(0)
     , m_spaceUnit(spaceUnit)
     , m_timeUnit(timeUnit)
 {
@@ -221,9 +218,6 @@ void Mechanics::Device::addMaskedSensor() { m_sensorMask.push_back(true); }
 void Mechanics::Device::applyAlignment(const Alignment& alignment)
 {
   m_alignment = alignment;
-  m_beamSlopeX = m_alignment.m_beamSlopeX;
-  m_beamSlopeY = m_alignment.m_beamSlopeY;
-  m_syncRatio = m_alignment.m_syncRatio;
 
   for (Index sensorId = 0; sensorId < getNumSensors(); ++sensorId) {
     Sensor* sensor = getSensor(sensorId);
@@ -258,6 +252,18 @@ unsigned int Mechanics::Device::getNumPixels() const
   return numPixels;
 }
 
+double Mechanics::Device::getBeamSlopeX() const
+{
+  auto dir = m_alignment.beamDirection();
+  return dir.x() / dir.z();
+}
+
+double Mechanics::Device::getBeamSlopeY() const
+{
+  auto dir = m_alignment.beamDirection();
+  return dir.y() / dir.z();
+}
+
 //=========================================================
 void Mechanics::Device::print() const
 {
@@ -265,9 +271,9 @@ void Mechanics::Device::print() const
        << "  Name: '" << m_name << "'\n"
        << "  Clock rate: " << m_clockRate << "\n"
        << "  Read out window: " << m_readoutWindow << "\n"
-       << "  Sensors: " << getNumSensors() << "\n"
-       << "  Alignment: " << m_alignment.m_path << "\n"
-       << "  Noisemask: " << m_noiseMask.getFileName() << endl;
+       << "  Sensors: " << getNumSensors() << "\n";
+       // << "  Alignment: " << m_alignment.m_path << "\n"
+       // << "  Noisemask: " << m_noiseMask.getFileName() << endl;
 
   for (unsigned int nsens = 0; nsens < getNumSensors(); nsens++)
     getSensor(nsens)->print();
