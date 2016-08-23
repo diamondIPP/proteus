@@ -140,17 +140,11 @@ Mechanics::NoiseMask Mechanics::NoiseMask::fromFile(const std::string& path)
   if (!comments.str().empty())
     parseComments(comments, noise.m_cfg);
 
-  noise.m_path = path;
-}
-
-Mechanics::NoiseMask::NoiseMask()
-    : m_path("<TRANSIENT>")
-{
+  return noise;
 }
 
 Mechanics::NoiseMask::NoiseMask(const Loopers::NoiseScanConfig* config)
     : m_cfg(*config)
-    , m_path("<TRANSIENT>")
 {
 }
 

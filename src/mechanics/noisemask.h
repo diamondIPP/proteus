@@ -26,8 +26,7 @@ public:
   /** Construct a noise mask from a configuration file. */
   static NoiseMask fromFile(const std::string& path);
 
-  /** Create empty noise masks with the default config. */
-  NoiseMask();
+  NoiseMask() = default;
   /** Create an empty noise mask with the given scan config. */
   explicit NoiseMask(const Loopers::NoiseScanConfig* config);
 
@@ -38,7 +37,6 @@ public:
   const ColumnRowSet& getMaskedPixels(Index sensorId) const;
   const size_t getNumMaskedPixels() const;
 
-  const std::string& getFileName() const { return m_path; }
   const Loopers::NoiseScanConfig* getConfig() const { return &m_cfg; }
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
@@ -46,7 +44,6 @@ public:
 private:
   std::map<Index, ColumnRowSet> m_maskedPixels;
   Loopers::NoiseScanConfig m_cfg;
-  std::string m_path;
 };
 
 } // namespace Mechanics
