@@ -180,12 +180,11 @@ void Mechanics::Sensor::print(std::ostream& os, const std::string& prefix) const
   os << prefix << "Name: " << m_name << '\n';
   os << prefix << "Columns: " << m_numCols << '\n';
   os << prefix << "Rows: " << m_numRows << '\n';
-  os << prefix << "Pitch Column: " << m_pitchCol << '\n';
-  os << prefix << "Pitch Row: " << m_pitchRow << '\n';
+  os << prefix << "Pitch column: " << m_pitchCol << '\n';
+  os << prefix << "Pitch row: " << m_pitchRow << '\n';
   os << prefix << "Depth: " << m_depth << '\n';
   os << prefix << "x/X0: " << m_xX0 << '\n';
-  os << prefix << "Sensitive X: " << getSensitiveX() << '\n';
-  os << prefix << "Sensitive Y: " << getSensitiveY() << '\n';
+  os.flush();
 }
 
 void Mechanics::Sensor::print() const { print(std::cout); }

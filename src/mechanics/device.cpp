@@ -16,7 +16,7 @@ using Utils::logger;
 Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
 {
   auto device = fromConfig(ConfigParser(path.c_str()));
-  INFO("Read device configuration from '", path, "'\n");
+  INFO("read device from '", path, "'\n");
   return device;
 }
 
@@ -123,7 +123,7 @@ static void parseSensors(const ConfigParser& config,
     else if (!row->key.compare("alignable"))
       alignable = ConfigParser::valueToLogical(row->value);
     else {
-      std::string msg("Device: can't parse line, key='");
+      std::string msg("Device: failed to parse row, key='");
       msg += row->key;
       msg += '\'';
       throw std::runtime_error(msg);
@@ -183,7 +183,7 @@ Mechanics::Device Mechanics::Device::fromConfig(const ConfigParser& config)
     else if (!row->key.compare("time unit"))
       timeUnit = row->value;
     else {
-      std::string msg("Device: Can't parse row, key='");
+      std::string msg("Device: Failed to parse row, key='");
       msg += row->key;
       msg += '\'';
       throw std::runtime_error(msg);
@@ -277,7 +277,6 @@ void Mechanics::Device::print(std::ostream& os, const std::string& prefix) const
   if (!m_pathNoiseMask.empty())
     os << prefix << "  Noise mask path: " << m_pathNoiseMask << '\n';
 
-  os << prefix << "  Sensors:\n";
   for (Index sensorId = 0; sensorId < getNumSensors(); ++sensorId) {
     os << prefix << "  Sensor " << sensorId << ":\n";
     getSensor(sensorId)->print(os, prefix + "    ");
@@ -285,6 +284,7 @@ void Mechanics::Device::print(std::ostream& os, const std::string& prefix) const
 
   m_alignment.print(os, prefix + "  ");
   m_noiseMask.print(os, prefix + "  ");
+  os.flush();
 }
 
 void Mechanics::Device::print() const { print(std::cout); }

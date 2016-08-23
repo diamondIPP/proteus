@@ -35,7 +35,7 @@ static void parseLine(std::stringstream& line, Index& nsens, Index& x, Index& y)
     counter++;
   }
   if (counter != 3)
-    throw std::runtime_error("NoiseMask: could not parse line");
+    throw std::runtime_error("NoiseMask: failed to parse line");
 }
 
 static void parseComments(std::stringstream& comments,
@@ -53,13 +53,13 @@ static void parseComments(std::stringstream& comments,
   char nameBuff[] = "/tmp/noiseMask.XXXXXX";
   int fd = mkstemp(nameBuff);
   if (fd == -1) {
-    std::string msg("NoiseMask: Can't create temp file '");
+    std::string msg("NoiseMask: failed to create temp file '");
     msg += nameBuff;
     msg += '\'';
     throw std::runtime_error(msg);
   }
 
-  DEBUG("Created temp file '", nameBuff, "'n");
+  DEBUG("created temp file '", nameBuff, "'n");
 
   write(fd, str.c_str(), strlen(str.c_str()));
   close(fd);
@@ -92,7 +92,7 @@ static void parseComments(std::stringstream& comments,
     else if (!row->key.compare("upper y"))
       cfg.setUpperLimitY(ConfigParser::valueToNumerical(row->value));
     else {
-      ERROR("Can't parse row, key='", row->key, "'\n");
+      ERROR("failed to parse row, key='", row->key, "'\n");
     }
   }
 
@@ -106,10 +106,10 @@ Mechanics::NoiseMask Mechanics::NoiseMask::fromFile(const std::string& path)
   std::fstream input(path, std::ios_base::in);
 
   if (!input) {
-    ERROR("Failed to open file '", path, "'\n");
+    ERROR("failed to open file '", path, "'\n");
     return noise;
   }
-  INFO("Read noise mask from '", path, "'\n");
+  INFO("read noise mask from '", path, "'\n");
 
   std::stringstream comments;
   while (input) {
@@ -145,7 +145,7 @@ void Mechanics::NoiseMask::writeFile(const std::string& path) const
   std::fstream out(path, std::ios_base::out);
 
   if (!out.is_open()) {
-    std::string msg("NoiseMask: Can't open file'");
+    std::string msg("NoiseMask: failed to open file '");
     msg += path;
     msg += '\'';
     throw std::runtime_error(msg);
@@ -164,7 +164,7 @@ void Mechanics::NoiseMask::writeFile(const std::string& path) const
   out << m_cfg.print() << '\n';
   out.close();
 
-  INFO("Wrote noise mask to '", path, "'\n");
+  INFO("wrote noise mask to '", path, "'\n");
 }
 
 void Mechanics::NoiseMask::maskPixel(Index sensorId, Index col, Index row)
@@ -194,23 +194,26 @@ const size_t Mechanics::NoiseMask::getNumMaskedPixels() const
 void Mechanics::NoiseMask::print(std::ostream& os,
                                  const std::string& prefix) const
 {
-  os << prefix << "Pixel Masks:\n";
+  os << prefix << "Noise mask:\n";
+
+  if (m_maskedPixels.empty()) {
+    os << prefix << "  No masked pixels\n";
+    os.flush();
+    return;
+  }
 
   auto ipixs = m_maskedPixels.begin();
   for (; ipixs != m_maskedPixels.end(); ++ipixs) {
     Index i = ipixs->first;
     const ColumnRowSet& pixs = ipixs->second;
 
-    std::string indent = prefix + "  ";
-
     if (pixs.empty())
       continue;
 
-    os << indent << "Sensor " << i << ":\n";
-
+    os << prefix << "  Sensor " << i << ":\n";
     auto cr = pixs.begin();
-    for (; cr != pixs.end(); ++cr) {
-      os << indent << "  col=" << cr->first << ", row=" << cr->second << '\n';
-    }
+    for (; cr != pixs.end(); ++cr)
+      os << prefix << "    col=" << cr->first << ", row=" << cr->second << '\n';
   }
+  os.flush();
 }

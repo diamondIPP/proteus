@@ -16,7 +16,7 @@ using Utils::logger;
 Mechanics::Alignment Mechanics::Alignment::fromFile(const std::string& path)
 {
   auto alignment = fromConfig(ConfigParser(path.c_str()));
-  INFO("read alignment configuration from '", path, "'\n");
+  INFO("read alignment from '", path, "'\n");
   return alignment;
 }
 
@@ -41,7 +41,7 @@ Mechanics::Alignment::fromConfig(const ConfigParser& config)
       else if (!row->key.compare("sync ratio"))
         alignment.m_syncRatio = value;
       else
-        throw std::runtime_error("Alignment: can't parse config row");
+        throw std::runtime_error("Alignment: failed to parse row");
       continue;
     }
 
@@ -51,7 +51,7 @@ Mechanics::Alignment::fromConfig(const ConfigParser& config)
     // header format should be "Sensor <#sensor_id>"
     if ((row->header.size() <= 7) ||
         row->header.substr(0, 7).compare("Sensor "))
-      throw std::runtime_error("Alignment: parsed an incorrect header");
+      throw std::runtime_error("Alignment: found an invalid header");
 
     unsigned int isens = std::stoi(row->header.substr(7));
     const double value = ConfigParser::valueToNumerical(row->value);
@@ -68,7 +68,7 @@ Mechanics::Alignment::fromConfig(const ConfigParser& config)
     else if (!row->key.compare("rotation z"))
       alignment.m_geo[isens].rotationZ = value;
     else
-      throw std::runtime_error("Alignment: can't parse config row");
+      throw std::runtime_error("Alignment: failed to parse row");
   }
   return alignment;
 }
@@ -86,9 +86,12 @@ void Mechanics::Alignment::writeFile(const std::string& path) const
 
   std::ofstream file(path);
 
-  if (!file.is_open())
-    throw std::runtime_error("Alignment: unable to open '" + path +
-                             "' for writing");
+  if (!file.is_open()) {
+    std::string msg("Alignment: failed to open file '");
+    msg += path;
+    msg += '\'';
+    throw std::runtime_error(msg);
+  }
 
   file << std::setprecision(9);
   file << std::fixed;
@@ -115,7 +118,7 @@ void Mechanics::Alignment::writeFile(const std::string& path) const
 
   file.close();
 
-  INFO("wrote alignment configuration to '", path, "'\n");
+  INFO("wrote alignment to '", path, "'\n");
 }
 
 bool Mechanics::Alignment::hasAlignment(Index sensorId) const
@@ -218,14 +221,13 @@ void Mechanics::Alignment::print(std::ostream& os,
     Index i = ip->first;
     const GeoParams& p = ip->second;
 
-    std::string indent = prefix + "  ";
-
-    os << indent << "Sensor " << i << ":\n";
-    os << indent << "  Offset X: " << p.offsetX << '\n'
-       << indent << "  Offset Y: " << p.offsetY << '\n'
-       << indent << "  Offset Z: " << p.offsetZ << '\n';
-    os << indent << "  Rotation X: " << p.rotationX << '\n'
-       << indent << "  Rotation Y: " << p.rotationY << '\n'
-       << indent << "  Rotation Z: " << p.rotationZ << '\n';
+    os << prefix << "  Sensor " << i << ":\n";
+    os << prefix << "    Offset X: " << p.offsetX << '\n'
+       << prefix << "    Offset Y: " << p.offsetY << '\n'
+       << prefix << "    Offset Z: " << p.offsetZ << '\n';
+    os << prefix << "    Rotation X: " << p.rotationX << '\n'
+       << prefix << "    Rotation Y: " << p.rotationY << '\n'
+       << prefix << "    Rotation Z: " << p.rotationZ << '\n';
   }
+  os.flush();
 }
