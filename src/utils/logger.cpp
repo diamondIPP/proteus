@@ -1,7 +1,7 @@
 #include "logger.h"
 
-Utils::Logger& Utils::globalLogger()
+Utils::Logger& Utils::logger()
 {
-    static Logger logger;
-    return logger;
+    static Logger s_logger;
+    return s_logger;
 }

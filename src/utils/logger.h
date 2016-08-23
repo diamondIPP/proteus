@@ -26,68 +26,67 @@ namespace Utils {
  */
 class Logger {
 public:
-    enum Level { ERROR = 0, INFO, DEBUG };
+  enum Level { ERROR = 0, INFO, DEBUG };
 
-    explicit Logger(Level lvl = Level::ERROR) : _lvl(lvl) {}
-    void setLevel(Level lvl) { _lvl = lvl; }
-    template <typename... Ts>
-    void error(const Ts&... things)
-    {
-        log(Level::ERROR, things...);
-    }
-    template <typename... Ts>
-    void info(const Ts&... things)
-    {
-        log(Level::INFO, things...);
-    }
-    template <typename... Ts>
-    void debug(const Ts&... things)
-    {
-        log(Level::DEBUG, things...);
-    }
+  explicit Logger(Level lvl = Level::ERROR)
+      : _lvl(lvl)
+  {
+  }
+  void setLevel(Level lvl) { _lvl = lvl; }
+  template <typename... Ts> void error(const Ts&... things)
+  {
+    log(Level::ERROR, things...);
+  }
+  template <typename... Ts> void info(const Ts&... things)
+  {
+    log(Level::INFO, things...);
+  }
+  template <typename... Ts> void debug(const Ts&... things)
+  {
+    log(Level::DEBUG, things...);
+  }
 
 private:
-    template <typename T>
-    static void print(std::ostream& os, const T& thing)
-    {
-        os << thing;
-    }
-    template <typename T0, typename... TN>
-    static void print(std::ostream& os, const T0& thing, const TN&... rest)
-    {
-        os << thing;
-        print(os, rest...);
-    }
-    template <typename... Ts>
-    void log(Level lvl, const Ts&... things)
-    {
-        if (lvl <= _lvl)
-            log((lvl <= Level::ERROR) ? std::cerr : std::cout, things...);
-    }
+  template <typename T> static void print(std::ostream& os, const T& thing)
+  {
+    os << thing;
+  }
+  template <typename T0, typename... TN>
+  static void print(std::ostream& os, const T0& thing, const TN&... rest)
+  {
+    os << thing;
+    print(os, rest...);
+  }
+  static std::ostream& stream(Level lvl)
+  {
+    return (lvl <= Level::ERROR) ? std::cerr : std::cout;
+  }
+  template <typename... Ts> void log(Level lvl, const Ts&... things)
+  {
+    if (lvl <= _lvl)
+      print(stream(lvl), things...);
+  }
 
-    Level _lvl;
+  Level _lvl;
 };
 
-Logger& globalLogger();
-
-// convenience functions using the global logger
-
-template <typename... Ts>
-void error(const Ts&... things)
-{
-    globalLogger().error(things...);
-}
-template <typename... Ts>
-void info(const Ts&... things)
-{
-    globalLogger().info(things...);
-}
-template <typename... Ts>
-void debug(const Ts&... things)
-{
-    globalLogger().debug(things...);
-}
+Logger& logger();
 
 }  // namespace Utils
+
+/* Convenience macros to use the logger.
+ *
+ * These macros expect a `logger()` function to be available that
+ * returns a reference to a `Logger` object. This allows usage of a
+ * class specific logger by implementing the necessary private method
+ * of the given name or to use the global logger by importing the
+ * global logger function at the beginning of the file, i.e.
+ *
+ *     using Utils::logger;
+ *
+ */
+#define ERROR(...) do { logger().error(__VA_ARGS__); } while(false)
+#define INFO(...) do { logger().info(__VA_ARGS__); } while(false)
+#define DEBUG(...) do { logger().debug(__VA_ARGS__); } while(false)
 
 #endif  // __LOGGER_H__
