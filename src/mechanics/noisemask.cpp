@@ -10,10 +10,9 @@
 #include "loopers/noisescan.h"
 #include "mechanics/device.h"
 #include "mechanics/sensor.h"
+#include "utils/logger.h"
 
-#ifndef VERBOSE
-#define VERBOSE 0
-#endif
+using Utils::logger;
 
 static void parseLine(std::stringstream& line, Index& nsens, Index& x, Index& y)
 {
@@ -36,7 +35,7 @@ static void parseLine(std::stringstream& line, Index& nsens, Index& x, Index& y)
     counter++;
   }
   if (counter != 3)
-    throw "[NoiseMask::parseLine] bad line found in file";
+    throw std::runtime_error("NoiseMask: could not parse line");
 }
 
 static void parseComments(std::stringstream& comments,
@@ -44,10 +43,7 @@ static void parseComments(std::stringstream& comments,
 {
   using std::cout;
 
-  if (VERBOSE) {
-    cout << "\n[NoiseMask::parseComments] input string:" << std::endl;
-    cout << comments.str() << std::endl;
-  }
+  DEBUG("parseComments input string:\n", comments.str(), '\n');
 
   // remove '#' characters from input string
   std::string str(comments.str());
@@ -57,20 +53,19 @@ static void parseComments(std::stringstream& comments,
   char nameBuff[] = "/tmp/noiseMask.XXXXXX";
   int fd = mkstemp(nameBuff);
   if (fd == -1) {
-    std::string err("[NoiseMask::parseComments] ERROR can't create temp file");
-    err += std::string(nameBuff) + "'";
-    throw err.c_str();
+    std::string msg("NoiseMask: Can't create temp file '");
+    msg += nameBuff;
+    msg += '\'';
+    throw std::runtime_error(msg);
   }
-  if (VERBOSE)
-    cout << "temp file '" << nameBuff << "' created OK" << std::endl;
+
+  DEBUG("Created temp file '", nameBuff, "'n");
+
   write(fd, str.c_str(), strlen(str.c_str()));
   close(fd);
 
   // use ConfigParser to parse contents
   ConfigParser parser(nameBuff);
-  if (VERBOSE)
-    parser.print();
-
   for (unsigned int i = 0; i < parser.getNumRows(); i++) {
     const ConfigParser::Row* row = parser.getRow(i);
 
@@ -97,8 +92,7 @@ static void parseComments(std::stringstream& comments,
     else if (!row->key.compare("upper y"))
       cfg.setUpperLimitY(ConfigParser::valueToNumerical(row->value));
     else {
-      cout << "[NoiseMask::parseComments] WARNING can't parse row with key '"
-           << row->key << std::endl;
+      ERROR("Can't parse row, key='", row->key, "'\n");
     }
   }
 
@@ -112,12 +106,10 @@ Mechanics::NoiseMask Mechanics::NoiseMask::fromFile(const std::string& path)
   std::fstream input(path, std::ios_base::in);
 
   if (!input) {
-    std::cout
-        << "[NoiseMask::readMask] WARNING :: Noise mask failed to open file '"
-        << path << "'" << std::endl;
+    ERROR("Failed to open file '", path, "'\n");
     return noise;
   }
-  std::cout << "Read noise mask from '" << path << "'\n";
+  INFO("Read noise mask from '", path, "'\n");
 
   std::stringstream comments;
   while (input) {
@@ -153,8 +145,9 @@ void Mechanics::NoiseMask::writeFile(const std::string& path) const
   std::fstream out(path, std::ios_base::out);
 
   if (!out.is_open()) {
-    std::string msg("[NoiseMask::writeMask]");
-    msg += "unable to open file '" + path + "' for writting";
+    std::string msg("NoiseMask: Can't open file'");
+    msg += path;
+    msg += '\'';
     throw std::runtime_error(msg);
   }
 
@@ -171,7 +164,7 @@ void Mechanics::NoiseMask::writeFile(const std::string& path) const
   out << m_cfg.print() << '\n';
   out.close();
 
-  std::cout << "Wrote noise mask to '" << path << "'\n";
+  INFO("Wrote noise mask to '", path, "'\n");
 }
 
 void Mechanics::NoiseMask::maskPixel(Index sensorId, Index col, Index row)
