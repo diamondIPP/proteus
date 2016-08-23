@@ -28,7 +28,7 @@ class Logger {
 public:
   enum Level { ERROR = 0, INFO, DEBUG };
 
-  explicit Logger(Level lvl = Level::ERROR)
+  explicit Logger(Level lvl = Level::DEBUG)
       : _lvl(lvl)
   {
   }
