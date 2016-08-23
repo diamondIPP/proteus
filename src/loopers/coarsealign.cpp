@@ -100,7 +100,7 @@ void Loopers::CoarseAlign::loop(){
   }
   
   // create output alignment file
-  align.writeFile();
+  align.writeFile(_refDevice->pathAlignment());
 }
 
 //=========================================================

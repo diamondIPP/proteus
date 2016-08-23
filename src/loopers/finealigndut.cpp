@@ -173,7 +173,7 @@ void Loopers::FineAlignDut::loop()
 
   }
 
-  alignment.writeFile();
+  alignment.writeFile(_dutDevice->pathAlignment());
 }
 
 void Loopers::FineAlignDut::setNumIterations(unsigned int value) { _numIterations = value; }

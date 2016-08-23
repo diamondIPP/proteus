@@ -98,7 +98,7 @@ void Loopers::CoarseAlignDut::loop()
    std::cout << "New offset: X= " << sensor->getOffX() << "  Y= " << sensor->getOffY() << std::endl;
   }
 
-  align.writeFile();
+  align.writeFile(_dutDevice->pathAlignment());
 }
 
 //=========================================================

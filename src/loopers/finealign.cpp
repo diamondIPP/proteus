@@ -287,7 +287,7 @@ void Loopers::FineAlign::loop()
    }
   out_file->Close();
 
-  alignment.writeFile();
+  alignment.writeFile(_refDevice->pathAlignment());
 }
 
 void Loopers::FineAlign::setNumIterations(unsigned int value) { _numIterations = value; }
