@@ -12,29 +12,34 @@
 #include "mechanics/sensor.h"
 #include "utils/definitions.h"
 
+class ConfigParser;
+
 namespace Mechanics {
 
 class Device {
 public:
+  /** Construct device from a configuration file. */
+  static Device fromFile(const std::string& path);
+  static Device fromConfig(const ConfigParser& cfg);
+
   Device(const std::string& name,
          double clockRate,
          unsigned int readoutWindow,
          const std::string& spaceUnit = std::string(),
          const std::string& timeUnit = std::string());
-  /** Construct device from a configuration file. */
-  static Device fromFile(const std::string& path);
 
   void addSensor(const Sensor& sensor);
   void addMaskedSensor();
   double tsToTime(uint64_t timeStamp) const;
 
-  /** Store the alignment and apply it to all configured sensors. */
+  /** Store the alignment and apply to all configured sensors. */
   void applyAlignment(const Alignment& alignment);
   /** Store the noise mask and apply to all configured sensors. */
   void applyNoiseMask(const NoiseMask& noiseMask);
 
   void setTimeStart(uint64_t timeStamp) { m_timeStart = timeStamp; }
   void setTimeEnd(uint64_t timeStamp) { m_timeEnd = timeStamp; }
+  /** \deprecated Use alignment directly */
   void setSyncRatio(double ratio) { m_alignment.setSyncRatio(ratio); }
 
   unsigned int getNumSensors() const { return m_sensors.size(); }
@@ -45,6 +50,8 @@ public:
 
   const std::vector<bool>* getSensorMask() const { return &m_sensorMask; }
 
+  const std::string& pathAlignment() const { return m_pathAlignment; }
+  const std::string& pathNoiseMask() const { return m_pathNoiseMask; }
   const char* getName() const { return m_name.c_str(); }
   double getClockRate() const { return m_clockRate; }
   unsigned int getReadOutWindow() const { return m_readoutWindow; }
@@ -71,6 +78,7 @@ private:
   double m_clockRate;
   unsigned int m_readoutWindow;
   uint64_t m_timeStart, m_timeEnd;
+  std::string m_pathAlignment, m_pathNoiseMask;
   std::string m_spaceUnit;
   std::string m_timeUnit;
   std::vector<bool> m_sensorMask;

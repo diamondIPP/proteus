@@ -10,6 +10,12 @@
 #include "configparser.h"
 #include "utils/definitions.h"
 
+
+Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
+{
+  return fromConfig(ConfigParser(path.c_str()));
+}
+
 static void parseSensors(const ConfigParser& config,
                          Mechanics::Device& device,
                          Mechanics::Alignment& alignment)
@@ -124,14 +130,14 @@ static void parseSensors(const ConfigParser& config,
   }
 }
 
-static Mechanics::Device parseDevice(const ConfigParser& config)
+Mechanics::Device Mechanics::Device::fromConfig(const ConfigParser& config)
 {
-  std::string name = "";
-  std::string alignmentName = "";
-  std::string noiseMaskName = "";
-  std::string spaceUnit = "";
-  std::string timeUnit = "";
-  double clockRate = 0;
+  std::string name;
+  std::string pathAlignment;
+  std::string pathNoiseMask;
+  std::string spaceUnit;
+  std::string timeUnit;
+  double clockRate = 1;
   double readOutWindow = 0;
 
   for (unsigned int i = 0; i < config.getNumRows(); i++) {
@@ -144,13 +150,14 @@ static Mechanics::Device parseDevice(const ConfigParser& config)
 
       parseSensors(config, device, alignment);
 
-      if (!alignmentName.empty()) {
-        device.applyAlignment(Mechanics::Alignment::fromFile(alignmentName));
+      if (!pathAlignment.empty()) {
+        device.applyAlignment(Mechanics::Alignment::fromFile(pathAlignment));
+        device.m_pathAlignment = pathAlignment;
       } else {
         device.applyAlignment(alignment);
       }
-      if (!noiseMaskName.empty())
-        device.applyNoiseMask(Mechanics::NoiseMask::fromFile(noiseMaskName));
+      if (!pathNoiseMask.empty())
+        device.applyNoiseMask(Mechanics::NoiseMask::fromFile(pathNoiseMask));
       return device;
     }
 
@@ -163,9 +170,9 @@ static Mechanics::Device parseDevice(const ConfigParser& config)
     if (!row->key.compare("name"))
       name = row->value;
     else if (!row->key.compare("alignment"))
-      alignmentName = row->value;
+      pathAlignment = row->value;
     else if (!row->key.compare("noise mask"))
-      noiseMaskName = row->value;
+      pathNoiseMask = row->value;
     else if (!row->key.compare("clock"))
       clockRate = ConfigParser::valueToNumerical(row->value);
     else if (!row->key.compare("window"))
@@ -197,11 +204,6 @@ Mechanics::Device::Device(const std::string& name,
 {
   std::replace(m_timeUnit.begin(), m_timeUnit.end(), '\\', '#');
   std::replace(m_spaceUnit.begin(), m_spaceUnit.end(), '\\', '#');
-}
-
-Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
-{
-  return parseDevice(ConfigParser(path.c_str()));
 }
 
 void Mechanics::Device::addSensor(const Mechanics::Sensor& sensor)
@@ -266,7 +268,11 @@ void Mechanics::Device::print(std::ostream& os, const std::string& prefix) const
   os << prefix << "Device:\n";
   os << prefix << "  Name: " << m_name << '\n';
   os << prefix << "  Clock rate: " << m_clockRate << '\n';
-  os << prefix << "  Readout windos: " << m_readoutWindow << '\n';
+  os << prefix << "  Readout window: " << m_readoutWindow << '\n';
+  if (!m_pathAlignment.empty())
+    os << prefix << "  Alignment path: " << m_pathAlignment << '\n';
+  if (!m_pathNoiseMask.empty())
+    os << prefix << "  Noise mask path: " << m_pathNoiseMask << '\n';
 
   os << prefix << "  Sensors:\n";
   for (Index sensorId = 0; sensorId < getNumSensors(); ++sensorId) {
