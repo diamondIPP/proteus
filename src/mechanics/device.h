@@ -10,6 +10,7 @@
 #include "mechanics/alignment.h"
 #include "mechanics/noisemask.h"
 #include "mechanics/sensor.h"
+#include "utils/config.h"
 #include "utils/definitions.h"
 
 class ConfigParser;
@@ -21,6 +22,8 @@ public:
   /** Construct device from a configuration file. */
   static Device fromFile(const std::string& path);
   static Device fromConfig(const ConfigParser& cfg);
+  /** Construct device from configuration. */
+  static Device fromConfig(const toml::Value& cfg);
 
   Device(const std::string& name,
          double clockRate,

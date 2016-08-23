@@ -54,7 +54,8 @@ static void parseSensors(const ConfigParser& config,
         if (name.empty())
           name = "Plane" + std::to_string(sensorCounter);
 
-        Mechanics::Sensor sensor(name, cols, rows, pitchX, pitchY, depth, xox0);
+        Mechanics::Sensor sensor(
+            name, cols, rows, pitchX, pitchY, digi, depth, xox0);
         device.addSensor(sensor);
         alignment.setOffset(sensorCounter, offX, offY, offZ);
         alignment.setRotationAngles(sensorCounter, rotX, rotY, rotZ);
@@ -193,6 +194,40 @@ Mechanics::Device Mechanics::Device::fromConfig(const ConfigParser& config)
   throw std::runtime_error("No device was parsed.");
 }
 
+Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
+{
+  using namespace Utils::Config;
+
+  const auto& cfgDevice = cfg.get<toml::Table>("device");
+  const auto& cfgTypes = cfg.get<toml::Table>("types");
+  const auto& cfgPlanes = cfg.get<toml::Array>("planes");
+
+  Device device(cfgDevice.at("name").as<std::string>(),
+                cfgDevice.at("clock").as<double>(),
+                cfgDevice.at("window").as<int>(),
+                get(cfgDevice, "space_unit", std::string()),
+                get(cfgDevice, "time_unit", std::string()));
+
+  for (size_t i = 0; i < cfgPlanes.size(); ++i) {
+
+    auto name = get(cfgPlanes[i], "name", "plane" + std::to_string(i));
+    auto typeName = cfgPlanes[i].get<std::string>("type");
+    auto type = cfgTypes.at(typeName).as<toml::Table>();
+
+    Sensor sensor(name,
+                  type.at("cols").as<int>(),
+                  type.at("rows").as<int>(),
+                  type.at("pitch_cols").as<double>(),
+                  type.at("pitch_rows").as<double>(),
+                  type.at("digital").as<bool>(),
+                  type.at("depth").as<double>(),
+                  type.at("x_x0").as<double>());
+    device.addSensor(sensor);
+  }
+
+  return device;
+}
+
 Mechanics::Device::Device(const std::string& name,
                           double clockRate,
                           unsigned int readoutWindow,
@@ -210,7 +245,7 @@ Mechanics::Device::Device(const std::string& name,
   std::replace(m_spaceUnit.begin(), m_spaceUnit.end(), '\\', '#');
 }
 
-void Mechanics::Device::addSensor(const Mechanics::Sensor& sensor)
+void Mechanics::Device::addSensor(const Sensor& sensor)
 {
   m_sensors.emplace_back(sensor);
   m_sensorMask.push_back(false);
