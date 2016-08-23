@@ -16,6 +16,8 @@ class Alignment {
 public:
   /** Construct alignment from a configuration file. */
   static Alignment fromFile(const std::string& path);
+  /** Construct alignment from configuration. */
+  static Alignment fromConfig(const ConfigParser& config);
 
   Alignment();
 
@@ -64,8 +66,6 @@ private:
     {
     }
   };
-
-  void parse(const ConfigParser& config);
 
   std::map<Index, GeoParams> m_geo;
   double m_beamSlopeX, m_beamSlopeY, m_syncRatio;

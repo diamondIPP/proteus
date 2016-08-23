@@ -12,26 +12,13 @@
 
 Mechanics::Alignment Mechanics::Alignment::fromFile(const std::string& path)
 {
-  Alignment a;
-  a.parse(ConfigParser(path.c_str()));
-  a.m_path = path;
-  return a;
+  return fromConfig(ConfigParser(path.c_str()));
 }
 
-Mechanics::Alignment::Alignment()
-    : m_beamSlopeX(0)
-    , m_beamSlopeY(0)
-    , m_syncRatio(0)
-    , m_path("<TRANSIENT>")
+Mechanics::Alignment
+Mechanics::Alignment::fromConfig(const ConfigParser& config)
 {
-}
-
-void Mechanics::Alignment::parse(const ConfigParser& config)
-{
-  m_geo.clear();
-  m_beamSlopeX = 0;
-  m_beamSlopeY = 0;
-  m_syncRatio = 0;
+  Alignment alignment;
 
   for (unsigned int nrow = 0; nrow < config.getNumRows(); nrow++) {
     const ConfigParser::Row* row = config.getRow(nrow);
@@ -43,11 +30,11 @@ void Mechanics::Alignment::parse(const ConfigParser& config)
     if (!row->header.compare("Device")) {
       const double value = ConfigParser::valueToNumerical(row->value);
       if (!row->key.compare("slope x"))
-        m_beamSlopeX = value;
+        alignment.m_beamSlopeX = value;
       else if (!row->key.compare("slope y"))
-        m_beamSlopeY = value;
+        alignment.m_beamSlopeY = value;
       else if (!row->key.compare("sync ratio"))
-        m_syncRatio = value;
+        alignment.m_syncRatio = value;
       else
         throw std::runtime_error("Alignment: can't parse config row");
       continue;
@@ -64,20 +51,28 @@ void Mechanics::Alignment::parse(const ConfigParser& config)
     unsigned int isens = std::stoi(row->header.substr(7));
     const double value = ConfigParser::valueToNumerical(row->value);
     if (!row->key.compare("offset x"))
-      m_geo[isens].offsetX = value;
+      alignment.m_geo[isens].offsetX = value;
     else if (!row->key.compare("offset y"))
-      m_geo[isens].offsetY = value;
+      alignment.m_geo[isens].offsetY = value;
     else if (!row->key.compare("offset z"))
-      m_geo[isens].offsetZ = value;
+      alignment.m_geo[isens].offsetZ = value;
     else if (!row->key.compare("rotation x"))
-      m_geo[isens].rotationX = value;
+      alignment.m_geo[isens].rotationX = value;
     else if (!row->key.compare("rotation y"))
-      m_geo[isens].rotationY = value;
+      alignment.m_geo[isens].rotationY = value;
     else if (!row->key.compare("rotation z"))
-      m_geo[isens].rotationZ = value;
+      alignment.m_geo[isens].rotationZ = value;
     else
       throw std::runtime_error("Alignment: can't parse config row");
   }
+  return alignment;
+}
+
+Mechanics::Alignment::Alignment()
+    : m_beamSlopeX(0)
+    , m_beamSlopeY(0)
+    , m_syncRatio(0)
+{
 }
 
 void Mechanics::Alignment::writeFile(const std::string& path) const
