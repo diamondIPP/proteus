@@ -22,8 +22,6 @@ public:
   Alignment();
 
   void writeFile(const std::string& path) const;
-  /** \deprecated Alignment object should know nothing about file paths. */
-  void writeFile() const { writeFile(m_path); }
 
   /** Check if alignment information exsists for the given sensor. */
   bool hasAlignment(Index sensorId) const;
@@ -69,7 +67,6 @@ private:
 
   std::map<Index, GeoParams> m_geo;
   double m_beamSlopeX, m_beamSlopeY, m_syncRatio;
-  std::string m_path;
 };
 
 } // namespace Mechanics

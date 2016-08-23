@@ -71,7 +71,7 @@ Mechanics::Alignment::fromConfig(const ConfigParser& config)
 Mechanics::Alignment::Alignment()
     : m_beamSlopeX(0)
     , m_beamSlopeY(0)
-    , m_syncRatio(0)
+    , m_syncRatio(1)
 {
 }
 
@@ -82,7 +82,7 @@ void Mechanics::Alignment::writeFile(const std::string& path) const
   std::ofstream file(path);
 
   if (!file.is_open())
-    throw std::runtime_error("Alignment: unable to open '" + m_path +
+    throw std::runtime_error("Alignment: unable to open '" + path +
                              "' for writing");
 
   file << std::setprecision(9);
@@ -110,7 +110,7 @@ void Mechanics::Alignment::writeFile(const std::string& path) const
 
   file.close();
 
-  std::cout << "\nAlignment file '" << m_path << "' created OK\n" << std::endl;
+  std::cout << "\nAlignment file '" << path << "' created OK\n" << std::endl;
 }
 
 bool Mechanics::Alignment::hasAlignment(Index sensorId) const
