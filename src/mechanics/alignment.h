@@ -10,11 +10,13 @@ class ConfigParser;
 
 namespace Mechanics {
 
+/** Store and process alignment parameters. */
 class Alignment {
 public:
-  Alignment();
   /** Construct alignment from a configuration file. */
   static Alignment fromFile(const std::string& path);
+
+  Alignment();
 
   void writeFile(const std::string& path) const;
   /** \deprecated Alignment object should know nothing about file paths. */
@@ -30,6 +32,19 @@ public:
   /** Beam direction in the global coordinate system. */
   XYZVector beamDirection() const;
   void setBeamSlope(double slopeX, double slopeY);
+
+  double syncRatio() const { return m_syncRatio; }
+  void setSyncRatio(double ratio) { m_syncRatio = ratio; }
+
+  /** Change the offset by small values relative to the current position. */
+  void correctOffset(Index sensorId, double dx, double dy, double dz);
+  /** Change the rotation by small values around the current rotation angles. */
+  void correctRotationAngles(Index sensorId,
+                             double dalpha,
+                             double dbeta,
+                             double dgamma);
+  /** Change the beam direction by small values around the current slope. */
+  void correctBeamSlope(double dslopeX, double dslopeY);
 
 private:
   struct GeoParams {
@@ -52,9 +67,6 @@ private:
   std::map<Index, GeoParams> m_geo;
   double m_beamSlopeX, m_beamSlopeY, m_syncRatio;
   std::string m_path;
-
-  // only temporarily until Sensor is using Transform3D;
-  friend class Device;
 };
 
 } // namespace Mechanics

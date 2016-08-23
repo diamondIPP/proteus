@@ -18,20 +18,20 @@ using std::fstream;
 using std::cout;
 using std::endl;
 
-Mechanics::Alignment::Alignment()
-    : m_beamSlopeX(0)
-    , m_beamSlopeY(0)
-    , m_syncRatio(0)
-    , m_path("<TRANSIENT>")
-{
-}
-
 Mechanics::Alignment Mechanics::Alignment::fromFile(const std::string& path)
 {
   Alignment a;
   a.parse(ConfigParser(path.c_str()));
   a.m_path = path;
   return a;
+}
+
+Mechanics::Alignment::Alignment()
+    : m_beamSlopeX(0)
+    , m_beamSlopeY(0)
+    , m_syncRatio(0)
+    , m_path("<TRANSIENT>")
+{
 }
 
 void Mechanics::Alignment::parse(const ConfigParser& config)
@@ -159,6 +159,17 @@ void Mechanics::Alignment::setOffset(Index sensorId,
   params.offsetZ = z;
 }
 
+void Mechanics::Alignment::correctOffset(Index sensorId,
+                                         double dx,
+                                         double dy,
+                                         double dz)
+{
+  auto& params = m_geo[sensorId];
+  params.offsetX += dx;
+  params.offsetY += dy;
+  params.offsetZ += dz;
+}
+
 void Mechanics::Alignment::setRotationAngles(Index sensorId,
                                              double rotX,
                                              double rotY,
@@ -171,6 +182,17 @@ void Mechanics::Alignment::setRotationAngles(Index sensorId,
   params.rotationZ = rotZ;
 }
 
+void Mechanics::Alignment::correctRotationAngles(Index sensorId,
+                                                 double dalpha,
+                                                 double dbeta,
+                                                 double dgamma)
+{
+  auto& params = m_geo[sensorId];
+  params.rotationX += dalpha;
+  params.rotationY += dbeta;
+  params.rotationZ += dgamma;
+}
+
 XYZVector Mechanics::Alignment::beamDirection() const
 {
   double f = 1 / std::hypot(1, std::hypot(m_beamSlopeX, m_beamSlopeY));
@@ -181,4 +203,10 @@ void Mechanics::Alignment::setBeamSlope(double slopeX, double slopeY)
 {
   m_beamSlopeX = slopeX;
   m_beamSlopeY = slopeY;
+}
+
+void Mechanics::Alignment::correctBeamSlope(double dslopeX, double dslopeY)
+{
+  m_beamSlopeX += dslopeX;
+  m_beamSlopeY += dslopeY;
 }
