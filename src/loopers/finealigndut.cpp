@@ -60,6 +60,8 @@ Loopers::FineAlignDut::FineAlignDut(Mechanics::Device* refDevice,
 //=========================================================
 void Loopers::FineAlignDut::loop()
 {
+  Mechanics::Alignment& alignment = *_dutDevice->getAlignment();
+
   for (unsigned int niter = 0; niter < _numIterations; niter++)
   {
     cout << "Iteration " << niter << " of " << _numIterations - 1 << endl;
@@ -134,10 +136,8 @@ void Loopers::FineAlignDut::loop()
       
       std::cout << "Fine alignment with residuals:" << std::endl;
       std::cout << "   Sensor: " << nsens << ", Xcorrection: " << offsetX << ", Ycorrection: " << offsetY <<  std::endl;
-			// TODO msmk 2016-08-18 switch to new alignment
-      // sensor->setOffX(sensor->getOffX() + offsetX);
-      // sensor->setOffY(sensor->getOffY() + offsetY);
-      // sensor->setRotZ(sensor->getRotZ() + rotation);
+      alignment.correctOffset(nsens, offsetX, offsetY, 0);
+      alignment.correctRotationAngles(nsens, 0, 0, rotation);
       offsetX=0;
       offsetY=0;
       rotation=0;
@@ -173,7 +173,7 @@ void Loopers::FineAlignDut::loop()
 
   }
 
-  _dutDevice->getAlignment()->writeFile();
+  alignment.writeFile();
 }
 
 void Loopers::FineAlignDut::setNumIterations(unsigned int value) { _numIterations = value; }

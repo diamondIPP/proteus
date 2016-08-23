@@ -76,6 +76,8 @@ void Loopers::FineAlign::loop()
   
   double rotation1[_refDevice->getNumSensors()]; //fdibello offset in the aligmnent plot
 
+  Mechanics::Alignment& alignment = *_refDevice->getAlignment();
+
   for(unsigned int i=0;i<_refDevice->getNumSensors() ;i++){
     for(unsigned int l=0;l< _numIterations;l++){
       ofx[l][i]=0;
@@ -178,21 +180,30 @@ void Loopers::FineAlign::loop()
 
       //Bilbao@cern.ch: first alignment using the residuals in order to avoid a big ofset on the 2D technique. This also helps since the DUT is align with repspect to a ref plane but not consdeing the cumulative shift.
 
-      if(niter==0){
-      double sigmaX = 0, maxX = 0, backgroundX = 0;
-      double sigmaY = 0, maxY = 0, backgroundY = 0;
-      Processors::fitGaussian(residuals.getResidualX(nsens), offsetX, sigmaX, maxX, backgroundX, _displayFits);
-      Processors::fitGaussian(residuals.getResidualY(nsens), offsetY, sigmaY, maxX, backgroundY, _displayFits);
+      if (niter == 0) {
+        double sigmaX = 0, maxX = 0, backgroundX = 0;
+        double sigmaY = 0, maxY = 0, backgroundY = 0;
+        Processors::fitGaussian(residuals.getResidualX(nsens),
+                                offsetX,
+                                sigmaX,
+                                maxX,
+                                backgroundX,
+                                _displayFits);
+        Processors::fitGaussian(residuals.getResidualY(nsens),
+                                offsetY,
+                                sigmaY,
+                                maxX,
+                                backgroundY,
+                                _displayFits);
 
-      std::cout << "Fine alignment with residuals:" << std::endl;
-      std::cout << "   Sensor: " << nsens << ", Xcorrection: " << offsetX << ", Ycorrection: " << offsetY <<  std::endl;
-			// TODO msmk 2016-08-18 switch to new alignment
-      // sensor->setOffX(sensor->getOffX() + offsetX); //fdibello-->I think this is useless
-      // sensor->setOffY(sensor->getOffY() + offsetY);
-      // sensor->setRotZ(sensor->getRotZ() + rotation);
-      offsetX=0;
-      offsetY=0;
-      rotation=0;
+        std::cout << "Fine alignment with residuals:" << std::endl;
+        std::cout << "   Sensor: " << nsens << ", Xcorrection: " << offsetX
+                  << ", Ycorrection: " << offsetY << std::endl;
+        alignment.correctOffset(nsens, offsetX, offsetY, 0);
+        alignment.correctRotationAngles(nsens, 0, 0, rotation);
+        offsetX = 0;
+        offsetY = 0;
+        rotation = 0;
       }
 
       Processors::residualAlignment(residuals.getResidualXY(nsens), //i guess this is a typo --->nsens below instead of nsensor
@@ -203,11 +214,8 @@ void Loopers::FineAlign::loop()
       if(niter==0){rotation1[nsens]=rotation;}  //fdibello offset for the ali. plot
 
       std::cout << "Sensor: " << nsens << ", Xcorrection: " << offsetX<< ", Ycorrection: " << offsetY << ", Zcorrection: " << rotation << std::endl;
-			// TODO msmk 2016-08-18 switch to new alignment
-      // sensor->setOffX(sensor->getOffX() + offsetX);
-      // sensor->setOffY(sensor->getOffY() + offsetY);
-      // sensor->setRotZ(sensor->getRotZ() + rotation);
-      // sensor->setRotX(sensor->getRotX()); //fdibello
+      alignment.correctOffset(nsens, offsetX, offsetY, 0);
+      alignment.correctRotationAngles(nsens, 0, 0, rotation);
       // std::cout << "Sensor: " << nsens << ", Xoffset: " << sensor->getOffX()<< ", Yoffset: " << sensor->getOffY() << ", Zoffset: " << sensor->getOffZ() <<",  RotationX="<<sensor->getRotX()<<",  RotationY="<<sensor->getRotY()<<",  RotationZ="<<sensor->getRotZ()<< std::endl;
      
     //fdibello
@@ -230,8 +238,7 @@ void Loopers::FineAlign::loop()
     // Ajudst the device rotation using the average slopes
     avgSlopeX /= (double)numSlopes;
     avgSlopeY /= (double)numSlopes;
-    _refDevice->setBeamSlopeX(_refDevice->getBeamSlopeX() + avgSlopeX);
-    _refDevice->setBeamSlopeY(_refDevice->getBeamSlopeY() + avgSlopeY);
+    alignment.correctBeamSlope(avgSlopeX, avgSlopeY);
 
     cout << endl; // Space between iterations
   }
@@ -279,7 +286,8 @@ void Loopers::FineAlign::loop()
 
    }
   out_file->Close();
-  _refDevice->getAlignment()->writeFile();
+
+  alignment.writeFile();
 }
 
 void Loopers::FineAlign::setNumIterations(unsigned int value) { _numIterations = value; }
