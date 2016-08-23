@@ -277,7 +277,7 @@ void Loopers::NoiseScan::loop(){
     }
   }
 
-  newMask.writeFile(_refDevice->getNoiseMask()->getFileName());
+  newMask.writeFile(_refDevice->pathNoiseMask());
 }
 
 //=========================================================
