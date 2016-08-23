@@ -9,11 +9,15 @@
 
 #include "configparser.h"
 #include "utils/definitions.h"
+#include "utils/logger.h"
 
+using Utils::logger;
 
 Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
 {
-  return fromConfig(ConfigParser(path.c_str()));
+  auto device = fromConfig(ConfigParser(path.c_str()));
+  INFO("Read device configuration from '", path, "'\n");
+  return device;
 }
 
 static void parseSensors(const ConfigParser& config,
@@ -119,13 +123,10 @@ static void parseSensors(const ConfigParser& config,
     else if (!row->key.compare("alignable"))
       alignable = ConfigParser::valueToLogical(row->value);
     else {
-      std::string err("Device: can't parse line ");
-      std::stringstream ss;
-      ss << i;
-      err += ss.str() + " with [key,value]=['" + row->key + "','" + row->value +
-             "'] in cfg file '";
-      err += std::string(config.getFilePath()) + "'";
-      throw std::runtime_error(err);
+      std::string msg("Device: can't parse line, key='");
+      msg += row->key;
+      msg += '\'';
+      throw std::runtime_error(msg);
     }
   }
 }
@@ -181,8 +182,12 @@ Mechanics::Device Mechanics::Device::fromConfig(const ConfigParser& config)
       spaceUnit = row->value;
     else if (!row->key.compare("time unit"))
       timeUnit = row->value;
-    else
-      throw std::runtime_error("Can't parse device row.");
+    else {
+      std::string msg("Device: Can't parse row, key='");
+      msg += row->key;
+      msg += '\'';
+      throw std::runtime_error(msg);
+    }
   }
 
   // Control shouldn't arrive at this point
@@ -236,13 +241,11 @@ void Mechanics::Device::applyNoiseMask(const NoiseMask& noiseMask)
   // TODO 2016-08-18 msmk: check number of sensors / id consistency
 }
 
-//=========================================================
 double Mechanics::Device::tsToTime(uint64_t timeStamp) const
 {
   return (double)((timeStamp - getTimeStart()) / (double)getClockRate());
 }
 
-//=========================================================
 unsigned int Mechanics::Device::getNumPixels() const
 {
   unsigned int numPixels = 0;
