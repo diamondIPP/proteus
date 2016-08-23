@@ -10,14 +10,6 @@
 
 #include "configparser.h"
 
-#ifndef VERBOSE
-#define VERBOSE 1
-#endif
-
-using std::fstream;
-using std::cout;
-using std::endl;
-
 Mechanics::Alignment Mechanics::Alignment::fromFile(const std::string& path)
 {
   Alignment a;
@@ -90,6 +82,8 @@ void Mechanics::Alignment::parse(const ConfigParser& config)
 
 void Mechanics::Alignment::writeFile(const std::string& path) const
 {
+  using std::endl;
+
   std::ofstream file(path);
 
   if (!file.is_open())
@@ -209,4 +203,29 @@ void Mechanics::Alignment::correctBeamSlope(double dslopeX, double dslopeY)
 {
   m_beamSlopeX += dslopeX;
   m_beamSlopeY += dslopeY;
+}
+
+void Mechanics::Alignment::print(std::ostream& os,
+                                 const std::string& prefix) const
+{
+  os << prefix << "Alignment:\n";
+  os << prefix << "  Beam:\n"
+     << prefix << "    Slope X: " << m_beamSlopeX << '\n'
+     << prefix << "    Slope Y: " << m_beamSlopeY << '\n';
+
+  auto ip = m_geo.begin();
+  for (; ip != m_geo.end(); ++ip) {
+    Index i = ip->first;
+    const GeoParams& p = ip->second;
+
+    std::string indent = prefix + "  ";
+
+    os << indent << "Sensor " << i << ":\n";
+    os << indent << "  Offset X: " << p.offsetX << '\n'
+       << indent << "  Offset Y: " << p.offsetY << '\n'
+       << indent << "  Offset Z: " << p.offsetZ << '\n';
+    os << indent << "  Rotation X: " << p.rotationX << '\n'
+       << indent << "  Rotation Y: " << p.rotationY << '\n'
+       << indent << "  Rotation Z: " << p.rotationZ << '\n';
+  }
 }

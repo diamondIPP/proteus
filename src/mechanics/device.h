@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <iosfwd>
 #include <string>
 #include <vector>
 
@@ -59,6 +60,7 @@ public:
   NoiseMask* getNoiseMask() { return &m_noiseMask; }
   Alignment* getAlignment() { return &m_alignment; }
 
+  void print(std::ostream& os, const std::string& prefix = std::string()) const;
   void print() const;
 
 private:

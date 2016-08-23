@@ -1,6 +1,7 @@
 #ifndef NOISEMASK_H
 #define NOISEMASK_H
 
+#include <iosfwd>
 #include <map>
 #include <set>
 #include <string>
@@ -39,6 +40,8 @@ public:
 
   const std::string& getFileName() const { return m_path; }
   const Loopers::NoiseScanConfig* getConfig() const { return &m_cfg; }
+
+  void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
   std::map<Index, ColumnRowSet> m_maskedPixels;

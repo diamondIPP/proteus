@@ -203,3 +203,27 @@ const size_t Mechanics::NoiseMask::getNumMaskedPixels() const
     n += it->second.size();
   return n;
 }
+
+void Mechanics::NoiseMask::print(std::ostream& os,
+                                 const std::string& prefix) const
+{
+  os << prefix << "Pixel Masks:\n";
+
+  auto ipixs = m_maskedPixels.begin();
+  for (; ipixs != m_maskedPixels.end(); ++ipixs) {
+    Index i = ipixs->first;
+    const ColumnRowSet& pixs = ipixs->second;
+
+    std::string indent = prefix + "  ";
+
+    if (pixs.empty())
+      continue;
+
+    os << indent << "Sensor " << i << ":\n";
+
+    auto cr = pixs.begin();
+    for (; cr != pixs.end(); ++cr) {
+      os << indent << "  col=" << cr->first << ", row=" << cr->second << '\n';
+    }
+  }
+}

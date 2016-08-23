@@ -5,9 +5,6 @@
 #include <iostream>
 #include <string>
 
-using std::cout;
-using std::endl;
-
 Mechanics::Sensor::Sensor(const std::string& name,
                           Index numCols,
                           Index numRows,
@@ -131,39 +128,6 @@ void Mechanics::Sensor::setNoisyPixels(const std::set<ColumnRow>& pixels)
   }
 }
 
-//=========================================================
-//
-// Misc functions
-//
-//=========================================================
-void Mechanics::Sensor::print() const
-{
-  cout << "\nSENSOR:\n"
-       << "  Name: '" << m_name << "'\n"
-       << "  Transform: " << m_l2g << '\n'
-       //  << "  Pos: " << m_offX << " , " << m_offY << " , " << m_offZ << "\n"
-       //  << "  Rot: " << m_rotX << " , " << m_rotY << " , " << m_rotZ << "\n"
-       << "  Cols: " << getNumX() << "\n"
-       << "  Rows: " << getNumY() << "\n"
-       << "  Pitch-x: " << m_pitchCol << "\n"
-       << "  Pitch-y: " << m_pitchRow << "\n"
-       << "  Depth: " << m_depth << "\n"
-       << "  X / X0: " << m_xX0 << "\n"
-       << "  Sensitive X: " << getSensitiveX() << "\n"
-       << "  Sensitive Y: " << getSensitiveY() << "\n"
-       << "  PosNumX: " << getPosNumX() << "\n"
-       << "  PosNumY: " << getPosNumY() << "\n";
-
-  // TODO 2016-08-18 msmk: how to print?
-  // cout << "  Noisy pixels (" << m_numNoisyPixels << ")" << endl;
-  // if (m_numNoisyPixels < 20) {
-  //   for (unsigned int nx = 0; nx < getNumX(); nx++)
-  //     for (unsigned int ny = 0; ny < getNumY(); ny++)
-  //       if (m_noisyPixels[nx][ny])
-  //         cout << "    " << nx << " : " << ny << endl;
-  // }
-}
-
 bool Mechanics::Sensor::sort(const Sensor* s1, const Sensor* s2)
 {
   return (s1->getOffZ() < s2->getOffZ());
@@ -210,3 +174,18 @@ double Mechanics::Sensor::getPosSensitiveY() const
       localToGlobal() * XYZVector(getSensitiveX(), getSensitiveY(), 0);
   return std::abs(size.y());
 }
+
+void Mechanics::Sensor::print(std::ostream& os, const std::string& prefix) const
+{
+  os << prefix << "Name: " << m_name << '\n';
+  os << prefix << "Columns: " << m_numCols << '\n';
+  os << prefix << "Rows: " << m_numRows << '\n';
+  os << prefix << "Pitch Column: " << m_pitchCol << '\n';
+  os << prefix << "Pitch Row: " << m_pitchRow << '\n';
+  os << prefix << "Depth: " << m_depth << '\n';
+  os << prefix << "x/X0: " << m_xX0 << '\n';
+  os << prefix << "Sensitive X: " << getSensitiveX() << '\n';
+  os << prefix << "Sensitive Y: " << getSensitiveY() << '\n';
+}
+
+void Mechanics::Sensor::print() const { print(std::cout); }

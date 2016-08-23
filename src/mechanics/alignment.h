@@ -1,6 +1,7 @@
 #ifndef ALIGNMENT_H
 #define ALIGNMENT_H
 
+#include <iosfwd>
 #include <map>
 #include <string>
 
@@ -45,6 +46,8 @@ public:
                              double dgamma);
   /** Change the beam direction by small values around the current slope. */
   void correctBeamSlope(double dslopeX, double dslopeY);
+
+  void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
   struct GeoParams {

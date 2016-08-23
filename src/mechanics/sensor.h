@@ -2,6 +2,7 @@
 #define SENSOR_H
 
 #include <cstdint>
+#include <iosfwd>
 #include <set>
 #include <string>
 #include <vector>
@@ -88,6 +89,7 @@ public:
   //
   // Misc functions
   //
+  void print(std::ostream& os, const std::string& prefix = std::string()) const;
   void print() const;
   static bool sort(const Sensor* s1, const Sensor* s2);
 

@@ -10,9 +10,6 @@
 #include "configparser.h"
 #include "utils/definitions.h"
 
-using std::cout;
-using std::endl;
-
 static void parseSensors(const ConfigParser& config,
                          Mechanics::Device& device,
                          Mechanics::Alignment& alignment)
@@ -264,17 +261,21 @@ double Mechanics::Device::getBeamSlopeY() const
   return dir.y() / dir.z();
 }
 
-//=========================================================
-void Mechanics::Device::print() const
+void Mechanics::Device::print(std::ostream& os, const std::string& prefix) const
 {
-  cout << "\nDEVICE:\n"
-       << "  Name: '" << m_name << "'\n"
-       << "  Clock rate: " << m_clockRate << "\n"
-       << "  Read out window: " << m_readoutWindow << "\n"
-       << "  Sensors: " << getNumSensors() << "\n";
-       // << "  Alignment: " << m_alignment.m_path << "\n"
-       // << "  Noisemask: " << m_noiseMask.getFileName() << endl;
+  os << prefix << "Device:\n";
+  os << prefix << "  Name: " << m_name << '\n';
+  os << prefix << "  Clock rate: " << m_clockRate << '\n';
+  os << prefix << "  Readout windos: " << m_readoutWindow << '\n';
 
-  for (unsigned int nsens = 0; nsens < getNumSensors(); nsens++)
-    getSensor(nsens)->print();
+  os << prefix << "  Sensors:\n";
+  for (Index sensorId = 0; sensorId < getNumSensors(); ++sensorId) {
+    os << prefix << "  Sensor " << sensorId << ":\n";
+    getSensor(sensorId)->print(os, prefix + "    ");
+  }
+
+  m_alignment.print(os, prefix + "  ");
+  m_noiseMask.print(os, prefix + "  ");
 }
+
+void Mechanics::Device::print() const { print(std::cout); }
