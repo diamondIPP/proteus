@@ -6,6 +6,8 @@
 
 #include "eventprinter.h"
 
+using Utils::logger;
+
 std::unique_ptr<Analyzers::EventPrinter> Analyzers::EventPrinter::make()
 {
   return std::unique_ptr<EventPrinter>(new EventPrinter());
@@ -19,17 +21,15 @@ Analyzers::EventPrinter::EventPrinter()
 
 void Analyzers::EventPrinter::processEvent(const Storage::Event* event)
 {
-  Utils::Logger& log = Utils::globalLogger();
-
-  log.info("event ", _events, ":\n");
-  log.info("  hits: ", event->getNumHits(), '\n');
-  log.info("  clusters: ", event->getNumClusters(), '\n');
-  log.info("  tracks: ", event->getNumTracks(), '\n');
+  INFO("event ", _events, ":\n");
+  INFO("  hits: ", event->getNumHits(), '\n');
+  INFO("  clusters: ", event->getNumClusters(), '\n');
+  INFO("  tracks: ", event->getNumTracks(), '\n');
   for (Index iplane = 0; iplane < event->getNumPlanes(); ++iplane) {
     Storage::Plane* plane = event->getPlane(iplane);
-    log.debug("  plane", iplane, ":\n");
-    log.debug("    hits: ", plane->getNumHits(), '\n');
-    log.debug("    clusters: ", plane->getNumHits(), '\n');
+    DEBUG("  plane", iplane, ":\n");
+    DEBUG("    hits: ", plane->getNumHits(), '\n');
+    DEBUG("    clusters: ", plane->getNumHits(), '\n');
   }
   _events += 1;
 }
