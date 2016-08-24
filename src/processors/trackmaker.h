@@ -50,7 +50,7 @@ public:
   static void fitTrackToClusters(Storage::Track* track);
 
   bool getCalcIntercepts() { return _calcIntercepts; }
-  void processEvent(Storage::Event* event);
+  void processEvent(uint64_t eventId, Storage::Event* event);
   void finalize();
 };
 

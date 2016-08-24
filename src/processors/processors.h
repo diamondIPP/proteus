@@ -1,6 +1,8 @@
 #ifndef PROCESSORS_H
 #define PROCESSORS_H
 
+#include <cstdint>
+
 #include <TVirtualPad.h>
 #include <TH1D.h>
 #include <TH2D.h>
@@ -20,7 +22,7 @@ namespace Processors {
 class Processor {
 public:
   virtual ~Processor();
-  virtual void processEvent(Storage::Event* event) = 0;
+  virtual void processEvent(uint64_t eventId, Storage::Event* event) = 0;
   virtual void finalize() = 0;
 };
 

@@ -28,7 +28,7 @@ public:
 
   void generateClusters(Storage::Event* event, unsigned int planeNum);
 
-  void processEvent(Storage::Event* event);
+  void processEvent(uint64_t eventId, Storage::Event* event);
   void finalize();
 };
 }
