@@ -42,6 +42,7 @@ set(COMMON_SRC
     processors/synchronizer.cpp
     processors/clustermaker.cpp
     processors/configprocessors.cpp
+    processors/processor.cpp
     processors/processors.cpp
     processors/trackmaker.cpp
     processors/trackmatcher.cpp

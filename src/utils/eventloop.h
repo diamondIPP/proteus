@@ -7,13 +7,10 @@
 
 #include "progressbar.h"
 #include "statistics.h"
+#include "processors/processor.h"
 
 namespace Analyzers {
 class SingleAnalyzer;
-}
-
-namespace Processors {
-class Processor;
 }
 
 namespace Storage {

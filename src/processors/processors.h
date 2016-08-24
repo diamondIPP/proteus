@@ -18,14 +18,6 @@ namespace Storage { class Cluster; }
 
 namespace Processors {
 
-/** Interface for algorithms to process and modify events. */
-class Processor {
-public:
-  virtual ~Processor();
-  virtual void processEvent(uint64_t eventId, Storage::Event* event) = 0;
-  virtual void finalize() = 0;
-};
-
 TF1* fitPixelBeam(TH1D* hist, double pixWidth, double beamSigma, bool display = false);
 
 void fitGaussian(

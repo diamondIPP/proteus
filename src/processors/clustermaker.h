@@ -1,7 +1,7 @@
 #ifndef CLUSTERMAKER_H
 #define CLUSTERMAKER_H
 
-#include "processors.h"
+#include "processor.h"
 
 namespace Storage {
 class Hit;

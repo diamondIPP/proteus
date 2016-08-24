@@ -3,7 +3,6 @@
 
 #include "analyzers/singleanalyzer.h"
 #include "eventloop.h"
-#include "processors/processors.h"
 #include "storage/event.h"
 #include "storage/storageio.h"
 
