@@ -3,24 +3,21 @@
 
 #include <memory>
 
-#include "singleanalyzer.h"
-
-namespace Storage { class Event; }
+#include "analyzer.h"
 
 namespace Analyzers {
 
 /** Print detailed information for each event. */
-class EventPrinter : public SingleAnalyzer {
+class EventPrinter : public Analyzer {
 public:
   static std::unique_ptr<EventPrinter> make();
 
-  void processEvent(const Storage::Event* event);
-  void postProcessing();
+  std::string name() const;
+  void analyze(uint64_t eventId, const Storage::Event& event);
+  void finalize();
 
 private:
-  EventPrinter();
-
-  uint64_t _events;
+  EventPrinter() = default;
 };
 
 } // namespace Analyzers

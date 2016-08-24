@@ -13,25 +13,21 @@ std::unique_ptr<Analyzers::EventPrinter> Analyzers::EventPrinter::make()
   return std::unique_ptr<EventPrinter>(new EventPrinter());
 }
 
-Analyzers::EventPrinter::EventPrinter()
-    : SingleAnalyzer(NULL)
-    , _events(0)
-{
-}
+std::string Analyzers::EventPrinter::name() const { return "EventPrinter"; }
 
-void Analyzers::EventPrinter::processEvent(const Storage::Event* event)
+void Analyzers::EventPrinter::analyze(uint64_t eventId,
+                                      const Storage::Event& event)
 {
-  INFO("event ", _events, ":\n");
-  INFO("  hits: ", event->getNumHits(), '\n');
-  INFO("  clusters: ", event->getNumClusters(), '\n');
-  INFO("  tracks: ", event->getNumTracks(), '\n');
-  for (Index iplane = 0; iplane < event->getNumPlanes(); ++iplane) {
-    Storage::Plane* plane = event->getPlane(iplane);
+  INFO("event ", eventId, ":\n");
+  INFO("  hits: ", event.getNumHits(), '\n');
+  INFO("  clusters: ", event.getNumClusters(), '\n');
+  INFO("  tracks: ", event.getNumTracks(), '\n');
+  for (Index iplane = 0; iplane < event.getNumPlanes(); ++iplane) {
+    Storage::Plane* plane = event.getPlane(iplane);
     DEBUG("  plane", iplane, ":\n");
     DEBUG("    hits: ", plane->getNumHits(), '\n');
     DEBUG("    clusters: ", plane->getNumHits(), '\n');
   }
-  _events += 1;
 }
 
-void Analyzers::EventPrinter::postProcessing() {}
+void Analyzers::EventPrinter::finalize() {}
