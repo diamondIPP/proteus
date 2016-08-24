@@ -1,0 +1,55 @@
+alignment = "comparison/unaligned.toml"
+noise_mask = "comparison/fake_noise.toml"
+
+[device]
+name = "FEI4Tel"
+clock = 40.0
+window = 16
+space_unit = "um"
+time_unit = "ns"
+
+[sensor_types.fei4-si]
+cols = 80
+rows = 336
+pitch_col = 250.
+pitch_row = 50.
+is_digital = true
+depth = 250.
+x_x0 = 0.005443
+
+[sensor_types.ccpd_v4]
+cols = 80
+rows = 168
+pitch_col = 250.
+pitch_row = 100.
+is_digital = true
+depth = 250.
+x_x0 = 0.005443
+
+# sensors in the order as they appear in the data file
+
+[[sensors]]
+type = "fei4-si"
+
+[[sensors]]
+type = "fei4-si"
+
+[[sensors]]
+type = "fei4-si"
+
+[[sensors]]
+type = "fei4-si"
+
+[[sensors]]
+type = "fei4-si"
+
+[[sensors]]
+type = "fei4-si"
+
+[[sensors]]
+type = "ccpd_v4"
+name = "caribou04"
+
+[[sensors]]
+type = "ccpd_v4"
+name = "caribou06"

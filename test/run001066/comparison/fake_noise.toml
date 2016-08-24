@@ -1,0 +1,24 @@
+[config]
+runs = []
+max_factor = 3.
+max_occupancy = 1.
+col_min = -1
+col_max = -1
+row_min = -1
+row_max = -1
+
+# this noise map is random and only for testing
+
+[[sensors]]
+id = 2
+masked_pixels = [
+  [0, 1],
+  [2, 3],
+  [4, 2]]
+
+[[sensors]]
+id = 6
+masked_pixels = [
+  [1, 1],
+  [2, 2],
+  [3, 3]]
