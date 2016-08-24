@@ -7,6 +7,7 @@
 #define __JU_PROCESSOR_H__
 
 #include <cstdint>
+#include <string>
 
 namespace Storage {
 class Event;
@@ -18,6 +19,7 @@ namespace Processors {
 class Processor {
 public:
   virtual ~Processor();
+  virtual std::string name() const = 0;
   virtual void processEvent(uint64_t eventId, Storage::Event* event) = 0;
   virtual void finalize() = 0;
 };

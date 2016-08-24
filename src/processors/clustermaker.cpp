@@ -157,6 +157,8 @@ ClusterMaker::ClusterMaker(unsigned int maxSeparationX, unsigned int maxSeparati
     throw "ClusterMaker: max separation must be positive";
 }
 
+std::string ClusterMaker::name() const { return "ClusterMaker"; }
+
 void ClusterMaker::processEvent(uint64_t /* unused */, Storage::Event* event)
 {
   for (unsigned int i = 0; i < event->getNumPlanes(); ++i)
