@@ -119,7 +119,8 @@ Mechanics::Alignment Mechanics::Alignment::fromConfig(const toml::Value& cfg)
 
   alignment.setBeamSlope(cfg.get<double>("beam.slope_x"),
                          cfg.get<double>("beam.slope_y"));
-  alignment.setSyncRatio(cfg.get<double>("timing.sync_ratio"));
+  if (cfg.has("timing.sync_ratio"))
+    alignment.setSyncRatio(cfg.get<double>("timing.sync_ratio"));
 
   auto sensors = cfg.get<toml::Array>("sensors");
   for (auto is = sensors.begin(); is != sensors.end(); ++is) {
