@@ -78,9 +78,9 @@ static toml::Value cfgReadFile(const std::string& path)
 // read .toml file with automatic error handling
 static toml::Value tomlReadFile(const std::string& path)
 {
-  std::ifstream file(path);
+  std::ifstream file(path, std::ifstream::in | std::ifstream::binary);
   if (!file.good())
-    throw std::runtime_error("Could not open TOML file '" + path + "'");
+    throw std::runtime_error("Could not open file '" + path + "' to read");
 
   toml::ParseResult result = toml::parse(file);
   if (!result.valid())
@@ -98,4 +98,14 @@ toml::Value Utils::Config::readConfig(const std::string& path)
     return tomlReadFile(path);
   // fall-back to old config format
   return cfgReadFile(path);
+}
+
+void Utils::Config::writeConfig(const toml::Value& cfg, const std::string& path)
+{
+  std::ofstream file(path, std::ofstream::out | std::ofstream::binary);
+  if (!file.good())
+    throw std::runtime_error("Could not open file '" + path + "' to write");
+
+  cfg.writeFormatted(&file, toml::FORMAT_INDENT);
+  file.close();
 }
