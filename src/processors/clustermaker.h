@@ -29,7 +29,7 @@ public:
   void generateClusters(Storage::Event* event, unsigned int planeNum);
 
   std::string name() const;
-  void processEvent(uint64_t eventId, Storage::Event* event);
+  void processEvent(uint64_t eventId, Storage::Event& event);
   void finalize();
 };
 }

@@ -159,10 +159,10 @@ ClusterMaker::ClusterMaker(unsigned int maxSeparationX, unsigned int maxSeparati
 
 std::string ClusterMaker::name() const { return "ClusterMaker"; }
 
-void ClusterMaker::processEvent(uint64_t /* unused */, Storage::Event* event)
+void ClusterMaker::processEvent(uint64_t /* unused */, Storage::Event& event)
 {
-  for (unsigned int i = 0; i < event->getNumPlanes(); ++i)
-    generateClusters(event, i);
+  for (unsigned int i = 0; i < event.getNumPlanes(); ++i)
+    generateClusters(&event, i);
 }
 void ClusterMaker::finalize() {}
 
