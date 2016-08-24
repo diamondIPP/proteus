@@ -135,10 +135,9 @@ void Mechanics::NoiseMask::writeFile(const std::string& path) const
 {
   std::fstream out(path, std::ios_base::out);
 
-  if (!out.is_open()) {
-    std::string msg("NoiseMask: failed to open file '" + path + '\'');
-    throw std::runtime_error(msg);
-  }
+  if (!out.is_open())
+    throw std::runtime_error("NoiseMask: failed to open file '" + path +
+                             "' to write");
 
   for (auto it = m_maskedPixels.begin(); it != m_maskedPixels.end(); ++it) {
     Index sensorId = it->first;
@@ -153,6 +152,48 @@ void Mechanics::NoiseMask::writeFile(const std::string& path) const
   out.close();
 
   INFO("wrote noise mask to '", path, "'\n");
+}
+
+Mechanics::NoiseMask Mechanics::NoiseMask::fromConfig(const toml::Value& cfg)
+{
+  NoiseMask mask;
+
+  auto sensors = cfg.get<toml::Array>("sensors");
+  for (auto is = sensors.begin(); is != sensors.end(); ++is) {
+    auto id = is->get<int>("id");
+    auto pixels = is->get<toml::Array>("masked_pixels");
+    for (auto ip = pixels.begin(); ip != pixels.end(); ++ip) {
+      // column / row array *must* have exactly two elements
+      if (ip->size() != 2)
+        throw std::runtime_error("NoiseMask: column/row array size " +
+                                 std::to_string(ip->size()) + " != 2");
+      mask.maskPixel(id, ip->get<int>(0), ip->get<int>(1));
+    }
+  }
+  return mask;
+}
+
+toml::Value Mechanics::NoiseMask::toConfig() const
+{
+  toml::Value cfg;
+  cfg["sensors"] = toml::Array();
+
+  for (auto im = m_maskedPixels.begin(); im != m_maskedPixels.end(); ++im) {
+    int id = static_cast<int>(im->first);
+    const ColumnRowSet& pixels = im->second;
+
+    toml::Array cfgPixels;
+    for (auto ip = pixels.begin(); ip != pixels.end(); ++ip) {
+      cfgPixels.emplace_back(toml::Array{static_cast<int>(ip->first),
+                                         static_cast<int>(ip->second)});
+    }
+
+    toml::Value cfgSensor;
+    cfgSensor["id"] = static_cast<int>(id);
+    cfgSensor["masked_pixels"] = std::move(cfgPixels);
+    cfg["sensors"].push(std::move(cfgSensor));
+  }
+  return cfg;
 }
 
 void Mechanics::NoiseMask::maskPixel(Index sensorId, Index col, Index row)
@@ -188,17 +229,15 @@ void Mechanics::NoiseMask::print(std::ostream& os,
     return;
   }
 
-  auto ipixs = m_maskedPixels.begin();
-  for (; ipixs != m_maskedPixels.end(); ++ipixs) {
-    Index i = ipixs->first;
-    const ColumnRowSet& pixs = ipixs->second;
+  for (auto im = m_maskedPixels.begin(); im != m_maskedPixels.end(); ++im) {
+    Index id = im->first;
+    const ColumnRowSet& pixels = im->second;
 
-    if (pixs.empty())
+    if (pixels.empty())
       continue;
 
-    os << prefix << "sensor " << i << ":\n";
-    auto cr = pixs.begin();
-    for (; cr != pixs.end(); ++cr)
+    os << prefix << "sensor " << id << ":\n";
+    for (auto cr = pixels.begin(); cr != pixels.end(); ++cr)
       os << prefix << "  col=" << cr->first << ", row=" << cr->second << '\n';
   }
   os.flush();
