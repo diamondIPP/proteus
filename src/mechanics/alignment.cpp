@@ -13,16 +13,16 @@
 
 using Utils::logger;
 
-Mechanics::Alignment Mechanics::Alignment::fromFile(const std::string& path)
+Mechanics::Alignment::Alignment()
+    : m_beamSlopeX(0)
+    , m_beamSlopeY(0)
+    , m_syncRatio(1)
 {
-  auto alignment = fromConfig(ConfigParser(path.c_str()));
-  INFO("read alignment from '", path, "'\n");
-  return alignment;
 }
 
-Mechanics::Alignment
-Mechanics::Alignment::fromConfig(const ConfigParser& config)
+Mechanics::Alignment Mechanics::Alignment::fromFile(const std::string& path)
 {
+  ConfigParser config(path.c_str());
   Alignment alignment;
 
   for (unsigned int nrow = 0; nrow < config.getNumRows(); nrow++) {
@@ -70,14 +70,9 @@ Mechanics::Alignment::fromConfig(const ConfigParser& config)
     else
       throw std::runtime_error("Alignment: failed to parse row");
   }
-  return alignment;
-}
 
-Mechanics::Alignment::Alignment()
-    : m_beamSlopeX(0)
-    , m_beamSlopeY(0)
-    , m_syncRatio(1)
-{
+  INFO("read alignment from '", path, "'\n");
+  return alignment;
 }
 
 void Mechanics::Alignment::writeFile(const std::string& path) const
@@ -86,12 +81,9 @@ void Mechanics::Alignment::writeFile(const std::string& path) const
 
   std::ofstream file(path);
 
-  if (!file.is_open()) {
-    std::string msg("Alignment: failed to open file '");
-    msg += path;
-    msg += '\'';
-    throw std::runtime_error(msg);
-  }
+  if (!file.is_open())
+    throw std::runtime_error("Alignment: failed to open file '" + path +
+                             "' to write");
 
   file << std::setprecision(9);
   file << std::fixed;
@@ -119,6 +111,54 @@ void Mechanics::Alignment::writeFile(const std::string& path) const
   file.close();
 
   INFO("wrote alignment to '", path, "'\n");
+}
+
+Mechanics::Alignment Mechanics::Alignment::fromConfig(const toml::Value& cfg)
+{
+  Alignment alignment;
+
+  alignment.setBeamSlope(cfg.get<double>("beam.slope_x"),
+                         cfg.get<double>("beam.slope_y"));
+  alignment.setSyncRatio(cfg.get<double>("timing.sync_ratio"));
+
+  auto sensors = cfg.get<toml::Array>("sensors");
+  for (auto is = sensors.begin(); is != sensors.end(); ++is) {
+    alignment.setOffset(is->get<int>("id"),
+                        is->get<double>("offset_x"),
+                        is->get<double>("offset_y"),
+                        is->get<double>("offset_z"));
+    alignment.setRotationAngles(is->get<int>("id"),
+                                is->get<double>("rotation_x"),
+                                is->get<double>("rotation_y"),
+                                is->get<double>("rotation_z"));
+  }
+  return alignment;
+}
+
+toml::Value Mechanics::Alignment::toConfig() const
+{
+    toml::Value cfg;
+
+    cfg["beam"]["slope_x"] = m_beamSlopeX;
+    cfg["beam"]["slope_y"] = m_beamSlopeY;
+    cfg["timing"]["sync_ratio"] = m_syncRatio;
+
+    cfg["sensors"] = toml::Array();
+    for (auto ig = m_geo.begin(); ig != m_geo.end(); ++ig) {
+        int id = static_cast<int>(ig->first);
+        const GeoParams& params = ig->second;
+
+        toml::Value cfgSensor;
+        cfgSensor["id"] = id;
+        cfgSensor["offset_x"] = params.offsetX;
+        cfgSensor["offset_y"] = params.offsetY;
+        cfgSensor["offset_z"] = params.offsetZ;
+        cfgSensor["rotation_x"] = params.rotationX;
+        cfgSensor["rotation_y"] = params.rotationY;
+        cfgSensor["rotation_z"] = params.rotationZ;
+        cfg["sensors"].push(std::move(cfgSensor));
+    }
+    return cfg;
 }
 
 bool Mechanics::Alignment::hasAlignment(Index sensorId) const

@@ -5,23 +5,25 @@
 #include <map>
 #include <string>
 
+#include "utils/config.h"
 #include "utils/definitions.h"
-
-class ConfigParser;
 
 namespace Mechanics {
 
 /** Store and process alignment parameters. */
 class Alignment {
 public:
-  /** Construct alignment from a configuration file. */
-  static Alignment fromFile(const std::string& path);
-  /** Construct alignment from configuration. */
-  static Alignment fromConfig(const ConfigParser& config);
-
   Alignment();
 
+  /** Construct alignment from a configuration file (old format). */
+  static Alignment fromFile(const std::string& path);
+  /** Write alignment to a configuration file (old format). */
   void writeFile(const std::string& path) const;
+
+  /** Construct alignment from a configuration object. */
+  static Alignment fromConfig(const toml::Value& cfg);
+  /** Convert alignment into a configuration object. */
+  toml::Value toConfig() const;
 
   /** Check if alignment information exsists for the given sensor. */
   bool hasAlignment(Index sensorId) const;
