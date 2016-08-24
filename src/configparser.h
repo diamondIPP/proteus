@@ -34,6 +34,8 @@ class ConfigParser{
   
   template <typename T>
     static void valueToVec(const std::string& value, std::vector<T>& vec){
+    if (value.empty())
+      return;
     std::stringstream stream;
     stream.str(value);
     std::string buffer;
