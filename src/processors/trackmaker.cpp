@@ -391,7 +391,7 @@ TrackMaker::TrackMaker(double maxClusterDist,
 }
 
 std::string TrackMaker::name() const { return "TrackMaker"; }
-void TrackMaker::processEvent(uint64_t eventId, Storage::Event& event) {}
+void TrackMaker::process(uint64_t eventId, Storage::Event& event) {}
 void TrackMaker::finalize() {}
 
 }

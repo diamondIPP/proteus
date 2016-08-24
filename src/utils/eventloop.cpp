@@ -64,7 +64,7 @@ void Utils::EventLoop::run()
 
     Time startProcessors = Clock::now();
     for (auto p = m_processors.begin(); p != m_processors.end(); ++p)
-      (*p)->processEvent(ievent, *event.get());
+      (*p)->process(ievent, *event.get());
 
     Time startAnalyzers = Clock::now();
     for (auto a = m_analyzers.begin(); a != m_analyzers.end(); ++a)

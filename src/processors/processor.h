@@ -20,7 +20,7 @@ class Processor {
 public:
   virtual ~Processor();
   virtual std::string name() const = 0;
-  virtual void processEvent(uint64_t eventId, Storage::Event& event) = 0;
+  virtual void process(uint64_t eventId, Storage::Event& event) = 0;
   virtual void finalize() = 0;
 };
 
