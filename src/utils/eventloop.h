@@ -1,17 +1,19 @@
-#ifndef __JD_EVENTLOOP_H__
-#define __JD_EVENTLOOP_H__
+#ifndef __JU_EVENTLOOP_H__
+#define __JU_EVENTLOOP_H__
 
 #include <cstdint>
 #include <memory>
 #include <vector>
 
+/**
+ * \author Moritz Kiehn <msmk@cern.ch>
+ * \created 2016-08
+ */
+
 #include "progressbar.h"
 #include "statistics.h"
+#include "analyzers/analyzer.h"
 #include "processors/processor.h"
-
-namespace Analyzers {
-class SingleAnalyzer;
-}
 
 namespace Storage {
 class Event;
@@ -33,9 +35,10 @@ public:
   EventLoop(Storage::StorageIO* storage,
             uint64_t startEvent = 0,
             uint64_t numEvents = 0);
+  ~EventLoop();
 
   void addProcessor(std::unique_ptr<Processors::Processor> processor);
-  void addAnalyzer(std::unique_ptr<Analyzers::SingleAnalyzer> analyzer);
+  void addAnalyzer(std::unique_ptr<Analyzers::Analyzer> analyzer);
   void run();
 
   std::unique_ptr<Storage::Event> readStartEvent();
@@ -49,9 +52,9 @@ private:
   ProgressBar m_progress;
   EventStatistics m_stat;
   std::vector<std::unique_ptr<Processors::Processor>> m_processors;
-  std::vector<std::unique_ptr<Analyzers::SingleAnalyzer>> m_analyzers;
+  std::vector<std::unique_ptr<Analyzers::Analyzer>> m_analyzers;
 };
 
 } // namespace Utils
 
-#endif // __JD_EVENTLOOP_H__
+#endif // __JU_EVENTLOOP_H__

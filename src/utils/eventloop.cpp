@@ -1,7 +1,11 @@
+/**
+ * \author Moritz Kiehn <msmk@cern.ch>
+ * \created 2016-08
+ */
+
 #include <cassert>
 #include <chrono>
 
-#include "analyzers/singleanalyzer.h"
 #include "eventloop.h"
 #include "storage/event.h"
 #include "storage/storageio.h"
@@ -27,6 +31,8 @@ Utils::EventLoop::EventLoop(Storage::StorageIO* storage,
     throw std::runtime_error("end event exceeds available events in storage");
 }
 
+Utils::EventLoop::~EventLoop() {}
+
 void Utils::EventLoop::addProcessor(
     std::unique_ptr<Processors::Processor> processor)
 {
@@ -34,7 +40,7 @@ void Utils::EventLoop::addProcessor(
 }
 
 void Utils::EventLoop::addAnalyzer(
-    std::unique_ptr<Analyzers::SingleAnalyzer> analyzer)
+    std::unique_ptr<Analyzers::Analyzer> analyzer)
 {
   m_analyzers.emplace_back(std::move(analyzer));
 }
@@ -62,7 +68,7 @@ void Utils::EventLoop::run()
 
     Time startAnalyzers = Clock::now();
     for (auto a = m_analyzers.begin(); a != m_analyzers.end(); ++a)
-      (*a)->processEvent(event.get());
+      (*a)->analyze(ievent, *event.get());
 
     Time end = Clock::now();
     durIo += startProcessors - startIo;
@@ -78,7 +84,7 @@ void Utils::EventLoop::run()
   for (auto p = m_processors.begin(); p != m_processors.end(); ++p)
     (*p)->finalize();
   for (auto a = m_analyzers.begin(); a != m_analyzers.end(); ++a)
-    (*a)->postProcessing();
+    (*a)->finalize();
 
   using std::cout;
 

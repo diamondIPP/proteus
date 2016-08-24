@@ -1,4 +1,5 @@
 set(COMMON_SRC
+    analyzers/analyzer.cpp
     analyzers/baseanalyzer.cpp
     analyzers/clusterinfo.cpp
     analyzers/configanalyzers.cpp
