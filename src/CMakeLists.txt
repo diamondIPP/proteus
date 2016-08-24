@@ -62,3 +62,6 @@ target_link_libraries(pt-common PUBLIC ${ROOT_LIBRARIES})
 
 add_executable(proteus main.cpp configparser.cpp inputargs.cpp)
 target_link_libraries(proteus pt-common)
+
+add_executable(pt-cfg pt-cfg.cpp)
+target_link_libraries(pt-cfg pt-common)
