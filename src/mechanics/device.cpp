@@ -7,16 +7,25 @@
 #include <vector>
 
 #include "configparser.h"
-#include "utils/definitions.h"
 #include "utils/logger.h"
 
 using Utils::logger;
 
-Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
+Mechanics::Device::Device(const std::string& name,
+                          double clockRate,
+                          unsigned int readoutWindow,
+                          const std::string& spaceUnit,
+                          const std::string& timeUnit)
+    : m_name(name)
+    , m_clockRate(clockRate)
+    , m_readoutWindow(readoutWindow)
+    , m_timeStart(0)
+    , m_timeEnd(0)
+    , m_spaceUnit(spaceUnit)
+    , m_timeUnit(timeUnit)
 {
-  auto device = fromConfig(ConfigParser(path.c_str()));
-  INFO("read device from '", path, "'\n");
-  return device;
+  std::replace(m_timeUnit.begin(), m_timeUnit.end(), '\\', '#');
+  std::replace(m_spaceUnit.begin(), m_spaceUnit.end(), '\\', '#');
 }
 
 static void parseSensors(const ConfigParser& config,
@@ -122,17 +131,15 @@ static void parseSensors(const ConfigParser& config,
       digi = ConfigParser::valueToLogical(row->value);
     else if (!row->key.compare("alignable"))
       alignable = ConfigParser::valueToLogical(row->value);
-    else {
-      std::string msg("Device: failed to parse row, key='");
-      msg += row->key;
-      msg += '\'';
-      throw std::runtime_error(msg);
-    }
+    else
+      throw std::runtime_error("Device: failed to parse row, key='" + row->key +
+                               '\'');
   }
 }
 
-Mechanics::Device Mechanics::Device::fromConfig(const ConfigParser& config)
+static Mechanics::Device parseDevice(const std::string& path)
 {
+  ConfigParser config(path.c_str());
   std::string name;
   std::string pathAlignment;
   std::string pathNoiseMask;
@@ -145,6 +152,11 @@ Mechanics::Device Mechanics::Device::fromConfig(const ConfigParser& config)
     const ConfigParser::Row* row = config.getRow(i);
 
     if (row->isHeader && !row->header.compare("End Device")) {
+
+      INFO("device config: '", path, "'\n");
+      INFO("alignment config: '", pathAlignment, "'\n");
+      INFO("noise mask config: '", pathNoiseMask, "'\n");
+
       Mechanics::Device device(
           name, clockRate, readOutWindow, spaceUnit, timeUnit);
       Mechanics::Alignment alignment;
@@ -153,12 +165,14 @@ Mechanics::Device Mechanics::Device::fromConfig(const ConfigParser& config)
 
       if (!pathAlignment.empty()) {
         device.applyAlignment(Mechanics::Alignment::fromFile(pathAlignment));
-        device.m_pathAlignment = pathAlignment;
+        // device.m_pathAlignment = pathAlignment;
       } else {
         device.applyAlignment(alignment);
       }
-      if (!pathNoiseMask.empty())
+      if (!pathNoiseMask.empty()) {
         device.applyNoiseMask(Mechanics::NoiseMask::fromFile(pathNoiseMask));
+        // device.m_pathNoiseMask = pathNoiseMask;
+      }
       return device;
     }
 
@@ -182,67 +196,69 @@ Mechanics::Device Mechanics::Device::fromConfig(const ConfigParser& config)
       spaceUnit = row->value;
     else if (!row->key.compare("time unit"))
       timeUnit = row->value;
-    else {
-      std::string msg("Device: Failed to parse row, key='");
-      msg += row->key;
-      msg += '\'';
-      throw std::runtime_error(msg);
-    }
+    else
+      throw std::runtime_error("Device: Failed to parse row, key='" + row->key +
+                               '\'');
   }
 
   // Control shouldn't arrive at this point
   throw std::runtime_error("No device was parsed.");
 }
 
-Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
+Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
 {
-  using namespace Utils::Config;
+    using Utils::Config::readConfig;
 
-  const auto& cfgDevice = cfg.get<toml::Table>("device");
-  const auto& cfgTypes = cfg.get<toml::Table>("types");
-  const auto& cfgPlanes = cfg.get<toml::Array>("planes");
+    std::string ext(path.substr(path.find_last_of('.') + 1));
 
-  Device device(cfgDevice.at("name").as<std::string>(),
-                cfgDevice.at("clock").as<double>(),
-                cfgDevice.at("window").as<int>(),
-                get(cfgDevice, "space_unit", std::string()),
-                get(cfgDevice, "time_unit", std::string()));
-
-  for (size_t i = 0; i < cfgPlanes.size(); ++i) {
-
-    auto name = get(cfgPlanes[i], "name", "plane" + std::to_string(i));
-    auto typeName = cfgPlanes[i].get<std::string>("type");
-    auto type = cfgTypes.at(typeName).as<toml::Table>();
-
-    Sensor sensor(name,
-                  type.at("cols").as<int>(),
-                  type.at("rows").as<int>(),
-                  type.at("pitch_cols").as<double>(),
-                  type.at("pitch_rows").as<double>(),
-                  type.at("digital").as<bool>(),
-                  type.at("depth").as<double>(),
-                  type.at("x_x0").as<double>());
-    device.addSensor(sensor);
-  }
-
-  return device;
+    if (ext == "toml") {
+        auto cfg = readConfig(path);
+        auto cfgAlign = cfg.find("alignment");
+        auto cfgNoise = cfg.find("noise_mask");
+        if (cfgAlign && cfgAlign->is<std::string>())
+          cfg["alignment"] = readConfig(cfgAlign->as<std::string>());
+        if (cfgNoise && cfgNoise->is<std::string>())
+          cfg["noise_mask"] = readConfig(cfgNoise->as<std::string>());
+        return fromConfig(cfg);
+    }
+    return parseDevice(path);
 }
 
-Mechanics::Device::Device(const std::string& name,
-                          double clockRate,
-                          unsigned int readoutWindow,
-                          const std::string& spaceUnit,
-                          const std::string& timeUnit)
-    : m_name(name)
-    , m_clockRate(clockRate)
-    , m_readoutWindow(readoutWindow)
-    , m_timeStart(0)
-    , m_timeEnd(0)
-    , m_spaceUnit(spaceUnit)
-    , m_timeUnit(timeUnit)
+Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
 {
-  std::replace(m_timeUnit.begin(), m_timeUnit.end(), '\\', '#');
-  std::replace(m_spaceUnit.begin(), m_spaceUnit.end(), '\\', '#');
+  Device device(cfg.get<std::string>("device.name"),
+                cfg.get<double>("device.clock"),
+                cfg.get<int>("device.window"),
+                cfg.get<std::string>("device.space_unit"),
+                cfg.get<std::string>("device.time_unit"));
+
+  auto types = cfg.get<toml::Table>("sensor_types");
+  auto sensors = cfg.get<toml::Array>("sensors");
+
+  for (size_t i = 0; i < sensors.size(); ++i) {
+    auto sensor = sensors[i];
+    auto name = Utils::Config::get(sensor, "name", "plane" + std::to_string(i));
+    auto typeName = sensor.get<std::string>("type");
+    auto type = types[typeName];
+
+    device.addSensor(Sensor(name,
+                            type.get<int>("cols"),
+                            type.get<int>("rows"),
+                            type.get<double>("pitch_col"),
+                            type.get<double>("pitch_row"),
+                            type.get<bool>("is_digital"),
+                            type.get<double>("depth"),
+                            type.get<double>("x_x0")));
+  }
+
+  auto cfgAlign = cfg.find("alignment");
+  auto cfgNoise = cfg.find("noise_mask");
+  if (cfgAlign)
+    device.applyAlignment(Alignment::fromConfig(*cfgAlign));
+  if (cfgNoise)
+    device.applyNoiseMask(NoiseMask::fromConfig(*cfgNoise));
+
+  return device;
 }
 
 void Mechanics::Device::addSensor(const Sensor& sensor)

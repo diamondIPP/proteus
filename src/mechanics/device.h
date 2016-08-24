@@ -13,23 +13,20 @@
 #include "utils/config.h"
 #include "utils/definitions.h"
 
-class ConfigParser;
-
 namespace Mechanics {
 
 class Device {
 public:
-  /** Construct device from a configuration file. */
-  static Device fromFile(const std::string& path);
-  static Device fromConfig(const ConfigParser& cfg);
-  /** Construct device from configuration. */
-  static Device fromConfig(const toml::Value& cfg);
-
   Device(const std::string& name,
          double clockRate,
          unsigned int readoutWindow,
          const std::string& spaceUnit = std::string(),
          const std::string& timeUnit = std::string());
+
+  /** Construct device from a configuration file (old format). */
+  static Device fromFile(const std::string& path);
+  /** Construct device from a configuration object. */
+  static Device fromConfig(const toml::Value& cfg);
 
   const std::string& name() const { return m_name; }
   const std::string& pathAlignment() const { return m_pathAlignment; }
