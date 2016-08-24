@@ -1,4 +1,4 @@
-set(Common_SRC
+set(COMMON_SRC
     analyzers/baseanalyzer.cpp
     analyzers/clusterinfo.cpp
     analyzers/configanalyzers.cpp
@@ -56,7 +56,7 @@ set(Common_SRC
     utils/logger.cpp
     exception.cpp)
 
-add_library(pt-common STATIC ${Common_SRC})
+add_library(pt-common STATIC ${COMMON_SRC})
 target_include_directories(pt-common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})
 target_link_libraries(pt-common PUBLIC ${ROOT_LIBRARIES})
 
