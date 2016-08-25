@@ -6,19 +6,11 @@
 #include <set>
 #include <string>
 
-#include "loopers/noisescan.h"
 #include "utils/definitions.h"
 
 namespace Mechanics {
 
-/** @class NoiseMask
- **
- ** @brief Store masked pixels for multiple sensors
- **
- ** Writes and reads from a textfile of all noisy pixels
- ** in the format:
- **      sensor, x, y
- */
+/** Store and process masked pixels. */
 class NoiseMask {
 public:
   using ColumnRowSet = std::set<ColumnRow>;
@@ -27,8 +19,6 @@ public:
   static NoiseMask fromFile(const std::string& path);
 
   NoiseMask() = default;
-  /** Create an empty noise mask with the given scan config. */
-  explicit NoiseMask(const Loopers::NoiseScanConfig* config);
 
   /** Write the current noise masks and configuration to a file. */
   void writeFile(const std::string& path) const;
@@ -37,13 +27,10 @@ public:
   const ColumnRowSet& getMaskedPixels(Index sensorId) const;
   const size_t getNumMaskedPixels() const;
 
-  const Loopers::NoiseScanConfig* getConfig() const { return &m_cfg; }
-
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
   std::map<Index, ColumnRowSet> m_maskedPixels;
-  Loopers::NoiseScanConfig m_cfg;
 };
 
 } // namespace Mechanics

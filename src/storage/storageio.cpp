@@ -516,7 +516,7 @@ namespace Storage {
   //=========================================================
   void StorageIO::setNoiseMaskData(const Mechanics::NoiseMask* noisemask)
   {
-    const Loopers::NoiseScanConfig* config = noisemask->getConfig();
+    const Loopers::NoiseScanConfig* config = NULL;
     if (!config) {
       cout << "[StorageIO::setNoiseMaskData] WARNING: no NoiseScanConfig "
               "info found"

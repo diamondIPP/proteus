@@ -7,7 +7,6 @@
 #include <stdexcept>
 
 #include "configparser.h"
-#include "loopers/noisescan.h"
 #include "mechanics/device.h"
 #include "mechanics/sensor.h"
 #include "utils/logger.h"
@@ -38,67 +37,67 @@ static void parseLine(std::stringstream& line, Index& nsens, Index& x, Index& y)
     throw std::runtime_error("NoiseMask: failed to parse line");
 }
 
-static void parseComments(std::stringstream& comments,
-                          Loopers::NoiseScanConfig& cfg)
-{
-  using std::cout;
+// static void parseComments(std::stringstream& comments,
+//                           Loopers::NoiseScanConfig& cfg)
+// {
+//   using std::cout;
 
-  DEBUG("parseComments input string:\n", comments.str(), '\n');
+//   DEBUG("parseComments input string:\n", comments.str(), '\n');
 
-  // remove '#' characters from input string
-  std::string str(comments.str());
-  str.erase(std::remove(str.begin(), str.end(), '#'), str.end());
+//   // remove '#' characters from input string
+//   std::string str(comments.str());
+//   str.erase(std::remove(str.begin(), str.end(), '#'), str.end());
 
-  // create temporary file to write metadata
-  char nameBuff[] = "/tmp/noiseMask.XXXXXX";
-  int fd = mkstemp(nameBuff);
-  if (fd == -1) {
-    std::string msg("NoiseMask: failed to create temp file '");
-    msg += nameBuff;
-    msg += '\'';
-    throw std::runtime_error(msg);
-  }
+//   // create temporary file to write metadata
+//   char nameBuff[] = "/tmp/noiseMask.XXXXXX";
+//   int fd = mkstemp(nameBuff);
+//   if (fd == -1) {
+//     std::string msg("NoiseMask: failed to create temp file '");
+//     msg += nameBuff;
+//     msg += '\'';
+//     throw std::runtime_error(msg);
+//   }
 
-  DEBUG("created temp file '", nameBuff, "'n");
+//   DEBUG("created temp file '", nameBuff, "'n");
 
-  write(fd, str.c_str(), strlen(str.c_str()));
-  close(fd);
+//   write(fd, str.c_str(), strlen(str.c_str()));
+//   close(fd);
 
-  // use ConfigParser to parse contents
-  ConfigParser parser(nameBuff);
-  for (unsigned int i = 0; i < parser.getNumRows(); i++) {
-    const ConfigParser::Row* row = parser.getRow(i);
+//   // use ConfigParser to parse contents
+//   ConfigParser parser(nameBuff);
+//   for (unsigned int i = 0; i < parser.getNumRows(); i++) {
+//     const ConfigParser::Row* row = parser.getRow(i);
 
-    if (row->isHeader)
-      continue;
-    if (row->header.compare("Noise Scan"))
-      continue;
+//     if (row->isHeader)
+//       continue;
+//     if (row->header.compare("Noise Scan"))
+//       continue;
 
-    if (!row->key.compare("runs")) {
-      std::vector<int> runs;
-      ConfigParser::valueToVec(row->value, runs);
-      cfg.setRuns(runs);
-      runs.clear();
-    } else if (!row->key.compare("max factor"))
-      cfg.setMaxFactor(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("max occupancy"))
-      cfg.setMaxOccupancy(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("bottom x"))
-      cfg.setBottomLimitX(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("upper x"))
-      cfg.setUpperLimitX(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("bottom y"))
-      cfg.setBottomLimitY(ConfigParser::valueToNumerical(row->value));
-    else if (!row->key.compare("upper y"))
-      cfg.setUpperLimitY(ConfigParser::valueToNumerical(row->value));
-    else {
-      ERROR("failed to parse row, key='", row->key, "'\n");
-    }
-  }
+//     if (!row->key.compare("runs")) {
+//       std::vector<int> runs;
+//       ConfigParser::valueToVec(row->value, runs);
+//       cfg.setRuns(runs);
+//       runs.clear();
+//     } else if (!row->key.compare("max factor"))
+//       cfg.setMaxFactor(ConfigParser::valueToNumerical(row->value));
+//     else if (!row->key.compare("max occupancy"))
+//       cfg.setMaxOccupancy(ConfigParser::valueToNumerical(row->value));
+//     else if (!row->key.compare("bottom x"))
+//       cfg.setBottomLimitX(ConfigParser::valueToNumerical(row->value));
+//     else if (!row->key.compare("upper x"))
+//       cfg.setUpperLimitX(ConfigParser::valueToNumerical(row->value));
+//     else if (!row->key.compare("bottom y"))
+//       cfg.setBottomLimitY(ConfigParser::valueToNumerical(row->value));
+//     else if (!row->key.compare("upper y"))
+//       cfg.setUpperLimitY(ConfigParser::valueToNumerical(row->value));
+//     else {
+//       ERROR("failed to parse row, key='", row->key, "'\n");
+//     }
+//   }
 
-  // delete temporary file
-  unlink(nameBuff);
-}
+//   // delete temporary file
+//   unlink(nameBuff);
+// }
 
 Mechanics::NoiseMask Mechanics::NoiseMask::fromFile(const std::string& path)
 {
@@ -129,15 +128,7 @@ Mechanics::NoiseMask Mechanics::NoiseMask::fromFile(const std::string& path)
     noise.maskPixel(nsens, x, y);
   }
 
-  if (!comments.str().empty())
-    parseComments(comments, noise.m_cfg);
-
   return noise;
-}
-
-Mechanics::NoiseMask::NoiseMask(const Loopers::NoiseScanConfig* config)
-    : m_cfg(*config)
-{
 }
 
 void Mechanics::NoiseMask::writeFile(const std::string& path) const
@@ -161,7 +152,6 @@ void Mechanics::NoiseMask::writeFile(const std::string& path) const
     }
   }
 
-  out << m_cfg.print() << '\n';
   out.close();
 
   INFO("wrote noise mask to '", path, "'\n");

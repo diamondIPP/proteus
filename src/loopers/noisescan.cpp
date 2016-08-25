@@ -150,7 +150,7 @@ void Loopers::NoiseScan::loop(){
   }
   
   // new noisymask calculated from this Scan
-  Mechanics::NoiseMask newMask(_config);
+  Mechanics::NoiseMask newMask;
 
   // loop in planes and determine noisy pixels
   for (unsigned int nsens = 0; nsens < _refDevice->getNumSensors(); nsens++) {
