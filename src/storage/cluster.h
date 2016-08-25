@@ -15,8 +15,7 @@ namespace Storage {
      
   protected:
     Cluster(); // The Event class manages the memory, not the user
-    ~Cluster() { ; } // The user can't delete Cluster pointers
-    
+
   public:
      friend class Plane;     // Needs to use the set plane method
      friend class Event;     // Needs access the constructor and destructor

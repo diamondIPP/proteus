@@ -11,8 +11,7 @@ class Plane;
  class Hit {
  protected:
    Hit(); // Hits memory is managed by the event class
-   ~Hit() { ; } // The user can get Hit pointers but can't delete them
-   
+
  public:
    friend class Plane;     // Access set plane method
    friend class Event;     // Access cluster index

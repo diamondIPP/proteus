@@ -27,23 +27,8 @@ Storage::Event::Event(unsigned int numPlanes) :
   _invalid(false)
 {
   for (unsigned int nplane=0; nplane< getNumPlanes(); nplane++){
-    _planes.push_back(new Plane(nplane));
+    _planes.push_back(Plane(nplane));
   }
-}
-
-//=========================================================
-Storage::Event::~Event() {
-  for(unsigned int nhit=0; nhit< getNumHits(); nhit++)
-    delete _hits.at(nhit);
-  
-  for(unsigned int ncluster=0; ncluster< getNumClusters(); ncluster++)
-    delete _clusters.at(ncluster);
-  
-  for(unsigned int nplane=0; nplane< getNumPlanes(); nplane++)
-    delete _planes.at(nplane);
-  
-  for(unsigned int ntrack=0; ntrack< getNumTracks(); ntrack++)
-    delete _tracks.at(ntrack);
 }
 
 //=========================================================
@@ -65,51 +50,30 @@ void Storage::Event::print(){
 
 //=========================================================
 Storage::Hit* Storage::Event::newHit(unsigned int nplane) {
-  Hit* hit = new Hit();
-  _hits.push_back(hit);
-  _planes.at(nplane)->addHit(hit);
-  return hit;
+  _hits.push_back(Hit());
+  _planes.at(nplane).addHit(&_hits.back());
+  return &_hits.back();
 }
 
 //=========================================================
 Cluster* Storage::Event::newCluster(unsigned int nplane) {
-  Cluster* cluster = new Cluster();
-  cluster->_index = _clusters.size();
-  _clusters.push_back(cluster);
-  _planes.at(nplane)->addCluster(cluster);
-  return cluster;
+  _clusters.push_back(Cluster());
+  _clusters.back()._index = _clusters.size() - 1;
+  _planes.at(nplane).addCluster(&_clusters.back());
+  return &_clusters.back();
 }
 
 //=========================================================
-void Storage::Event::addTrack(Track* track){
-  track->_index = _tracks.size();
-  _tracks.push_back(track);
+void Storage::Event::addTrack(Track* otherTrack){
+  // WARNING 2016-08-25 msmk: implicit ownership transfer
+  _tracks.push_back(*otherTrack);
+  _tracks.back()._index = _tracks.size() - 1;
+  delete otherTrack;
 }
 
 //=========================================================
 Track* Storage::Event::newTrack(){
-  Track* track = new Track();
-  addTrack(track);
-  return track;
+  _tracks.push_back(Track());
+  _tracks.back()._index = _tracks.size() - 1;
+  return &_tracks.back();
 }
-
-//=========================================================
-Hit* Storage::Event::getHit(unsigned int n) const {
-  return _hits.at(n);
-}
-
-//=========================================================
-Cluster* Storage::Event::getCluster(unsigned int n) const{
-  return _clusters.at(n);
-}
-
-//=========================================================
-Plane* Storage::Event::getPlane(unsigned int n) const {
-  return _planes.at(n);
-}
-
-//=========================================================
-Track* Storage::Event::getTrack(unsigned int n) const{
-  return _tracks.at(n);
-}
-

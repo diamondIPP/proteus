@@ -4,30 +4,33 @@
 #include <cstdint>
 #include <vector>
 
+#include "hit.h"
+#include "cluster.h"
+#include "track.h"
+#include "plane.h"
+
 namespace Processors { class TrackMaker; }
 
 namespace Storage
 {  
-  class Hit;
-  class Cluster;
-  class Track;
-  class Plane;
-  
   class Event {
   public:
     Event(unsigned int numPlanes);
-    ~Event();
-    
+
     void print();
     
     Hit* newHit(unsigned int nplane);
     Cluster* newCluster(unsigned int nplane);
     Track* newTrack();
-    
-    Hit* getHit(unsigned int n) const;
-    Cluster* getCluster(unsigned int n) const;
-    Plane* getPlane(unsigned int n) const;
-    Track* getTrack(unsigned int n) const;
+
+    Plane* getPlane(unsigned int n) { return &_planes.at(n); }
+    Hit* getHit(unsigned int n) { return &_hits.at(n); }
+    Cluster* getCluster(unsigned int n) { return &_clusters.at(n); }
+    Track* getTrack(unsigned int n) { return &_tracks.at(n); }
+    const Plane* getPlane(unsigned int n) const { return &_planes.at(n); }
+    const Cluster* getCluster(unsigned int n) const { return &_clusters.at(n); }
+    const Hit* getHit(unsigned int n) const { return &_hits.at(n); }
+    const Track* getTrack(unsigned int n) const { return &_tracks.at(n); }
     
     void setInvalid(bool value) { _invalid = value; }
     void setTimeStamp(uint64_t timeStamp) { _timeStamp = timeStamp; }
@@ -35,7 +38,6 @@ namespace Storage
     void setTriggerOffset(unsigned int triggerOffset) { _triggerOffset = triggerOffset; }
     void setTriggerInfo(unsigned int triggerInfo) { _triggerInfo = triggerInfo; }
     void setTriggerPhase(unsigned int triggerPhase) { _triggerPhase = triggerPhase; }
-    
 
     unsigned int getNumHits() const { return _hits.size(); }
     unsigned int getNumClusters() const { return _clusters.size(); }
@@ -61,10 +63,10 @@ namespace Storage
     unsigned int _triggerPhase;
     bool _invalid;
     
-    std::vector<Hit*> _hits;
-    std::vector<Cluster*> _clusters;
-    std::vector<Plane*> _planes;
-    std::vector<Track*> _tracks;
+    std::vector<Hit> _hits;
+    std::vector<Cluster> _clusters;
+    std::vector<Plane> _planes;
+    std::vector<Track> _tracks;
   }; // end of class
   
 } // end of namespace

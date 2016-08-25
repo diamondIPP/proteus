@@ -16,11 +16,8 @@ namespace Storage {
   class Plane {
   protected:
     Plane(unsigned int planeNum);
-    ~Plane() { ; }
 
   public:
-    friend class Event;
-
     inline unsigned int getPlaneNum() const { return _planeNum; }
     inline unsigned int getNumHits() const { return _numHits; }
     inline unsigned int getNumClusters() const { return _numClusters; }
@@ -44,7 +41,9 @@ namespace Storage {
     unsigned int _numClusters;
     std::vector<Cluster*> _clusters;
     unsigned int _numIntercepts;
-    std::vector< std::pair<double, double> > _intercepts;  
+    std::vector< std::pair<double, double> > _intercepts;
+
+    friend class Event;
   };  
 }
 
