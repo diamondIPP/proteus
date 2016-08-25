@@ -38,8 +38,8 @@ void DUTCorrelation::processEvent(const Storage::Event* refEvent,
 
   for (unsigned int nsensor = 0; nsensor < _dutDevice->getNumSensors(); nsensor++)
   {
-    Storage::Plane* plane0 = refEvent->getPlane(_nearestRef);
-    Storage::Plane* plane1 = dutEvent->getPlane(nsensor);
+    const Storage::Plane* plane0 = refEvent->getPlane(_nearestRef);
+    const Storage::Plane* plane1 = dutEvent->getPlane(nsensor);
 
     TH2D* corrX = _corrX.at(nsensor);
     TH2D* corrY = _corrY.at(nsensor);

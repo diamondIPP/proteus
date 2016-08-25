@@ -163,7 +163,7 @@ void Analyzers::ClusterInfo::processEvent(const Storage::Event* event) {
     if (!_eventCuts.at(ncut)->check(event)) return;
 
   for(unsigned int nplane=0; nplane<event->getNumPlanes(); nplane++) {
-    Storage::Plane* plane = event->getPlane(nplane);
+    const Storage::Plane* plane = event->getPlane(nplane);
     
     for(unsigned int ncluster=0; ncluster<plane->getNumClusters(); ncluster++){
       Storage::Cluster* cluster = plane->getCluster(ncluster);

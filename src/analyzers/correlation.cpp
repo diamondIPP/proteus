@@ -37,8 +37,8 @@ void Correlation::processEvent(const Storage::Event* event)
 
   for (unsigned int nsens = 0; nsens < _device->getNumSensors() - 1; nsens++)
   {
-    Storage::Plane* plane0 = event->getPlane(nsens);
-    Storage::Plane* plane1 = event->getPlane(nsens + 1);
+    const Storage::Plane* plane0 = event->getPlane(nsens);
+    const Storage::Plane* plane1 = event->getPlane(nsens + 1);
 
     TH2D* corrX = _corrX.at(nsens);
     TH2D* corrY = _corrY.at(nsens);

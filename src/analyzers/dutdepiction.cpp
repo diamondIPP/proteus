@@ -70,7 +70,7 @@ void DUTDepictor::processEvent(const Storage::Event* refEvent,
     {
     for (unsigned int ntrack = 0; ntrack < refEvent->getNumTracks(); ntrack++)
     {
-      Storage::Track* track = refEvent->getTrack(ntrack);
+      const Storage::Track* track = refEvent->getTrack(ntrack);
 
       for (unsigned int ncut = 0; ncut < _numTrackCuts; ncut++)
         if (!_trackCuts.at(ncut)->check(track)) continue;

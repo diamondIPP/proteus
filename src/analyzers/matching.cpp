@@ -151,7 +151,7 @@ void Analyzers::Matching::processEvent(const Storage::Event* refEvent,
 
   /** Loop in all reconstructed tracls*/
   for(unsigned int ntrack=0; ntrack<refEvent->getNumTracks(); ntrack++) {
-    Storage::Track* track = refEvent->getTrack(ntrack);
+    const Storage::Track* track = refEvent->getTrack(ntrack);
     
     // Check if the track passes the cuts
     bool pass = true;
