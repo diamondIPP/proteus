@@ -1,0 +1,8 @@
+[noise]
+sensor_ids = [1, 2, 5]
+max_sigma_above_avg = 1.5
+max_occupancy = 0.1
+col_min = 35
+col_max = 48
+row_min = 139
+row_max = 179
