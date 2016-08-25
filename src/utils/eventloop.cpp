@@ -9,6 +9,9 @@
 #include "eventloop.h"
 #include "storage/event.h"
 #include "storage/storageio.h"
+#include "utils/logger.h"
+
+using Utils::logger;
 
 Utils::EventLoop::EventLoop(Storage::StorageIO* storage,
                             uint64_t startEvent,
@@ -51,6 +54,14 @@ void Utils::EventLoop::run()
   using Duration = Clock::duration;
   using Time = Clock::time_point;
 
+  INFO("Processors:\n");
+  for (auto p = m_processors.begin(); p != m_processors.end(); ++p)
+      INFO("  ", (*p)->name(), '\n');
+  INFO("Analyzers:\n");
+  for (auto a = m_analyzers.begin(); a != m_analyzers.end(); ++a)
+      INFO("  ", (*a)->name(), '\n');
+
+  Time startWall = Clock::now();
   Duration durIo = Duration::zero();
   Duration durProcessors = Duration::zero();
   Duration durAnalyzers = Duration::zero();
@@ -80,16 +91,17 @@ void Utils::EventLoop::run()
         event->getNumHits(), event->getNumClusters(), event->getNumTracks());
     m_progress.update((float)(ievent - m_startEvent + 1) / numEvents());
   }
+  m_progress.clear();
 
   for (auto p = m_processors.begin(); p != m_processors.end(); ++p)
     (*p)->finalize();
   for (auto a = m_analyzers.begin(); a != m_analyzers.end(); ++a)
     (*a)->finalize();
 
-  using std::cout;
+  Duration durWall = Clock::now() - startWall;
 
   // print common event statistics
-  cout << "\nEvent Statistics:\n" << m_stat.str("  ") << '\n';
+  INFO("\nEvent Statistics:\n", m_stat.str("  "), '\n');
 
   // print timing
   // allow fractional tics when calculating time per event
@@ -98,11 +110,21 @@ void Utils::EventLoop::run()
     float n = m_endEvent - m_startEvent + 1;
     return (std::chrono::duration<float, std::micro>(dt) / n).count();
   };
-  cout << "Timing:\n";
-  cout << "  io: " << time_per_event(durIo) << unit;
-  cout << "  processors: " << time_per_event(durProcessors) << unit;
-  cout << "  analyzers: " << time_per_event(durAnalyzers) << unit;
-  cout << "  total: " << time_per_event(durTotal) << unit;
+  INFO("Timing:\n");
+  INFO("  i/o: ", time_per_event(durIo), unit);
+  INFO("  processors: ", time_per_event(durProcessors), unit);
+  INFO("  analyzers: ", time_per_event(durAnalyzers), unit);
+  INFO("  combined: ", time_per_event(durTotal), unit);
+  INFO("  total (clocked): ",
+       std::chrono::duration_cast<std::chrono::minutes>(durTotal).count(),
+       " min ",
+       std::chrono::duration_cast<std::chrono::seconds>(durTotal).count(),
+       " s\n");
+  INFO("  total (wall): ",
+       std::chrono::duration_cast<std::chrono::minutes>(durWall).count(),
+       " min ",
+       std::chrono::duration_cast<std::chrono::seconds>(durWall).count(),
+       " s\n");
 }
 
 std::unique_ptr<Storage::Event> Utils::EventLoop::readStartEvent()
