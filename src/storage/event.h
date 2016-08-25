@@ -38,10 +38,10 @@ namespace Storage
     void setTriggerPhase(unsigned int triggerPhase) { _triggerPhase = triggerPhase; }
     
 
-    unsigned int getNumHits() const { return _numHits; }
-    unsigned int getNumClusters() const { return _numClusters; }
-    unsigned int getNumPlanes() const { return _numPlanes; }
-    unsigned int getNumTracks() const { return _numTracks; }
+    unsigned int getNumHits() const { return _hits.size(); }
+    unsigned int getNumClusters() const { return _clusters.size(); }
+    unsigned int getNumPlanes() const { return _planes.size(); }
+    unsigned int getNumTracks() const { return _tracks.size(); }
     bool getInvalid() const { return _invalid; }
     ULong64_t getTimeStamp() const { return _timeStamp; }
     ULong64_t getFrameNumber() const { return _frameNumber; }
@@ -62,18 +62,10 @@ namespace Storage
     unsigned int _triggerPhase;
     bool _invalid;
     
-    unsigned int _numHits;
     std::vector<Hit*> _hits;
-    
-    unsigned int _numClusters;
     std::vector<Cluster*> _clusters;
-    
-    unsigned int _numPlanes;
     std::vector<Plane*> _planes;
-    
-    unsigned int _numTracks;
     std::vector<Track*> _tracks;
-    
   }; // end of class
   
 } // end of namespace

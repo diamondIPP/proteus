@@ -24,30 +24,25 @@ Storage::Event::Event(unsigned int numPlanes) :
   _timeStamp(0),
   _frameNumber(0),
   _triggerOffset(0),
-  _invalid(false),
-  _numHits(0),
-  _numClusters(0),
-  _numPlanes(numPlanes),
-  _numTracks(0)
+  _invalid(false)
 {
-  for (unsigned int nplane=0; nplane<_numPlanes; nplane++){
-    Plane* plane = new Plane(nplane);
-    _planes.push_back(plane);
+  for (unsigned int nplane=0; nplane< getNumPlanes(); nplane++){
+    _planes.push_back(new Plane(nplane));
   }
 }
 
 //=========================================================
 Storage::Event::~Event() {
-  for(unsigned int nhit=0; nhit<_numHits; nhit++)
+  for(unsigned int nhit=0; nhit< getNumHits(); nhit++)
     delete _hits.at(nhit);
   
-  for(unsigned int ncluster=0; ncluster<_numClusters; ncluster++)
+  for(unsigned int ncluster=0; ncluster< getNumClusters(); ncluster++)
     delete _clusters.at(ncluster);
   
-  for(unsigned int nplane=0; nplane<_numPlanes; nplane++)
+  for(unsigned int nplane=0; nplane< getNumPlanes(); nplane++)
     delete _planes.at(nplane);
   
-  for(unsigned int ntrack=0; ntrack<_numTracks; ntrack++)
+  for(unsigned int ntrack=0; ntrack< getNumTracks(); ntrack++)
     delete _tracks.at(ntrack);
 }
 
@@ -73,25 +68,22 @@ Storage::Hit* Storage::Event::newHit(unsigned int nplane) {
   Hit* hit = new Hit();
   _hits.push_back(hit);
   _planes.at(nplane)->addHit(hit);
-  _numHits++;
   return hit;
 }
 
 //=========================================================
 Cluster* Storage::Event::newCluster(unsigned int nplane) {
   Cluster* cluster = new Cluster();
-  cluster->_index = _numClusters;
+  cluster->_index = _clusters.size();
   _clusters.push_back(cluster);
   _planes.at(nplane)->addCluster(cluster);
-  _numClusters++;
   return cluster;
 }
 
 //=========================================================
 void Storage::Event::addTrack(Track* track){
-  track->_index = _numTracks;
+  track->_index = _tracks.size();
   _tracks.push_back(track);
-  _numTracks++;
 }
 
 //=========================================================
@@ -103,25 +95,21 @@ Track* Storage::Event::newTrack(){
 
 //=========================================================
 Hit* Storage::Event::getHit(unsigned int n) const {
-  assert(n < getNumHits() && "Event: hit index exceeds vector range");
   return _hits.at(n);
 }
 
 //=========================================================
 Cluster* Storage::Event::getCluster(unsigned int n) const{
-  assert(n < getNumClusters() && "Event: cluster index exceeds vector range");
   return _clusters.at(n);
 }
 
 //=========================================================
 Plane* Storage::Event::getPlane(unsigned int n) const {
-  assert(n < getNumPlanes() && "Event: plane index exceeds vector range");
   return _planes.at(n);
 }
 
 //=========================================================
 Track* Storage::Event::getTrack(unsigned int n) const{
-  assert(n < getNumTracks() && "Event: track index exceeds vector range");
   return _tracks.at(n);
 }
 
