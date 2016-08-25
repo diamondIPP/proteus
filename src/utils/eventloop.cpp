@@ -54,12 +54,16 @@ void Utils::EventLoop::run()
   using Duration = Clock::duration;
   using Time = Clock::time_point;
 
-  INFO("Processors:\n");
-  for (auto p = m_processors.begin(); p != m_processors.end(); ++p)
+  if (!m_processors.empty()) {
+    INFO("Processors:\n");
+    for (auto p = m_processors.begin(); p != m_processors.end(); ++p)
       INFO("  ", (*p)->name(), '\n');
-  INFO("Analyzers:\n");
-  for (auto a = m_analyzers.begin(); a != m_analyzers.end(); ++a)
+  }
+  if (!m_analyzers.empty()) {
+    INFO("Analyzers:\n");
+    for (auto a = m_analyzers.begin(); a != m_analyzers.end(); ++a)
       INFO("  ", (*a)->name(), '\n');
+  }
 
   Time startWall = Clock::now();
   Duration durIo = Duration::zero();
