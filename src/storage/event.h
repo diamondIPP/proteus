@@ -1,9 +1,8 @@
 #ifndef EVENT_H
 #define EVENT_H
 
+#include <cstdint>
 #include <vector>
-
-#include <Rtypes.h>
 
 namespace Processors { class TrackMaker; }
 
@@ -31,8 +30,8 @@ namespace Storage
     Track* getTrack(unsigned int n) const;
     
     void setInvalid(bool value) { _invalid = value; }
-    void setTimeStamp(ULong64_t timeStamp) { _timeStamp = timeStamp; }
-    void setFrameNumber(ULong64_t frameNumber) { _frameNumber = frameNumber; }
+    void setTimeStamp(uint64_t timeStamp) { _timeStamp = timeStamp; }
+    void setFrameNumber(uint64_t frameNumber) { _frameNumber = frameNumber; }
     void setTriggerOffset(unsigned int triggerOffset) { _triggerOffset = triggerOffset; }
     void setTriggerInfo(unsigned int triggerInfo) { _triggerInfo = triggerInfo; }
     void setTriggerPhase(unsigned int triggerPhase) { _triggerPhase = triggerPhase; }
@@ -43,8 +42,8 @@ namespace Storage
     unsigned int getNumPlanes() const { return _planes.size(); }
     unsigned int getNumTracks() const { return _tracks.size(); }
     bool getInvalid() const { return _invalid; }
-    ULong64_t getTimeStamp() const { return _timeStamp; }
-    ULong64_t getFrameNumber() const { return _frameNumber; }
+    uint64_t getTimeStamp() const { return _timeStamp; }
+    uint64_t getFrameNumber() const { return _frameNumber; }
     unsigned int getTriggerOffset() const { return _triggerOffset; }
     unsigned int getTriggerInfo() const { return _triggerInfo; }
     unsigned int getTriggerPhase() const { return _triggerPhase; }
@@ -55,8 +54,8 @@ namespace Storage
     void addTrack(Track* track);
     
   private:
-    ULong64_t _timeStamp;
-    ULong64_t _frameNumber;
+    uint64_t _timeStamp;
+    uint64_t _frameNumber;
     unsigned int _triggerOffset;
     unsigned int _triggerInfo; // Dammit Andrej!
     unsigned int _triggerPhase;
