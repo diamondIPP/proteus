@@ -38,10 +38,17 @@ public:
       m_os << ' ';
     // after printing rewind back to the beginning of the line so that the next
     // update (or unrelated messages) overwrite the current status
-    m_os << "] " << std::setw(3) << static_cast<size_t>(100 * fraction)
-         << "%\r" << std::flush;
+    m_os << "] " << std::setw(3) << static_cast<size_t>(100 * fraction) << "%\r"
+         << std::flush;
     // update for next iteration
     m_curr = status;
+  }
+  /** Overwrite the progress bar with empty spaces. */
+  void clear()
+  {
+    for (size_t i = 0; i < (m_length + 8); ++i)
+      m_os << ' ';
+    m_os << '\r' << std::flush;
   }
 
 private:
