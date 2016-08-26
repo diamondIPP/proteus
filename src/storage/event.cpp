@@ -61,7 +61,7 @@ Storage::Hit* Storage::Event::newHit(unsigned int nplane)
 Cluster* Storage::Event::newCluster(unsigned int nplane)
 {
   _clusters.push_back(Cluster());
-  _clusters.back()._index = _clusters.size() - 1;
+  _clusters.back().m_index = _clusters.size() - 1;
   _planes.at(nplane).addCluster(&_clusters.back());
   return &_clusters.back();
 }

@@ -17,56 +17,42 @@ using Storage::Hit;
 using Storage::Track;
 
 Storage::Cluster::Cluster()
-    : _plane(0)
-    , _index(-1)
-    , _posX(0)
-    , _posY(0)
-    , _posZ(0)
-    , _posErrX(0)
-    , _posErrY(0)
-    , _posErrZ(0)
-    , _timing(0)
-    , _value(0)
-    , _matchDistance(0)
-    , _track(0)
-    , _matchedTrack(0)
-    , _numHits(0)
+    : m_plane(0)
+    , m_index(-1)
+    , m_posX(0)
+    , m_posY(0)
+    , m_posZ(0)
+    , m_posErrX(0)
+    , m_posErrY(0)
+    , m_posErrZ(0)
+    , m_timing(0)
+    , m_value(0)
+    , m_matchDistance(0)
+    , m_track(0)
+    , m_matchedTrack(0)
 {
 }
 
 void Storage::Cluster::setTrack(Storage::Track* track)
 {
-  assert(!_track && "Cluster: can't use a cluster for more than one track");
-  _track = track;
+  assert(!m_track && "Cluster: can't use a cluster for more than one track");
+  m_track = track;
 }
 
 void Storage::Cluster::setMatchedTrack(Storage::Track* track)
 {
-  _matchedTrack = track;
+  m_matchedTrack = track;
 }
 
 void Storage::Cluster::addHit(Storage::Hit* hit)
 {
+  if (m_hits.empty() == 0)
+    m_timing = hit->getTiming();
   hit->setCluster(this);
-  _hits.push_back(hit);
+  m_hits.push_back(hit);
   // Fill the value and timing from this hit
-  _value += hit->getValue();
-  if (_numHits == 0)
-    _timing = hit->getTiming();
-  _numHits++;
+  m_value += hit->getValue();
 }
-
-Hit* Storage::Cluster::getHit(unsigned int n) const
-{
-  assert(n < getNumHits() && "Cluster: hit index exceeds vector range");
-  return _hits.at(n);
-}
-
-Track* Storage::Cluster::getTrack() const { return _track; }
-
-Track* Storage::Cluster::getMatchedTrack() const { return _matchedTrack; }
-
-Storage::Plane* Storage::Cluster::getPlane() const { return _plane; }
 
 void Storage::Cluster::print() const
 {

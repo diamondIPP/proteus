@@ -27,7 +27,7 @@ void Storage::Plane::addHit(Storage::Hit* hit)
 void Storage::Plane::addCluster(Storage::Cluster* cluster)
 {
   _clusters.push_back(cluster);
-  cluster->_plane = this;
+  cluster->m_plane = this;
   _numClusters++;
 }
 
