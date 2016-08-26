@@ -11,27 +11,24 @@ using std::cout;
 using std::endl;
 
 Storage::Hit::Hit()
-    : _plane(NULL)
-    , _pixX(0)
-    , _pixY(0)
-    , _posX(0)
-    , _posY(0)
-    , _posZ(0)
-    , _value(0)
-    , _timing(0)
-    , _cluster(NULL)
+    :  m_col(-1)
+    , m_row(-1)
+    , m_value(0)
+    , m_timing(0)
+    , m_cluster(NULL)
+    , m_plane(NULL)
 {
 }
 
 void Storage::Hit::setCluster(Storage::Cluster* cluster)
 {
-  assert(!_cluster && "Hit: can't cluster an already clustered hit.");
-  _cluster = cluster;
+  assert(!m_cluster && "Hit: can't cluster an already clustered hit.");
+  m_cluster = cluster;
 }
 
-Storage::Cluster* Storage::Hit::getCluster() const { return _cluster; }
+Storage::Cluster* Storage::Hit::getCluster() const { return m_cluster; }
 
-Storage::Plane* Storage::Hit::getPlane() const { return _plane; }
+Storage::Plane* Storage::Hit::getPlane() const { return m_plane; }
 
 void Storage::Hit::print() const { cout << "\nHIT\n" << printStr() << endl; }
 
