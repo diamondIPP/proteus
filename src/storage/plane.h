@@ -1,50 +1,50 @@
 #ifndef PLANE_H
 #define PLANE_H
 
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace Storage {
-  
-  class Hit;
-  class Cluster;
-  
-  /*******************************************************************************
-   * Plane class contains the hits and clusters for one sensor plane as well as
-   * a plane number.
-   */
-  class Plane {
-  protected:
-    Plane(unsigned int planeNum);
 
-  public:
-    inline unsigned int getPlaneNum() const { return _planeNum; }
-    inline unsigned int getNumHits() const { return _numHits; }
-    inline unsigned int getNumClusters() const { return _numClusters; }
-    inline unsigned int getNumIntercepts() const { return _numIntercepts; }
+class Hit;
+class Cluster;
 
-    Hit* getHit(unsigned int n) const;
-    Cluster* getCluster(unsigned int n) const;
-    std::pair<double, double> getIntercept(unsigned int n) const;
-    
-    void addIntercept(double posX, double posY);
-    void print() const;
-  
-  protected:
-    void addHit(Hit* hit);
-    void addCluster(Cluster* cluster);
-   
-  private:
-    unsigned int _planeNum;
-    unsigned int _numHits;
-    std::vector<Hit*> _hits;
-    unsigned int _numClusters;
-    std::vector<Cluster*> _clusters;
-    unsigned int _numIntercepts;
-    std::vector< std::pair<double, double> > _intercepts;
+/*******************************************************************************
+ * Plane class contains the hits and clusters for one sensor plane as well as
+ * a plane number.
+ */
+class Plane {
+protected:
+  Plane(unsigned int planeNum);
 
-    friend class Event;
-  };  
+public:
+  inline unsigned int getPlaneNum() const { return _planeNum; }
+  inline unsigned int getNumHits() const { return _numHits; }
+  inline unsigned int getNumClusters() const { return _numClusters; }
+  inline unsigned int getNumIntercepts() const { return _numIntercepts; }
+
+  Hit* getHit(unsigned int n) const;
+  Cluster* getCluster(unsigned int n) const;
+  std::pair<double, double> getIntercept(unsigned int n) const;
+
+  void addIntercept(double posX, double posY);
+  void print() const;
+
+protected:
+  void addHit(Hit* hit);
+  void addCluster(Cluster* cluster);
+
+private:
+  unsigned int _planeNum;
+  unsigned int _numHits;
+  std::vector<Hit*> _hits;
+  unsigned int _numClusters;
+  std::vector<Cluster*> _clusters;
+  unsigned int _numIntercepts;
+  std::vector<std::pair<double, double>> _intercepts;
+
+  friend class Event;
+};
 }
 
 #endif // PLANE_H

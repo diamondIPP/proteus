@@ -3,7 +3,9 @@
 
 #include <vector>
 
-namespace Processors { class TrackMaker; }
+namespace Processors {
+class TrackMaker;
+}
 
 namespace Storage {
 
@@ -15,8 +17,7 @@ class Cluster;
  * it.
  */
 
-class Track
-{
+class Track {
 private:
   double _originX;
   double _originY;
@@ -50,15 +51,38 @@ public:
   Cluster* getCluster(unsigned int n) const;
   Cluster* getMatchedCluster(unsigned int n) const;
 
-  inline void setOrigin(double x, double y) { _originX = x; _originY = y; }
-  inline void setOriginErr(double x, double y) { _originErrX = x; _originErrY = y; }
-  inline void setSlope(double x, double y) { _slopeX = x; _slopeY = y; }
-  inline void setSlopeErr(double x, double y) { _slopeErrX = x; _slopeErrY = y; }
+  inline void setOrigin(double x, double y)
+  {
+    _originX = x;
+    _originY = y;
+  }
+  inline void setOriginErr(double x, double y)
+  {
+    _originErrX = x;
+    _originErrY = y;
+  }
+  inline void setSlope(double x, double y)
+  {
+    _slopeX = x;
+    _slopeY = y;
+  }
+  inline void setSlopeErr(double x, double y)
+  {
+    _slopeErrX = x;
+    _slopeErrY = y;
+  }
   inline void setChi2(double chi2) { _chi2 = chi2; }
-  inline void setCovariance(double x, double y) { _covarianceX = x; _covarianceY = y; }
+  inline void setCovariance(double x, double y)
+  {
+    _covarianceX = x;
+    _covarianceY = y;
+  }
 
   inline unsigned int getNumClusters() const { return _numClusters; }
-  inline unsigned int getNumMatchedClusters() const { return _numMatchedClusters; }
+  inline unsigned int getNumMatchedClusters() const
+  {
+    return _numMatchedClusters;
+  }
   inline double getOriginX() const { return _originX; }
   inline double getOriginY() const { return _originY; }
   inline double getOriginErrX() const { return _originErrX; }
@@ -75,7 +99,6 @@ public:
   friend class Event;
   friend class Processors::TrackMaker;
 };
-
 }
 
 #endif // TRACK_H
