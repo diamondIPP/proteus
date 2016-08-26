@@ -21,7 +21,8 @@ namespace Mechanics {
  *     addresses, i.e. columns and rows. The sensitive sensor area is located
  *     from [0,numberCols) and [0,numberRows). Each has unit area, e.g.
  *     the positions inside the pixel at (0,0) have a column and row position
- *     in the [0,1) range.
+ *     in the [0,1) range. Please be aware that the nominal position for a
+ *     hit is the center of the pixel, i.e. (0.5,0.5).
  * 2.  The local metric coordinates are also defined along the column and row
  *     axis of the pixel matrix but scaled with the pixel pitch to have the
  *     same units as the global coordinates. Local coordinates (u,v,w)
@@ -56,12 +57,6 @@ public:
   XYZPoint origin() const { return XYZPoint(m_l2g.Translation().Vect()); }
   XYZVector normal() const;
   void setLocalToGlobal(const Transform3D& l2g) { m_l2g = l2g; }
-  // \deprecated For backward compatibility.
-  double getOffX() const;
-  double getOffY() const;
-  double getOffZ() const;
-  void getGlobalOrigin(double& x, double& y, double& z) const;
-  void getNormalVector(double& x, double& y, double& z) const;
 
   //
   // transformations between different coordinate systems
@@ -72,6 +67,7 @@ public:
   XYZPoint transformGlobalToLocal(const XYZPoint& xyz) const;
   XYZPoint transformPixelToGlobal(double col, double row) const;
   XYZPoint transformLocalToGlobal(const XYZPoint& uvw) const;
+  // \deprecated Use transformations above
   void
   pixelToSpace(double pixX, double pixY, double& x, double& y, double& z) const;
   void
@@ -95,6 +91,11 @@ public:
   //
   // Get functions
   //
+  const std::string& name() const { return m_name; }
+  Index numCols() const { return m_numCols; }
+  Index numRows() const { return m_numRows; }
+  Index numPixels() const { return m_numCols * m_numRows; }
+  // \deprecated For backward compatibility.
   bool getDigital() const { return m_isDigital; }
   bool getAlignable() const { return true; }
   unsigned int getNumX() const { return m_numCols; }
@@ -112,6 +113,11 @@ public:
   double getSensitiveY() const { return m_numRows * m_pitchRow; }
   double getPosSensitiveX() const;
   double getPosSensitiveY() const;
+  double getOffX() const;
+  double getOffY() const;
+  double getOffZ() const;
+  void getGlobalOrigin(double& x, double& y, double& z) const;
+  void getNormalVector(double& x, double& y, double& z) const;
   const std::string& getName() const { return m_name; }
 
 private:
