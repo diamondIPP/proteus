@@ -1,6 +1,7 @@
 #ifndef HIT_H
 #define HIT_H
 
+#include <iosfwd>
 #include <string>
 
 #include "utils/definitions.h"
@@ -43,8 +44,7 @@ public:
   Cluster* getCluster() const;
   Plane* getPlane() const;
 
-  void print() const;
-  const std::string printStr(int blankWidth = 0) const;
+  void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
   Hit(); // Hits memory is managed by the event class

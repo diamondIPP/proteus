@@ -68,7 +68,8 @@ void Storage::Plane::print() const
     cout << "\n    ** CLUSTER # " << ncluster << endl
          << getCluster(ncluster)->printStr(6) << endl;
 
-  for (unsigned int nhit = 0; nhit < getNumHits(); nhit++)
-    cout << "\n    ** HIT # " << nhit << endl
-         << getHit(nhit)->printStr(6) << endl;
+  for (unsigned int nhit = 0; nhit < getNumHits(); nhit++) {
+    cout << "\n    ** HIT # " << nhit << endl;
+    getHit(nhit)->print(cout, "      ");
+  }
 }
