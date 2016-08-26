@@ -47,8 +47,8 @@ private:
   Hit(); // Hits memory is managed by the event class
 
   Index m_col, m_row;
-  double m_value;  // Time over threshold, typically
   double m_timing; // Level 1 accept, typically
+  double m_value;  // Time over threshold, typically
   XYZPoint m_pos;
 
   Cluster* m_cluster; // The cluster containing this hit
