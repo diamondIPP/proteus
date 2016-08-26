@@ -9,7 +9,6 @@
 namespace Storage {
 
 class Cluster;
-class Plane;
 
 class Hit {
 public:
@@ -25,24 +24,22 @@ public:
 
   Index col() const { return m_col; }
   Index row() const { return m_row; }
-  XYPoint pixel() const { return XYPoint(m_col, m_row); }
-  const XYZPoint& global() const { return m_pos; }
+  XYPoint posPixel() const { return XYPoint(m_col, m_row); }
+  XYZPoint posGlobal() const { return m_pos; }
   double value() const { return m_value; }
   double timing() const { return m_timing; }
 
-  unsigned int getPixX() const { return m_col; }
-  unsigned int getPixY() const { return m_row; }
-  double getPosX() const { return global().x(); }
-  double getPosY() const { return global().y(); }
-  double getPosZ() const { return global().z(); }
-  double getValue() const { return m_value; }
-  double getTiming() const { return m_timing; }
-
+  bool isInCluster() const { return (m_cluster != NULL); }
+  Cluster* getCluster() const { return m_cluster; }
   void setCluster(Cluster* cluster);
 
-  // These are in the cpp file so that the classes can be included
-  Cluster* getCluster() const;
-  Plane* getPlane() const;
+  unsigned int getPixX() const { return m_col; }
+  unsigned int getPixY() const { return m_row; }
+  double getPosX() const { return posGlobal().x(); }
+  double getPosY() const { return posGlobal().y(); }
+  double getPosZ() const { return posGlobal().z(); }
+  double getValue() const { return m_value; }
+  double getTiming() const { return m_timing; }
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
@@ -55,7 +52,6 @@ private:
   XYZPoint m_pos;
 
   Cluster* m_cluster; // The cluster containing this hit
-  Plane* m_plane;     // Plane in which the hit is found
 
   friend class Plane;     // Access set plane method
   friend class Event;     // Access cluster index

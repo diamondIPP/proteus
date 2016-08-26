@@ -21,7 +21,6 @@ Storage::Plane::Plane(unsigned int planeNum)
 void Storage::Plane::addHit(Storage::Hit* hit)
 {
   _hits.push_back(hit);
-  hit->m_plane = this;
   _numHits++;
 }
 
