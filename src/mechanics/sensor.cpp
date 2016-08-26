@@ -1,5 +1,7 @@
 #include "sensor.h"
 
+#include <algorithm>
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <ostream>
@@ -138,6 +140,36 @@ bool Mechanics::Sensor::sort(const Sensor* s1, const Sensor* s2)
 // get functions
 //
 //=========================================================
+
+std::array<double, 4> Mechanics::Sensor::sensitiveAreaPixel() const
+{
+  return {-0.5, m_numCols - 0.5, -0.5, m_numRows - 0.5};
+}
+
+std::array<double, 4> Mechanics::Sensor::sensitiveAreaLocal() const
+{
+  auto lowerLeft = transformPixelToLocal(-0.5, -0.5);
+  auto upperRight = transformPixelToLocal(m_numCols - 0.5, m_numRows - 0.5);
+  return {lowerLeft.x(), upperRight.x(), lowerLeft.y(), upperRight.y()};
+}
+
+std::array<double, 4> Mechanics::Sensor::sensitiveEnvelopeGlobal() const
+{
+  // TODO 2016-08 msmk: find a smarter way to this, but its Friday
+  // transform each corner of the sensitive rectangle
+  auto minMin = transformPixelToGlobal(-0.5, -0.5);
+  auto minMax = transformPixelToGlobal(-0.5, m_numRows - 0.5);
+  auto maxMin = transformPixelToGlobal(m_numCols - 0.5, -0.5);
+  auto maxMax = transformPixelToGlobal(m_numCols - 0.5, m_numRows - 0.5);
+
+  std::array<double, 4> xs = {minMin.x(), minMax.x(), maxMin.x(), maxMax.x()};
+  std::array<double, 4> ys = {minMin.y(), minMax.y(), maxMin.y(), maxMax.y()};
+
+  return {*std::min_element(xs.begin(), xs.end()),
+          *std::max_element(xs.begin(), xs.end()),
+          *std::min_element(ys.begin(), ys.end()),
+          *std::max_element(ys.begin(), ys.end())};
+}
 
 unsigned int Mechanics::Sensor::getPosNumX() const
 {

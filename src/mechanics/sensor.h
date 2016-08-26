@@ -1,6 +1,7 @@
 #ifndef SENSOR_H
 #define SENSOR_H
 
+#include <array>
 #include <cstdint>
 #include <iosfwd>
 #include <set>
@@ -13,16 +14,17 @@ namespace Mechanics {
 
 /** Pixel sensor with digital and geometry information.
  *
- * To define the sensor its local coordinate and its orientation in space
- * three different coordinate systems are defined:
+ * To define the sensor and its orientation in space, three different
+ * coordinate systems are used:
  *
- * 1.  The digital pixel coordinates are defined along the column and row
+ * 1.  The pixel coordinates are defined along the column and row
  *     axis of the pixel matrix. Coordinates are measured in digital pixel
- *     addresses, i.e. columns and rows. The sensitive sensor area is located
- *     from [0,numberCols) and [0,numberRows). Each has unit area, e.g.
- *     the positions inside the pixel at (0,0) have a column and row position
- *     in the [0,1) range. Please be aware that the nominal position for a
- *     hit is the center of the pixel, i.e. (0.5,0.5).
+ *     addresses, i.e. columns and rows. Integer numbers indicate the nominal
+ *     pixel centers, e.g. positions inside the (0,0) pixel have column and
+ *     row positions in the [-0.5,0.5) range. Each pixel has unit area. The
+ *     total sensitive sensor is [-0.5,numberCols-0.5)x[-0.5,numberRows-0.5).
+ *     This conventions allows easy conversion between recorded pixel indices
+ *     and e.g. reconstructed track positions.
  * 2.  The local metric coordinates are also defined along the column and row
  *     axis of the pixel matrix but scaled with the pixel pitch to have the
  *     same units as the global coordinates. Local coordinates (u,v,w)
@@ -95,6 +97,13 @@ public:
   Index numCols() const { return m_numCols; }
   Index numRows() const { return m_numRows; }
   Index numPixels() const { return m_numCols * m_numRows; }
+  /** Sensitive area in pixel coordinates [col_min,col_max,row_min,row_max]. */
+  std::array<double,4> sensitiveAreaPixel() const;
+  /** Sensitive area in local coordinates [u_min,u_max,v_min,v_max]. */
+  std::array<double,4> sensitiveAreaLocal() const;
+  /** Sensitive envelope in the global xy-plane [x_min,x_max,y_min,y_max]. */
+  std::array<double,4> sensitiveEnvelopeGlobal() const;
+
   // \deprecated For backward compatibility.
   bool getDigital() const { return m_isDigital; }
   bool getAlignable() const { return true; }
