@@ -42,7 +42,7 @@ The original Judith software was written by
 
 The fork has seen contributions from (in alphabetical order):
 
-*   Javier Bilbao
+*   Javier Bilbao de Mendizabal
 *   Reina Camacho
 *   Francesco Di Bello
 *   Moritz Kiehn
