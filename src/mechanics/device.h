@@ -37,6 +37,7 @@ public:
   /** Store the noise mask and apply to all configured sensors. */
   void applyNoiseMask(const NoiseMask& noiseMask);
 
+  void setTimestampRange(uint64_t start, uint64_t end);
   void setTimeStart(uint64_t timeStamp) { m_timeStart = timeStamp; }
   void setTimeEnd(uint64_t timeStamp) { m_timeEnd = timeStamp; }
   /** \deprecated Use alignment directly */
@@ -50,14 +51,18 @@ public:
 
   const std::vector<bool>* getSensorMask() const { return &m_sensorMask; }
 
+  const std::string& name() const { return m_name; }
   const std::string& pathAlignment() const { return m_pathAlignment; }
   const std::string& pathNoiseMask() const { return m_pathNoiseMask; }
+  const NoiseMask& noiseMask() const { return m_noiseMask; }
+  const Alignment& alignment() const { return m_alignment; }
+  XYZVector beamDirection() const { return m_alignment.beamDirection(); }
+
   const char* getName() const { return m_name.c_str(); }
   double getClockRate() const { return m_clockRate; }
   unsigned int getReadOutWindow() const { return m_readoutWindow; }
   const char* getSpaceUnit() const { return m_spaceUnit.c_str(); }
   const char* getTimeUnit() const { return m_timeUnit.c_str(); }
-  XYZVector beamDirection() const { return m_alignment.beamDirection(); }
   double getBeamSlopeX() const;
   double getBeamSlopeY() const;
   uint64_t getTimeStart() const { return m_timeStart; }

@@ -246,6 +246,12 @@ double Mechanics::Device::tsToTime(uint64_t timeStamp) const
   return (double)((timeStamp - getTimeStart()) / (double)getClockRate());
 }
 
+void Mechanics::Device::setTimestampRange(uint64_t start, uint64_t end)
+{
+    m_timeStart = start;
+    m_timeEnd = end;
+}
+
 unsigned int Mechanics::Device::getNumPixels() const
 {
   unsigned int numPixels = 0;
