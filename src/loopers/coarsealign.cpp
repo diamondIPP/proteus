@@ -39,7 +39,7 @@ Loopers::CoarseAlign::CoarseAlign(Mechanics::Device* refDevice,
 	 "Loopers: number of planes / sensors mis-match");
   
   std::cout << "CoarseAlign::CoarseAlign" << std::endl;
-  refDevice->print();
+  refDevice->print(std::cout);
 }
 
 //=========================================================

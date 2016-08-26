@@ -3,7 +3,7 @@
 #include <cassert>
 #include <fstream>
 #include <iomanip>
-#include <iostream>
+#include <ostream>
 #include <sstream>
 #include <stdexcept>
 #include <string>

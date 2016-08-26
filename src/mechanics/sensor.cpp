@@ -2,7 +2,7 @@
 
 #include <cassert>
 #include <cmath>
-#include <iostream>
+#include <ostream>
 #include <string>
 
 Mechanics::Sensor::Sensor(const std::string& name,
@@ -186,5 +186,3 @@ void Mechanics::Sensor::print(std::ostream& os, const std::string& prefix) const
   os << prefix << "x/X0: " << m_xX0 << '\n';
   os.flush();
 }
-
-void Mechanics::Sensor::print() const { print(std::cout); }

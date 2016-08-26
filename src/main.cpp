@@ -487,7 +487,7 @@ void printDevice(const char* configName)
   try
   {
     Mechanics::Device device = Mechanics::Device::fromFile(configName);
-    device.print();
+    device.print(std::cout);
   }
   catch (const char* e)
   {

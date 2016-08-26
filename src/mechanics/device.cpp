@@ -2,8 +2,7 @@
 
 #include <algorithm>
 #include <cassert>
-#include <iostream>
-#include <string.h>
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -292,5 +291,3 @@ void Mechanics::Device::print(std::ostream& os, const std::string& prefix) const
   m_noiseMask.print(os, prefix + "  ");
   os.flush();
 }
-
-void Mechanics::Device::print() const { print(std::cout); }

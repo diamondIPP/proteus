@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
-#include <iostream>
+#include <ostream>
 #include <stdexcept>
 
 #include "configparser.h"

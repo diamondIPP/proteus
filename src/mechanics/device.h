@@ -73,7 +73,6 @@ public:
   Alignment* getAlignment() { return &m_alignment; }
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
-  void print() const;
 
 private:
   std::string m_name;
