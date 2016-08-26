@@ -128,8 +128,7 @@ void applyMask(const char* inputName,
     Loopers::ApplyMask looper(&device, &output, &input, startEvent, numEvents);
     const Storage::Event* start = input.readEvent(looper.getStartEvent());
     const Storage::Event* end = input.readEvent(looper.getEndEvent());
-    device.setTimeStart(start->getTimeStamp());
-    device.setTimeEnd(end->getTimeStamp());
+    device.setTimeStampRange(start->getTimeStamp(), end->getTimeStamp());
     delete start;
     delete end;
 
@@ -346,8 +345,7 @@ void process(const char* inputName,
     Loopers::ProcessEvents looper(&device, &output, clusterMaker, trackMaker, &input, startEvent, numEvents);
     const Storage::Event* start = input.readEvent(looper.getStartEvent());
     const Storage::Event* end = input.readEvent(looper.getEndEvent());
-    device.setTimeStart(start->getTimeStamp());
-    device.setTimeEnd(end->getTimeStamp());
+    device.setTimeStampRange(start->getTimeStamp(), end->getTimeStamp());
     delete start;
     delete end;
 
@@ -396,8 +394,7 @@ void analysis(const char* inputName,
       Loopers::Analysis looper(&input, startEvent, numEvents);
       const Storage::Event* start = input.readEvent(looper.getStartEvent());
       const Storage::Event* end = input.readEvent(looper.getEndEvent());
-      device.setTimeStart(start->getTimeStamp());
-      device.setTimeEnd(end->getTimeStamp());
+      device.setTimeStampRange(start->getTimeStamp(), end->getTimeStamp());
       delete start;
       delete end;
 
@@ -452,8 +449,7 @@ void analysisDUT(const char* refInputName,
 
       const Storage::Event* start = refInput.readEvent(looper.getStartEvent());
       const Storage::Event* end = refInput.readEvent(looper.getEndEvent());
-      refDevice.setTimeStart(start->getTimeStamp());
-      refDevice.setTimeEnd(end->getTimeStamp());
+      refDevice.setTimeStampRange(start->getTimeStamp(), end->getTimeStamp());
       delete start;
       delete end;
 

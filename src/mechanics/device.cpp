@@ -245,7 +245,7 @@ double Mechanics::Device::tsToTime(uint64_t timeStamp) const
   return (double)((timeStamp - getTimeStart()) / (double)getClockRate());
 }
 
-void Mechanics::Device::setTimestampRange(uint64_t start, uint64_t end)
+void Mechanics::Device::setTimeStampRange(uint64_t start, uint64_t end)
 {
     m_timeStart = start;
     m_timeEnd = end;

@@ -37,9 +37,7 @@ public:
   /** Store the noise mask and apply to all configured sensors. */
   void applyNoiseMask(const NoiseMask& noiseMask);
 
-  void setTimestampRange(uint64_t start, uint64_t end);
-  void setTimeStart(uint64_t timeStamp) { m_timeStart = timeStamp; }
-  void setTimeEnd(uint64_t timeStamp) { m_timeEnd = timeStamp; }
+  void setTimeStampRange(uint64_t start, uint64_t end);
   /** \deprecated Use alignment directly */
   void setSyncRatio(double ratio) { m_alignment.setSyncRatio(ratio); }
 
@@ -48,8 +46,6 @@ public:
   const Sensor* getSensor(unsigned int i) const { return &m_sensors.at(i); }
 
   unsigned int getNumPixels() const;
-
-  const std::vector<bool>* getSensorMask() const { return &m_sensorMask; }
 
   const std::string& name() const { return m_name; }
   const std::string& pathAlignment() const { return m_pathAlignment; }
@@ -68,6 +64,8 @@ public:
   uint64_t getTimeStart() const { return m_timeStart; }
   uint64_t getTimeEnd() const { return m_timeEnd; }
   double getSyncRatio() const { return m_alignment.syncRatio(); }
+
+  const std::vector<bool>* getSensorMask() const { return &m_sensorMask; }
 
   NoiseMask* getNoiseMask() { return &m_noiseMask; }
   Alignment* getAlignment() { return &m_alignment; }
