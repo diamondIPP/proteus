@@ -45,23 +45,24 @@ namespace Loopers {
   void ApplyMask::loop() {
 
     for (ULong64_t nevent=_startEvent; nevent<=_endEvent; nevent++){
-      Storage::Event* refEvent = _refStorage->readEvent(nevent);      
-
+      Storage::Event* refEvent = _refStorage->readEvent(nevent);
       Storage::Event* maskedEvent = new Storage::Event(_refDevice->getNumSensors());
-      
-      for (unsigned int nhit=0; nhit<refEvent->getNumHits(); nhit++) {
-	Storage::Hit* hit = refEvent->getHit(nhit);
-	const unsigned int nplane = hit->getPlane()->getPlaneNum(); 
-	const unsigned int x = hit->getPixX();
-	const unsigned int y = hit->getPixY();
-	if (!_refDevice->getSensor(nplane)->isPixelNoisy(x,y)) {
-	  Storage::Hit* copy = maskedEvent->newHit(nplane);
-	  copy->setPix(x,y);
-	  copy->setValue(hit->getValue());
-	  copy->setTiming(hit->getTiming());
-	}
+
+      for (Index iplane = 0; iplane < refEvent->getNumPlanes(); ++iplane) {
+        const Storage::Plane* plane = refEvent->getPlane(iplane);
+        for (Index ihit = 0; ihit < plane->getNumHits(); ihit++) {
+          const Storage::Hit* hit = plane->getHit(ihit);
+          const unsigned int x = hit->getPixX();
+          const unsigned int y = hit->getPixY();
+          if (!_refDevice->getSensor(iplane)->isPixelNoisy(x, y)) {
+            Storage::Hit* copy = maskedEvent->newHit(iplane);
+            copy->setPix(x, y);
+            copy->setValue(hit->getValue());
+            copy->setTiming(hit->getTiming());
+          }
+        }
       }
-      
+
       maskedEvent->setTimeStamp(refEvent->getTimeStamp());
       maskedEvent->setFrameNumber(refEvent->getFrameNumber());
       maskedEvent->setTriggerOffset(refEvent->getTriggerOffset());
