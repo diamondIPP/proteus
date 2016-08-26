@@ -12,24 +12,14 @@
 using std::cout;
 using std::endl;
 
-using Storage::Cluster;
-using Storage::Hit;
-using Storage::Track;
-
 Storage::Cluster::Cluster()
-    : m_plane(0)
-    , m_index(-1)
-    , m_posX(0)
-    , m_posY(0)
-    , m_posZ(0)
-    , m_posErrX(0)
-    , m_posErrY(0)
-    , m_posErrZ(0)
-    , m_timing(0)
-    , m_value(0)
-    , m_matchDistance(0)
-    , m_track(0)
-    , m_matchedTrack(0)
+
+    : m_timing(-1)
+    , m_value(-1)
+    , m_plane(NULL)
+    , m_track(NULL)
+    , m_matchedTrack(NULL)
+    , m_matchDistance(-1)
 {
 }
 
