@@ -1,7 +1,7 @@
-<TO BE RENAMED> --- beam telescope reconstruction and analysis
-==============================================================
+Proteus --- Pixel telescope software
+====================================
 
-<TO BE RENAMED> is a software to reconstruct and analyze beam telescope
+Proteus is a software to reconstruct and analyze beam telescope
 measurements. It started as a fork of the [Judith][judith] software but
 has since then evolved into an independent package.
 
@@ -22,14 +22,14 @@ environment. By sourcing it via
 
     source build/activate.sh
 
-the `Judith` binary can be called directly without specifying its location
+the binaries can be called directly without specifying its location
 explicitly.
-
-Additional information including the coding and contribution guide can be found
-in the `doc/` directory.
 
 The `test` directory contains example configurations and additional information
 on how to use them.
+
+Additional information including the coding and contribution guide can be found
+in the `doc/` directory.
 
 Authors
 -------
@@ -40,7 +40,7 @@ The original Judith software was written by
 *   Matevž Červ
 *   Andrej Gorišek
 
-The fork has seen contributions from (in alphabetical order):
+The Proteus fork has seen contributions from (in alphabetical order):
 
 *   Javier Bilbao de Mendizabal
 *   Reina Camacho
@@ -65,8 +65,8 @@ License
 
 This software is distributed under the terms of the MIT license.
 
-    Copyright (c) 201x-2014 The Judith authors
-    Copyright (c) 2014-2016 The <TO BE RENAMED> authors
+    Copyright (c) 2014 The Judith authors
+    Copyright (c) 2014-2016 The Proteus authors
 
     Permission is hereby granted, free of charge, to any person
     obtaining a copy of this software and associated documentation files
