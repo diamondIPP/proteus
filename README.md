@@ -22,8 +22,8 @@ environment. By sourcing it via
 
     source build/activate.sh
 
-the binaries can be called directly without specifying its location
-explicitly.
+the `proteus` binary can be called directly without specifying its
+location explicitly.
 
 The `test` directory contains example configurations and additional information
 on how to use them.

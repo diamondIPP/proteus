@@ -1,4 +1,4 @@
-set(JudithCommon_SRC
+set(Common_SRC
     analyzers/baseanalyzer.cpp
     analyzers/clusterinfo.cpp
     analyzers/configanalyzers.cpp
@@ -53,11 +53,10 @@ set(JudithCommon_SRC
     storage/track.cpp
     storage/plane.cpp
     storage/storageio.cpp)
-set(Judith_SRC main.cpp configparser.cpp inputargs.cpp)
 
-add_library(JudithCommon STATIC ${JudithCommon_SRC})
-target_include_directories(JudithCommon PUBLIC ${ROOT_INCLUDE_DIRS})
-target_link_libraries(JudithCommon PUBLIC ${ROOT_LIBRARIES})
+add_library(pt-common STATIC ${Common_SRC})
+target_include_directories(pt-common PUBLIC ${ROOT_INCLUDE_DIRS})
+target_link_libraries(pt-common PUBLIC ${ROOT_LIBRARIES})
 
-add_executable(Judith ${Judith_SRC})
-target_link_libraries(Judith JudithCommon)
+add_executable(proteus main.cpp configparser.cpp inputargs.cpp)
+target_link_libraries(proteus pt-common)
