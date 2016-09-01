@@ -1,5 +1,7 @@
 #include "track.h"
 
+#include <ostream>
+
 #include "cluster.h"
 
 Storage::TrackState::TrackState(double posU,
@@ -68,4 +70,18 @@ void Storage::Track::addCluster(Cluster* cluster)
 void Storage::Track::addMatchedCluster(Cluster* cluster)
 {
   m_matchedClusters.push_back(cluster);
+}
+
+void Storage::TrackState::print(std::ostream& os, const std::string& prefix) const
+{
+  os << prefix << "offset: " << offset() << '\n';
+  os << prefix << "slope: " << slope() << '\n';
+}
+
+void Storage::Track::print(std::ostream& os, const std::string& prefix) const
+{
+  os << prefix << "chi2: " << m_chi2 << '\n';
+  os << prefix << "num clusters: " << m_clusters.size() << '\n';
+  os << prefix << "global state:\n";
+  m_state.print(os, prefix + "  ");
 }

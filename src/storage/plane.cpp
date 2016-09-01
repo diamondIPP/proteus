@@ -1,7 +1,6 @@
 #include "plane.h"
 
 #include <iostream>
-#include <vector>
 
 #include "cluster.h"
 #include "hit.h"
@@ -42,19 +41,20 @@ std::pair<double, double> Storage::Plane::getIntercept(unsigned int n) const
   return m_intercepts.at(n);
 }
 
-void Storage::Plane::print() const
+void Storage::Plane::print(std::ostream& os, const std::string& prefix) const
 {
-  cout << "PLANE:\n"
-       << " - Address: " << this << "\n"
-       << " - Num clusters: " << getNumClusters() << "\n"
-       << " - Num hits: " << getNumHits() << endl;
+  size_t ihit = 0;
+  size_t icluster = 0;
 
-  for (unsigned int ncluster = 0; ncluster < getNumClusters(); ncluster++)
-    cout << "\n    ** CLUSTER # " << ncluster << endl
-         << getCluster(ncluster)->printStr(6) << endl;
-
-  for (unsigned int nhit = 0; nhit < getNumHits(); nhit++) {
-    cout << "\n    ** HIT # " << nhit << endl;
-    getHit(nhit)->print(cout, "      ");
+  os << prefix << "hits:\n";
+  for (const auto* hit : m_hits) {
+    os << prefix << "  hit " << ihit++ << ":\n";
+    hit->print(os, prefix + "    ");
   }
+  os << prefix << "clusters:\n";
+  for (const auto* cluster : m_clusters) {
+    os << prefix << "  cluster " << icluster++ << ":\n";
+    cluster->print(os, prefix + "    ");
+  }
+  os.flush();
 }

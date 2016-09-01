@@ -2,17 +2,11 @@
 
 #include <cassert>
 #include <iostream>
-#include <vector>
-
-#include <Rtypes.h>
 
 #include "cluster.h"
 #include "hit.h"
 #include "plane.h"
 #include "track.h"
-
-using std::cout;
-using std::endl;
 
 using Storage::Hit;
 using Storage::Cluster;
@@ -28,24 +22,6 @@ Storage::Event::Event(unsigned int numPlanes)
 {
   for (unsigned int nplane = 0; nplane < getNumPlanes(); nplane++) {
     _planes.push_back(Plane(nplane));
-  }
-}
-
-//=========================================================
-void Storage::Event::print()
-{
-  cout << "\nEVENT:\n"
-       << "  Time stamp: " << getTimeStamp() << "\n"
-       << "  Frame number: " << getFrameNumber() << "\n"
-       << "  Trigger offset: " << getTriggerOffset() << "\n"
-       << "  Invalid: " << getInvalid() << "\n"
-       << "  Num planes: " << getNumPlanes() << "\n"
-       << "  Num hits: " << getNumHits() << "\n"
-       << "  Num clusters: " << getNumClusters() << endl;
-
-  for (unsigned int nplane = 0; nplane < getNumPlanes(); nplane++) {
-    cout << "\n[" << nplane << "] ";
-    getPlane(nplane)->print();
   }
 }
 
@@ -82,3 +58,30 @@ Track* Storage::Event::newTrack()
   _tracks.back().m_index = _tracks.size() - 1;
   return &_tracks.back();
 }
+
+void Storage::Event::print(std::ostream& os, const std::string& prefix) const
+{
+  size_t iplane = 0;
+  size_t itrack = 0;
+
+  os << prefix << "time stamp: " << getTimeStamp() << '\n';
+  os << prefix << "frame number: " << getFrameNumber() << '\n';
+  os << prefix << "trigger offset: " << getTriggerOffset() << '\n';
+  os << prefix << "invalid: " << getInvalid() << '\n';
+
+  os << prefix << "planes:\n";
+  for (const auto& plane : _planes) {
+    os << prefix << "  plane " << iplane++ << ":\n";
+    plane.print(os, prefix + "    ");
+  }
+
+  os << prefix << "tracks:\n";
+  for (const auto& track : _tracks) {
+    os << prefix << "  track " << itrack++ << ":\n";
+    track.print(os, prefix + "    ");
+  }
+
+  os.flush();
+}
+
+void Storage::Event::print() const { print(std::cout); }

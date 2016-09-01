@@ -1,6 +1,7 @@
 #ifndef CLUSTER_H
 #define CLUSTER_H
 
+#include <iosfwd>
 #include <string>
 #include <vector>
 
@@ -56,8 +57,7 @@ public:
   Track* getMatchedTrack() const { return m_matchedTrack; }
   Plane* getPlane() const { return m_plane; }
 
-  void print() const;
-  const std::string printStr(int blankWidth = 0) const;
+  void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
   Cluster(); // The Event class manages the memory, not the user

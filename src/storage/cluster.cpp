@@ -1,9 +1,7 @@
 #include "cluster.h"
 
 #include <cassert>
-#include <iostream>
-#include <sstream>
-#include <vector>
+#include <ostream>
 
 #include "hit.h"
 #include "plane.h"
@@ -39,29 +37,12 @@ void Storage::Cluster::addHit(Storage::Hit* hit)
   m_value += hit->getValue();
 }
 
-void Storage::Cluster::print() const
+void Storage::Cluster::print(std::ostream& os, const std::string& prefix) const
 {
-  cout << "\nCLUSTER\n" << printStr() << endl;
-}
-
-const std::string Storage::Cluster::printStr(int blankWidth) const
-{
-  std::ostringstream out;
-
-  std::string blank(" ");
-  for (int i = 1; i <= blankWidth; i++)
-    blank += " ";
-
-  out << blank << "Address: " << this << "\n";
-  out << blank << "Pix: (" << getPixX() << " , " << getPixY() << ")\n";
-  out << blank << "Pix err: (" << getPixErrX() << " , " << getPixErrY()
-      << ")\n";
-  out << blank << "Pos: (" << getPosX() << " , " << getPosY() << " , "
-      << getPosZ() << ")\n";
-  out << blank << "Pos err: (" << getPosErrX() << " , " << getPosErrY() << " , "
-      << getPosErrZ() << ")\n";
-  out << blank << "Num hits: " << getNumHits() << "\n";
-  out << blank << "Plane: " << getPlane();
-
-  return out.str();
+  os << prefix << "pixel: " << posPixel() << '\n';
+  os << prefix << "pixel error: " << errPixel() << '\n';
+  os << prefix << "global: " << posGlobal() << '\n';
+  os << prefix << "global error: " << errGlobal() << '\n';
+  os << prefix << "size: " << getNumHits() << '\n';
+  os.flush();
 }

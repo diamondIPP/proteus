@@ -1,6 +1,7 @@
 #ifndef PLANE_H
 #define PLANE_H
 
+#include <iosfwd>
 #include <string>
 #include <vector>
 
@@ -25,7 +26,8 @@ public:
   std::pair<double, double> getIntercept(unsigned int n) const;
 
   void addIntercept(double posX, double posY);
-  void print() const;
+
+  void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
   Plane(unsigned int planeNum);

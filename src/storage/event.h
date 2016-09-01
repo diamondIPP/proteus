@@ -2,6 +2,8 @@
 #define EVENT_H
 
 #include <cstdint>
+#include <iosfwd>
+#include <string>
 #include <vector>
 
 #include "cluster.h"
@@ -17,8 +19,6 @@ namespace Storage {
 class Event {
 public:
   Event(unsigned int numPlanes);
-
-  void print();
 
   Hit* newHit(unsigned int nplane);
   Cluster* newCluster(unsigned int nplane);
@@ -58,6 +58,9 @@ public:
   unsigned int getTriggerPhase() const { return _triggerPhase; }
 
   friend class Processors::TrackMaker;
+
+  void print(std::ostream& os, const std::string& prefix = std::string()) const;
+  void print() const;
 
 protected:
   void addTrack(Track* track);

@@ -1,6 +1,8 @@
 #ifndef TRACK_H
 #define TRACK_H
 
+#include <iosfwd>
+#include <string>
 #include <vector>
 
 #include "utils/definitions.h"
@@ -42,6 +44,8 @@ public:
   {
     return XYZPoint(m_u + m_du * w, m_v + m_dv * w, w);
   }
+
+  void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
   double m_u, m_v, m_du, m_dv;
@@ -90,6 +94,8 @@ public:
   double getCovarianceY() const { return m_state.m_covVDv; }
   double getChi2() const { return m_chi2; }
   int getIndex() const { return m_index; }
+
+  void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
   TrackState m_state;
