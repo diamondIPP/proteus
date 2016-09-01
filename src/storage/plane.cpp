@@ -14,10 +14,7 @@ Storage::Plane::Plane(unsigned int planeNum)
 {
 }
 
-void Storage::Plane::addHit(Storage::Hit* hit)
-{
-  m_hits.push_back(hit);
-}
+void Storage::Plane::addHit(Storage::Hit* hit) { m_hits.push_back(hit); }
 
 void Storage::Plane::addCluster(Storage::Cluster* cluster)
 {

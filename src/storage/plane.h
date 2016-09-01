@@ -32,7 +32,7 @@ private:
 
   void addHit(Hit* hit);
   void addCluster(Cluster* cluster);
-  
+
   unsigned int m_planeNum;
   std::vector<Hit*> m_hits;
   std::vector<Cluster*> m_clusters;
