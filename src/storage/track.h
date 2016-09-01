@@ -2,6 +2,7 @@
 #define TRACK_H
 
 #include <iosfwd>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -23,6 +24,7 @@ class Cluster;
  */
 class TrackState {
 public:
+  TrackState();
   TrackState(const XYPoint& offset, const XYVector& slope = XYVector(0, 0));
   TrackState(double posU, double posV, double slopeU = 0, double slopeV = 0);
 
@@ -62,8 +64,18 @@ private:
  */
 class Track {
 public:
+  typedef std::map<Index, TrackState> TrackStates;
+
   Track();
   Track(const TrackState& globalState);
+
+  void addLocalState(Index sensor, const TrackState& state);
+  void setGlobalState(const TrackState& state) { m_state = state; }
+  void setChi2(double chi2) { m_chi2 = chi2; }
+
+  const TrackState& globalState() const { return m_state; }
+  const TrackState& localState(Index sensor) const;
+  const TrackStates& localStates() const { return m_localStates; }
 
   void addCluster(Cluster* cluster);
   void addMatchedCluster(Cluster* cluster);
@@ -73,9 +85,6 @@ public:
   {
     return m_matchedClusters.at(n);
   }
-
-  void setGlobalState(const TrackState& state) { m_state = state; }
-  void setChi2(double chi2) { m_chi2 = chi2; }
 
   unsigned int getNumClusters() const { return m_clusters.size(); }
   unsigned int getNumMatchedClusters() const
@@ -99,6 +108,7 @@ public:
 
 private:
   TrackState m_state;
+  TrackStates m_localStates;
   double m_chi2;
   int m_index;
 

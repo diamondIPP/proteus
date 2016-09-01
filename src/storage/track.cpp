@@ -26,6 +26,11 @@ Storage::TrackState::TrackState(const XYPoint& offset, const XYVector& slope)
 {
 }
 
+Storage::TrackState::TrackState()
+    : TrackState(0, 0, 0, 0)
+{
+}
+
 void Storage::TrackState::setOffsetErr(double errU, double errV)
 {
   m_errU = errU;
@@ -60,6 +65,16 @@ Storage::Track::Track(const TrackState& globalState)
 {
 }
 
+void Storage::Track::addLocalState(Index sensor, const TrackState& state)
+{
+  m_localStates[sensor] = state;
+}
+
+const Storage::TrackState& Storage::Track::localState(Index sensor) const
+{
+  return m_localStates.at(sensor);
+}
+
 // NOTE: this doesn't tell the cluster about the track (due to building trial
 // tracks)
 void Storage::Track::addCluster(Cluster* cluster)
@@ -72,7 +87,8 @@ void Storage::Track::addMatchedCluster(Cluster* cluster)
   m_matchedClusters.push_back(cluster);
 }
 
-void Storage::TrackState::print(std::ostream& os, const std::string& prefix) const
+void Storage::TrackState::print(std::ostream& os,
+                                const std::string& prefix) const
 {
   os << prefix << "offset: " << offset() << '\n';
   os << prefix << "slope: " << slope() << '\n';
@@ -84,4 +100,11 @@ void Storage::Track::print(std::ostream& os, const std::string& prefix) const
   os << prefix << "num clusters: " << m_clusters.size() << '\n';
   os << prefix << "global state:\n";
   m_state.print(os, prefix + "  ");
+  os << prefix << "local states:\n";
+  for (auto is = m_localStates.begin(); is != m_localStates.end(); ++is) {
+    const auto& sensorId = is->first;
+    const auto& state = is->second;
+    os << prefix << "  sensor " << sensorId << ":\n";
+    state.print(os, prefix + "    ");
+  }
 }
