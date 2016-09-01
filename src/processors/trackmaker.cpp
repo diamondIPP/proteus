@@ -179,9 +179,9 @@ void TrackMaker::generateTracks(Event* event,
       if (cluster->getTrack()) continue;
 
       std::vector<Track*> candidates;
-      Track* seedTrack = new Track();
-      seedTrack->setOrigin(cluster->getPosX(), cluster->getPosY());
-      seedTrack->setOriginErr(cluster->getPosErrX(), cluster->getPosErrY());
+      TrackState state(cluster->getPosX(), cluster->getPosY());
+      state.setOffsetErr(cluster->getPosErrX(), cluster->getPosErrY());
+      Track* seedTrack = new Track(state);
       seedTrack->addCluster(cluster);
 
       const unsigned int nextPlane =
@@ -365,12 +365,11 @@ void TrackMaker::fitTrackToClusters(Track* track)
   // Get a chi2 normalized to the number of DOF
   const double chi2 = (chi2X + chi2Y) / (2.0 * (double)(npoints - 2));
 
-  track->setOrigin(originX, originY);
-  track->setOriginErr(originErrX, originErrY);
-  track->setSlope(slopeX, slopeY);
-  track->setSlopeErr(slopeErrX, slopeErrY);
+  TrackState state(originX, originY, slopeX, slopeY);
+  state.setErrU(originErrX, slopeErrX, covarianceX);
+  state.setErrV(originErrY, slopeErrY, covarianceY);
+  track->setGlobalState(state);
   track->setChi2(chi2);
-  track->setCovariance(covarianceX, covarianceY);
 
   delete[] dependant;
   delete[] independant;

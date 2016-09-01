@@ -3,6 +3,8 @@
 
 #include <vector>
 
+#include "utils/definitions.h"
+
 namespace Processors {
 class TrackMaker;
 }
@@ -11,78 +13,86 @@ namespace Storage {
 
 class Cluster;
 
-/*******************************************************************************
- * Track class contains all values which define one track, composed of some
- * number of clusters. It also provides a list of the clusters which comprise
- * it.
+/** Track state, i.e. position and direction, on a local plane.
+ *
+ * If the local plane is the global xy-plane, the local track description
+ * is identical to the usual global description, i.e. global position and
+ * slopes along the global z-axis.
  */
+class TrackState {
+public:
+  TrackState(const XYPoint& offset, const XYVector& slope = XYVector(0, 0));
+  TrackState(double posU, double posV, double slopeU = 0, double slopeV = 0);
 
+  void setOffsetErr(double errU, double errV);
+  void setErrU(double errU, double errDu, double cov = 0);
+  void setErrV(double errV, double errDv, double cov = 0);
+
+  /** Plane offset in local coordinates. */
+  XYPoint offset() const { return XYPoint(m_u, m_v); }
+  XYVector offsetErr() const { return XYVector(m_errU, m_errV); }
+  /** Slope in local coordinates. */
+  XYVector slope() const { return XYVector(m_du, m_dv); }
+  XYVector slopeErr() const { return XYVector(m_errDu, m_errDv); }
+
+  /** Full position in the local coordinates. */
+  XYZPoint position() const { return XYZPoint(m_u, m_v, 0); }
+  /** Propagated position in the local coordinates. */
+  XYZPoint position_at(double w) const
+  {
+    return XYZPoint(m_u + m_du * w, m_v + m_dv * w, w);
+  }
+
+private:
+  double m_u, m_v, m_du, m_dv;
+  double m_errU, m_errDu, m_covUDu;
+  double m_errV, m_errDv, m_covVDv;
+
+  friend class Track;
+};
+
+/** A particle track.
+ *
+ * The track consist of a set of input clusters and a set of reconstructed
+ * track states on selected sensor planes.
+ */
 class Track {
 public:
   Track();
+  Track(const TrackState& globalState);
 
   void addCluster(Cluster* cluster);
   void addMatchedCluster(Cluster* cluster);
 
   Cluster* getCluster(unsigned int n) const { return m_clusters.at(n); }
-  Cluster* getMatchedCluster(unsigned int n) const { return m_matchedClusters.at(n); }
+  Cluster* getMatchedCluster(unsigned int n) const
+  {
+    return m_matchedClusters.at(n);
+  }
 
-  void setOrigin(double x, double y)
-  {
-    m_originX = x;
-    m_originY = y;
-  }
-  void setOriginErr(double x, double y)
-  {
-    m_originErrX = x;
-    m_originErrY = y;
-  }
-  void setSlope(double x, double y)
-  {
-    m_slopeX = x;
-    m_slopeY = y;
-  }
-  void setSlopeErr(double x, double y)
-  {
-    m_slopeErrX = x;
-    m_slopeErrY = y;
-  }
+  void setGlobalState(const TrackState& state) { m_state = state; }
   void setChi2(double chi2) { m_chi2 = chi2; }
-  void setCovariance(double x, double y)
-  {
-    m_covarianceX = x;
-    m_covarianceY = y;
-  }
 
   unsigned int getNumClusters() const { return m_clusters.size(); }
   unsigned int getNumMatchedClusters() const
   {
     return m_matchedClusters.size();
   }
-  double getOriginX() const { return m_originX; }
-  double getOriginY() const { return m_originY; }
-  double getOriginErrX() const { return m_originErrX; }
-  double getOriginErrY() const { return m_originErrY; }
-  double getSlopeX() const { return m_slopeX; }
-  double getSlopeY() const { return m_slopeY; }
-  double getSlopeErrX() const { return m_slopeErrX; }
-  double getSlopeErrY() const { return m_slopeErrY; }
-  double getCovarianceX() const { return m_covarianceX; }
-  double getCovarianceY() const { return m_covarianceY; }
+  double getOriginX() const { return m_state.offset().x(); }
+  double getOriginY() const { return m_state.offset().y(); }
+  double getOriginErrX() const { return m_state.offsetErr().x(); }
+  double getOriginErrY() const { return m_state.offsetErr().y(); }
+  double getSlopeX() const { return m_state.slope().x(); }
+  double getSlopeY() const { return m_state.slope().y(); }
+  double getSlopeErrX() const { return m_state.slopeErr().x(); }
+  double getSlopeErrY() const { return m_state.slopeErr().y(); }
+  double getCovarianceX() const { return m_state.m_covUDu; }
+  double getCovarianceY() const { return m_state.m_covVDv; }
   double getChi2() const { return m_chi2; }
   int getIndex() const { return m_index; }
 
 private:
-  double m_originX;
-  double m_originY;
-  double m_originErrX;
-  double m_originErrY;
-  double m_slopeX;
-  double m_slopeY;
-  double m_slopeErrX;
-  double m_slopeErrY;
-  double m_covarianceX;
-  double m_covarianceY;
+  TrackState m_state;
   double m_chi2;
   int m_index;
 

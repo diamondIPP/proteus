@@ -600,12 +600,18 @@ namespace Storage {
 
     // Generate a list of track objects
     for (int ntrack=0; ntrack<numTracks; ntrack++){
+      TrackState state(trackOriginX[ntrack],
+                       trackOriginY[ntrack],
+                       trackSlopeX[ntrack],
+                       trackSlopeY[ntrack]);
+      state.setErrU(trackOriginErrX[ntrack],
+                    trackSlopeErrX[ntrack],
+                    trackCovarianceX[ntrack]);
+      state.setErrV(trackOriginErrY[ntrack],
+                    trackSlopeErrY[ntrack],
+                    trackCovarianceY[ntrack]);
       Track* track = event->newTrack();
-      track->setOrigin(trackOriginX[ntrack], trackOriginY[ntrack]);
-      track->setOriginErr(trackOriginErrX[ntrack], trackOriginErrY[ntrack]);
-      track->setSlope(trackSlopeX[ntrack], trackSlopeY[ntrack]);
-      track->setSlopeErr(trackSlopeErrX[ntrack], trackSlopeErrY[ntrack]);
-      track->setCovariance(trackCovarianceX[ntrack], trackCovarianceY[ntrack]);
+      track->setGlobalState(state);
       track->setChi2(trackChi2[ntrack]);
     }
 
