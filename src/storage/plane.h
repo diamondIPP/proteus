@@ -14,14 +14,11 @@ class Cluster;
  * a plane number.
  */
 class Plane {
-protected:
-  Plane(unsigned int planeNum);
-
 public:
-  inline unsigned int getPlaneNum() const { return _planeNum; }
-  inline unsigned int getNumHits() const { return _numHits; }
-  inline unsigned int getNumClusters() const { return _numClusters; }
-  inline unsigned int getNumIntercepts() const { return _numIntercepts; }
+  inline unsigned int getPlaneNum() const { return m_planeNum; }
+  inline unsigned int getNumHits() const { return m_hits.size(); }
+  inline unsigned int getNumClusters() const { return m_clusters.size(); }
+  inline unsigned int getNumIntercepts() const { return m_intercepts.size(); }
 
   Hit* getHit(unsigned int n) const;
   Cluster* getCluster(unsigned int n) const;
@@ -30,21 +27,20 @@ public:
   void addIntercept(double posX, double posY);
   void print() const;
 
-protected:
+private:
+  Plane(unsigned int planeNum);
+
   void addHit(Hit* hit);
   void addCluster(Cluster* cluster);
-
-private:
-  unsigned int _planeNum;
-  unsigned int _numHits;
-  std::vector<Hit*> _hits;
-  unsigned int _numClusters;
-  std::vector<Cluster*> _clusters;
-  unsigned int _numIntercepts;
-  std::vector<std::pair<double, double>> _intercepts;
+  
+  unsigned int m_planeNum;
+  std::vector<Hit*> m_hits;
+  std::vector<Cluster*> m_clusters;
+  std::vector<std::pair<double, double>> m_intercepts;
 
   friend class Event;
 };
-}
+
+} // namespace Storage
 
 #endif // PLANE_H

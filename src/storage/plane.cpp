@@ -1,6 +1,5 @@
 #include "plane.h"
 
-#include <cassert>
 #include <iostream>
 #include <vector>
 
@@ -11,49 +10,39 @@ using std::cout;
 using std::endl;
 
 Storage::Plane::Plane(unsigned int planeNum)
-    : _planeNum(planeNum)
-    , _numHits(0)
-    , _numClusters(0)
-    , _numIntercepts(0)
+    : m_planeNum(planeNum)
 {
 }
 
 void Storage::Plane::addHit(Storage::Hit* hit)
 {
-  _hits.push_back(hit);
-  _numHits++;
+  m_hits.push_back(hit);
 }
 
 void Storage::Plane::addCluster(Storage::Cluster* cluster)
 {
-  _clusters.push_back(cluster);
+  m_clusters.push_back(cluster);
   cluster->m_plane = this;
-  _numClusters++;
 }
 
 void Storage::Plane::addIntercept(double posX, double posY)
 {
-  _intercepts.push_back(std::pair<double, double>(posX, posY));
-  _numIntercepts++;
+  m_intercepts.push_back(std::pair<double, double>(posX, posY));
 }
 
 Storage::Hit* Storage::Plane::getHit(unsigned int n) const
 {
-  assert(n < getNumHits() && "Plane: hit index exceeds vector size");
-  return _hits.at(n);
+  return m_hits.at(n);
 }
 
 Storage::Cluster* Storage::Plane::getCluster(unsigned int n) const
 {
-  assert(n < getNumClusters() && "Plane: cluster index exceeds vector size");
-  return _clusters.at(n);
+  return m_clusters.at(n);
 }
 
 std::pair<double, double> Storage::Plane::getIntercept(unsigned int n) const
 {
-  assert(n < getNumIntercepts() &&
-         "Plane: intercept index exceeds vector size");
-  return _intercepts.at(n);
+  return m_intercepts.at(n);
 }
 
 void Storage::Plane::print() const
