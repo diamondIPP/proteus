@@ -24,61 +24,60 @@ public:
   Cluster* newCluster(unsigned int nplane);
   Track* newTrack();
 
-  Plane* getPlane(unsigned int n) { return &_planes.at(n); }
-  Hit* getHit(unsigned int n) { return &_hits.at(n); }
-  Cluster* getCluster(unsigned int n) { return &_clusters.at(n); }
-  Track* getTrack(unsigned int n) { return &_tracks.at(n); }
-  const Plane* getPlane(unsigned int n) const { return &_planes.at(n); }
-  const Cluster* getCluster(unsigned int n) const { return &_clusters.at(n); }
-  const Hit* getHit(unsigned int n) const { return &_hits.at(n); }
-  const Track* getTrack(unsigned int n) const { return &_tracks.at(n); }
+  Plane* getPlane(unsigned int n) { return &m_planes.at(n); }
+  Hit* getHit(unsigned int n) { return &m_hits.at(n); }
+  Cluster* getCluster(unsigned int n) { return &m_clusters.at(n); }
+  Track* getTrack(unsigned int n) { return &m_tracks.at(n); }
+  const Plane* getPlane(unsigned int n) const { return &m_planes.at(n); }
+  const Cluster* getCluster(unsigned int n) const { return &m_clusters.at(n); }
+  const Hit* getHit(unsigned int n) const { return &m_hits.at(n); }
+  const Track* getTrack(unsigned int n) const { return &m_tracks.at(n); }
 
-  void setInvalid(bool value) { _invalid = value; }
-  void setTimeStamp(uint64_t timeStamp) { _timeStamp = timeStamp; }
-  void setFrameNumber(uint64_t frameNumber) { _frameNumber = frameNumber; }
+  void setInvalid(bool value) { m_invalid = value; }
+  void setTimeStamp(uint64_t timeStamp) { m_timeStamp = timeStamp; }
+  void setFrameNumber(uint64_t frameNumber) { m_frameNumber = frameNumber; }
   void setTriggerOffset(unsigned int triggerOffset)
   {
-    _triggerOffset = triggerOffset;
+    m_triggerOffset = triggerOffset;
   }
-  void setTriggerInfo(unsigned int triggerInfo) { _triggerInfo = triggerInfo; }
+  void setTriggerInfo(unsigned int triggerInfo) { m_triggerInfo = triggerInfo; }
   void setTriggerPhase(unsigned int triggerPhase)
   {
-    _triggerPhase = triggerPhase;
+    m_triggerPhase = triggerPhase;
   }
 
-  unsigned int getNumHits() const { return _hits.size(); }
-  unsigned int getNumClusters() const { return _clusters.size(); }
-  unsigned int getNumPlanes() const { return _planes.size(); }
-  unsigned int getNumTracks() const { return _tracks.size(); }
-  bool getInvalid() const { return _invalid; }
-  uint64_t getTimeStamp() const { return _timeStamp; }
-  uint64_t getFrameNumber() const { return _frameNumber; }
-  unsigned int getTriggerOffset() const { return _triggerOffset; }
-  unsigned int getTriggerInfo() const { return _triggerInfo; }
-  unsigned int getTriggerPhase() const { return _triggerPhase; }
-
-  friend class Processors::TrackMaker;
+  unsigned int getNumHits() const { return m_hits.size(); }
+  unsigned int getNumClusters() const { return m_clusters.size(); }
+  unsigned int getNumPlanes() const { return m_planes.size(); }
+  unsigned int getNumTracks() const { return m_tracks.size(); }
+  bool getInvalid() const { return m_invalid; }
+  uint64_t getTimeStamp() const { return m_timeStamp; }
+  uint64_t getFrameNumber() const { return m_frameNumber; }
+  unsigned int getTriggerOffset() const { return m_triggerOffset; }
+  unsigned int getTriggerInfo() const { return m_triggerInfo; }
+  unsigned int getTriggerPhase() const { return m_triggerPhase; }
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
   void print() const;
 
-protected:
+private:
   void addTrack(Track* track);
 
-private:
-  uint64_t _timeStamp;
-  uint64_t _frameNumber;
-  unsigned int _triggerOffset;
-  unsigned int _triggerInfo; // Dammit Andrej!
-  unsigned int _triggerPhase;
-  bool _invalid;
+  uint64_t m_timeStamp;
+  uint64_t m_frameNumber;
+  unsigned int m_triggerOffset;
+  unsigned int m_triggerInfo; // Dammit Andrej!
+  unsigned int m_triggerPhase;
+  bool m_invalid;
 
-  std::vector<Hit> _hits;
-  std::vector<Cluster> _clusters;
-  std::vector<Plane> _planes;
-  std::vector<Track> _tracks;
-}; // end of class
+  std::vector<Hit> m_hits;
+  std::vector<Cluster> m_clusters;
+  std::vector<Plane> m_planes;
+  std::vector<Track> m_tracks;
 
-} // end of namespace
+  friend class Processors::TrackMaker;
+};
+
+} // namespace Storage
 
 #endif // EVENT_H

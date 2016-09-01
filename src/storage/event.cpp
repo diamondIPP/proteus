@@ -3,60 +3,45 @@
 #include <cassert>
 #include <iostream>
 
-#include "cluster.h"
-#include "hit.h"
-#include "plane.h"
-#include "track.h"
-
-using Storage::Hit;
-using Storage::Cluster;
-using Storage::Track;
-using Storage::Plane;
-
-//=========================================================
 Storage::Event::Event(unsigned int numPlanes)
-    : _timeStamp(0)
-    , _frameNumber(0)
-    , _triggerOffset(0)
-    , _invalid(false)
+    : m_timeStamp(0)
+    , m_frameNumber(0)
+    , m_triggerOffset(0)
+    , m_invalid(false)
 {
   for (unsigned int nplane = 0; nplane < getNumPlanes(); nplane++) {
-    _planes.push_back(Plane(nplane));
+    m_planes.push_back(Plane(nplane));
   }
 }
 
-//=========================================================
 Storage::Hit* Storage::Event::newHit(unsigned int nplane)
 {
-  _hits.push_back(Hit());
-  _planes.at(nplane).addHit(&_hits.back());
-  return &_hits.back();
+  m_hits.push_back(Hit());
+  m_planes.at(nplane).addHit(&m_hits.back());
+  return &m_hits.back();
 }
 
-//=========================================================
-Cluster* Storage::Event::newCluster(unsigned int nplane)
+Storage::Cluster* Storage::Event::newCluster(unsigned int nplane)
 {
-  _clusters.push_back(Cluster());
-  _clusters.back().m_index = _clusters.size() - 1;
-  _planes.at(nplane).addCluster(&_clusters.back());
-  return &_clusters.back();
+  m_clusters.push_back(Cluster());
+  m_clusters.back().m_index = m_clusters.size() - 1;
+  m_planes.at(nplane).addCluster(&m_clusters.back());
+  return &m_clusters.back();
 }
 
-//=========================================================
 void Storage::Event::addTrack(Track* otherTrack)
 {
   // WARNING 2016-08-25 msmk: implicit ownership transfer
-  _tracks.push_back(*otherTrack);
-  _tracks.back().m_index = _tracks.size() - 1;
+  m_tracks.push_back(*otherTrack);
+  m_tracks.back().m_index = m_tracks.size() - 1;
   delete otherTrack;
 }
 
-//=========================================================
-Track* Storage::Event::newTrack()
+Storage::Track* Storage::Event::newTrack()
 {
-  _tracks.push_back(Track());
-  _tracks.back().m_index = _tracks.size() - 1;
-  return &_tracks.back();
+  m_tracks.push_back(Track());
+  m_tracks.back().m_index = m_tracks.size() - 1;
+  return &m_tracks.back();
 }
 
 void Storage::Event::print(std::ostream& os, const std::string& prefix) const
@@ -70,13 +55,13 @@ void Storage::Event::print(std::ostream& os, const std::string& prefix) const
   os << prefix << "invalid: " << getInvalid() << '\n';
 
   os << prefix << "planes:\n";
-  for (const auto& plane : _planes) {
+  for (const auto& plane : m_planes) {
     os << prefix << "  plane " << iplane++ << ":\n";
     plane.print(os, prefix + "    ");
   }
 
   os << prefix << "tracks:\n";
-  for (const auto& track : _tracks) {
+  for (const auto& track : m_tracks) {
     os << prefix << "  track " << itrack++ << ":\n";
     track.print(os, prefix + "    ");
   }
