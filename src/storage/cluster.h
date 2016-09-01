@@ -49,7 +49,7 @@ public:
   int getIndex() const { return m_index; }
 
   void setTrack(Track* track);
-  void setMatchedTrack(Track* track);
+  void setMatchedTrack(Track* track) { m_matchedTrack = track; }
   void addHit(Hit* hit); // Add a hit to this cluster
 
   Track* getTrack() const { return m_track; }

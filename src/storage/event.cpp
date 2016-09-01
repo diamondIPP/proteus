@@ -71,7 +71,7 @@ void Storage::Event::addTrack(Track* otherTrack)
 {
   // WARNING 2016-08-25 msmk: implicit ownership transfer
   _tracks.push_back(*otherTrack);
-  _tracks.back()._index = _tracks.size() - 1;
+  _tracks.back().m_index = _tracks.size() - 1;
   delete otherTrack;
 }
 
@@ -79,6 +79,6 @@ void Storage::Event::addTrack(Track* otherTrack)
 Track* Storage::Event::newTrack()
 {
   _tracks.push_back(Track());
-  _tracks.back()._index = _tracks.size() - 1;
+  _tracks.back().m_index = _tracks.size() - 1;
   return &_tracks.back();
 }

@@ -29,11 +29,6 @@ void Storage::Cluster::setTrack(Storage::Track* track)
   m_track = track;
 }
 
-void Storage::Cluster::setMatchedTrack(Storage::Track* track)
-{
-  m_matchedTrack = track;
-}
-
 void Storage::Cluster::addHit(Storage::Hit* hit)
 {
   if (m_hits.empty() == 0)
