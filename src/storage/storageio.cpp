@@ -558,12 +558,6 @@ namespace Storage {
   }
 
   //=========================================================
-  Long64_t StorageIO::getNumEvents() const {
-    assert(_fileMode != OUTPUT && "StorageIO: can't get number of entries in output mode");
-    return _numEvents;
-  }
-
-  //=========================================================
   std::vector<int> StorageIO::getRuns() const {
     std::vector<int> vec;
     if(!_summaryTree){
@@ -578,7 +572,7 @@ namespace Storage {
   }
 
   //=========================================================
-  Event* StorageIO::readEvent(Long64_t n)
+  Event* StorageIO::readEvent(uint64_t n)
   {
     /* Note: fill in reversed order: tracks first, hits last. This is so that
      * once a hit is produced, it can immediately recieve the address of its

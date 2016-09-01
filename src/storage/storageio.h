@@ -1,9 +1,9 @@
 #ifndef STORAGEIO_H
 #define STORAGEIO_H
 
+#include <cstdint>
 #include <vector>
 
-#include <Rtypes.h>
 #include <TFile.h>
 #include <TTree.h>
 #include <TBranch.h>
@@ -59,12 +59,12 @@ namespace Storage {
     void setRuns(const std::vector<int> &vruns);
     void setNoiseMaskData(const Mechanics::NoiseMask& noisemask);
 
-    Long64_t getNumEvents() const;
+    uint64_t getNumEvents() const { return _numEvents; }
     unsigned int getNumPlanes() const { return _numPlanes; }
     Storage::Mode getMode() const {  return _fileMode; }
     std::vector<int> getRuns() const;
 
-    Event* readEvent(Long64_t n); // Read an event and generate its objects
+    Event* readEvent(uint64_t n); // Read an event and generate its objects
     void writeEvent(Event* event); // Write an event at the end of the file
 
   private:
@@ -78,7 +78,7 @@ namespace Storage {
     TFile*       _file; // Storage file
     const Mode   _fileMode; // How to open and process the file
     unsigned int _numPlanes; // This can be read from the file structure
-    Long64_t     _numEvents; // Number of events in the input file
+    uint64_t     _numEvents; // Number of events in the input file
 
     int _printLevel; // verbose level
 
