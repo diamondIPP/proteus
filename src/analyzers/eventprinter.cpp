@@ -23,7 +23,7 @@ void Analyzers::EventPrinter::analyze(uint64_t eventId,
   INFO("  clusters: ", event.getNumClusters(), '\n');
   INFO("  tracks: ", event.getNumTracks(), '\n');
   for (Index iplane = 0; iplane < event.getNumPlanes(); ++iplane) {
-    Storage::Plane* plane = event.getPlane(iplane);
+    const Storage::Plane* plane = event.getPlane(iplane);
     DEBUG("  plane", iplane, ":\n");
     DEBUG("    hits: ", plane->getNumHits(), '\n');
     DEBUG("    clusters: ", plane->getNumHits(), '\n');
