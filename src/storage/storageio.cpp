@@ -1,25 +1,23 @@
 #include "storageio.h"
 
 #include <cassert>
+#include <iostream>
 #include <sstream>
 #include <vector>
-#include <iostream>
-#include <stdlib.h>
 
-#include <TFile.h>
 #include <TDirectory.h>
+#include <TFile.h>
 #include <TTree.h>
-#include <TBranch.h>
 
-#include "event.h"
-#include "track.h"
-#include "plane.h"
-#include "cluster.h"
-#include "hit.h"
-#include "../mechanics/noisemask.h"
-#include "../mechanics/device.h"
-#include "../mechanics/sensor.h"
-#include "../loopers/noisescan.h"
+#include "loopers/noisescan.h"
+#include "mechanics/device.h"
+#include "mechanics/noisemask.h"
+#include "mechanics/sensor.h"
+#include "storage/cluster.h"
+#include "storage/event.h"
+#include "storage/hit.h"
+#include "storage/plane.h"
+#include "storage/track.h"
 
 #ifndef VERBOSE
 #define VERBOSE 1
@@ -31,14 +29,13 @@ using std::endl;
 namespace Storage {
 
   //=========================================================
-  StorageIO::StorageIO(const char* filePath,
+  StorageIO::StorageIO(const std::string& filePath,
 		       Mode fileMode,
 		       unsigned int numPlanes,
 		       const unsigned int treeMask,
 		       const std::vector<bool>* planeMask,
 		       int printLevel) :
-    _filePath(filePath),
-    _file(0),
+    _file(NULL),
     _fileMode(fileMode),
     _numPlanes(0),
     _numEvents(0),
@@ -48,8 +45,8 @@ namespace Storage {
     _eventInfo(0),
     _summaryTree(0)
   {
-    if      (fileMode == INPUT)  _file = new TFile(_filePath, "READ");
-    else if (fileMode == OUTPUT) _file = new TFile(_filePath, "RECREATE");
+    if      (fileMode == INPUT)  _file = new TFile(filePath.c_str(), "READ");
+    else if (fileMode == OUTPUT) _file = new TFile(filePath.c_str(), "RECREATE");
     if (!_file) throw "StorageIO: file didn't initialize";
 
     // clear tree variables
@@ -289,7 +286,7 @@ namespace Storage {
     // debug info
     if( _printLevel > 0  ){
       cout << "\n[StorageIO::StorageIO]" << endl;
-      cout << "  - filePath  = " << _filePath  << endl;
+      cout << "  - filePath  = " << _file->GetPath()  << endl;
       cout << "  - fileMode  = " << _fileMode;
       std::string ost = _fileMode ? "OUTPUT" : "INPUT";
       cout << " (" << ost << ")"<< endl;
@@ -355,7 +352,7 @@ namespace Storage {
 
       if( _printLevel>1 ){
 	cout << "\n[Storage::~Storage]"<< endl;
-	cout << "  - filePath  = " << _filePath  << endl;
+	cout << "  - filePath  = " << _file->GetPath() << endl;
 	cout << "  - fileMode  = " << _fileMode;
 	std::string ost = _fileMode ? "OUTPUT" : "INPUT";
 	cout << " (" << ost << ")"<< endl;

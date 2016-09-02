@@ -2,6 +2,7 @@
 #define STORAGEIO_H
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 #include <TFile.h>
@@ -43,7 +44,7 @@ namespace Storage {
   class StorageIO {
   public:
     /** Constructor. */
-    StorageIO(const char* filePath,
+    StorageIO(const std::string& filePath,
 	      Mode fileMode,
 	      unsigned int numPlanes = 0,
 	      const unsigned int treeMask = 0,
@@ -73,7 +74,6 @@ namespace Storage {
     const std::string printSummaryTree();
 
   private:
-    const char*  _filePath; // Path to the storage file
     TFile*       _file; // Storage file
     const Mode   _fileMode; // How to open and process the file
     unsigned int _numPlanes; // This can be read from the file structure
