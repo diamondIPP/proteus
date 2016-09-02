@@ -19,13 +19,9 @@
 #include "storage/hit.h"
 #include "storage/plane.h"
 #include "storage/track.h"
+#include "utils/logger.h"
 
-#ifndef VERBOSE
-#define VERBOSE 1
-#endif
-
-using std::cout;
-using std::endl;
+using Utils::logger;
 
 namespace Storage {
 
@@ -62,8 +58,8 @@ namespace Storage {
      create the directory structure and the relevant trees
     ****************************************************/
     if ( _fileMode == OUTPUT ){
-      if (planeMask && (VERBOSE || _printLevel>0) )
-	cout << "WARNING :: StorageIO: disregarding plane mask in output mode";
+      if (planeMask)
+        ERROR("StorageIO: disregarding plane mask in output mode\n");
 
       _numPlanes = numPlanes;
 
@@ -163,8 +159,8 @@ namespace Storage {
     *********************/
     if (_fileMode == INPUT){
 
-      if (_numPlanes && (VERBOSE || _printLevel>0) )
-	cout << "WARNING :: StorageIO: disregarding specified number of planes" << endl;
+      if (_numPlanes)
+        INFO("StorageIO: disregarding specified number of planes\n");
 
       _numPlanes = 0; // Determine num planes from file structure
 
@@ -285,16 +281,11 @@ namespace Storage {
     } // end if(_fileMode == INPUT)
 
     // debug info
-    if( _printLevel > 0  ){
-      cout << "\n[StorageIO::StorageIO]" << endl;
-      cout << "  - filePath  = " << _file->GetPath()  << endl;
-      cout << "  - fileMode  = " << _fileMode;
-      std::string ost = _fileMode ? "OUTPUT" : "INPUT";
-      cout << " (" << ost << ")"<< endl;
-      cout << "  - numPlanes = " << _numPlanes << endl;
-      cout << "  - treeMask  = " << treeMask  << endl;
-      cout << printSummaryTree() << endl;
-    }
+    INFO("file path: ", _file->GetPath(), '\n');
+    INFO("file mode: ", (_fileMode ? "OUTPUT" : "INPUT"), '\n');
+    INFO("planes: ", _numPlanes, '\n');
+    INFO("tree mask: ", treeMask, '\n');
+    INFO(printSummaryTree(), '\n');
 
     if (_numPlanes < 1)
       throw std::runtime_error("StorageIO: didn't initialize any planes");
@@ -351,15 +342,10 @@ namespace Storage {
 	 is done just once (not a per-event tree) */
       _summaryTree->Fill();
 
-      if( _printLevel>1 ){
-	cout << "\n[Storage::~Storage]"<< endl;
-	cout << "  - filePath  = " << _file->GetPath() << endl;
-	cout << "  - fileMode  = " << _fileMode;
-	std::string ost = _fileMode ? "OUTPUT" : "INPUT";
-	cout << " (" << ost << ")"<< endl;
-	cout << "  - numPlanes = " << _numPlanes << endl;
-	cout << printSummaryTree() << endl;
-      }
+      INFO("file path: ", _file->GetPath(), '\n');
+      INFO("file mode: ", (_fileMode ? "OUTPUT" : "INPUT"), '\n');
+      INFO("planes: ", _numPlanes, '\n');
+      INFO(printSummaryTree(), '\n');
       _file->Write();
       delete _file;
     }
@@ -441,11 +427,11 @@ namespace Storage {
 
   //=========================================================
   const std::string StorageIO::printSummaryTree(){
+    using std::endl;
     std::ostringstream out;
 
-    if( _summaryTree == 0 ){
-      out << "[StorageIO::printSummaryTree] WARNING :: "
-	  << "no summaryTree found  " << endl;
+    if(!_summaryTree) {
+      ERROR("no summaryTree found\n");
       return out.str();
     }
 
@@ -497,8 +483,7 @@ namespace Storage {
     assert( _fileMode != INPUT && "StorageIO: can't set runs in input mode" );
 
     if( vruns.empty() ){
-      cout << "WARNING :: no --runs option detected; "
-	   << "summaryTree saved without run info" << endl;
+      ERROR("no --runs option detected; summaryTree saved without run info\n");
       return;
     }
 
@@ -515,9 +500,7 @@ namespace Storage {
   {
     const Loopers::NoiseScanConfig* config = NULL;
     if (!config) {
-      cout << "[StorageIO::setNoiseMaskData] WARNING: no NoiseScanConfig "
-              "info found"
-           << endl;
+      ERROR("[StorageIO::setNoiseMaskData] WARNING: no NoiseScanConfig info found\n");
       return;
     }
 
@@ -558,7 +541,7 @@ namespace Storage {
   std::vector<int> StorageIO::getRuns() const {
     std::vector<int> vec;
     if(!_summaryTree){
-      cout << "[StorageIO::getRuns()] WARNING no summaryTree, can't get run info" << endl;
+      ERROR("[StorageIO::getRuns()] WARNING no summaryTree, can't get run info\n");
     }
     else{
       _summaryTree->GetEntry(0);
