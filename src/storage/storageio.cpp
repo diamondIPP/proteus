@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <stdexcept>
 #include <sstream>
 #include <vector>
 
@@ -47,14 +48,14 @@ namespace Storage {
   {
     if      (fileMode == INPUT)  _file = new TFile(filePath.c_str(), "READ");
     else if (fileMode == OUTPUT) _file = new TFile(filePath.c_str(), "RECREATE");
-    if (!_file) throw "StorageIO: file didn't initialize";
+    if (!_file) throw std::runtime_error("StorageIO: file didn't initialize");
 
     // clear tree variables
     clearVariables();
 
     // Plane mask holds a true for masked planes
     if(planeMask && fileMode == OUTPUT)
-      throw "StorageIO: can't use a plane mask in output mode";
+      throw std::runtime_error("StorageIO: can't use a plane mask in output mode");
 
     /****************************************************
      In OUTPUT mode,
@@ -180,7 +181,7 @@ namespace Storage {
 	planeCount++;
 
 	if (planeMask && planeCount > planeMask->size())
-	  throw "StorageIO: plane mask is too small";
+	  throw std::runtime_error("StorageIO: plane mask is too small");
 
 	if (planeMask && planeMask->at(planeCount - 1)) continue;
 
@@ -296,7 +297,7 @@ namespace Storage {
     }
 
     if (_numPlanes < 1)
-      throw "StorageIO: didn't initialize any planes";
+      throw std::runtime_error("StorageIO: didn't initialize any planes");
 
     // Delete trees as per the tree flags
     if( treeMask ){
@@ -322,7 +323,7 @@ namespace Storage {
       }
 
       if (nHits % _numPlanes || nClusters % _numPlanes)
-	throw "StorageIO: number of events in different planes mismatch";
+	throw std::runtime_error("StorageIO: number of events in different planes mismatch");
 
       nHits /= _numPlanes;
       nClusters /= _numPlanes;
@@ -336,7 +337,7 @@ namespace Storage {
 	  (nTracks && _numEvents != nTracks) ||
 	  (nHits && _numEvents != nHits) ||
 	  (nClusters && _numEvents != nClusters))
-	throw "StorageIO: all trees don't have the same number of events";
+	throw std::runtime_error("StorageIO: all trees don't have the same number of events");
 
     } // end if (_fileMode == INPUT)
 
@@ -482,7 +483,7 @@ namespace Storage {
   // //=========================================================
   // void StorageIO::setNoiseMasks(std::vector<bool**>* noiseMasks){
   //   if (noiseMasks && _numPlanes != noiseMasks->size())
-  //     throw "StorageIO: noise mask has more planes than will be read in";
+  //     throw std::runtime_error("StorageIO: noise mask has more planes than will be read in";
   //   _noiseMasks = noiseMasks;
   // }
 
@@ -574,10 +575,10 @@ namespace Storage {
      * once a hit is produced, it can immediately recieve the address of its
      * parent cluster, likewise for clusters and track. */
 
-    if (n >= _numEvents) throw "StorageIO: requested event outside range";
+    if (n >= _numEvents) throw std::runtime_error("StorageIO: requested event outside range");
 
-    if (_eventInfo &&_eventInfo->GetEntry(n) <= 0) throw "StorageIO: error reading event tree";
-    if (_tracks && _tracks->GetEntry(n) <= 0) throw "StorageIO: error reading tracks tree";
+    if (_eventInfo &&_eventInfo->GetEntry(n) <= 0) throw std::runtime_error("StorageIO: error reading event tree");
+    if (_tracks && _tracks->GetEntry(n) <= 0) throw std::runtime_error("StorageIO: error reading tracks tree");
 
     Event* event = new Event(_numPlanes);
     event->setTimeStamp(timeStamp);
@@ -608,14 +609,14 @@ namespace Storage {
     for (unsigned int nplane=0; nplane<_numPlanes; nplane++){
 
       if (_hits.at(nplane) && _hits.at(nplane)->GetEntry(n) <= 0)
-	throw "StorageIO: error reading hits tree";
+	throw std::runtime_error("StorageIO: error reading hits tree");
 
       if (_clusters.at(nplane) && _clusters.at(nplane)->GetEntry(n) <= 0)
-	throw "StorageIO: error reading clusters tree";
+	throw std::runtime_error("StorageIO: error reading clusters tree");
 
       if (_intercepts.at(nplane)){
          if(_intercepts.at(nplane)->GetEntry(n) <= 0){
-            throw "StorageIO: error reading intercepts tree";
+            throw std::runtime_error("StorageIO: error reading intercepts tree");
          }
          // Add intercepts
          for(int nintercept=0; nintercept < numIntercepts; nintercept++) {
@@ -644,7 +645,7 @@ namespace Storage {
       for(int nhit=0; nhit<numHits; nhit++) {
 	if (_noiseMasks && _noiseMasks->at(nplane)[hitPixX[nhit]][hitPixY[nhit]]){
 	  if (hitInCluster[nhit] >= 0)
-	    throw "StorageIO: tried to mask a hit which is already in a cluster";
+	    throw std::runtime_error("StorageIO: tried to mask a hit which is already in a cluster");
 	  continue;
 	}
 
@@ -668,7 +669,7 @@ namespace Storage {
   //=========================================================
   void StorageIO::writeEvent(Event* event){
 
-    if (_fileMode == INPUT) throw "StorageIO: can't write event in input mode";
+    if (_fileMode == INPUT) throw std::runtime_error("StorageIO: can't write event in input mode");
 
     timeStamp = event->getTimeStamp();
     frameNumber = event->getFrameNumber();
@@ -679,7 +680,7 @@ namespace Storage {
     invalid = event->getInvalid();
 
     numTracks = event->getNumTracks();
-    if (numTracks > MAX_TRACKS) throw "StorageIO: event exceeds MAX_TRACKS";
+    if (numTracks > MAX_TRACKS) throw std::runtime_error("StorageIO: event exceeds MAX_TRACKS");
 
     // Set the object track values into the arrays for writing to the root file
     for (int ntrack=0; ntrack<numTracks; ntrack++){
@@ -703,7 +704,7 @@ namespace Storage {
 
       // fill intercepts
 		numIntercepts = plane->getNumIntercepts();
-		if (numIntercepts > MAX_TRACKS) throw "StorageIO: event exceeds MAX_Tracks";
+		if (numIntercepts > MAX_TRACKS) throw std::runtime_error("StorageIO: event exceeds MAX_Tracks");
 		for (int nintercept = 0; nintercept < numIntercepts; nintercept++) {
 			std::pair<double, double> intercept = plane->getIntercept(nintercept);
 			interceptX[nintercept] = intercept.first;
@@ -711,7 +712,7 @@ namespace Storage {
 		}
 
       numClusters = plane->getNumClusters();
-      if (numClusters > MAX_CLUSTERS) throw "StorageIO: event exceeds MAX_CLUSTERS";
+      if (numClusters > MAX_CLUSTERS) throw std::runtime_error("StorageIO: event exceeds MAX_CLUSTERS");
 
       // Set the object cluster values into the arrays for writig into the root file
       for (int ncluster=0; ncluster<numClusters; ncluster++)
@@ -731,7 +732,7 @@ namespace Storage {
 	}
 
       numHits = plane->getNumHits();
-      if (numHits > MAX_HITS) throw "StorageIO: event exceeds MAX_HITS";
+      if (numHits > MAX_HITS) throw std::runtime_error("StorageIO: event exceeds MAX_HITS");
 
       // Set the object hit values into the arrays for writing into the root file
       for (int nhit=0; nhit<numHits; nhit++){
@@ -746,7 +747,7 @@ namespace Storage {
 	hitInCluster[nhit] = hit->getCluster() ? hit->getCluster()->getIndex() : -1;
       }
 
-      if (nplane >= _hits.size()) throw "StorageIO: event has too many planes for the storage";
+      if (nplane >= _hits.size()) throw std::runtime_error("StorageIO: event has too many planes for the storage");
 
       // Fill the plane by plane trees for this plane
       if (_hits.at(nplane)) _hits.at(nplane)->Fill();
