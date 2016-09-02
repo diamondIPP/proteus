@@ -70,6 +70,8 @@ namespace Storage {
   private:
     StorageIO(const StorageIO&); // Disable the copy constructor
     StorageIO& operator=(const StorageIO&); // Disable the assignment operator
+    void openRead(const std::string& path, const std::vector<bool>* planeMask);
+    void openTruncate(const std::string& path);
     void clearVariables();
     const std::string printSummaryTree();
 

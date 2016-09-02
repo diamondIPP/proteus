@@ -23,6 +23,258 @@
 
 using Utils::logger;
 
+void Storage::StorageIO::openRead(const std::string& path, const std::vector<bool>* planeMask)
+{
+  _file = TFile::Open(path.c_str(), "READ");
+  if (!_file)
+    throw std::runtime_error("Could not open file '" + path + "' for reading.");
+
+  if (_numPlanes)
+    INFO("StorageIO: disregarding specified number of planes\n");
+
+  _numPlanes = 0; // Determine num planes from file structure
+
+  unsigned int planeCount = 0;
+  while (true) {
+    std::string name("Plane" + std::to_string(planeCount));
+
+    // Try to get this plane's directory
+    TDirectory* dir = 0;
+    _file->GetObject(name.c_str(), dir);
+    if (!dir)
+      break;
+
+    planeCount++;
+
+    if (planeMask && planeCount > planeMask->size())
+      throw std::runtime_error("StorageIO: plane mask is too small");
+
+    if (planeMask && planeMask->at(planeCount - 1))
+      continue;
+
+    _numPlanes++;
+
+    TTree* hits;
+    _file->GetObject(name.append("/Hits").c_str(), hits);
+    _hits.push_back(hits);
+    if (hits) {
+      hits->SetBranchAddress("NHits", &numHits, &bNumHits);
+      hits->SetBranchAddress("PixX", hitPixX, &bHitPixX);
+      hits->SetBranchAddress("PixY", hitPixY, &bHitPixY);
+      hits->SetBranchAddress("Value", hitValue, &bHitValue);
+      hits->SetBranchAddress("Timing", hitTiming, &bHitTiming);
+      hits->SetBranchAddress("HitInCluster", hitInCluster, &bHitInCluster);
+      hits->SetBranchAddress("PosX", hitPosX, &bHitPosX);
+      hits->SetBranchAddress("PosY", hitPosY, &bHitPosY);
+      hits->SetBranchAddress("PosZ", hitPosZ, &bHitPosZ);
+    }
+
+    TTree* clusters;
+    _file->GetObject(name.append("/Clusters").c_str(), clusters);
+    _clusters.push_back(clusters);
+    if (clusters) {
+      clusters->SetBranchAddress("NClusters", &numClusters, &bNumClusters);
+      clusters->SetBranchAddress("PixX", clusterPixX, &bClusterPixX);
+      clusters->SetBranchAddress("PixY", clusterPixY, &bClusterPixY);
+      clusters->SetBranchAddress("PixErrX", clusterPixErrX, &bClusterPixErrX);
+      clusters->SetBranchAddress("PixErrY", clusterPixErrY, &bClusterPixErrY);
+      clusters->SetBranchAddress("InTrack", clusterInTrack, &bClusterInTrack);
+      clusters->SetBranchAddress("PosX", clusterPosX, &bClusterPosX);
+      clusters->SetBranchAddress("PosY", clusterPosY, &bClusterPosY);
+      clusters->SetBranchAddress("PosZ", clusterPosZ, &bClusterPosZ);
+      clusters->SetBranchAddress("PosErrX", clusterPosErrX, &bClusterPosErrX);
+      clusters->SetBranchAddress("PosErrY", clusterPosErrY, &bClusterPosErrY);
+      clusters->SetBranchAddress("PosErrZ", clusterPosErrZ, &bClusterPosErrZ);
+    }
+
+    TTree* intercepts;
+    _file->GetObject(name.append("/Intercepts").c_str(), intercepts);
+    _intercepts.push_back(intercepts);
+    if (intercepts) {
+      intercepts->SetBranchAddress(
+          "NIntercepts", &numIntercepts, &bNumIntercepts);
+      intercepts->SetBranchAddress("interceptX", interceptX, &bInterceptX);
+      intercepts->SetBranchAddress("interceptY", interceptY, &bInterceptY);
+    }
+  }
+
+  _file->GetObject("Event", _eventInfo);
+  if (_eventInfo) {
+    _eventInfo->SetBranchAddress("TimeStamp", &timeStamp, &bTimeStamp);
+    _eventInfo->SetBranchAddress("FrameNumber", &frameNumber, &bFrameNumber);
+    _eventInfo->SetBranchAddress(
+        "TriggerOffset", &triggerOffset, &bTriggerOffset);
+    _eventInfo->SetBranchAddress("TriggerInfo", &triggerInfo, &bTriggerInfo);
+    _eventInfo->SetBranchAddress("TriggerPhase", &triggerPhase, &bTriggerPhase);
+    _eventInfo->SetBranchAddress("Invalid", &invalid, &bInvalid);
+  }
+
+  _file->GetObject("Tracks", _tracks);
+  if (_tracks) {
+    _tracks->SetBranchAddress("NTracks", &numTracks, &bNumTracks);
+    _tracks->SetBranchAddress("SlopeX", trackSlopeX, &bTrackSlopeX);
+    _tracks->SetBranchAddress("SlopeY", trackSlopeY, &bTrackSlopeY);
+    _tracks->SetBranchAddress("SlopeErrX", trackSlopeErrX, &bTrackSlopeErrX);
+    _tracks->SetBranchAddress("SlopeErrY", trackSlopeErrY, &bTrackSlopeErrY);
+    _tracks->SetBranchAddress("OriginX", trackOriginX, &bTrackOriginX);
+    _tracks->SetBranchAddress("OriginY", trackOriginY, &bTrackOriginY);
+    _tracks->SetBranchAddress("OriginErrX", trackOriginErrX, &bTrackOriginErrX);
+    _tracks->SetBranchAddress("OriginErrY", trackOriginErrY, &bTrackOriginErrY);
+    _tracks->SetBranchAddress(
+        "CovarianceX", trackCovarianceX, &bTrackCovarianceX);
+    _tracks->SetBranchAddress(
+        "CovarianceY", trackCovarianceY, &bTrackCovarianceY);
+    _tracks->SetBranchAddress("Chi2", trackChi2, &bTrackChi2);
+  }
+
+  _file->GetObject("SummaryTree", _summaryTree);
+  if (_summaryTree) {
+    _summaryTree->SetBranchAddress("NRuns", &st_numRuns, &b_NumRuns);
+    _summaryTree->SetBranchAddress("Run", st_run, &b_Run);
+    _summaryTree->SetBranchAddress(
+        "nscan_NRuns", &st_nscan_numRuns, &b_NoiseScan_NumRuns);
+    _summaryTree->SetBranchAddress("nscan_Run", st_nscan_run, &b_NoiseScan_Run);
+    _summaryTree->SetBranchAddress(
+        "nscan_maxFactor", &st_nscan_maxFactor, &b_NoiseScan_MaxFactor);
+    _summaryTree->SetBranchAddress("nscan_maxOccupancy",
+                                   &st_nscan_maxOccupancy,
+                                   &b_NoiseScan_MaxOccupancy);
+    _summaryTree->SetBranchAddress(
+        "nscan_bottomX", &st_nscan_bottom_x, &b_NoiseScan_BottomX);
+    _summaryTree->SetBranchAddress(
+        "nscan_upperX", &st_nscan_upper_x, &b_NoiseScan_UpperX);
+    _summaryTree->SetBranchAddress(
+        "nscan_bottomY", &st_nscan_bottom_y, &b_NoiseScan_BottomY);
+    _summaryTree->SetBranchAddress(
+        "nscan_upperY", &st_nscan_upper_y, &b_NoiseScan_UpperY);
+    _summaryTree->SetBranchAddress("nscan_NNoisyPixels",
+                                   &st_nscan_numNoisyPixels,
+                                   &b_NoiseScan_NumNoisyPixels);
+    // ensure enough space is available for the maximum number of possible
+    // noise pixels, i.e. #planes * #pixels_per_plane
+    // use Mimosa26 (1152 cols x 576 rows) as upper limit
+    size_t max_size = _numPlanes * 1152 * 576;
+    st_nscan_noisyPixel_plane.resize(max_size);
+    st_nscan_noisyPixel_x.resize(max_size);
+    st_nscan_noisyPixel_y.resize(max_size);
+    _summaryTree->SetBranchAddress("nscan_noisyPixel_plane",
+                                   st_nscan_noisyPixel_plane.data(),
+                                   &b_NoiseScan_NoisyPixelPlane);
+    _summaryTree->SetBranchAddress("nscan_noisyPixel_x",
+                                   st_nscan_noisyPixel_x.data(),
+                                   &b_NoiseScan_NoisyPixelX);
+    _summaryTree->SetBranchAddress("nscan_noisyPixel_y",
+                                   st_nscan_noisyPixel_y.data(),
+                                   &b_NoiseScan_NoisyPixelY);
+  }
+}
+
+void Storage::StorageIO::openTruncate(const std::string& path)
+{
+  _file = TFile::Open(path.c_str(), "RECREATE");
+  if (!_file)
+    throw std::runtime_error("Could not open file '" + path + "' for writing.");
+
+  TDirectory* dir = 0;
+  for (unsigned int nplane = 0; nplane < _numPlanes; nplane++) {
+    std::string name("Plane" + std::to_string(nplane));
+
+    dir = _file->mkdir(name.c_str());
+    dir->cd();
+
+    // Hits tree
+    TTree* hits = new TTree("Hits", "Hits");
+    _hits.push_back(hits);
+    hits->Branch("NHits", &numHits, "NHits/I");
+    hits->Branch("PixX", hitPixX, "HitPixX[NHits]/I");
+    hits->Branch("PixY", hitPixY, "HitPixY[NHits]/I");
+    hits->Branch("Value", hitValue, "HitValue[NHits]/I");
+    hits->Branch("Timing", hitTiming, "HitTiming[NHits]/I");
+    hits->Branch("HitInCluster", hitInCluster, "HitInCluster[NHits]/I");
+    hits->Branch("PosX", hitPosX, "HitPosX[NHits]/D");
+    hits->Branch("PosY", hitPosY, "HitPosY[NHits]/D");
+    hits->Branch("PosZ", hitPosZ, "HitPosZ[NHits]/D");
+
+    // Clusters tree
+    TTree* clusters = new TTree("Clusters", "Clusters");
+    _clusters.push_back(clusters);
+    clusters->Branch("NClusters", &numClusters, "NClusters/I");
+    clusters->Branch("PixX", clusterPixX, "ClusterPixX[NClusters]/D");
+    clusters->Branch("PixY", clusterPixY, "ClusterPixY[NClusters]/D");
+    clusters->Branch("PixErrX", clusterPixErrX, "ClusterPixErrX[NClusters]/D");
+    clusters->Branch("PixErrY", clusterPixErrY, "ClusterPixErrY[NClusters]/D");
+    clusters->Branch("InTrack", clusterInTrack, "ClusterInTrack[NClusters]/I");
+    clusters->Branch("PosX", clusterPosX, "ClusterPosX[NClusters]/D");
+    clusters->Branch("PosY", clusterPosY, "ClusterPosY[NClusters]/D");
+    clusters->Branch("PosZ", clusterPosZ, "ClusterPosZ[NClusters]/D");
+    clusters->Branch("PosErrX", clusterPosErrX, "ClusterPosErrX[NClusters]/D");
+    clusters->Branch("PosErrY", clusterPosErrY, "ClusterPosErrY[NClusters]/D");
+    clusters->Branch("PosErrZ", clusterPosErrZ, "ClusterPosErrZ[NClusters]/D");
+
+    // Local track position tree
+    TTree* intercepts = new TTree("Intercepts", "Intercepts");
+    _intercepts.push_back(intercepts);
+    intercepts->Branch("NIntercepts", &numIntercepts, "NIntercepts/I");
+    intercepts->Branch("interceptX", interceptX, "interceptX[NIntercepts]/D");
+    intercepts->Branch("interceptY", interceptY, "interceptY[NIntercepts]/D");
+  }
+
+  _file->cd();
+
+  // EventInfo tree
+  _eventInfo = new TTree("Event", "Event information");
+  _eventInfo->Branch("TimeStamp", &timeStamp, "TimeStamp/l");
+  _eventInfo->Branch("FrameNumber", &frameNumber, "FrameNumber/l");
+  _eventInfo->Branch("TriggerOffset", &triggerOffset, "TriggerOffset/I");
+  _eventInfo->Branch("TriggerInfo", &triggerInfo, "TriggerInfo/I");
+  _eventInfo->Branch("TriggerPhase", &triggerPhase, "TriggerPhase/I");
+  _eventInfo->Branch("Invalid", &invalid, "Invalid/O");
+
+  // Tracks tree
+  _tracks = new TTree("Tracks", "Track parameters");
+  _tracks->Branch("NTracks", &numTracks, "NTracks/I");
+  _tracks->Branch("SlopeX", trackSlopeX, "TrackSlopeX[NTracks]/D");
+  _tracks->Branch("SlopeY", trackSlopeY, "TrackSlopeY[NTracks]/D");
+  _tracks->Branch("SlopeErrX", trackSlopeErrX, "TrackSlopeErrX[NTracks]/D");
+  _tracks->Branch("SlopeErrY", trackSlopeErrY, "TrackSlopeErrY[NTracks]/D");
+  _tracks->Branch("OriginX", trackOriginX, "TrackOriginX[NTracks]/D");
+  _tracks->Branch("OriginY", trackOriginY, "TrackOriginY[NTracks]/D");
+  _tracks->Branch("OriginErrX", trackOriginErrX, "TrackOriginErrX[NTracks]/D");
+  _tracks->Branch("OriginErrY", trackOriginErrY, "TrackOriginErrY[NTracks]/D");
+  _tracks->Branch(
+      "CovarianceX", trackCovarianceX, "TrackCovarianceX[NTracks]/D");
+  _tracks->Branch(
+      "CovarianceY", trackCovarianceY, "TrackCovarianceY[NTracks]/D");
+  _tracks->Branch("Chi2", trackChi2, "TrackChi2[NTracks]/D");
+
+  // SummaryTree tree
+  _summaryTree = new TTree("SummaryTree", "Summary of configuration");
+  _summaryTree->Branch("NRuns", &st_numRuns, "NRuns/I");
+  _summaryTree->Branch("Run", st_run, "Run[NRuns]/I");
+
+  _summaryTree->Branch("nscan_NRuns", &st_nscan_numRuns, "nscan_NRuns/I");
+  _summaryTree->Branch("nscan_Run", st_nscan_run, "nscan_Run[nscan_NRuns]/I");
+  _summaryTree->Branch(
+      "nscan_maxFactor", &st_nscan_maxFactor, "nscan_maxFactor/D");
+  _summaryTree->Branch(
+      "nscan_maxOccupancy", &st_nscan_maxOccupancy, "nscan_maxOccupancy/D");
+  _summaryTree->Branch("nscan_bottomX", &st_nscan_bottom_x, "nscan_bottomX/I");
+  _summaryTree->Branch("nscan_upperX", &st_nscan_upper_x, "nscan_upperX/I");
+  _summaryTree->Branch("nscan_bottomY", &st_nscan_bottom_y, "nscan_bottomY/I");
+  _summaryTree->Branch("nscan_upperY", &st_nscan_upper_y, "nscan_upperY/I");
+  _summaryTree->Branch(
+      "nscan_NNoisyPixels", &st_nscan_numNoisyPixels, "nscan_NNoisyPixels/I");
+  _summaryTree->Branch("nscan_noisyPixel_plane",
+                       st_nscan_noisyPixel_plane.data(),
+                       "nscan_noisyPixel_Plane[nscan_NNoisyPixels]/I");
+  _summaryTree->Branch("nscan_noisyPixel_x",
+                       st_nscan_noisyPixel_x.data(),
+                       "nscan_noisyPixel_X[nscan_NNoisyPixels]/I");
+  _summaryTree->Branch("nscan_noisyPixel_y",
+                       st_nscan_noisyPixel_y.data(),
+                       "nscan_noisyPixel_Y[nscan_NNoisyPixels]/I");
+}
+
 namespace Storage {
 
   //=========================================================
@@ -34,7 +286,7 @@ namespace Storage {
 		       int printLevel) :
     _file(NULL),
     _fileMode(fileMode),
-    _numPlanes(0),
+    _numPlanes(numPlanes),
     _numEvents(0),
     _printLevel(printLevel),
     _noiseMasks(0),
@@ -42,243 +294,18 @@ namespace Storage {
     _eventInfo(0),
     _summaryTree(0)
   {
-    if      (fileMode == INPUT)  _file = new TFile(filePath.c_str(), "READ");
-    else if (fileMode == OUTPUT) _file = new TFile(filePath.c_str(), "RECREATE");
-    if (!_file) throw std::runtime_error("StorageIO: file didn't initialize");
-
-    // clear tree variables
-    clearVariables();
 
     // Plane mask holds a true for masked planes
     if(planeMask && fileMode == OUTPUT)
       throw std::runtime_error("StorageIO: can't use a plane mask in output mode");
 
-    /****************************************************
-     In OUTPUT mode,
-     create the directory structure and the relevant trees
-    ****************************************************/
-    if ( _fileMode == OUTPUT ){
-      if (planeMask)
-        ERROR("StorageIO: disregarding plane mask in output mode\n");
+    clearVariables();
 
-      _numPlanes = numPlanes;
-
-      TDirectory* dir = 0;
-      for(unsigned int nplane=0; nplane<_numPlanes; nplane++){
-	std::stringstream ss;
-	ss << "Plane" << nplane;
-
-	dir = _file->mkdir(ss.str().c_str());
-	dir->cd();
-
-	// Hits tree
-	TTree* hits = new TTree("Hits", "Hits");
-	_hits.push_back(hits);
-	hits->Branch("NHits", &numHits, "NHits/I");
-	hits->Branch("PixX", hitPixX, "HitPixX[NHits]/I");
-	hits->Branch("PixY", hitPixY, "HitPixY[NHits]/I");
-	hits->Branch("Value", hitValue, "HitValue[NHits]/I");
-	hits->Branch("Timing", hitTiming, "HitTiming[NHits]/I");
-	hits->Branch("HitInCluster", hitInCluster, "HitInCluster[NHits]/I");
-	hits->Branch("PosX", hitPosX, "HitPosX[NHits]/D");
-	hits->Branch("PosY", hitPosY, "HitPosY[NHits]/D");
-	hits->Branch("PosZ", hitPosZ, "HitPosZ[NHits]/D");
-
-	// Clusters tree
-	TTree* clusters = new TTree("Clusters", "Clusters");
-	_clusters.push_back(clusters);
-	clusters->Branch("NClusters", &numClusters, "NClusters/I");
-	clusters->Branch("PixX", clusterPixX, "ClusterPixX[NClusters]/D");
-	clusters->Branch("PixY", clusterPixY, "ClusterPixY[NClusters]/D");
-	clusters->Branch("PixErrX", clusterPixErrX, "ClusterPixErrX[NClusters]/D");
-	clusters->Branch("PixErrY", clusterPixErrY, "ClusterPixErrY[NClusters]/D");
-	clusters->Branch("InTrack", clusterInTrack, "ClusterInTrack[NClusters]/I");
-	clusters->Branch("PosX", clusterPosX, "ClusterPosX[NClusters]/D");
-	clusters->Branch("PosY", clusterPosY, "ClusterPosY[NClusters]/D");
-	clusters->Branch("PosZ", clusterPosZ, "ClusterPosZ[NClusters]/D");
-	clusters->Branch("PosErrX", clusterPosErrX, "ClusterPosErrX[NClusters]/D");
-	clusters->Branch("PosErrY", clusterPosErrY, "ClusterPosErrY[NClusters]/D");
-	clusters->Branch("PosErrZ", clusterPosErrZ, "ClusterPosErrZ[NClusters]/D");
-
-	// Local track position tree
-	TTree* intercepts = new TTree("Intercepts", "Intercepts");
-	_intercepts.push_back(intercepts);
-	intercepts->Branch("NIntercepts", &numIntercepts, "NIntercepts/I");
-	intercepts->Branch("interceptX", interceptX, "interceptX[NIntercepts]/D");
-	intercepts->Branch("interceptY", interceptY, "interceptY[NIntercepts]/D");
- }
-
-      _file->cd();
-
-      // EventInfo tree
-      _eventInfo = new TTree("Event", "Event information");
-      _eventInfo->Branch("TimeStamp", &timeStamp, "TimeStamp/l");
-      _eventInfo->Branch("FrameNumber", &frameNumber, "FrameNumber/l");
-      _eventInfo->Branch("TriggerOffset", &triggerOffset, "TriggerOffset/I");
-      _eventInfo->Branch("TriggerInfo", &triggerInfo, "TriggerInfo/I");
-      _eventInfo->Branch("TriggerPhase", &triggerPhase, "TriggerPhase/I");
-      _eventInfo->Branch("Invalid", &invalid, "Invalid/O");
-
-      // Tracks tree
-      _tracks = new TTree("Tracks", "Track parameters");
-      _tracks->Branch("NTracks", &numTracks, "NTracks/I");
-      _tracks->Branch("SlopeX", trackSlopeX, "TrackSlopeX[NTracks]/D");
-      _tracks->Branch("SlopeY", trackSlopeY, "TrackSlopeY[NTracks]/D");
-      _tracks->Branch("SlopeErrX", trackSlopeErrX, "TrackSlopeErrX[NTracks]/D");
-      _tracks->Branch("SlopeErrY", trackSlopeErrY, "TrackSlopeErrY[NTracks]/D");
-      _tracks->Branch("OriginX", trackOriginX, "TrackOriginX[NTracks]/D");
-      _tracks->Branch("OriginY", trackOriginY, "TrackOriginY[NTracks]/D");
-      _tracks->Branch("OriginErrX", trackOriginErrX, "TrackOriginErrX[NTracks]/D");
-      _tracks->Branch("OriginErrY", trackOriginErrY, "TrackOriginErrY[NTracks]/D");
-      _tracks->Branch("CovarianceX", trackCovarianceX, "TrackCovarianceX[NTracks]/D");
-      _tracks->Branch("CovarianceY", trackCovarianceY, "TrackCovarianceY[NTracks]/D");
-      _tracks->Branch("Chi2", trackChi2, "TrackChi2[NTracks]/D");
-
-      // SummaryTree tree
-      _summaryTree = new TTree("SummaryTree", "Summary of configuration");
-      _summaryTree->Branch("NRuns", &st_numRuns, "NRuns/I");
-      _summaryTree->Branch("Run", st_run, "Run[NRuns]/I");
-
-      _summaryTree->Branch("nscan_NRuns", &st_nscan_numRuns, "nscan_NRuns/I");
-      _summaryTree->Branch("nscan_Run", st_nscan_run, "nscan_Run[nscan_NRuns]/I");
-      _summaryTree->Branch("nscan_maxFactor", &st_nscan_maxFactor, "nscan_maxFactor/D");
-      _summaryTree->Branch("nscan_maxOccupancy", &st_nscan_maxOccupancy, "nscan_maxOccupancy/D");
-      _summaryTree->Branch("nscan_bottomX", &st_nscan_bottom_x, "nscan_bottomX/I");
-      _summaryTree->Branch("nscan_upperX", &st_nscan_upper_x, "nscan_upperX/I");
-      _summaryTree->Branch("nscan_bottomY", &st_nscan_bottom_y, "nscan_bottomY/I");
-      _summaryTree->Branch("nscan_upperY", &st_nscan_upper_y, "nscan_upperY/I");
-      _summaryTree->Branch("nscan_NNoisyPixels",  &st_nscan_numNoisyPixels, "nscan_NNoisyPixels/I");
-      _summaryTree->Branch("nscan_noisyPixel_plane", st_nscan_noisyPixel_plane.data(), "nscan_noisyPixel_Plane[nscan_NNoisyPixels]/I");
-      _summaryTree->Branch("nscan_noisyPixel_x", st_nscan_noisyPixel_x.data(), "nscan_noisyPixel_X[nscan_NNoisyPixels]/I");
-      _summaryTree->Branch("nscan_noisyPixel_y", st_nscan_noisyPixel_y.data(), "nscan_noisyPixel_Y[nscan_NNoisyPixels]/I");
-
-    } // end if (_fileMode == OUTPUT)
-
-    /*********************
-     In input mode
-    *********************/
-    if (_fileMode == INPUT){
-
-      if (_numPlanes)
-        INFO("StorageIO: disregarding specified number of planes\n");
-
-      _numPlanes = 0; // Determine num planes from file structure
-
-      unsigned int planeCount = 0;
-      while (true){
-	std::stringstream ss;
-	ss << "Plane" << planeCount;
-
-	// Try to get this plane's directory
-	TDirectory* dir = 0;
-	_file->GetObject(ss.str().c_str(), dir);
-	if (!dir) break;
-
-	planeCount++;
-
-	if (planeMask && planeCount > planeMask->size())
-	  throw std::runtime_error("StorageIO: plane mask is too small");
-
-	if (planeMask && planeMask->at(planeCount - 1)) continue;
-
-	_numPlanes++;
-
-	TTree* hits;
-	_file->GetObject(ss.str().append("/Hits").c_str(), hits);
-	_hits.push_back(hits);
-	if (hits){
-	  hits->SetBranchAddress("NHits", &numHits, &bNumHits);
-	  hits->SetBranchAddress("PixX", hitPixX, &bHitPixX);
-	  hits->SetBranchAddress("PixY", hitPixY, &bHitPixY);
-	  hits->SetBranchAddress("Value", hitValue, &bHitValue);
-	  hits->SetBranchAddress("Timing", hitTiming, &bHitTiming);
-	  hits->SetBranchAddress("HitInCluster", hitInCluster, &bHitInCluster);
-	  hits->SetBranchAddress("PosX", hitPosX, &bHitPosX);
-	  hits->SetBranchAddress("PosY", hitPosY, &bHitPosY);
-	  hits->SetBranchAddress("PosZ", hitPosZ, &bHitPosZ);
-	}
-
-	TTree* clusters;
-	_file->GetObject(ss.str().append("/Clusters").c_str(), clusters);
-	_clusters.push_back(clusters);
-	if(clusters){
-	  clusters->SetBranchAddress("NClusters", &numClusters, &bNumClusters);
-	  clusters->SetBranchAddress("PixX", clusterPixX, &bClusterPixX);
-	  clusters->SetBranchAddress("PixY", clusterPixY, &bClusterPixY);
-	  clusters->SetBranchAddress("PixErrX", clusterPixErrX, &bClusterPixErrX);
-	  clusters->SetBranchAddress("PixErrY", clusterPixErrY, &bClusterPixErrY);
-	  clusters->SetBranchAddress("InTrack", clusterInTrack, &bClusterInTrack);
-	  clusters->SetBranchAddress("PosX", clusterPosX, &bClusterPosX);
-	  clusters->SetBranchAddress("PosY", clusterPosY, &bClusterPosY);
-	  clusters->SetBranchAddress("PosZ", clusterPosZ, &bClusterPosZ);
-	  clusters->SetBranchAddress("PosErrX", clusterPosErrX, &bClusterPosErrX);
-	  clusters->SetBranchAddress("PosErrY", clusterPosErrY, &bClusterPosErrY);
-	  clusters->SetBranchAddress("PosErrZ", clusterPosErrZ, &bClusterPosErrZ);
-	}
-
-	TTree* intercepts;
-	_file->GetObject(ss.str().append("/Intercepts").c_str(), intercepts);
-	_intercepts.push_back(intercepts);
-	if(intercepts){
-	  intercepts->SetBranchAddress("NIntercepts", &numIntercepts, &bNumIntercepts);
-	  intercepts->SetBranchAddress("interceptX", interceptX, &bInterceptX);
-	  intercepts->SetBranchAddress("interceptY", interceptY, &bInterceptY);
-	}
-
-
-}
-
-      _file->GetObject("Event", _eventInfo);
-      if (_eventInfo){
-	_eventInfo->SetBranchAddress("TimeStamp", &timeStamp, &bTimeStamp);
-	_eventInfo->SetBranchAddress("FrameNumber", &frameNumber, &bFrameNumber);
-	_eventInfo->SetBranchAddress("TriggerOffset", &triggerOffset, &bTriggerOffset);
-	_eventInfo->SetBranchAddress("TriggerInfo", &triggerInfo, &bTriggerInfo);
-	_eventInfo->SetBranchAddress("TriggerPhase", &triggerPhase, &bTriggerPhase);
-	_eventInfo->SetBranchAddress("Invalid", &invalid, &bInvalid);
-      }
-
-      _file->GetObject("Tracks", _tracks);
-      if (_tracks){
-	_tracks->SetBranchAddress("NTracks", &numTracks, &bNumTracks);
-	_tracks->SetBranchAddress("SlopeX", trackSlopeX, &bTrackSlopeX);
-	_tracks->SetBranchAddress("SlopeY", trackSlopeY, &bTrackSlopeY);
-	_tracks->SetBranchAddress("SlopeErrX", trackSlopeErrX, &bTrackSlopeErrX);
-	_tracks->SetBranchAddress("SlopeErrY", trackSlopeErrY, &bTrackSlopeErrY);
-	_tracks->SetBranchAddress("OriginX", trackOriginX, &bTrackOriginX);
-	_tracks->SetBranchAddress("OriginY", trackOriginY, &bTrackOriginY);
-	_tracks->SetBranchAddress("OriginErrX", trackOriginErrX, &bTrackOriginErrX);
-	_tracks->SetBranchAddress("OriginErrY", trackOriginErrY, &bTrackOriginErrY);
-	_tracks->SetBranchAddress("CovarianceX", trackCovarianceX, &bTrackCovarianceX);
-	_tracks->SetBranchAddress("CovarianceY", trackCovarianceY, &bTrackCovarianceY);
-	_tracks->SetBranchAddress("Chi2", trackChi2, &bTrackChi2);
-      }
-
-      _file->GetObject("SummaryTree", _summaryTree);
-      if( _summaryTree ){
-	_summaryTree->SetBranchAddress("NRuns", &st_numRuns, &b_NumRuns);
-	_summaryTree->SetBranchAddress("Run", st_run, &b_Run);
-	_summaryTree->SetBranchAddress("nscan_NRuns", &st_nscan_numRuns, &b_NoiseScan_NumRuns);
-	_summaryTree->SetBranchAddress("nscan_Run", st_nscan_run, &b_NoiseScan_Run);
-	_summaryTree->SetBranchAddress("nscan_maxFactor", &st_nscan_maxFactor, &b_NoiseScan_MaxFactor);
-	_summaryTree->SetBranchAddress("nscan_maxOccupancy", &st_nscan_maxOccupancy, &b_NoiseScan_MaxOccupancy);
-	_summaryTree->SetBranchAddress("nscan_bottomX", &st_nscan_bottom_x, &b_NoiseScan_BottomX);
-	_summaryTree->SetBranchAddress("nscan_upperX", &st_nscan_upper_x, &b_NoiseScan_UpperX);
-	_summaryTree->SetBranchAddress("nscan_bottomY", &st_nscan_bottom_y, &b_NoiseScan_BottomY);
-	_summaryTree->SetBranchAddress("nscan_upperY", &st_nscan_upper_y, &b_NoiseScan_UpperY);
-	_summaryTree->SetBranchAddress("nscan_NNoisyPixels", &st_nscan_numNoisyPixels, &b_NoiseScan_NumNoisyPixels);
-  // ensure enough space is available for the maximum number of possible
-  // noise pixels, i.e. #planes * #pixels_per_plane
-  // use Mimosa26 (1152 cols x 576 rows) as upper limit
-  size_t max_size = _numPlanes * 1152 * 576;
-  st_nscan_noisyPixel_plane.resize(max_size);
-  st_nscan_noisyPixel_x.resize(max_size);
-  st_nscan_noisyPixel_y.resize(max_size);
-	_summaryTree->SetBranchAddress("nscan_noisyPixel_plane", st_nscan_noisyPixel_plane.data(), &b_NoiseScan_NoisyPixelPlane);
-	_summaryTree->SetBranchAddress("nscan_noisyPixel_x", st_nscan_noisyPixel_x.data(), &b_NoiseScan_NoisyPixelX);
-	_summaryTree->SetBranchAddress("nscan_noisyPixel_y", st_nscan_noisyPixel_y.data(), &b_NoiseScan_NoisyPixelY);
-      }
-    } // end if(_fileMode == INPUT)
+    if (fileMode == INPUT) {
+      openRead(filePath, planeMask);
+    } else {
+      openTruncate(filePath);
+    }
 
     // debug info
     INFO("file path: ", _file->GetPath(), '\n');
