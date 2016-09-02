@@ -19,7 +19,6 @@
 #define MAX_RUNS 1000
 #define MAX_NOISY 20000
 
-class ConfigParser;
 namespace Mechanics { class NoiseMask; }
 
 namespace Storage {
