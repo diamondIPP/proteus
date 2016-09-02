@@ -119,9 +119,9 @@ void applyMask(const char* inputName,
     // ConfigParser runConfig(tbCfg);
 
     unsigned int inMask = Storage::Flags::TRACKS | Storage::Flags::CLUSTERS;
-    Storage::StorageIO input(inputName, Storage::INPUT, 0, inMask, device.getSensorMask(), printLevel);
+    Storage::StorageIO input(inputName, Storage::INPUT, 0, inMask, device.getSensorMask());
 
-    Storage::StorageIO output(outputName, Storage::OUTPUT, device.getNumSensors(), inMask, 0, printLevel);
+    Storage::StorageIO output(outputName, Storage::OUTPUT, device.getNumSensors(), inMask, 0);
     output.setNoiseMaskData(device.noiseMask());
     output.setRuns(runs);
 
@@ -335,12 +335,12 @@ void process(const char* inputName,
 
     // input file
     unsigned int inMask = Storage::Flags::TRACKS | Storage::Flags::CLUSTERS;
-    Storage::StorageIO input(inputName, Storage::INPUT, 0, inMask, 0, printLevel);
+    Storage::StorageIO input(inputName, Storage::INPUT, 0, inMask, 0);
 
     // output file
     unsigned int outMask = 0;
     if(device.getNumSensors() <= 2) outMask = Storage::Flags::TRACKS;
-    Storage::StorageIO output(outputName, Storage::OUTPUT, device.getNumSensors(), outMask, 0, printLevel);
+    Storage::StorageIO output(outputName, Storage::OUTPUT, device.getNumSensors(), outMask, 0);
 
     Loopers::ProcessEvents looper(&device, &output, clusterMaker, trackMaker, &input, startEvent, numEvents);
     const Storage::Event* start = input.readEvent(looper.getStartEvent());

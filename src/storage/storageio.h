@@ -48,14 +48,11 @@ namespace Storage {
 	      Mode fileMode,
 	      unsigned int numPlanes = 0,
 	      const unsigned int treeMask = 0,
-	      const std::vector<bool>* planeMask = 0,
-	      int printLevel = 0);
+	      const std::vector<bool>* planeMask = 0);
 
     /** Destructor */
     ~StorageIO();
 
-    // void setNoiseMasks(std::vector<bool**>* noiseMasks);
-    void setPrintLevel(const int printLevel);
     void setRuns(const std::vector<int> &vruns);
     void setNoiseMaskData(const Mechanics::NoiseMask& noisemask);
 
@@ -80,8 +77,6 @@ namespace Storage {
     const Mode   _fileMode; // How to open and process the file
     unsigned int _numPlanes; // This can be read from the file structure
     uint64_t     _numEvents; // Number of events in the input file
-
-    int _printLevel; // verbose level
 
     const std::vector<bool**>* _noiseMasks;
 

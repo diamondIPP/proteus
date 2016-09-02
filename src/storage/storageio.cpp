@@ -282,13 +282,11 @@ namespace Storage {
 		       Mode fileMode,
 		       unsigned int numPlanes,
 		       const unsigned int treeMask,
-		       const std::vector<bool>* planeMask,
-		       int printLevel) :
+		       const std::vector<bool>* planeMask) :
     _file(NULL),
     _fileMode(fileMode),
     _numPlanes(numPlanes),
     _numEvents(0),
-    _printLevel(printLevel),
     _noiseMasks(0),
     _tracks(0),
     _eventInfo(0),
@@ -491,18 +489,6 @@ namespace Storage {
     }
       out << endl;
       return out.str();
-  }
-  //
-  // //=========================================================
-  // void StorageIO::setNoiseMasks(std::vector<bool**>* noiseMasks){
-  //   if (noiseMasks && _numPlanes != noiseMasks->size())
-  //     throw std::runtime_error("StorageIO: noise mask has more planes than will be read in";
-  //   _noiseMasks = noiseMasks;
-  // }
-
-  //=========================================================
-  void StorageIO::setPrintLevel(const int printLevel){
-    _printLevel = printLevel;
   }
 
   //=========================================================
