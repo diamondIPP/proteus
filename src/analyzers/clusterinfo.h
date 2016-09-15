@@ -36,7 +36,7 @@ namespace Analyzers {
     std::vector<TH2D*> _timingVsHitValue;
     unsigned int _totBins;
 
-  }; // end of class  
+  }; // end of class
 
 } // end of namespace
 

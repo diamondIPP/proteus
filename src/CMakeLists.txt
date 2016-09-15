@@ -20,7 +20,6 @@ set(Common_SRC
     analyzers/efficiency.cpp
     analyzers/residuals.cpp
     converters/kartelconvert.cpp
-    exception.cpp
     loopers/analysis.cpp
     loopers/applymask.cpp
     loopers/coarsealign.cpp
@@ -34,7 +33,6 @@ set(Common_SRC
     loopers/finealigndut.cpp
     loopers/noisescan.cpp
     loopers/processevents.cpp
-    mechanics/configmechanics.cpp
     mechanics/device.cpp
     mechanics/noisemask.cpp
     mechanics/alignment.cpp
@@ -52,10 +50,13 @@ set(Common_SRC
     storage/hit.cpp
     storage/track.cpp
     storage/plane.cpp
-    storage/storageio.cpp)
+    storage/storageio.cpp
+    utils/logger.cpp
+    exception.cpp
+    configparser.cpp)
 
 add_library(pt-common STATIC ${Common_SRC})
-target_include_directories(pt-common PUBLIC ${ROOT_INCLUDE_DIRS})
+target_include_directories(pt-common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})
 target_link_libraries(pt-common PUBLIC ${ROOT_LIBRARIES})
 
 add_executable(proteus main.cpp configparser.cpp inputargs.cpp)

@@ -204,7 +204,7 @@ int KartelConvert::checkHit(const Hit& hit, unsigned int nsensor)
   if (_device) assert(nsensor < _device->getNumSensors() &&
                       "KatelConvert: device doesn't have the correct number of planes");
   if (!_device) return 0;
-  Mechanics::Sensor* sensor = _device->getSensor(nsensor);
+  const Mechanics::Sensor* sensor = _device->getSensor(nsensor);
   if (hit.x > sensor->getNumX() || hit.y > sensor->getNumY()) return -1;
   if (sensor->isPixelNoisy(hit.x, hit.y)) return 1;
   return 0;

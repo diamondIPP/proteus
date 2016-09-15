@@ -48,7 +48,7 @@ void Residuals::processEvent(const Storage::Event* refEvent)
     for (unsigned int nplane = 0; nplane < refEvent->getNumPlanes(); nplane++)
     {
       Storage::Plane* plane = refEvent->getPlane(nplane);
-      Mechanics::Sensor* sensor = _device->getSensor(nplane);
+      const Mechanics::Sensor* sensor = _device->getSensor(nplane);
       double tx = 0, ty = 0, tz = 0;
       Processors::trackSensorIntercept(track, sensor, tx, ty, tz);
 
@@ -78,10 +78,10 @@ void Residuals::processEvent(const Storage::Event* refEvent)
 
         _residualsX.at(nplane)->Fill(rx1);
         _residualsY.at(nplane)->Fill(ry1);
-        _residualsXX.at(nplane)->Fill(rx1, tx);  
+        _residualsXX.at(nplane)->Fill(rx1, tx);
         _residualsYY.at(nplane)->Fill(ry1, ty);
         _residualsXY.at(nplane)->Fill(rx1, ty);
-        _residualsYX.at(nplane)->Fill(ry1, tx); 
+        _residualsYX.at(nplane)->Fill(ry1, tx);
 
 
     }
@@ -151,10 +151,10 @@ Residuals::Residuals(const Mechanics::Device* refDevice,
   // Generate a histogram for each sensor in the device
   for (unsigned int nsens = 0; nsens < _device->getNumSensors(); nsens++)
   {
-    Mechanics::Sensor* sensor = _device->getSensor(nsens);
+    const Mechanics::Sensor* sensor = _device->getSensor(nsens);
     for (unsigned int axis = 0; axis < 2; axis++)
     {
-      double width = nPixX * 
+      double width = nPixX *
           (axis ? sensor->getPosPitchX() : sensor->getPosPitchY());
 
       unsigned int nbins = binsPerPix * nPixX;
@@ -165,9 +165,9 @@ Residuals::Residuals(const Mechanics::Device* refDevice,
 
       // Generate the 1D residual distribution for the given axis
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName()
+      name << sensor->getName()
            << ((axis) ? "X" : "Y") << _nameSuffix;
-      title << sensor->getDevice()->getName() << " " << sensor->getName()
+      title << sensor->getName()
             << ((axis) ? " X" : " Y")
             << ";Track cluster difference " << (axis ? "X" : "Y")
             << " [" << _device->getSpaceUnit() << "]"
@@ -184,9 +184,9 @@ Residuals::Residuals(const Mechanics::Device* refDevice,
       height = axis ? sensor->getPosSensitiveX() : sensor->getPosSensitiveY();
 
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName()
+      name << sensor->getName()
            << ((axis) ? "XvsX" : "YvsY") << _nameSuffix;
-      title << sensor->getDevice()->getName() << " " << sensor->getName()
+      title << sensor->getName()
             << ((axis) ? " X vs. X" : " Y vs. Y")
             << ";Track cluster difference " << (axis ? "X" : "Y")
             << " [" << _device->getSpaceUnit() << "]"
@@ -205,9 +205,9 @@ Residuals::Residuals(const Mechanics::Device* refDevice,
       height = axis ? sensor->getSensitiveY() : sensor->getSensitiveX();
 
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName()
+      name << sensor->getName()
            << ((axis) ? "XvsY" : "YvsX") << _nameSuffix;
-      title << sensor->getDevice()->getName() << " " << sensor->getName()
+      title << sensor->getName()
             << ((axis) ? " X vs. Y" : " Y vs. X")
             << ";Track cluster difference " << (axis ? "X" : "Y")
             << " [" << _device->getSpaceUnit() << "]"

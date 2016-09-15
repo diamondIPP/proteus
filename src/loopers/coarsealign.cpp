@@ -39,7 +39,7 @@ Loopers::CoarseAlign::CoarseAlign(Mechanics::Device* refDevice,
 	 "Loopers: number of planes / sensors mis-match");
   
   std::cout << "CoarseAlign::CoarseAlign" << std::endl;
-  refDevice->print();
+  refDevice->print(std::cout);
 }
 
 //=========================================================
@@ -72,7 +72,9 @@ void Loopers::CoarseAlign::loop(){
   
   double cummulativeX = 0;
   double cummulativeY = 0;
-  
+
+  Mechanics::Alignment& align = *_refDevice->getAlignment();
+
   for(unsigned int nsensor=1; nsensor<_refDevice->getNumSensors(); nsensor++){
     Mechanics::Sensor* sensor = _refDevice->getSensor(nsensor);
     
@@ -91,16 +93,15 @@ void Loopers::CoarseAlign::loop(){
     std::cout << "For sensor: " << nsensor << std::endl;
     std::cout << "Gaussian mean: X= " << offsetX << "  Y= " << offsetY << std::endl;
     std::cout << "Cummulative    X= " << cummulativeX << "  Y= " << cummulativeY << std::endl;
-    
-    sensor->setOffX(sensor->getOffX() + cummulativeX);
-    sensor->setOffY(sensor->getOffY() + cummulativeY);
-    
+
+    align.correctOffset(nsensor, cummulativeX, cummulativeY, 0);
+
     std::cout << "New offset: X= " << sensor->getOffX() << "  Y= " << sensor->getOffY() << std::endl;
   }
   
   // create output alignment file
-  _refDevice->getAlignment()->writeFile();
-} 
+  align.writeFile(_refDevice->pathAlignment());
+}
 
 //=========================================================
 void Loopers::CoarseAlign::print() const {

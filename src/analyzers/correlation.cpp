@@ -92,11 +92,11 @@ void Correlation::initializeHist(const Mechanics::Sensor* sensor0,
   {
     // Generate the name and title of the correlation plot for this sensor and axis
     name.str(""); title.str("");
-    name << sensor1->getDevice()->getName() << sensor1->getName()
-         << "To" << sensor0->getDevice()->getName() << sensor0->getName()
+    name << sensor1->getName()
+         << "To" << sensor0->getName()
          << ((axis) ? "X" : "Y") << _nameSuffix;
-    title << sensor1->getDevice()->getName() << " " << sensor1->getName()
-          << " To " << sensor0->getDevice()->getName() << " " << sensor0->getName()
+    title << " " << sensor1->getName()
+          << " To " << " " << sensor0->getName()
           << ((axis) ? " X" : " Y");
 
     // Get the number of pixels for the axis
@@ -135,11 +135,11 @@ void Correlation::initializeHist(const Mechanics::Sensor* sensor0,
 
     // Repeat for the alignment histograms
     name.str(""); title.str("");
-    name << sensor1->getDevice()->getName() << sensor1->getName()
-         << "To" << sensor0->getDevice()->getName() << sensor0->getName()
+    name << sensor1->getName()
+         << "To" << sensor0->getName()
          << ((axis) ? "X" : "Y") << _nameSuffix;
-    title << sensor1->getDevice()->getName() << " " << sensor1->getName()
-          << " To " << sensor0->getDevice()->getName() << " " << sensor0->getName()
+    title << " " << sensor1->getName()
+          << " To " << sensor0->getName()
           << ((axis) ? " X" : " Y");
 
     const double sens1Size = (axis) ? sensor1->getPosSensitiveX() :

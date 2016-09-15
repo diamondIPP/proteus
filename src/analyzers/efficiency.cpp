@@ -76,7 +76,7 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
 
   // Generate a histogram for each sensor in the device
   for (unsigned int nsens = 0; nsens < _dutDevice->getNumSensors(); nsens++) {
-    Mechanics::Sensor *sensor = _dutDevice->getSensor(nsens);
+    const Mechanics::Sensor *sensor = _dutDevice->getSensor(nsens);
 
     unsigned int nx = sensor->getPosNumX() / rebinX;
     unsigned int ny = sensor->getPosNumY() / rebinY;
@@ -101,8 +101,8 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
 
     // Efficiency map initialization
     name.str(""); title.str("");
-    name << sensor->getDevice()->getName() << sensor->getName() << "Map" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " - " << sensor->getName()
+    name<< sensor->getName() << "Map" << _nameSuffix;
+    title << sensor->getName()
           << " [Efficiency Map]"
           << ";X position" << " [" << _dutDevice->getSpaceUnit() << "]"
           << ";Y position" << " [" << _dutDevice->getSpaceUnit() << "]"
@@ -121,7 +121,7 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
 
 //---------Residual plot
       name.str(""); title.str("");
-      name << 
+      name <<
             "ResX";
       title << "ResX ";
       TH1D* resX1d = new TH1D(name.str().c_str(), title.str().c_str(),
@@ -151,9 +151,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
 
     // Pixel grouped efficieny initialization
     name.str(""); title.str("");
-    name << sensor->getDevice()->getName() << sensor->getName()
+    name << sensor->getName()
          << "GroupedDistribution" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " - " << sensor->getName()
+    title << sensor->getName()
           << " [Grouped Efficiency]";
     TH1D *pixels = new TH1D(name.str().c_str(), title.str().c_str(),
                             20, 0, 1.001);
@@ -164,9 +164,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
 
     // Track matched position (X)
     name.str(""); title.str(""); Xaxis.str("");
-    name << sensor->getDevice()->getName() << sensor->getName()
+    name << sensor->getName()
          << "MatchedTracksPositionX" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " " << sensor->getName()
+    title << sensor->getName()
           << " [Matched tracks : Position-X]";
     TH1D *matchedPositionX = new TH1D(name.str().c_str(), title.str().c_str(),
                 //                      sensor->getNumX() * 1.5 * 3, 1.5 * lowX, 1.5 * uppX);
@@ -178,9 +178,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
 
     // Track matched position (Y)
     name.str(""); title.str(""); Xaxis.str("");
-    name << sensor->getDevice()->getName() << sensor->getName()
+    name << sensor->getName()
          << "MatchedTracksPositionY" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " - " << sensor->getName()
+    title << sensor->getName()
           << " [Matched tracks : Position-Y]";
     TH1D *matchedPositionY = new TH1D(name.str().c_str(), title.str().c_str(),
                                       sensor->getNumY() * 1.5 * 3, 1.5 * lowY, 1.5 * uppY);
@@ -191,8 +191,8 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
 
     //-----------------------------------------------------------
     name.str(""); title.str(""); Xaxis.str("");
-    name << sensor->getDevice()->getName() << sensor->getName() << "MatchedTiming" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " - " << sensor->getName()
+    name << sensor->getName() << "MatchedTiming" << _nameSuffix;
+    title << sensor->getName()
           << " [Matched tracks : Timing]";
     TH1D *matchTiming = new TH1D(name.str().c_str(), title.str().c_str(),
                                  16, 0, 16);
@@ -206,8 +206,8 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     name.str(""); title.str(""); Xaxis.str("");
     for (int BC = 0; BC <= 16; BC++) {
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName() << "TDC_DUT_BC_" << BC << _nameSuffix;
-      title << sensor->getDevice()->getName() << " - " << sensor->getName() << " [Matched tracks : TDC_DUT_BC_" << BC << "]";
+      name << sensor->getName() << "TDC_DUT_BC_" << BC << _nameSuffix;
+      title << sensor->getName() << " [Matched tracks : TDC_DUT_BC_" << BC << "]";
       TH1D *triggerPhaseDUT = new TH1D(name.str().c_str(), title.str().c_str(), 65, -0.5, 63.5);
       triggerPhaseDUT->GetXaxis()->SetTitle("TriggerPhase");
       triggerPhaseDUT->GetYaxis()->SetTitle("# hits");
@@ -222,8 +222,8 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     for (int NUM_PLANE = 0; NUM_PLANE < 6; NUM_PLANE++) {
       for (int BC = 0; BC < 4; BC++) {
         name.str(""); title.str("");
-        name << sensor->getDevice()->getName() << sensor->getName() << "TDC_PLANE_" << NUM_PLANE << "_BC_" << BC << _nameSuffix;
-        title << sensor->getDevice()->getName() << " - " << sensor->getName() << " [Matched tracks : TDC_PLANE_" << NUM_PLANE << "_BC_" << BC << "]";
+        name << sensor->getName() << "TDC_PLANE_" << NUM_PLANE << "_BC_" << BC << _nameSuffix;
+        title << sensor->getName() << " [Matched tracks : TDC_PLANE_" << NUM_PLANE << "_BC_" << BC << "]";
         TH1D *triggerPhaseREF = new TH1D(name.str().c_str(), title.str().c_str(), 65, -0.5, 63.5);
         triggerPhaseREF->GetXaxis()->SetTitle("TriggerPhase");
         triggerPhaseREF->GetYaxis()->SetTitle("# hits");
@@ -237,8 +237,8 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     name.str(""); title.str(""); Xaxis.str("");
     for (int NUM_PLANE = 0; NUM_PLANE < 6; NUM_PLANE++) {
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName() << "_LVL1TriggerREF_" << NUM_PLANE <<"_"<<  _nameSuffix;
-      title << sensor->getDevice()->getName() << " - LVL1 - " << sensor->getName() << " [Matched tracks : Timing]";
+      name << sensor->getName() << "_LVL1TriggerREF_" << NUM_PLANE <<"_"<<  _nameSuffix;
+      title << " - LVL1 - " << sensor->getName() << " [Matched tracks : Timing]";
       TH1D *matchTiming_LV1_REF = new TH1D(name.str().c_str(), title.str().c_str(),5, -0.5, 4.5);
       matchTiming_LV1_REF->GetXaxis()->SetTitle("Timing [BC]");
       matchTiming_LV1_REF->GetYaxis()->SetTitle("# hits");
@@ -251,9 +251,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
         std::vector<TH1D *> tmp7;
         for (int cl_size = 0; cl_size <= _maxclustersize; cl_size++) {
           name.str(""); title.str("");
-          name << sensor->getDevice()->getName() << sensor->getName()
+          name << sensor->getName()
                << Form("Timing_Cluster_%d", cl_size+1) << _nameSuffix;
-          title << sensor->getDevice()->getName() << " " << sensor->getName()
+          title << " " << sensor->getName()
                 << Form("Timing for cluster = %d ", cl_size+1);
           TH1D *timing_cluster = new TH1D(name.str().c_str(), title.str().c_str(),16, 0, 16);
           timing_cluster->SetDirectory(plotDir_ClusterEfficiency);
@@ -272,8 +272,8 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
 
 
     name.str(""); title.str(""); Xaxis.str("");
-    name << sensor->getDevice()->getName() << sensor->getName() << "Matchedcluster" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " - " << sensor->getName()
+    name << sensor->getName() << "Matchedcluster" << _nameSuffix;
+    title << sensor->getName()
           << " [Matched tracks : Cluster]";
     TH1D *matchCluster = new TH1D(name.str().c_str(), title.str().c_str(),
                                   10, 0, 10);
@@ -285,8 +285,8 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     //-----------------------------------------------------------
 
     name.str(""); title.str(""); Xaxis.str("");
-    name << sensor->getDevice()->getName() << sensor->getName() << "Matched_ToT" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " - " << sensor->getName() << " [ToT distribution]";
+    name << sensor->getName() << "Matched_ToT" << _nameSuffix;
+    title << sensor->getName() << " [ToT distribution]";
     TH1D *matchToT = new TH1D(name.str().c_str(), title.str().c_str(),
                               18, 0, 18);
     matchToT->GetXaxis()->SetTitle("ToT [BC]");
@@ -295,9 +295,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
 
     //-----------------------------------------------------------
     name.str(""); title.str("");
-    name << sensor->getDevice()->getName() << sensor->getName()
+    name << sensor->getName()
          << "lvl1_vs_ToT" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " - " << sensor->getName()
+    title << sensor->getName()
           << " [Timing vs ToT]";
     TH2D *lvl1vsToT = new TH2D(name.str().c_str(), title.str().c_str(),
                                16, 0, 16, // LVL1
@@ -310,9 +310,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     std::vector<TH2D *> tmp4;
     for (int cl_size = 0; cl_size <= _maxclustersize; cl_size++) {
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName()
+      name << sensor->getName()
            << Form("TimingTOT_cl_%d", cl_size + 1) << _nameSuffix;
-      title << sensor->getDevice()->getName() << " " << sensor->getName()
+      title << sensor->getName()
             << Form(" Timing vs TOT for cluster size = %d", cl_size + 1);
       TH2D *TimingTOT_cluster = new TH2D(name.str().c_str(), title.str().c_str(),
                                          16, 0, 16, // LVL1
@@ -327,9 +327,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     //-----------------------------------------------------------
 
     name.str(""); title.str("");
-    name << sensor->getDevice()->getName() << sensor->getName()
+    name << sensor->getName()
          << "InPixelTiming" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " - " << sensor->getName()
+    title << sensor->getName()
           << " [InPixel Timing Map]";
     TH2D *inTimingMap = new TH2D(name.str().c_str(), title.str().c_str(),
                                  pixBinsX, 0, sensor->getPitchX(),
@@ -343,9 +343,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     std::vector<TH2D *> tmp;
     for (int bc = 0; bc < 16; bc++) {
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName()
+      name << sensor->getName()
            << Form("InPixelTiming_bc_%d", bc) << _nameSuffix;
-      title << sensor->getDevice()->getName() << " " << sensor->getName()
+      title << sensor->getName()
             << Form(" InPixel Timing Map for lvl= %d bc", bc);
       TH2D *inTimingMap1 = new TH2D(name.str().c_str(), title.str().c_str(),
                                     pixBinsX, 0, sensor->getPitchX(),
@@ -359,9 +359,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
 
     // InPixel efficiency : all LVL1
     name.str(""); title.str("");
-    name << sensor->getDevice()->getName() << sensor->getName()
+    name << sensor->getName()
          << "total_cluster" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " " << sensor->getName()
+    title << sensor->getName()
           << " InPixel Efficiency Map for lvl=  bc";
     TH2D *inPixel_LVL1_total = new TH2D(name.str().c_str(), title.str().c_str(),
                                         pixBinsX, 0, sensor->getPitchX(),
@@ -374,9 +374,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     std::vector<TH2D *> tmp2;
     for (int bc = 0; bc < 16; bc++) {
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName()
+      name << sensor->getName()
            << Form("InPixelEfficiencypa_bc_%d", bc) << _nameSuffix;
-      title << sensor->getDevice()->getName() << " " << sensor->getName()
+      title << sensor->getName()
             << Form(" In Pixel Efficiency Map for lvl= %d bc", bc);
       TH2D *inPixel_LVL1_passed = new TH2D(name.str().c_str(), title.str().c_str(),
                                            pixBinsX, 0, sensor->getPitchX(),
@@ -391,9 +391,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     std::vector<TH2D *> tmppp;
     for (int plane = 0; plane < 6; plane++) {
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName()
+      name << sensor->getName()
            << Form("Correlation_plot_plane_%d_%d", plane,plane+1) << _nameSuffix;
-      title << sensor->getDevice()->getName() << " " << sensor->getName()
+      title << sensor->getName()
             << Form(" Correlation plane %d and %d", plane, plane+1);
       TH2D *correlation_plane = new TH2D(name.str().c_str(), title.str().c_str(),
                                            16, 0, 16,
@@ -409,9 +409,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     std::vector<TH1D *> tmpp;
     for (int plane = 0; plane < 6; plane++) {
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName()
+      name << sensor->getName()
            << Form("Timing_Plane_%d", plane) << _nameSuffix;
-      title << sensor->getDevice()->getName() << " " << sensor->getName()
+      title << sensor->getName()
             << Form("Timing distribution plane= %d ", plane);
       TH1D *correlation_plane = new TH1D(name.str().c_str(), title.str().c_str(),
                                            16, 0, 16);
@@ -428,9 +428,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
 
 
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName()
+      name << sensor->getName()
            << "Timing_diff" << _nameSuffix;
-      title << sensor->getDevice()->getName() << " " << sensor->getName()
+      title << sensor->getName()
             << "Timing_diff"<<_nameSuffix;
       TH1D *TimeDif = new TH1D(name.str().c_str(), title.str().c_str(),
                                            16, 0, 16);
@@ -448,9 +448,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     std::vector<TH1D *> tmp7;
     for (int cl_size = 0; cl_size <= _maxclustersize; cl_size++) {
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName()
+      name << sensor->getName()
            << Form("Timing_Cluster_%d", cl_size + 1) << _nameSuffix;
-      title << sensor->getDevice()->getName() << " " << sensor->getName()
+      title << sensor->getName()
             << Form("Timing for cluster = %d ", cl_size+1);
       TH1D *timing_cluster = new TH1D(name.str().c_str(), title.str().c_str(),16, 0, 16);
       timing_cluster->SetDirectory(plotDir_ClusterEfficiency);
@@ -462,9 +462,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     //std::vector<TH1D *> tmp7;
     for (int cl_size = 0; cl_size <= _maxclustersize; cl_size++) {
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName()
+      name << sensor->getName()
            << Form("_Fast_Timing_Cluster_%d", cl_size+1) << _nameSuffix;
-      title << sensor->getDevice()->getName() << " " << sensor->getName()
+      title << sensor->getName()
             << Form("Fast Timing for cluster = %d ", cl_size+1);
       TH1D *timing_cluster_fast = new TH1D(name.str().c_str(), title.str().c_str(),16, 0, 16);
       timing_cluster_fast->SetDirectory(plotDir_ClusterEfficiency);
@@ -475,9 +475,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     //std::vector<TH1D *> tmp7;
     for (int cl_size = 0; cl_size <= _maxclustersize; cl_size++) {
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName()
+      name << sensor->getName()
            << Form("_Fast_Timing_Cluster_%d", cl_size + 1) << _nameSuffix;
-      title << sensor->getDevice()->getName() << " " << sensor->getName()
+      title << sensor->getName()
             << Form("Fast Timing for cluster = %d ", cl_size + 1);
       TH1D *timing_cluster_fast = new TH1D(name.str().c_str(), title.str().c_str(), 16, 0, 16);
       timing_cluster_fast->SetDirectory(plotDir_ClusterEfficiency);
@@ -489,9 +489,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     std::vector<TH1D *> tmp9;
     for (int cl_size = 0; cl_size <= _maxclustersize; cl_size++) {
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName()
+      name << sensor->getName()
            << Form("_Slow_Timing_Cluster_%d", cl_size+1) << _nameSuffix;
-      title << sensor->getDevice()->getName() << " " << sensor->getName()
+      title << sensor->getName()
             << Form("Slow Timing for cluster = %d ", cl_size+1);
       TH1D *timing_cluster_slow = new TH1D(name.str().c_str(), title.str().c_str(),16, 0, 16);
       timing_cluster_slow->SetDirectory(plotDir_ClusterEfficiency);
@@ -508,9 +508,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     std::vector<TH2D *> tmp5;
     for (int cl_size = 0; cl_size < 1; cl_size++) {
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName()
+      name<< sensor->getName()
            << Form("InPixelEfficiencyClusterMap_%d", cl_size) << _nameSuffix;
-      title << sensor->getDevice()->getName() << " " << sensor->getName()
+      title << sensor->getName()
             << Form("Total Cluster Efficiency Map for cluster = %d ", cl_size);
       TH2D *cluster_total = new TH2D(name.str().c_str(), title.str().c_str(),
                                      pixBinsX, 0, sensor->getPitchX(),
@@ -526,9 +526,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
     std::vector<TH2D *> tmp3;
     for (int cl_size = 0; cl_size <= _maxclustersize; cl_size++) {
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName()
+      name<< sensor->getName()
            << Form("InPixelEfficiencyCluster_%d", cl_size + 1) << _nameSuffix;
-      title << sensor->getDevice()->getName() << " " << sensor->getName()
+      title << sensor->getName()
             << Form(" Cluster Efficiency Map for cluster = %d ", cl_size + 1);
       TH2D *cluster_passed = new TH2D(name.str().c_str(), title.str().c_str(),
                                       pixBinsX, 0, sensor->getPitchX(),
@@ -543,9 +543,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
 
 
     name.str(""); title.str("");
-    name << sensor->getDevice()->getName() << sensor->getName()
+    name<< sensor->getName()
          << "InPixelToT" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " " << sensor->getName()
+    title << sensor->getName()
           << " In Pixel ToT Map";
     TH2D *inToTMap = new TH2D(name.str().c_str(), title.str().c_str(),
                               pixBinsX, 0, sensor->getPitchX(),
@@ -555,9 +555,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
 
     //-----------------------------------------------------------
     name.str(""); title.str("");
-    name << sensor->getDevice()->getName() << sensor->getName()
+    name<< sensor->getName()
          << "InPixelTimingCnt" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " - " << sensor->getName()
+    title << sensor->getName()
           << " [InPixel Timing Map counting]";
     TH2D *count = new TH2D(name.str().c_str(), title.str().c_str(),
                            pixBinsX, 0, sensor->getPitchX(),
@@ -570,9 +570,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
 
 
     name.str(""); title.str("");
-    name << sensor->getDevice()->getName() << sensor->getName()
+    name<< sensor->getName()
          << "InPixelTimingCnt1" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " - " << sensor->getName()
+    title << sensor->getName()
           << " [InPixel Timing Map counting1]";
     TH2D *count_intiming = new TH2D(name.str().c_str(), title.str().c_str(),
                            pixBinsX, 0, sensor->getPitchX(),
@@ -583,9 +583,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
 
     // Track matching information
     name.str(""); title.str("");
-    name << sensor->getDevice()->getName() << sensor->getName()
+    name<< sensor->getName()
          << "MatchedTracks" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " " << sensor->getName()
+    title << sensor->getName()
           << " [Matched Tracks]";
     TH1D *matched = new TH1D(name.str().c_str(), title.str().c_str(),
                              2, -0.5, 1.5);
@@ -595,9 +595,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
 
     //-----------------------------------------------------------
     name.str(""); title.str("");
-    name << sensor->getDevice()->getName() << sensor->getName()
+    name<< sensor->getName()
          <<  "InPixelEfficiency" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " " << sensor->getName()
+    title << sensor->getName()
           << " In Pixel Efficiency"
           << ";X position [" << _dutDevice->getSpaceUnit() << "]"
           << ";Y position [" << _dutDevice->getSpaceUnit() << "]"
@@ -618,9 +618,9 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Device *refDevice,
       const ULong64_t endTime = timeSpan - (timeSpan % nTimeBins) + startTime;
 
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName()
+      name<< sensor->getName()
            << "EfficiencyVsTime" << _nameSuffix;
-      title << sensor->getDevice()->getName() << " " << sensor->getName()
+      title << sensor->getName()
             << " Efficiency Vs. Time"
             << ";Time [" << _refDevice->getTimeUnit() << "]"
             << ";Average efficiency";
@@ -696,7 +696,7 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
     if (_relativeToSensor >= 0 && !matches.at(_relativeToSensor)) continue;
 
     for (unsigned int nsensor = 0; nsensor < _dutDevice->getNumSensors(); nsensor++) {
-      Mechanics::Sensor *sensor = _dutDevice->getSensor(nsensor);
+      const Mechanics::Sensor *sensor = _dutDevice->getSensor(nsensor);
 
       double tx = 0, ty = 0, tz = 0;
       Processors::trackSensorIntercept(track, sensor, tx, ty, tz);
@@ -786,7 +786,7 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
 
 
         if (match) {
-//*        
+//*
 //
 //
 //
@@ -991,7 +991,7 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
             
             if(nhit==match->getNumHits()-1) (_TimingCluster_fast.at(nsensor))[clustersize]->Fill(std::abs(Tfast));
             if(nhit==match->getNumHits()-1) (_timing_diff.at(nsensor))->Fill(std::abs(Tfast-timing0));
-            if( nhit>0) { 
+            if( nhit>0) {
 
             if(max<hit->getTiming()) (_TimingCluster_slow.at(nsensor))[clustersize]->Fill(ttime);
 
@@ -1007,10 +1007,10 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
              //   trackPosY * sensor->getPitchY());
           
   
-            (_TimingTOT_cluster.at(nsensor))[clustersize]->Fill(hit->getTiming(), hit->getValue()); 
+            (_TimingTOT_cluster.at(nsensor))[clustersize]->Fill(hit->getTiming(), hit->getValue());
            }
           
-        } 
+        }
       }
 
 
@@ -1051,15 +1051,15 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
           for(unsigned int y = 0; y < match->getNumHits(); y++){
            if(max>timing[y+1]) max=timing[y+1];
             }
-           } 
+           }
 
             if(nhit==0) Tfast=hit->getTiming();
             if(nhit>0){
-             if(Tfast>hit->getTiming()) Tfast=hit->getTiming();  //only the fastest is kept          
+             if(Tfast>hit->getTiming()) Tfast=hit->getTiming();  //only the fastest is kept
             }
             if(nhit==0) Tslow=hit->getTiming();
             if(nhit>0){
-             if(Tslow<hit->getTiming()) Tslow=hit->getTiming();  //only the fastest is kept          
+             if(Tslow<hit->getTiming()) Tslow=hit->getTiming();  //only the fastest is kept
             }
 
 
@@ -1072,7 +1072,7 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
 
 	   (_TimingCluster.at(nsensor))[clustersize]->Fill(hit->getTiming());
             if(nhit==match->getNumHits()-1) (_TimingCluster_fast.at(nsensor))[clustersize]->Fill(Tfast);
-            if( nhit>0) { 
+            if( nhit>0) {
 
             if(max<hit->getTiming()) (_TimingCluster_slow.at(nsensor))[clustersize]->Fill(ttime);
 
@@ -1136,7 +1136,7 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
           const Storage::Hit *hit = match->getHit(nhit);
           if(hit->getTiming()<4) flag=1;
          }
-        //fare un efficienza per il fastest hit, dare un taglio sul fastest hit: cioè un reclustering al vol. fai copia e incolla dal clustermaker. 
+        //fare un efficienza per il fastest hit, dare un taglio sul fastest hit: cioè un reclustering al vol. fai copia e incolla dal clustermaker.
        /* if(flag==1)*/_efficiencyMap.at(nsensor)->Fill(true, match->getPosX(), match->getPosY());
        /* if(flag==0)_efficiencyMap.at(nsensor)->Fill(false, tx, ty);*/
         _matchedTracks.at(nsensor)->Fill(1);

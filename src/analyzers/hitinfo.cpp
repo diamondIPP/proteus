@@ -114,12 +114,12 @@ HitInfo::HitInfo(const Mechanics::Device* device,
   // Generate a histogram for each sensor in the device
   for (unsigned int nsens = 0; nsens < _device->getNumSensors(); nsens++)
   {
-    Mechanics::Sensor* sensor = _device->getSensor(nsens);
+    const Mechanics::Sensor* sensor = _device->getSensor(nsens);
 
     name.str(""); title.str("");
-    name << sensor->getDevice()->getName() << sensor->getName()
+    name << sensor->getName()
          <<  "Timing" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " " << sensor->getName()
+    title << sensor->getName()
           << " Level 1 Accept"
           << ";Level 1 bin number"
           << ";Hits";
@@ -129,9 +129,9 @@ HitInfo::HitInfo(const Mechanics::Device* device,
     _lvl1.push_back(lvl1);
 
     name.str(""); title.str("");
-    name << sensor->getDevice()->getName() << sensor->getName()
+    name << sensor->getName()
          <<  "ToT" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " " << sensor->getName()
+    title << sensor->getName()
           << " ToT Distribution"
           << ";ToT bin number"
           << ";Hits";

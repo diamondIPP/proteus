@@ -54,7 +54,7 @@ namespace Storage {
     /** Destructor */
     ~StorageIO();
 
-    void setNoiseMasks(std::vector<bool**>* noiseMasks);
+    // void setNoiseMasks(std::vector<bool**>* noiseMasks);
     void setPrintLevel(const int printLevel);
     void setRuns(const std::vector<int> &vruns);
     void setNoiseMaskData(const Mechanics::NoiseMask* noisemask);
@@ -167,9 +167,9 @@ namespace Storage {
     Int_t st_nscan_bottom_y;
     Int_t st_nscan_upper_y;
     Int_t st_nscan_numNoisyPixels;              // total number of noisy pixels
-    Int_t st_nscan_noisyPixel_plane[MAX_NOISY]; // noisy pixel plane number
-    Int_t st_nscan_noisyPixel_x[MAX_NOISY];     // noisy pixel x (col number)
-    Int_t st_nscan_noisyPixel_y[MAX_NOISY];     // noisy pixel y (row number)
+    std::vector<Int_t> st_nscan_noisyPixel_plane; // noisy pixel plane number
+    std::vector<Int_t> st_nscan_noisyPixel_x; // noisy pixel x (col number)
+    std::vector<Int_t> st_nscan_noisyPixel_y; // noisy pixel y (row number)
 
     // Branches corresponding to the above variables
     TBranch* bNumHits;

@@ -1,188 +1,109 @@
 #include "sensor.h"
 
+#include <algorithm>
+#include <array>
 #include <cassert>
-#include <math.h>
-#include <iostream>
+#include <cmath>
+#include <ostream>
 #include <string>
 
-#include "device.h"
-
-using std::cout;
-using std::endl;
-
-Mechanics::Sensor::Sensor(unsigned int numX,
-			  unsigned int numY,
-			  double pitchX,
-			  double pitchY,
-			  double depth,
-			  Device* device,
-			  std::string name,
-			  bool digi,
-			  bool alignable,
-			  double xox0,
-			  double offX,
-			  double offY,
-			  double offZ,
-			  double rotX,
-			  double rotY,
-			  double rotZ) :
-  _numX(numX),
-  _numY(numY),
-  _pitchX(pitchX),
-  _pitchY(pitchY),
-  _depth(depth),
-  _device(device),
-  _name(name),
-  _digi(digi),
-  _xox0(xox0),
-  _offX(offX),
-  _offY(offY),
-  _offZ(offZ),
-  _rotX(rotX),
-  _rotY(rotY),
-  _rotZ(rotZ),
-  _alignable(alignable),
-  _sensitiveX(pitchX*numX),
-  _sensitiveY(pitchY*numY),
-  _numNoisyPixels(0)
+Mechanics::Sensor::Sensor(const std::string& name,
+                          Index numCols,
+                          Index numRows,
+                          double pitchCol,
+                          double pitchRow,
+                          bool isDigital,
+                          double depth,
+                          double xX0)
+    : m_numCols(numCols)
+    , m_numRows(numRows)
+    , m_pitchCol(pitchCol)
+    , m_pitchRow(pitchRow)
+    , m_depth(depth)
+    , m_xX0(xX0)
+    , m_name(name)
+    , m_noiseMask(numCols * numRows, false)
+    , m_isDigital(isDigital)
 {
-  assert(device && "Sensor: need to link the sensor back to a device.");
-  
-  calculateRotation();
-  
-  _noisyPixels = new bool*[_numX];
-  for(unsigned int x=0; x<_numX; x++){ 
-    bool *row = new bool[_numY];
-    _noisyPixels[x] = row;
-  }
-  clearNoisyPixels();
 }
 
-Mechanics::Sensor::~Sensor(){
-  for(unsigned int x=0; x<_numX; x++)
-    delete[] _noisyPixels[x];
-  delete[] _noisyPixels;
-}
+// geometry related methods
 
-//=========================================================
-//
-// Set functions
-//
-//=========================================================
-void Mechanics::Sensor::setOffX(double offset) { _offX = offset; }
-void Mechanics::Sensor::setOffY(double offset) { _offY = offset; }
-void Mechanics::Sensor::setOffZ(double offset) { _offZ = offset; }
-void Mechanics::Sensor::setRotX(double rotation) { _rotX = rotation; calculateRotation(); }
-void Mechanics::Sensor::setRotY(double rotation) { _rotY = rotation; calculateRotation(); }
-void Mechanics::Sensor::setRotZ(double rotation) { _rotZ = rotation; calculateRotation(); }
-
-//=========================================================
-//
-// geometry functions
-//
-//=========================================================
-void Mechanics::Sensor::applyRotation(double& x,
-				      double& y,
-				      double& z,
-				      bool invert) const {
-  const double point[3] = {x, y, z};
-  double* rotated[3] = {&x, &y, &z};
-  
-  // Use the sensor rotation matrix to transform
-  for (int i=0; i<3; i++) {
-    *(rotated[i]) = 0;
-    for (int j=0; j<3; j++){
-      if (!invert) *(rotated[i]) += _rotation[i][j] * point[j];
-      else         *(rotated[i]) += _unRotate[i][j] * point[j];      
-    }
-  }
-
-  //std::cout << *(rotated[0]) << std::endl;
-  //if( _rotation[0][1]==1){ 
-  //if(*(rotated[0]) == 0){
-  //std::cout << "Coordinates were (" << x <<";"<< y <<";"<< z << ")"<< std::endl; 
-  //std::cout << "They are: (" << *(rotated[0]) <<";"<< *(rotated[1]) <<";"<< *(rotated[2]) <<")" << std::endl;
-  //    std::cout << "" << std::endl;
-  //}
-  //}
-}
-
-void Mechanics::Sensor::calculateRotation() {
-  const double rx = _rotX;
-  const double ry = _rotY;
-  const double rz = _rotZ;
-  _rotation[0][0] = cos(ry) * cos(rz);
-  _rotation[0][1] = -cos(rx) * sin(rz) + sin(rx) * sin(ry) * cos(rz);
-  _rotation[0][2] = sin(rx) * sin(rz) + cos(rx) * sin(ry) * cos(rz);
-  _rotation[1][0] = cos(ry) * sin(rz);
-  _rotation[1][1] = cos(rx) * cos(rz) + sin(rx) * sin(ry) * sin(rz);
-  _rotation[1][2] = -sin(rx) * cos(rz) + cos(rx) * sin(ry) * sin(rz);
-  _rotation[2][0] = -sin(ry);
-  _rotation[2][1] = sin(rx) * cos(ry);
-  _rotation[2][2] = cos(rx) * cos(ry);
-
-  // Transpose of a rotation matrix is its inverse
-  for (unsigned int i = 0; i < 3; i++)
-    for (unsigned int j = 0; j < 3; j++)
-      _unRotate[i][j] = _rotation[j][i];
-
-  _normalX = 0, _normalY = 0, _normalZ = 1;
-  applyRotation(_normalX, _normalY, _normalZ);
-}
-
-
-void Mechanics::Sensor::rotateToGlobal(double& x, double& y, double& z) const{
-  applyRotation(x, y, z);
-}
-
-void Mechanics::Sensor::rotateToSensor(double& x, double& y, double& z) const {
-  applyRotation(x, y, z, true);
-}
-
-void Mechanics::Sensor::pixelToSpace(double pixX, double pixY,
-				     double& x, double& y, double& z) const
+XYZVector Mechanics::Sensor::normal() const
 {
-  if (pixX >= _numX && pixY >= _numY)
-    throw "Sensor: requested pixel out of range";
-
-  x = 0, y = 0, z = 0;
-
-  const double halfX = getSensitiveX() / 2.0;
-  const double halfY = getSensitiveY() / 2.0;
-
-  x = pixX * _pitchX; // To the middle of the pixel
-  x -= halfX; // Origin on center of sensor
-
-  y = pixY * _pitchY;
-  y -= halfY;
-  rotateToGlobal(x, y, z);
-
-  x += getOffX();
-  y += getOffY();
-  z += getOffZ();
+  XYZVector W, U, V;
+  m_l2g.Rotation().GetComponents(U, V, W);
+  return W;
 }
 
-void Mechanics::Sensor::spaceToPixel(double x, double y, double z,
-				     double& pixX, double& pixY) const
+double Mechanics::Sensor::getOffX() const
 {
-  const double halfX = getSensitiveX() / 2.0;
-  const double halfY = getSensitiveY() / 2.0;
+  return m_l2g.Translation().Vect().x();
+}
 
-  // Subtract sensor offsets
-  x -= getOffX();
-  y -= getOffY();
-  z -= getOffZ();
+double Mechanics::Sensor::getOffY() const
+{
+  return m_l2g.Translation().Vect().y();
+}
 
-  rotateToSensor(x, y, z);
+double Mechanics::Sensor::getOffZ() const
+{
+  return m_l2g.Translation().Vect().z();
+}
 
-  x += halfX;
-  y += halfY;
+void Mechanics::Sensor::getGlobalOrigin(double& x, double& y, double& z) const
+{
+  origin().GetCoordinates(x, y, z);
+}
 
-  double mapX = x / _pitchX;
-  double mapY = y / _pitchY;
+void Mechanics::Sensor::getNormalVector(double& x, double& y, double& z) const
+{
+  normal().GetCoordinates(x, y, z);
+}
 
-  pixX = mapX;
-  pixY = mapY;
+XYPoint Mechanics::Sensor::transformLocalToPixel(const XYZPoint& uvw) const
+{
+  return XYPoint((uvw.x() / m_pitchCol) + std::round(m_numCols / 2),
+                 (uvw.y() / m_pitchRow) + std::round(m_numRows / 2));
+}
+
+XYPoint Mechanics::Sensor::transformGlobalToPixel(const XYZPoint& xyz) const
+{
+  return transformLocalToPixel(globalToLocal() * xyz);
+}
+
+XYZPoint Mechanics::Sensor::transformPixelToLocal(double col, double row) const
+{
+  return XYZPoint(m_pitchCol * (col - std::round(m_numCols / 2)),
+                  m_pitchRow * (row - std::round(m_numRows / 2)),
+                  0);
+}
+
+XYZPoint Mechanics::Sensor::transformGlobalToLocal(const XYZPoint& xyz) const
+{
+  return globalToLocal() * xyz;
+}
+
+XYZPoint Mechanics::Sensor::transformPixelToGlobal(double col, double row) const
+{
+  return localToGlobal() * transformPixelToLocal(col, row);
+}
+
+XYZPoint Mechanics::Sensor::transformLocalToGlobal(const XYZPoint& uvw) const
+{
+  return localToGlobal() * uvw;
+}
+
+void Mechanics::Sensor::pixelToSpace(
+    double col, double row, double& x, double& y, double& z) const
+{
+  transformPixelToGlobal(col, row).GetCoordinates(x, y, z);
+}
+
+void Mechanics::Sensor::spaceToPixel(
+    double x, double y, double z, double& col, double& row) const
+{
+  transformGlobalToPixel({x, y, z}).GetCoordinates(col, row);
 }
 
 //=========================================================
@@ -190,50 +111,27 @@ void Mechanics::Sensor::spaceToPixel(double x, double y, double z,
 // noisy-pixels functions
 //
 //=========================================================
-void Mechanics::Sensor::addNoisyPixel(unsigned int x, unsigned int y){
-  assert(x < _numX && y < _numY && "Storage: tried to add noisy pixel outside sensor");
-  _noisyPixels[x][y] = true;
-  _numNoisyPixels++;
-}
 
-void Mechanics::Sensor::clearNoisyPixels(){
-  _numNoisyPixels=0;
-  for(unsigned int x=0; x<_numX; x++)
-    for(unsigned int y=0; y<_numY; y++)
-      _noisyPixels[x][y] = false;
-}
+void Mechanics::Sensor::setNoisyPixels(const std::set<ColumnRow>& pixels)
+{
+  // reset possible existing mask
+  std::fill(m_noiseMask.begin(), m_noiseMask.end(), false);
 
-//=========================================================
-//
-// Misc functions
-//
-//=========================================================
-void Mechanics::Sensor::print(){
-  cout << "\nSENSOR:\n"
-       << "  Name: '" << _name << "'\n"
-       << "  Pos: " << _offX << " , " << _offY << " , " << _offZ << "\n"
-       << "  Rot: " << _rotX << " , " << _rotY << " , " << _rotZ << "\n"
-       << "  Cols: " << getNumX() << "\n"
-       << "  Rows: " << getNumY() << "\n"
-       << "  Pitch-x: " << _pitchX << "\n"
-       << "  Pitch-y: " << _pitchY << "\n"
-       << "  Depth: " << _depth << "\n"
-       << "  X / X0: " << _xox0 << "\n"
-       << "  Sensitive X: " << getSensitiveX() << "\n"
-       << "  Sensitive Y: " << getSensitiveY() << "\n"
-       << "  PosNumX: " << getPosNumX() << "\n"
-       << "  PosNumY: " << getPosNumY() << "\n"
-       << "  Alignable: " << _alignable << endl;
-  
-  cout << "  Noisy pixels (" << _numNoisyPixels << ")" << endl;
-  if( _numNoisyPixels < 20 ){
-    for (unsigned int nx=0; nx<getNumX(); nx++)
-      for (unsigned int ny=0; ny<getNumY(); ny++)
-        if (_noisyPixels[nx][ny]) cout << "    " << nx << " : " << ny << endl;
+  for (auto it = pixels.begin(); it != pixels.end(); ++it) {
+    auto col = std::get<0>(*it);
+    auto row = std::get<1>(*it);
+
+    if (m_numCols <= col)
+      throw std::runtime_error("column index is out of range");
+    if (m_numRows <= row)
+      throw std::runtime_error("row index is out of range");
+
+    m_noiseMask[linearPixelIndex(col, row)] = true;
   }
 }
 
-bool Mechanics::Sensor::sort(const Sensor* s1, const Sensor* s2){
+bool Mechanics::Sensor::sort(const Sensor* s1, const Sensor* s2)
+{
   return (s1->getOffZ() < s2->getOffZ());
 }
 
@@ -242,115 +140,81 @@ bool Mechanics::Sensor::sort(const Sensor* s1, const Sensor* s2){
 // get functions
 //
 //=========================================================
-void Mechanics::Sensor::getGlobalOrigin(double& x, double& y, double& z) const {
-  x = getOffX();
-  y = getOffY();
-  z = getOffZ();
+
+std::array<double, 4> Mechanics::Sensor::sensitiveAreaPixel() const
+{
+  return {0, static_cast<double>(m_numCols), 0, static_cast<double>(m_numRows)};
 }
 
-void Mechanics::Sensor::getNormalVector(double& x, double& y, double& z) const {
-  x = _normalX;
-  y = _normalY;
-  z = _normalZ;
+std::array<double, 4> Mechanics::Sensor::sensitiveAreaLocal() const
+{
+  auto lowerLeft = transformPixelToLocal(0, 0);
+  auto upperRight = transformPixelToLocal(m_numCols, m_numRows);
+  return {lowerLeft.x(), upperRight.x(), lowerLeft.y(), upperRight.y()};
 }
 
-unsigned int Mechanics::Sensor::getPosNumX() const {
-  return (unsigned int)((getPosSensitiveX()/getPosPitchX())+0.5);
+std::array<double, 4> Mechanics::Sensor::sensitiveEnvelopeGlobal() const
+{
+  // TODO 2016-08 msmk: find a smarter way to this, but its Friday
+  // transform each corner of the sensitive rectangle
+  auto minMin = transformPixelToGlobal(0, 0);
+  auto minMax = transformPixelToGlobal(0, m_numRows);
+  auto maxMin = transformPixelToGlobal(m_numCols, 0);
+  auto maxMax = transformPixelToGlobal(m_numCols, m_numRows);
+
+  std::array<double, 4> xs = {minMin.x(), minMax.x(), maxMin.x(), maxMax.x()};
+  std::array<double, 4> ys = {minMin.y(), minMax.y(), maxMin.y(), maxMax.y()};
+
+  return {*std::min_element(xs.begin(), xs.end()),
+          *std::max_element(xs.begin(), xs.end()),
+          *std::min_element(ys.begin(), ys.end()),
+          *std::max_element(ys.begin(), ys.end())};
 }
 
-unsigned int Mechanics::Sensor::getPosNumY() const {
-  return (unsigned int)((getPosSensitiveY()/getPosPitchY())+0.5);
+unsigned int Mechanics::Sensor::getPosNumX() const
+{
+  return (unsigned int)((getPosSensitiveX() / getPosPitchX()) + 0.5);
 }
 
-double Mechanics::Sensor::getPosPitchX() const { 
-  double pitch = 0;
-  double x, y, z;
-  // Make a vector pointing along the pixel's x-axis
-  x = getPitchX();
-  y = 0;
-  z = 0;
-  // Get it's x-projection
-  rotateToGlobal(x, y, z);
-  pitch += fabs(x);
-  // Again with the pixel's y-axis
-  x = 0;
-  y = getPitchY();
-  z = 0;
-  rotateToGlobal(x, y, z);
-  pitch += fabs(x); 
-  // Return the sum of the x-projection
-  return pitch;
+unsigned int Mechanics::Sensor::getPosNumY() const
+{
+  return (unsigned int)((getPosSensitiveY() / getPosPitchY()) + 0.5);
 }
 
-double Mechanics::Sensor::getPosPitchY() const { 
-  double pitch = 0;
-  double x, y, z;
-  x = getPitchX();
-  y = 0;
-  z = 0;
-  rotateToGlobal(x, y, z);
-  pitch += fabs(y);
-  x = 0;
-  y = getPitchY();
-  z = 0;
-  rotateToGlobal(x, y, z);
-  pitch += fabs(y);
-  return pitch;
+double Mechanics::Sensor::getPosPitchX() const
+{
+  XYZVector pitch = localToGlobal() * XYZVector(m_pitchCol, m_pitchRow, 0);
+  return std::abs(pitch.x());
 }
 
-double Mechanics::Sensor::getPosSensitiveX() const {
-  double size = 0;
-  double x, y, z;
-  x = getSensitiveX();
-  y = 0;
-  z = 0;
-  rotateToGlobal(x, y, z);
-  size += fabs(x);
-
-  x = 0;
-  y = getSensitiveY();
-  z = 0;
-  rotateToGlobal(x, y, z);
-  size += fabs(x);
-
-  return size;
+double Mechanics::Sensor::getPosPitchY() const
+{
+  XYZVector pitch = localToGlobal() * XYZVector(m_pitchCol, m_pitchRow, 0);
+  return std::abs(pitch.y());
 }
 
-double Mechanics::Sensor::getPosSensitiveY() const {
-  double size = 0;
-  double x, y, z;
-  x = getSensitiveX();
-  y = 0;
-  z = 0;
-  rotateToGlobal(x, y, z);
-  size += fabs(y);
-  x = 0;
-  y = getSensitiveY();
-  z = 0;
-  rotateToGlobal(x, y, z);
-  size += fabs(y);
-  return size;
+double Mechanics::Sensor::getPosSensitiveX() const
+{
+  XYZVector size =
+      localToGlobal() * XYZVector(getSensitiveX(), getSensitiveY(), 0);
+  return std::abs(size.x());
 }
 
-bool** Mechanics::Sensor::getNoiseMask() const { return _noisyPixels; }
-bool Mechanics::Sensor::getDigital() const { return _digi; }
-bool Mechanics::Sensor::getAlignable() const { return _alignable; }
-unsigned int Mechanics::Sensor::getNumX() const { return _numX; }
-unsigned int Mechanics::Sensor::getNumY() const { return _numY; }
-unsigned int Mechanics::Sensor::getNumPixels() const { return _numX * _numY; }
-unsigned int Mechanics::Sensor::getNumNoisyPixels() const { return _numNoisyPixels; }
-double Mechanics::Sensor::getPitchX() const { return _pitchX; }
-double Mechanics::Sensor::getPitchY() const { return _pitchY; }
-double Mechanics::Sensor::getDepth() const { return _depth; }
-double Mechanics::Sensor::getXox0() const { return _xox0; }
-double Mechanics::Sensor::getOffX() const { return _offX; }
-double Mechanics::Sensor::getOffY() const { return _offY; }
-double Mechanics::Sensor::getOffZ() const { return _offZ; }
-double Mechanics::Sensor::getRotX() const { return _rotX; }
-double Mechanics::Sensor::getRotY() const { return _rotY; }
-double Mechanics::Sensor::getRotZ() const { return _rotZ; }
-double Mechanics::Sensor::getSensitiveX() const { return _sensitiveX; }
-double Mechanics::Sensor::getSensitiveY() const { return _sensitiveY; }
-const Mechanics::Device* Mechanics::Sensor::getDevice() const { return _device; }
-const char* Mechanics::Sensor::getName() const { return _name.c_str(); }
+double Mechanics::Sensor::getPosSensitiveY() const
+{
+  XYZVector size =
+      localToGlobal() * XYZVector(getSensitiveX(), getSensitiveY(), 0);
+  return std::abs(size.y());
+}
 
+void Mechanics::Sensor::print(std::ostream& os, const std::string& prefix) const
+{
+  os << prefix << "Name: " << m_name << '\n';
+  os << prefix << "Columns: " << m_numCols << '\n';
+  os << prefix << "Rows: " << m_numRows << '\n';
+  os << prefix << "Pitch column: " << m_pitchCol << '\n';
+  os << prefix << "Pitch row: " << m_pitchRow << '\n';
+  os << prefix << "Depth: " << m_depth << '\n';
+  os << prefix << "x/X0: " << m_xX0 << '\n';
+  os.flush();
+}

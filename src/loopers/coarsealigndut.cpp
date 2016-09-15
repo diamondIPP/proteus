@@ -74,6 +74,8 @@ void Loopers::CoarseAlignDut::loop()
     delete dutEvent;
   }
 
+  Mechanics::Alignment& align = *_dutDevice->getAlignment();
+
   for (unsigned int nsensor = 0; nsensor < _dutDevice->getNumSensors(); nsensor++)
   {
     Mechanics::Sensor* sensor = _dutDevice->getSensor(nsensor);
@@ -88,14 +90,15 @@ void Loopers::CoarseAlignDut::loop()
     double sigmaY = 0;
     Processors::fitGaussian(alignY, offsetY, sigmaY, _displayFits);
    std::cout << "Old offset: X= " << sensor->getOffX() << "  Y= " << sensor->getOffY() << std::endl;
-    sensor->setOffX(sensor->getOffX() - offsetX);
-    sensor->setOffY(sensor->getOffY() - offsetY);
+
+   align.correctOffset(nsensor, -offsetX, -offsetY, 0);
 
    std::cout << "DUT plane: " << nsensor << std::endl;
    std::cout << "gaussian mean: X= " << offsetX << "  Y= " << offsetY << std::endl;
    std::cout << "New offset: X= " << sensor->getOffX() << "  Y= " << sensor->getOffY() << std::endl;
   }
-  _dutDevice->getAlignment()->writeFile();
+
+  align.writeFile(_dutDevice->pathAlignment());
 }
 
 //=========================================================

@@ -1,137 +1,152 @@
 #ifndef SENSOR_H
 #define SENSOR_H
 
-#include <vector>
+#include <array>
+#include <cstdint>
+#include <iosfwd>
+#include <set>
 #include <string>
+#include <vector>
+
+#include "utils/definitions.h"
 
 namespace Mechanics {
-  
-  class Device;
-  
-  class Sensor {
-  public:
-    Sensor(unsigned int numX,
-	   unsigned int numY,
-	   double pitchX,
-	   double pitchY,
-	   double depth,
-	   Device* device,
-	   std::string name,
-	   bool digi,
-	   bool alignable=true,	   
-	   double xox0=0,
-	   double offX=0,
-	   double offY=0,
-	   double offZ=0,
-	   double rotX=0,
-	   double rotY=0,
-	   double rotZ=0);
 
-    ~Sensor();
+/** Pixel sensor with digital and geometry information.
+ *
+ * To define the sensor and its orientation in space, three different
+ * coordinate systems are used:
+ *
+ * 1.  The pixel coordinates are defined along the column and row
+ *     axis of the pixel matrix. Coordinates are measured in numbers of digital
+ *     pixels. Pixel boundaries are located on integer numbers, i.e. the
+ *     (0,0) pixel has column and row position in the [0,1) range and unit
+ *     area. Please note that for pixel address (0,0) the pixel center is
+ *     located at (0.5,0.5). This shift must be considered when converting
+ *     addresses to pixel positions. The total sensitive sensor area is
+ *     [0,numberCols)x[0,numberRows).
+ * 2.  The local metric coordinates are also defined along the column and row
+ *     axis of the pixel matrix but scaled with the pixel pitch to have the
+ *     same units as the global coordinates. Local coordinates (u,v,w)
+ *     correspond to the column, row, and normal axis, where the normal axis
+ *     is defined such that the coordinate system is right-handed. The origin
+ *     is located at the center of the sensitive area but always on a pixel
+ *     boundary.
+ * 3.  The global coordinate system has the same units as the local coordinate
+ *     system with coordinates (x,y,z);
+ *
+ */
+class Sensor {
+public:
+  /** Construct with an empty transformation (local = global) and no noise.
+   *
+   * This is the minimal configuration required to have a usable Sensor.
+   */
+  Sensor(const std::string& name,
+         Index numCols,
+         Index numRows,
+         double pitchCol,
+         double pitchRow,
+         bool isDigital,
+         double depth = 0,
+         double xX0 = 0);
 
-    //
-    // Set functions
-    //
-    void setOffX(double offset);
-    void setOffY(double offset);
-    void setOffZ(double offset);
-    void setRotX(double rotation);
-    void setRotY(double rotation);
-    void setRotZ(double rotation);
+  //
+  // geometry related
+  //
+  const Transform3D& localToGlobal() const { return m_l2g; }
+  Transform3D globalToLocal() const { return m_l2g.Inverse(); }
+  XYZPoint origin() const { return XYZPoint(m_l2g.Translation().Vect()); }
+  XYZVector normal() const;
+  void setLocalToGlobal(const Transform3D& l2g) { m_l2g = l2g; }
 
-    //
-    // Geometry functions
-    //
-    void rotateToGlobal(double& x, double& y, double& z) const;
-    void rotateToSensor(double& x, double& y, double& z) const;
-    void pixelToSpace(double pixX, double pixY,
-		      double& x, double& y, double& z) const;
-    void spaceToPixel(double x, double y, double z,
-		      double& pixX, double& pixY) const;
-    
-    //
-    // noise-pixels functions
-    //
-    void addNoisyPixel(unsigned int x, unsigned int y);
-    void clearNoisyPixels();    
+  //
+  // transformations between different coordinate systems
+  //
+  XYPoint transformLocalToPixel(const XYZPoint& uvw) const;
+  XYPoint transformGlobalToPixel(const XYZPoint& xyz) const;
+  XYZPoint transformPixelToLocal(double col, double row) const;
+  XYZPoint transformGlobalToLocal(const XYZPoint& xyz) const;
+  XYZPoint transformPixelToGlobal(double col, double row) const;
+  XYZPoint transformLocalToGlobal(const XYZPoint& uvw) const;
+  // \deprecated Use transformations above
+  void
+  pixelToSpace(double pixX, double pixY, double& x, double& y, double& z) const;
+  void
+  spaceToPixel(double x, double y, double z, double& pixX, double& pixY) const;
 
-    inline bool isPixelNoisy(unsigned int x, unsigned int y) const {
-      return _noisyPixels[x][y];
-    }
+  //
+  // noise-pixels functions
+  //
+  bool isPixelNoisy(Index col, Index row) const
+  {
+    return m_noiseMask[linearPixelIndex(col, row)];
+  }
+  void setNoisyPixels(const std::set<ColumnRow>& pixels);
 
-    //
-    // Misc functions
-    //
-    void print();
-    static bool sort(const Sensor* s1, const Sensor* s2);
+  //
+  // Misc functions
+  //
+  void print(std::ostream& os, const std::string& prefix = std::string()) const;
+  static bool sort(const Sensor* s1, const Sensor* s2);
 
-    //
-    // Get functions
-    //
-    bool** getNoiseMask() const;
-    bool getDigital() const;
-    bool getAlignable() const;
-    unsigned int getNumX() const;
-    unsigned int getNumY() const;
-    unsigned int getNumPixels() const;
-    unsigned int getPosNumX() const;
-    unsigned int getPosNumY() const;
-    unsigned int getNumNoisyPixels() const;
-    double getPitchX() const;
-    double getPitchY() const;
-    double getPosPitchX() const;
-    double getPosPitchY() const;
-    double getDepth() const;
-    double getXox0() const;
-    double getOffX() const;
-    double getOffY() const;
-    double getOffZ() const;
-    double getRotX() const;
-    double getRotY() const;
-    double getRotZ() const;
-    double getSensitiveX() const;
-    double getSensitiveY() const;
-    double getPosSensitiveX() const;
-    double getPosSensitiveY() const;
-    const Device* getDevice() const;
-    const char* getName() const;
-    void getGlobalOrigin(double& x, double& y, double& z) const;
-    void getNormalVector(double& x, double& y, double& z) const;
-   
-  private:
-    void applyRotation(double& x, double& y, double& z, bool invert=false) const;
-    void calculateRotation(); // Calculates the rotation matricies and normal vector
-    
-  private:
-    const unsigned int _numX; // number of columns (local x-direction)
-    const unsigned int _numY; // number of rows (local y-direction)
-    const double _pitchX;     // pitch along x (col) (250 um for FEI4)
-    const double _pitchY;     // pitch along y (row) ( 50 um for FEI4)
-    const double _depth; // sensor thickness
-    const Device* _device;
-    std::string _name;
-    bool _digi;
-    const double _xox0; // X/X0
-    double _offX; // translation in X
-    double _offY; // translation in Y 
-    double _offZ; // translation in Z
-    double _rotX; // rotation angle (rad) around Global X-axis
-    double _rotY; // rotation angle (rad) around Global Y-axis
-    double _rotZ; // rotation angle (rad) around Global Z-axis
-    bool _alignable; // if sensor is to be aligned
-    const double _sensitiveX;
-    const double _sensitiveY;
-    unsigned int _numNoisyPixels; // total number of noisy pixels
-    bool** _noisyPixels;          // 2D array of noisy-pixels
-    
-    double _rotation[3][3]; // The rotation matrix for the plane
-    double _unRotate[3][3]; // Invert the rotation
-    double _normalX;
-    double _normalY;
-    double _normalZ;   
-    
-  }; // end of class
-  
-} // end of namespace
+  //
+  // Get functions
+  //
+  const std::string& name() const { return m_name; }
+  Index numCols() const { return m_numCols; }
+  Index numRows() const { return m_numRows; }
+  Index numPixels() const { return m_numCols * m_numRows; }
+  /** Sensitive area in pixel coordinates [col_min,col_max,row_min,row_max]. */
+  std::array<double,4> sensitiveAreaPixel() const;
+  /** Sensitive area in local coordinates [u_min,u_max,v_min,v_max]. */
+  std::array<double,4> sensitiveAreaLocal() const;
+  /** Sensitive envelope in the global xy-plane [x_min,x_max,y_min,y_max]. */
+  std::array<double,4> sensitiveEnvelopeGlobal() const;
+
+  // \deprecated For backward compatibility.
+  bool getDigital() const { return m_isDigital; }
+  bool getAlignable() const { return true; }
+  unsigned int getNumX() const { return m_numCols; }
+  unsigned int getNumY() const { return m_numRows; }
+  unsigned int getNumPixels() const { return m_numCols * m_numRows; }
+  unsigned int getPosNumX() const;
+  unsigned int getPosNumY() const;
+  double getPitchX() const { return m_pitchCol; }
+  double getPitchY() const { return m_pitchRow; }
+  double getPosPitchX() const;
+  double getPosPitchY() const;
+  double getDepth() const { return m_depth; }
+  double getXox0() const { return m_xX0; }
+  double getSensitiveX() const { return m_numCols * m_pitchCol; }
+  double getSensitiveY() const { return m_numRows * m_pitchRow; }
+  double getPosSensitiveX() const;
+  double getPosSensitiveY() const;
+  double getOffX() const;
+  double getOffY() const;
+  double getOffZ() const;
+  void getGlobalOrigin(double& x, double& y, double& z) const;
+  void getNormalVector(double& x, double& y, double& z) const;
+  const std::string& getName() const { return m_name; }
+
+private:
+  // row major indices for the pixel masks
+  size_t linearPixelIndex(Index col, Index row) const
+  {
+    return m_numCols * col + row;
+  }
+
+private:
+  Transform3D m_l2g;
+  const Index m_numCols, m_numRows;    // number of columns and rows
+  const double m_pitchCol, m_pitchRow; // pitch along column and row direction
+  const double m_depth;                // sensor thickness
+  const double m_xX0;                 // X/X0 (thickness in radiation lengths)
+  const std::string m_name;
+  std::vector<bool> m_noiseMask;
+  bool m_isDigital;
+};
+
+} // namespace Mechanics
 
 #endif // SENSOR_H

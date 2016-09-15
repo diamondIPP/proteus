@@ -43,12 +43,12 @@ Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
   // Generate a histogram for each sensor in the device
   for (unsigned int nsens = 0; nsens < _device->getNumSensors(); nsens++)
   {
-    Mechanics::Sensor* sensor = _device->getSensor(nsens);
+    const Mechanics::Sensor* sensor = _device->getSensor(nsens);
 
     name.str(""); title.str("");
-    name << sensor->getDevice()->getName() << sensor->getName()
+    name << _device->getName() << sensor->getName()
          <<  "Size" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " " << sensor->getName()
+    title << _device->getName() << " " << sensor->getName()
           << " Cluster Size"
           << ";Pixels in cluster"
           << ";Clusters";
@@ -58,9 +58,9 @@ Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
     _clusterSize.push_back(size);
 
     name.str(""); title.str("");
-    name << sensor->getDevice()->getName() << sensor->getName()
+    name << _device->getName() << sensor->getName()
          <<  "ToT" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " " << sensor->getName()
+    title << _device->getName() << " " << sensor->getName()
           << " Clustered ToT Distribution"
           << ";ToT bin number"
           << ";Clusters";
@@ -71,9 +71,9 @@ Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
 
 
     name.str(""); title.str("");
-    name << sensor->getDevice()->getName() << sensor->getName()
+    name << _device->getName() << sensor->getName()
          << "TimingVsSize" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " " << sensor->getName()
+    title << _device->getName() << " " << sensor->getName()
           << " Hit Timing in cluster Vs. Cluster Size"
           << ";Pixels in cluster"
           << ";Pixel timing [BC]"
@@ -86,9 +86,9 @@ Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
 
     //Bilbao@cern.ch: Not sure if this is the best place since it concerns timing for hits
     name.str(""); title.str("");
-    name << sensor->getDevice()->getName() << sensor->getName()
+    name << _device->getName() << sensor->getName()
          << "TimingVsValue" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " " << sensor->getName()
+    title << _device->getName() << " " << sensor->getName()
           << " Hit Timing in cluster Vs. Hit Value"
           << ";ToT"
           << ";Pixel timing [BC]"
@@ -100,9 +100,9 @@ Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
     _timingVsHitValue.push_back(timingVsValue);
 
     name.str(""); title.str("");
-    name << sensor->getDevice()->getName() << sensor->getName()
+    name << _device->getName() << sensor->getName()
          << "ToTVsSize" << _nameSuffix;
-    title << sensor->getDevice()->getName() << " " << sensor->getName()
+    title << _device->getName() << " " << sensor->getName()
           << " ToT Vs. Cluster Size"
           << ";Pixels in cluster"
           << ";ToT bin number"
@@ -123,9 +123,9 @@ Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
       const ULong64_t endTime = timeSpan - (timeSpan % nTimeBins) + startTime;
 
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName()
+      name << _device->getName() << sensor->getName()
            << "ClustersVsTime" << _nameSuffix;
-      title << sensor->getDevice()->getName() << " " << sensor->getName()
+      title << _device->getName() << " " << sensor->getName()
             << " Clustsers Vs. Time";
       TH1D* clusterTime = new TH1D(name.str().c_str(), title.str().c_str(),
                                    nTimeBins,
@@ -135,9 +135,9 @@ Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
       _clustersVsTime.push_back(clusterTime);
 
       name.str(""); title.str("");
-      name << sensor->getDevice()->getName() << sensor->getName()
+      name << _device->getName() << sensor->getName()
            << "TotVsTime" << _nameSuffix;
-      title << sensor->getDevice()->getName() << " " << sensor->getName()
+      title << _device->getName() << " " << sensor->getName()
             << " ToT Vs. Time"
             << ";Time [" << _device->getTimeUnit() << "]"
             << ";Average cluster ToT";
@@ -210,5 +210,3 @@ void Analyzers::ClusterInfo::postProcessing(){
   }
   _postProcessed = true;
 }
-
-

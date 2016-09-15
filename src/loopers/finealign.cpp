@@ -62,7 +62,7 @@ void Loopers::FineAlign::loop()
 {
   // Build a vector of sensor indices which will be permutated at eaich iteration
   //fdibello@cern.ch convergence plot for the fine aligmenet variables, offset x=0, offset y=1, offset z=2, rotation z=3
-  TGraphErrors *convergence[4][_refDevice->getNumSensors()];  
+  TGraphErrors *convergence[4][_refDevice->getNumSensors()];
   float nit[_numIterations];
   float ofx[_numIterations][_refDevice->getNumSensors()];
   float ofy[_numIterations][_refDevice->getNumSensors()];
@@ -75,6 +75,8 @@ void Loopers::FineAlign::loop()
   TDirectory *sensordir[_refDevice->getNumSensors()];
   
   double rotation1[_refDevice->getNumSensors()]; //fdibello offset in the aligmnent plot
+
+  Mechanics::Alignment& alignment = *_refDevice->getAlignment();
 
   for(unsigned int i=0;i<_refDevice->getNumSensors() ;i++){
     for(unsigned int l=0;l< _numIterations;l++){
@@ -178,41 +180,50 @@ void Loopers::FineAlign::loop()
 
       //Bilbao@cern.ch: first alignment using the residuals in order to avoid a big ofset on the 2D technique. This also helps since the DUT is align with repspect to a ref plane but not consdeing the cumulative shift.
 
-      if(niter==0){
-      double sigmaX = 0, maxX = 0, backgroundX = 0;
-      double sigmaY = 0, maxY = 0, backgroundY = 0;
-      Processors::fitGaussian(residuals.getResidualX(nsens), offsetX, sigmaX, maxX, backgroundX, _displayFits);
-      Processors::fitGaussian(residuals.getResidualY(nsens), offsetY, sigmaY, maxX, backgroundY, _displayFits);
+      if (niter == 0) {
+        double sigmaX = 0, maxX = 0, backgroundX = 0;
+        double sigmaY = 0, maxY = 0, backgroundY = 0;
+        Processors::fitGaussian(residuals.getResidualX(nsens),
+                                offsetX,
+                                sigmaX,
+                                maxX,
+                                backgroundX,
+                                _displayFits);
+        Processors::fitGaussian(residuals.getResidualY(nsens),
+                                offsetY,
+                                sigmaY,
+                                maxX,
+                                backgroundY,
+                                _displayFits);
 
-      std::cout << "Fine alignment with residuals:" << std::endl;
-      std::cout << "   Sensor: " << nsens << ", Xcorrection: " << offsetX << ", Ycorrection: " << offsetY <<  std::endl;
-      sensor->setOffX(sensor->getOffX() + offsetX); //fdibello-->I think this is useless
-      sensor->setOffY(sensor->getOffY() + offsetY);
-      sensor->setRotZ(sensor->getRotZ() + rotation);
-      offsetX=0;
-      offsetY=0;
-      rotation=0;      
+        std::cout << "Fine alignment with residuals:" << std::endl;
+        std::cout << "   Sensor: " << nsens << ", Xcorrection: " << offsetX
+                  << ", Ycorrection: " << offsetY << std::endl;
+        alignment.correctOffset(nsens, offsetX, offsetY, 0);
+        alignment.correctRotationAngles(nsens, 0, 0, rotation);
+        offsetX = 0;
+        offsetY = 0;
+        rotation = 0;
       }
 
       Processors::residualAlignment(residuals.getResidualXY(nsens), //i guess this is a typo --->nsens below instead of nsensor
                                     residuals.getResidualYX(nsens),
-                                    offsetX, offsetY, rotation, 
+                                    offsetX, offsetY, rotation,
                                     _relaxation, _displayFits);
 
       if(niter==0){rotation1[nsens]=rotation;}  //fdibello offset for the ali. plot
 
       std::cout << "Sensor: " << nsens << ", Xcorrection: " << offsetX<< ", Ycorrection: " << offsetY << ", Zcorrection: " << rotation << std::endl;
-      sensor->setOffX(sensor->getOffX() + offsetX);
-      sensor->setOffY(sensor->getOffY() + offsetY);
-      sensor->setRotZ(sensor->getRotZ() + rotation);
-      sensor->setRotX(sensor->getRotX()); //fdibello
-      std::cout << "Sensor: " << nsens << ", Xoffset: " << sensor->getOffX()<< ", Yoffset: " << sensor->getOffY() << ", Zoffset: " << sensor->getOffZ() <<",  RotationX="<<sensor->getRotX()<<",  RotationY="<<sensor->getRotY()<<",  RotationZ="<<sensor->getRotZ()<< std::endl;
+      alignment.correctOffset(nsens, offsetX, offsetY, 0);
+      alignment.correctRotationAngles(nsens, 0, 0, rotation);
+      // std::cout << "Sensor: " << nsens << ", Xoffset: " << sensor->getOffX()<< ", Yoffset: " << sensor->getOffY() << ", Zoffset: " << sensor->getOffZ() <<",  RotationX="<<sensor->getRotX()<<",  RotationY="<<sensor->getRotY()<<",  RotationZ="<<sensor->getRotZ()<< std::endl;
      
-    //fdibello  
+    //fdibello
     ofx[niter][nsens]=sensor->getOffX();
     ofy[niter][nsens]=sensor->getOffY();
     ofz[niter][nsens]=sensor->getOffZ();
-    rotz[niter][nsens]=sensor->getRotZ();
+		// TODO msmk 2016-08-18 switch to new alignment
+    // rotz[niter][nsens]=sensor->getRotZ();
     nit[niter]=niter;
      
     //  double sigmaX1 = 0, maxX1 = 0, backgroundX1 = 0;
@@ -227,8 +238,7 @@ void Loopers::FineAlign::loop()
     // Ajudst the device rotation using the average slopes
     avgSlopeX /= (double)numSlopes;
     avgSlopeY /= (double)numSlopes;
-    _refDevice->setBeamSlopeX(_refDevice->getBeamSlopeX() + avgSlopeX);
-    _refDevice->setBeamSlopeY(_refDevice->getBeamSlopeY() + avgSlopeY);
+    alignment.correctBeamSlope(avgSlopeX, avgSlopeY);
 
     cout << endl; // Space between iterations
   }
@@ -240,7 +250,7 @@ void Loopers::FineAlign::loop()
    float ofyy[_numIterations];
    float rotzz[_numIterations];
    float ofzz[_numIterations];
-   for(unsigned int l=0;l< _numIterations;l++){ 
+   for(unsigned int l=0;l< _numIterations;l++){
  //  sigmaxx[l]=sigmax[l][i];
  //  sigmayy[l]=sigmay[l][i];
    ofxx[l]=ofx[l][i];
@@ -276,7 +286,8 @@ void Loopers::FineAlign::loop()
 
    }
   out_file->Close();
-  _refDevice->getAlignment()->writeFile();
+
+  alignment.writeFile(_refDevice->pathAlignment());
 }
 
 void Loopers::FineAlign::setNumIterations(unsigned int value) { _numIterations = value; }
@@ -293,12 +304,9 @@ void Loopers::FineAlign::print() const {
   cout << "  - numIterations   : "  << _numIterations << endl;
   cout << "  - numBinsY        : "  << _numBinsY << endl;
   cout << "  - numPixX         : "  << _numPixX << endl;
-  cout << "  - binsPerPix      : "  << _binsPerPix << endl;  
+  cout << "  - binsPerPix      : "  << _binsPerPix << endl;
   cout << "  - numPixXBroad    : "  << _numPixXBroad << endl;
   cout << "  - binsPerPixBroad : "  << _binsPerPixBroad << endl;
   cout << "  - display Fits    : "  << _displayFits << endl;
   cout << "  - relaxation      : "  << _relaxation << endl;
 }
-
-
-

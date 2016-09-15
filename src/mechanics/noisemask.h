@@ -1,55 +1,38 @@
 #ifndef NOISEMASK_H
 #define NOISEMASK_H
 
-#include <vector>
-#include <fstream>
-#include <sstream>
+#include <iosfwd>
+#include <map>
+#include <set>
 #include <string>
 
-namespace Loopers { class NoiseScanConfig; }
+#include "utils/definitions.h"
 
 namespace Mechanics {
 
-  class Device;
+/** Store and process masked pixels. */
+class NoiseMask {
+public:
+  using ColumnRowSet = std::set<ColumnRow>;
 
-  /** @class NoiseMask
-   **    
-   ** @brief A class to deal with masked pixels.
-   **
-   ** Writes and reads from a textfile of all noisy pixels 
-   ** in the format:
-   **      sensor, x, y
-   */
-  class NoiseMask {
-    
-  public:
-    NoiseMask(const char* fileName, Device* device);
-    ~NoiseMask();
+  /** Construct a noise mask from a configuration file. */
+  static NoiseMask fromFile(const std::string& path);
 
-    void writeMask(const Loopers::NoiseScanConfig* config);
-    void readMask();
-    
-    std::vector<bool**> getMaskArrays() const;
+  NoiseMask() = default;
 
-    const char* getFileName() { return _fileName.c_str(); }
-    const Device* getDevice() const { return _device; }
-    const Loopers::NoiseScanConfig* getConfig() const { return _config; }
-    
-  private:
-    void parseLine(std::stringstream& line,
-		   unsigned int& nsens,
-		   unsigned int& x,
-		   unsigned int& y);
+  /** Write the current noise masks and configuration to a file. */
+  void writeFile(const std::string& path) const;
 
-    void parseComments(std::stringstream& comments);
-    
-  private:
-    std::string _fileName;
-    Device* _device;
-    Loopers::NoiseScanConfig* _config;
+  void maskPixel(Index sensorId, Index col, Index row);
+  const ColumnRowSet& getMaskedPixels(Index sensorId) const;
+  const size_t getNumMaskedPixels() const;
 
-  }; // end of class
-  
-} // end of namespace
+  void print(std::ostream& os, const std::string& prefix = std::string()) const;
+
+private:
+  std::map<Index, ColumnRowSet> m_maskedPixels;
+};
+
+} // namespace Mechanics
 
 #endif // NOISEMASK_H

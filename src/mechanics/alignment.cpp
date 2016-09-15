@@ -1,143 +1,233 @@
 #include "alignment.h"
 
 #include <cassert>
-#include <string>
-#include <sstream>
 #include <fstream>
-#include <iostream>
-#include <float.h>
 #include <iomanip>
+#include <ostream>
+#include <sstream>
+#include <stdexcept>
+#include <string>
 
-#include "../configparser.h"
-#include "device.h"
-#include "sensor.h"
+#include "configparser.h"
+#include "utils/logger.h"
 
-#ifndef VERBOSE
-#define VERBOSE 1
-#endif
+using Utils::logger;
 
-using std::fstream;
-using std::cout;
-using std::endl;
-
-//=========================================================
-Mechanics::Alignment::Alignment(const char* fileName,
-				Device* device) :
-  _fileName(fileName),
-  _device(device)
+Mechanics::Alignment Mechanics::Alignment::fromFile(const std::string& path)
 {
-  assert(device && "Alignment: can't initialize with a null device");
+  auto alignment = fromConfig(ConfigParser(path.c_str()));
+  INFO("read alignment from '", path, "'\n");
+  return alignment;
 }
 
-//=========================================================
-const char* Mechanics::Alignment::getFileName() {
-  return _fileName.c_str();
-}
+Mechanics::Alignment
+Mechanics::Alignment::fromConfig(const ConfigParser& config)
+{
+  Alignment alignment;
 
-//=========================================================
-unsigned int Mechanics::Alignment::sensorFromHeader(std::string header) {
-  if (header.size() <= 7 || header.substr(0, 7).compare("Sensor "))
-    throw "AlignmentFile: parsed an incorrect header";
-  
-  std::stringstream ss;
-  ss << header.substr(7);
-  
-  unsigned int sensorNum = 0;
-  ss >> sensorNum;
-  
-  if (sensorNum >= _device->getNumSensors())
-    throw "AlignmentFile: sensor exceeds device range";
-  
-  return sensorNum;
-}
+  for (unsigned int nrow = 0; nrow < config.getNumRows(); nrow++) {
+    const ConfigParser::Row* row = config.getRow(nrow);
 
-//=========================================================
-void Mechanics::Alignment::readFile() {
-  try
-    {
-      ConfigParser config(_fileName.c_str());
-      
-      for (unsigned int nrow=0; nrow<config.getNumRows(); nrow++){
-	const ConfigParser::Row* row=config.getRow(nrow);
-	
-	// No action to take when encoutering a header
-	if (row->isHeader) continue;
-	
-	if (!row->header.compare("Device"))
-	  {
-	    const double value = ConfigParser::valueToNumerical(row->value);
-	    if (!row->key.compare("slope x"))
-	      _device->setBeamSlopeX(value);
-	    else if (!row->key.compare("slope y"))
-	      _device->setBeamSlopeY(value);
-	    else if (!row->key.compare("sync ratio"))
-	      _device->setSyncRatio(value);
-	    else
-	      throw "Alignment: can't parse config row";
-	    
-	    continue;
-	  }
-	
-	if (!row->header.compare("End Sensor")) continue;
-	
-	unsigned int nsens = sensorFromHeader(row->header);
-	Sensor* sensor = _device->getSensor(nsens);
-	const double value = ConfigParser::valueToNumerical(row->value);
-	if (!row->key.compare("offset x"))
-	  sensor->setOffX(value);
-	else if (!row->key.compare("offset y"))
-	  sensor->setOffY(value);
-	else if (!row->key.compare("offset z"))
-	  sensor->setOffZ(value);
-	else if (!row->key.compare("rotation x"))
-	  sensor->setRotX(value);
-	else if (!row->key.compare("rotation y"))
-	  sensor->setRotY(value);
-	else if (!row->key.compare("rotation z"))
-	  sensor->setRotZ(value);
-	else
-	  throw "Alignment: can't parse config row";
-      }
+    // No action to take when encoutering a header
+    if (row->isHeader)
+      continue;
+
+    if (!row->header.compare("Device")) {
+      const double value = ConfigParser::valueToNumerical(row->value);
+      if (!row->key.compare("slope x"))
+        alignment.m_beamSlopeX = value;
+      else if (!row->key.compare("slope y"))
+        alignment.m_beamSlopeY = value;
+      else if (!row->key.compare("sync ratio"))
+        alignment.m_syncRatio = value;
+      else
+        throw std::runtime_error("Alignment: failed to parse row");
+      continue;
     }
-  catch (const char* e){
-    if (VERBOSE) cout << "WARNING :: Alignment file failed :: " << e << endl;
+
+    if (!row->header.compare("End Sensor"))
+      continue;
+
+    // header format should be "Sensor <#sensor_id>"
+    if ((row->header.size() <= 7) ||
+        row->header.substr(0, 7).compare("Sensor "))
+      throw std::runtime_error("Alignment: found an invalid header");
+
+    unsigned int isens = std::stoi(row->header.substr(7));
+    const double value = ConfigParser::valueToNumerical(row->value);
+    if (!row->key.compare("offset x"))
+      alignment.m_geo[isens].offsetX = value;
+    else if (!row->key.compare("offset y"))
+      alignment.m_geo[isens].offsetY = value;
+    else if (!row->key.compare("offset z"))
+      alignment.m_geo[isens].offsetZ = value;
+    else if (!row->key.compare("rotation x"))
+      alignment.m_geo[isens].rotationX = value;
+    else if (!row->key.compare("rotation y"))
+      alignment.m_geo[isens].rotationY = value;
+    else if (!row->key.compare("rotation z"))
+      alignment.m_geo[isens].rotationZ = value;
+    else
+      throw std::runtime_error("Alignment: failed to parse row");
   }
+  return alignment;
 }
 
-//=========================================================
-void Mechanics::Alignment::writeFile() {
-  std::ofstream file;
-  file.open(_fileName.c_str());
-  
-  if (!file.is_open()){
-    std::string err="[Alignment::writeFile] ERROR unable to open '"	
-      +std::string(_fileName)+"' for writting";
-    throw err.c_str();
+Mechanics::Alignment::Alignment()
+    : m_beamSlopeX(0)
+    , m_beamSlopeY(0)
+    , m_syncRatio(1)
+{
+}
+
+void Mechanics::Alignment::writeFile(const std::string& path) const
+{
+  using std::endl;
+
+  std::ofstream file(path);
+
+  if (!file.is_open()) {
+    std::string msg("Alignment: failed to open file '");
+    msg += path;
+    msg += '\'';
+    throw std::runtime_error(msg);
   }
-  
+
   file << std::setprecision(9);
   file << std::fixed;
-  
-  for(unsigned int nsens=0; nsens<_device->getNumSensors(); nsens++){
-    Sensor* sensor = _device->getSensor(nsens);
-    file << "[Sensor " << nsens << "]" << endl;
-    file << "offset x   : " << sensor->getOffX() << endl;
-      file << "offset y   : " << sensor->getOffY() << endl;
-      file << "offset z   : " << sensor->getOffZ() << endl;
-      file << "rotation x : " << sensor->getRotX() << endl;
-      file << "rotation y : " << sensor->getRotY() << endl;
-      file << "rotation z : " << sensor->getRotZ() << endl;
-      file << "[End Sensor]\n" << endl;
-    }
-    
-    file << "[Device]" << endl;
-    file << "slope x    : " << _device->getBeamSlopeX() << endl;
-    file << "slope y    : " << _device->getBeamSlopeY() << endl;
-    if (_device->getSyncRatio() > 0)
-      file << "sync ratio : " << _device->getSyncRatio() << endl;
-    file << "[End Device]\n" << endl;
-    
-    file.close();
-    
-    std::cout << "\nAlignment file '" << _fileName << "' created OK\n" << std::endl;
-}    
+
+  for (auto it = m_geo.begin(); it != m_geo.end(); ++it) {
+    Index sensorId = it->first;
+    const GeoParams& params = it->second;
+
+    file << "[Sensor " << sensorId << "]" << endl;
+    file << "offset x   : " << params.offsetX << endl;
+    file << "offset y   : " << params.offsetY << endl;
+    file << "offset z   : " << params.offsetZ << endl;
+    file << "rotation x : " << params.rotationX << endl;
+    file << "rotation y : " << params.rotationY << endl;
+    file << "rotation z : " << params.rotationZ << endl;
+    file << "[End Sensor]\n" << endl;
+  }
+
+  file << "[Device]" << endl;
+  file << "slope x    : " << m_beamSlopeX << endl;
+  file << "slope y    : " << m_beamSlopeY << endl;
+  file << "sync ratio : " << m_syncRatio << endl;
+  file << "[End Device]\n" << endl;
+
+  file.close();
+
+  INFO("wrote alignment to '", path, "'\n");
+}
+
+bool Mechanics::Alignment::hasAlignment(Index sensorId) const
+{
+  return (0 < m_geo.count(sensorId));
+}
+
+Transform3D Mechanics::Alignment::getLocalToGlobal(Index sensorId) const
+{
+  auto it = m_geo.find(sensorId);
+  if (it == m_geo.cend())
+    return Transform3D();
+
+  const GeoParams& params = it->second;
+
+  XYZVector off(params.offsetX, params.offsetY, params.offsetZ);
+  RotationZYX rot(params.rotationZ, params.rotationY, params.rotationX);
+  return Transform3D(rot, off);
+}
+
+void Mechanics::Alignment::setOffset(Index sensorId, const XYZPoint& offset)
+{
+  setOffset(sensorId, offset.x(), offset.y(), offset.z());
+}
+
+void Mechanics::Alignment::setOffset(Index sensorId,
+                                     double x,
+                                     double y,
+                                     double z)
+{
+  // will automatically create a missing GeoParams
+  auto& params = m_geo[sensorId];
+  params.offsetX = x;
+  params.offsetY = y;
+  params.offsetZ = z;
+}
+
+void Mechanics::Alignment::correctOffset(Index sensorId,
+                                         double dx,
+                                         double dy,
+                                         double dz)
+{
+  auto& params = m_geo[sensorId];
+  params.offsetX += dx;
+  params.offsetY += dy;
+  params.offsetZ += dz;
+}
+
+void Mechanics::Alignment::setRotationAngles(Index sensorId,
+                                             double rotX,
+                                             double rotY,
+                                             double rotZ)
+{
+  // will automatically create a missing GeoParams
+  auto& params = m_geo[sensorId];
+  params.rotationX = rotX;
+  params.rotationY = rotY;
+  params.rotationZ = rotZ;
+}
+
+void Mechanics::Alignment::correctRotationAngles(Index sensorId,
+                                                 double dalpha,
+                                                 double dbeta,
+                                                 double dgamma)
+{
+  auto& params = m_geo[sensorId];
+  params.rotationX += dalpha;
+  params.rotationY += dbeta;
+  params.rotationZ += dgamma;
+}
+
+XYZVector Mechanics::Alignment::beamDirection() const
+{
+  double f = 1 / std::hypot(1, std::hypot(m_beamSlopeX, m_beamSlopeY));
+  return XYZVector(f * m_beamSlopeX, f * m_beamSlopeY, f);
+}
+
+void Mechanics::Alignment::setBeamSlope(double slopeX, double slopeY)
+{
+  m_beamSlopeX = slopeX;
+  m_beamSlopeY = slopeY;
+}
+
+void Mechanics::Alignment::correctBeamSlope(double dslopeX, double dslopeY)
+{
+  m_beamSlopeX += dslopeX;
+  m_beamSlopeY += dslopeY;
+}
+
+void Mechanics::Alignment::print(std::ostream& os,
+                                 const std::string& prefix) const
+{
+  os << prefix << "Alignment:\n";
+  os << prefix << "  Beam:\n"
+     << prefix << "    Slope X: " << m_beamSlopeX << '\n'
+     << prefix << "    Slope Y: " << m_beamSlopeY << '\n';
+
+  auto ip = m_geo.begin();
+  for (; ip != m_geo.end(); ++ip) {
+    Index i = ip->first;
+    const GeoParams& p = ip->second;
+
+    os << prefix << "  Sensor " << i << ":\n";
+    os << prefix << "    Offset X: " << p.offsetX << '\n'
+       << prefix << "    Offset Y: " << p.offsetY << '\n'
+       << prefix << "    Offset Z: " << p.offsetZ << '\n';
+    os << prefix << "    Rotation X: " << p.rotationX << '\n'
+       << prefix << "    Rotation Y: " << p.rotationY << '\n'
+       << prefix << "    Rotation Z: " << p.rotationZ << '\n';
+  }
+  os.flush();
+}

@@ -40,7 +40,7 @@ void Analyzers::Occupancy::bookHistos(TDirectory* plotDir){
   char name[500], title[500];
   
   for (unsigned int nsens=0; nsens<_device->getNumSensors(); nsens++){
-    Mechanics::Sensor* sensor = _device->getSensor(nsens);
+    const Mechanics::Sensor* sensor = _device->getSensor(nsens);
     
     // (1) pixel hitmap (pix-Y vs pix-X, PIXEL units)
     sprintf(name,"%s%s_%s%s", _device->getName(), sensor->getName(), "HitOccupancy", _nameSuffix.c_str());
@@ -83,7 +83,7 @@ void Analyzers::Occupancy::bookHistos(TDirectory* plotDir){
     cout << sensor->getPosNumX() << " " << uppX << " " << lowX << " " << 79*sensor->getPosNumX()/(uppX - lowX) << endl;
     cout << sensor->getPosNumY() << " " << uppY << " " << lowY << " " << sensor->getPosNumY()/(uppY - lowY) << endl;
     cout << "nbinsX = " << histClustXZ->GetXaxis()->GetNbins() << endl;
-    cout << "nbinsY = " << histClustXZ->GetYaxis()->GetNbins() << endl;    
+    cout << "nbinsY = " << histClustXZ->GetYaxis()->GetNbins() << endl;
     cout << "  - OK 3" << endl;
     histClustXZ->SetDirectory(plotDir);
     _clusterOccXZ.push_back(histClustXZ);
@@ -152,7 +152,7 @@ void Analyzers::Occupancy::processEvent(const Storage::Event* event) {
   for (unsigned int nplane=0; nplane<event->getNumPlanes(); nplane++){
     Storage::Plane* plane=event->getPlane(nplane);
     
-    // 1.- Loop in hits within plane and fill histos      
+    // 1.- Loop in hits within plane and fill histos
     for (unsigned int nhit=0; nhit<plane->getNumHits(); nhit++){
       Storage::Hit* hit = plane->getHit(nhit);
       
@@ -177,7 +177,7 @@ void Analyzers::Occupancy::processEvent(const Storage::Event* event) {
       if (!pass) continue;
       
       _clusterOcc.at(nplane)->Fill(cluster->getPosX(), cluster->getPosY());
-      //_clusterOccXZ.at(nplane)->Fill(cluster->getPosX(), cluster->getPosY());  
+      //_clusterOccXZ.at(nplane)->Fill(cluster->getPosX(), cluster->getPosY());
       //_clusterOccYZ.at(nplane)->Fill(cluster->getPosY(), cluster->getPosZ());
       _clusterOccPix.at(nplane)->Fill(cluster->getPixX(), cluster->getPixY());
       
@@ -190,11 +190,11 @@ void Analyzers::Occupancy::processEvent(const Storage::Event* event) {
 void Analyzers::Occupancy::postProcessing(){
   if (_postProcessed) return;
 
-  // Generate the bounds of the 1D occupancy hist  
+  // Generate the bounds of the 1D occupancy hist
   std::vector<unsigned int> vTotalHits;
   std::vector<unsigned int> vMaxHits;
   for(unsigned int nsens=0; nsens<_device->getNumSensors(); nsens++){
-    Mechanics::Sensor* sensor = _device->getSensor(nsens);
+    const Mechanics::Sensor* sensor = _device->getSensor(nsens);
     TH2D* occ = _hitOcc.at(nsens);
     unsigned int cnt=0, max=0;
     for(unsigned int x=0; x<sensor->getNumX(); x++){
@@ -214,19 +214,19 @@ void Analyzers::Occupancy::postProcessing(){
   //<< " max=" << vMaxHits[nsens] << endl;
   
   char hname[100], htitle[300];
-  TDirectory* plotDir = makeGetDirectory("Occupancy");  
+  TDirectory* plotDir = makeGetDirectory("Occupancy");
   for(unsigned int nsens=0; nsens<_device->getNumSensors(); nsens++){
-    Mechanics::Sensor* sensor = _device->getSensor(nsens);
+    const Mechanics::Sensor* sensor = _device->getSensor(nsens);
 
     sprintf(hname,"%s%s_OccDist", _device->getName(), sensor->getName());
-    sprintf(htitle, "%s - %s [Occupancy distribution]", _device->getName(), sensor->getName());    
+    sprintf(htitle, "%s - %s [Occupancy distribution]", _device->getName(), sensor->getName());
     float xmax = vTotalHits[nsens] != 0 ? (double)vMaxHits[nsens]/(double)vTotalHits[nsens] : vMaxHits[nsens];
     TH1D *h = new TH1D(hname, htitle, 100, 0, xmax);
     //TH1D *h = new TH1D(hname, htitle, vMaxHits[nsens]+1, 0, vMaxHits[nsens]+1); // rebin offline if needed
     h->GetXaxis()->SetTitle("Hits per trigger");
     h->SetDirectory(plotDir);
         
-    TH2D* occ = _hitOcc.at(nsens);      
+    TH2D* occ = _hitOcc.at(nsens);
     for(int bx=1; bx<=occ->GetNbinsX(); ++bx){
       for(int by=1; by<=occ->GetNbinsY(); ++by){
 	const unsigned int numHits = occ->GetBinContent(bx,by);

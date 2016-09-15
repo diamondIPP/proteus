@@ -414,7 +414,7 @@ void TrackMaker::calculateIntercepts(Storage::Event* event, Mechanics::Device* d
 			
 			// restore origin to center of sensor
 			const double halfX = sensor->getSensitiveX() / 2.0;
-			const double halfY = sensor->getSensitiveY() / 2.0;	
+			const double halfY = sensor->getSensitiveY() / 2.0;
 			
 			posX -= halfX;
 			posY -= halfY;
@@ -423,8 +423,8 @@ void TrackMaker::calculateIntercepts(Storage::Event* event, Mechanics::Device* d
 			plane->addIntercept(posX, posY);
 			
 		}
-	}	
-}	
+	}
+}
 	
 	
 	

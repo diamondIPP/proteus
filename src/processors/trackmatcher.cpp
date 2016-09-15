@@ -27,7 +27,7 @@ void Processors::TrackMatcher::matchEvent(Storage::Event* refEvent,
   // Look for a tracks to clusters in each plane
   for (unsigned int nplane=0; nplane<dutEvent->getNumPlanes(); nplane++){
     Storage::Plane* plane = dutEvent->getPlane(nplane);
-    Mechanics::Sensor* sensor = _device->getSensor(nplane);
+    const Mechanics::Sensor* sensor = _device->getSensor(nplane);
     
     // If there are more cluster than tracks, match each track to one cluster
     if (plane->getNumClusters() >= refEvent->getNumTracks())
@@ -60,7 +60,7 @@ void Processors::TrackMatcher::matchTracksToClusters(Storage::Event* trackEvent,
       // bilbao@cern.ch: circular distance to calculate the track-cluster distance
       // fdibello@cern.ch: definition of the distance that takes in account the rectangulatr shape of pixel of the DUT
       const double dist = sqrt(pow(x/clustersSensor->getPitchX(), 2) +
-			       pow(y/clustersSensor->getPitchY(), 2)); 
+			       pow(y/clustersSensor->getPitchY(), 2));
 
 
       if (!match || dist < nearestDist)
@@ -106,7 +106,7 @@ void Processors::TrackMatcher::matchClustersToTracks(Storage::Event* trackEvent,
       
       // bilbao@cern.ch: cone distance to calculate the track-cluster distance
       const double dist = sqrt(pow(x/clustersSensor->getPitchX(), 2) +
-			       pow(y/clustersSensor->getPitchY(), 2)); 
+			       pow(y/clustersSensor->getPitchY(), 2));
       
       if (!match || dist < nearestDist){
         nearestDist = dist;

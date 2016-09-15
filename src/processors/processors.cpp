@@ -24,6 +24,7 @@
 #include "../mechanics/sensor.h"
 #include "../mechanics/device.h"
 #include "../processors/trackmaker.h"
+#include "utils/definitions.h"
 
 #ifndef VERBOSE
 #define VERBOSE 1
@@ -208,7 +209,7 @@ void fitGaussian(
 }
 //fdibello slices in x and y in order to correct rotation for the FE14
 void residualAlignment(TH2D* residualX, TH2D* residualY, double& offsetX,
-                       double& offsetY, double& rotation, 
+                       double& offsetY, double& rotation,
                        double relaxation, bool display)
 {
   assert(residualX && residualY && "Processors: can't perform residual alignment without histograms");
@@ -245,7 +246,7 @@ void residualAlignment(TH2D* residualX, TH2D* residualY, double& offsetX,
     c1->cd(1);
     residualX->Draw("colz");
     c1->cd(2);
-    residualY->Draw("colz"); 
+    residualY->Draw("colz");
     c1->WaitPrimitive();
     if(c1!=NULL){c1->Closed();}
     }
@@ -255,7 +256,7 @@ void residualAlignment(TH2D* residualX, TH2D* residualY, double& offsetX,
     std::vector<double> ptsErr;
 
     const unsigned int numSlices = hist->GetNbinsY();
-    //std::cout << "Number of slices: " << numSlices << std::endl; 
+    //std::cout << "Number of slices: " << numSlices << std::endl;
     for (Int_t row = 1; row <= (int)numSlices; row++)
     {
       TH1D* slice = hist->ProjectionX("ResidualSlice", row, row);
@@ -394,7 +395,7 @@ void applyAlignment(Storage::Event* event, const Mechanics::Device* device)
   for (unsigned int nplane = 0; nplane < event->getNumPlanes(); nplane++)
   {
     Storage::Plane* plane = event->getPlane(nplane);
-    Mechanics::Sensor* sensor = device->getSensor(nplane);
+    const Mechanics::Sensor* sensor = device->getSensor(nplane);
     // Apply alignment to hits
     for (unsigned int nhit = 0; nhit < plane->getNumHits(); nhit++)
     {
@@ -417,14 +418,12 @@ void applyAlignment(Storage::Event* event, const Mechanics::Device* device)
       cluster->setPos(posX, posY, posZ);
      // cout<<"Sensor= "<<nplane  <<"in processors,cluster , set pos Z="<<posZ<<std::endl;
 
-      double errX = sensor->getPitchX() * cluster->getPixErrX();
-      double errY = sensor->getPitchY() * cluster->getPixErrY();
-      double errZ = 0;
-      sensor->rotateToGlobal(errX, errY, errZ);
-      errX = fabs(errX);
-      errY = fabs(errY);
-      errZ = fabs(errZ);
-      cluster->setPosErr(errX, errY, errZ); 
+      XYZVector errLocal(sensor->getPitchX() * cluster->getPixErrX(),
+                       sensor->getPitchY() * cluster->getPixErrY(), 0);
+      XYZVector errGlobal = sensor->localToGlobal() * errLocal;
+      cluster->setPosErr(fabs(errGlobal.x()),
+                         fabs(errGlobal.y()),
+                         fabs(errGlobal.z()));
     }
   }
 
