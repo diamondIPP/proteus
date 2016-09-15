@@ -10,6 +10,7 @@
 #include "storage/track.h"
 
 namespace Processors {
+class TrackFinder;
 class TrackMaker;
 }
 
@@ -69,6 +70,7 @@ private:
   std::vector<Plane> m_planes;
   std::vector<Track> m_tracks;
 
+  friend class Processors::TrackFinder;
   friend class Processors::TrackMaker;
 };
 
