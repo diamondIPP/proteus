@@ -19,12 +19,12 @@ cp -f comparison/unaligned-ref.dat alignment-ref.dat
 mkdir -p output
 
 # assume noise-free telescope; no noise mask
-# Judith $FLAGS -c applyMask -i $RAWFILE -o ${PREFIX}ref.root -t $CFG -r $REF
-# Judith $FLAGS -c noiseScan -i ${PREFIX}ref.root -t $CFG -r $REF
-Judith $FLAGS -c applyMask -i $RAWFILE -o ${PREFIX}ref.root -t $CFG -r $REF
-Judith $FLAGS -c process -i ${PREFIX}ref.root -o ${PREFIX}ref-p.root -t $CFG -r $REF
-Judith $FLAGS -c coarseAlign -i ${PREFIX}ref-p.root -t $CFG -r $REF
+# proteus $FLAGS -c applyMask -i $RAWFILE -o ${PREFIX}ref.root -t $CFG -r $REF
+# proteus $FLAGS -c noiseScan -i ${PREFIX}ref.root -t $CFG -r $REF
+proteus $FLAGS -c applyMask -i $RAWFILE -o ${PREFIX}ref.root -t $CFG -r $REF
+proteus $FLAGS -c process -i ${PREFIX}ref.root -o ${PREFIX}ref-p.root -t $CFG -r $REF
+proteus $FLAGS -c coarseAlign -i ${PREFIX}ref-p.root -t $CFG -r $REF
 cp alignment-ref.dat alignment-ref-coarseAlign.dat
-Judith $FLAGS -c fineAlign -i ${PREFIX}ref-p.root -t $CFG -r $REF
-Judith $FLAGS -c process -i ${PREFIX}ref.root -o ${PREFIX}ref-pa.root -t $CFG -r $REF -R ${PREFIX}ref-pr.root
-Judith $FLAGS -c analysis -i ${PREFIX}ref-pa.root -R ${PREFIX}ref-pa-analysis.root -t $CFG -r $REF
+proteus $FLAGS -c fineAlign -i ${PREFIX}ref-p.root -t $CFG -r $REF
+proteus $FLAGS -c process -i ${PREFIX}ref.root -o ${PREFIX}ref-pa.root -t $CFG -r $REF -R ${PREFIX}ref-pr.root
+proteus $FLAGS -c analysis -i ${PREFIX}ref-pa.root -R ${PREFIX}ref-pa-analysis.root -t $CFG -r $REF

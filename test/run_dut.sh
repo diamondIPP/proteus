@@ -24,9 +24,9 @@ cp -f comparison/alignment-ref.dat alignment-ref.dat
 cp -f comparison/alignment-dut0.dat alignment-dut0.dat
 mkdir -p output
 
-Judith $FLAGS -c applyMask -i $RAWFILE -o ${PREFIX}dut0.root -t $CFG -r $DUT0
-Judith $FLAGS -c noiseScan -i ${PREFIX}dut0.root -t $CFG -r $DUT0
-Judith $FLAGS -c applyMask -i $RAWFILE -o ${PREFIX}dut0.root -t $CFG -r $DUT0
+proteus $FLAGS -c applyMask -i $RAWFILE -o ${PREFIX}dut0.root -t $CFG -r $DUT0
+proteus $FLAGS -c noiseScan -i ${PREFIX}dut0.root -t $CFG -r $DUT0
+proteus $FLAGS -c applyMask -i $RAWFILE -o ${PREFIX}dut0.root -t $CFG -r $DUT0
 # extra mapping and selection for ccpd devices
 root -l -q "${MACROS}/Regions.cc+(\"${PREFIX}dut0\",0,5,157,173,165,168)"
 root -l -q "${MACROS}/mapping.cc+(\"${PREFIX}dut0_Stime.root\",\"${PREFIX}dut0_Stime-m.root\")"
@@ -37,15 +37,15 @@ root -l -q "${MACROS}/mapping.cc+(\"${PREFIX}dut0_Stime.root\",\"${PREFIX}dut0_S
 # region-of-interest cuts in the code base.
 # needs to be updated when issues #11 and #12 are fixed.
 
-# Judith $FLAGS -c coarseAlignDUT -t $CFG -r $REF -d $DUT \
+# proteus $FLAGS -c coarseAlignDUT -t $CFG -r $REF -d $DUT \
 #     -i ${PREFIX}ref-p.root -I ${PREFIX}dut0_Stime-m.root
-# Judith $FLAGS -c fineAlignDUT -t $CFG -r $REF -d $DUT \
+# proteus $FLAGS -c fineAlignDUT -t $CFG -r $REF -d $DUT \
 #     -i ${PREFIX}ref-p.root -I ${PREFIX}dut0_Stime-m.root
-Judith $FLAGS -c process -t $CFG -r $DUT0M \
+proteus $FLAGS -c process -t $CFG -r $DUT0M \
     -i ${PREFIX}dut0_Stime-m.root \
     -o ${PREFIX}dut0_Stime-p.root \
     -R ${PREFIX}dut0_Stime-p-hists.root
-# Judith $FLAGS -c analysisDUT -t $CFG -r $REF -d $DUT0M \
+# proteus $FLAGS -c analysisDUT -t $CFG -r $REF -d $DUT0M \
 #     -i ${PREFIX}ref-p.root \
 #     -I ${PREFIX}dut0_Stime-p.root \
 #     -R ${PREFIX}dut0_Stime-analysis.root
