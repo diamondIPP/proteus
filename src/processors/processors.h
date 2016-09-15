@@ -38,8 +38,6 @@ void residualAlignment(TH2D* residualX, TH2D* residualY, double& offsetX,
                        double& offsetY, double& rotation,
                        double relaxation = 0.8, bool display = false);
 
-void applyAlignment(Storage::Event* event, const Mechanics::Device* device);
-
 void pixelToSlope(const Mechanics::Device* device, double &slopeX, double &slopeY);
 
 int lineSensorIntercept(double posX, double posY, double posZ,

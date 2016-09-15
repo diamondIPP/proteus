@@ -9,6 +9,7 @@
 #include "../storage/event.h"
 #include "../mechanics/device.h"
 #include "../mechanics/sensor.h"
+#include "../processors/applyalignment.h"
 #include "../processors/processors.h"
 #include "../processors/clustermaker.h"
 #include "../processors/trackmaker.h"

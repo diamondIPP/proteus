@@ -390,41 +390,6 @@ void residualAlignment(TH2D* residualX, TH2D* residualY, double& offsetX,
   offsetY *= relaxation;
 }
 
-void applyAlignment(Storage::Event* event, const Mechanics::Device* device)
-{
-  assert(event && device && "Processors: can't apply alignmet with null event and/or device");
-  assert(event->getNumPlanes() == device->getNumSensors() &&
-         "Processors: plane / sensor mismatch");
-
-  for (unsigned int nplane = 0; nplane < event->getNumPlanes(); nplane++)
-  {
-    Storage::Plane* plane = event->getPlane(nplane);
-    const Mechanics::Sensor* sensor = device->getSensor(nplane);
-    Transform3D pixelToGlobal = sensor->constructPixelToGlobal();
-
-    // Apply alignment to hits
-    for (unsigned int nhit = 0; nhit < plane->numHits(); nhit++)
-    {
-      Storage::Hit* hit = plane->getHit(nhit);
-      hit->transformToGlobal(pixelToGlobal);
-    }
-
-    // Apply alignment to clusters
-    for (unsigned int ncluster = 0; ncluster < plane->numClusters(); ncluster++)
-    {
-      Storage::Cluster* cluster = plane->getCluster(ncluster);
-      cluster->transformToGlobal(pixelToGlobal);
-    }
-  }
-
-  // Apply alignment to tracks
-  for (unsigned int ntrack = 0; ntrack < event->numTracks(); ntrack++)
-  {
-    Storage::Track* track = event->getTrack(ntrack);
-    Processors::TrackMaker::fitTrackToClusters(track);
-  }
-}
-
 void pixelToSlope(const Mechanics::Device* device, double &slopeX, double &slopeY)
 {
   assert(device && "Processors: can't use a null device to calculate a pixel slope");

@@ -39,6 +39,7 @@ set(COMMON_SRC
     mechanics/noisemask.cpp
     mechanics/alignment.cpp
     mechanics/sensor.cpp
+    processors/applyalignment.cpp
     processors/eventdepictor.cpp
     processors/largesynchronizer.cpp
     processors/synchronizer.cpp
