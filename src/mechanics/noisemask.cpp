@@ -184,10 +184,8 @@ const size_t Mechanics::NoiseMask::getNumMaskedPixels() const
 void Mechanics::NoiseMask::print(std::ostream& os,
                                  const std::string& prefix) const
 {
-  os << prefix << "Noise mask:\n";
-
   if (m_maskedPixels.empty()) {
-    os << prefix << "  No masked pixels\n";
+    os << prefix << "no masked pixels\n";
     os.flush();
     return;
   }
@@ -200,10 +198,10 @@ void Mechanics::NoiseMask::print(std::ostream& os,
     if (pixs.empty())
       continue;
 
-    os << prefix << "  Sensor " << i << ":\n";
+    os << prefix << "sensor " << i << ":\n";
     auto cr = pixs.begin();
     for (; cr != pixs.end(); ++cr)
-      os << prefix << "    col=" << cr->first << ", row=" << cr->second << '\n';
+      os << prefix << "  col=" << cr->first << ", row=" << cr->second << '\n';
   }
   os.flush();
 }

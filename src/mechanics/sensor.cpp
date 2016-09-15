@@ -209,12 +209,12 @@ double Mechanics::Sensor::getPosSensitiveY() const
 
 void Mechanics::Sensor::print(std::ostream& os, const std::string& prefix) const
 {
-  os << prefix << "Name: " << m_name << '\n';
-  os << prefix << "Columns: " << m_numCols << '\n';
-  os << prefix << "Rows: " << m_numRows << '\n';
-  os << prefix << "Pitch column: " << m_pitchCol << '\n';
-  os << prefix << "Pitch row: " << m_pitchRow << '\n';
-  os << prefix << "Depth: " << m_depth << '\n';
+  os << prefix << "name: " << m_name << '\n';
+  os << prefix << "columns: " << m_numCols << '\n';
+  os << prefix << "rows: " << m_numRows << '\n';
+  os << prefix << "pitch column: " << m_pitchCol << '\n';
+  os << prefix << "pitch row: " << m_pitchRow << '\n';
+  os << prefix << "thickness: " << m_depth << '\n';
   os << prefix << "x/X0: " << m_xX0 << '\n';
   os.flush();
 }
