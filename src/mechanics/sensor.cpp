@@ -63,8 +63,8 @@ void Mechanics::Sensor::getNormalVector(double& x, double& y, double& z) const
 
 XYPoint Mechanics::Sensor::transformLocalToPixel(const XYZPoint& uvw) const
 {
-  return {(uvw.x() / m_pitchCol) + (m_numCols / 2),
-          (uvw.y() / m_pitchRow) + (m_numRows / 2)};
+  return XYPoint((uvw.x() / m_pitchCol) + std::round(m_numCols / 2),
+                 (uvw.y() / m_pitchRow) + std::round(m_numRows / 2));
 }
 
 XYPoint Mechanics::Sensor::transformGlobalToPixel(const XYZPoint& xyz) const
@@ -74,9 +74,9 @@ XYPoint Mechanics::Sensor::transformGlobalToPixel(const XYZPoint& xyz) const
 
 XYZPoint Mechanics::Sensor::transformPixelToLocal(double col, double row) const
 {
-  return {m_pitchCol * (col - (m_numCols / 2)),
-          m_pitchRow * (row - (m_numRows / 2)),
-          0};
+  return XYZPoint(m_pitchCol * (col - std::round(m_numCols / 2)),
+                  m_pitchRow * (row - std::round(m_numRows / 2)),
+                  0);
 }
 
 XYZPoint Mechanics::Sensor::transformGlobalToLocal(const XYZPoint& xyz) const
@@ -143,13 +143,13 @@ bool Mechanics::Sensor::sort(const Sensor* s1, const Sensor* s2)
 
 std::array<double, 4> Mechanics::Sensor::sensitiveAreaPixel() const
 {
-  return {-0.5, m_numCols - 0.5, -0.5, m_numRows - 0.5};
+  return {0, static_cast<double>(m_numCols), 0, static_cast<double>(m_numRows)};
 }
 
 std::array<double, 4> Mechanics::Sensor::sensitiveAreaLocal() const
 {
-  auto lowerLeft = transformPixelToLocal(-0.5, -0.5);
-  auto upperRight = transformPixelToLocal(m_numCols - 0.5, m_numRows - 0.5);
+  auto lowerLeft = transformPixelToLocal(0, 0);
+  auto upperRight = transformPixelToLocal(m_numCols, m_numRows);
   return {lowerLeft.x(), upperRight.x(), lowerLeft.y(), upperRight.y()};
 }
 
@@ -157,10 +157,10 @@ std::array<double, 4> Mechanics::Sensor::sensitiveEnvelopeGlobal() const
 {
   // TODO 2016-08 msmk: find a smarter way to this, but its Friday
   // transform each corner of the sensitive rectangle
-  auto minMin = transformPixelToGlobal(-0.5, -0.5);
-  auto minMax = transformPixelToGlobal(-0.5, m_numRows - 0.5);
-  auto maxMin = transformPixelToGlobal(m_numCols - 0.5, -0.5);
-  auto maxMax = transformPixelToGlobal(m_numCols - 0.5, m_numRows - 0.5);
+  auto minMin = transformPixelToGlobal(0, 0);
+  auto minMax = transformPixelToGlobal(0, m_numRows);
+  auto maxMin = transformPixelToGlobal(m_numCols, 0);
+  auto maxMax = transformPixelToGlobal(m_numCols, m_numRows);
 
   std::array<double, 4> xs = {minMin.x(), minMax.x(), maxMin.x(), maxMax.x()};
   std::array<double, 4> ys = {minMin.y(), minMax.y(), maxMin.y(), maxMax.y()};

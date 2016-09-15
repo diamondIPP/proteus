@@ -18,13 +18,13 @@ namespace Mechanics {
  * coordinate systems are used:
  *
  * 1.  The pixel coordinates are defined along the column and row
- *     axis of the pixel matrix. Coordinates are measured in digital pixel
- *     addresses, i.e. columns and rows. Integer numbers indicate the nominal
- *     pixel centers, e.g. positions inside the (0,0) pixel have column and
- *     row positions in the [-0.5,0.5) range. Each pixel has unit area. The
- *     total sensitive sensor is [-0.5,numberCols-0.5)x[-0.5,numberRows-0.5).
- *     This conventions allows easy conversion between recorded pixel indices
- *     and e.g. reconstructed track positions.
+ *     axis of the pixel matrix. Coordinates are measured in numbers of digital
+ *     pixels. Pixel boundaries are located on integer numbers, i.e. the
+ *     (0,0) pixel has column and row position in the [0,1) range and unit
+ *     area. Please note that for pixel address (0,0) the pixel center is
+ *     located at (0.5,0.5). This shift must be considered when converting
+ *     addresses to pixel positions. The total sensitive sensor area is
+ *     [0,numberCols)x[0,numberRows).
  * 2.  The local metric coordinates are also defined along the column and row
  *     axis of the pixel matrix but scaled with the pixel pitch to have the
  *     same units as the global coordinates. Local coordinates (u,v,w)
