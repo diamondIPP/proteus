@@ -4,8 +4,8 @@ Contribution Guide
 Development
 -----------
 
-The development happens at the `project gitlab repository
-<https://gitlab.cern.ch/unige-fei4tel/judith>`_. Development of
+All development happens at the `project gitlab repository
+<https://gitlab.cern.ch/unige-fei4tel/proteus>`_. Development of
 new features, bugfixes, and other changes should start with opening an
 issue in the issue tracker. The progress for each issue should be tracked
 in a separate (user-specific) branch. Features that are ready to be
