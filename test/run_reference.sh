@@ -1,4 +1,4 @@
-#!/bin/sh -ex
+#!/bin/bash -ex
 #
 # run the processing chain for the reference telescope
 
@@ -8,7 +8,7 @@ RUN=1066
 # FLAGS="--numEvents 10000--printLevel 1"
 FLAGS=
 
-RAWFILE=$(realpath $(printf "raw/cosmic_%06d.root" $RUN))
+RAWFILE=$(realpath $(printf "raw/run%06d.root" $RUN))
 RUNDIR=$(printf "run%06d" $RUN)
 PREFIX=$(printf "output/run%06d-" $RUN)
 
