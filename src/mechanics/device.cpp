@@ -247,8 +247,10 @@ double Mechanics::Device::tsToTime(uint64_t timeStamp) const
 
 void Mechanics::Device::setTimeStampRange(uint64_t start, uint64_t end)
 {
-    m_timeStart = start;
-    m_timeEnd = end;
+  if (end < start)
+    throw std::runtime_error("end time stamp must come after start");
+  m_timeStart = start;
+  m_timeEnd = end;
 }
 
 unsigned int Mechanics::Device::getNumPixels() const
