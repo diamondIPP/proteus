@@ -248,7 +248,6 @@ void residualAlignment(TH2D* residualX, TH2D* residualY, double& offsetX,
     c1->cd(2);
     residualY->Draw("colz");
     c1->WaitPrimitive();
-    if(c1!=NULL){c1->Closed();}
     }
 
     std::vector<double> ptsX;
