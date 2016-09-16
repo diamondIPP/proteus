@@ -28,8 +28,8 @@ rotation z : 0.000000000
 [Sensor 3]
 offset x   : 0.000000000
 offset y   : 0.000000000
-offset z   : 0.000000000
-rotation x : 678000.000000000
+offset z   : 678000.00000000
+rotation x : 0.000000000
 rotation y : 3.1415926535897
 rotation z : 0.000000000
 [End Sensor]
