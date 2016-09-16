@@ -13,13 +13,13 @@ Mechanics::Sensor::Sensor(const std::string& name,
                           double pitchCol,
                           double pitchRow,
                           bool isDigital,
-                          double depth,
+                          double thickness,
                           double xX0)
     : m_numCols(numCols)
     , m_numRows(numRows)
     , m_pitchCol(pitchCol)
     , m_pitchRow(pitchRow)
-    , m_depth(depth)
+    , m_thickness(thickness)
     , m_xX0(xX0)
     , m_name(name)
     , m_noiseMask(numCols * numRows, false)
@@ -29,6 +29,11 @@ Mechanics::Sensor::Sensor(const std::string& name,
 
 // geometry related methods
 
+XYZPoint Mechanics::Sensor::origin() const
+{
+  return XYZPoint(m_l2g.Translation().Vect());
+}
+
 XYZVector Mechanics::Sensor::normal() const
 {
   XYZVector W, U, V;
@@ -36,29 +41,10 @@ XYZVector Mechanics::Sensor::normal() const
   return W;
 }
 
-double Mechanics::Sensor::getOffX() const
+void Mechanics::Sensor::setLocalToGlobal(const Transform3D& l2g)
 {
-  return m_l2g.Translation().Vect().x();
-}
-
-double Mechanics::Sensor::getOffY() const
-{
-  return m_l2g.Translation().Vect().y();
-}
-
-double Mechanics::Sensor::getOffZ() const
-{
-  return m_l2g.Translation().Vect().z();
-}
-
-void Mechanics::Sensor::getGlobalOrigin(double& x, double& y, double& z) const
-{
-  origin().GetCoordinates(x, y, z);
-}
-
-void Mechanics::Sensor::getNormalVector(double& x, double& y, double& z) const
-{
-  normal().GetCoordinates(x, y, z);
+  m_l2g = l2g;
+  m_g2l = l2g.Inverse();
 }
 
 XYPoint Mechanics::Sensor::transformLocalToPixel(const XYZPoint& uvw) const
@@ -72,11 +58,16 @@ XYPoint Mechanics::Sensor::transformGlobalToPixel(const XYZPoint& xyz) const
   return transformLocalToPixel(globalToLocal() * xyz);
 }
 
-XYZPoint Mechanics::Sensor::transformPixelToLocal(double col, double row) const
+XYZPoint Mechanics::Sensor::transformPixelToLocal(double c, double r) const
 {
-  return XYZPoint(m_pitchCol * (col - std::round(m_numCols / 2)),
-                  m_pitchRow * (row - std::round(m_numRows / 2)),
+  return XYZPoint(m_pitchCol * (c - std::round(m_numCols / 2)),
+                  m_pitchRow * (r - std::round(m_numRows / 2)),
                   0);
+}
+
+XYZPoint Mechanics::Sensor::transformPixelToLocal(const XYPoint& cr) const
+{
+  return transformPixelToLocal(cr.x(), cr.y());
 }
 
 XYZPoint Mechanics::Sensor::transformGlobalToLocal(const XYZPoint& xyz) const
@@ -84,9 +75,14 @@ XYZPoint Mechanics::Sensor::transformGlobalToLocal(const XYZPoint& xyz) const
   return globalToLocal() * xyz;
 }
 
-XYZPoint Mechanics::Sensor::transformPixelToGlobal(double col, double row) const
+XYZPoint Mechanics::Sensor::transformPixelToGlobal(double c, double r) const
 {
-  return localToGlobal() * transformPixelToLocal(col, row);
+  return localToGlobal() * transformPixelToLocal(c, r);
+}
+
+XYZPoint Mechanics::Sensor::transformPixelToGlobal(const XYPoint& cr) const
+{
+  return localToGlobal() * transformPixelToLocal(cr.x(), cr.y());
 }
 
 XYZPoint Mechanics::Sensor::transformLocalToGlobal(const XYZPoint& uvw) const
@@ -95,15 +91,15 @@ XYZPoint Mechanics::Sensor::transformLocalToGlobal(const XYZPoint& uvw) const
 }
 
 void Mechanics::Sensor::pixelToSpace(
-    double col, double row, double& x, double& y, double& z) const
+    double c, double r, double& x, double& y, double& z) const
 {
-  transformPixelToGlobal(col, row).GetCoordinates(x, y, z);
+  transformPixelToGlobal(c, r).GetCoordinates(x, y, z);
 }
 
 void Mechanics::Sensor::spaceToPixel(
-    double x, double y, double z, double& col, double& row) const
+    double x, double y, double z, double& c, double& r) const
 {
-  transformGlobalToPixel({x, y, z}).GetCoordinates(col, row);
+  transformGlobalToPixel(XYZPoint(x, y, z)).GetCoordinates(c, r);
 }
 
 //=========================================================
@@ -171,6 +167,31 @@ std::array<double, 4> Mechanics::Sensor::sensitiveEnvelopeGlobal() const
           *std::max_element(ys.begin(), ys.end())};
 }
 
+double Mechanics::Sensor::getOffX() const
+{
+  return m_l2g.Translation().Vect().x();
+}
+
+double Mechanics::Sensor::getOffY() const
+{
+  return m_l2g.Translation().Vect().y();
+}
+
+double Mechanics::Sensor::getOffZ() const
+{
+  return m_l2g.Translation().Vect().z();
+}
+
+void Mechanics::Sensor::getGlobalOrigin(double& x, double& y, double& z) const
+{
+  origin().GetCoordinates(x, y, z);
+}
+
+void Mechanics::Sensor::getNormalVector(double& x, double& y, double& z) const
+{
+  normal().GetCoordinates(x, y, z);
+}
+
 unsigned int Mechanics::Sensor::getPosNumX() const
 {
   return (unsigned int)((getPosSensitiveX() / getPosPitchX()) + 0.5);
@@ -214,7 +235,7 @@ void Mechanics::Sensor::print(std::ostream& os, const std::string& prefix) const
   os << prefix << "rows: " << m_numRows << '\n';
   os << prefix << "pitch column: " << m_pitchCol << '\n';
   os << prefix << "pitch row: " << m_pitchRow << '\n';
-  os << prefix << "thickness: " << m_depth << '\n';
+  os << prefix << "thickness: " << m_thickness << '\n';
   os << prefix << "x/X0: " << m_xX0 << '\n';
   os.flush();
 }
