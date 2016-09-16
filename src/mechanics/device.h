@@ -69,9 +69,6 @@ public:
 
   const std::vector<bool>* getSensorMask() const { return &m_sensorMask; }
 
-  NoiseMask* getNoiseMask() { return &m_noiseMask; }
-  Alignment* getAlignment() { return &m_alignment; }
-
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
