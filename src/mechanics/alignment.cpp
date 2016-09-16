@@ -156,17 +156,6 @@ void Mechanics::Alignment::setOffset(Index sensorId,
   params.offsetZ = z;
 }
 
-void Mechanics::Alignment::correctOffset(Index sensorId,
-                                         double dx,
-                                         double dy,
-                                         double dz)
-{
-  auto& params = m_geo[sensorId];
-  params.offsetX += dx;
-  params.offsetY += dy;
-  params.offsetZ += dz;
-}
-
 void Mechanics::Alignment::setRotationAngles(Index sensorId,
                                              double rotX,
                                              double rotY,
@@ -177,6 +166,17 @@ void Mechanics::Alignment::setRotationAngles(Index sensorId,
   params.rotationX = rotX;
   params.rotationY = rotY;
   params.rotationZ = rotZ;
+}
+
+void Mechanics::Alignment::correctOffset(Index sensorId,
+                                         double dx,
+                                         double dy,
+                                         double dz)
+{
+  auto& params = m_geo[sensorId];
+  params.offsetX += dx;
+  params.offsetY += dy;
+  params.offsetZ += dz;
 }
 
 void Mechanics::Alignment::correctRotationAngles(Index sensorId,
@@ -192,20 +192,13 @@ void Mechanics::Alignment::correctRotationAngles(Index sensorId,
 
 XYZVector Mechanics::Alignment::beamDirection() const
 {
-  double f = 1 / std::hypot(1, std::hypot(m_beamSlopeX, m_beamSlopeY));
-  return XYZVector(f * m_beamSlopeX, f * m_beamSlopeY, f);
+  return XYZVector(m_beamSlopeX, m_beamSlopeY, 1);
 }
 
 void Mechanics::Alignment::setBeamSlope(double slopeX, double slopeY)
 {
   m_beamSlopeX = slopeX;
   m_beamSlopeY = slopeY;
-}
-
-void Mechanics::Alignment::correctBeamSlope(double dslopeX, double dslopeY)
-{
-  m_beamSlopeX += dslopeX;
-  m_beamSlopeY += dslopeY;
 }
 
 void Mechanics::Alignment::print(std::ostream& os,
