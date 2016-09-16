@@ -25,7 +25,7 @@ public:
 
   void maskPixel(Index sensorId, Index col, Index row);
   const ColumnRowSet& getMaskedPixels(Index sensorId) const;
-  const size_t getNumMaskedPixels() const;
+  size_t getNumMaskedPixels() const;
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 

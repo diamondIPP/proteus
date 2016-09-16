@@ -136,9 +136,7 @@ void Mechanics::NoiseMask::writeFile(const std::string& path) const
   std::fstream out(path, std::ios_base::out);
 
   if (!out.is_open()) {
-    std::string msg("NoiseMask: failed to open file '");
-    msg += path;
-    msg += '\'';
+    std::string msg("NoiseMask: failed to open file '" + path + '\'');
     throw std::runtime_error(msg);
   }
 
@@ -173,7 +171,7 @@ Mechanics::NoiseMask::getMaskedPixels(Index sensorId) const
   return EMPTY;
 }
 
-const size_t Mechanics::NoiseMask::getNumMaskedPixels() const
+size_t Mechanics::NoiseMask::getNumMaskedPixels() const
 {
   size_t n = 0;
   for (auto it = m_maskedPixels.begin(); it != m_maskedPixels.end(); ++it)
