@@ -28,32 +28,32 @@ public:
          const std::string& spaceUnit = std::string(),
          const std::string& timeUnit = std::string());
 
+  const std::string& name() const { return m_name; }
+  const std::string& pathAlignment() const { return m_pathAlignment; }
+  const std::string& pathNoiseMask() const { return m_pathNoiseMask; }
+
   void addSensor(const Sensor& sensor);
   void addMaskedSensor();
-  double tsToTime(uint64_t timeStamp) const;
-
-  /** Store the alignment and apply to all configured sensors. */
-  void applyAlignment(const Alignment& alignment);
-  /** Store the noise mask and apply to all configured sensors. */
-  void applyNoiseMask(const NoiseMask& noiseMask);
-
-  void setTimeStampRange(uint64_t start, uint64_t end);
-  /** \deprecated Use alignment directly */
-  void setSyncRatio(double ratio) { m_alignment.setSyncRatio(ratio); }
-
   unsigned int getNumSensors() const { return m_sensors.size(); }
   Sensor* getSensor(unsigned int i) { return &m_sensors.at(i); }
   const Sensor* getSensor(unsigned int i) const { return &m_sensors.at(i); }
 
-  unsigned int getNumPixels() const;
-
-  const std::string& name() const { return m_name; }
-  const std::string& pathAlignment() const { return m_pathAlignment; }
-  const std::string& pathNoiseMask() const { return m_pathNoiseMask; }
-  const NoiseMask& noiseMask() const { return m_noiseMask; }
   const Alignment& alignment() const { return m_alignment; }
   XYZVector beamDirection() const { return m_alignment.beamDirection(); }
+  /** Store the alignment and apply to all configured sensors. */
+  void applyAlignment(const Alignment& alignment);
 
+  const NoiseMask& noiseMask() const { return m_noiseMask; }
+  /** Store the noise mask and apply to all configured sensors. */
+  void applyNoiseMask(const NoiseMask& noiseMask);
+
+  uint64_t timeStampStart() const { return m_timeStart; }
+  uint64_t timeStampEnd() const { return m_timeEnd; }
+  double clockRate() const { return m_clockRate; }
+  double tsToTime(uint64_t timeStamp) const;
+  void setTimeStampRange(uint64_t start, uint64_t end);
+
+  unsigned int getNumPixels() const;
   const char* getName() const { return m_name.c_str(); }
   double getClockRate() const { return m_clockRate; }
   unsigned int getReadOutWindow() const { return m_readoutWindow; }
@@ -64,6 +64,8 @@ public:
   uint64_t getTimeStart() const { return m_timeStart; }
   uint64_t getTimeEnd() const { return m_timeEnd; }
   double getSyncRatio() const { return m_alignment.syncRatio(); }
+  /** \deprecated Use alignment directly */
+  void setSyncRatio(double ratio) { m_alignment.setSyncRatio(ratio); }
 
   const std::vector<bool>* getSensorMask() const { return &m_sensorMask; }
 
