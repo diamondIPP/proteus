@@ -156,17 +156,6 @@ void Mechanics::Alignment::setOffset(Index sensorId,
   params.offsetZ = z;
 }
 
-void Mechanics::Alignment::correctOffset(Index sensorId,
-                                         double dx,
-                                         double dy,
-                                         double dz)
-{
-  auto& params = m_geo[sensorId];
-  params.offsetX += dx;
-  params.offsetY += dy;
-  params.offsetZ += dz;
-}
-
 void Mechanics::Alignment::setRotationAngles(Index sensorId,
                                              double rotX,
                                              double rotY,
@@ -177,6 +166,17 @@ void Mechanics::Alignment::setRotationAngles(Index sensorId,
   params.rotationX = rotX;
   params.rotationY = rotY;
   params.rotationZ = rotZ;
+}
+
+void Mechanics::Alignment::correctOffset(Index sensorId,
+                                         double dx,
+                                         double dy,
+                                         double dz)
+{
+  auto& params = m_geo[sensorId];
+  params.offsetX += dx;
+  params.offsetY += dy;
+  params.offsetZ += dz;
 }
 
 void Mechanics::Alignment::correctRotationAngles(Index sensorId,
@@ -192,8 +192,7 @@ void Mechanics::Alignment::correctRotationAngles(Index sensorId,
 
 XYZVector Mechanics::Alignment::beamDirection() const
 {
-  double f = 1 / std::hypot(1, std::hypot(m_beamSlopeX, m_beamSlopeY));
-  return XYZVector(f * m_beamSlopeX, f * m_beamSlopeY, f);
+  return XYZVector(m_beamSlopeX, m_beamSlopeY, 1);
 }
 
 void Mechanics::Alignment::setBeamSlope(double slopeX, double slopeY)
@@ -202,32 +201,25 @@ void Mechanics::Alignment::setBeamSlope(double slopeX, double slopeY)
   m_beamSlopeY = slopeY;
 }
 
-void Mechanics::Alignment::correctBeamSlope(double dslopeX, double dslopeY)
-{
-  m_beamSlopeX += dslopeX;
-  m_beamSlopeY += dslopeY;
-}
-
 void Mechanics::Alignment::print(std::ostream& os,
                                  const std::string& prefix) const
 {
-  os << prefix << "Alignment:\n";
-  os << prefix << "  Beam:\n"
-     << prefix << "    Slope X: " << m_beamSlopeX << '\n'
-     << prefix << "    Slope Y: " << m_beamSlopeY << '\n';
+  os << prefix << "beam:\n"
+     << prefix << "  slope X: " << m_beamSlopeX << '\n'
+     << prefix << "  slope Y: " << m_beamSlopeY << '\n';
 
   auto ip = m_geo.begin();
   for (; ip != m_geo.end(); ++ip) {
     Index i = ip->first;
     const GeoParams& p = ip->second;
 
-    os << prefix << "  Sensor " << i << ":\n";
-    os << prefix << "    Offset X: " << p.offsetX << '\n'
-       << prefix << "    Offset Y: " << p.offsetY << '\n'
-       << prefix << "    Offset Z: " << p.offsetZ << '\n';
-    os << prefix << "    Rotation X: " << p.rotationX << '\n'
-       << prefix << "    Rotation Y: " << p.rotationY << '\n'
-       << prefix << "    Rotation Z: " << p.rotationZ << '\n';
+    os << prefix << "sensor " << i << ":\n";
+    os << prefix << "  offset X: " << p.offsetX << '\n'
+       << prefix << "  offset Y: " << p.offsetY << '\n'
+       << prefix << "  offset Z: " << p.offsetZ << '\n';
+    os << prefix << "  rotation X: " << p.rotationX << '\n'
+       << prefix << "  rotation Y: " << p.rotationY << '\n'
+       << prefix << "  rotation Z: " << p.rotationZ << '\n';
   }
   os.flush();
 }

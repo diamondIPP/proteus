@@ -48,26 +48,44 @@ public:
          double pitchCol,
          double pitchRow,
          bool isDigital,
-         double depth = 0,
+         double thickness = 0,
          double xX0 = 0);
+
+  //
+  // properties
+  //
+  const std::string& name() const { return m_name; }
+  Index numCols() const { return m_numCols; }
+  Index numRows() const { return m_numRows; }
+  Index numPixels() const { return m_numCols * m_numRows; }
+  double thickness() const { return m_thickness; }
+  double xX0() const { return m_xX0; }
+  /** Sensitive area in pixel coordinates [col_min,col_max,row_min,row_max]. */
+  std::array<double, 4> sensitiveAreaPixel() const;
+  /** Sensitive area in local coordinates [u_min,u_max,v_min,v_max]. */
+  std::array<double, 4> sensitiveAreaLocal() const;
+  /** Sensitive envelope in the global xy-plane [x_min,x_max,y_min,y_max]. */
+  std::array<double, 4> sensitiveEnvelopeGlobal() const;
 
   //
   // geometry related
   //
-  const Transform3D& localToGlobal() const { return m_l2g; }
-  Transform3D globalToLocal() const { return m_l2g.Inverse(); }
-  XYZPoint origin() const { return XYZPoint(m_l2g.Translation().Vect()); }
+  XYZPoint origin() const;
   XYZVector normal() const;
-  void setLocalToGlobal(const Transform3D& l2g) { m_l2g = l2g; }
+  const Transform3D& localToGlobal() const { return m_l2g; }
+  const Transform3D& globalToLocal() const { return m_g2l; }
+  void setLocalToGlobal(const Transform3D& l2g);
 
   //
   // transformations between different coordinate systems
   //
   XYPoint transformLocalToPixel(const XYZPoint& uvw) const;
   XYPoint transformGlobalToPixel(const XYZPoint& xyz) const;
-  XYZPoint transformPixelToLocal(double col, double row) const;
+  XYZPoint transformPixelToLocal(double c, double r) const;
+  XYZPoint transformPixelToLocal(const XYPoint& cr) const;
   XYZPoint transformGlobalToLocal(const XYZPoint& xyz) const;
-  XYZPoint transformPixelToGlobal(double col, double row) const;
+  XYZPoint transformPixelToGlobal(double c, double r) const;
+  XYZPoint transformPixelToGlobal(const XYPoint& cr) const;
   XYZPoint transformLocalToGlobal(const XYZPoint& uvw) const;
   // \deprecated Use transformations above
   void
@@ -90,20 +108,6 @@ public:
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
   static bool sort(const Sensor* s1, const Sensor* s2);
 
-  //
-  // Get functions
-  //
-  const std::string& name() const { return m_name; }
-  Index numCols() const { return m_numCols; }
-  Index numRows() const { return m_numRows; }
-  Index numPixels() const { return m_numCols * m_numRows; }
-  /** Sensitive area in pixel coordinates [col_min,col_max,row_min,row_max]. */
-  std::array<double,4> sensitiveAreaPixel() const;
-  /** Sensitive area in local coordinates [u_min,u_max,v_min,v_max]. */
-  std::array<double,4> sensitiveAreaLocal() const;
-  /** Sensitive envelope in the global xy-plane [x_min,x_max,y_min,y_max]. */
-  std::array<double,4> sensitiveEnvelopeGlobal() const;
-
   // \deprecated For backward compatibility.
   bool getDigital() const { return m_isDigital; }
   bool getAlignable() const { return true; }
@@ -116,7 +120,7 @@ public:
   double getPitchY() const { return m_pitchRow; }
   double getPosPitchX() const;
   double getPosPitchY() const;
-  double getDepth() const { return m_depth; }
+  double getDepth() const { return m_thickness; }
   double getXox0() const { return m_xX0; }
   double getSensitiveX() const { return m_numCols * m_pitchCol; }
   double getSensitiveY() const { return m_numRows * m_pitchRow; }
@@ -137,12 +141,12 @@ private:
   }
 
 private:
-  Transform3D m_l2g;
-  const Index m_numCols, m_numRows;    // number of columns and rows
-  const double m_pitchCol, m_pitchRow; // pitch along column and row direction
-  const double m_depth;                // sensor thickness
-  const double m_xX0;                 // X/X0 (thickness in radiation lengths)
-  const std::string m_name;
+  Transform3D m_l2g, m_g2l;
+  Index m_numCols, m_numRows;    // number of columns and rows
+  double m_pitchCol, m_pitchRow; // pitch along column and row direction
+  double m_thickness;            // sensor thickness
+  double m_xX0;                  // X/X0 (thickness in radiation lengths)
+  std::string m_name;
   std::vector<bool> m_noiseMask;
   bool m_isDigital;
 };

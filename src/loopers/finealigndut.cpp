@@ -60,7 +60,7 @@ Loopers::FineAlignDut::FineAlignDut(Mechanics::Device* refDevice,
 //=========================================================
 void Loopers::FineAlignDut::loop()
 {
-  Mechanics::Alignment& alignment = *_dutDevice->getAlignment();
+  Mechanics::Alignment newAlignment = _dutDevice->alignment();
 
   for (unsigned int niter = 0; niter < _numIterations; niter++)
   {
@@ -136,8 +136,8 @@ void Loopers::FineAlignDut::loop()
       
       std::cout << "Fine alignment with residuals:" << std::endl;
       std::cout << "   Sensor: " << nsens << ", Xcorrection: " << offsetX << ", Ycorrection: " << offsetY <<  std::endl;
-      alignment.correctOffset(nsens, offsetX, offsetY, 0);
-      alignment.correctRotationAngles(nsens, 0, 0, rotation);
+      newAlignment.correctOffset(nsens, offsetX, offsetY, 0);
+      newAlignment.correctRotationAngles(nsens, 0, 0, rotation);
       offsetX=0;
       offsetY=0;
       rotation=0;
@@ -153,10 +153,8 @@ void Loopers::FineAlignDut::loop()
 		<< "Ycorrection: " << offsetY << ", "
 		<< "Zcorrection: " << rotation
 		<< std::endl;
-			// TODO msmk 2016-08-18 switch to new alignment
-      // sensor->setOffX(sensor->getOffX() + offsetX);
-      // sensor->setOffY(sensor->getOffY() + offsetY);
-      // sensor->setRotZ(sensor->getRotZ() + rotation);
+			newAlignment.correctOffset(nsens, offsetX, offsetY, 0);
+			newAlignment.correctRotationAngles(nsens, 0, 0, rotation);
       std::cout << "Sensor: " << nsens << ", "
 		<< "Xoffset: " << sensor->getOffX() << ", "
 		<< "Yoffset: " << sensor->getOffY() << ", "
@@ -173,7 +171,7 @@ void Loopers::FineAlignDut::loop()
 
   }
 
-  alignment.writeFile(_dutDevice->pathAlignment());
+  newAlignment.writeFile(_dutDevice->pathAlignment());
 }
 
 void Loopers::FineAlignDut::setNumIterations(unsigned int value) { _numIterations = value; }

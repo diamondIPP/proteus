@@ -122,7 +122,7 @@ void applyMask(const char* inputName,
     Storage::StorageIO input(inputName, Storage::INPUT, 0, inMask, device.getSensorMask(), printLevel);
 
     Storage::StorageIO output(outputName, Storage::OUTPUT, device.getNumSensors(), inMask, 0, printLevel);
-    output.setNoiseMaskData(device.getNoiseMask());
+    output.setNoiseMaskData(device.noiseMask());
     output.setRuns(runs);
 
     Loopers::ApplyMask looper(&device, &output, &input, startEvent, numEvents);

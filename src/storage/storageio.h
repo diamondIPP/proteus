@@ -57,7 +57,7 @@ namespace Storage {
     // void setNoiseMasks(std::vector<bool**>* noiseMasks);
     void setPrintLevel(const int printLevel);
     void setRuns(const std::vector<int> &vruns);
-    void setNoiseMaskData(const Mechanics::NoiseMask* noisemask);
+    void setNoiseMaskData(const Mechanics::NoiseMask& noisemask);
 
     Long64_t getNumEvents() const;
     unsigned int getNumPlanes() const { return _numPlanes; }

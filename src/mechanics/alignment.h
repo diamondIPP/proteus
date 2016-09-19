@@ -29,14 +29,6 @@ public:
   void setOffset(Index sensorId, const XYZPoint& offset);
   void setOffset(Index sensorId, double x, double y, double z);
   void setRotationAngles(Index sensorId, double rotX, double rotY, double rotZ);
-
-  /** Beam direction in the global coordinate system. */
-  XYZVector beamDirection() const;
-  void setBeamSlope(double slopeX, double slopeY);
-
-  double syncRatio() const { return m_syncRatio; }
-  void setSyncRatio(double ratio) { m_syncRatio = ratio; }
-
   /** Change the offset by small values relative to the current position. */
   void correctOffset(Index sensorId, double dx, double dy, double dz);
   /** Change the rotation by small values around the current rotation angles. */
@@ -44,8 +36,13 @@ public:
                              double dalpha,
                              double dbeta,
                              double dgamma);
-  /** Change the beam direction by small values around the current slope. */
-  void correctBeamSlope(double dslopeX, double dslopeY);
+
+  /** Beam direction in the global coordinate system. */
+  XYZVector beamDirection() const;
+  void setBeamSlope(double slopeX, double slopeY);
+
+  double syncRatio() const { return m_syncRatio; }
+  void setSyncRatio(double ratio) { m_syncRatio = ratio; }
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 

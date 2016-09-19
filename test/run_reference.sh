@@ -2,10 +2,11 @@
 #
 # run the processing chain for the reference telescope
 
+RUN=${1-1066}
 CFG=configs/global.cfg
 REF=configs/device-ref.cfg
-RUN=1066
-# FLAGS="--numEvents 10000--printLevel 1"
+# FLAGS="--numEvents 10000 --printLevel 1"
+# FLAGS="--numEvents 100000"
 FLAGS=
 
 RAWFILE=$(realpath $(printf "raw/run%06d.root" $RUN))
@@ -19,12 +20,11 @@ cp -f comparison/unaligned-ref.dat alignment-ref.dat
 mkdir -p output
 
 # assume noise-free telescope; no noise mask
-# proteus $FLAGS -c applyMask -i $RAWFILE -o ${PREFIX}ref.root -t $CFG -r $REF
-# proteus $FLAGS -c noiseScan -i ${PREFIX}ref.root -t $CFG -r $REF
 proteus $FLAGS -c applyMask -i $RAWFILE -o ${PREFIX}ref.root -t $CFG -r $REF
-proteus $FLAGS -c process -i ${PREFIX}ref.root -o ${PREFIX}ref-p.root -t $CFG -r $REF
-proteus $FLAGS -c coarseAlign -i ${PREFIX}ref-p.root -t $CFG -r $REF
+proteus $FLAGS -c process -i ${PREFIX}ref.root -o ${PREFIX}ref-unaligned.root -t $CFG -r $REF -R ${PREFIX}ref-unaligned-hists.root
+proteus $FLAGS -c coarseAlign -i ${PREFIX}ref-unaligned.root -t $CFG -r $REF
 cp alignment-ref.dat alignment-ref-coarseAlign.dat
-proteus $FLAGS -c fineAlign -i ${PREFIX}ref-p.root -t $CFG -r $REF
-proteus $FLAGS -c process -i ${PREFIX}ref.root -o ${PREFIX}ref-pa.root -t $CFG -r $REF -R ${PREFIX}ref-pr.root
-proteus $FLAGS -c analysis -i ${PREFIX}ref-pa.root -R ${PREFIX}ref-pa-analysis.root -t $CFG -r $REF
+# TODO 2016-09-16 msmk: fine alignment does not work w/ roi cut on data
+# proteus $FLAGS -c fineAlign -i ${PREFIX}ref-unaligned.root -t $CFG -r $REF
+# cp alignment-ref.dat alignment-ref-fineAlign.dat
+proteus $FLAGS -c process -i ${PREFIX}ref.root -o ${PREFIX}ref-aligned.root -t $CFG -r $REF -R ${PREFIX}ref-aligned-hists.root

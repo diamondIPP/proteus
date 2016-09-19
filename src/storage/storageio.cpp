@@ -514,7 +514,7 @@ namespace Storage {
   }
 
   //=========================================================
-  void StorageIO::setNoiseMaskData(const Mechanics::NoiseMask* noisemask)
+  void StorageIO::setNoiseMaskData(const Mechanics::NoiseMask& noisemask)
   {
     const Loopers::NoiseScanConfig* config = NULL;
     if (!config) {
@@ -542,7 +542,7 @@ namespace Storage {
     st_nscan_noisyPixel_x.clear();
     st_nscan_noisyPixel_y.clear();
     for (unsigned int isensor = 0; isensor < _numPlanes; ++isensor) {
-      const auto& maskedIndices = noisemask->getMaskedPixels(isensor);
+      const auto& maskedIndices = noisemask.getMaskedPixels(isensor);
       for (const auto& index : maskedIndices) {
         st_nscan_noisyPixel_plane.push_back(isensor);
         st_nscan_noisyPixel_x.push_back(std::get<0>(index));

@@ -275,21 +275,23 @@ double Mechanics::Device::getBeamSlopeY() const
 
 void Mechanics::Device::print(std::ostream& os, const std::string& prefix) const
 {
-  os << prefix << "Device:\n";
-  os << prefix << "  Name: " << m_name << '\n';
-  os << prefix << "  Clock rate: " << m_clockRate << '\n';
-  os << prefix << "  Readout window: " << m_readoutWindow << '\n';
-  if (!m_pathAlignment.empty())
-    os << prefix << "  Alignment path: " << m_pathAlignment << '\n';
-  if (!m_pathNoiseMask.empty())
-    os << prefix << "  Noise mask path: " << m_pathNoiseMask << '\n';
-
+  os << prefix << "name: " << m_name << '\n';
+  os << prefix << "clock rate: " << m_clockRate << '\n';
+  os << prefix << "readout window: " << m_readoutWindow << '\n';
   for (Index sensorId = 0; sensorId < getNumSensors(); ++sensorId) {
-    os << prefix << "  Sensor " << sensorId << ":\n";
-    getSensor(sensorId)->print(os, prefix + "    ");
+    os << prefix << "sensor " << sensorId << ":\n";
+    getSensor(sensorId)->print(os, prefix + "  ");
   }
 
+  os << prefix << "alignment:\n";
+  if (!m_pathAlignment.empty())
+    os << prefix << "  path: " << m_pathAlignment << '\n';
   m_alignment.print(os, prefix + "  ");
+
+  os << prefix << "noise mask:\n";
+  if (!m_pathNoiseMask.empty())
+    os << prefix << "  path: " << m_pathNoiseMask << '\n';
   m_noiseMask.print(os, prefix + "  ");
+
   os.flush();
 }

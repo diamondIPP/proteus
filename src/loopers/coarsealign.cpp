@@ -69,11 +69,11 @@ void Loopers::CoarseAlign::loop(){
     
     delete refEvent;
   }
-  
+
   double cummulativeX = 0;
   double cummulativeY = 0;
 
-  Mechanics::Alignment& align = *_refDevice->getAlignment();
+  Mechanics::Alignment newAlignment = _refDevice->alignment();
 
   for(unsigned int nsensor=1; nsensor<_refDevice->getNumSensors(); nsensor++){
     Mechanics::Sensor* sensor = _refDevice->getSensor(nsensor);
@@ -94,13 +94,14 @@ void Loopers::CoarseAlign::loop(){
     std::cout << "Gaussian mean: X= " << offsetX << "  Y= " << offsetY << std::endl;
     std::cout << "Cummulative    X= " << cummulativeX << "  Y= " << cummulativeY << std::endl;
 
-    align.correctOffset(nsensor, cummulativeX, cummulativeY, 0);
-
-    std::cout << "New offset: X= " << sensor->getOffX() << "  Y= " << sensor->getOffY() << std::endl;
+    newAlignment.correctOffset(nsensor, cummulativeX, cummulativeY, 0);
   }
-  
+
+	std::cout << "New alignment:\n";
+	newAlignment.print(std::cout);
+
   // create output alignment file
-  align.writeFile(_refDevice->pathAlignment());
+  newAlignment.writeFile(_refDevice->pathAlignment());
 }
 
 //=========================================================

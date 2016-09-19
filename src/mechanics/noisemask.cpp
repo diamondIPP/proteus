@@ -136,9 +136,7 @@ void Mechanics::NoiseMask::writeFile(const std::string& path) const
   std::fstream out(path, std::ios_base::out);
 
   if (!out.is_open()) {
-    std::string msg("NoiseMask: failed to open file '");
-    msg += path;
-    msg += '\'';
+    std::string msg("NoiseMask: failed to open file '" + path + '\'');
     throw std::runtime_error(msg);
   }
 
@@ -173,7 +171,7 @@ Mechanics::NoiseMask::getMaskedPixels(Index sensorId) const
   return EMPTY;
 }
 
-const size_t Mechanics::NoiseMask::getNumMaskedPixels() const
+size_t Mechanics::NoiseMask::getNumMaskedPixels() const
 {
   size_t n = 0;
   for (auto it = m_maskedPixels.begin(); it != m_maskedPixels.end(); ++it)
@@ -184,10 +182,8 @@ const size_t Mechanics::NoiseMask::getNumMaskedPixels() const
 void Mechanics::NoiseMask::print(std::ostream& os,
                                  const std::string& prefix) const
 {
-  os << prefix << "Noise mask:\n";
-
   if (m_maskedPixels.empty()) {
-    os << prefix << "  No masked pixels\n";
+    os << prefix << "no masked pixels\n";
     os.flush();
     return;
   }
@@ -200,10 +196,10 @@ void Mechanics::NoiseMask::print(std::ostream& os,
     if (pixs.empty())
       continue;
 
-    os << prefix << "  Sensor " << i << ":\n";
+    os << prefix << "sensor " << i << ":\n";
     auto cr = pixs.begin();
     for (; cr != pixs.end(); ++cr)
-      os << prefix << "    col=" << cr->first << ", row=" << cr->second << '\n';
+      os << prefix << "  col=" << cr->first << ", row=" << cr->second << '\n';
   }
   os.flush();
 }
