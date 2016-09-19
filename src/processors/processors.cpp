@@ -242,17 +242,15 @@ void residualAlignment(TH2D* residualX, TH2D* residualY, double& offsetX,
 
 //bilbao: just a croscheck of the 2D plots residuals we are giving as imput for the 2D histo alignment
     if (display) {
-      TCanvas* c1 =
-          (TCanvas*)gROOT->GetListOfCanvases()->FindObject("AlignmentInput");
-      if (!c1)
-        c1 =
-            new TCanvas("AlignmentInput", "Input 2D Track Residuals", 400, 800);
+      TCanvas* c1 = new TCanvas("AlignmentInput", "Input 2D Track Residuals", 400, 800);
       c1->Divide(2, 1);
       c1->cd(1);
       residualX->Draw("colz");
       c1->cd(2);
       residualY->Draw("colz");
       c1->WaitPrimitive();
+      c1 = (TCanvas*)(gROOT->GetListOfCanvases()->FindObject("AlignmentInput"));
+      delete c1;
     }
 
     std::vector<double> ptsX;
@@ -366,11 +364,7 @@ void residualAlignment(TH2D* residualX, TH2D* residualY, double& offsetX,
 
     if (display)
     {
-      TCanvas* can =
-          (TCanvas*)gROOT->GetListOfCanvases()->FindObject("AlignmentOutput");
-      if (!can)
-        can =
-            new TCanvas("AlignmentOutput", "Alignment Residual Fit", 900, 600);
+      TCanvas* can = new TCanvas("AlignmentOutput", "Alignment Residual Fit", 900, 600);
       can->Divide(2);
       can->cd(1);
       hist->Draw("COLZ");
@@ -380,6 +374,8 @@ void residualAlignment(TH2D* residualX, TH2D* residualY, double& offsetX,
       graph->Draw("ap");
       result->Draw("SAME");
       can->WaitPrimitive();
+      can = (TCanvas*)(gROOT->GetListOfCanvases()->FindObject("AlignmentOutput"));
+      delete can;
     }
 
     delete fitFunc;
