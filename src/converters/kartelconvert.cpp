@@ -411,7 +411,7 @@ void KartelConvert::writeFrame(bool invalid)
         const unsigned int x = _frame.hits[nplane].at(nhit).x;
         const unsigned int y = _frame.hits[nplane].at(nhit).y;
         Storage::Hit* hit = event->newHit(nplane);
-        hit->setPix(x, y);
+        hit->setAddress(x, y);
       }
     }
   }
