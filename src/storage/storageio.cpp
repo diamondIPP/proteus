@@ -624,10 +624,10 @@ namespace Storage {
    // Generate the cluster objects
    for (int ncluster=0; ncluster<numClusters; ncluster++){
 	   Cluster* cluster = event->newCluster(nplane);
-      cluster->setPix(clusterPixX[ncluster], clusterPixY[ncluster]);
-	   cluster->setPixErr(clusterPixErrX[ncluster], clusterPixErrY[ncluster]);
-	   cluster->setPos(clusterPosX[ncluster], clusterPosY[ncluster], clusterPosZ[ncluster]);
-	   cluster->setPosErr(clusterPosErrX[ncluster], clusterPosErrY[ncluster], clusterPosErrZ[ncluster]);
+     cluster->setPosPixel({clusterPixX[ncluster], clusterPixY[ncluster]});
+	   cluster->setErrPixel({clusterPixErrX[ncluster], clusterPixErrY[ncluster]});
+	  //  cluster->setPosGlobal({clusterPosX[ncluster], clusterPosY[ncluster], clusterPosZ[ncluster]});
+	  //  cluster->setErrGlobal({clusterPosErrX[ncluster], clusterPosErrY[ncluster], clusterPosErrZ[ncluster]});
 
 	// If this cluster is in a track, mark this (and the tracks tree is active)
 	if (_tracks && clusterInTrack[ncluster] >= 0){
@@ -646,8 +646,8 @@ namespace Storage {
 	}
 
 	Hit* hit = event->newHit(nplane);
-	hit->setPix(hitPixX[nhit], hitPixY[nhit]);
-	hit->setPos(hitPosX[nhit], hitPosY[nhit], hitPosZ[nhit]);
+	hit->setAddress(hitPixX[nhit], hitPixY[nhit]);
+	// hit->setPosGlobal({hitPosX[nhit], hitPosY[nhit], hitPosZ[nhit]});
 	hit->setValue(hitValue[nhit]);
 	hit->setTiming(hitTiming[nhit]);
 
