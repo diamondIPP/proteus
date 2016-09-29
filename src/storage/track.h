@@ -26,33 +26,29 @@ class TrackState {
 public:
   TrackState();
   TrackState(const XYPoint& offset, const XYVector& slope = XYVector(0, 0));
-  TrackState(double posU, double posV, double slopeU = 0, double slopeV = 0);
+  TrackState(double u, double v, double dU = 0, double dV = 0);
 
-  void setOffsetErr(double errU, double errV);
+  void setErrOffset(double errU, double errV);
   void setErrU(double errU, double errDu, double cov = 0);
   void setErrV(double errV, double errDv, double cov = 0);
 
   /** Plane offset in local coordinates. */
-  XYPoint offset() const { return XYPoint(m_u, m_v); }
-  XYVector offsetErr() const { return XYVector(m_errU, m_errV); }
+  const XYPoint& offset() const { return m_offset; }
   /** Slope in local coordinates. */
-  XYVector slope() const { return XYVector(m_du, m_dv); }
-  XYVector slopeErr() const { return XYVector(m_errDu, m_errDv); }
+  const XYVector& slope() const { return m_slope; }
+  const XYVector& errOffset() const { return m_errOffset; }
+  const XYVector& errSlope() const { return m_errSlope; }
 
   /** Full position in the local coordinates. */
-  XYZPoint position() const { return XYZPoint(m_u, m_v, 0); }
-  /** Propagated position in the local coordinates. */
-  XYZPoint position_at(double w) const
-  {
-    return XYZPoint(m_u + m_du * w, m_v + m_dv * w, w);
-  }
+  XYZPoint posLocal() const { return XYZPoint(m_offset.x(), m_offset.y(), 0); }
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
-  double m_u, m_v, m_du, m_dv;
-  double m_errU, m_errDu, m_covUDu;
-  double m_errV, m_errDv, m_covVDv;
+  XYPoint m_offset;
+  XYVector m_slope;
+  XYVector m_errOffset, m_errSlope;
+  double m_covUDu, m_covVDv;
 
   friend class Track;
 };
@@ -93,12 +89,12 @@ public:
   }
   double getOriginX() const { return m_state.offset().x(); }
   double getOriginY() const { return m_state.offset().y(); }
-  double getOriginErrX() const { return m_state.offsetErr().x(); }
-  double getOriginErrY() const { return m_state.offsetErr().y(); }
+  double getOriginErrX() const { return m_state.errOffset().x(); }
+  double getOriginErrY() const { return m_state.errOffset().y(); }
   double getSlopeX() const { return m_state.slope().x(); }
   double getSlopeY() const { return m_state.slope().y(); }
-  double getSlopeErrX() const { return m_state.slopeErr().x(); }
-  double getSlopeErrY() const { return m_state.slopeErr().y(); }
+  double getSlopeErrX() const { return m_state.errSlope().x(); }
+  double getSlopeErrY() const { return m_state.errSlope().y(); }
   double getCovarianceX() const { return m_state.m_covUDu; }
   double getCovarianceY() const { return m_state.m_covVDv; }
   double getChi2() const { return m_chi2; }

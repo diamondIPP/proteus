@@ -4,20 +4,13 @@
 
 #include "cluster.h"
 
-Storage::TrackState::TrackState(double posU,
-                                double posV,
-                                double slopeU,
-                                double slopeV)
-    : m_u(posU)
-    , m_v(posV)
-    , m_du(slopeU)
-    , m_dv(slopeV)
-    , m_errU(0)
-    , m_errDu(0)
-    , m_covUDu(0)
-    , m_errV(0)
-    , m_errDv(0)
-    , m_covVDv(0)
+Storage::TrackState::TrackState(double u,
+                                double v,
+                                double dU,
+                                double dV)
+    : m_offset(u, v)
+    , m_slope(dU, dV)
+    , m_covUDu(0), m_covVDv(0)
 {
 }
 
@@ -31,23 +24,22 @@ Storage::TrackState::TrackState()
 {
 }
 
-void Storage::TrackState::setOffsetErr(double errU, double errV)
+void Storage::TrackState::setErrOffset(double errU, double errV)
 {
-  m_errU = errU;
-  m_errV = errV;
+  m_errOffset.SetXY(errU, errV);
 }
 
 void Storage::TrackState::setErrU(double errU, double errDu, double cov)
 {
-  m_errU = errU;
-  m_errDu = errDu;
+  m_errOffset.SetX(errU);
+  m_errSlope.SetX(errDu);
   m_covUDu = cov;
 }
 
 void Storage::TrackState::setErrV(double errV, double errDv, double cov)
 {
-  m_errV = errV;
-  m_errDv = errDv;
+  m_errOffset.SetY(errV);
+  m_errSlope.SetY(errDv);
   m_covVDv = cov;
 }
 
