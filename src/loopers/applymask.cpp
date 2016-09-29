@@ -52,13 +52,13 @@ namespace Loopers {
         const Storage::Plane* plane = refEvent->getPlane(iplane);
         for (Index ihit = 0; ihit < plane->getNumHits(); ihit++) {
           const Storage::Hit* hit = plane->getHit(ihit);
-          const unsigned int x = hit->getPixX();
-          const unsigned int y = hit->getPixY();
-          if (!_refDevice->getSensor(iplane)->isPixelNoisy(x, y)) {
+          const Index col = hit->col();
+          const Index row = hit->row();
+          if (!_refDevice->getSensor(iplane)->isPixelNoisy(col, row)) {
             Storage::Hit* copy = maskedEvent->newHit(iplane);
-            copy->setPix(x, y);
-            copy->setValue(hit->getValue());
-            copy->setTiming(hit->getTiming());
+            copy->setAddress(col, row);
+            copy->setTiming(hit->timing());
+            copy->setValue(hit->value());
           }
         }
       }
