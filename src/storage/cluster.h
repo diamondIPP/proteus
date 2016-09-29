@@ -15,25 +15,23 @@ class Plane;
 
 class Cluster {
 public:
-  void setPix(double col, double row) { m_pixel.SetCoordinates(col, row); }
-  void setPos(double x, double y, double z) { m_global.SetCoordinates(x, y, z); }
-  void setPixErr(double col, double row) { m_pixelErr.SetCoordinates(col, row); }
-  void setPosErr(double x, double y, double z)
-  {
-    m_globalErr.SetCoordinates(x, y, z);
-  }
-  void setMatchDistance(double value) { m_matchDistance = value; }
+  void setPosPixel(const XYPoint& cr) { m_cr = cr; }
+  void setErrPixel(const XYVector& err) { m_errCr = err; }
+  /** Set global position using the transform from pixel to global coords. */
+  void transformToGlobal(const Transform3D& pixelToGlobal);
 
-  const XYPoint& posPixel() const { return m_pixel; }
-  const XYZPoint& posGlobal() const { return m_global; }
-  const XYVector& errPixel() const { return m_pixelErr; }
-  const XYZVector& errGlobal() const { return m_globalErr; }
+  const XYPoint& posPixel() const { return m_cr; }
+  const XYZPoint& posGlobal() const { return m_xyz; }
+  const XYVector& errPixel() const { return m_errCr; }
+  const XYZVector& errGlobal() const { return m_errXyz; }
   double timing() const { return m_timing; }
   double value() const { return m_value; }
 
-  Index getNumHits() const { return m_hits.size(); }
-  Hit* getHit(Index i) const { return m_hits.at(i); }
+  void addHit(Hit* hit);
+  Hit* getHit(Index i) { return m_hits.at(i); }
+  const Hit* getHit(Index i) const { return m_hits.at(i); }
 
+  Index getNumHits() const { return m_hits.size(); }
   double getPixX() const { return posPixel().x(); }
   double getPixY() const { return posPixel().y(); }
   double getPixErrX() const { return errPixel().x(); }
@@ -51,30 +49,30 @@ public:
 
   void setTrack(Track* track);
   void setMatchedTrack(Track* track) { m_matchedTrack = track; }
-  void addHit(Hit* hit); // Add a hit to this cluster
 
   Track* getTrack() const { return m_track; }
   Track* getMatchedTrack() const { return m_matchedTrack; }
   Plane* getPlane() const { return m_plane; }
 
+  void setMatchDistance(double value) { m_matchDistance = value; }
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
   Cluster(); // The Event class manages the memory, not the user
 
+  XYPoint m_cr;
+  XYVector m_errCr;
+  double m_timing; // The timing of the underlying hits
+  double m_value;  // The combined value of all its hits
+  XYZPoint m_xyz;
+  XYZVector m_errXyz;
   std::vector<Hit*> m_hits; // List of hits composing the cluster
-  XYPoint m_pixel;
-  XYVector m_pixelErr;
-  double m_timing;        // The timing of the underlying hits
-  double m_value;         // The total value of all its hits
-  XYZPoint m_global;
-  XYZVector m_globalErr;
 
   int m_index;
-  Plane* m_plane; //<! The plane containing the cluster
-  Track* m_track;        // The track containing this cluster
-  Track* m_matchedTrack; // Track matched to this cluster in DUT analysis (not
-                        // stored)
+  Plane* m_plane;         //<! The plane containing the cluster
+  Track* m_track;         // The track containing this cluster
+  Track* m_matchedTrack;  // Track matched to this cluster in DUT analysis (not
+                          // stored)
   double m_matchDistance; // Distance to matched track
 
   friend class Plane;     // Needs to use the set plane method
