@@ -4,11 +4,11 @@
 #include <math.h>
 #include <float.h>
 
-#include "../storage/plane.h"
-#include "../storage/cluster.h"
-#include "../storage/hit.h"
-#include "../storage/event.h"
 #include "processors.h"
+#include "storage/plane.h"
+#include "storage/cluster.h"
+#include "storage/hit.h"
+#include "storage/event.h"
 
 namespace Processors {
 
@@ -91,18 +91,18 @@ void ClusterMaker::calculateCluster(Storage::Cluster* cluster)
   {
     const Storage::Hit* hit = cluster->getHit(nhit);
     //  const double value = (hit->getValue() > 0) ? hit->getValue() : 1;
-    //taking the fastest hit to build the cluster 
+    //taking the fastest hit to build the cluster
     //digital sensor:
     cogX += hit->getPixX();
     cogY += hit->getPixY();
     weight += 1;
 
-    if(fastest_timing>hit->getTiming()){fastest_timing=hit->getTiming(); fastest_hitX=hit->getPixX(); fastest_hitY=hit->getPixY();    }  
+    if(fastest_timing>hit->getTiming()){fastest_timing=hit->getTiming(); fastest_hitX=hit->getPixX(); fastest_hitY=hit->getPixY();    }
 
 
   //    cogX += hit->getPixX() * value;
     //    cogY += hit->getPixY() * value;
-    //    weight += hit->getValue();   
+    //    weight += hit->getValue();
   }
 
   
@@ -144,11 +144,10 @@ void ClusterMaker::calculateCluster(Storage::Cluster* cluster)
   //const double errX = (stdevX) ? stdevX : pixErrX;
   //const double errY = (stdevY) ? stdevY : pixErrY;
 
-  const double errX = pixErrX;
-  const double errY = pixErrY;
+  XYVector err(pixErrX, pixErrY);
 
-  cluster->setPix(cogX, cogY);
-  cluster->setPixErr(errX, errY);
+  cluster->setPosPixel(XYPoint(cogX, cogY));
+  cluster->setErrPixel(err);
 }
 
 ClusterMaker::ClusterMaker(unsigned int maxSeparationX, unsigned int maxSeparationY,
