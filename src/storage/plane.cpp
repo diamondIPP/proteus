@@ -47,10 +47,8 @@ void Storage::Plane::print(std::ostream& os, const std::string& prefix) const
   size_t icluster = 0;
 
   os << prefix << "hits:\n";
-  for (const auto* hit : m_hits) {
-    os << prefix << "  hit " << ihit++ << ":\n";
-    hit->print(os, prefix + "    ");
-  }
+  for (const auto* hit : m_hits)
+    os << prefix << "  hit " << ihit++ << ": " << hit << '\n';
   os << prefix << "clusters:\n";
   for (const auto* cluster : m_clusters) {
     os << prefix << "  cluster " << icluster++ << ":\n";
