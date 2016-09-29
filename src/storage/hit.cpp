@@ -14,17 +14,21 @@ Storage::Hit::Hit()
 {
 }
 
+void Storage::Hit::transformToGlobal(const Transform3D& pixelToGlobal)
+{
+  // conversion from digital address to pixel center
+  m_xyz = pixelToGlobal * XYZPoint(m_col + 0.5, m_row + 0.5, 0);
+}
+
 void Storage::Hit::setCluster(Storage::Cluster* cluster)
 {
   assert(!m_cluster && "Hit: can't cluster an already clustered hit.");
   m_cluster = cluster;
 }
 
-void Storage::Hit::print(std::ostream& os, const std::string& prefix) const
+std::ostream& operator<<(std::ostream& os, const Storage::Hit& hit)
 {
-  os << prefix << "pixel: " << posPixel() << '\n';
-  os << prefix << "global: " << posGlobal() << '\n';
-  os << prefix << "timing: " << timing() << '\n';
-  os << prefix << "value: " << value() << '\n';
-  os.flush();
+  os << "col=" << hit.col() << ", row=" << hit.row()
+     << ", timing=" << hit.timing() << ", value=" << hit.value();
+  return os;
 }
