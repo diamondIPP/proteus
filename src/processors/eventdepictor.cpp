@@ -87,7 +87,7 @@ void EventDepictor::drawEventClusterHits(const Storage::Cluster* cluster)
 {
   for (unsigned int nhit = 0; nhit < cluster->getNumHits(); nhit++)
   {
-    Storage::Hit* hit = cluster->getHit(nhit);
+    const Storage::Hit* hit = cluster->getHit(nhit);
 
     assert(hit->getCluster() == cluster && "EventDepictor: hit / cluster association failed");
 
