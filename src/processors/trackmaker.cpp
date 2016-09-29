@@ -180,7 +180,7 @@ void TrackMaker::generateTracks(Event* event,
 
       std::vector<Track*> candidates;
       TrackState state(cluster->getPosX(), cluster->getPosY());
-      state.setOffsetErr(cluster->getPosErrX(), cluster->getPosErrY());
+      state.setErrOffset(cluster->getPosErrX(), cluster->getPosErrY());
       Track* seedTrack = new Track(state);
       seedTrack->addCluster(cluster);
 
