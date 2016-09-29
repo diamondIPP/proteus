@@ -74,6 +74,8 @@ public:
   XYZVector normal() const;
   const Transform3D& localToGlobal() const { return m_l2g; }
   const Transform3D& globalToLocal() const { return m_g2l; }
+  /** Construct a transformation for pixel col/row to global xyz coordinates. */
+  Transform3D constructPixelToGlobal() const;
   void setLocalToGlobal(const Transform3D& l2g);
 
   //
