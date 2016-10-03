@@ -603,6 +603,7 @@ namespace Storage {
     }
 
     for (unsigned int nplane=0; nplane<_numPlanes; nplane++){
+      Storage::Plane* plane = event->getPlane(nplane);
 
       if (_hits.at(nplane) && _hits.at(nplane)->GetEntry(n) <= 0)
 	throw std::runtime_error("StorageIO: error reading hits tree");
@@ -616,14 +617,13 @@ namespace Storage {
          }
          // Add intercepts
          for(int nintercept=0; nintercept < numIntercepts; nintercept++) {
-            event->getPlane(nplane)->addIntercept(interceptX[nintercept],
-                   interceptY[nintercept]);
+           plane->addIntercept(interceptX[nintercept], interceptY[nintercept]);
          }
       }
 
    // Generate the cluster objects
    for (int ncluster=0; ncluster<numClusters; ncluster++){
-	   Cluster* cluster = event->newCluster(nplane);
+	   Cluster* cluster = plane->newCluster();
      cluster->setPosPixel({clusterPixX[ncluster], clusterPixY[ncluster]});
 	   cluster->setErrPixel({clusterPixErrX[ncluster], clusterPixErrY[ncluster]});
 	  //  cluster->setPosGlobal({clusterPosX[ncluster], clusterPosY[ncluster], clusterPosZ[ncluster]});
@@ -645,7 +645,7 @@ namespace Storage {
 	  continue;
 	}
 
-	Hit* hit = event->newHit(nplane);
+	Hit* hit = plane->newHit();
 	hit->setAddress(hitPixX[nhit], hitPixY[nhit]);
 	// hit->setPosGlobal({hitPosX[nhit], hitPosY[nhit], hitPosZ[nhit]});
 	hit->setValue(hitValue[nhit]);
@@ -653,7 +653,7 @@ namespace Storage {
 
 	// If this hit is in a cluster, mark this (and the clusters tree is active)
 	if (_clusters.at(nplane) && hitInCluster[nhit] >= 0){
-	  Cluster* cluster = event->getCluster(hitInCluster[nhit]);
+	  Cluster* cluster = plane->getCluster(hitInCluster[nhit]);
 	  cluster->addHit(hit);
 	}
       }

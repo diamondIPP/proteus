@@ -6,10 +6,8 @@
 #include <string>
 #include <vector>
 
-#include "cluster.h"
-#include "hit.h"
-#include "plane.h"
-#include "track.h"
+#include "storage/plane.h"
+#include "storage/track.h"
 
 namespace Processors {
 class TrackMaker;
@@ -35,18 +33,8 @@ public:
   unsigned int triggerPhase() const { return m_triggerPhase; }
 
   Index numPlanes() const { return static_cast<Index>(m_planes.size()); }
-  Plane* getPlane(unsigned int n) { return &m_planes.at(n); }
-  const Plane* getPlane(unsigned int n) const { return &m_planes.at(n); }
-
-  Hit* newHit(Index iplane);
-  Index numHits() const { return static_cast<Index>(m_hits.size()); }
-  Hit* getHit(Index i) { return &m_hits.at(i); }
-  const Hit* getHit(Index i) const { return &m_hits.at(i); }
-
-  Cluster* newCluster(Index iplane);
-  Index numClusters() const { return static_cast<Index>(m_clusters.size()); }
-  Cluster* getCluster(Index i) { return &m_clusters.at(i); }
-  const Cluster* getCluster(Index i) const { return &m_clusters.at(i); }
+  Plane* getPlane(Index i) { return &m_planes.at(i); }
+  const Plane* getPlane(Index i) const { return &m_planes.at(i); }
 
   Track* newTrack();
   Index numTracks() const { return static_cast<Index>(m_tracks.size()); }
@@ -54,8 +42,8 @@ public:
   const Track* getTrack(Index i) const { return &m_tracks.at(i); }
 
   // deprecated accessors
-  unsigned int getNumHits() const { return m_hits.size(); }
-  unsigned int getNumClusters() const { return m_clusters.size(); }
+  unsigned int getNumHits() const;
+  unsigned int getNumClusters() const;
   unsigned int getNumPlanes() const { return m_planes.size(); }
   unsigned int getNumTracks() const { return m_tracks.size(); }
   bool getInvalid() const { return m_invalid; }
@@ -78,8 +66,6 @@ private:
   unsigned int m_triggerPhase;
   bool m_invalid;
 
-  std::vector<Hit> m_hits;
-  std::vector<Cluster> m_clusters;
   std::vector<Plane> m_planes;
   std::vector<Track> m_tracks;
 

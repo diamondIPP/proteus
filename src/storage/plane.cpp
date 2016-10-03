@@ -1,27 +1,24 @@
 #include "plane.h"
 
-#include <cassert>
 #include <ostream>
-
-#include "cluster.h"
-#include "hit.h"
 
 Storage::Plane::Plane(Index planeNum)
     : m_planeNum(planeNum)
 {
 }
 
-void Storage::Plane::addHit(Storage::Hit* hit)
+Storage::Hit* Storage::Plane::newHit()
 {
-  assert(hit && "Hit must be non-null");
-  m_hits.push_back(hit);
+  m_hits.push_back(Hit());
+  return &m_hits.back();
 }
 
-void Storage::Plane::addCluster(Storage::Cluster* cluster)
+Storage::Cluster* Storage::Plane::newCluster()
 {
-  assert(cluster && "Cluster must be non-null");
-  m_clusters.push_back(cluster);
-  cluster->m_plane = this;
+  m_clusters.push_back(Cluster());
+  m_clusters.back().m_index = m_clusters.size() - 1;
+  m_clusters.back().m_plane = this;
+  return &m_clusters.back();
 }
 
 void Storage::Plane::addIntercept(double posX, double posY)
@@ -33,11 +30,11 @@ void Storage::Plane::print(std::ostream& os, const std::string& prefix) const
 {
   os << prefix << "hits:\n";
   for (size_t ihit = 0; ihit < m_hits.size(); ++ihit)
-    os << prefix << "  hit " << ihit << ": " << *m_hits[ihit] << '\n';
+    os << prefix << "  hit " << ihit << ": " << m_hits[ihit] << '\n';
   os << prefix << "clusters:\n";
   for (size_t iclu = 0; iclu < m_clusters.size(); ++iclu) {
     os << prefix << "  cluster " << iclu << ":\n";
-    m_clusters[iclu]->print(os, prefix + "    ");
+    m_clusters[iclu].print(os, prefix + "    ");
   }
   os.flush();
 }

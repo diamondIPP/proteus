@@ -14,21 +14,6 @@ Storage::Event::Event(Index numPlanes)
   }
 }
 
-Storage::Hit* Storage::Event::newHit(Index iplane)
-{
-  m_hits.push_back(Hit());
-  m_planes.at(iplane).addHit(&m_hits.back());
-  return &m_hits.back();
-}
-
-Storage::Cluster* Storage::Event::newCluster(Index iplane)
-{
-  m_clusters.push_back(Cluster());
-  m_clusters.back().m_index = m_clusters.size() - 1;
-  m_planes.at(iplane).addCluster(&m_clusters.back());
-  return &m_clusters.back();
-}
-
 void Storage::Event::addTrack(Track* otherTrack)
 {
   // WARNING 2016-08-25 msmk: implicit ownership transfer
@@ -42,6 +27,21 @@ Storage::Track* Storage::Event::newTrack()
   m_tracks.push_back(Track());
   m_tracks.back().m_index = m_tracks.size() - 1;
   return &m_tracks.back();
+}
+
+unsigned int Storage::Event::getNumHits() const
+{
+  Index n = 0;
+  for (auto plane = m_planes.begin(); plane != m_planes.end(); ++plane)
+    n += plane->numHits();
+  return n;
+}
+unsigned int Storage::Event::getNumClusters() const
+{
+  Index n = 0;
+  for (auto plane = m_planes.begin(); plane != m_planes.end(); ++plane)
+    n += plane->numClusters();
+  return n;
 }
 
 void Storage::Event::print(std::ostream& os, const std::string& prefix) const

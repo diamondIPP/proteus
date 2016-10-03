@@ -60,7 +60,7 @@ void ClusterMaker::generateClusters(Storage::Event* event, unsigned int planeNum
 
     // If the hit isn't clustered, make a new cluster
     if (!hit->getCluster()) {
-       Storage::Cluster* cluster = event->newCluster(planeNum);
+       Storage::Cluster* cluster = plane->newCluster();
       cluster->addHit(hit);
     }
 

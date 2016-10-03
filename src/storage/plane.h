@@ -5,12 +5,11 @@
 #include <string>
 #include <vector>
 
+#include "storage/cluster.h"
+#include "storage/hit.h"
 #include "utils/definitions.h"
 
 namespace Storage {
-
-class Hit;
-class Cluster;
 
 /** An readout event for a single sensor.
  *
@@ -20,13 +19,15 @@ class Plane {
 public:
   Index planeNumber() const { return m_planeNum; }
 
+  Storage::Hit* newHit();
   Index numHits() const { return static_cast<Index>(m_hits.size()); }
-  Hit* getHit(Index i) { return m_hits.at(i); }
-  const Hit* getHit(Index i) const { return m_hits.at(i); }
+  Hit* getHit(Index i) { return &m_hits.at(i); }
+  const Hit* getHit(Index i) const { return &m_hits.at(i); }
 
+  Storage::Cluster* newCluster();
   Index numClusters() const { return static_cast<Index>(m_clusters.size()); }
-  Cluster* getCluster(Index i) { return m_clusters.at(i); }
-  const Cluster* getCluster(Index i) const { return m_clusters.at(i); }
+  Cluster* getCluster(Index i) { return &m_clusters.at(i); }
+  const Cluster* getCluster(Index i) const { return &m_clusters.at(i); }
 
   void addIntercept(double posX, double posY);
   Index numIntercepts() const
@@ -43,11 +44,8 @@ public:
 private:
   Plane(Index planeNum);
 
-  void addHit(Hit* hit);
-  void addCluster(Cluster* cluster);
-
-  std::vector<Hit*> m_hits;
-  std::vector<Cluster*> m_clusters;
+  std::vector<Hit> m_hits;
+  std::vector<Cluster> m_clusters;
   std::vector<std::pair<double, double>> m_intercepts;
   Index m_planeNum;
 
