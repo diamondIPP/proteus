@@ -239,7 +239,7 @@ void EventDepictor::depictTrack(const Storage::Track* track)
 
   for (unsigned int ncluster = 0; ncluster < track->getNumClusters(); ncluster++)
   {
-    Storage::Cluster* cluster = track->getCluster(ncluster);
+    const Storage::Cluster* cluster = track->getCluster(ncluster);
     px[ncluster] = cluster->getPosX();
     ex[ncluster] = cluster->getPosErrX();
     py[ncluster] = cluster->getPosY();
@@ -249,7 +249,7 @@ void EventDepictor::depictTrack(const Storage::Track* track)
 
   for (unsigned int ncluster = 0; ncluster < track->getNumMatchedClusters(); ncluster++)
   {
-    Storage::Cluster* cluster = track->getMatchedCluster(ncluster);
+    const Storage::Cluster* cluster = track->getMatchedCluster(ncluster);
     px[track->getNumClusters() + ncluster] = cluster->getPosX();
     ex[track->getNumClusters() + ncluster] = cluster->getPosErrX();
     py[track->getNumClusters() + ncluster] = cluster->getPosY();
@@ -371,26 +371,24 @@ void EventDepictor::depictEvent(const Storage::Event* refEvent,
     const Storage::Track* track = refEvent->getTrack(ntrack);
 
     // Generate arrays of the clusters associated with this track
-    Storage::Cluster** refClusters = new Storage::Cluster*[_refDevice->getNumSensors()];
+    std::vector<const Storage::Cluster*> refClusters(_refDevice->getNumSensors());
     for (unsigned int nsens = 0; nsens < _refDevice->getNumSensors(); nsens++)
       refClusters[nsens] = 0;
 
     for (unsigned int nclus = 0; nclus < track->getNumClusters(); nclus++)
     {
-      Storage::Cluster* cluster = track->getCluster(nclus);
+      const Storage::Cluster* cluster = track->getCluster(nclus);
       refClusters[cluster->getPlane()->getPlaneNum()] = cluster;
     }
 
     // Draw the track in each sensor, with the associated cluster
     for (unsigned int nsens = 0; nsens < _refDevice->getNumSensors(); nsens++)
     {
-      Storage::Cluster* cluster = refClusters[nsens];
+      const Storage::Cluster* cluster = refClusters[nsens];
       const Mechanics::Sensor* sensor = _refDevice->getSensor(nsens);
       can->cd(nsens + 1);
       drawEventTrackIntercepts(track, cluster, sensor);
     }
-
-    delete[] refClusters;
 
     // And for the DUT but don't associate with clusters
     if (_dutDevice)

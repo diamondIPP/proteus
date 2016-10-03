@@ -832,7 +832,7 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
         double max=0;
         const unsigned int Dim=match->getNumHits();
         double timing[Dim]; //*/
-        Storage::Cluster *cluster0;
+        const Storage::Cluster *cluster0;
         const Storage::Hit *hit1;
 
         int fflag=0;
