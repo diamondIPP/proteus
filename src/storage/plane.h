@@ -12,25 +12,37 @@ namespace Storage {
 class Hit;
 class Cluster;
 
-/*******************************************************************************
- * Plane class contains the hits and clusters for one sensor plane as well as
- * a plane number.
+/** An readout event for a single sensor.
+ *
+ * This provides access to all hits and clusters on a single sensor.
  */
 class Plane {
 public:
-  Index getPlaneNum() const { return m_planeNum; }
-  Index getNumHits() const { return static_cast<Index>(m_hits.size()); }
-  Index getNumClusters() const { return static_cast<Index>(m_clusters.size()); }
-  Index getNumIntercepts() const
+  Index planeNumber() const { return m_planeNum; }
+
+  Index numHits() const { return static_cast<Index>(m_hits.size()); }
+  Hit* getHit(Index i) { return m_hits.at(i); }
+  const Hit* getHit(Index i) const { return m_hits.at(i); }
+
+  Index numClusters() const { return static_cast<Index>(m_clusters.size()); }
+  Cluster* getCluster(Index i) { return m_clusters.at(i); }
+  const Cluster* getCluster(Index i) const { return m_clusters.at(i); }
+
+  void addIntercept(double posX, double posY);
+  Index numIntercepts() const
   {
     return static_cast<Index>(m_intercepts.size());
   }
+  std::pair<double, double> getIntercept(Index i) const
+  {
+    return m_intercepts.at(i);
+  }
 
-  Hit* getHit(Index i) const;
-  Cluster* getCluster(Index i) const;
-  std::pair<double, double> getIntercept(Index i) const;
-
-  void addIntercept(double posX, double posY);
+  // deprecated accessors
+  Index getPlaneNum() const { return m_planeNum; }
+  Index getNumHits() const { return numHits(); }
+  Index getNumClusters() const { return numClusters(); }
+  Index getNumIntercepts() const { return numIntercepts(); }
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
@@ -40,10 +52,10 @@ private:
   void addHit(Hit* hit);
   void addCluster(Cluster* cluster);
 
-  Index m_planeNum;
   std::vector<Hit*> m_hits;
   std::vector<Cluster*> m_clusters;
   std::vector<std::pair<double, double>> m_intercepts;
+  Index m_planeNum;
 
   friend class Event;
 };

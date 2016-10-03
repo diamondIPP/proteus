@@ -1,14 +1,11 @@
 #include "plane.h"
 
-#include <iostream>
+#include <ostream>
 
 #include "cluster.h"
 #include "hit.h"
 
-using std::cout;
-using std::endl;
-
-Storage::Plane::Plane(unsigned int planeNum)
+Storage::Plane::Plane(Index planeNum)
     : m_planeNum(planeNum)
 {
 }
@@ -26,33 +23,15 @@ void Storage::Plane::addIntercept(double posX, double posY)
   m_intercepts.push_back(std::pair<double, double>(posX, posY));
 }
 
-Storage::Hit* Storage::Plane::getHit(Index n) const
-{
-  return m_hits.at(n);
-}
-
-Storage::Cluster* Storage::Plane::getCluster(Index n) const
-{
-  return m_clusters.at(n);
-}
-
-std::pair<double, double> Storage::Plane::getIntercept(Index n) const
-{
-  return m_intercepts.at(n);
-}
-
 void Storage::Plane::print(std::ostream& os, const std::string& prefix) const
 {
-  size_t ihit = 0;
-  size_t icluster = 0;
-
   os << prefix << "hits:\n";
-  for (const auto* hit : m_hits)
-    os << prefix << "  hit " << ihit++ << ": " << hit << '\n';
+  for (size_t ihit = 0; ihit < m_hits.size(); ++ihit)
+    os << prefix << "  hit " << ihit << ": " << *m_hits[ihit] << '\n';
   os << prefix << "clusters:\n";
-  for (const auto* cluster : m_clusters) {
-    os << prefix << "  cluster " << icluster++ << ":\n";
-    cluster->print(os, prefix + "    ");
+  for (size_t iclu = 0; iclu < m_clusters.size(); ++iclu) {
+    os << prefix << "  cluster " << iclu << ":\n";
+    m_clusters[iclu]->print(os, prefix + "    ");
   }
   os.flush();
 }
