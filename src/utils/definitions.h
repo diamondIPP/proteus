@@ -1,5 +1,5 @@
-#ifndef __JUDITH__DEFINITIONS_H__
-#define __JUDITH__DEFINITIONS_H__
+#ifndef PT_DEFINITIONS_H
+#define PT_DEFINITIONS_H
 
 #include <utility>
 
@@ -14,7 +14,7 @@
 
 using Index = unsigned int;
 // Digital matrix position defined by column and row index
-using ColumnRow = std::pair<Index,Index>;
+using ColumnRow = std::pair<Index, Index>;
 
 // commonly used vector and geometry types
 using XYPoint = ROOT::Math::XYPoint;
@@ -26,4 +26,4 @@ using Rotation3D = ROOT::Math::Rotation3D;
 using RotationZYX = ROOT::Math::RotationZYX;
 using Transform3D = ROOT::Math::Transform3D;
 
-#endif /* end of include guard: __JUDITH__DEFINITIONS_H__ */
+#endif // PT_DEFINITIONS_H
