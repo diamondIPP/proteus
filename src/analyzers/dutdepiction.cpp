@@ -46,21 +46,26 @@ void DUTDepictor::processEvent(const Storage::Event* refEvent,
   if (_depictClusters)
   {
     std::vector<const Storage::Cluster*> refClusters;
-    for (unsigned int ncluster = 0; ncluster < refEvent->getNumClusters(); ncluster++)
-    {
-      const Storage::Cluster* cluster = refEvent->getCluster(ncluster);
-      for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
-        if (!_clusterCuts.at(ncut)->check(cluster)) continue;
-      refClusters.push_back(cluster);
+    for (Index iplane = 0; iplane < refEvent->numPlanes(); ++iplane) {
+      const Storage::Plane* plane = refEvent->getPlane(iplane);
+      for (Index icluster = 0; icluster < plane->numClusters(); icluster++) {
+        const Storage::Cluster* cluster = plane->getCluster(icluster);
+        for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
+          if (!_clusterCuts.at(ncut)->check(cluster))
+            continue;
+        refClusters.push_back(cluster);
+      }
     }
-
     std::vector<const Storage::Cluster*> dutClusters;
-    for (unsigned int ncluster = 0; ncluster < dutEvent->getNumClusters(); ncluster++)
-    {
-      const Storage::Cluster* cluster = dutEvent->getCluster(ncluster);
-      for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
-        if (!_clusterCuts.at(ncut)->check(cluster)) continue;
-      dutClusters.push_back(cluster);
+    for (Index iplane = 0; iplane < dutEvent->numPlanes(); ++iplane) {
+      const Storage::Plane* plane = dutEvent->getPlane(iplane);
+      for (Index icluster = 0; icluster < plane->numClusters(); icluster++) {
+        const Storage::Cluster* cluster = plane->getCluster(icluster);
+        for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
+          if (!_clusterCuts.at(ncut)->check(cluster))
+            continue;
+        dutClusters.push_back(cluster);
+      }
     }
 
     _depictor->depictClusters(refClusters, dutClusters);
