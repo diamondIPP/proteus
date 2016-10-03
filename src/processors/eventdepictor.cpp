@@ -143,7 +143,7 @@ void EventDepictor::depictEventSensor(const Storage::Plane* plane,
 
   for (unsigned int ncluster = 0; ncluster < plane->getNumClusters(); ncluster++)
   {
-    Storage::Cluster* cluster = plane->getCluster(ncluster);
+    const Storage::Cluster* cluster = plane->getCluster(ncluster);
     drawEventClusterHits(cluster);
     drawEventCluster(cluster);
   }

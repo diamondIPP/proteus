@@ -166,7 +166,7 @@ void Analyzers::ClusterInfo::processEvent(const Storage::Event* event) {
     const Storage::Plane* plane = event->getPlane(nplane);
     
     for(unsigned int ncluster=0; ncluster<plane->getNumClusters(); ncluster++){
-      Storage::Cluster* cluster = plane->getCluster(ncluster);
+      const Storage::Cluster* cluster = plane->getCluster(ncluster);
       
       // Check if the cluster passes the cuts
       bool pass = true;
@@ -179,7 +179,7 @@ void Analyzers::ClusterInfo::processEvent(const Storage::Event* event) {
       _totSize.at(nplane)->Fill(cluster->getNumHits(), cluster->getValue());
       
       for( unsigned int nhits=0; nhits<cluster->getNumHits(); nhits++){
-	Storage::Hit* hit= cluster->getHit(nhits);
+	const Storage::Hit* hit= cluster->getHit(nhits);
 	//std::cout << hit->getTiming() << std::endl;
 	_timingVsClusterSize.at(nplane)->Fill(cluster->getNumHits(),hit->getTiming());
         _timingVsHitValue.at(nplane)->Fill(hit->getValue(),hit->getTiming());

@@ -33,7 +33,7 @@ void TrackMaker::searchPlane(Track* track, std::vector<Track*>& candidates,
   assert(track && "TrackMaker: can't search plane with a void track");
   assert((int)nplane != _maskedPlane && "TrackMaker: ouch");
 
-  const Plane* plane = _event->getPlane(nplane);
+  Plane* plane = _event->getPlane(nplane);
 
   // Search over clusters in this event
   bool matchedCluster = false;
@@ -170,7 +170,7 @@ void TrackMaker::generateTracks(Event* event,
   {
     if ((int)nplane == _maskedPlane) continue;
 
-    const Plane* plane = _event->getPlane(nplane);
+    Plane* plane = _event->getPlane(nplane);
 
     // Each seed cluster generates a list of candidates from which the best is kept
     for (unsigned int ncluster = 0; ncluster < plane->getNumClusters(); ncluster++)

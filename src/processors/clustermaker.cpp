@@ -12,13 +12,13 @@
 
 namespace Processors {
 
-void ClusterMaker::addNeighbours(const Storage::Hit* hit, const  Storage::Plane* plane,
+void ClusterMaker::addNeighbours(const Storage::Hit* hit, Storage::Plane* plane,
                                   Storage::Cluster* cluster)
 {
   // Go through all hits
   for (unsigned int nhit = 0; nhit < plane->getNumHits(); nhit++)
   {
-     Storage::Hit* compare = plane->getHit(nhit);
+    Storage::Hit* compare = plane->getHit(nhit);
 
     // Continue if this hit is already clustered or if it is the one being considered
     if (compare->getCluster() || compare == hit) continue;

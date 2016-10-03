@@ -168,7 +168,7 @@ void Analyzers::Occupancy::processEvent(const Storage::Event* event) {
     
     // 2.- Loop in clusters within plane and fill histos
     for (unsigned int ncluster=0; ncluster<plane->getNumClusters(); ncluster++){
-      Storage::Cluster* cluster = plane->getCluster(ncluster);
+      const Storage::Cluster* cluster = plane->getCluster(ncluster);
       
       // Check if the cluster passes the cuts
       bool pass=true;
