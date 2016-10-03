@@ -28,6 +28,7 @@ public:
   double value() const { return m_value; }
 
   void addHit(Hit* hit);
+  Index numHits() const { return static_cast<Index>(m_hits.size()); }
   Hit* getHit(Index i) { return m_hits.at(i); }
   const Hit* getHit(Index i) const { return m_hits.at(i); }
 
