@@ -26,17 +26,17 @@ void Storage::Plane::addIntercept(double posX, double posY)
   m_intercepts.push_back(std::pair<double, double>(posX, posY));
 }
 
-Storage::Hit* Storage::Plane::getHit(unsigned int n) const
+Storage::Hit* Storage::Plane::getHit(Index n) const
 {
   return m_hits.at(n);
 }
 
-Storage::Cluster* Storage::Plane::getCluster(unsigned int n) const
+Storage::Cluster* Storage::Plane::getCluster(Index n) const
 {
   return m_clusters.at(n);
 }
 
-std::pair<double, double> Storage::Plane::getIntercept(unsigned int n) const
+std::pair<double, double> Storage::Plane::getIntercept(Index n) const
 {
   return m_intercepts.at(n);
 }

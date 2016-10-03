@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include "utils/definitions.h"
+
 namespace Storage {
 
 class Hit;
@@ -16,26 +18,29 @@ class Cluster;
  */
 class Plane {
 public:
-  inline unsigned int getPlaneNum() const { return m_planeNum; }
-  inline unsigned int getNumHits() const { return m_hits.size(); }
-  inline unsigned int getNumClusters() const { return m_clusters.size(); }
-  inline unsigned int getNumIntercepts() const { return m_intercepts.size(); }
+  Index getPlaneNum() const { return m_planeNum; }
+  Index getNumHits() const { return static_cast<Index>(m_hits.size()); }
+  Index getNumClusters() const { return static_cast<Index>(m_clusters.size()); }
+  Index getNumIntercepts() const
+  {
+    return static_cast<Index>(m_intercepts.size());
+  }
 
-  Hit* getHit(unsigned int n) const;
-  Cluster* getCluster(unsigned int n) const;
-  std::pair<double, double> getIntercept(unsigned int n) const;
+  Hit* getHit(Index i) const;
+  Cluster* getCluster(Index i) const;
+  std::pair<double, double> getIntercept(Index i) const;
 
   void addIntercept(double posX, double posY);
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
-  Plane(unsigned int planeNum);
+  Plane(Index planeNum);
 
   void addHit(Hit* hit);
   void addCluster(Cluster* cluster);
 
-  unsigned int m_planeNum;
+  Index m_planeNum;
   std::vector<Hit*> m_hits;
   std::vector<Cluster*> m_clusters;
   std::vector<std::pair<double, double>> m_intercepts;
