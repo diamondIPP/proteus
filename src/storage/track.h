@@ -74,18 +74,19 @@ public:
   const TrackStates& localStates() const { return m_localStates; }
 
   void addCluster(Cluster* cluster);
-  void addMatchedCluster(Cluster* cluster);
-
-  Cluster* getCluster(unsigned int n) const { return m_clusters.at(n); }
-  Cluster* getMatchedCluster(unsigned int n) const
-  {
-    return m_matchedClusters.at(n);
-  }
+  Index numClusters() const { return static_cast<Index>(m_clusters.size()); }
+  Cluster* getCluster(Index i) { return m_clusters.at(i); }
+  const Cluster* getCluster(Index i) const { return m_clusters.at(i); }
 
   unsigned int getNumClusters() const { return m_clusters.size(); }
   unsigned int getNumMatchedClusters() const
   {
     return m_matchedClusters.size();
+  }
+  void addMatchedCluster(Cluster* cluster);
+  Cluster* getMatchedCluster(unsigned int n) const
+  {
+    return m_matchedClusters.at(n);
   }
   double getOriginX() const { return m_state.offset().x(); }
   double getOriginY() const { return m_state.offset().y(); }
