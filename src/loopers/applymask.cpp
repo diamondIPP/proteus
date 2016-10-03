@@ -48,9 +48,9 @@ namespace Loopers {
       Storage::Event* refEvent = _refStorage->readEvent(nevent);
       Storage::Event* maskedEvent = new Storage::Event(_refDevice->getNumSensors());
 
-      for (Index iplane = 0; iplane < refEvent->getNumPlanes(); ++iplane) {
+      for (Index iplane = 0; iplane < refEvent->numPlanes(); ++iplane) {
         const Storage::Plane* plane = refEvent->getPlane(iplane);
-        for (Index ihit = 0; ihit < plane->getNumHits(); ihit++) {
+        for (Index ihit = 0; ihit < plane->numHits(); ihit++) {
           const Storage::Hit* hit = plane->getHit(ihit);
           const Index col = hit->col();
           const Index row = hit->row();

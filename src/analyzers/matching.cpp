@@ -174,7 +174,7 @@ void Analyzers::Matching::processEvent(const Storage::Event* refEvent,
         if (!_clusterCuts.at(ncut)->check(cluster)) { pass = false; break; }
       if (!pass) continue;
 
-      matches.at(cluster->getPlane()->getPlaneNum()) = cluster;
+      matches.at(cluster->getPlane()->planeNumber()) = cluster;
     }
 
     for (unsigned int nsens=0; nsens<_dutDevice->getNumSensors(); nsens++){

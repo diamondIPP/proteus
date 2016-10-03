@@ -135,13 +135,13 @@ void EventDepictor::depictEventSensor(const Storage::Plane* plane,
   depiction->SetDirectory(0);
 
   // Some error checking
-  for (unsigned int nhit = 0; nhit < plane->getNumHits(); nhit++)
+  for (unsigned int nhit = 0; nhit < plane->numHits(); nhit++)
     assert(plane->getHit(nhit)->getCluster() &&
            "Processors: unclustered hit detected during depiction");
 
   depiction->Draw(); // Draw axis and sets coordinates for drawing boxes...
 
-  for (unsigned int ncluster = 0; ncluster < plane->getNumClusters(); ncluster++)
+  for (unsigned int ncluster = 0; ncluster < plane->numClusters(); ncluster++)
   {
     const Storage::Cluster* cluster = plane->getCluster(ncluster);
     drawEventClusterHits(cluster);
@@ -378,7 +378,7 @@ void EventDepictor::depictEvent(const Storage::Event* refEvent,
     for (unsigned int nclus = 0; nclus < track->getNumClusters(); nclus++)
     {
       const Storage::Cluster* cluster = track->getCluster(nclus);
-      refClusters[cluster->getPlane()->getPlaneNum()] = cluster;
+      refClusters[cluster->getPlane()->planeNumber()] = cluster;
     }
 
     // Draw the track in each sensor, with the associated cluster

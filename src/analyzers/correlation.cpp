@@ -45,7 +45,7 @@ void Correlation::processEvent(const Storage::Event* event)
     TH1D* alignX = _alignX.at(nsens);
     TH1D* alignY = _alignY.at(nsens);
 
-    for (unsigned int ncluster0 = 0; ncluster0 < plane0->getNumClusters(); ncluster0++)
+    for (unsigned int ncluster0 = 0; ncluster0 < plane0->numClusters(); ncluster0++)
     {
       const Storage::Cluster* cluster0 = plane0->getCluster(ncluster0);
 
@@ -55,7 +55,7 @@ void Correlation::processEvent(const Storage::Event* event)
         if (!_clusterCuts.at(ncut)->check(cluster0)) { pass = false; break; }
       if (!pass) continue;
 
-      for (unsigned int ncluster1 = 0; ncluster1 < plane1->getNumClusters(); ncluster1++)
+      for (unsigned int ncluster1 = 0; ncluster1 < plane1->numClusters(); ncluster1++)
       {
         const Storage::Cluster* cluster1 = plane1->getCluster(ncluster1);
 

@@ -149,11 +149,11 @@ void Analyzers::Occupancy::processEvent(const Storage::Event* event) {
     if (!_eventCuts.at(ncut)->check(event)) return;
   
   // 0.- Loop in planes
-  for (unsigned int nplane=0; nplane<event->getNumPlanes(); nplane++){
+  for (unsigned int nplane=0; nplane<event->numPlanes(); nplane++){
     const Storage::Plane* plane=event->getPlane(nplane);
     
     // 1.- Loop in hits within plane and fill histos
-    for (unsigned int nhit=0; nhit<plane->getNumHits(); nhit++){
+    for (unsigned int nhit=0; nhit<plane->numHits(); nhit++){
       const Storage::Hit* hit = plane->getHit(nhit);
       
       // Check if the hit passes the cuts
@@ -167,7 +167,7 @@ void Analyzers::Occupancy::processEvent(const Storage::Event* event) {
     }
     
     // 2.- Loop in clusters within plane and fill histos
-    for (unsigned int ncluster=0; ncluster<plane->getNumClusters(); ncluster++){
+    for (unsigned int ncluster=0; ncluster<plane->numClusters(); ncluster++){
       const Storage::Cluster* cluster = plane->getCluster(ncluster);
       
       // Check if the cluster passes the cuts

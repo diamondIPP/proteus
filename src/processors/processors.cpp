@@ -403,14 +403,14 @@ void applyAlignment(Storage::Event* event, const Mechanics::Device* device)
     Transform3D pixelToGlobal = sensor->constructPixelToGlobal();
 
     // Apply alignment to hits
-    for (unsigned int nhit = 0; nhit < plane->getNumHits(); nhit++)
+    for (unsigned int nhit = 0; nhit < plane->numHits(); nhit++)
     {
       Storage::Hit* hit = plane->getHit(nhit);
       hit->transformToGlobal(pixelToGlobal);
     }
 
     // Apply alignment to clusters
-    for (unsigned int ncluster = 0; ncluster < plane->getNumClusters(); ncluster++)
+    for (unsigned int ncluster = 0; ncluster < plane->numClusters(); ncluster++)
     {
       Storage::Cluster* cluster = plane->getCluster(ncluster);
       cluster->transformToGlobal(pixelToGlobal);
@@ -418,7 +418,7 @@ void applyAlignment(Storage::Event* event, const Mechanics::Device* device)
   }
 
   // Apply alignment to tracks
-  for (unsigned int ntrack = 0; ntrack < event->getNumTracks(); ntrack++)
+  for (unsigned int ntrack = 0; ntrack < event->numTracks(); ntrack++)
   {
     Storage::Track* track = event->getTrack(ntrack);
     Processors::TrackMaker::fitTrackToClusters(track);

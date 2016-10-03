@@ -62,7 +62,7 @@ void DUTResiduals::processEvent(const Storage::Event *refEvent,
 
       //std::cout <<"Number of clusters = "<< plane->getNumClusters() << std::endl;
 
-      for (unsigned int ncluster = 0; ncluster < plane->getNumClusters(); ncluster++)
+      for (unsigned int ncluster = 0; ncluster < plane->numClusters(); ncluster++)
       {
         const Storage::Cluster *cluster = plane->getCluster(ncluster);
 

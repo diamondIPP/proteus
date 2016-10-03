@@ -37,7 +37,7 @@ void TrackMaker::searchPlane(Track* track, std::vector<Track*>& candidates,
 
   // Search over clusters in this event
   bool matchedCluster = false;
-  for (unsigned int ncluster = 0; ncluster < plane->getNumClusters() + 1; ncluster++)
+  for (unsigned int ncluster = 0; ncluster < plane->numClusters() + 1; ncluster++)
   {
     Track* trialTrack = 0;
 
@@ -45,7 +45,7 @@ void TrackMaker::searchPlane(Track* track, std::vector<Track*>& candidates,
     Cluster* lastCluster = track->getCluster(track->getNumClusters() - 1);
 
     // Try to add the clusters to the track
-    if (ncluster < plane->getNumClusters())
+    if (ncluster < plane->numClusters())
     {
       Cluster* cluster = plane->getCluster(ncluster);
       if (cluster->getTrack()) continue;
@@ -173,7 +173,7 @@ void TrackMaker::generateTracks(Event* event,
     Plane* plane = _event->getPlane(nplane);
 
     // Each seed cluster generates a list of candidates from which the best is kept
-    for (unsigned int ncluster = 0; ncluster < plane->getNumClusters(); ncluster++)
+    for (unsigned int ncluster = 0; ncluster < plane->numClusters(); ncluster++)
     {
       Cluster* cluster = plane->getCluster(ncluster);
       if (cluster->getTrack()) continue;

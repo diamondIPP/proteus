@@ -16,7 +16,7 @@ void ClusterMaker::addNeighbours(const Storage::Hit* hit, Storage::Plane* plane,
                                   Storage::Cluster* cluster)
 {
   // Go through all hits
-  for (unsigned int nhit = 0; nhit < plane->getNumHits(); nhit++)
+  for (unsigned int nhit = 0; nhit < plane->numHits(); nhit++)
   {
     Storage::Hit* compare = plane->getHit(nhit);
 
@@ -51,10 +51,10 @@ void ClusterMaker::addNeighbours(const Storage::Hit* hit, Storage::Plane* plane,
 void ClusterMaker::generateClusters(Storage::Event* event, unsigned int planeNum)
 {
    Storage::Plane* plane = event->getPlane(planeNum);
-  if (plane->getNumClusters() > 0)
+  if (plane->numClusters() > 0)
     throw "ClusterMaker: clusters already exist for this hit";
 
-  for (unsigned int nhit = 0; nhit < plane->getNumHits(); nhit++)
+  for (unsigned int nhit = 0; nhit < plane->numHits(); nhit++)
   {
      Storage::Hit* hit = plane->getHit(nhit);
 
@@ -65,13 +65,13 @@ void ClusterMaker::generateClusters(Storage::Event* event, unsigned int planeNum
     }
 
     // Add neighbouring clusters to this hit (this is recursive)
-     Storage::Cluster* lastCluster = plane->getCluster(plane->getNumClusters() - 1);
+     Storage::Cluster* lastCluster = plane->getCluster(plane->numClusters() - 1);
     assert(lastCluster && "ClusterMaker: hits didn't generate any clusters");
     addNeighbours(hit, plane, lastCluster);
   }
 
   // Recursive search has ended, finalize all the cluster information
-  for (unsigned int i = 0; i < plane->getNumClusters(); i++)
+  for (unsigned int i = 0; i < plane->numClusters(); i++)
     calculateCluster(plane->getCluster(i));
 }
 

@@ -684,7 +684,7 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
             break;}*/
 
         pass = true;
-        matches.at(cluster->getPlane()->getPlaneNum()) = cluster;
+        matches.at(cluster->getPlane()->planeNumber()) = cluster;
       }
     }
 
@@ -875,7 +875,7 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
 
           if(hit1->getTiming()==1)fflag=fflag+1;  //asking for get plane
        //   cout<<cluster->getPlane()->getPlaneNum()<<endl;
-          if(cluster->getPlane()->getPlaneNum()==2) cluster0 = track->getCluster(k);
+          if(cluster->getPlane()->planeNumber()==2) cluster0 = track->getCluster(k);
           }
 
 

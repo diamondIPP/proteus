@@ -699,7 +699,7 @@ namespace Storage {
       Plane* plane = event->getPlane(nplane);
 
       // fill intercepts
-		numIntercepts = plane->getNumIntercepts();
+		numIntercepts = plane->numIntercepts();
 		if (numIntercepts > MAX_TRACKS) throw std::runtime_error("StorageIO: event exceeds MAX_Tracks");
 		for (int nintercept = 0; nintercept < numIntercepts; nintercept++) {
 			std::pair<double, double> intercept = plane->getIntercept(nintercept);
@@ -707,7 +707,7 @@ namespace Storage {
 			interceptY[nintercept] = intercept.second;
 		}
 
-      numClusters = plane->getNumClusters();
+      numClusters = plane->numClusters();
       if (numClusters > MAX_CLUSTERS) throw std::runtime_error("StorageIO: event exceeds MAX_CLUSTERS");
 
       // Set the object cluster values into the arrays for writig into the root file
@@ -727,7 +727,7 @@ namespace Storage {
 	  clusterInTrack[ncluster] = cluster->getTrack() ? cluster->getTrack()->getIndex() : -1;
 	}
 
-      numHits = plane->getNumHits();
+      numHits = plane->numHits();
       if (numHits > MAX_HITS) throw std::runtime_error("StorageIO: event exceeds MAX_HITS");
 
       // Set the object hit values into the arrays for writing into the root file
