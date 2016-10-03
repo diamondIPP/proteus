@@ -1,5 +1,6 @@
 #include "plane.h"
 
+#include <cassert>
 #include <ostream>
 
 #include "cluster.h"
@@ -10,10 +11,15 @@ Storage::Plane::Plane(Index planeNum)
 {
 }
 
-void Storage::Plane::addHit(Storage::Hit* hit) { m_hits.push_back(hit); }
+void Storage::Plane::addHit(Storage::Hit* hit)
+{
+  assert(hit && "Hit must be non-null");
+  m_hits.push_back(hit);
+}
 
 void Storage::Plane::addCluster(Storage::Cluster* cluster)
 {
+  assert(cluster && "Cluster must be non-null");
   m_clusters.push_back(cluster);
   cluster->m_plane = this;
 }

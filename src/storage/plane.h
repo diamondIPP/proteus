@@ -38,12 +38,6 @@ public:
     return m_intercepts.at(i);
   }
 
-  // deprecated accessors
-  Index getPlaneNum() const { return m_planeNum; }
-  Index getNumHits() const { return numHits(); }
-  Index getNumClusters() const { return numClusters(); }
-  Index getNumIntercepts() const { return numIntercepts(); }
-
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
