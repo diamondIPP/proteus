@@ -3,6 +3,10 @@
 #include <cassert>
 #include <ostream>
 
+#include <Math/SMatrix.h>
+#include <Math/SMatrixDfwd.h>
+#include <Math/SVector.h>
+
 #include "hit.h"
 #include "plane.h"
 #include "track.h"
@@ -23,12 +27,24 @@ Storage::Cluster::Cluster()
 
 void Storage::Cluster::transformToGlobal(const Transform3D& pixelToGlobal)
 {
+  using Matrix3 = ROOT::Math::SMatrix<double, 3, 3>;
+  using Matrix34 = ROOT::Math::SMatrix<double, 3, 4>;
+  using SymMatrix3 = ROOT::Math::SMatrix<double, 3, 3, ROOT::Math::MatRepSym<double, 3>>;
+
+  Matrix34 transform;
+  SymMatrix3 covPixel, covGlobal;
+
+  pixelToGlobal.GetTransformMatrix(transform);
+  covPixel = ROOT::Math::SMatrixIdentity();
+  covPixel(0, 0) = m_errCr.x() * m_errCr.x();
+  covPixel(1, 1) = m_errCr.y() * m_errCr.y();
+  covPixel(2, 2) = 1;
+  covGlobal = Similarity(transform.Sub<Matrix3>(0,0), covPixel);
+
   m_xyz = pixelToGlobal * XYZPoint(m_cr.x(), m_cr.y(), 0);
-  m_errXyz =  pixelToGlobal * XYZVector(m_errCr.x(), m_errCr.y(), 0);
-  // poor mans solution; use full covariance and jacobian
-  m_errXyz.SetX(std::abs(m_errXyz.x()));
-  m_errXyz.SetY(std::abs(m_errXyz.y()));
-  m_errXyz.SetZ(std::abs(m_errXyz.y()));
+  m_errXyz.SetXYZ(std::sqrt(covGlobal(0, 0)),
+                  std::sqrt(covGlobal(1, 1)),
+                  std::sqrt(covGlobal(2, 2)));
 }
 
 void Storage::Cluster::setTrack(Storage::Track* track)
