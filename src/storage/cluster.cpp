@@ -15,7 +15,6 @@ using std::cout;
 using std::endl;
 
 Storage::Cluster::Cluster()
-
     : m_timing(-1)
     , m_value(-1)
     , m_plane(NULL)
