@@ -740,7 +740,7 @@ namespace Storage {
 	hitPosZ[nhit] = hit->getPosZ();
 	hitValue[nhit] = hit->getValue();
 	hitTiming[nhit] = hit->getTiming();
-	hitInCluster[nhit] = hit->getCluster() ? hit->getCluster()->getIndex() : -1;
+	hitInCluster[nhit] = hit->isInCluster() ? hit->cluster()->getIndex() : -1;
       }
 
       if (nplane >= _hits.size()) throw std::runtime_error("StorageIO: event has too many planes for the storage");

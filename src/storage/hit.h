@@ -37,7 +37,6 @@ public:
   double getPosZ() const { return posGlobal().z(); }
   double getValue() const { return m_value; }
   double getTiming() const { return m_timing; }
-  Cluster* getCluster() const { return m_cluster; }
 
 private:
   Hit(); // Hits memory is managed by the event class

@@ -89,7 +89,7 @@ void EventDepictor::drawEventClusterHits(const Storage::Cluster* cluster)
   {
     const Storage::Hit* hit = cluster->getHit(nhit);
 
-    assert(hit->getCluster() == cluster && "EventDepictor: hit / cluster association failed");
+    assert(hit->cluster() == cluster && "EventDepictor: hit / cluster association failed");
 
     const double hitX = cluster->getPixX() + _zoom * (hit->getPixX() + 0.5 - cluster->getPixX());
     const double hitY = cluster->getPixY() + _zoom * (hit->getPixY() + 0.5 - cluster->getPixY());
@@ -136,7 +136,7 @@ void EventDepictor::depictEventSensor(const Storage::Plane* plane,
 
   // Some error checking
   for (unsigned int nhit = 0; nhit < plane->numHits(); nhit++)
-    assert(plane->getHit(nhit)->getCluster() &&
+    assert(plane->getHit(nhit)->isInCluster() &&
            "Processors: unclustered hit detected during depiction");
 
   depiction->Draw(); // Draw axis and sets coordinates for drawing boxes...

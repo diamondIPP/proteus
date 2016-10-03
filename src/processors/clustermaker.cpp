@@ -21,7 +21,7 @@ void ClusterMaker::addNeighbours(const Storage::Hit* hit, Storage::Plane* plane,
     Storage::Hit* compare = plane->getHit(nhit);
 
     // Continue if this hit is already clustered or if it is the one being considered
-    if (compare->getCluster() || compare == hit) continue;
+    if (compare->isInCluster() || compare == hit) continue;
 
     // If a maximum separation has been defined in real coordinates, check now
     if (_maxSeparation > 0)
@@ -59,7 +59,7 @@ void ClusterMaker::generateClusters(Storage::Event* event, unsigned int planeNum
      Storage::Hit* hit = plane->getHit(nhit);
 
     // If the hit isn't clustered, make a new cluster
-    if (!hit->getCluster()) {
+    if (!hit->isInCluster()) {
        Storage::Cluster* cluster = plane->newCluster();
       cluster->addHit(hit);
     }
