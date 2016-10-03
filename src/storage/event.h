@@ -18,34 +18,42 @@ class TrackMaker;
 namespace Storage {
 class Event {
 public:
-  Event(unsigned int numPlanes);
-
-  Hit* newHit(unsigned int nplane);
-  Cluster* newCluster(unsigned int nplane);
-  Track* newTrack();
-
-  Plane* getPlane(unsigned int n) { return &m_planes.at(n); }
-  Hit* getHit(unsigned int n) { return &m_hits.at(n); }
-  Cluster* getCluster(unsigned int n) { return &m_clusters.at(n); }
-  Track* getTrack(unsigned int n) { return &m_tracks.at(n); }
-  const Plane* getPlane(unsigned int n) const { return &m_planes.at(n); }
-  const Cluster* getCluster(unsigned int n) const { return &m_clusters.at(n); }
-  const Hit* getHit(unsigned int n) const { return &m_hits.at(n); }
-  const Track* getTrack(unsigned int n) const { return &m_tracks.at(n); }
+  Event(Index numPlanes);
 
   void setInvalid(bool value) { m_invalid = value; }
   void setTimeStamp(uint64_t timeStamp) { m_timeStamp = timeStamp; }
   void setFrameNumber(uint64_t frameNumber) { m_frameNumber = frameNumber; }
-  void setTriggerOffset(unsigned int triggerOffset)
-  {
-    m_triggerOffset = triggerOffset;
-  }
-  void setTriggerInfo(unsigned int triggerInfo) { m_triggerInfo = triggerInfo; }
-  void setTriggerPhase(unsigned int triggerPhase)
-  {
-    m_triggerPhase = triggerPhase;
-  }
+  void setTriggerOffset(unsigned int offset) { m_triggerOffset = offset; }
+  void setTriggerInfo(unsigned int info) { m_triggerInfo = info; }
+  void setTriggerPhase(unsigned int phase) { m_triggerPhase = phase; }
 
+  bool invalid() const { return m_invalid; }
+  uint64_t timeStamp() const { return m_timeStamp; }
+  uint64_t frameNumber() const { return m_frameNumber; }
+  unsigned int triggerOffset() const { return m_triggerOffset; }
+  unsigned int triggerInfo() const { return m_triggerInfo; }
+  unsigned int triggerPhase() const { return m_triggerPhase; }
+
+  Index numPlanes() const { return static_cast<Index>(m_planes.size()); }
+  Plane* getPlane(unsigned int n) { return &m_planes.at(n); }
+  const Plane* getPlane(unsigned int n) const { return &m_planes.at(n); }
+
+  Hit* newHit(Index iplane);
+  Index numHits() const { return static_cast<Index>(m_hits.size()); }
+  Hit* getHit(Index i) { return &m_hits.at(i); }
+  const Hit* getHit(Index i) const { return &m_hits.at(i); }
+
+  Cluster* newCluster(Index iplane);
+  Index numClusters() const { return static_cast<Index>(m_clusters.size()); }
+  Cluster* getCluster(Index i) { return &m_clusters.at(i); }
+  const Cluster* getCluster(Index i) const { return &m_clusters.at(i); }
+
+  Track* newTrack();
+  Index numTracks() const { return static_cast<Index>(m_tracks.size()); }
+  Track* getTrack(Index i) { return &m_tracks.at(i); }
+  const Track* getTrack(Index i) const { return &m_tracks.at(i); }
+
+  // deprecated accessors
   unsigned int getNumHits() const { return m_hits.size(); }
   unsigned int getNumClusters() const { return m_clusters.size(); }
   unsigned int getNumPlanes() const { return m_planes.size(); }

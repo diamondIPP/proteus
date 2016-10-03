@@ -3,29 +3,29 @@
 #include <cassert>
 #include <iostream>
 
-Storage::Event::Event(unsigned int numPlanes)
+Storage::Event::Event(Index numPlanes)
     : m_timeStamp(0)
     , m_frameNumber(0)
     , m_triggerOffset(0)
     , m_invalid(false)
 {
-  for (unsigned int nplane = 0; nplane < getNumPlanes(); nplane++) {
-    m_planes.push_back(Plane(nplane));
+  for (Index iplane = 0; iplane < numPlanes; ++iplane) {
+    m_planes.push_back(Plane(iplane));
   }
 }
 
-Storage::Hit* Storage::Event::newHit(unsigned int nplane)
+Storage::Hit* Storage::Event::newHit(Index iplane)
 {
   m_hits.push_back(Hit());
-  m_planes.at(nplane).addHit(&m_hits.back());
+  m_planes.at(iplane).addHit(&m_hits.back());
   return &m_hits.back();
 }
 
-Storage::Cluster* Storage::Event::newCluster(unsigned int nplane)
+Storage::Cluster* Storage::Event::newCluster(Index iplane)
 {
   m_clusters.push_back(Cluster());
   m_clusters.back().m_index = m_clusters.size() - 1;
-  m_planes.at(nplane).addCluster(&m_clusters.back());
+  m_planes.at(iplane).addCluster(&m_clusters.back());
   return &m_clusters.back();
 }
 
