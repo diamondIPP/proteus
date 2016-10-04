@@ -44,11 +44,14 @@ XYZVector Mechanics::Sensor::normal() const
 Transform3D Mechanics::Sensor::constructPixelToGlobal() const
 {
   // clang-format off
+  Translation3D shiftToCenter(-std::round(m_numCols / 2),
+                              -std::round(m_numRows / 2),
+                              0);
   Rotation3D scalePitch(m_pitchCol, 0, 0,
                         0, m_pitchRow, 0,
                         0, 0, m_thickness);
   // clang-format on
-  return m_l2g * scalePitch;
+  return m_l2g * scalePitch * shiftToCenter;
 }
 
 void Mechanics::Sensor::setLocalToGlobal(const Transform3D& l2g)
