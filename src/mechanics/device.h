@@ -34,9 +34,9 @@ public:
 
   void addSensor(const Sensor& sensor);
   void addMaskedSensor();
-  unsigned int getNumSensors() const { return m_sensors.size(); }
-  Sensor* getSensor(unsigned int i) { return &m_sensors.at(i); }
-  const Sensor* getSensor(unsigned int i) const { return &m_sensors.at(i); }
+  Index numSensors() const { return static_cast<Index>(m_sensors.size()); }
+  Sensor* getSensor(Index i) { return &m_sensors.at(i); }
+  const Sensor* getSensor(Index i) const { return &m_sensors.at(i); }
 
   const Alignment& alignment() const { return m_alignment; }
   XYZVector beamDirection() const { return m_alignment.beamDirection(); }
@@ -66,6 +66,7 @@ public:
   double getSyncRatio() const { return m_alignment.syncRatio(); }
   /** \deprecated Use alignment directly */
   void setSyncRatio(double ratio) { m_alignment.setSyncRatio(ratio); }
+  unsigned int getNumSensors() const { return m_sensors.size(); }
 
   const std::vector<bool>* getSensorMask() const { return &m_sensorMask; }
 
