@@ -73,7 +73,10 @@ public:
   const TrackState& localState(Index sensor) const;
   const TrackStates& localStates() const { return m_localStates; }
 
+  /** Adds the cluster to the track but does not inform the cluster about it. */
   void addCluster(Cluster* cluster);
+  /** Inform all track clusters that they belong to this track. */
+  void fixClusterAssociation();
   Index numClusters() const { return static_cast<Index>(m_clusters.size()); }
   Cluster* getCluster(Index i) { return m_clusters.at(i); }
   const Cluster* getCluster(Index i) const { return m_clusters.at(i); }

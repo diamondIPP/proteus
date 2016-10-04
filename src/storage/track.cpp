@@ -4,13 +4,11 @@
 
 #include "cluster.h"
 
-Storage::TrackState::TrackState(double u,
-                                double v,
-                                double dU,
-                                double dV)
+Storage::TrackState::TrackState(double u, double v, double dU, double dV)
     : m_offset(u, v)
     , m_slope(dU, dV)
-    , m_covUDu(0), m_covVDv(0)
+    , m_covUDu(0)
+    , m_covVDv(0)
 {
 }
 
@@ -72,6 +70,13 @@ const Storage::TrackState& Storage::Track::localState(Index sensor) const
 void Storage::Track::addCluster(Cluster* cluster)
 {
   m_clusters.push_back(cluster);
+}
+
+void Storage::Track::fixClusterAssociation()
+{
+  for (auto cluster = m_clusters.begin(); cluster != m_clusters.end();
+       ++cluster)
+    (*cluster)->setTrack(this);
 }
 
 void Storage::Track::addMatchedCluster(Cluster* cluster)
