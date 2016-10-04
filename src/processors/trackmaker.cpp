@@ -231,9 +231,10 @@ void TrackMaker::generateTracks(Event* event,
       assert(bestCandidate && "TrackMaker: failed to select a candidate");
 
       // Finalize the best candidate
-      _event->addTrack(bestCandidate);
-      for (unsigned int i = 0; i < bestCandidate->getNumClusters(); i++)
-        bestCandidate->getCluster(i)->setTrack(bestCandidate);
+      _event->addTrack(*bestCandidate)->fixClusterAssociation();
+      delete bestCandidate;
+      // for (unsigned int i = 0; i < bestCandidate->getNumClusters(); i++)
+      //   bestCandidate->getCluster(i)->setTrack(bestCandidate);
     }
   }
 }
