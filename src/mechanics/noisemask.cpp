@@ -6,9 +6,9 @@
 #include <ostream>
 #include <stdexcept>
 
-#include "configparser.h"
 #include "mechanics/device.h"
 #include "mechanics/sensor.h"
+#include "utils/configparser.h"
 #include "utils/logger.h"
 
 using Utils::logger;

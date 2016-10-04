@@ -8,7 +8,7 @@
 #include <stdexcept>
 #include <string>
 
-#include "configparser.h"
+#include "utils/configparser.h"
 #include "utils/logger.h"
 
 using Utils::logger;

@@ -2,8 +2,8 @@
 
 #include <cassert>
 
-#include "../mechanics/device.h"
-#include "../configparser.h"
+#include "mechanics/device.h"
+#include "utils/configparser.h"
 #include "trackmaker.h"
 #include "trackmatcher.h"
 #include "clustermaker.h"
@@ -41,7 +41,7 @@ namespace Processors {
 	maxSeparation = ConfigParser::valueToNumerical(row->value);
       else
 	throw "Processors: can't parse cluster maker row";
-    }    
+    }
     throw "Processors: didn't produce a cluster maker";
   }
 
