@@ -14,12 +14,11 @@ Storage::Event::Event(Index numPlanes)
   }
 }
 
-void Storage::Event::addTrack(Track* otherTrack)
+Storage::Track* Storage::Event::addTrack(const Track& otherTrack)
 {
-  // WARNING 2016-08-25 msmk: implicit ownership transfer
-  m_tracks.push_back(*otherTrack);
+  m_tracks.push_back(otherTrack);
   m_tracks.back().m_index = m_tracks.size() - 1;
-  delete otherTrack;
+  return &m_tracks.back();
 }
 
 Storage::Track* Storage::Event::newTrack()

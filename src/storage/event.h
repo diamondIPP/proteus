@@ -57,7 +57,7 @@ public:
   void print() const;
 
 private:
-  void addTrack(Track* track);
+  Track* addTrack(const Track& track);
 
   uint64_t m_timeStamp;
   uint64_t m_frameNumber;
