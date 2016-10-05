@@ -37,78 +37,13 @@ static void parseLine(std::stringstream& line, Index& nsens, Index& x, Index& y)
     throw std::runtime_error("NoiseMask: failed to parse line");
 }
 
-// static void parseComments(std::stringstream& comments,
-//                           Loopers::NoiseScanConfig& cfg)
-// {
-//   using std::cout;
-
-//   DEBUG("parseComments input string:\n", comments.str(), '\n');
-
-//   // remove '#' characters from input string
-//   std::string str(comments.str());
-//   str.erase(std::remove(str.begin(), str.end(), '#'), str.end());
-
-//   // create temporary file to write metadata
-//   char nameBuff[] = "/tmp/noiseMask.XXXXXX";
-//   int fd = mkstemp(nameBuff);
-//   if (fd == -1) {
-//     std::string msg("NoiseMask: failed to create temp file '");
-//     msg += nameBuff;
-//     msg += '\'';
-//     throw std::runtime_error(msg);
-//   }
-
-//   DEBUG("created temp file '", nameBuff, "'n");
-
-//   write(fd, str.c_str(), strlen(str.c_str()));
-//   close(fd);
-
-//   // use ConfigParser to parse contents
-//   ConfigParser parser(nameBuff);
-//   for (unsigned int i = 0; i < parser.getNumRows(); i++) {
-//     const ConfigParser::Row* row = parser.getRow(i);
-
-//     if (row->isHeader)
-//       continue;
-//     if (row->header.compare("Noise Scan"))
-//       continue;
-
-//     if (!row->key.compare("runs")) {
-//       std::vector<int> runs;
-//       ConfigParser::valueToVec(row->value, runs);
-//       cfg.setRuns(runs);
-//       runs.clear();
-//     } else if (!row->key.compare("max factor"))
-//       cfg.setMaxFactor(ConfigParser::valueToNumerical(row->value));
-//     else if (!row->key.compare("max occupancy"))
-//       cfg.setMaxOccupancy(ConfigParser::valueToNumerical(row->value));
-//     else if (!row->key.compare("bottom x"))
-//       cfg.setBottomLimitX(ConfigParser::valueToNumerical(row->value));
-//     else if (!row->key.compare("upper x"))
-//       cfg.setUpperLimitX(ConfigParser::valueToNumerical(row->value));
-//     else if (!row->key.compare("bottom y"))
-//       cfg.setBottomLimitY(ConfigParser::valueToNumerical(row->value));
-//     else if (!row->key.compare("upper y"))
-//       cfg.setUpperLimitY(ConfigParser::valueToNumerical(row->value));
-//     else {
-//       ERROR("failed to parse row, key='", row->key, "'\n");
-//     }
-//   }
-
-//   // delete temporary file
-//   unlink(nameBuff);
-// }
-
-Mechanics::NoiseMask Mechanics::NoiseMask::fromFile(const std::string& path)
+static void parseFile(const std::string& path, Mechanics::NoiseMask& mask)
 {
-  NoiseMask noise;
   std::fstream input(path, std::ios_base::in);
 
   if (!input) {
     ERROR("failed to open file '", path, "'\n");
-    return noise;
   }
-  INFO("read noise mask from '", path, "'\n");
 
   std::stringstream comments;
   while (input) {
@@ -125,32 +60,26 @@ Mechanics::NoiseMask Mechanics::NoiseMask::fromFile(const std::string& path)
     }
     std::stringstream lineStream(line);
     parseLine(lineStream, nsens, x, y);
-    noise.maskPixel(nsens, x, y);
+    mask.maskPixel(nsens, x, y);
   }
+}
 
-  return noise;
+Mechanics::NoiseMask Mechanics::NoiseMask::fromFile(const std::string& path)
+{
+  NoiseMask mask;
+
+  if (Utils::Config::pathExtension(path) == "toml") {
+    mask = fromConfig(Utils::Config::readConfig(path));
+  } else {
+    parseFile(path, mask);
+  }
+  INFO("read noise mask from '", path, "'\n");
+  return mask;
 }
 
 void Mechanics::NoiseMask::writeFile(const std::string& path) const
 {
-  std::fstream out(path, std::ios_base::out);
-
-  if (!out.is_open())
-    throw std::runtime_error("NoiseMask: failed to open file '" + path +
-                             "' to write");
-
-  for (auto it = m_maskedPixels.begin(); it != m_maskedPixels.end(); ++it) {
-    Index sensorId = it->first;
-    const ColumnRowSet& pixels = it->second;
-    for (auto jt = pixels.begin(); jt != pixels.end(); ++jt) {
-      auto col = std::get<0>(*jt);
-      auto row = std::get<1>(*jt);
-      out << sensorId << ", " << col << ", " << row << '\n';
-    }
-  }
-
-  out.close();
-
+  Utils::Config::writeConfig(toConfig(), path);
   INFO("wrote noise mask to '", path, "'\n");
 }
 

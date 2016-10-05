@@ -18,9 +18,9 @@ public:
 
   NoiseMask() = default;
 
-  /** Construct a noise mask from a configuration file (old format). */
+  /** Construct a noise mask from a configuration file. */
   static NoiseMask fromFile(const std::string& path);
-  /** Write the noise mask and configuration to a file (old format). */
+  /** Write the noise mask to a configuration file. */
   void writeFile(const std::string& path) const;
 
   /** Construct noise mask from a configuration object. */
