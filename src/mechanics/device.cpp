@@ -207,23 +207,36 @@ Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
 {
   using namespace Utils::Config;
 
+  std::string dir = pathDirname(path);
+
   if (pathExtension(path) == "toml") {
     auto cfg = readConfig(path);
+    auto device = fromConfig(readConfig(path));
+
     auto cfgAlign = cfg.find("alignment");
-    if (cfgAlign && cfgAlign->is<std::string>())
-      cfg["alignment"] = readConfig(cfgAlign->as<std::string>());
-    auto cfgNoise = cfg.find("noise_mask");
-    // allow overlay of multiple noise masks
-    if (cfgNoise && cfgNoise->is<std::vector<std::string>>()) {
-      NoiseMask mask;
-      auto paths = cfgNoise->as<std::vector<std::string>>();
-      for (auto maskPath = paths.begin(); maskPath != paths.end(); ++maskPath)
-        mask.merge(NoiseMask::fromFile(*maskPath));
-      cfg["noise_mask"] = mask.toConfig();
-    } else if (cfgNoise && cfgNoise->is<std::string>()) {
-      cfg["noise_mask"] = readConfig(cfgNoise->as<std::string>());
+    if (cfgAlign && cfgAlign->is<std::string>()) {
+      device.m_pathAlignment = cfgAlign->as<std::string>();
+      device.applyAlignment(Alignment::fromFile(device.m_pathAlignment));
+    } else if (cfgAlign) {
+      device.applyAlignment(Alignment::fromConfig(*cfgAlign));
     }
-    return fromConfig(cfg);
+
+    auto cfgMask = cfg.find("noise_mask");
+    // allow overlay of multiple noise masks
+    if (cfgMask && cfgMask->is<std::vector<std::string>>()) {
+      NoiseMask combined;
+      auto paths = cfgMask->as<std::vector<std::string>>();
+      for (auto maskPath = paths.begin(); maskPath != paths.end(); ++maskPath)
+        combined.merge(NoiseMask::fromFile(*maskPath));
+      device.applyNoiseMask(combined);
+    } else if (cfgMask && cfgMask->is<std::string>()) {
+      device.m_pathNoiseMask = cfgMask->as<std::string>();
+      device.applyNoiseMask(NoiseMask::fromFile(device.m_pathNoiseMask));
+    } else if (cfgMask) {
+      device.applyNoiseMask(NoiseMask::fromConfig(*cfgMask));
+    }
+
+    return device;
   }
   // fall-back to old format
   return parseDevice(path);
@@ -261,15 +274,6 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
                             type.get<double>("thickness"),
                             type.get<double>("x_x0")));
   }
-
-  // alignment and pixel masks are optional
-  auto cfgAlign = cfg.find("alignment");
-  if (cfgAlign)
-    device.applyAlignment(Alignment::fromConfig(*cfgAlign));
-  auto cfgNoise = cfg.find("noise_mask");
-  if (cfgNoise)
-    device.applyNoiseMask(NoiseMask::fromConfig(*cfgNoise));
-
   return device;
 }
 
