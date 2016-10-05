@@ -28,6 +28,9 @@ public:
   /** Convert noise mask into a configuration object. */
   toml::Value toConfig() const;
 
+  /** Merge masked pixels from another NoiseMask into this NoiseMask. */
+  void merge(const NoiseMask& other);
+
   void maskPixel(Index sensorId, Index col, Index row);
   const ColumnRowSet& getMaskedPixels(Index sensorId) const;
   size_t getNumMaskedPixels() const;

@@ -125,6 +125,17 @@ toml::Value Mechanics::NoiseMask::toConfig() const
   return cfg;
 }
 
+void Mechanics::NoiseMask::merge(const NoiseMask& other)
+{
+  for (auto mask = other.m_maskedPixels.begin();
+       mask != other.m_maskedPixels.end();
+       ++mask) {
+    Index sensorId = mask->first;
+    const ColumnRowSet& pixels = mask->second;
+    m_maskedPixels[sensorId].insert(pixels.begin(), pixels.end());
+  }
+}
+
 void Mechanics::NoiseMask::maskPixel(Index sensorId, Index col, Index row)
 {
   m_maskedPixels[sensorId].emplace(col, row);
