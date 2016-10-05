@@ -8,6 +8,8 @@
 #include "utils/config.h"
 #include "utils/definitions.h"
 
+class ConfigParser;
+
 namespace Mechanics {
 
 /** Store and process alignment parameters. */
@@ -15,11 +17,13 @@ class Alignment {
 public:
   Alignment();
 
-  /** Construct alignment from a configuration file (old format). */
+  /** Construct alignment from a configuration file. */
   static Alignment fromFile(const std::string& path);
-  /** Write alignment to a configuration file (old format). */
+  /** Write alignment to a configuration file. */
   void writeFile(const std::string& path) const;
 
+  /** Construct alignment from old configuration parser. */
+  static Alignment fromConfig(const ConfigParser& cfg);
   /** Construct alignment from a configuration object. */
   static Alignment fromConfig(const toml::Value& cfg);
   /** Convert alignment into a configuration object. */

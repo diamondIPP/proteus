@@ -22,7 +22,27 @@ Mechanics::Alignment::Alignment()
 
 Mechanics::Alignment Mechanics::Alignment::fromFile(const std::string& path)
 {
-  ConfigParser config(path.c_str());
+  Alignment alignment;
+
+  if (Utils::Config::pathExtension(path) == "toml") {
+    alignment = fromConfig(Utils::Config::readConfig(path));
+  } else {
+    // fall-back to old format
+    alignment = fromConfig(ConfigParser(path.c_str()));
+  }
+  INFO("read alignment from '", path, "'\n");
+  return alignment;
+}
+
+void Mechanics::Alignment::writeFile(const std::string& path) const
+{
+  Utils::Config::writeConfig(toConfig(), path);
+  INFO("wrote alignment to '", path, "'\n");
+}
+
+Mechanics::Alignment
+Mechanics::Alignment::fromConfig(const ConfigParser& config)
+{
   Alignment alignment;
 
   for (unsigned int nrow = 0; nrow < config.getNumRows(); nrow++) {
@@ -71,46 +91,7 @@ Mechanics::Alignment Mechanics::Alignment::fromFile(const std::string& path)
       throw std::runtime_error("Alignment: failed to parse row");
   }
 
-  INFO("read alignment from '", path, "'\n");
   return alignment;
-}
-
-void Mechanics::Alignment::writeFile(const std::string& path) const
-{
-  using std::endl;
-
-  std::ofstream file(path);
-
-  if (!file.is_open())
-    throw std::runtime_error("Alignment: failed to open file '" + path +
-                             "' to write");
-
-  file << std::setprecision(9);
-  file << std::fixed;
-
-  for (auto it = m_geo.begin(); it != m_geo.end(); ++it) {
-    Index sensorId = it->first;
-    const GeoParams& params = it->second;
-
-    file << "[Sensor " << sensorId << "]" << endl;
-    file << "offset x   : " << params.offsetX << endl;
-    file << "offset y   : " << params.offsetY << endl;
-    file << "offset z   : " << params.offsetZ << endl;
-    file << "rotation x : " << params.rotationX << endl;
-    file << "rotation y : " << params.rotationY << endl;
-    file << "rotation z : " << params.rotationZ << endl;
-    file << "[End Sensor]\n" << endl;
-  }
-
-  file << "[Device]" << endl;
-  file << "slope x    : " << m_beamSlopeX << endl;
-  file << "slope y    : " << m_beamSlopeY << endl;
-  file << "sync ratio : " << m_syncRatio << endl;
-  file << "[End Device]\n" << endl;
-
-  file.close();
-
-  INFO("wrote alignment to '", path, "'\n");
 }
 
 Mechanics::Alignment Mechanics::Alignment::fromConfig(const toml::Value& cfg)
@@ -138,28 +119,28 @@ Mechanics::Alignment Mechanics::Alignment::fromConfig(const toml::Value& cfg)
 
 toml::Value Mechanics::Alignment::toConfig() const
 {
-    toml::Value cfg;
+  toml::Value cfg;
 
-    cfg["beam"]["slope_x"] = m_beamSlopeX;
-    cfg["beam"]["slope_y"] = m_beamSlopeY;
-    cfg["timing"]["sync_ratio"] = m_syncRatio;
+  cfg["beam"]["slope_x"] = m_beamSlopeX;
+  cfg["beam"]["slope_y"] = m_beamSlopeY;
+  cfg["timing"]["sync_ratio"] = m_syncRatio;
 
-    cfg["sensors"] = toml::Array();
-    for (auto ig = m_geo.begin(); ig != m_geo.end(); ++ig) {
-        int id = static_cast<int>(ig->first);
-        const GeoParams& params = ig->second;
+  cfg["sensors"] = toml::Array();
+  for (auto ig = m_geo.begin(); ig != m_geo.end(); ++ig) {
+    int id = static_cast<int>(ig->first);
+    const GeoParams& params = ig->second;
 
-        toml::Value cfgSensor;
-        cfgSensor["id"] = id;
-        cfgSensor["offset_x"] = params.offsetX;
-        cfgSensor["offset_y"] = params.offsetY;
-        cfgSensor["offset_z"] = params.offsetZ;
-        cfgSensor["rotation_x"] = params.rotationX;
-        cfgSensor["rotation_y"] = params.rotationY;
-        cfgSensor["rotation_z"] = params.rotationZ;
-        cfg["sensors"].push(std::move(cfgSensor));
-    }
-    return cfg;
+    toml::Value cfgSensor;
+    cfgSensor["id"] = id;
+    cfgSensor["offset_x"] = params.offsetX;
+    cfgSensor["offset_y"] = params.offsetY;
+    cfgSensor["offset_z"] = params.offsetZ;
+    cfgSensor["rotation_x"] = params.rotationX;
+    cfgSensor["rotation_y"] = params.rotationY;
+    cfgSensor["rotation_z"] = params.rotationZ;
+    cfg["sensors"].push(std::move(cfgSensor));
+  }
+  return cfg;
 }
 
 bool Mechanics::Alignment::hasAlignment(Index sensorId) const
@@ -249,8 +230,7 @@ void Mechanics::Alignment::print(std::ostream& os,
      << prefix << "  slope X: " << m_beamSlopeX << '\n'
      << prefix << "  slope Y: " << m_beamSlopeY << '\n';
 
-  auto ip = m_geo.begin();
-  for (; ip != m_geo.end(); ++ip) {
+  for (auto ip = m_geo.begin(); ip != m_geo.end(); ++ip) {
     Index i = ip->first;
     const GeoParams& p = ip->second;
 
