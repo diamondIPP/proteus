@@ -165,13 +165,11 @@ static Mechanics::Device parseDevice(const std::string& path)
 
       if (!pathAlignment.empty()) {
         device.applyAlignment(Mechanics::Alignment::fromFile(pathAlignment));
-        // device.m_pathAlignment = pathAlignment;
       } else {
         device.applyAlignment(alignment);
       }
       if (!pathNoiseMask.empty()) {
         device.applyNoiseMask(Mechanics::NoiseMask::fromFile(pathNoiseMask));
-        // device.m_pathNoiseMask = pathNoiseMask;
       }
       return device;
     }
@@ -207,21 +205,28 @@ static Mechanics::Device parseDevice(const std::string& path)
 
 Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
 {
-    using Utils::Config::readConfig;
+  using namespace Utils::Config;
 
-    std::string ext(path.substr(path.find_last_of('.') + 1));
-
-    if (ext == "toml") {
-        auto cfg = readConfig(path);
-        auto cfgAlign = cfg.find("alignment");
-        auto cfgNoise = cfg.find("noise_mask");
-        if (cfgAlign && cfgAlign->is<std::string>())
-          cfg["alignment"] = readConfig(cfgAlign->as<std::string>());
-        if (cfgNoise && cfgNoise->is<std::string>())
-          cfg["noise_mask"] = readConfig(cfgNoise->as<std::string>());
-        return fromConfig(cfg);
+  if (pathExtension(path) == "toml") {
+    auto cfg = readConfig(path);
+    auto cfgAlign = cfg.find("alignment");
+    if (cfgAlign && cfgAlign->is<std::string>())
+      cfg["alignment"] = readConfig(cfgAlign->as<std::string>());
+    auto cfgNoise = cfg.find("noise_mask");
+    // allow overlay of multiple noise masks
+    if (cfgNoise && cfgNoise->is<std::vector<std::string>>()) {
+      NoiseMask mask;
+      auto paths = cfgNoise->as<std::vector<std::string>>();
+      for (auto maskPath = paths.begin(); maskPath != paths.end(); ++maskPath)
+        mask.merge(NoiseMask::fromFile(*maskPath));
+      cfg["noise_mask"] = mask.toConfig();
+    } else if (cfgNoise && cfgNoise->is<std::string>()) {
+      cfg["noise_mask"] = readConfig(cfgNoise->as<std::string>());
     }
-    return parseDevice(path);
+    return fromConfig(cfg);
+  }
+  // fall-back to old format
+  return parseDevice(path);
 }
 
 Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
@@ -234,13 +239,19 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
 
   auto types = cfg.get<toml::Table>("sensor_types");
   auto sensors = cfg.get<toml::Array>("sensors");
-
   for (size_t i = 0; i < sensors.size(); ++i) {
     auto sensor = sensors[i];
+    if (Utils::Config::get(sensor, "is_masked", false)) {
+      device.addMaskedSensor();
+      continue;
+    }
     auto name = Utils::Config::get(sensor, "name", "plane" + std::to_string(i));
     auto typeName = sensor.get<std::string>("type");
+    if (types.count(typeName) == 0) {
+      throw std::runtime_error("Device: sensor type '" + typeName +
+                               "' does not exist");
+    }
     auto type = types[typeName];
-
     device.addSensor(Sensor(name,
                             type.get<int>("cols"),
                             type.get<int>("rows"),
@@ -251,10 +262,11 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
                             type.get<double>("x_x0")));
   }
 
+  // alignment and pixel masks are optional
   auto cfgAlign = cfg.find("alignment");
-  auto cfgNoise = cfg.find("noise_mask");
   if (cfgAlign)
     device.applyAlignment(Alignment::fromConfig(*cfgAlign));
+  auto cfgNoise = cfg.find("noise_mask");
   if (cfgNoise)
     device.applyNoiseMask(NoiseMask::fromConfig(*cfgNoise));
 

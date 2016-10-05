@@ -23,7 +23,7 @@ public:
          const std::string& spaceUnit = std::string(),
          const std::string& timeUnit = std::string());
 
-  /** Construct device from a configuration file (old format). */
+  /** Construct device from a configuration file. */
   static Device fromFile(const std::string& path);
   /** Construct device from a configuration object. */
   static Device fromConfig(const toml::Value& cfg);
