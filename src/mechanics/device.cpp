@@ -258,7 +258,7 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
                             type.get<double>("pitch_col"),
                             type.get<double>("pitch_row"),
                             type.get<bool>("is_digital"),
-                            type.get<double>("depth"),
+                            type.get<double>("thickness"),
                             type.get<double>("x_x0")));
   }
 
@@ -285,7 +285,7 @@ void Mechanics::Device::applyAlignment(const Alignment& alignment)
 {
   m_alignment = alignment;
 
-  for (Index sensorId = 0; sensorId < getNumSensors(); ++sensorId) {
+  for (Index sensorId = 0; sensorId < numSensors(); ++sensorId) {
     Sensor* sensor = getSensor(sensorId);
     sensor->setLocalToGlobal(m_alignment.getLocalToGlobal(sensorId));
   }
@@ -296,7 +296,7 @@ void Mechanics::Device::applyNoiseMask(const NoiseMask& noiseMask)
 {
   m_noiseMask = noiseMask;
 
-  for (Index sensorId = 0; sensorId < getNumSensors(); ++sensorId) {
+  for (Index sensorId = 0; sensorId < numSensors(); ++sensorId) {
     Sensor* sensor = getSensor(sensorId);
     sensor->setNoisyPixels(m_noiseMask.getMaskedPixels(sensorId));
   }
@@ -305,7 +305,7 @@ void Mechanics::Device::applyNoiseMask(const NoiseMask& noiseMask)
 
 double Mechanics::Device::tsToTime(uint64_t timeStamp) const
 {
-  return (double)((timeStamp - getTimeStart()) / (double)getClockRate());
+  return (double)((timeStamp - timeStampStart()) / (double)clockRate());
 }
 
 void Mechanics::Device::setTimeStampRange(uint64_t start, uint64_t end)
@@ -319,8 +319,8 @@ void Mechanics::Device::setTimeStampRange(uint64_t start, uint64_t end)
 unsigned int Mechanics::Device::getNumPixels() const
 {
   unsigned int numPixels = 0;
-  for (unsigned int nsens = 0; nsens < getNumSensors(); nsens++)
-    numPixels += getSensor(nsens)->getNumPixels();
+  for (unsigned int nsens = 0; nsens < numSensors(); nsens++)
+    numPixels += getSensor(nsens)->numPixels();
   return numPixels;
 }
 
@@ -341,16 +341,14 @@ void Mechanics::Device::print(std::ostream& os, const std::string& prefix) const
   os << prefix << "name: " << m_name << '\n';
   os << prefix << "clock rate: " << m_clockRate << '\n';
   os << prefix << "readout window: " << m_readoutWindow << '\n';
-  for (Index sensorId = 0; sensorId < getNumSensors(); ++sensorId) {
+  for (Index sensorId = 0; sensorId < numSensors(); ++sensorId) {
     os << prefix << "sensor " << sensorId << ":\n";
     getSensor(sensorId)->print(os, prefix + "  ");
   }
-
   os << prefix << "alignment:\n";
   if (!m_pathAlignment.empty())
     os << prefix << "  path: " << m_pathAlignment << '\n';
   m_alignment.print(os, prefix + "  ");
-
   os << prefix << "noise mask:\n";
   if (!m_pathNoiseMask.empty())
     os << prefix << "  path: " << m_pathNoiseMask << '\n';
