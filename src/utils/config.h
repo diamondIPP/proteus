@@ -38,16 +38,13 @@ inline std::string pathJoin(const std::string& path0, const std::string& path1)
   return path0 + (path0.empty() ? std::string() : std::string('/', 1)) + path1;
 }
 
-/** Read a config file, either .cfg or .toml, and convert it to toml::Value. */
+/** Read a ConfigParser config file and convert it to toml. */
+toml::Value readConfigParser(const std::string& path);
+/** Read a toml config file with automatic error handling. */
 toml::Value readConfig(const std::string& path);
 
 /** Write a toml::Value to file. */
 void writeConfig(const toml::Value& cfg, const std::string& path);
-
-template <typename T> T get(const toml::Value& cfg, const std::string& key)
-{
-  return cfg.get<T>(key);
-}
 
 template <typename T>
 T get(const toml::Value& cfg, const std::string& key, const T& default_value)

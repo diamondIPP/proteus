@@ -40,8 +40,7 @@ static toml::Value cfgConvertValue(const std::string& value)
   return toml::Value(value);
 }
 
-// read .cfg files and convert to Toml
-static toml::Value cfgReadFile(const std::string& path)
+toml::Value Utils::Config::readConfigParser(const std::string& path)
 {
   toml::Value cfg = toml::Table();
   toml::Value* section;
@@ -75,8 +74,7 @@ static toml::Value cfgReadFile(const std::string& path)
   return cfg;
 }
 
-// read .toml file with automatic error handling
-static toml::Value tomlReadFile(const std::string& path)
+toml::Value Utils::Config::readConfig(const std::string& path)
 {
   std::ifstream file(path, std::ifstream::in | std::ifstream::binary);
   if (!file.good())
@@ -90,22 +88,12 @@ static toml::Value tomlReadFile(const std::string& path)
   return std::move(result.value);
 }
 
-toml::Value Utils::Config::readConfig(const std::string& path)
-{
-  const std::string ext(path.substr(path.find_last_of('.') + 1));
-
-  if (ext == "toml")
-    return tomlReadFile(path);
-  // fall-back to old config format
-  return cfgReadFile(path);
-}
-
 void Utils::Config::writeConfig(const toml::Value& cfg, const std::string& path)
 {
   std::ofstream file(path, std::ofstream::out | std::ofstream::binary);
   if (!file.good())
     throw std::runtime_error("Could not open file '" + path + "' to write");
 
-  cfg.writeFormatted(&file, toml::FORMAT_INDENT);
+  cfg.write(&file);
   file.close();
 }
