@@ -21,7 +21,6 @@ public:
   virtual ~Processor();
   virtual std::string name() const = 0;
   virtual void process(Storage::Event& event) = 0;
-  virtual void finalize() = 0;
 };
 
 } // namespace Processors

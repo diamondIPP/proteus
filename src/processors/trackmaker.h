@@ -52,7 +52,6 @@ public:
   bool getCalcIntercepts() { return _calcIntercepts; }
   std::string name() const;
   void process(Storage::Event& event);
-  void finalize();
 };
 
 }  // namespace Processors

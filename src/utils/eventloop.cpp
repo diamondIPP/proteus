@@ -97,8 +97,6 @@ void Utils::EventLoop::run()
   }
   m_progress.clear();
 
-  for (auto p = m_processors.begin(); p != m_processors.end(); ++p)
-    (*p)->finalize();
   for (auto a = m_analyzers.begin(); a != m_analyzers.end(); ++a)
     (*a)->finalize();
 
