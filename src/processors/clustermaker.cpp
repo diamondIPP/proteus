@@ -10,11 +10,9 @@
 #include "storage/hit.h"
 #include "storage/plane.h"
 
-namespace Processors {
-
-ClusterMaker::ClusterMaker(int maxSeparationCol,
-                           int maxSeparationRow,
-                           double maxSeparationColRow)
+Processors::ClusterMaker::ClusterMaker(int maxSeparationCol,
+                                       int maxSeparationRow,
+                                       double maxSeparationColRow)
     : m_maxSeparationCol(maxSeparationCol)
     , m_maxSeparationRow(maxSeparationRow)
     , m_maxSeparationColRowSquared(maxSeparationColRow * maxSeparationColRow)
@@ -30,17 +28,17 @@ ClusterMaker::ClusterMaker(int maxSeparationCol,
         "ClusterMaker: maximum column/row distance must be positive");
 }
 
-std::string ClusterMaker::name() const { return "ClusterMaker"; }
+std::string Processors::ClusterMaker::name() const { return "ClusterMaker"; }
 
-void ClusterMaker::process(Storage::Event& event) const
+void Processors::ClusterMaker::process(Storage::Event& event) const
 {
   for (unsigned int i = 0; i < event.getNumPlanes(); ++i)
     generateClusters(&event, i);
 }
 
-void ClusterMaker::addNeighbours(const Storage::Hit* hit,
-                                 Storage::Plane* plane,
-                                 Storage::Cluster* cluster) const
+void Processors::ClusterMaker::addNeighbours(const Storage::Hit* hit,
+                                             Storage::Plane* plane,
+                                             Storage::Cluster* cluster) const
 {
   // Go through all hits
   for (unsigned int nhit = 0; nhit < plane->numHits(); nhit++) {
@@ -74,8 +72,8 @@ void ClusterMaker::addNeighbours(const Storage::Hit* hit,
   }
 }
 
-void ClusterMaker::generateClusters(Storage::Event* event,
-                                    unsigned int planeNum) const
+void Processors::ClusterMaker::generateClusters(Storage::Event* event,
+                                                unsigned int planeNum) const
 {
   Storage::Plane* plane = event->getPlane(planeNum);
   if (plane->numClusters() > 0)
@@ -101,7 +99,7 @@ void ClusterMaker::generateClusters(Storage::Event* event,
     calculateCluster(plane->getCluster(i));
 }
 
-void ClusterMaker::calculateCluster(Storage::Cluster* cluster) const
+void Processors::ClusterMaker::calculateCluster(Storage::Cluster* cluster) const
 {
   const double rt12 = 1.0 / sqrt(12);
   double pixErrX = rt12;
@@ -170,5 +168,3 @@ void ClusterMaker::calculateCluster(Storage::Cluster* cluster) const
   cluster->setPosPixel(cogX, cogY);
   cluster->setErrPixel(pixErrX, pixErrY);
 }
-
-} // namespace Processors
