@@ -19,19 +19,21 @@ class Event {
 public:
   Event(Index numPlanes);
 
-  void setInvalid(bool value) { m_invalid = value; }
+  void setId(uint64_t id) { m_id = id; }
   void setTimeStamp(uint64_t timeStamp) { m_timeStamp = timeStamp; }
   void setFrameNumber(uint64_t frameNumber) { m_frameNumber = frameNumber; }
   void setTriggerOffset(unsigned int offset) { m_triggerOffset = offset; }
   void setTriggerInfo(unsigned int info) { m_triggerInfo = info; }
   void setTriggerPhase(unsigned int phase) { m_triggerPhase = phase; }
+  void setInvalid(bool value) { m_invalid = value; }
 
-  bool invalid() const { return m_invalid; }
+  uint64_t id() const { return m_id; }
   uint64_t timeStamp() const { return m_timeStamp; }
   uint64_t frameNumber() const { return m_frameNumber; }
   unsigned int triggerOffset() const { return m_triggerOffset; }
   unsigned int triggerInfo() const { return m_triggerInfo; }
   unsigned int triggerPhase() const { return m_triggerPhase; }
+  bool invalid() const { return m_invalid; }
 
   Index numPlanes() const { return static_cast<Index>(m_planes.size()); }
   Plane* getPlane(Index i) { return &m_planes.at(i); }
@@ -60,6 +62,7 @@ public:
 private:
   Track* addTrack(const Track& track);
 
+  uint64_t m_id;
   uint64_t m_timeStamp;
   uint64_t m_frameNumber;
   unsigned int m_triggerOffset;

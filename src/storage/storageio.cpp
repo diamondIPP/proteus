@@ -577,6 +577,7 @@ namespace Storage {
     if (_tracks && _tracks->GetEntry(n) <= 0) throw std::runtime_error("StorageIO: error reading tracks tree");
 
     Event* event = new Event(_numPlanes);
+    event->setId(n);
     event->setTimeStamp(timeStamp);
     event->setFrameNumber(frameNumber);
     event->setTriggerOffset(triggerOffset);
