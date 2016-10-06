@@ -6,6 +6,41 @@
 
 #include "configparser.h"
 
+bool Utils::Config::pathIsAbsolute(const std::string& path)
+{
+  return !path.empty() && (path.front() == '/');
+}
+
+std::string Utils::Config::pathDirname(const std::string& path)
+{
+  auto pos = path.find_last_of('/');
+  // no slash means the path contains only a filename
+  if (path.empty() || (pos == std::string::npos))
+    return ".";
+  // remove possible duplicates slashes at the end
+  return path.substr(0, path.find_last_not_of('/', pos) + 1);
+}
+
+std::string Utils::Config::pathExtension(const std::string& path)
+{
+  auto pos = path.find_last_of('.');
+  return ((pos != std::string::npos) ? path.substr(pos + 1) : std::string());
+}
+
+std::string Utils::Config::pathRebaseIfRelative(const std::string& path,
+                                                const std::string& dir)
+{
+  if (pathIsAbsolute(path))
+    return path;
+  std::string full;
+  if (!dir.empty()) {
+    full = dir;
+    full += '/';
+  }
+  full += path;
+  return full;
+}
+
 // create a valid toml identifier, i.e. lower case and no spaces
 static std::string cfgConvertKey(std::string key)
 {
