@@ -145,8 +145,8 @@ void Analyzers::Occupancy::processEvent(const Storage::Event* event) {
   eventDeviceAgree(event);
   
   // Check if the event passes the cuts
-  for (unsigned int ncut=0; ncut<_numEventCuts; ncut++)
-    if (!_eventCuts.at(ncut)->check(event)) return;
+  if (!checkCuts(event))
+    return;
   
   // 0.- Loop in planes
   for (unsigned int nplane=0; nplane<event->numPlanes(); nplane++){
@@ -157,10 +157,8 @@ void Analyzers::Occupancy::processEvent(const Storage::Event* event) {
       const Storage::Hit* hit = plane->getHit(nhit);
       
       // Check if the hit passes the cuts
-      bool pass=true;
-      for (unsigned int ncut=0; ncut<_numHitCuts; ncut++)
-	if (!_hitCuts.at(ncut)->check(hit)) { pass = false; break; }
-      if (!pass) continue;
+      if (!checkCuts(hit))
+        continue;
       
       _hitOcc.at(nplane)->Fill(hit->getPixX(), hit->getPixY());
       _totalHitOccupancy.at(nplane)++;
@@ -171,10 +169,8 @@ void Analyzers::Occupancy::processEvent(const Storage::Event* event) {
       const Storage::Cluster* cluster = plane->getCluster(ncluster);
       
       // Check if the cluster passes the cuts
-      bool pass=true;
-      for (unsigned int ncut=0; ncut<_numClusterCuts; ncut++)
-	if (!_clusterCuts.at(ncut)->check(cluster)) { pass = false; break; }
-      if (!pass) continue;
+      if (!checkCuts(cluster))
+        continue;
       
       _clusterOcc.at(nplane)->Fill(cluster->getPosX(), cluster->getPosY());
       //_clusterOccXZ.at(nplane)->Fill(cluster->getPosX(), cluster->getPosY());

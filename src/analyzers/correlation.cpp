@@ -32,8 +32,8 @@ void Correlation::processEvent(const Storage::Event* event)
   eventDeviceAgree(event);
 
   // Check if the event passes the cuts
-  for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)
-    if (!_eventCuts.at(ncut)->check(event)) return;
+  if (!checkCuts(event))
+    return;
 
   for (unsigned int nsens = 0; nsens < _device->getNumSensors() - 1; nsens++)
   {
@@ -50,20 +50,16 @@ void Correlation::processEvent(const Storage::Event* event)
       const Storage::Cluster* cluster0 = plane0->getCluster(ncluster0);
 
       // Check if the cluster passes the cuts
-      bool pass = true;
-      for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
-        if (!_clusterCuts.at(ncut)->check(cluster0)) { pass = false; break; }
-      if (!pass) continue;
+      if (!checkCuts(cluster0))
+        continue;
 
       for (unsigned int ncluster1 = 0; ncluster1 < plane1->numClusters(); ncluster1++)
       {
         const Storage::Cluster* cluster1 = plane1->getCluster(ncluster1);
 
         // Check if the cluster passes the cuts
-        bool pass = true;
-        for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
-          if (!_clusterCuts.at(ncut)->check(cluster1)) { pass = false; break; }
-        if (!pass) continue;
+        if (!checkCuts(cluster1))
+          continue;
 
         corrX->Fill(cluster0->getPosX(), cluster1->getPosX());
         corrY->Fill(cluster0->getPosY(), cluster1->getPosY());

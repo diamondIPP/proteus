@@ -32,18 +32,16 @@ void TrackInfo::processEvent(const Storage::Event* event)
   eventDeviceAgree(event);
 
   // Check if the event passes the cuts
-  for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)
-    if (!_eventCuts.at(ncut)->check(event)) return;
+  if (!checkCuts(event))
+    return;
 
   for (unsigned int ntrack = 0; ntrack < event->getNumTracks(); ntrack++)
   {
     const Storage::Track* track = event->getTrack(ntrack);
 
     // Check if the track passes the cuts
-    bool pass = true;
-    for (unsigned int ncut = 0; ncut < _numTrackCuts; ncut++)
-      if (!_trackCuts.at(ncut)->check(track)) { pass = false; break; }
-    if (!pass) continue;
+    if (!checkCuts(track))
+      continue;
 
     _slopesX->Fill(track->getSlopeX());
     _slopesY->Fill(track->getSlopeY());

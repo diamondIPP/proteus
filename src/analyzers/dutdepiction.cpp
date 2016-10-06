@@ -37,8 +37,8 @@ void DUTDepictor::processEvent(const Storage::Event* refEvent,
   if (_depictEvent)
   {
     // Check if the event passes the cuts
-    for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)
-      if (!_eventCuts.at(ncut)->check(refEvent)) return;
+    if (!checkCuts(refEvent))
+      return;
 
     _depictor->depictEvent(refEvent, dutEvent);
   }
@@ -50,9 +50,8 @@ void DUTDepictor::processEvent(const Storage::Event* refEvent,
       const Storage::Plane* plane = refEvent->getPlane(iplane);
       for (Index icluster = 0; icluster < plane->numClusters(); icluster++) {
         const Storage::Cluster* cluster = plane->getCluster(icluster);
-        for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
-          if (!_clusterCuts.at(ncut)->check(cluster))
-            continue;
+        if (!checkCuts(cluster))
+          continue;
         refClusters.push_back(cluster);
       }
     }
@@ -61,9 +60,8 @@ void DUTDepictor::processEvent(const Storage::Event* refEvent,
       const Storage::Plane* plane = dutEvent->getPlane(iplane);
       for (Index icluster = 0; icluster < plane->numClusters(); icluster++) {
         const Storage::Cluster* cluster = plane->getCluster(icluster);
-        for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
-          if (!_clusterCuts.at(ncut)->check(cluster))
-            continue;
+        if (!checkCuts(cluster))
+          continue;
         dutClusters.push_back(cluster);
       }
     }
@@ -77,8 +75,8 @@ void DUTDepictor::processEvent(const Storage::Event* refEvent,
     {
       const Storage::Track* track = refEvent->getTrack(ntrack);
 
-      for (unsigned int ncut = 0; ncut < _numTrackCuts; ncut++)
-        if (!_trackCuts.at(ncut)->check(track)) continue;
+      if (!checkCuts(track))
+          continue;
 
       _depictor->depictTrack(track);
     }

@@ -146,18 +146,16 @@ void Analyzers::Matching::processEvent(const Storage::Event* refEvent,
   eventDeviceAgree(refEvent, dutEvent);
 
   // Check if the event passes the cuts
-  for (unsigned int ncut=0; ncut<_numEventCuts; ncut++)
-    if (!_eventCuts.at(ncut)->check(refEvent)) return;
+  if (!checkCuts(refEvent))
+    return;
 
   /** Loop in all reconstructed tracls*/
   for(unsigned int ntrack=0; ntrack<refEvent->getNumTracks(); ntrack++) {
     const Storage::Track* track = refEvent->getTrack(ntrack);
     
     // Check if the track passes the cuts
-    bool pass = true;
-    for (unsigned int ncut=0; ncut<_numTrackCuts; ncut++)
-      if (!_trackCuts.at(ncut)->check(track)) { pass = false; break; }
-    if (!pass) continue;
+    if (!checkCuts(track))
+      continue;
 
     // Make a list of the planes with their matched cluster
     std::vector<Storage::Cluster*> matches;
@@ -169,10 +167,8 @@ void Analyzers::Matching::processEvent(const Storage::Event* refEvent,
       Storage::Cluster* cluster = track->getMatchedCluster(nmatch);
       
       // Check if this cluster passes the cuts
-      bool pass = true;
-      for(unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
-        if (!_clusterCuts.at(ncut)->check(cluster)) { pass = false; break; }
-      if (!pass) continue;
+      if (!checkCuts(cluster))
+        continue;
 
       matches.at(cluster->getPlane()->planeNumber()) = cluster;
     }

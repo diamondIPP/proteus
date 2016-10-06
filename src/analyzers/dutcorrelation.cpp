@@ -33,8 +33,8 @@ void DUTCorrelation::processEvent(const Storage::Event* refEvent,
   eventDeviceAgree(refEvent, dutEvent);
 
   // Check if the event passes the cuts
-  for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)
-    if (!_eventCuts.at(ncut)->check(refEvent)) return;
+  if (!checkCuts(refEvent))
+    return;
 
   for (unsigned int nsensor = 0; nsensor < _dutDevice->getNumSensors(); nsensor++)
   {
@@ -50,20 +50,16 @@ void DUTCorrelation::processEvent(const Storage::Event* refEvent,
       const Storage::Cluster* cluster0 = plane0->getCluster(ncluster0);
 
       // Check if the cluster passes the cuts
-      bool pass = true;
-      for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
-        if (!_clusterCuts.at(ncut)->check(cluster0)) { pass = false; break; }
-      if (!pass) continue;
+      if (!checkCuts(cluster0))
+        continue;
 
       for (unsigned int ncluster1 = 0; ncluster1 < plane1->numClusters(); ncluster1++)
       {
         const Storage::Cluster* cluster1 = plane1->getCluster(ncluster1);
 
         // Check if the cluster passes the cuts
-        bool pass = true;
-        for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
-          if (!_clusterCuts.at(ncut)->check(cluster1)) { pass = false; break; }
-        if (!pass) continue;
+        if (!checkCuts(cluster1))
+          continue;
 	//Bilbao@cern.ch : pixel clusters are properly center in the pixel for both sensors
 	//std::cout << "Plane 0   X: " <<  cluster0->getPixX() << ", Y: " << cluster0->getPixY() << std::endl;
 	//std::cout << "Plane 1   X: " <<  cluster1->getPixX() << ", Y: " << cluster1->getPixY() << std::endl;

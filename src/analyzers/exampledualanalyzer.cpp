@@ -33,8 +33,8 @@ void ExampleDualAnalyzer::processEvent(const Storage::Event* refEvent,
   eventDeviceAgree(refEvent, dutEvent);
 
   // Check if the event passes the cuts
-  for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)
-    if (!_eventCuts.at(ncut)->check(refEvent)) return;
+  if (!checkCuts(refEvent))
+      return;
 
   // Loop over tracks, clusters, hits... and apply cuts to each object above
 }
