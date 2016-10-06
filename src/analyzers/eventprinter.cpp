@@ -8,9 +8,9 @@
 
 using Utils::logger;
 
-std::unique_ptr<Analyzers::EventPrinter> Analyzers::EventPrinter::make()
+std::shared_ptr<Analyzers::EventPrinter> Analyzers::EventPrinter::make()
 {
-  return std::unique_ptr<EventPrinter>(new EventPrinter());
+  return std::make_shared<EventPrinter>();
 }
 
 std::string Analyzers::EventPrinter::name() const { return "EventPrinter"; }
@@ -24,10 +24,14 @@ void Analyzers::EventPrinter::analyze(uint64_t eventId,
   INFO("  tracks: ", event.getNumTracks(), '\n');
   for (Index iplane = 0; iplane < event.getNumPlanes(); ++iplane) {
     const Storage::Plane* plane = event.getPlane(iplane);
-    DEBUG("  plane", iplane, ":\n");
-    DEBUG("    hits: ", plane->getNumHits(), '\n');
-    DEBUG("    clusters: ", plane->getNumHits(), '\n');
+    INFO("  sensor", iplane, ":\n");
+    if (0 < plane->numHits())
+      INFO("    hits: ", plane->numHits(), '\n');
+    if (0 < plane->numClusters())
+      INFO("    clusters: ", plane->numClusters(), '\n');
   }
+  if (0 < event.numTracks())
+    INFO("  tracks: ", event.numTracks(), '\n');
 }
 
 void Analyzers::EventPrinter::finalize() {}

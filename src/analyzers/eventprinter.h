@@ -10,14 +10,11 @@ namespace Analyzers {
 /** Print detailed information for each event. */
 class EventPrinter : public Analyzer {
 public:
-  static std::unique_ptr<EventPrinter> make();
+  static std::shared_ptr<EventPrinter> make();
 
   std::string name() const;
   void analyze(uint64_t eventId, const Storage::Event& event);
   void finalize();
-
-private:
-  EventPrinter() = default;
 };
 
 } // namespace Analyzers
