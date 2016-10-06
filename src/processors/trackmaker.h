@@ -51,7 +51,7 @@ public:
 
   bool getCalcIntercepts() { return _calcIntercepts; }
   std::string name() const;
-  void process(uint64_t eventId, Storage::Event& event);
+  void process(Storage::Event& event);
   void finalize();
 };
 
