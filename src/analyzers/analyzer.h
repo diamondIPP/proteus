@@ -19,7 +19,7 @@ class Analyzer {
 public:
   virtual ~Analyzer();
   virtual std::string name() const = 0;
-  virtual void analyze(uint64_t eventId, const Storage::Event& event) = 0;
+  virtual void analyze(const Storage::Event& event) = 0;
   virtual void finalize() = 0;
 };
 

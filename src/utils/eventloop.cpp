@@ -83,7 +83,7 @@ void Utils::EventLoop::run()
 
     Time startAnalyzers = Clock::now();
     for (auto a = m_analyzers.begin(); a != m_analyzers.end(); ++a)
-      (*a)->analyze(ievent, *event.get());
+      (*a)->analyze(*event.get());
 
     Time end = Clock::now();
     durIo += startProcessors - startIo;
