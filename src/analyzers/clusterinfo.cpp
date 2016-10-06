@@ -162,11 +162,11 @@ void Analyzers::ClusterInfo::processEvent(const Storage::Event* event) {
   for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)
     if (!_eventCuts.at(ncut)->check(event)) return;
 
-  for(unsigned int nplane=0; nplane<event->getNumPlanes(); nplane++) {
-    Storage::Plane* plane = event->getPlane(nplane);
+  for(unsigned int nplane=0; nplane<event->numPlanes(); nplane++) {
+    const Storage::Plane* plane = event->getPlane(nplane);
     
-    for(unsigned int ncluster=0; ncluster<plane->getNumClusters(); ncluster++){
-      Storage::Cluster* cluster = plane->getCluster(ncluster);
+    for(unsigned int ncluster=0; ncluster<plane->numClusters(); ncluster++){
+      const Storage::Cluster* cluster = plane->getCluster(ncluster);
       
       // Check if the cluster passes the cuts
       bool pass = true;
@@ -179,7 +179,7 @@ void Analyzers::ClusterInfo::processEvent(const Storage::Event* event) {
       _totSize.at(nplane)->Fill(cluster->getNumHits(), cluster->getValue());
       
       for( unsigned int nhits=0; nhits<cluster->getNumHits(); nhits++){
-	Storage::Hit* hit= cluster->getHit(nhits);
+	const Storage::Hit* hit= cluster->getHit(nhits);
 	//std::cout << hit->getTiming() << std::endl;
 	_timingVsClusterSize.at(nplane)->Fill(cluster->getNumHits(),hit->getTiming());
         _timingVsHitValue.at(nplane)->Fill(hit->getValue(),hit->getTiming());

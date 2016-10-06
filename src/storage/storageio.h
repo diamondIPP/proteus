@@ -1,9 +1,10 @@
 #ifndef STORAGEIO_H
 #define STORAGEIO_H
 
+#include <cstdint>
+#include <string>
 #include <vector>
 
-#include <Rtypes.h>
 #include <TFile.h>
 #include <TTree.h>
 #include <TBranch.h>
@@ -19,7 +20,6 @@
 #define MAX_RUNS 1000
 #define MAX_NOISY 20000
 
-class ConfigParser;
 namespace Mechanics { class NoiseMask; }
 
 namespace Storage {
@@ -44,43 +44,39 @@ namespace Storage {
   class StorageIO {
   public:
     /** Constructor. */
-    StorageIO(const char* filePath,
+    StorageIO(const std::string& filePath,
 	      Mode fileMode,
 	      unsigned int numPlanes = 0,
 	      const unsigned int treeMask = 0,
-	      const std::vector<bool>* planeMask = 0,
-	      int printLevel = 0);
+	      const std::vector<bool>* planeMask = 0);
 
     /** Destructor */
     ~StorageIO();
 
-    // void setNoiseMasks(std::vector<bool**>* noiseMasks);
-    void setPrintLevel(const int printLevel);
     void setRuns(const std::vector<int> &vruns);
     void setNoiseMaskData(const Mechanics::NoiseMask& noisemask);
 
-    Long64_t getNumEvents() const;
+    uint64_t getNumEvents() const { return _numEvents; }
     unsigned int getNumPlanes() const { return _numPlanes; }
     Storage::Mode getMode() const {  return _fileMode; }
     std::vector<int> getRuns() const;
 
-    Event* readEvent(Long64_t n); // Read an event and generate its objects
+    Event* readEvent(uint64_t n); // Read an event and generate its objects
     void writeEvent(Event* event); // Write an event at the end of the file
 
   private:
     StorageIO(const StorageIO&); // Disable the copy constructor
     StorageIO& operator=(const StorageIO&); // Disable the assignment operator
+    void openRead(const std::string& path, const std::vector<bool>* planeMask);
+    void openTruncate(const std::string& path);
     void clearVariables();
     const std::string printSummaryTree();
 
   private:
-    const char*  _filePath; // Path to the storage file
     TFile*       _file; // Storage file
     const Mode   _fileMode; // How to open and process the file
     unsigned int _numPlanes; // This can be read from the file structure
-    Long64_t     _numEvents; // Number of events in the input file
-
-    int _printLevel; // verbose level
+    uint64_t     _numEvents; // Number of events in the input file
 
     const std::vector<bool**>* _noiseMasks;
 

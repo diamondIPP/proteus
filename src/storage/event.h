@@ -1,81 +1,77 @@
 #ifndef EVENT_H
 #define EVENT_H
 
+#include <cstdint>
+#include <iosfwd>
+#include <string>
 #include <vector>
 
-#include <Rtypes.h>
+#include "storage/plane.h"
+#include "storage/track.h"
 
-namespace Processors { class TrackMaker; }
+namespace Processors {
+class TrackMaker;
+}
 
-namespace Storage
-{  
-  class Hit;
-  class Cluster;
-  class Track;
-  class Plane;
-  
-  class Event {
-  public:
-    Event(unsigned int numPlanes);
-    ~Event();
-    
-    void print();
-    
-    Hit* newHit(unsigned int nplane);
-    Cluster* newCluster(unsigned int nplane);
-    Track* newTrack();
-    
-    Hit* getHit(unsigned int n) const;
-    Cluster* getCluster(unsigned int n) const;
-    Plane* getPlane(unsigned int n) const;
-    Track* getTrack(unsigned int n) const;
-    
-    void setInvalid(bool value) { _invalid = value; }
-    void setTimeStamp(ULong64_t timeStamp) { _timeStamp = timeStamp; }
-    void setFrameNumber(ULong64_t frameNumber) { _frameNumber = frameNumber; }
-    void setTriggerOffset(unsigned int triggerOffset) { _triggerOffset = triggerOffset; }
-    void setTriggerInfo(unsigned int triggerInfo) { _triggerInfo = triggerInfo; }
-    void setTriggerPhase(unsigned int triggerPhase) { _triggerPhase = triggerPhase; }
-    
+namespace Storage {
+class Event {
+public:
+  Event(Index numPlanes);
 
-    unsigned int getNumHits() const { return _numHits; }
-    unsigned int getNumClusters() const { return _numClusters; }
-    unsigned int getNumPlanes() const { return _numPlanes; }
-    unsigned int getNumTracks() const { return _numTracks; }
-    bool getInvalid() const { return _invalid; }
-    ULong64_t getTimeStamp() const { return _timeStamp; }
-    ULong64_t getFrameNumber() const { return _frameNumber; }
-    unsigned int getTriggerOffset() const { return _triggerOffset; }
-    unsigned int getTriggerInfo() const { return _triggerInfo; }
-    unsigned int getTriggerPhase() const { return _triggerPhase; }
+  void setInvalid(bool value) { m_invalid = value; }
+  void setTimeStamp(uint64_t timeStamp) { m_timeStamp = timeStamp; }
+  void setFrameNumber(uint64_t frameNumber) { m_frameNumber = frameNumber; }
+  void setTriggerOffset(unsigned int offset) { m_triggerOffset = offset; }
+  void setTriggerInfo(unsigned int info) { m_triggerInfo = info; }
+  void setTriggerPhase(unsigned int phase) { m_triggerPhase = phase; }
 
-    friend class Processors::TrackMaker;
+  bool invalid() const { return m_invalid; }
+  uint64_t timeStamp() const { return m_timeStamp; }
+  uint64_t frameNumber() const { return m_frameNumber; }
+  unsigned int triggerOffset() const { return m_triggerOffset; }
+  unsigned int triggerInfo() const { return m_triggerInfo; }
+  unsigned int triggerPhase() const { return m_triggerPhase; }
 
-  protected:
-    void addTrack(Track* track);
-    
-  private:
-    ULong64_t _timeStamp;
-    ULong64_t _frameNumber;
-    unsigned int _triggerOffset;
-    unsigned int _triggerInfo; // Dammit Andrej!
-    unsigned int _triggerPhase;
-    bool _invalid;
-    
-    unsigned int _numHits;
-    std::vector<Hit*> _hits;
-    
-    unsigned int _numClusters;
-    std::vector<Cluster*> _clusters;
-    
-    unsigned int _numPlanes;
-    std::vector<Plane*> _planes;
-    
-    unsigned int _numTracks;
-    std::vector<Track*> _tracks;
-    
-  }; // end of class
-  
-} // end of namespace
+  Index numPlanes() const { return static_cast<Index>(m_planes.size()); }
+  Plane* getPlane(Index i) { return &m_planes.at(i); }
+  const Plane* getPlane(Index i) const { return &m_planes.at(i); }
+
+  Track* newTrack();
+  Index numTracks() const { return static_cast<Index>(m_tracks.size()); }
+  Track* getTrack(Index i) { return &m_tracks.at(i); }
+  const Track* getTrack(Index i) const { return &m_tracks.at(i); }
+
+  // deprecated accessors
+  unsigned int getNumHits() const;
+  unsigned int getNumClusters() const;
+  unsigned int getNumPlanes() const { return m_planes.size(); }
+  unsigned int getNumTracks() const { return m_tracks.size(); }
+  bool getInvalid() const { return m_invalid; }
+  uint64_t getTimeStamp() const { return m_timeStamp; }
+  uint64_t getFrameNumber() const { return m_frameNumber; }
+  unsigned int getTriggerOffset() const { return m_triggerOffset; }
+  unsigned int getTriggerInfo() const { return m_triggerInfo; }
+  unsigned int getTriggerPhase() const { return m_triggerPhase; }
+
+  void print(std::ostream& os, const std::string& prefix = std::string()) const;
+  void print() const;
+
+private:
+  Track* addTrack(const Track& track);
+
+  uint64_t m_timeStamp;
+  uint64_t m_frameNumber;
+  unsigned int m_triggerOffset;
+  unsigned int m_triggerInfo; // Dammit Andrej!
+  unsigned int m_triggerPhase;
+  bool m_invalid;
+
+  std::vector<Plane> m_planes;
+  std::vector<Track> m_tracks;
+
+  friend class Processors::TrackMaker;
+};
+
+} // namespace Storage
 
 #endif // EVENT_H

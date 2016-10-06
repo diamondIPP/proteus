@@ -4,24 +4,24 @@
 #include <math.h>
 #include <float.h>
 
-#include "../storage/plane.h"
-#include "../storage/cluster.h"
-#include "../storage/hit.h"
-#include "../storage/event.h"
 #include "processors.h"
+#include "storage/plane.h"
+#include "storage/cluster.h"
+#include "storage/hit.h"
+#include "storage/event.h"
 
 namespace Processors {
 
-void ClusterMaker::addNeighbours(const Storage::Hit* hit, const  Storage::Plane* plane,
+void ClusterMaker::addNeighbours(const Storage::Hit* hit, Storage::Plane* plane,
                                   Storage::Cluster* cluster)
 {
   // Go through all hits
-  for (unsigned int nhit = 0; nhit < plane->getNumHits(); nhit++)
+  for (unsigned int nhit = 0; nhit < plane->numHits(); nhit++)
   {
-     Storage::Hit* compare = plane->getHit(nhit);
+    Storage::Hit* compare = plane->getHit(nhit);
 
     // Continue if this hit is already clustered or if it is the one being considered
-    if (compare->getCluster() || compare == hit) continue;
+    if (compare->isInCluster() || compare == hit) continue;
 
     // If a maximum separation has been defined in real coordinates, check now
     if (_maxSeparation > 0)
@@ -51,27 +51,27 @@ void ClusterMaker::addNeighbours(const Storage::Hit* hit, const  Storage::Plane*
 void ClusterMaker::generateClusters(Storage::Event* event, unsigned int planeNum)
 {
    Storage::Plane* plane = event->getPlane(planeNum);
-  if (plane->getNumClusters() > 0)
+  if (plane->numClusters() > 0)
     throw "ClusterMaker: clusters already exist for this hit";
 
-  for (unsigned int nhit = 0; nhit < plane->getNumHits(); nhit++)
+  for (unsigned int nhit = 0; nhit < plane->numHits(); nhit++)
   {
      Storage::Hit* hit = plane->getHit(nhit);
 
     // If the hit isn't clustered, make a new cluster
-    if (!hit->getCluster()) {
-       Storage::Cluster* cluster = event->newCluster(planeNum);
+    if (!hit->isInCluster()) {
+       Storage::Cluster* cluster = plane->newCluster();
       cluster->addHit(hit);
     }
 
     // Add neighbouring clusters to this hit (this is recursive)
-     Storage::Cluster* lastCluster = plane->getCluster(plane->getNumClusters() - 1);
+     Storage::Cluster* lastCluster = plane->getCluster(plane->numClusters() - 1);
     assert(lastCluster && "ClusterMaker: hits didn't generate any clusters");
     addNeighbours(hit, plane, lastCluster);
   }
 
   // Recursive search has ended, finalize all the cluster information
-  for (unsigned int i = 0; i < plane->getNumClusters(); i++)
+  for (unsigned int i = 0; i < plane->numClusters(); i++)
     calculateCluster(plane->getCluster(i));
 }
 
@@ -91,18 +91,18 @@ void ClusterMaker::calculateCluster(Storage::Cluster* cluster)
   {
     const Storage::Hit* hit = cluster->getHit(nhit);
     //  const double value = (hit->getValue() > 0) ? hit->getValue() : 1;
-    //taking the fastest hit to build the cluster 
+    //taking the fastest hit to build the cluster
     //digital sensor:
     cogX += hit->getPixX();
     cogY += hit->getPixY();
     weight += 1;
 
-    if(fastest_timing>hit->getTiming()){fastest_timing=hit->getTiming(); fastest_hitX=hit->getPixX(); fastest_hitY=hit->getPixY();    }  
+    if(fastest_timing>hit->getTiming()){fastest_timing=hit->getTiming(); fastest_hitX=hit->getPixX(); fastest_hitY=hit->getPixY();    }
 
 
   //    cogX += hit->getPixX() * value;
     //    cogY += hit->getPixY() * value;
-    //    weight += hit->getValue();   
+    //    weight += hit->getValue();
   }
 
   
@@ -144,11 +144,10 @@ void ClusterMaker::calculateCluster(Storage::Cluster* cluster)
   //const double errX = (stdevX) ? stdevX : pixErrX;
   //const double errY = (stdevY) ? stdevY : pixErrY;
 
-  const double errX = pixErrX;
-  const double errY = pixErrY;
+  XYVector err(pixErrX, pixErrY);
 
-  cluster->setPix(cogX, cogY);
-  cluster->setPixErr(errX, errY);
+  cluster->setPosPixel(XYPoint(cogX, cogY));
+  cluster->setErrPixel(err);
 }
 
 ClusterMaker::ClusterMaker(unsigned int maxSeparationX, unsigned int maxSeparationY,

@@ -38,16 +38,16 @@ void DUTCorrelation::processEvent(const Storage::Event* refEvent,
 
   for (unsigned int nsensor = 0; nsensor < _dutDevice->getNumSensors(); nsensor++)
   {
-    Storage::Plane* plane0 = refEvent->getPlane(_nearestRef);
-    Storage::Plane* plane1 = dutEvent->getPlane(nsensor);
+    const Storage::Plane* plane0 = refEvent->getPlane(_nearestRef);
+    const Storage::Plane* plane1 = dutEvent->getPlane(nsensor);
 
     TH2D* corrX = _corrX.at(nsensor);
     TH2D* corrY = _corrY.at(nsensor);
     TH1D* alignX = _alignX.at(nsensor);
     TH1D* alignY = _alignY.at(nsensor);
-    for (unsigned int ncluster0 = 0; ncluster0 < plane0->getNumClusters(); ncluster0++)
+    for (unsigned int ncluster0 = 0; ncluster0 < plane0->numClusters(); ncluster0++)
     {
-      Storage::Cluster* cluster0 = plane0->getCluster(ncluster0);
+      const Storage::Cluster* cluster0 = plane0->getCluster(ncluster0);
 
       // Check if the cluster passes the cuts
       bool pass = true;
@@ -55,9 +55,9 @@ void DUTCorrelation::processEvent(const Storage::Event* refEvent,
         if (!_clusterCuts.at(ncut)->check(cluster0)) { pass = false; break; }
       if (!pass) continue;
 
-      for (unsigned int ncluster1 = 0; ncluster1 < plane1->getNumClusters(); ncluster1++)
+      for (unsigned int ncluster1 = 0; ncluster1 < plane1->numClusters(); ncluster1++)
       {
-        Storage::Cluster* cluster1 = plane1->getCluster(ncluster1);
+        const Storage::Cluster* cluster1 = plane1->getCluster(ncluster1);
 
         // Check if the cluster passes the cuts
         bool pass = true;

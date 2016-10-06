@@ -15,7 +15,7 @@ private:
   const unsigned int _maxSeparationY;
   const double _maxSeparation;
 
-  void addNeighbours(const Storage::Hit* hit, const Storage::Plane* plane,
+  void addNeighbours(const Storage::Hit* hit, Storage::Plane* plane,
                      Storage::Cluster* cluster);
   void calculateCluster(Storage::Cluster* cluster);
 

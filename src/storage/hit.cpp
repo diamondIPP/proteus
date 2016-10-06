@@ -1,56 +1,34 @@
 #include "hit.h"
 
 #include <cassert>
-#include <iostream>
-#include <sstream>
+#include <ostream>
 
 #include "cluster.h"
-#include "plane.h"
 
-using std::cout;
-using std::endl;
-
-Storage::Hit::Hit() :
-  _plane(NULL),
-  _pixX(0),
-  _pixY(0),
-  _posX(0),
-  _posY(0),
-  _posZ(0),
-  _value(0),
-  _timing(0),
-  _cluster(NULL)
-{ }
-
-void Storage::Hit::setCluster(Storage::Cluster *cluster){
-  assert(!_cluster && "Hit: can't cluster an already clustered hit.");
-  _cluster = cluster;
+Storage::Hit::Hit()
+    : m_col(-1)
+    , m_row(-1)
+    , m_timing(-1)
+    , m_value(-1)
+    , m_cluster(NULL)
+{
 }
 
-Storage::Cluster* Storage::Hit::getCluster() const { 
-  return _cluster;
+void Storage::Hit::transformToGlobal(const Transform3D& pixelToGlobal)
+{
+  // conversion from digital address to pixel center
+  m_xyz = pixelToGlobal * XYZPoint(m_col + 0.5, m_row + 0.5, 0);
 }
 
-Storage::Plane* Storage::Hit::getPlane() const {
-  return _plane;
+void Storage::Hit::setCluster(Storage::Cluster* cluster)
+{
+  assert(!m_cluster && "Hit: can't cluster an already clustered hit.");
+  m_cluster = cluster;
 }
 
-void Storage::Hit::print() const {
-  cout << "\nHIT\n" << printStr() << endl;
-}
-
-const std::string Storage::Hit::printStr(int blankWidth) const {
-  std::ostringstream out;
-
-  std::string blank(" ");
-  for(int i=1; i<=blankWidth; i++) blank += " ";
-  
-  out << blank << "  Pix: (" << getPixX() << " , " << getPixY() << ")\n"
-      << blank << "  Pos: (" << getPosX() << " , " << getPosY() << " , " << getPosZ() << ")\n"
-      << blank << "  Value: " << getValue() << "\n"
-      << blank << "  Timing: " << getTiming() << "\n"
-      << blank << "  Cluster: " << getCluster() << "\n"
-      << blank << "  Plane: "  << getPlane();
-
-  return out.str();
+std::ostream& Storage::operator<<(std::ostream& os, const Storage::Hit& hit)
+{
+  os << "col=" << hit.col() << ", row=" << hit.row()
+     << ", timing=" << hit.timing() << ", value=" << hit.value();
+  return os;
 }

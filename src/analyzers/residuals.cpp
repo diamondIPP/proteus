@@ -35,9 +35,9 @@ void Residuals::processEvent(const Storage::Event* refEvent)
   for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)
     if (!_eventCuts.at(ncut)->check(refEvent)) return;
 
-  for (unsigned int ntrack = 0; ntrack < refEvent->getNumTracks(); ntrack++)
+  for (unsigned int ntrack = 0; ntrack < refEvent->numTracks(); ntrack++)
   {
-    Storage::Track* track = refEvent->getTrack(ntrack);
+    const Storage::Track* track = refEvent->getTrack(ntrack);
 
     // Check if the track passes the cuts
     bool pass = true;
@@ -45,9 +45,9 @@ void Residuals::processEvent(const Storage::Event* refEvent)
       if (!_trackCuts.at(ncut)->check(track)) { pass = false; break; }
     if (!pass) continue;
 
-    for (unsigned int nplane = 0; nplane < refEvent->getNumPlanes(); nplane++)
+    for (unsigned int nplane = 0; nplane < refEvent->numPlanes(); nplane++)
     {
-      Storage::Plane* plane = refEvent->getPlane(nplane);
+      const Storage::Plane* plane = refEvent->getPlane(nplane);
       const Mechanics::Sensor* sensor = _device->getSensor(nplane);
       double tx = 0, ty = 0, tz = 0;
       Processors::trackSensorIntercept(track, sensor, tx, ty, tz);
@@ -55,9 +55,9 @@ void Residuals::processEvent(const Storage::Event* refEvent)
       //fdibello@cern.ch variable to select the closest cluster associated to the track
       double rx1=0, ry1=0, dist=0, dist1=1000000;
 
-      for (unsigned int ncluster = 0; ncluster < plane->getNumClusters(); ncluster++)
+      for (unsigned int ncluster = 0; ncluster < plane->numClusters(); ncluster++)
       {
-        Storage::Cluster* cluster = plane->getCluster(ncluster);
+        const Storage::Cluster* cluster = plane->getCluster(ncluster);
 
 
         // Check if the cluster passes the cuts

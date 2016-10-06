@@ -30,7 +30,7 @@ void Processors::TrackMatcher::matchEvent(Storage::Event* refEvent,
     const Mechanics::Sensor* sensor = _device->getSensor(nplane);
     
     // If there are more cluster than tracks, match each track to one cluster
-    if (plane->getNumClusters() >= refEvent->getNumTracks())
+    if (plane->numClusters() >= refEvent->numTracks())
       matchTracksToClusters(refEvent, plane, sensor);
     else
       matchClustersToTracks(refEvent, plane, sensor);
@@ -49,7 +49,7 @@ void Processors::TrackMatcher::matchTracksToClusters(Storage::Event* trackEvent,
     double nearestDist = 0;
     Storage::Cluster* match = 0;
     
-    for(unsigned int ncluster=0; ncluster<clustersPlane->getNumClusters(); ncluster++){
+    for(unsigned int ncluster=0; ncluster<clustersPlane->numClusters(); ncluster++){
       Storage::Cluster* cluster = clustersPlane->getCluster(ncluster);
       
       double x = 0, y = 0, errx = 0, erry = 0;
@@ -85,7 +85,7 @@ void Processors::TrackMatcher::matchClustersToTracks(Storage::Event* trackEvent,
 						     Storage::Plane* clustersPlane,
 						     const Mechanics::Sensor* clustersSensor){
 
-  for (unsigned int ncluster=0; ncluster<clustersPlane->getNumClusters(); ncluster++){
+  for (unsigned int ncluster=0; ncluster<clustersPlane->numClusters(); ncluster++){
     Storage::Cluster* cluster = clustersPlane->getCluster(ncluster);
     
     // Find the nearest track

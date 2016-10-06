@@ -1,81 +1,125 @@
 #ifndef TRACK_H
 #define TRACK_H
 
+#include <iosfwd>
+#include <map>
+#include <string>
 #include <vector>
 
-namespace Processors { class TrackMaker; }
+#include "utils/definitions.h"
+
+namespace Processors {
+class TrackMaker;
+}
 
 namespace Storage {
 
 class Cluster;
 
-/*******************************************************************************
- * Track class contains all values which define one track, composed of some
- * number of clusters. It also provides a list of the clusters which comprise
- * it.
+/** Track state, i.e. position and direction, on a local plane.
+ *
+ * If the local plane is the global xy-plane, the local track description
+ * is identical to the usual global description, i.e. global position and
+ * slopes along the global z-axis.
  */
-
-class Track
-{
-private:
-  double _originX;
-  double _originY;
-  double _originErrX;
-  double _originErrY;
-  double _slopeX;
-  double _slopeY;
-  double _slopeErrX;
-  double _slopeErrY;
-  double _covarianceX;
-  double _covarianceY;
-  double _chi2;
-
-  unsigned int _numClusters;
-  std::vector<Cluster*> _clusters;
-
-  // NOTE: this isn't stored in file, its a place holder for doing DUT analysis
-  unsigned int _numMatchedClusters;
-  std::vector<Cluster*> _matchedClusters;
-
-protected:
-  int _index;
-
+class TrackState {
 public:
-  Track(const Track& old);
+  TrackState();
+  TrackState(const XYPoint& offset, const XYVector& slope = XYVector(0, 0));
+  TrackState(double u, double v, double dU = 0, double dV = 0);
+
+  void setErrOffset(double errU, double errV);
+  void setErrU(double errU, double errDu, double cov = 0);
+  void setErrV(double errV, double errDv, double cov = 0);
+
+  /** Plane offset in local coordinates. */
+  const XYPoint& offset() const { return m_offset; }
+  /** Slope in local coordinates. */
+  const XYVector& slope() const { return m_slope; }
+  const XYVector& errOffset() const { return m_errOffset; }
+  const XYVector& errSlope() const { return m_errSlope; }
+
+  /** Full position in the local coordinates. */
+  XYZPoint posLocal() const { return XYZPoint(m_offset.x(), m_offset.y(), 0); }
+
+  void print(std::ostream& os, const std::string& prefix = std::string()) const;
+
+private:
+  XYPoint m_offset;
+  XYVector m_slope;
+  XYVector m_errOffset, m_errSlope;
+  double m_covUDu, m_covVDv;
+
+  friend class Track;
+};
+
+/** A particle track.
+ *
+ * The track consist of a set of input clusters and a set of reconstructed
+ * track states on selected sensor planes.
+ */
+class Track {
+public:
+  typedef std::map<Index, TrackState> TrackStates;
+
   Track();
+  Track(const TrackState& globalState);
 
+  void addLocalState(Index sensor, const TrackState& state);
+  void setGlobalState(const TrackState& state) { m_state = state; }
+  void setChi2(double chi2) { m_chi2 = chi2; }
+
+  const TrackState& globalState() const { return m_state; }
+  const TrackState& localState(Index sensor) const;
+  const TrackStates& localStates() const { return m_localStates; }
+
+  /** Adds the cluster to the track but does not inform the cluster about it. */
   void addCluster(Cluster* cluster);
+  /** Inform all track clusters that they belong to this track. */
+  void fixClusterAssociation();
+  Index numClusters() const { return static_cast<Index>(m_clusters.size()); }
+  Cluster* getCluster(Index i) { return m_clusters.at(i); }
+  const Cluster* getCluster(Index i) const { return m_clusters.at(i); }
+
+  unsigned int getNumClusters() const { return m_clusters.size(); }
+  unsigned int getNumMatchedClusters() const
+  {
+    return m_matchedClusters.size();
+  }
   void addMatchedCluster(Cluster* cluster);
+  Cluster* getMatchedCluster(unsigned int n) const
+  {
+    return m_matchedClusters.at(n);
+  }
+  double getOriginX() const { return m_state.offset().x(); }
+  double getOriginY() const { return m_state.offset().y(); }
+  double getOriginErrX() const { return m_state.errOffset().x(); }
+  double getOriginErrY() const { return m_state.errOffset().y(); }
+  double getSlopeX() const { return m_state.slope().x(); }
+  double getSlopeY() const { return m_state.slope().y(); }
+  double getSlopeErrX() const { return m_state.errSlope().x(); }
+  double getSlopeErrY() const { return m_state.errSlope().y(); }
+  double getCovarianceX() const { return m_state.m_covUDu; }
+  double getCovarianceY() const { return m_state.m_covVDv; }
+  double getChi2() const { return m_chi2; }
+  int getIndex() const { return m_index; }
 
-  Cluster* getCluster(unsigned int n) const;
-  Cluster* getMatchedCluster(unsigned int n) const;
+  void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
-  inline void setOrigin(double x, double y) { _originX = x; _originY = y; }
-  inline void setOriginErr(double x, double y) { _originErrX = x; _originErrY = y; }
-  inline void setSlope(double x, double y) { _slopeX = x; _slopeY = y; }
-  inline void setSlopeErr(double x, double y) { _slopeErrX = x; _slopeErrY = y; }
-  inline void setChi2(double chi2) { _chi2 = chi2; }
-  inline void setCovariance(double x, double y) { _covarianceX = x; _covarianceY = y; }
+private:
+  TrackState m_state;
+  TrackStates m_localStates;
+  double m_chi2;
+  int m_index;
 
-  inline unsigned int getNumClusters() const { return _numClusters; }
-  inline unsigned int getNumMatchedClusters() const { return _numMatchedClusters; }
-  inline double getOriginX() const { return _originX; }
-  inline double getOriginY() const { return _originY; }
-  inline double getOriginErrX() const { return _originErrX; }
-  inline double getOriginErrY() const { return _originErrY; }
-  inline double getSlopeX() const { return _slopeX; }
-  inline double getSlopeY() const { return _slopeY; }
-  inline double getSlopeErrX() const { return _slopeErrX; }
-  inline double getSlopeErrY() const { return _slopeErrY; }
-  inline double getCovarianceX() const { return _covarianceX; }
-  inline double getCovarianceY() const { return _covarianceY; }
-  inline double getChi2() const { return _chi2; }
-  inline int getIndex() const { return _index; }
+  std::vector<Cluster*> m_clusters;
+  // NOTE: this isn't stored in file, its a place holder for doing DUT analysis
+  std::vector<Cluster*> m_matchedClusters;
 
   friend class Event;
   friend class Processors::TrackMaker;
 };
 
-}
+} // namespace Storage
 
 #endif // TRACK_H

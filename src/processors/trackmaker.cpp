@@ -33,11 +33,11 @@ void TrackMaker::searchPlane(Track* track, std::vector<Track*>& candidates,
   assert(track && "TrackMaker: can't search plane with a void track");
   assert((int)nplane != _maskedPlane && "TrackMaker: ouch");
 
-  const Plane* plane = _event->getPlane(nplane);
+  Plane* plane = _event->getPlane(nplane);
 
   // Search over clusters in this event
   bool matchedCluster = false;
-  for (unsigned int ncluster = 0; ncluster < plane->getNumClusters() + 1; ncluster++)
+  for (unsigned int ncluster = 0; ncluster < plane->numClusters() + 1; ncluster++)
   {
     Track* trialTrack = 0;
 
@@ -45,7 +45,7 @@ void TrackMaker::searchPlane(Track* track, std::vector<Track*>& candidates,
     Cluster* lastCluster = track->getCluster(track->getNumClusters() - 1);
 
     // Try to add the clusters to the track
-    if (ncluster < plane->getNumClusters())
+    if (ncluster < plane->numClusters())
     {
       Cluster* cluster = plane->getCluster(ncluster);
       if (cluster->getTrack()) continue;
@@ -170,18 +170,18 @@ void TrackMaker::generateTracks(Event* event,
   {
     if ((int)nplane == _maskedPlane) continue;
 
-    const Plane* plane = _event->getPlane(nplane);
+    Plane* plane = _event->getPlane(nplane);
 
     // Each seed cluster generates a list of candidates from which the best is kept
-    for (unsigned int ncluster = 0; ncluster < plane->getNumClusters(); ncluster++)
+    for (unsigned int ncluster = 0; ncluster < plane->numClusters(); ncluster++)
     {
       Cluster* cluster = plane->getCluster(ncluster);
       if (cluster->getTrack()) continue;
 
       std::vector<Track*> candidates;
-      Track* seedTrack = new Track();
-      seedTrack->setOrigin(cluster->getPosX(), cluster->getPosY());
-      seedTrack->setOriginErr(cluster->getPosErrX(), cluster->getPosErrY());
+      TrackState state(cluster->getPosX(), cluster->getPosY());
+      state.setErrOffset(cluster->getPosErrX(), cluster->getPosErrY());
+      Track* seedTrack = new Track(state);
       seedTrack->addCluster(cluster);
 
       const unsigned int nextPlane =
@@ -231,9 +231,10 @@ void TrackMaker::generateTracks(Event* event,
       assert(bestCandidate && "TrackMaker: failed to select a candidate");
 
       // Finalize the best candidate
-      _event->addTrack(bestCandidate);
-      for (unsigned int i = 0; i < bestCandidate->getNumClusters(); i++)
-        bestCandidate->getCluster(i)->setTrack(bestCandidate);
+      _event->addTrack(*bestCandidate)->fixClusterAssociation();
+      delete bestCandidate;
+      // for (unsigned int i = 0; i < bestCandidate->getNumClusters(); i++)
+      //   bestCandidate->getCluster(i)->setTrack(bestCandidate);
     }
   }
 }
@@ -365,12 +366,11 @@ void TrackMaker::fitTrackToClusters(Track* track)
   // Get a chi2 normalized to the number of DOF
   const double chi2 = (chi2X + chi2Y) / (2.0 * (double)(npoints - 2));
 
-  track->setOrigin(originX, originY);
-  track->setOriginErr(originErrX, originErrY);
-  track->setSlope(slopeX, slopeY);
-  track->setSlopeErr(slopeErrX, slopeErrY);
+  TrackState state(originX, originY, slopeX, slopeY);
+  state.setErrU(originErrX, slopeErrX, covarianceX);
+  state.setErrV(originErrY, slopeErrY, covarianceY);
+  track->setGlobalState(state);
   track->setChi2(chi2);
-  track->setCovariance(covarianceX, covarianceY);
 
   delete[] dependant;
   delete[] independant;

@@ -35,13 +35,13 @@ void HitInfo::processEvent(const Storage::Event* event)
   for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)
     if (!_eventCuts.at(ncut)->check(event)) return;
 
-  for (unsigned int nplane = 0; nplane < event->getNumPlanes(); nplane++)
+  for (unsigned int nplane = 0; nplane < event->numPlanes(); nplane++)
   {
-    Storage::Plane* plane = event->getPlane(nplane);
+    const Storage::Plane* plane = event->getPlane(nplane);
 
-    for (unsigned int nhit = 0; nhit < plane->getNumHits(); nhit++)
+    for (unsigned int nhit = 0; nhit < plane->numHits(); nhit++)
     {
-      Storage::Hit* hit = plane->getHit(nhit);
+      const Storage::Hit* hit = plane->getHit(nhit);
 
       // Check if the hit passes the cuts
       bool pass = true;

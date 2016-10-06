@@ -1,62 +1,59 @@
-#ifndef HIT_H
-#define HIT_H
+#ifndef PT_HIT_H
+#define PT_HIT_H
 
-#include <string>
+#include <iosfwd>
+
+#include "utils/definitions.h"
 
 namespace Storage {
 
 class Cluster;
-class Plane;
 
- class Hit {
- protected:
-   Hit(); // Hits memory is managed by the event class
-   ~Hit() { ; } // The user can get Hit pointers but can't delete them
-   
- public:
-   friend class Plane;     // Access set plane method
-   friend class Event;     // Access cluster index
-   friend class StorageIO; // Constructor and destructor
+class Hit {
+public:
+  void setAddress(Index col, Index row) { m_col = col, m_row = row; }
+  void setValue(double value) { m_value = value; }
+  void setTiming(double timing) { m_timing = timing; }
+  /** Set global position using the transform from pixel to global coords. */
+  void transformToGlobal(const Transform3D& pixelToGlobal);
 
-   // Inline setters and getters since they will be used frequently
-   inline void setPix(unsigned int x, unsigned int y) { _pixX = x; _pixY = y; }
-   inline void setPos(double x, double y, double z) { _posX = x; _posY = y; _posZ = z; }
-   inline void setValue(double value) { _value = value; }
-   inline void setTiming(double timing) { _timing = timing; }
-   
-   inline unsigned int getPixX() const { return _pixX; }
-   inline unsigned int getPixY() const { return _pixY; }
-   inline double getPosX() const { return _posX; }
-   inline double getPosY() const { return _posY; }
-   inline double getPosZ() const { return _posZ; }
-   inline double getValue() const { return _value; }
-   inline double getTiming() const { return _timing; }
-   
-   void setCluster(Cluster* cluster);
-   
-   // These are in the cpp file so that the classes can be included 
-   Cluster* getCluster() const;
-   Plane* getPlane() const;
+  Index col() const { return m_col; }
+  Index row() const { return m_row; }
+  /** Return the pixel center position in pixel coordinates. */
+  XYPoint posPixel() const { return XYPoint(m_col + 0.5, m_row + 0.5); }
+  const XYZPoint& posGlobal() const { return m_xyz; }
+  double timing() const { return m_timing; }
+  double value() const { return m_value; }
 
-   void print() const;
-   const std::string printStr(int blankWidth=0) const;
+  bool isInCluster() const { return (m_cluster != NULL); }
+  Cluster* cluster() { return m_cluster; }
+  const Cluster* cluster() const { return m_cluster; }
+  void setCluster(Cluster* cluster);
 
- protected:
-   Plane* _plane; // Plane in which the hit is found
-   
- private:
-   unsigned int _pixX; //<! pixel number (local x) of this hit
-   unsigned int _pixY; //<! pixel number (local y) of this hit
-   double _posX; //<! X (global) position of the hit on the sensor
-   double _posY; //<! Y (global) position of the hit on the sensor
-   double _posZ; //<! Z (global) position of the hit on the sensor
-   double _value; // Time over threshold, typically
-   double _timing; // Level 1 accept, typically
-   
-   Cluster* _cluster; // The cluster containing this hit
+  unsigned int getPixX() const { return m_col; }
+  unsigned int getPixY() const { return m_row; }
+  double getPosX() const { return posGlobal().x(); }
+  double getPosY() const { return posGlobal().y(); }
+  double getPosZ() const { return posGlobal().z(); }
+  double getValue() const { return m_value; }
+  double getTiming() const { return m_timing; }
 
- }; // end of class
- 
-} // end of namespace 
+private:
+  Hit(); // Hits memory is managed by the event class
 
-#endif // HIT_H
+  Index m_col, m_row;
+  double m_timing; // Level 1 accept, typically
+  double m_value;  // Time over threshold, typically
+  XYZPoint m_xyz;
+  Cluster* m_cluster; // The cluster containing this hit
+
+  friend class Plane;     // Access set plane method
+  friend class Event;     // Access cluster index
+  friend class StorageIO; // Constructor and destructor
+};
+
+std::ostream& operator<<(std::ostream& os, const Hit& hit);
+
+} // namespace Storage
+
+#endif // PT_HIT_H

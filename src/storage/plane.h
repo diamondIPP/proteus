@@ -1,51 +1,57 @@
 #ifndef PLANE_H
 #define PLANE_H
 
-#include <vector>
+#include <iosfwd>
 #include <string>
+#include <vector>
+
+#include "storage/cluster.h"
+#include "storage/hit.h"
+#include "utils/definitions.h"
 
 namespace Storage {
-  
-  class Hit;
-  class Cluster;
-  
-  /*******************************************************************************
-   * Plane class contains the hits and clusters for one sensor plane as well as
-   * a plane number.
-   */
-  class Plane {
-  protected:
-    Plane(unsigned int planeNum);
-    ~Plane() { ; }
 
-  public:
-    friend class Event;
+/** An readout event for a single sensor.
+ *
+ * This provides access to all hits and clusters on a single sensor.
+ */
+class Plane {
+public:
+  Index planeNumber() const { return m_planeNum; }
 
-    inline unsigned int getPlaneNum() const { return _planeNum; }
-    inline unsigned int getNumHits() const { return _numHits; }
-    inline unsigned int getNumClusters() const { return _numClusters; }
-    inline unsigned int getNumIntercepts() const { return _numIntercepts; }
+  Storage::Hit* newHit();
+  Index numHits() const { return static_cast<Index>(m_hits.size()); }
+  Hit* getHit(Index i) { return &m_hits.at(i); }
+  const Hit* getHit(Index i) const { return &m_hits.at(i); }
 
-    Hit* getHit(unsigned int n) const;
-    Cluster* getCluster(unsigned int n) const;
-    std::pair<double, double> getIntercept(unsigned int n) const;
-    
-    void addIntercept(double posX, double posY);
-    void print() const;
-  
-  protected:
-    void addHit(Hit* hit);
-    void addCluster(Cluster* cluster);
-   
-  private:
-    unsigned int _planeNum;
-    unsigned int _numHits;
-    std::vector<Hit*> _hits;
-    unsigned int _numClusters;
-    std::vector<Cluster*> _clusters;
-    unsigned int _numIntercepts;
-    std::vector< std::pair<double, double> > _intercepts;  
-  };  
-}
+  Storage::Cluster* newCluster();
+  Index numClusters() const { return static_cast<Index>(m_clusters.size()); }
+  Cluster* getCluster(Index i) { return &m_clusters.at(i); }
+  const Cluster* getCluster(Index i) const { return &m_clusters.at(i); }
+
+  void addIntercept(double posX, double posY);
+  Index numIntercepts() const
+  {
+    return static_cast<Index>(m_intercepts.size());
+  }
+  std::pair<double, double> getIntercept(Index i) const
+  {
+    return m_intercepts.at(i);
+  }
+
+  void print(std::ostream& os, const std::string& prefix = std::string()) const;
+
+private:
+  Plane(Index planeNum);
+
+  std::vector<Hit> m_hits;
+  std::vector<Cluster> m_clusters;
+  std::vector<std::pair<double, double>> m_intercepts;
+  Index m_planeNum;
+
+  friend class Event;
+};
+
+} // namespace Storage
 
 #endif // PLANE_H

@@ -649,7 +649,7 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
     if (!_eventCuts.at(ncut)->check(refEvent)) return;
 
   for (unsigned int ntrack = 0; ntrack < refEvent->getNumTracks(); ntrack++) {
-    Storage::Track *track = refEvent->getTrack(ntrack);
+    const Storage::Track *track = refEvent->getTrack(ntrack);
 
     // Check if the track passes the cuts
     bool pass = true;
@@ -684,7 +684,7 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
             break;}*/
 
         pass = true;
-        matches.at(cluster->getPlane()->getPlaneNum()) = cluster;
+        matches.at(cluster->getPlane()->planeNumber()) = cluster;
       }
     }
 
@@ -832,7 +832,7 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
         double max=0;
         const unsigned int Dim=match->getNumHits();
         double timing[Dim]; //*/
-        Storage::Cluster *cluster0;
+        const Storage::Cluster *cluster0;
         const Storage::Hit *hit1;
 
         int fflag=0;
@@ -875,7 +875,7 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
 
           if(hit1->getTiming()==1)fflag=fflag+1;  //asking for get plane
        //   cout<<cluster->getPlane()->getPlaneNum()<<endl;
-          if(cluster->getPlane()->getPlaneNum()==2) cluster0 = track->getCluster(k);
+          if(cluster->getPlane()->planeNumber()==2) cluster0 = track->getCluster(k);
           }
 
 

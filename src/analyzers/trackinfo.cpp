@@ -37,7 +37,7 @@ void TrackInfo::processEvent(const Storage::Event* event)
 
   for (unsigned int ntrack = 0; ntrack < event->getNumTracks(); ntrack++)
   {
-    Storage::Track* track = event->getTrack(ntrack);
+    const Storage::Track* track = event->getTrack(ntrack);
 
     // Check if the track passes the cuts
     bool pass = true;
