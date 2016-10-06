@@ -17,7 +17,6 @@ pitch_col = 250.
 pitch_row = 50.
 thickness = 250.
 x_x0 = 0.005443
-is_digital = true
 
 [sensor_types.ccpd_v4]
 cols = 80
@@ -26,7 +25,6 @@ pitch_col = 250.
 pitch_row = 100.
 thickness = 250.
 x_x0 = 0.005443
-is_digital = true
 
 # sensors in the order as they appear in the data file
 

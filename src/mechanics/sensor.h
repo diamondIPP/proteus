@@ -47,9 +47,8 @@ public:
          Index numRows,
          double pitchCol,
          double pitchRow,
-         bool isDigital,
-         double thickness = 0,
-         double xX0 = 0);
+         double thickness,
+         double xX0);
 
   //
   // properties
@@ -111,8 +110,6 @@ public:
   static bool sort(const Sensor* s1, const Sensor* s2);
 
   // \deprecated For backward compatibility.
-  bool getDigital() const { return m_isDigital; }
-  bool getAlignable() const { return true; }
   unsigned int getNumX() const { return m_numCols; }
   unsigned int getNumY() const { return m_numRows; }
   unsigned int getNumPixels() const { return m_numCols * m_numRows; }
@@ -150,7 +147,6 @@ private:
   double m_xX0;                  // X/X0 (thickness in radiation lengths)
   std::string m_name;
   std::vector<bool> m_noiseMask;
-  bool m_isDigital;
 };
 
 } // namespace Mechanics

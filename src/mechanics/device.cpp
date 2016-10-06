@@ -64,7 +64,7 @@ static void parseSensors(const ConfigParser& config,
           name = "Plane" + std::to_string(sensorCounter);
 
         Mechanics::Sensor sensor(
-            name, cols, rows, pitchX, pitchY, digi, depth, xox0);
+            name, cols, rows, pitchX, pitchY, depth, xox0);
         device.addSensor(sensor);
         alignment.setOffset(sensorCounter, offX, offY, offZ);
         alignment.setRotationAngles(sensorCounter, rotX, rotY, rotZ);
@@ -275,7 +275,6 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
                             type.get<int>("rows"),
                             type.get<double>("pitch_col"),
                             type.get<double>("pitch_row"),
-                            type.get<bool>("is_digital"),
                             type.get<double>("thickness"),
                             type.get<double>("x_x0")));
   }

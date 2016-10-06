@@ -12,7 +12,6 @@ Mechanics::Sensor::Sensor(const std::string& name,
                           Index numRows,
                           double pitchCol,
                           double pitchRow,
-                          bool isDigital,
                           double thickness,
                           double xX0)
     : m_numCols(numCols)
@@ -23,7 +22,6 @@ Mechanics::Sensor::Sensor(const std::string& name,
     , m_xX0(xX0)
     , m_name(name)
     , m_noiseMask(numCols * numRows, false)
-    , m_isDigital(isDigital)
 {
 }
 
