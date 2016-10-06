@@ -5,7 +5,12 @@
 #include <string>
 #include <TDirectory.h>
 
-namespace Storage { class Event; }
+namespace Storage { 
+  class Event;
+  class Track;
+  class Cluster;
+  class Hit; 
+}
 
 namespace Analyzers {
   
@@ -54,6 +59,11 @@ namespace Analyzers {
     
     std::vector<const HitCut*> _hitCuts;
     unsigned int _numHitCuts;
+    
+    bool checkCuts(const Storage::Event* event) const;
+    bool checkCuts(const Storage::Track* track) const;
+    bool checkCuts(const Storage::Cluster* cluster) const;
+    bool checkCuts(const Storage::Hit* hit) const;
     
   }; // end of class
   
