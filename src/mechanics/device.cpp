@@ -208,6 +208,7 @@ Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
   using namespace Utils::Config;
 
   std::string dir = pathDirname(path);
+  DEBUG("config base dir '", dir, "'\n");
 
   if (pathExtension(path) == "toml") {
     auto cfg = readConfig(path);
@@ -215,8 +216,9 @@ Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
 
     auto cfgAlign = cfg.find("alignment");
     if (cfgAlign && cfgAlign->is<std::string>()) {
-      device.m_pathAlignment = cfgAlign->as<std::string>();
-      device.applyAlignment(Alignment::fromFile(device.m_pathAlignment));
+      auto p = pathRebaseIfRelative(cfgAlign->as<std::string>(), dir);
+      device.applyAlignment(Alignment::fromFile(p));
+      device.m_pathAlignment = p;
     } else if (cfgAlign) {
       device.applyAlignment(Alignment::fromConfig(*cfgAlign));
     }
@@ -226,12 +228,15 @@ Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
     if (cfgMask && cfgMask->is<std::vector<std::string>>()) {
       NoiseMask combined;
       auto paths = cfgMask->as<std::vector<std::string>>();
-      for (auto maskPath = paths.begin(); maskPath != paths.end(); ++maskPath)
-        combined.merge(NoiseMask::fromFile(*maskPath));
+      for (auto it = paths.begin(); it != paths.end(); ++it) {
+        auto p = pathRebaseIfRelative(*it, dir);
+        combined.merge(NoiseMask::fromFile(p));
+      }
       device.applyNoiseMask(combined);
     } else if (cfgMask && cfgMask->is<std::string>()) {
-      device.m_pathNoiseMask = cfgMask->as<std::string>();
-      device.applyNoiseMask(NoiseMask::fromFile(device.m_pathNoiseMask));
+      auto p = pathRebaseIfRelative(cfgMask->as<std::string>(), dir);
+      device.applyNoiseMask(NoiseMask::fromFile(p));
+      device.m_pathNoiseMask = p;
     } else if (cfgMask) {
       device.applyNoiseMask(NoiseMask::fromConfig(*cfgMask));
     }
