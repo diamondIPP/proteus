@@ -51,7 +51,9 @@ type = "fei4-si"
 [[sensors]]
 type = "ccpd_v4"
 name = "caribou04"
+is_masked = true
 
 [[sensors]]
 type = "ccpd_v4"
 name = "caribou06"
+is_masked = true
