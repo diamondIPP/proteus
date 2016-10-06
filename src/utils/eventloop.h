@@ -5,15 +5,10 @@
 #include <memory>
 #include <vector>
 
-/**
- * \author Moritz Kiehn <msmk@cern.ch>
- * \created 2016-08
- */
-
-#include "progressbar.h"
-#include "statistics.h"
 #include "analyzers/analyzer.h"
 #include "processors/processor.h"
+#include "utils/progressbar.h"
+#include "utils/statistics.h"
 
 namespace Storage {
 class Event;
@@ -37,8 +32,8 @@ public:
             uint64_t numEvents = 0);
   ~EventLoop();
 
-  void addProcessor(std::unique_ptr<Processors::Processor> processor);
-  void addAnalyzer(std::unique_ptr<Analyzers::Analyzer> analyzer);
+  void addProcessor(std::shared_ptr<Processors::Processor> processor);
+  void addAnalyzer(std::shared_ptr<Analyzers::Analyzer> analyzer);
   void run();
 
   std::unique_ptr<Storage::Event> readStartEvent();
@@ -51,8 +46,8 @@ private:
   uint64_t m_startEvent, m_endEvent;
   ProgressBar m_progress;
   EventStatistics m_stat;
-  std::vector<std::unique_ptr<Processors::Processor>> m_processors;
-  std::vector<std::unique_ptr<Analyzers::Analyzer>> m_analyzers;
+  std::vector<std::shared_ptr<Processors::Processor>> m_processors;
+  std::vector<std::shared_ptr<Analyzers::Analyzer>> m_analyzers;
 };
 
 } // namespace Utils

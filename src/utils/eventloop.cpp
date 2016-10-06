@@ -37,13 +37,13 @@ Utils::EventLoop::EventLoop(Storage::StorageIO* storage,
 Utils::EventLoop::~EventLoop() {}
 
 void Utils::EventLoop::addProcessor(
-    std::unique_ptr<Processors::Processor> processor)
+    std::shared_ptr<Processors::Processor> processor)
 {
   m_processors.emplace_back(std::move(processor));
 }
 
 void Utils::EventLoop::addAnalyzer(
-    std::unique_ptr<Analyzers::Analyzer> analyzer)
+    std::shared_ptr<Analyzers::Analyzer> analyzer)
 {
   m_analyzers.emplace_back(std::move(analyzer));
 }
