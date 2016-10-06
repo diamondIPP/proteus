@@ -12,6 +12,32 @@
 
 namespace Processors {
 
+ClusterMaker::ClusterMaker(int maxSeparationCol,
+                           int maxSeparationRow,
+                           double maxSeparationColRow)
+    : m_maxSeparationCol(maxSeparationCol)
+    , m_maxSeparationRow(maxSeparationRow)
+    , m_maxSeparationColRowSquared(maxSeparationColRow * maxSeparationColRow)
+{
+  if (maxSeparationCol < 0)
+    throw std::runtime_error(
+        "ClusterMaker: maximum column distance must be positive");
+  if (maxSeparationRow < 0)
+    throw std::runtime_error(
+        "ClusterMaker: maximum row distance must be positive");
+  if (maxSeparationColRow < 0)
+    throw std::runtime_error(
+        "ClusterMaker: maximum column/row distance must be positive");
+}
+
+std::string ClusterMaker::name() const { return "ClusterMaker"; }
+
+void ClusterMaker::process(Storage::Event& event) const
+{
+  for (unsigned int i = 0; i < event.getNumPlanes(); ++i)
+    generateClusters(&event, i);
+}
+
 void ClusterMaker::addNeighbours(const Storage::Hit* hit,
                                  Storage::Plane* plane,
                                  Storage::Cluster* cluster) const
@@ -26,17 +52,17 @@ void ClusterMaker::addNeighbours(const Storage::Hit* hit,
       continue;
 
     // If a maximum separation has been defined in real coordinates, check now
-    if (_maxSeparation > 0) {
+    if (m_maxSeparationColRowSquared > 0) {
       const double distX = compare->getPosX() - hit->getPosX();
       const double distY = compare->getPosY() - hit->getPosY();
-      const double dist = sqrt(pow(distX, 2) + pow(distY, 2));
-      if (dist > _maxSeparation)
+      const double dist = pow(distX, 2) + pow(distY, 2);
+      if (dist > m_maxSeparationColRowSquared)
         continue;
     } else {
       //   std::cout<< _maxSeparationX<<std::endl;
       const int distX = compare->getPixX() - hit->getPixX();
       const int distY = compare->getPixY() - hit->getPixY();
-      if (fabs(distX) > _maxSeparationX || fabs(distY) > _maxSeparationY)
+      if (fabs(distX) > m_maxSeparationCol || fabs(distY) > m_maxSeparationRow)
         continue;
     }
 
@@ -144,26 +170,5 @@ void ClusterMaker::calculateCluster(Storage::Cluster* cluster) const
   cluster->setPosPixel(cogX, cogY);
   cluster->setErrPixel(pixErrX, pixErrY);
 }
-
-ClusterMaker::ClusterMaker(unsigned int maxSeparationX,
-                           unsigned int maxSeparationY,
-                           double maxSeparation)
-    : _maxSeparationX(maxSeparationX)
-    , _maxSeparationY(maxSeparationY)
-    , _maxSeparation(maxSeparation)
-{
-  if (_maxSeparation < 0)
-    throw "ClusterMaker: max separation must be positive";
-}
-
-std::string ClusterMaker::name() const { return "ClusterMaker"; }
-
-void ClusterMaker::process(Storage::Event& event) const
-{
-  for (unsigned int i = 0; i < event.getNumPlanes(); ++i)
-    generateClusters(&event, i);
-}
-
-void ClusterMaker::finalize() {}
 
 } // namespace Processors
