@@ -3,10 +3,13 @@
  * \created 2016-08
  */
 
+#include "eventloop.h"
+
 #include <cassert>
 #include <chrono>
+#include <memory>
 
-#include "eventloop.h"
+#include "analyzers/singleanalyzer.h"
 #include "storage/event.h"
 #include "storage/storageio.h"
 #include "utils/logger.h"
@@ -46,6 +49,26 @@ void Utils::EventLoop::addAnalyzer(
     std::shared_ptr<Analyzers::Analyzer> analyzer)
 {
   m_analyzers.emplace_back(std::move(analyzer));
+}
+
+/** Wrapper for SingleAnalyzer to conform to new interface. */
+class SingleAnalyzerShim : public Analyzers::Analyzer {
+public:
+  SingleAnalyzerShim(Analyzers::SingleAnalyzer* analyzer)
+      : m_ana(analyzer)
+  {
+  }
+  std::string name() const { return m_ana->name(); };
+  void analyze(const Storage::Event& event) { m_ana->processEvent(&event); };
+  void finalize() { m_ana->postProcessing(); };
+
+private:
+  std::unique_ptr<Analyzers::SingleAnalyzer> m_ana;
+};
+
+void Utils::EventLoop::addAnalyzer(Analyzers::SingleAnalyzer* analyzer)
+{
+  m_analyzers.emplace_back(std::make_shared<SingleAnalyzerShim>(analyzer));
 }
 
 void Utils::EventLoop::run()
