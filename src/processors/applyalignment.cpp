@@ -16,36 +16,32 @@ std::string Processors::ApplyAlignment::name() const
   return "ApplyAlignment";
 }
 
-void Processors::ApplyAlignment::process(uint64_t /* unused */,
-                                         Storage::Event& event)
+void Processors::ApplyAlignment::process(Storage::Event& event) const
 {
   applyAlignment(&event, &m_device);
 }
-
-void Processors::ApplyAlignment::finalize() {}
 
 void Processors::applyAlignment(Storage::Event* event,
                                 const Mechanics::Device* device)
 {
   assert(event && device &&
-         "Processors: can't apply alignmet with null event and/or device");
+         "Processors: can't apply alignment with null event and/or device");
   assert(event->numPlanes() == device->getNumSensors() &&
          "Processors: plane / sensor mismatch");
 
-  for (unsigned int nplane = 0; nplane < event->numPlanes(); nplane++) {
-    Storage::Plane* plane = event->getPlane(nplane);
-    const Mechanics::Sensor* sensor = device->getSensor(nplane);
+  for (Index iplane = 0; iplane < event->numPlanes(); iplane++) {
+    Storage::Plane* plane = event->getPlane(iplane);
+    const Mechanics::Sensor* sensor = device->getSensor(iplane);
     const Transform3D pixelToGlobal = sensor->constructPixelToGlobal();
 
     for (unsigned int ihit = 0; ihit < plane->numHits(); ihit++)
       plane->getHit(ihit)->transformToGlobal(pixelToGlobal);
-    for (unsigned int iclu = 0; iclu < plane->numClusters(); iclu++)
-      plane->getCluster(iclu)->transformToGlobal(pixelToGlobal);
+    for (unsigned int icluster = 0; icluster < plane->numClusters(); icluster++)
+      plane->getCluster(icluster)->transformToGlobal(pixelToGlobal);
   }
 
   // Apply alignment to tracks
-  for (unsigned int ntrack = 0; ntrack < event->numTracks(); ntrack++) {
-    Storage::Track* track = event->getTrack(ntrack);
-    Processors::TrackMaker::fitTrackToClusters(track);
+  for (unsigned int itrack = 0; itrack < event->numTracks(); itrack++) {
+    Processors::TrackMaker::fitTrackToClusters(event->getTrack(itrack));
   }
 }

@@ -1,7 +1,7 @@
 #ifndef PT_APPLYALIGNMENT_H
 #define PT_APPLYALIGNMENT_H
 
-#include "processor.h"
+#include "processors/processor.h"
 
 namespace Mechanics {
 class Device;
@@ -16,8 +16,7 @@ public:
   ApplyAlignment(const Mechanics::Device& device);
 
   std::string name() const;
-  void process(uint64_t eventId, Storage::Event& event);
-  void finalize();
+  void process(Storage::Event& event) const;
 
 private:
   const Mechanics::Device& m_device;
