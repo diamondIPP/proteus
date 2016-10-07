@@ -130,7 +130,7 @@ Residuals::Residuals(const Mechanics::Device* refDevice,
                      double binsPerPix,
                      unsigned int binsY) :
   // Base class is initialized here and manages directory / device
-  SingleAnalyzer(refDevice, dir, suffix)
+  SingleAnalyzer(refDevice, dir, suffix, "Residuals")
 {
   assert(refDevice && "Analyzer: can't initialize with null device");
 

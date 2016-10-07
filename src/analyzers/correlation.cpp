@@ -176,7 +176,7 @@ Correlation::Correlation(const Mechanics::Device* device,
                          TDirectory* dir,
                          const char* suffix) :
   // Base class is initialized here and manages directory / device
-  SingleAnalyzer(device, dir, suffix)
+  SingleAnalyzer(device, dir, suffix, "Correlation")
 {
   assert(device && "Analyzer: can't initialize with null device");
 

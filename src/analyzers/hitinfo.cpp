@@ -94,7 +94,7 @@ HitInfo::HitInfo(const Mechanics::Device* device,
                  unsigned int lvl1Bins,
                  unsigned int totBins) :
   // Base class is initialized here and manages directory / device
-  SingleAnalyzer(device, dir, suffix),
+  SingleAnalyzer(device, dir, suffix, "HitInfo"),
   _lvl1Bins(lvl1Bins),
   _totBins(totBins)
 {
