@@ -1,19 +1,14 @@
 #include "trackmaker.h"
 
 #include <cassert>
-#include <vector>
-#include <math.h>
-#include <iostream>
 #include <float.h>
+#include <iostream>
+#include <math.h>
+#include <vector>
 
-#include "../storage/event.h"
-#include "../storage/plane.h"
-#include "../storage/track.h"
-#include "../storage/cluster.h"
-#include "../mechanics/device.h"
-#include "../mechanics/sensor.h"
-#include "../processors/processors.h"
-#include "utils/logger.h"
+#include "mechanics/device.h"
+#include "processors/processors.h"
+#include "storage/event.h"
 
 #ifndef VERBOSE
 #define VERBOSE 1
@@ -24,12 +19,11 @@ using std::endl;
 
 using namespace Storage;
 
-PT_SETUP_GLOBAL_LOGGER
-
 namespace Processors {
 
-void TrackMaker::searchPlane(Track* track, std::vector<Track*>& candidates,
-                             unsigned int nplane)
+void Processors::TrackMaker::searchPlane(Track* track,
+                                         std::vector<Track*>& candidates,
+                                         unsigned int nplane) const
 {
   assert(nplane < _event->getNumPlanes() &&
          "TrackMaker: adding clusters in plane outside event range");
@@ -40,47 +34,49 @@ void TrackMaker::searchPlane(Track* track, std::vector<Track*>& candidates,
 
   // Search over clusters in this event
   bool matchedCluster = false;
-  for (unsigned int ncluster = 0; ncluster < plane->numClusters() + 1; ncluster++)
-  {
+  for (unsigned int ncluster = 0; ncluster < plane->numClusters() + 1;
+       ncluster++) {
     Track* trialTrack = 0;
 
-    assert(track->getNumClusters() && "TrackMaker: the track should have been seeded");
+    assert(track->getNumClusters() &&
+           "TrackMaker: the track should have been seeded");
     Cluster* lastCluster = track->getCluster(track->getNumClusters() - 1);
 
     // Try to add the clusters to the track
-    if (ncluster < plane->numClusters())
-    {
+    if (ncluster < plane->numClusters()) {
       Cluster* cluster = plane->getCluster(ncluster);
-      if (cluster->getTrack()) continue;
+      if (cluster->getTrack())
+        continue;
 
-      const double errX = sqrt(pow(cluster->getPosErrX(), 2) + pow(lastCluster->getPosErrX(), 2));
-      const double errY = sqrt(pow(cluster->getPosErrY(), 2) + pow(lastCluster->getPosErrY(), 2));
+      const double errX = sqrt(pow(cluster->getPosErrX(), 2) +
+                               pow(lastCluster->getPosErrX(), 2));
+      const double errY = sqrt(pow(cluster->getPosErrY(), 2) +
+                               pow(lastCluster->getPosErrY(), 2));
 
       // The real space distance between this cluster and the last
       const double distX = cluster->getPosX() - lastCluster->getPosX();
       const double distY = cluster->getPosY() - lastCluster->getPosY();
       const double distZ = cluster->getPosZ() - lastCluster->getPosZ();
 
-      // Adjust the distance in X and Y to account for the slope, and normalize in sigmas
+      // Adjust the distance in X and Y to account for the slope, and normalize
+      // in sigmas
       const double sigDistX = (distX - _beamAngleX * distZ) / errX;
       const double sigDistY = (distY - _beamAngleY * distZ) / errY;
 
       const double dist = sqrt(pow(sigDistX, 2) + pow(sigDistY, 2));
 
-      if (dist > _maxClusterDist) continue;
+      if (dist > _maxClusterDist)
+        continue;
       // Found a good cluster, bifurcate the track and add the cluster
       matchedCluster = true;
       trialTrack = new Track(*track);
       trialTrack->addCluster(cluster);
     }
     // There were no more clusters in the track
-    else if (!matchedCluster)
-    {
+    else if (!matchedCluster) {
       // No good clusters were found, use this track on the next plane
       trialTrack = track;
-    }
-    else
-    {
+    } else {
       // At least one good cluster has been found
       delete track;
       continue; // This iteration of the loop isn't necessary
@@ -96,42 +92,36 @@ void TrackMaker::searchPlane(Track* track, std::vector<Track*>& candidates,
     const int requiredClusters = _minClusters - trialTrack->getNumClusters();
 
     // Check if it makes sense to continue building this track
-    if (planesRemaining > 0 && requiredClusters <= planesRemaining)
-    {
+    if (planesRemaining > 0 && requiredClusters <= planesRemaining) {
       const unsigned int nextPlane =
           (_maskedPlane == (int)nplane + 1) ? nplane + 2 : nplane + 1;
       // This call will delete the trial track when it is done with it
       searchPlane(trialTrack, candidates, nextPlane);
-    }
-    else if (trialTrack->getNumClusters() < _minClusters)
-    {
+    } else if (trialTrack->getNumClusters() < _minClusters) {
       // This track can't continue and doesn't meet the cluster requirement
       delete trialTrack;
-    }
-    else
-    {
+    } else {
       fitTrackToClusters(trialTrack);
       candidates.push_back(trialTrack);
     }
   }
 }
 
-
-void TrackMaker::generateTracks(Event* event,
-                                double beamAngleX,
-                                double beamAngleY,
-                                int maskedPlane)
+void Processors::TrackMaker::generateTracks(Event* event,
+                                            double beamAngleX,
+                                            double beamAngleY,
+                                            int maskedPlane) const
 {
   if (event->getNumPlanes() < 3)
-    throw "TrackMaker: can't generate tracks from event with less than 3 planes";
+    throw "TrackMaker: can't generate tracks from event with less than 3 "
+          "planes";
   if (event->getNumTracks() > 0)
     throw "TrackMaker: tracks already exist for this event";
 
   _beamAngleX = beamAngleX;
   _beamAngleY = beamAngleY;
 
-  if (maskedPlane >= (int)event->getNumPlanes() && VERBOSE)
-  {
+  if (maskedPlane >= (int)event->getNumPlanes() && VERBOSE) {
     cout << "WARNING :: TrackMaker: masked plane outside range";
     maskedPlane = -1;
   }
@@ -148,18 +138,16 @@ void TrackMaker::generateTracks(Event* event,
 
   const unsigned int maxSeedPlanes = numPlanes - _minClusters + 1;
   unsigned int numSeedPlanes = 0;
-  if (_numSeedPlanes > maxSeedPlanes)
-  {
-    numSeedPlanes = maxSeedPlanes; // Requested number of seed planes exceeds max
-    if (VERBOSE) cout << "WARNING :: TrackMaker: too many seed planes, adjusting" << endl;
-  }
-  else
-  {
+  if (_numSeedPlanes > maxSeedPlanes) {
+    numSeedPlanes =
+        maxSeedPlanes; // Requested number of seed planes exceeds max
+    if (VERBOSE)
+      cout << "WARNING :: TrackMaker: too many seed planes, adjusting" << endl;
+  } else {
     numSeedPlanes = _numSeedPlanes; // Requested seed planes is OK
   }
 
-  if (_maskedPlane >= 0 && _maskedPlane < (int)numSeedPlanes)
-  {
+  if (_maskedPlane >= 0 && _maskedPlane < (int)numSeedPlanes) {
     numSeedPlanes += 1; // Masking one of the seed planes, add one
   }
 
@@ -169,17 +157,19 @@ void TrackMaker::generateTracks(Event* event,
   assert(numSeedPlanes < _event->getNumPlanes() &&
          "TrackMaker: num seed planes is outside the plane range");
 
-  for (unsigned int nplane = 0; nplane < numSeedPlanes; nplane++)
-  {
-    if ((int)nplane == _maskedPlane) continue;
+  for (unsigned int nplane = 0; nplane < numSeedPlanes; nplane++) {
+    if ((int)nplane == _maskedPlane)
+      continue;
 
     Plane* plane = _event->getPlane(nplane);
 
-    // Each seed cluster generates a list of candidates from which the best is kept
-    for (unsigned int ncluster = 0; ncluster < plane->numClusters(); ncluster++)
-    {
+    // Each seed cluster generates a list of candidates from which the best is
+    // kept
+    for (unsigned int ncluster = 0; ncluster < plane->numClusters();
+         ncluster++) {
       Cluster* cluster = plane->getCluster(ncluster);
-      if (cluster->getTrack()) continue;
+      if (cluster->getTrack())
+        continue;
 
       std::vector<Track*> candidates;
       TrackState state(cluster->getPosX(), cluster->getPosY());
@@ -192,42 +182,40 @@ void TrackMaker::generateTracks(Event* event,
       searchPlane(seedTrack, candidates, nextPlane);
 
       const unsigned int numCandidates = candidates.size();
-      if (!numCandidates) continue;
+      if (!numCandidates)
+        continue;
 
       Track* bestCandidate = 0;
 
       // If there is only one candidate, use it
-      if (numCandidates == 1)
-      {
+      if (numCandidates == 1) {
         bestCandidate = candidates.at(0);
       }
       // Otherwise find the best candidate for this seed
-      else
-      {
+      else {
         // Find the longest candidate size
         unsigned int mostClusters = 0;
         std::vector<Track*>::iterator it;
-        for (it = candidates.begin(); it != candidates.end(); ++it)
-        {
+        for (it = candidates.begin(); it != candidates.end(); ++it) {
           Track* candidate = *(it);
           if (candidate->getNumClusters() > mostClusters)
             mostClusters = candidate->getNumClusters();
         }
 
         // Find the best chi2 amongst tracks which match the most clusters
-        for (it = candidates.begin(); it != candidates.end(); ++it)
-        {
+        for (it = candidates.begin(); it != candidates.end(); ++it) {
           Track* candidate = *(it);
-          if (candidate->getNumClusters() < mostClusters) continue;
+          if (candidate->getNumClusters() < mostClusters)
+            continue;
           if (!bestCandidate || candidate->getChi2() > bestCandidate->getChi2())
             bestCandidate = candidate;
         }
 
         // Delete the rest of the candidates
-        for (it = candidates.begin(); it != candidates.end(); ++it)
-        {
+        for (it = candidates.begin(); it != candidates.end(); ++it) {
           Track* candidate = *(it);
-          if (candidate != bestCandidate) delete candidate;
+          if (candidate != bestCandidate)
+            delete candidate;
         }
       }
 
@@ -242,14 +230,20 @@ void TrackMaker::generateTracks(Event* event,
   }
 }
 
-int TrackMaker::linearFit(const unsigned int npoints, const double* independant,
-                          const double* dependant, const double* uncertainty,
-                          double& slope, double& slopeErr, double& intercept,
-                          double& interceptErr, double& chi2, double& covariance)
+int Processors::TrackMaker::linearFit(const unsigned int npoints,
+                                      const double* independant,
+                                      const double* dependant,
+                                      const double* uncertainty,
+                                      double& slope,
+                                      double& slopeErr,
+                                      double& intercept,
+                                      double& interceptErr,
+                                      double& chi2,
+                                      double& covariance)
 {
-  if (npoints < 3)
-  {
-    if (VERBOSE) cout << "WARN: can't fit a line to less than 3 points";
+  if (npoints < 3) {
+    if (VERBOSE)
+      cout << "WARN: can't fit a line to less than 3 points";
     return -1;
   }
 
@@ -263,14 +257,15 @@ int TrackMaker::linearFit(const unsigned int npoints, const double* independant,
   covariance = 0;
 
   // Check the uncertainties for problems
-  for (unsigned int i = 0; i < npoints; i++)
-  {
+  for (unsigned int i = 0; i < npoints; i++) {
     assert(uncertainty[i] >= 0 &&
            "Processors: negative uncertainty for fit point");
 
     // Check if no uncertainty is specified (zeros are exact in binary)
-    if (uncertainty[i] == 0.0) err[i] = 1.0;
-    else err[i] = uncertainty[i];
+    if (uncertainty[i] == 0.0)
+      err[i] = 1.0;
+    else
+      err[i] = uncertainty[i];
   }
 
   // Regression variables
@@ -283,9 +278,9 @@ int TrackMaker::linearFit(const unsigned int npoints, const double* independant,
   for (unsigned int i = 0; i < npoints; i++) {
     const double wt = 1.0 / pow(uncertainty[i], 2);
     // Check for divison by 0
-    if (!(wt <= DBL_MAX && wt >= -DBL_MAX))
-    {
-      if (VERBOSE) cout << "WARN: regresssion divided by 0 uncertainty" << endl;
+    if (!(wt <= DBL_MAX && wt >= -DBL_MAX)) {
+      if (VERBOSE)
+        cout << "WARN: regresssion divided by 0 uncertainty" << endl;
       return -1;
     }
     ss += wt;
@@ -311,7 +306,8 @@ int TrackMaker::linearFit(const unsigned int npoints, const double* independant,
 
   for (unsigned int i = 0; i < npoints; i++)
     chi2 += pow((dependant[i] - intercept - slope * independant[i]) /
-                uncertainty[i], 2);
+                    uncertainty[i],
+                2);
 
   covariance = -sx / (ss * st2);
 
@@ -320,7 +316,7 @@ int TrackMaker::linearFit(const unsigned int npoints, const double* independant,
   return 0;
 }
 
-void TrackMaker::fitTrackToClusters(Track* track)
+void Processors::TrackMaker::fitTrackToClusters(Track* track)
 {
   const unsigned int npoints = track->getNumClusters();
   double* dependant = new double[npoints];
@@ -335,18 +331,13 @@ void TrackMaker::fitTrackToClusters(Track* track)
   double chi2X = 0, chi2Y = 0;
   double covarianceX = 0, covarianceY = 0;
 
-  for (unsigned int axis = 0; axis < 2; axis++)
-  {
+  for (unsigned int axis = 0; axis < 2; axis++) {
     // Fill the arrays with the points dependint on the loop (x or y axis)
-    for (unsigned int npoint = 0; npoint < npoints; npoint++)
-    {
-      if (!axis)
-      {
+    for (unsigned int npoint = 0; npoint < npoints; npoint++) {
+      if (!axis) {
         dependant[npoint] = track->getCluster(npoint)->getPosX();
         uncertainty[npoint] = track->getCluster(npoint)->getPosErrX();
-      }
-      else
-      {
+      } else {
         dependant[npoint] = track->getCluster(npoint)->getPosY();
         uncertainty[npoint] = track->getCluster(npoint)->getPosErrY();
       }
@@ -354,15 +345,28 @@ void TrackMaker::fitTrackToClusters(Track* track)
     }
 
     // Perform the regression
-    if (!axis)
-    {
-      linearFit(npoints, independant, dependant, uncertainty,
-                slopeX, slopeErrX, originX, originErrX, chi2X, covarianceX);
-    }
-    else
-    {
-      linearFit(npoints, independant, dependant, uncertainty,
-                slopeY, slopeErrY, originY, originErrY, chi2Y, covarianceY);
+    if (!axis) {
+      linearFit(npoints,
+                independant,
+                dependant,
+                uncertainty,
+                slopeX,
+                slopeErrX,
+                originX,
+                originErrX,
+                chi2X,
+                covarianceX);
+    } else {
+      linearFit(npoints,
+                independant,
+                dependant,
+                uncertainty,
+                slopeY,
+                slopeErrY,
+                originY,
+                originErrY,
+                chi2Y,
+                covarianceY);
     }
   }
 
@@ -377,15 +381,16 @@ void TrackMaker::fitTrackToClusters(Track* track)
   delete[] uncertainty;
 }
 
-TrackMaker::TrackMaker(double maxClusterDist,
-                       unsigned int numSeedPlanes,
-                       unsigned int minClusters, bool calcIntercepts) :
-  _maxClusterDist(maxClusterDist),
-  _numSeedPlanes(numSeedPlanes),
-  _minClusters(minClusters),
-  _event(0),
-  _maskedPlane(-1),
-  _calcIntercepts(calcIntercepts)
+Processors::TrackMaker::TrackMaker(double maxClusterDist,
+                                   unsigned int numSeedPlanes,
+                                   unsigned int minClusters,
+                                   bool calcIntercepts)
+    : _maxClusterDist(maxClusterDist)
+    , _numSeedPlanes(numSeedPlanes)
+    , _minClusters(minClusters)
+    , _event(0)
+    , _maskedPlane(-1)
+    , _calcIntercepts(calcIntercepts)
 {
   if (minClusters < 3)
     throw "TrackMaker: min clusters needs to be at least 3";
@@ -393,7 +398,9 @@ TrackMaker::TrackMaker(double maxClusterDist,
     throw "TrackMaker: needs at least one seed plane";
 }
 
-std::string TrackMaker::name() const { return "TrackMaker"; }
-void TrackMaker::process(Storage::Event& event) const {}
+std::string Processors::TrackMaker::name() const { return "TrackMaker"; }
 
+void Processors::TrackMaker::process(Storage::Event& event) const
+{
+  generateTracks(&event);
 }

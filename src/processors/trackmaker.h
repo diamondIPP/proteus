@@ -1,5 +1,5 @@
-#ifndef TRACKMAKER_H
-#define TRACKMAKER_H
+#ifndef PT_TRACKMAKER_H
+#define PT_TRACKMAKER_H
 
 #include <vector>
 
@@ -22,16 +22,16 @@ private:
   const double _maxClusterDist;
   const unsigned int _numSeedPlanes;
   const unsigned int _minClusters;
-  double _beamAngleX;
-  double _beamAngleY;
+  mutable double _beamAngleX;
+  mutable double _beamAngleY;
 
-  Storage::Event* _event;
-  int _maskedPlane;
+  mutable Storage::Event* _event;
+  mutable int _maskedPlane;
   bool _calcIntercepts;
 
   void searchPlane(Storage::Track* track,
                    std::vector<Storage::Track*>& candidates,
-                   unsigned int nplane);
+                   unsigned int nplane) const;
 
 public:
   TrackMaker(double maxClusterDist,
@@ -40,7 +40,7 @@ public:
              bool calcIntercepts = false);
 
   void generateTracks(Storage::Event* event, double beamAngleX = 0,
-                      double beamAngleY = 0, int maskedPlane = -1);
+                      double beamAngleY = 0, int maskedPlane = -1) const;
 
   static int linearFit(const unsigned int npoints, const double* independant,
                        const double* dependant, const double* uncertainty,
@@ -56,4 +56,4 @@ public:
 
 }  // namespace Processors
 
-#endif  // TRACKMAKER_H
+#endif  // PT_TRACKMAKER_H
