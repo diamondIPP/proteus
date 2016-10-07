@@ -54,8 +54,8 @@ void Utils::EventLoop::addAnalyzer(
 /** Wrapper for SingleAnalyzer to conform to new interface. */
 class SingleAnalyzerShim : public Analyzers::Analyzer {
 public:
-  SingleAnalyzerShim(Analyzers::SingleAnalyzer* analyzer)
-      : m_ana(analyzer)
+  SingleAnalyzerShim(std::shared_ptr<Analyzers::SingleAnalyzer>&& analyzer)
+      : m_ana(std::move(analyzer))
   {
   }
   std::string name() const { return m_ana->name(); };
@@ -63,12 +63,14 @@ public:
   void finalize() { m_ana->postProcessing(); };
 
 private:
-  std::unique_ptr<Analyzers::SingleAnalyzer> m_ana;
+  std::shared_ptr<Analyzers::SingleAnalyzer> m_ana;
 };
 
-void Utils::EventLoop::addAnalyzer(Analyzers::SingleAnalyzer* analyzer)
+void Utils::EventLoop::addAnalyzer(
+    std::shared_ptr<Analyzers::SingleAnalyzer> analyzer)
 {
-  m_analyzers.emplace_back(std::make_shared<SingleAnalyzerShim>(analyzer));
+  m_analyzers.emplace_back(
+      std::make_shared<SingleAnalyzerShim>(std::move(analyzer)));
 }
 
 void Utils::EventLoop::run()
