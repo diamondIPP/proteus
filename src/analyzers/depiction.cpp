@@ -21,8 +21,6 @@
 // Some generic processors to calcualte typical event related things
 #include "../processors/eventdepictor.h"
 #include "../processors/processors.h"
-// This header defines all the cuts
-#include "cuts.h"
 
 namespace Analyzers {
 
