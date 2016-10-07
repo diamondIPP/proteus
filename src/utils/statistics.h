@@ -33,15 +33,16 @@ public:
   double avg() const { return m_avg; }
   double var() const
   {
-    return (1 < m_entries) ? (m_m2 / (m_entries - 1))
-                           : std::numeric_limits<double>::quiet_NaN();
+    if (m_entries < 2)
+      return std::numeric_limits<double>::quiet_NaN();
+    return m_m2 / (m_entries - 1);
   }
   double std() const { return std::sqrt(var()); }
   T min() const { return m_min; }
   T max() const { return m_max; }
 
 private:
-  size_t m_entries;
+  uint64_t m_entries;
   double m_avg, m_m2;
   T m_min, m_max;
 };
