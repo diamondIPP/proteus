@@ -663,9 +663,8 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
       Storage::Cluster *cluster = track->getMatchedCluster(nmatch);
 
       // Check if this cluster passes the cuts
-      // TODO: bane -- why is this cut ignored?
-      //if (!checkCuts(cluster))
-      //  continue;
+      if (!checkCuts(cluster))
+        continue;
 
         //Bilbao@cern.ch:Cut for cluster size (also in DUTresiduals to affect all eff.root results)
         /*if(cluster->getNumHits()==1){
