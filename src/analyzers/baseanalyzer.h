@@ -48,6 +48,12 @@ namespace Analyzers {
     bool _postProcessed;
     std::string _analyzerName;
     
+    bool checkCuts(const Storage::Event* event) const;
+    bool checkCuts(const Storage::Track* track) const;
+    bool checkCuts(const Storage::Cluster* cluster) const;
+    bool checkCuts(const Storage::Hit* hit) const;
+
+  private:
     std::vector<const EventCut*> _eventCuts;
     unsigned int _numEventCuts;    
 
@@ -59,12 +65,7 @@ namespace Analyzers {
     
     std::vector<const HitCut*> _hitCuts;
     unsigned int _numHitCuts;
-    
-    bool checkCuts(const Storage::Event* event) const;
-    bool checkCuts(const Storage::Track* track) const;
-    bool checkCuts(const Storage::Cluster* cluster) const;
-    bool checkCuts(const Storage::Hit* hit) const;
-    
+
   }; // end of class
   
 } // end of namespace
