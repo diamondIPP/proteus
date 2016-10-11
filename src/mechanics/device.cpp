@@ -32,6 +32,8 @@ static void parseSensors(const ConfigParser& config,
                          Mechanics::Device& device,
                          Mechanics::Alignment& alignment)
 {
+  using Mechanics::Sensor;
+
   double offX = 0;
   double offY = 0;
   double offZ = 0;
@@ -63,8 +65,9 @@ static void parseSensors(const ConfigParser& config,
         if (name.empty())
           name = "Plane" + std::to_string(sensorCounter);
 
-        Mechanics::Sensor sensor(
-            name, cols, rows, pitchX, pitchY, depth, xox0);
+        Sensor::Measurement m = (digi ? Sensor::Measurement::PIXEL_BINARY
+                                      : Sensor::Measurement::PIXEL_TOT);
+        Sensor sensor(name, m, cols, rows, pitchX, pitchY, depth, xox0);
         device.addSensor(sensor);
         alignment.setOffset(sensorCounter, offX, offY, offZ);
         alignment.setRotationAngles(sensorCounter, rotX, rotY, rotZ);
@@ -270,7 +273,10 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
                                "' does not exist");
     }
     auto type = types[typeName];
+    auto measurement =
+        Sensor::measurementFromName(type.get<std::string>("measurement"));
     device.addSensor(Sensor(name,
+                            measurement,
                             type.get<int>("cols"),
                             type.get<int>("rows"),
                             type.get<double>("pitch_col"),
