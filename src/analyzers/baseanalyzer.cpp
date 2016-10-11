@@ -84,39 +84,30 @@ const std::string Analyzers::BaseAnalyzer::printStr() const {
  return out.str();
 }
 
-bool Analyzers::BaseAnalyzer::checkCuts(const Storage::Event* event) const {
-  for (auto cut = _eventCuts.begin(); cut != _eventCuts.end(); ++cut) {
-    if (!(*cut)->check(event)) {
+template<class TO, class TC>
+bool checkCuts(const TO *obj, const TC& cuts) {
+  for (auto cut = cuts.begin(); cut != cuts.end(); ++cut) {
+    if (!(*cut)->check(obj)) {
       return false;
     }
   }
   return true;
+}
+
+bool Analyzers::BaseAnalyzer::checkCuts(const Storage::Event* event) const {
+  return ::checkCuts(event, _eventCuts);
 }
 
 bool Analyzers::BaseAnalyzer::checkCuts(const Storage::Track* track) const {
-  for (auto cut = _trackCuts.begin(); cut != _trackCuts.end(); ++cut) {
-    if (!(*cut)->check(track)) {
-      return false;
-    }
-  }
-  return true;
+  return ::checkCuts(track, _trackCuts);
 }
 
 bool Analyzers::BaseAnalyzer::checkCuts(const Storage::Cluster* cluster) const {
-  for (auto cut = _clusterCuts.begin(); cut != _clusterCuts.end(); ++cut) {
-    if (!(*cut)->check(cluster)) {
-      return false;
-    }
-  }
-  return true;
+  return ::checkCuts(cluster, _clusterCuts);
 }
 
 bool Analyzers::BaseAnalyzer::checkCuts(const Storage::Hit* hit) const {
-  for (auto cut = _hitCuts.begin(); cut != _hitCuts.end(); ++cut) {
-    if (!(*cut)->check(hit)) {
-      return false;
-    }
-  }
-  return true;
+  return ::checkCuts(hit, _hitCuts);
 }
+
 
