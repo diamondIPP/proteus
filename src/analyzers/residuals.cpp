@@ -19,8 +19,6 @@
 #include "../storage/event.h"
 // Some generic processors to calcualte typical event related things
 #include "../processors/processors.h"
-// This header defines all the cuts
-#include "cuts.h"
 
 namespace Analyzers {
 
@@ -32,18 +30,16 @@ void Residuals::processEvent(const Storage::Event* refEvent)
   eventDeviceAgree(refEvent);
 
   // Check if the event passes the cuts
-  for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)
-    if (!_eventCuts.at(ncut)->check(refEvent)) return;
+  if (!checkCuts(refEvent))
+    return;
 
   for (unsigned int ntrack = 0; ntrack < refEvent->numTracks(); ntrack++)
   {
     const Storage::Track* track = refEvent->getTrack(ntrack);
 
     // Check if the track passes the cuts
-    bool pass = true;
-    for (unsigned int ncut = 0; ncut < _numTrackCuts; ncut++)
-      if (!_trackCuts.at(ncut)->check(track)) { pass = false; break; }
-    if (!pass) continue;
+    if (!checkCuts(track))
+        continue;
 
     for (unsigned int nplane = 0; nplane < refEvent->numPlanes(); nplane++)
     {
@@ -61,9 +57,9 @@ void Residuals::processEvent(const Storage::Event* refEvent)
 
 
         // Check if the cluster passes the cuts
-        for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
-          if (!_clusterCuts.at(ncut)->check(cluster)) continue;
-    
+        if (!checkCuts(cluster))
+        continue;
+
         const double rx = tx - cluster->getPosX();
         const double ry = ty - cluster->getPosY();
         dist=sqrt(pow(rx/sensor->getPitchX(),2)+pow(ry/sensor->getPitchY(),2));

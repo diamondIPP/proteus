@@ -19,8 +19,6 @@
 #include "../storage/event.h"
 // Some generic processors to calcualte typical event related things
 #include "../processors/processors.h"
-// This header defines all the cuts
-#include "cuts.h"
 
 //=========================================================
 Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
@@ -159,8 +157,8 @@ void Analyzers::ClusterInfo::processEvent(const Storage::Event* event) {
   eventDeviceAgree(event);
   
   // Check if the event passes the cuts
-  for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)
-    if (!_eventCuts.at(ncut)->check(event)) return;
+  if (!checkCuts(event))
+    return;
 
   for(unsigned int nplane=0; nplane<event->numPlanes(); nplane++) {
     const Storage::Plane* plane = event->getPlane(nplane);
@@ -169,10 +167,8 @@ void Analyzers::ClusterInfo::processEvent(const Storage::Event* event) {
       const Storage::Cluster* cluster = plane->getCluster(ncluster);
       
       // Check if the cluster passes the cuts
-      bool pass = true;
-      for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
-        if (!_clusterCuts.at(ncut)->check(cluster)) { pass = false; break; }
-      if (!pass) continue;
+      if (!checkCuts(cluster))
+        continue;
       
       _clusterSize.at(nplane)->Fill(cluster->getNumHits());
       _tot.at(nplane)->Fill(cluster->getValue());

@@ -19,8 +19,6 @@
 #include "../storage/event.h"
 // Some generic processors to calcualte typical event related things
 #include "../processors/processors.h"
-// This header defines all the cuts
-#include "cuts.h"
 
 namespace Analyzers {
 
@@ -32,8 +30,8 @@ void HitInfo::processEvent(const Storage::Event* event)
   eventDeviceAgree(event);
 
   // Check if the event passes the cuts
-  for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)
-    if (!_eventCuts.at(ncut)->check(event)) return;
+  if (!checkCuts(event))
+    return;
 
   for (unsigned int nplane = 0; nplane < event->numPlanes(); nplane++)
   {
@@ -44,11 +42,8 @@ void HitInfo::processEvent(const Storage::Event* event)
       const Storage::Hit* hit = plane->getHit(nhit);
 
       // Check if the hit passes the cuts
-      bool pass = true;
-      for (unsigned int ncut = 0; ncut < _numHitCuts; ncut++)
-        if (!_hitCuts.at(ncut)->check(hit)) { pass = false; break; }
-      if (!pass) continue;
-
+      if (!checkCuts(hit))
+        continue;
 
       _lvl1.at(nplane)->Fill(hit->getTiming());
       _tot.at(nplane)->Fill(hit->getValue());

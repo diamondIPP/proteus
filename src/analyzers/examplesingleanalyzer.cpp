@@ -19,8 +19,6 @@
 #include "../storage/event.h"
 // Some generic processors to calcualte typical event related things
 #include "../processors/processors.h"
-// This header defines all the cuts
-#include "cuts.h"
 
 namespace Analyzers {
 
@@ -32,8 +30,8 @@ void ExampleSingleAnalyzer::processEvent(const Storage::Event* event)
   eventDeviceAgree(event);
 
   // Check if the event passes the cuts
-  for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)
-    if (!_eventCuts.at(ncut)->check(event)) return;
+  if (!checkCuts(event))
+    return;
 
   // Loop over tracks, clusters, hits... and apply cuts to each object above
 }

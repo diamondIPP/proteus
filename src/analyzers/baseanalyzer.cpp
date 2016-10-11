@@ -83,3 +83,40 @@ const std::string Analyzers::BaseAnalyzer::printStr() const {
       <<  _numHitCuts << ")";
  return out.str();
 }
+
+bool Analyzers::BaseAnalyzer::checkCuts(const Storage::Event* event) const {
+  for (auto cut = _eventCuts.begin(); cut != _eventCuts.end(); ++cut) {
+    if (!(*cut)->check(event)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool Analyzers::BaseAnalyzer::checkCuts(const Storage::Track* track) const {
+  for (auto cut = _trackCuts.begin(); cut != _trackCuts.end(); ++cut) {
+    if (!(*cut)->check(track)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool Analyzers::BaseAnalyzer::checkCuts(const Storage::Cluster* cluster) const {
+  for (auto cut = _clusterCuts.begin(); cut != _clusterCuts.end(); ++cut) {
+    if (!(*cut)->check(cluster)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool Analyzers::BaseAnalyzer::checkCuts(const Storage::Hit* hit) const {
+  for (auto cut = _hitCuts.begin(); cut != _hitCuts.end(); ++cut) {
+    if (!(*cut)->check(hit)) {
+      return false;
+    }
+  }
+  return true;
+}
+

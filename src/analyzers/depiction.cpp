@@ -21,8 +21,6 @@
 // Some generic processors to calcualte typical event related things
 #include "../processors/eventdepictor.h"
 #include "../processors/processors.h"
-// This header defines all the cuts
-#include "cuts.h"
 
 namespace Analyzers {
 
@@ -32,9 +30,8 @@ void Depictor::processEvent(const Storage::Event* refEvent)
 
   if (_depictEvent) {
     // Check if the event passes the cuts
-    for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)
-      if (!_eventCuts.at(ncut)->check(refEvent))
-        return;
+    if (!checkCuts(refEvent))
+      return;
 
     _depictor->depictEvent(refEvent, 0);
   }
@@ -45,9 +42,11 @@ void Depictor::processEvent(const Storage::Event* refEvent)
       const Storage::Plane* plane = refEvent->getPlane(iplane);
       for (Index icluster = 0; icluster < plane->numClusters(); icluster++) {
         const Storage::Cluster* cluster = plane->getCluster(icluster);
-        for (auto cut = _clusterCuts.begin(); cut != _clusterCuts.end(); ++cut)
-          if (!(*cut)->check(cluster))
-            continue;
+
+        // Check if the cluster passes the cuts
+        if (!checkCuts(cluster))
+          continue;
+
         refClusters.push_back(cluster);
       }
     }
@@ -61,9 +60,9 @@ void Depictor::processEvent(const Storage::Event* refEvent)
     for (unsigned int ntrack = 0; ntrack < refEvent->numTracks(); ntrack++) {
       const Storage::Track* track = refEvent->getTrack(ntrack);
 
-      for (unsigned int ncut = 0; ncut < _numTrackCuts; ncut++)
-        if (!_trackCuts.at(ncut)->check(track))
-          continue;
+      // Check if the track passes the cuts
+      if(!checkCuts(track))
+        continue;
 
       _depictor->depictTrack(track);
     }

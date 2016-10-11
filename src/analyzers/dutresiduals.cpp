@@ -19,8 +19,6 @@
 #include "../storage/event.h"
 // Some generic processors to calcualte typical event related things
 #include "../processors/processors.h"
-// This header defines all the cuts
-#include "cuts.h"
 
 namespace Analyzers {
 
@@ -35,8 +33,8 @@ void DUTResiduals::processEvent(const Storage::Event *refEvent,
   //Max Cluster Size
   _maxclustersize = 5;
   // Check if the event passes the cuts
-  for (unsigned int ncut = 0; ncut < _numEventCuts; ncut++)
-    if (!_eventCuts.at(ncut)->check(refEvent)) return;
+  if (!checkCuts(refEvent))
+    return;
 
   //std::cout <<"Number of tracks = "<< refEvent->getNumTracks() << std::endl;
 
@@ -45,13 +43,8 @@ void DUTResiduals::processEvent(const Storage::Event *refEvent,
     const Storage::Track *track = refEvent->getTrack(ntrack);
 
     // Check if the track passes the cuts
-    bool pass = true;
-    for (unsigned int ncut = 0; ncut < _numTrackCuts; ncut++)
-      if (!_trackCuts.at(ncut)->check(track)) {
-        pass = false;
-        break;
-      }
-    if (!pass) continue;
+    if (!checkCuts(track))
+      continue;
 
     for (unsigned int nplane = 0; nplane < dutEvent->getNumPlanes(); nplane++)
     {
@@ -67,15 +60,10 @@ void DUTResiduals::processEvent(const Storage::Event *refEvent,
         const Storage::Cluster *cluster = plane->getCluster(ncluster);
 
         // Check if the cluster passes the cuts
-        bool pass = true;
-        for (unsigned int ncut = 0; ncut < _numClusterCuts; ncut++)
-          if (!_clusterCuts.at(ncut)->check(cluster)) {
-            pass = false;
-            break;
-          }
+        if (!checkCuts(cluster))
+          continue;
         //Bilbao@cern.ch:Cut for cluster size (also in efficiency to affect all eff.root results)
         //if(cluster->getNumHits()==1){ pass = false; break;}
-        if (!pass) continue;
 
         const double rx = tx - cluster->getPosX();
         const double ry = ty - cluster->getPosY();
