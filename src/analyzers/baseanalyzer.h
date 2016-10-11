@@ -56,16 +56,9 @@ namespace Analyzers {
 
   private:
     std::vector<const EventCut*> _eventCuts;
-    unsigned int _numEventCuts;
-
     std::vector<const TrackCut*> _trackCuts;
-    unsigned int _numTrackCuts;
-    
     std::vector<const ClusterCut*> _clusterCuts;
-    unsigned int _numClusterCuts;
-    
     std::vector<const HitCut*> _hitCuts;
-    unsigned int _numHitCuts;
 
   }; // end of class
   

@@ -17,23 +17,19 @@ Analyzers::BaseAnalyzer::BaseAnalyzer(TDirectory* dir,
   _dir(dir),
   _nameSuffix(nameSuffix),
   _postProcessed(false),
-  _analyzerName(analyzerName),
-  _numEventCuts(0),
-  _numTrackCuts(0),
-  _numClusterCuts(0),
-  _numHitCuts(0)
+  _analyzerName(analyzerName)
 {}
 
 
 Analyzers::BaseAnalyzer::~BaseAnalyzer() {
-  for(unsigned int i=0; i<_eventCuts.size(); i++)
-    delete _eventCuts.at(i);
-  for (unsigned int i=0; i<_trackCuts.size(); i++)
-    delete _trackCuts.at(i);
-  for (unsigned int i=0; i<_clusterCuts.size(); i++)
-    delete _clusterCuts.at(i);
-  for (unsigned int i=0; i<_hitCuts.size(); i++)
-    delete _hitCuts.at(i);
+   for (auto ecut = _eventCuts.begin(); ecut != _eventCuts.end(); ++ecut)
+      delete *ecut;
+   for (auto tcut = _trackCuts.begin(); tcut != _trackCuts.end(); ++tcut)
+      delete *tcut;
+   for (auto ccut = _clusterCuts.begin(); ccut != _clusterCuts.end(); ++ccut)
+      delete *ccut;
+   for (auto hcut = _hitCuts.begin(); hcut != _hitCuts.end(); ++hcut)
+      delete *hcut;
 }
 
 TDirectory* Analyzers::BaseAnalyzer::makeGetDirectory(const char* dirName){
@@ -51,22 +47,18 @@ void Analyzers::BaseAnalyzer::setAnalyzerName(const std::string name) {
 
 void Analyzers::BaseAnalyzer::addCut(const EventCut* cut) {
   _eventCuts.push_back(cut);
-  _numEventCuts++;
 }
 
 void Analyzers::BaseAnalyzer::addCut(const TrackCut* cut) {
   _trackCuts.push_back(cut);
-  _numTrackCuts++;
 }
 
 void Analyzers::BaseAnalyzer::addCut(const ClusterCut* cut) {
   _clusterCuts.push_back(cut);
-  _numClusterCuts++;
 }
 
 void Analyzers::BaseAnalyzer::addCut(const HitCut* cut) {
   _hitCuts.push_back(cut);
-  _numHitCuts++;
 }
 
 void Analyzers::BaseAnalyzer::print() const {
@@ -77,10 +69,10 @@ const std::string Analyzers::BaseAnalyzer::printStr() const {
   std::ostringstream out;
   out << "analyzer '" <<  _analyzerName  << "' ; ";
   out << "number of cuts (Evt,Trk,Clus,Hit) = ("
-      <<  _numEventCuts << ","
-      <<  _numTrackCuts << ","
-      <<  _numClusterCuts << ","
-      <<  _numHitCuts << ")";
+      <<  _eventCuts.size() << ","
+      <<  _trackCuts.size() << ","
+      <<  _clusterCuts.size() << ","
+      <<  _hitCuts.size() << ")";
  return out.str();
 }
 
