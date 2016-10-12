@@ -565,7 +565,7 @@ namespace Storage {
   }
 
   //=========================================================
-  Event* StorageIO::readEvent(uint64_t n)
+  void StorageIO::readEvent(uint64_t n, Event* event)
   {
     /* Note: fill in reversed order: tracks first, hits last. This is so that
      * once a hit is produced, it can immediately recieve the address of its
@@ -576,14 +576,13 @@ namespace Storage {
     if (_eventInfo &&_eventInfo->GetEntry(n) <= 0) throw std::runtime_error("StorageIO: error reading event tree");
     if (_tracks && _tracks->GetEntry(n) <= 0) throw std::runtime_error("StorageIO: error reading tracks tree");
 
-    Event* event = new Event(_numPlanes);
+    event->clear();
     event->setId(n);
     event->setTimeStamp(timeStamp);
     event->setFrameNumber(frameNumber);
     event->setTriggerOffset(triggerOffset);
     event->setTriggerInfo(triggerInfo);
     event->setTriggerPhase(triggerPhase);
-
     event->setInvalid(invalid);
 
     // Generate a list of track objects
@@ -659,7 +658,12 @@ namespace Storage {
 	}
       }
     } // end loop in planes
+  }
 
+  Event* StorageIO::readEvent(uint64_t index)
+  {
+    Event* event = new Event(_numPlanes);
+    readEvent(index, event);
     return event;
   }
 

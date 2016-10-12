@@ -61,6 +61,8 @@ namespace Storage {
     Storage::Mode getMode() const {  return _fileMode; }
     std::vector<int> getRuns() const;
 
+    /** Read the event in-place. Replaces all existing event content. */
+    void readEvent(uint64_t n, Event* event);
     Event* readEvent(uint64_t n); // Read an event and generate its objects
     void writeEvent(Event* event); // Write an event at the end of the file
 
