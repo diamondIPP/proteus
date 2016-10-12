@@ -8,6 +8,7 @@
 #include <cassert>
 #include <chrono>
 #include <memory>
+#include <numeric>
 
 #include "analyzers/singleanalyzer.h"
 #include "storage/event.h"
@@ -90,67 +91,80 @@ void Utils::EventLoop::run()
       INFO("  ", (*a)->name(), '\n');
   }
 
-  Time startWall = Clock::now();
-  Duration durIo = Duration::zero();
-  Duration durProcessors = Duration::zero();
-  Duration durAnalyzers = Duration::zero();
-  Duration durTotal = Duration::zero();
   std::unique_ptr<Storage::Event> event;
+  Duration durationWall = Duration::zero();
+  Duration durationTotal = Duration::zero();
+  Duration durationIo = Duration::zero();
+  std::vector<Duration> durationProcs(m_processors.size(), Duration::zero());
+  std::vector<Duration> durationAnas(m_analyzers.size(), Duration::zero());
 
+  Time startWall = Clock::now();
   for (uint64_t ievent = m_startEvent; ievent <= m_endEvent; ievent++) {
 
     Time startIo = Clock::now();
     event.reset(m_storage->readEvent(ievent));
+    durationIo += Clock::now() - startIo;
 
-    Time startProcessors = Clock::now();
-    for (auto p = m_processors.begin(); p != m_processors.end(); ++p)
-      (*p)->process(*event.get());
-
-    Time startAnalyzers = Clock::now();
-    for (auto a = m_analyzers.begin(); a != m_analyzers.end(); ++a)
-      (*a)->analyze(*event.get());
-
-    Time end = Clock::now();
-    durIo += startProcessors - startIo;
-    durProcessors += startAnalyzers - startProcessors;
-    durAnalyzers += end - startAnalyzers;
-    durTotal += end - startIo;
+    for (size_t i = 0; i < m_processors.size(); ++i) {
+      Time start = Clock::now();
+      m_processors[i]->process(*event.get());
+      durationProcs[i] += Clock::now() - start;
+    }
+    for (size_t i = 0; i < m_analyzers.size(); ++i) {
+      Time start = Clock::now();
+      m_analyzers[i]->analyze(*event.get());
+      durationAnas[i] += Clock::now() - start;
+    }
 
     m_stat.fill(
-        event->getNumHits(), event->getNumClusters(), event->getNumTracks());
+        event->getNumHits(), event->getNumClusters(), event->numTracks());
     m_progress.update((float)(ievent - m_startEvent + 1) / numEvents());
   }
   m_progress.clear();
 
-  for (auto a = m_analyzers.begin(); a != m_analyzers.end(); ++a)
+  for (auto a = m_analyzers.begin(); a != m_analyzers.end(); ++a) {
     (*a)->finalize();
-
-  Duration durWall = Clock::now() - startWall;
+  }
+  durationWall = Clock::now() - startWall;
+  durationTotal = durationIo;
+  durationTotal += std::accumulate(
+      durationProcs.begin(), durationProcs.end(), Duration::zero());
+  durationTotal += std::accumulate(
+      durationAnas.begin(), durationAnas.end(), Duration::zero());
 
   // print common event statistics
   INFO("\nEvent Statistics:\n", m_stat.str("  "), '\n');
 
   // print timing
   // allow fractional tics when calculating time per event
-  const char unit[] = " us/event\n";
+  const char* unit = " us/event";
   auto time_per_event = [&](const Duration& dt) -> float {
     float n = m_endEvent - m_startEvent + 1;
     return (std::chrono::duration<float, std::micro>(dt) / n).count();
   };
   INFO("Timing:\n");
-  INFO("  i/o: ", time_per_event(durIo), unit);
-  INFO("  processors: ", time_per_event(durProcessors), unit);
-  INFO("  analyzers: ", time_per_event(durAnalyzers), unit);
-  INFO("  combined: ", time_per_event(durTotal), unit);
+  INFO("  i/o: ", time_per_event(durationIo), unit, '\n');
+  // INFO("  processors: ", time_per_event(durProcessors), unit);
+  INFO("  processors:\n");
+  for (size_t i = 0; i < m_processors.size(); ++i) {
+    INFO("    ", m_processors[i]->name(), ": ");
+    INFO(time_per_event(durationProcs[i]), unit, '\n');
+  }
+  INFO("  analyzers:\n");
+  for (size_t i = 0; i < m_analyzers.size(); ++i) {
+    INFO("    ", m_analyzers[i]->name(), ": ");
+    INFO(time_per_event(durationAnas[i]), unit, '\n');
+  }
+  INFO("  combined: ", time_per_event(durationTotal), unit, '\n');
   INFO("  total (clocked): ",
-       std::chrono::duration_cast<std::chrono::minutes>(durTotal).count(),
+       std::chrono::duration_cast<std::chrono::minutes>(durationTotal).count(),
        " min ",
-       std::chrono::duration_cast<std::chrono::seconds>(durTotal).count(),
+       std::chrono::duration_cast<std::chrono::seconds>(durationTotal).count(),
        " s\n");
   INFO("  total (wall): ",
-       std::chrono::duration_cast<std::chrono::minutes>(durWall).count(),
+       std::chrono::duration_cast<std::chrono::minutes>(durationWall).count(),
        " min ",
-       std::chrono::duration_cast<std::chrono::seconds>(durWall).count(),
+       std::chrono::duration_cast<std::chrono::seconds>(durationWall).count(),
        " s\n");
 }
 
