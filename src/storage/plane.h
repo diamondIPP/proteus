@@ -44,6 +44,8 @@ public:
 private:
   Plane(Index planeNum);
 
+  void clear();
+
   std::vector<Hit> m_hits;
   std::vector<Cluster> m_clusters;
   std::vector<std::pair<double, double>> m_intercepts;

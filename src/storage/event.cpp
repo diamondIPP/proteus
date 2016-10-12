@@ -15,6 +15,14 @@ Storage::Event::Event(Index numPlanes)
   }
 }
 
+void Storage::Event::clear()
+{
+  for (auto plane = m_planes.begin(); plane != m_planes.end(); ++plane) {
+    plane->clear();
+  }
+  m_tracks.clear();
+}
+
 Storage::Track* Storage::Event::addTrack(const Track& otherTrack)
 {
   m_tracks.push_back(otherTrack);

@@ -2,6 +2,13 @@
 
 #include <ostream>
 
+void Storage::Plane::clear()
+{
+  m_intercepts.clear();
+  m_clusters.clear();
+  m_hits.clear();
+}
+
 Storage::Plane::Plane(Index planeNum)
     : m_planeNum(planeNum)
 {

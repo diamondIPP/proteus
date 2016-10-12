@@ -19,6 +19,7 @@ class Event {
 public:
   Event(Index numPlanes);
 
+  void clear();
   void setId(uint64_t id) { m_id = id; }
   void setTimeStamp(uint64_t timeStamp) { m_timeStamp = timeStamp; }
   void setFrameNumber(uint64_t frameNumber) { m_frameNumber = frameNumber; }
