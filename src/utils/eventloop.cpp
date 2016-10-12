@@ -7,7 +7,6 @@
 
 #include <cassert>
 #include <chrono>
-#include <memory>
 #include <numeric>
 
 #include "analyzers/singleanalyzer.h"
@@ -91,7 +90,7 @@ void Utils::EventLoop::run()
       INFO("  ", (*a)->name(), '\n');
   }
 
-  std::unique_ptr<Storage::Event> event;
+  Storage::Event event(m_storage->getNumPlanes());
   Duration durationWall = Duration::zero();
   Duration durationTotal = Duration::zero();
   Duration durationIo = Duration::zero();
@@ -102,22 +101,21 @@ void Utils::EventLoop::run()
   for (uint64_t ievent = m_startEvent; ievent <= m_endEvent; ievent++) {
 
     Time startIo = Clock::now();
-    event.reset(m_storage->readEvent(ievent));
+    m_storage->readEvent(ievent, &event);
     durationIo += Clock::now() - startIo;
 
     for (size_t i = 0; i < m_processors.size(); ++i) {
       Time start = Clock::now();
-      m_processors[i]->process(*event.get());
+      m_processors[i]->process(event);
       durationProcs[i] += Clock::now() - start;
     }
     for (size_t i = 0; i < m_analyzers.size(); ++i) {
       Time start = Clock::now();
-      m_analyzers[i]->analyze(*event.get());
+      m_analyzers[i]->analyze(event);
       durationAnas[i] += Clock::now() - start;
     }
 
-    m_stat.fill(
-        event->getNumHits(), event->getNumClusters(), event->numTracks());
+    m_stat.fill(event.getNumHits(), event.getNumClusters(), event.numTracks());
     m_progress.update((float)(ievent - m_startEvent + 1) / numEvents());
   }
   m_progress.clear();
