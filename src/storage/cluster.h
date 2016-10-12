@@ -19,6 +19,7 @@ public:
   void setErrPixel(const XYVector& err) { m_errCr = err; }
   /** Set global position using the transform from pixel to global coords. */
   void transformToGlobal(const Transform3D& pixelToGlobal);
+  void setTiming(double timing) { m_timing = timing; }
 
   const XYPoint& posPixel() const { return m_cr; }
   const XYZPoint& posGlobal() const { return m_xyz; }
