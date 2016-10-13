@@ -1,7 +1,7 @@
 #include "singleanalyzer.h"
-#include "../exception.h"
 
 #include <iostream>
+#include <stdexcept>
 #include <sstream>
 
 #include "../storage/event.h"
@@ -21,7 +21,7 @@ Analyzers::SingleAnalyzer::~SingleAnalyzer(){
 
 void Analyzers::SingleAnalyzer::validSensor(unsigned int nsensor) {
   if(nsensor >= _device->getNumSensors())
-    throw "SingleAnalyzer: requested sensor exceeds range";
+    throw std::runtime_error("SingleAnalyzer: requested sensor exceeds range");
 }
 
 void Analyzers::SingleAnalyzer::eventDeviceAgree(const Storage::Event* event) {
@@ -31,7 +31,7 @@ void Analyzers::SingleAnalyzer::eventDeviceAgree(const Storage::Event* event) {
     std::stringstream ss;
     ss << event->getNumPlanes() << ") vs device (" << _device->getNumSensors();
     err+=ss.str()+") plane mis-match";
-    throw Exception(err);
+    throw std::runtime_error(err);
   }
 }
 
