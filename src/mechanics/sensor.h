@@ -68,6 +68,8 @@ public:
   Index numCols() const { return m_numCols; }
   Index numRows() const { return m_numRows; }
   Index numPixels() const { return m_numCols * m_numRows; }
+  double pitchCol() const { return m_pitchCol; }
+  double pitchRow() const { return m_pitchRow; }
   double thickness() const { return m_thickness; }
   double xX0() const { return m_xX0; }
   /** Sensitive area in pixel coordinates [col_min,col_max,row_min,row_max]. */
