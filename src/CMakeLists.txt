@@ -40,13 +40,15 @@ set(COMMON_SRC
     mechanics/alignment.cpp
     mechanics/sensor.cpp
     processors/applyalignment.cpp
-    processors/eventdepictor.cpp
-    processors/largesynchronizer.cpp
-    processors/synchronizer.cpp
     processors/clustermaker.cpp
+    processors/clusterizer.cpp
     processors/configprocessors.cpp
+    processors/eventdepictor.cpp
+    processors/hitmapper.cpp
+    processors/largesynchronizer.cpp
     processors/processor.cpp
     processors/processors.cpp
+    processors/synchronizer.cpp
     processors/trackmaker.cpp
     processors/trackmatcher.cpp
     storage/cluster.cpp
