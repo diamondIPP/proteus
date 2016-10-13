@@ -7,8 +7,6 @@
 
 #include "analyzers/analyzer.h"
 #include "processors/processor.h"
-#include "utils/progressbar.h"
-#include "utils/statistics.h"
 
 namespace Analyzers {
 class SingleAnalyzer;
@@ -49,8 +47,6 @@ private:
 
   Storage::StorageIO* m_storage;
   uint64_t m_startEvent, m_endEvent;
-  ProgressBar m_progress;
-  EventStatistics m_stat;
   std::vector<std::shared_ptr<Processors::Processor>> m_processors;
   std::vector<std::shared_ptr<Analyzers::Analyzer>> m_analyzers;
 };

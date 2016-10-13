@@ -13,6 +13,8 @@
 #include "storage/event.h"
 #include "storage/storageio.h"
 #include "utils/logger.h"
+#include "utils/progressbar.h"
+#include "utils/statistics.h"
 
 using Utils::logger;
 
@@ -79,6 +81,14 @@ void Utils::EventLoop::run()
   using Duration = Clock::duration;
   using Time = Clock::time_point;
 
+  Storage::Event event(m_storage->getNumPlanes());
+  Utils::EventStatistics stats;
+  Duration durationWall = Duration::zero();
+  Duration durationTotal = Duration::zero();
+  Duration durationIo = Duration::zero();
+  std::vector<Duration> durationProcs(m_processors.size(), Duration::zero());
+  std::vector<Duration> durationAnas(m_analyzers.size(), Duration::zero());
+
   if (!m_processors.empty()) {
     INFO("Processors:\n");
     for (auto p = m_processors.begin(); p != m_processors.end(); ++p)
@@ -90,13 +100,7 @@ void Utils::EventLoop::run()
       INFO("  ", (*a)->name(), '\n');
   }
 
-  Storage::Event event(m_storage->getNumPlanes());
-  Duration durationWall = Duration::zero();
-  Duration durationTotal = Duration::zero();
-  Duration durationIo = Duration::zero();
-  std::vector<Duration> durationProcs(m_processors.size(), Duration::zero());
-  std::vector<Duration> durationAnas(m_analyzers.size(), Duration::zero());
-
+  Utils::ProgressBar progress;
   Time startWall = Clock::now();
   for (uint64_t ievent = m_startEvent; ievent <= m_endEvent; ievent++) {
 
@@ -115,10 +119,10 @@ void Utils::EventLoop::run()
       durationAnas[i] += Clock::now() - start;
     }
 
-    m_stat.fill(event.getNumHits(), event.getNumClusters(), event.numTracks());
-    m_progress.update((float)(ievent - m_startEvent + 1) / numEvents());
+    stats.fill(event.getNumHits(), event.getNumClusters(), event.numTracks());
+    progress.update((float)(ievent - m_startEvent + 1) / numEvents());
   }
-  m_progress.clear();
+  progress.clear();
 
   for (auto a = m_analyzers.begin(); a != m_analyzers.end(); ++a) {
     (*a)->finalize();
@@ -131,7 +135,7 @@ void Utils::EventLoop::run()
       durationAnas.begin(), durationAnas.end(), Duration::zero());
 
   // print common event statistics
-  INFO("\nEvent Statistics:\n", m_stat.str("  "), '\n');
+  INFO("\nEvent Statistics:\n", stats.str("  "), '\n');
 
   // print timing
   // allow fractional tics when calculating time per event
