@@ -8,9 +8,17 @@
 #define PT_HITMAPPER_H
 
 #include "processors/processor.h"
+#include "utils/definitions.h"
 #include "utils/logger.h"
 
 #include <set>
+
+namespace Mechanics {
+class Device;
+}
+namespace Utils {
+class EventLoop;
+}
 
 namespace Processors {
 
@@ -22,7 +30,7 @@ public:
       : m_sensorIds(std::begin(sensorIds), std::end(sensorIds))
   {
     using Utils::logger;
-    DEBUG("FEI4 to CCPDv4 map sensors:\n");
+    DEBUG("FEI4 to CCPDv4 mapping sensors:\n");
     for (auto id = m_sensorIds.begin(); id != m_sensorIds.end(); ++id)
       DEBUG("  ", *id, '\n');
   }
@@ -31,8 +39,10 @@ public:
   void process(Storage::Event& event) const;
 
 private:
-  std::set<int> m_sensorIds;
+  std::set<Index> m_sensorIds;
 };
+
+void setupHitMapper(const Mechanics::Device& device, Utils::EventLoop& loop);
 
 } // namespace Processors
 

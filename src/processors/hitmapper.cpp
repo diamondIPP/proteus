@@ -6,7 +6,11 @@
 
 #include "hitmapper.h"
 
+#include <set>
+
+#include "mechanics/device.h"
 #include "storage/event.h"
+#include "utils/eventloop.h"
 
 std::string Processors::CCPDv4HitMapper::name() const
 {
@@ -43,4 +47,21 @@ void Processors::CCPDv4HitMapper::process(Storage::Event& event) const
       hit->setAddress(col, row);
     }
   }
+}
+
+void Processors::setupHitMapper(const Mechanics::Device& device,
+                                Utils::EventLoop& loop)
+{
+  using Mechanics::Sensor;
+
+  std::set<Index> ccpdv4;
+
+  for (Index isensor = 0; isensor < device.numSensors(); ++isensor) {
+    const Sensor* sensor = device.getSensor(isensor);
+    if (sensor->measurement() == Sensor::CCPDV4_BINARY)
+      ccpdv4.insert(isensor);
+  }
+
+  if (!ccpdv4.empty())
+    loop.addProcessor(std::make_shared<CCPDv4HitMapper>(ccpdv4));
 }
