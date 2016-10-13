@@ -90,14 +90,14 @@ void Utils::EventLoop::run()
   std::vector<Duration> durationAnas(m_analyzers.size(), Duration::zero());
 
   if (!m_processors.empty()) {
-    INFO("Processors:\n");
+    DEBUG("configured processors:\n");
     for (auto p = m_processors.begin(); p != m_processors.end(); ++p)
-      INFO("  ", (*p)->name(), '\n');
+      DEBUG("  ", (*p)->name(), '\n');
   }
   if (!m_analyzers.empty()) {
-    INFO("Analyzers:\n");
+    DEBUG("configured analyzers:\n");
     for (auto a = m_analyzers.begin(); a != m_analyzers.end(); ++a)
-      INFO("  ", (*a)->name(), '\n');
+      DEBUG("  ", (*a)->name(), '\n');
   }
 
   Utils::ProgressBar progress;
