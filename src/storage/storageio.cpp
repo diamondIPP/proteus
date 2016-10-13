@@ -599,7 +599,7 @@ namespace Storage {
                     trackCovarianceY[ntrack]);
       Track* track = event->newTrack();
       track->setGlobalState(state);
-      track->setChi2(trackChi2[ntrack]);
+      track->setGoodnessOfFit(trackChi2[ntrack]);
     }
 
     for (unsigned int nplane=0; nplane<_numPlanes; nplane++){

@@ -67,11 +67,13 @@ public:
 
   void addLocalState(Index sensor, const TrackState& state);
   void setGlobalState(const TrackState& state) { m_state = state; }
-  void setChi2(double chi2) { m_chi2 = chi2; }
+  void setGoodnessOfFit(double chi2, int ndf) { m_redChi2 = chi2 / ndf; }
+  void setGoodnessOfFit(double reducedChi2) { m_redChi2 = reducedChi2; }
 
   const TrackState& globalState() const { return m_state; }
   const TrackState& localState(Index sensor) const;
   const TrackStates& localStates() const { return m_localStates; }
+  double reducedChi2() const { return m_redChi2; }
 
   /** Adds the cluster to the track but does not inform the cluster about it. */
   void addCluster(Cluster* cluster);
@@ -101,7 +103,7 @@ public:
   double getSlopeErrY() const { return m_state.errSlope().y(); }
   double getCovarianceX() const { return m_state.m_covUDu; }
   double getCovarianceY() const { return m_state.m_covVDv; }
-  double getChi2() const { return m_chi2; }
+  double getChi2() const { return m_redChi2; }
   int getIndex() const { return m_index; }
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
@@ -109,7 +111,7 @@ public:
 private:
   TrackState m_state;
   TrackStates m_localStates;
-  double m_chi2;
+  double m_redChi2;
   int m_index;
 
   std::vector<Cluster*> m_clusters;

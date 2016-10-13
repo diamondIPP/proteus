@@ -363,14 +363,11 @@ void TrackMaker::fitTrackToClusters(Track* track)
     }
   }
 
-  // Get a chi2 normalized to the number of DOF
-  const double chi2 = (chi2X + chi2Y) / (2.0 * (double)(npoints - 2));
-
   TrackState state(originX, originY, slopeX, slopeY);
   state.setErrU(originErrX, slopeErrX, covarianceX);
   state.setErrV(originErrY, slopeErrY, covarianceY);
   track->setGlobalState(state);
-  track->setChi2(chi2);
+  track->setGoodnessOfFit(chi2X + chi2Y, 2 * (npoints - 2));
 
   delete[] dependant;
   delete[] independant;

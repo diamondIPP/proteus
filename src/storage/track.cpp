@@ -43,14 +43,14 @@ void Storage::TrackState::setErrV(double errV, double errDv, double cov)
 
 Storage::Track::Track()
     : m_state(0, 0, 0, 0)
-    , m_chi2(-1)
+    , m_redChi2(-1)
     , m_index(-1)
 {
 }
 
 Storage::Track::Track(const TrackState& globalState)
     : m_state(globalState)
-    , m_chi2(-1)
+    , m_redChi2(-1)
     , m_index(-1)
 {
 }
@@ -93,7 +93,7 @@ void Storage::TrackState::print(std::ostream& os,
 
 void Storage::Track::print(std::ostream& os, const std::string& prefix) const
 {
-  os << prefix << "chi2: " << m_chi2 << '\n';
+  os << prefix << "chi2/ndf: " << m_redChi2 << '\n';
   os << prefix << "num clusters: " << m_clusters.size() << '\n';
   os << prefix << "global state:\n";
   m_state.print(os, prefix + "  ");
