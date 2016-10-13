@@ -1,9 +1,9 @@
 #ifndef OCCUPANCY_H_
 #define OCCUPANCY_H_
 
+#include <cstdint>
 #include <vector>
 
-#include <Rtypes.h>
 #include <TH2D.h>
 #include <TH1D.h>
 #include <TDirectory.h>
@@ -29,7 +29,7 @@ namespace Analyzers {
     /** Returns Hit occupancy 2D-map for given sensor. */
     TH2D* getHitOcc(unsigned int nsensor);
 
-    /** Returns Hit occupancy 1D-dist for given sensor. 
+    /** Returns Hit occupancy 1D-dist for given sensor.
 	postProcessing() must have been called beforehand. */
     TH1D* getHitOccDist(unsigned int nsensors);
 
@@ -40,16 +40,13 @@ namespace Analyzers {
     void bookHistos(TDirectory *plotdir);
     
   private:
-    std::vector<ULong64_t> _totalHitOccupancy; /*!< Total number of hits in each plane
+    uint64_t m_numEvents;
+    std::vector<uint64_t> _totalHitOccupancy; /*!< Total number of hits in each plane
 						 (sum of hits for all events). */
-    
+
     std::vector<TH2D*> _hitOcc; //!< pixel hitmaps
-    
+    std::vector<TH2D*> _clusteredHitOcc; //!< clustered hit positions
     std::vector<TH2D*> _clusterOcc; //!< cluster positions (XY) 2D-histos.
-    //std::vector<TH2D*> _clusterOccXZ;
-    //std::vector<TH2D*> _clusterOccYZ;
-    std::vector<TH2D*> _clusterOccPix;//!< cluster positions (pixel units) 2D-histos.
-    
     std::vector<TH1D*> _occDist; //!< Occupancy 1D-distributions (number of hits/trigger).
     
   }; // end of class

@@ -24,7 +24,7 @@ using namespace std;
 Analyzers::Occupancy::Occupancy(const Mechanics::Device* device,
 				TDirectory* dir,
 				const char* suffix) :
-  SingleAnalyzer(device,dir,suffix, "Occupancy")
+  SingleAnalyzer(device,dir,suffix, "Occupancy"), m_numEvents(0)
 {
   assert(device && "Analyzer: can't initialize with null device");
   
@@ -36,85 +36,60 @@ Analyzers::Occupancy::Occupancy(const Mechanics::Device* device,
 
 //=========================================================
 void Analyzers::Occupancy::bookHistos(TDirectory* plotDir){
-  char name[500], title[500];
+	std::string name, title;
   
   for (unsigned int nsens=0; nsens<_device->getNumSensors(); nsens++){
     const Mechanics::Sensor* sensor = _device->getSensor(nsens);
-    
-    // (1) pixel hitmap (pix-Y vs pix-X, PIXEL units)
-    sprintf(name,"%s%s_%s%s", _device->name().c_str(), sensor->name().c_str(), "HitOccupancy", _nameSuffix.c_str());
-    sprintf(title,"%s - %s [%s]", _device->name().c_str(), sensor->name().c_str(), "Hit Occupancy");
-    TH2D* hist = new TH2D(name, title,
-                          sensor->getNumX(), -0.5, sensor->getNumX()-0.5,
-                          sensor->getNumY(), -0.5, sensor->getNumY()-0.5);
-    hist->GetXaxis()->SetTitle("x-pixel");
-    hist->GetYaxis()->SetTitle("y-pixel");
+
+		auto areaPix = sensor->sensitiveAreaPixel(); // col_min,col_max,row_min,row_max
+		auto areaXY = sensor->sensitiveEnvelopeGlobal(); // x_min, x_max, y_min, y_max
+
+		// raw hits in pixel coordinates
+		name = sensor->name() + "-HitMap";
+		title = sensor->name() + " Hit Map";
+    TH2D* hist = new TH2D(name.c_str(), title.c_str(),
+                          sensor->numCols(), areaPix[0], areaPix[1],
+                          sensor->numRows(), areaPix[2], areaPix[3]);
+    hist->GetXaxis()->SetTitle("pixel column");
+    hist->GetYaxis()->SetTitle("pixel row");
     hist->SetDirectory(plotDir);
     _hitOcc.push_back(hist);
-    
-    // (2) cluster positions (clus-Y vs clux-X, GLOBAL coords)
-    const double lowX = sensor->getOffX() - sensor->getPosSensitiveX() / 2.0;
-    const double uppX = sensor->getOffX() + sensor->getPosSensitiveX() / 2.0;
-    const double lowY = sensor->getOffY() - sensor->getPosSensitiveY() / 2.0;
-    const double uppY = sensor->getOffY() + sensor->getPosSensitiveY() / 2.0;
 
-    sprintf(name,"%s_%s%s", sensor->name().c_str(), "ClusterOccupancy", _nameSuffix.c_str());
-    sprintf(title,"%s [%s]", sensor->name().c_str(), "Cluster Occupancy");
-    TH2D* histClust = new TH2D(name, title,
-			       sensor->getPosNumX(), lowX, uppX,
-			       sensor->getPosNumY(), lowY, uppY);
-    sprintf(name,"x-position [%s]", _device->getSpaceUnit());
-    histClust->GetXaxis()->SetTitle(name);
-    sprintf(name,"y-position [%s]", _device->getSpaceUnit());
-    histClust->GetYaxis()->SetTitle(name);
+		// clustered hits in pixel coordinates
+		name = sensor->name() + "-ClusteredHitMap";
+		title = sensor->name() + " Clustered Hit Map";
+    TH2D* clusterHit = new TH2D(name.c_str(), title.c_str(),
+                          sensor->numCols(), areaPix[0], areaPix[1],
+                          sensor->numRows(), areaPix[2], areaPix[3]);
+    clusterHit->GetXaxis()->SetTitle("pixel column");
+    clusterHit->GetYaxis()->SetTitle("pixel row");
+    clusterHit->SetDirectory(plotDir);
+    _clusterHitOcc.push_back(clusterHit);
+
+		// cluster positions in global xy coordinates
+		name = sensor->name() + "-ClusterMap";
+		title = sensor->name() + " Cluster Map";
+    TH2D* histClust = new TH2D(name.c_str(), title.c_str(),
+			       3 * sensor->numCols(), areaXY[0], areaXY[1],
+			       3 * sensor->numRows(), areaXY[2], areaXY[3]);
+    // sprintf(name,"x-position [%s]", _device->getSpaceUnit());
+    histClust->GetXaxis()->SetTitle("global x position");
+    // sprintf(name,"y-position [%s]", _device->getSpaceUnit());
+    histClust->GetYaxis()->SetTitle("global y position");
     histClust->SetDirectory(plotDir);
     _clusterOcc.push_back(histClust);
 
-    /*    name.str(""); title.str("");
-    name << sensor->getName() << "ClusterOccupancyXZ" << _nameSuffix;
-    title << sensor->getName() << " Cluster OccupancyXZ"
-          << ";X position [" << _device->getSpaceUnit() << "]"
-          << ";Z position [" << _device->getSpaceUnit() << "]"
-          << ";Clusters / pixel";
-    TH2D* histClustXZ = new TH2D(name.str().c_str(), title.str().c_str(),
-				 79*sensor->getPosNumX()/(uppX-lowX), 1, 80,
-				 349*sensor->getPosNumY()/(uppY-lowY), 1, 350);
-    cout << sensor->getPosNumX() << " " << uppX << " " << lowX << " " << 79*sensor->getPosNumX()/(uppX - lowX) << endl;
-    cout << sensor->getPosNumY() << " " << uppY << " " << lowY << " " << sensor->getPosNumY()/(uppY - lowY) << endl;
-    cout << "nbinsX = " << histClustXZ->GetXaxis()->GetNbins() << endl;
-    cout << "nbinsY = " << histClustXZ->GetYaxis()->GetNbins() << endl;
-    cout << "  - OK 3" << endl;
-    histClustXZ->SetDirectory(plotDir);
-    _clusterOccXZ.push_back(histClustXZ);
-    */
+		// occupancy distribution
+		name = sensor->name() + "-HitOccupancy";
+		title = sensor->name() + " Hit Occupancy distribution";
+		TH1D *h = new TH1D(name.c_str(), title.c_str(), 100, 0, 1);
+    //TH1D *h = new TH1D(hname, htitle, vMaxHits[nsens]+1, 0, vMaxHits[nsens]+1); // rebin offline if needed
+    h->GetXaxis()->SetTitle("hits / event");
+    h->SetDirectory(plotDir);
+		_occDist.push_back(h);
 
-    /*
-    name.str(""); title.str("");
-    name << sensor->getName() << "ClusterOccupancyYZ" << _nameSuffix;
-    title << sensor->getName() << " Cluster OccupancyYZ"
-          << ";Y position [" << _device->getSpaceUnit() << "]"
-          << ";Z position [" << _device->getSpaceUnit() << "]"
-          << ";Clusters / pixel";
-    TH2D* histClustYZ = new TH2D(name.str().c_str(), title.str().c_str(),
-				 sensor->getPosNumY(), lowY, uppY,
-				 sensor->getPosNumY()+500, sensor->getOffZ()+0.4, sensor->getOffZ()-0.4);
-    histClustYZ->SetDirectory(plotDir);
-    _clusterOccYZ.push_back(histClustYZ);
-    */
-
-    sprintf(name,"%s%s_%s%s", _device->name().c_str(), sensor->name().c_str(), "ClusterOccupancyPix", _nameSuffix.c_str());
-    sprintf(title,"%s - %s [%s[", _device->name().c_str(), sensor->name().c_str(), "Cluster Occupancy (pixels)");
-    TH2D* histClustPix = new TH2D(name, title,
-				  sensor->getNumX(), -0.5, sensor->getNumX()-0.5,
-				  sensor->getNumY(), -0.5, sensor->getNumY()-0.5);
-    histClustPix->GetXaxis()->SetTitle("x-pixel");
-    histClustPix->GetYaxis()->SetTitle("y-pixel");
-    histClustPix->SetDirectory(plotDir);
-    _clusterOccPix.push_back(histClustPix);
-    
-  } // end loop in device sensors
+  }
 }
-
 
 //=========================================================
 TH2D* Analyzers::Occupancy::getHitOcc(unsigned int nsensor) {
@@ -147,10 +122,15 @@ void Analyzers::Occupancy::processEvent(const Storage::Event* event) {
   if (!checkCuts(event))
     return;
   
+	m_numEvents += 1;
+
   // 0.- Loop in planes
   for (unsigned int nplane=0; nplane<event->numPlanes(); nplane++){
     const Storage::Plane* plane=event->getPlane(nplane);
-    
+    TH2D* hits = _hitOcc.at(nplane);
+		TH2D* clusteredHits = _clusterHitOcc.at(nplane);
+		TH2D* clusters = _clusterOcc.at(nplane);
+		
     // 1.- Loop in hits within plane and fill histos
     for (unsigned int nhit=0; nhit<plane->numHits(); nhit++){
       const Storage::Hit* hit = plane->getHit(nhit);
@@ -159,7 +139,7 @@ void Analyzers::Occupancy::processEvent(const Storage::Event* event) {
       if (!checkCuts(hit))
         continue;
       
-      _hitOcc.at(nplane)->Fill(hit->getPixX(), hit->getPixY());
+      hits->Fill(hit->col(), hit->row());
       _totalHitOccupancy.at(nplane)++;
     }
     
@@ -170,72 +150,33 @@ void Analyzers::Occupancy::processEvent(const Storage::Event* event) {
       // Check if the cluster passes the cuts
       if (!checkCuts(cluster))
         continue;
-      
-      _clusterOcc.at(nplane)->Fill(cluster->getPosX(), cluster->getPosY());
-      //_clusterOccXZ.at(nplane)->Fill(cluster->getPosX(), cluster->getPosY());
-      //_clusterOccYZ.at(nplane)->Fill(cluster->getPosY(), cluster->getPosZ());
-      _clusterOccPix.at(nplane)->Fill(cluster->getPixX(), cluster->getPixY());
-      
-    } // end loop in clusters
-   
-  } // end loop in planes
-}
 
-//=========================================================
-void Analyzers::Occupancy::postProcessing(){
-  if (_postProcessed) return;
-
-  // Generate the bounds of the 1D occupancy hist
-  std::vector<unsigned int> vTotalHits;
-  std::vector<unsigned int> vMaxHits;
-  for(unsigned int nsens=0; nsens<_device->getNumSensors(); nsens++){
-    const Mechanics::Sensor* sensor = _device->getSensor(nsens);
-    TH2D* occ = _hitOcc.at(nsens);
-    unsigned int cnt=0, max=0;
-    for(unsigned int x=0; x<sensor->getNumX(); x++){
-      for(unsigned int y=0; y<sensor->getNumY(); y++){
-	const unsigned int numHits = occ->GetBinContent(x+1,y+1);
-	cnt += numHits;
-	if(numHits > max )
-	  max = numHits;
-      }
+      clusters->Fill(cluster->posGlobal().x(), cluster->posGlobal().y());
+			
+			for (Index ihit = 0; ihit < cluster->numHits(); ++ihit) {
+				const Storage::Hit* hit = cluster->getHit(ihit);
+				clusteredHits->Fill(hit->col(), hit->row());
+			}
     }
-    vTotalHits.push_back(cnt);
-    vMaxHits.push_back(max);
   }
+}
 
-  //for(unsigned int nsens=0; nsens<_device->getNumSensors(); nsens++)
-  //cout << "       - plane " << nsens << " totHits=" << vTotalHits[nsens]
-  //<< " max=" << vMaxHits[nsens] << endl;
-  
-  char hname[100], htitle[300];
-  TDirectory* plotDir = makeGetDirectory("Occupancy");
-  for(unsigned int nsens=0; nsens<_device->getNumSensors(); nsens++){
+void Analyzers::Occupancy::postProcessing()
+{
+  for (unsigned int nsens = 0; nsens < _device->getNumSensors(); nsens++) {
     const Mechanics::Sensor* sensor = _device->getSensor(nsens);
 
-    sprintf(hname,"%s%s_OccDist", _device->name().c_str(), sensor->name().c_str());
-    sprintf(htitle, "%s - %s [Occupancy distribution]", _device->name().c_str(), sensor->name().c_str());
-    float xmax = vTotalHits[nsens] != 0 ? (double)vMaxHits[nsens]/(double)vTotalHits[nsens] : vMaxHits[nsens];
-    TH1D *h = new TH1D(hname, htitle, 100, 0, xmax);
-    //TH1D *h = new TH1D(hname, htitle, vMaxHits[nsens]+1, 0, vMaxHits[nsens]+1); // rebin offline if needed
-    h->GetXaxis()->SetTitle("Hits per trigger");
-    h->SetDirectory(plotDir);
-        
-    TH2D* occ = _hitOcc.at(nsens);
-    for(int bx=1; bx<=occ->GetNbinsX(); ++bx){
-      for(int by=1; by<=occ->GetNbinsY(); ++by){
-	const unsigned int numHits = occ->GetBinContent(bx,by);
-	if( vTotalHits[nsens] != 0 ) h->Fill( (double)numHits / (double)vTotalHits[nsens] );
-	//h->Fill( (double)numHits );
+    TH2D* hits = _hitOcc.at(nsens);
+    TH1D* pixels = _occDist.at(nsens);
+
+    // rebin histogram to maximum occupancy range
+    pixels->SetBins(100, 0, hits->GetMaximum() / m_numEvents);
+    pixels->Reset();
+    for (int bx = 1; bx <= hits->GetNbinsX(); ++bx) {
+      for (int by = 1; by <= hits->GetNbinsY(); ++by) {
+        double numHits = hits->GetBinContent(bx, by);
+        if (numHits != 0)
+          pixels->Fill(numHits / m_numEvents);
       }
     }
-    _occDist.push_back(h);
-    
-  } // end loop in planes
-
-  // clear vectors
-  vTotalHits.clear();
-  vMaxHits.clear();
-  
-  _postProcessed = true;
-}
+  }
