@@ -37,7 +37,7 @@ public:
   uint64_t getTotalHitOccupancy(unsigned int sensor);
 
 private:
-  void bookHistos(TDirectory* plotdir);
+  void bookHistos(const Mechanics::Device& device, TDirectory* dir);
 
   uint64_t m_numEvents;
   std::vector<TH2D*> m_occHits;         //!< pixel hitmaps

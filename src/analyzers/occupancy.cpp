@@ -25,22 +25,21 @@ Analyzers::Occupancy::Occupancy(const Mechanics::Device* device,
     , m_numEvents(0)
 {
   assert(device && "Analyzer: can't initialize with null device");
-  bookHistos(makeGetDirectory("Occupancy"));
+  bookHistos(*device, makeGetDirectory("Occupancy"));
 }
 
-void Analyzers::Occupancy::bookHistos(TDirectory* plotDir)
+void Analyzers::Occupancy::bookHistos(const Mechanics::Device& device,
+                                      TDirectory* dir)
 {
   std::string name, title;
   TH1D* h1;
   TH2D* h2;
 
-  for (unsigned int nsens = 0; nsens < _device->getNumSensors(); nsens++) {
-    const Mechanics::Sensor* sensor = _device->getSensor(nsens);
+  for (Index nsens = 0; nsens < device.numSensors(); nsens++) {
+    const Mechanics::Sensor* sensor = device.getSensor(nsens);
 
     auto areaPix =
         sensor->sensitiveAreaPixel(); // col_min,col_max,row_min,row_max
-    auto areaXY =
-        sensor->sensitiveEnvelopeGlobal(); // x_min, x_max, y_min, y_max
 
     // raw hits in pixel coordinates
     name = sensor->name() + "-HitMap";
@@ -55,7 +54,7 @@ void Analyzers::Occupancy::bookHistos(TDirectory* plotDir)
                   areaPix[3]);
     h2->GetXaxis()->SetTitle("pixel column");
     h2->GetYaxis()->SetTitle("pixel row");
-    h2->SetDirectory(plotDir);
+    h2->SetDirectory(dir);
     m_occHits.push_back(h2);
 
     // clustered hits in pixel coordinates
@@ -71,7 +70,7 @@ void Analyzers::Occupancy::bookHistos(TDirectory* plotDir)
                   areaPix[3]);
     h2->GetXaxis()->SetTitle("pixel column");
     h2->GetYaxis()->SetTitle("pixel row");
-    h2->SetDirectory(plotDir);
+    h2->SetDirectory(dir);
     m_occClustersHits.push_back(h2);
 
     // cluster positions in global xy coordinates
@@ -80,14 +79,14 @@ void Analyzers::Occupancy::bookHistos(TDirectory* plotDir)
     TH2D* h2 = new TH2D(name.c_str(),
                         title.c_str(),
                         3 * sensor->numCols(),
-                        areaXY[0],
-                        areaXY[1],
+                        areaPix[0],
+                        areaPix[1],
                         3 * sensor->numRows(),
-                        areaXY[2],
-                        areaXY[3]);
-    h2->GetXaxis()->SetTitle("global x position");
-    h2->GetYaxis()->SetTitle("global y position");
-    h2->SetDirectory(plotDir);
+                        areaPix[2],
+                        areaPix[3]);
+    h2->GetXaxis()->SetTitle("pixel column");
+    h2->GetYaxis()->SetTitle("pixel row");
+    h2->SetDirectory(dir);
     m_occClusters.push_back(h2);
 
     // occupancy distribution
@@ -95,7 +94,7 @@ void Analyzers::Occupancy::bookHistos(TDirectory* plotDir)
     title = sensor->name() + " Pixel Occupancy distribution";
     h1 = new TH1D(name.c_str(), title.c_str(), 100, 0, 1);
     h1->GetXaxis()->SetTitle("hits / event");
-    h1->SetDirectory(plotDir);
+    h1->SetDirectory(dir);
     m_occPixels.push_back(h1);
   }
 }
@@ -149,7 +148,7 @@ void Analyzers::Occupancy::processEvent(const Storage::Event* event)
       if (!checkCuts(hit))
         continue;
 
-      hits->Fill(hit->col(), hit->row());
+      hits->Fill(hit->posPixel().x(), hit->posPixel().y());
     }
 
     // 2.- Loop in clusters within plane and fill histos
@@ -161,11 +160,11 @@ void Analyzers::Occupancy::processEvent(const Storage::Event* event)
       if (!checkCuts(cluster))
         continue;
 
-      clusters->Fill(cluster->posGlobal().x(), cluster->posGlobal().y());
+      clusters->Fill(cluster->posPixel().x(), cluster->posPixel().y());
 
       for (Index ihit = 0; ihit < cluster->numHits(); ++ihit) {
         const Storage::Hit* hit = cluster->getHit(ihit);
-        clustersHits->Fill(hit->col(), hit->row());
+        clustersHits->Fill(hit->posPixel().x(), hit->posPixel().y());
       }
     }
   }
