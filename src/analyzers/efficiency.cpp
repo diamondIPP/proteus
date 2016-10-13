@@ -671,7 +671,7 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
         std::cout << cluster->getNumHits() << std::endl;
             continue;}*/
 
-      matches.at(cluster->getPlane()->planeNumber()) = cluster;
+      matches.at(cluster->getPlane()->sensorId()) = cluster;
     }
 
     assert(matches.size() == _dutDevice->getNumSensors() &&
@@ -861,7 +861,7 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
 
           if(hit1->getTiming()==1)fflag=fflag+1;  //asking for get plane
        //   cout<<cluster->getPlane()->getPlaneNum()<<endl;
-          if(cluster->getPlane()->planeNumber()==2) cluster0 = track->getCluster(k);
+          if(cluster->getPlane()->sensorId()==2) cluster0 = track->getCluster(k);
           }
 
 

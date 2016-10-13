@@ -28,6 +28,8 @@ public:
   double timing() const { return m_timing; }
   double value() const { return m_value; }
 
+  Index sensorId() const;
+
   void addHit(Hit* hit);
   Index numHits() const { return static_cast<Index>(m_hits.size()); }
   Hit* getHit(Index i) { return m_hits.at(i); }

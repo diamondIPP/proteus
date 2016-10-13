@@ -47,6 +47,8 @@ void Storage::Cluster::transformToGlobal(const Transform3D& pixelToGlobal)
                   std::sqrt(covGlobal(2, 2)));
 }
 
+Index Storage::Cluster::sensorId() const { return m_plane->sensorId(); }
+
 void Storage::Cluster::setTrack(Storage::Track* track)
 {
   assert(!m_track && "Cluster: can't use a cluster for more than one track");

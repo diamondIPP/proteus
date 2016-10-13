@@ -17,7 +17,7 @@ namespace Storage {
  */
 class Plane {
 public:
-  Index planeNumber() const { return m_planeNum; }
+  Index sensorId() const { return m_planeNum; }
 
   Storage::Hit* newHit();
   Index numHits() const { return static_cast<Index>(m_hits.size()); }

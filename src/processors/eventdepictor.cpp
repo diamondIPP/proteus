@@ -378,7 +378,7 @@ void EventDepictor::depictEvent(const Storage::Event* refEvent,
     for (unsigned int nclus = 0; nclus < track->getNumClusters(); nclus++)
     {
       const Storage::Cluster* cluster = track->getCluster(nclus);
-      refClusters[cluster->getPlane()->planeNumber()] = cluster;
+      refClusters[cluster->getPlane()->sensorId()] = cluster;
     }
 
     // Draw the track in each sensor, with the associated cluster
