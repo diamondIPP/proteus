@@ -3,8 +3,8 @@
  * @author Moritz Kiehn <msmk@cern.ch>
  */
 
-#ifndef __LOGGER_H__
-#define __LOGGER_H__
+#ifndef PT_LOGGER_H_
+#define PT_LOGGER_H_
 
 #include <iostream>
 
@@ -35,7 +35,7 @@ public:
   void setLevel(Level lvl) { _lvl = lvl; }
   template <typename... Ts> void error(const Ts&... things)
   {
-    log(Level::ERROR, things...);
+    log(Level::ERROR, ANSI_BOLD, ANSI_RED, things..., ANSI_RESET);
   }
   template <typename... Ts> void info(const Ts&... things)
   {
@@ -43,10 +43,15 @@ public:
   }
   template <typename... Ts> void debug(const Ts&... things)
   {
-    log(Level::DEBUG, things...);
+    log(Level::DEBUG, ANSI_ITALIC, things..., ANSI_RESET);
   }
 
 private:
+  static const char* ANSI_RESET;
+  static const char* ANSI_BOLD;
+  static const char* ANSI_ITALIC;
+  static const char* ANSI_RED;
+
   template <typename T> static void print(std::ostream& os, const T& thing)
   {
     os << thing;
@@ -72,7 +77,7 @@ private:
 
 Logger& logger();
 
-}  // namespace Utils
+} // namespace Utils
 
 /* Convenience macros to use the logger.
  *
@@ -85,8 +90,10 @@ Logger& logger();
  *     using Utils::logger;
  *
  */
-#define ERROR(...) do { logger().error(__VA_ARGS__); } while(false)
+// clang-format off
+#define ERROR(...) do { logger().error("ERROR: ", __VA_ARGS__); } while(false)
 #define INFO(...) do { logger().info(__VA_ARGS__); } while(false)
-#define DEBUG(...) do { logger().debug(__VA_ARGS__); } while(false)
+#define DEBUG(...) do { logger().debug("DEBUG ", __FUNCTION__, ": ", __VA_ARGS__); } while(false)
+// clang-format on
 
-#endif  // __LOGGER_H__
+#endif // PT_LOGGER_H
