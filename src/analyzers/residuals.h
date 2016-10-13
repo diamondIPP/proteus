@@ -1,5 +1,5 @@
-#ifndef RESIDUALS_H
-#define RESIDUALS_H
+#ifndef PT_RESIDUALS_H
+#define PT_RESIDUALS_H
 
 #include <vector>
 
@@ -19,14 +19,6 @@ class Device;
 namespace Analyzers {
 
 class Residuals : public SingleAnalyzer {
-private:
-  std::vector<TH1D*> _residualsX;
-  std::vector<TH1D*> _residualsY;
-  std::vector<TH2D*> _residualsXX;
-  std::vector<TH2D*> _residualsXY;
-  std::vector<TH2D*> _residualsYY;
-  std::vector<TH2D*> _residualsYX;
-
 public:
   Residuals(
       const Mechanics::Device* refDevice,
@@ -46,7 +38,16 @@ public:
   TH2D* getResidualXY(unsigned int nsensor);
   TH2D* getResidualYY(unsigned int nsensor);
   TH2D* getResidualYX(unsigned int nsensor);
-};
-}
 
-#endif // RESIDUALS_H
+private:
+  std::vector<TH1D*> _residualsX;
+  std::vector<TH1D*> _residualsY;
+  std::vector<TH2D*> _residualsXX;
+  std::vector<TH2D*> _residualsXY;
+  std::vector<TH2D*> _residualsYY;
+  std::vector<TH2D*> _residualsYX;
+};
+
+} // namespace Analyzers
+
+#endif // PT_RESIDUALS_H

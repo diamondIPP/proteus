@@ -1,81 +1,54 @@
 #include "residuals.h"
 
 #include <cassert>
-#include <math.h>
+#include <cmath>
 #include <sstream>
 
 #include <TDirectory.h>
 #include <TH1D.h>
 #include <TH2D.h>
 
-// Access to the device being analyzed and its sensors
-#include "../mechanics/device.h"
-#include "../mechanics/sensor.h"
-// Access to the data stored in the event
-#include "../storage/cluster.h"
-#include "../storage/event.h"
-#include "../storage/hit.h"
-#include "../storage/plane.h"
-#include "../storage/track.h"
-// Some generic processors to calcualte typical event related things
-#include "../processors/processors.h"
+#include "mechanics/device.h"
+#include "processors/processors.h"
+#include "storage/event.h"
 
 namespace Analyzers {
 
-void Residuals::processEvent(const Storage::Event* refEvent)
+void Residuals::processEvent(const Storage::Event* event)
 {
-  assert(refEvent && "Analyzer: can't process null events");
+  assert(event && "Analyzer: can't process null events");
 
   // Throw an error for sensor / plane mismatch
-  eventDeviceAgree(refEvent);
+  eventDeviceAgree(event);
 
   // Check if the event passes the cuts
-  if (!checkCuts(refEvent))
+  if (!checkCuts(event))
     return;
 
-  for (unsigned int ntrack = 0; ntrack < refEvent->numTracks(); ntrack++) {
-    const Storage::Track* track = refEvent->getTrack(ntrack);
+  for (Index itrack = 0; itrack < event->numTracks(); itrack++) {
+    const Storage::Track* track = event->getTrack(itrack);
 
     // Check if the track passes the cuts
     if (!checkCuts(track))
       continue;
 
-    for (unsigned int nplane = 0; nplane < refEvent->numPlanes(); nplane++) {
-      const Storage::Plane* plane = refEvent->getPlane(nplane);
-      const Mechanics::Sensor* sensor = _device->getSensor(nplane);
+    for (Index icluster = 0; icluster < track->numClusters(); ++icluster) {
+      const Storage::Cluster* cluster = track->getCluster(icluster);
+      Index sensorId = cluster->sensorId();
+      const Mechanics::Sensor* sensor = _device->getSensor(sensorId);
+
       double tx = 0, ty = 0, tz = 0;
       Processors::trackSensorIntercept(track, sensor, tx, ty, tz);
 
-      // fdibello@cern.ch variable to select the closest cluster associated to
-      // the track
-      double rx1 = 0, ry1 = 0, dist = 0, dist1 = 1000000;
+      XYZPoint t(tx, ty, tz);
+      XYZVector d = cluster->posGlobal() - t;
 
-      for (unsigned int ncluster = 0; ncluster < plane->numClusters();
-           ncluster++) {
-        const Storage::Cluster* cluster = plane->getCluster(ncluster);
-
-        // Check if the cluster passes the cuts
-        if (!checkCuts(cluster))
-          continue;
-
-        const double rx = tx - cluster->getPosX();
-        const double ry = ty - cluster->getPosY();
-        dist = sqrt(pow(rx / sensor->getPitchX(), 2) +
-                    pow(ry / sensor->getPitchY(), 2));
-        // fdibello@cern.ch only the closest cluster w.r.t. the track is taken
-        if (dist < dist1) {
-          rx1 = rx;
-          ry1 = ry;
-          dist1 = dist;
-        }
-      }
-
-      _residualsX.at(nplane)->Fill(rx1);
-      _residualsY.at(nplane)->Fill(ry1);
-      _residualsXX.at(nplane)->Fill(rx1, tx);
-      _residualsYY.at(nplane)->Fill(ry1, ty);
-      _residualsXY.at(nplane)->Fill(rx1, ty);
-      _residualsYX.at(nplane)->Fill(ry1, tx);
+      _residualsX.at(sensorId)->Fill(d.x());
+      _residualsY.at(sensorId)->Fill(d.y());
+      _residualsXX.at(sensorId)->Fill(d.x(), t.x());
+      _residualsYY.at(sensorId)->Fill(d.y(), t.y());
+      _residualsXY.at(sensorId)->Fill(d.x(), t.y());
+      _residualsYX.at(sensorId)->Fill(d.y(), t.x());
     }
   }
 }
