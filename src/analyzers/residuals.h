@@ -7,7 +7,8 @@
 #include <TH1D.h>
 #include <TH2D.h>
 
-#include "singleanalyzer.h"
+#include "analyzers/analyzer.h"
+#include "analyzers/singleanalyzer.h"
 
 namespace Storage {
 class Event;
@@ -46,6 +47,27 @@ private:
   std::vector<TH2D*> _residualsXY;
   std::vector<TH2D*> _residualsYY;
   std::vector<TH2D*> _residualsYX;
+};
+
+class UnbiasedResiduals : public Analyzer {
+public:
+  UnbiasedResiduals(const Mechanics::Device& device, TDirectory* dir);
+
+  std::string name() const;
+  void analyze(const Storage::Event& event);
+  void finalize();
+
+private:
+  const Mechanics::Device& m_device;
+  std::vector<TH2D*> m_res;
+  std::vector<TH2D*> m_resUtrackU;
+  std::vector<TH2D*> m_resUtrackV;
+  std::vector<TH2D*> m_resVtrackU;
+  std::vector<TH2D*> m_resVtrackV;
+  std::vector<TH2D*> m_resUslopeU;
+  std::vector<TH2D*> m_resUslopeV;
+  std::vector<TH2D*> m_resVslopeU;
+  std::vector<TH2D*> m_resVslopeV;
 };
 
 } // namespace Analyzers
