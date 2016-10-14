@@ -1,28 +1,28 @@
-#include <cstdio>
-#include <cstdlib>
+/**
+ * \file
+ * \author Moritz Kiehn (msmk@cern.ch)
+ * \date 2016-10
+ */
+
 #include <iostream>
 #include <string>
 
 #include "mechanics/device.h"
-
-void print_help(const std::string& name)
-{
-  using std::cout;
-
-  cout << "usage: " << name << " CONFIG_PATH\n\n";
-  cout << "read and show device configuration" << std::endl;
-}
+#include "utils/logger.h"
 
 int main(int argc, char const* argv[])
 {
-  const std::string arg0(argv[0]);
-  const std::string name(arg0.substr(arg0.find_last_of('/') + 1));
-
   if (argc != 2) {
-    print_help(name);
+    std::string arg0(argv[0]);
+    std::string name(arg0.substr(arg0.find_last_of('/') + 1));
+    std::cerr << "usage: " << name << " DEVICE_PATH\n";
+    std::cerr << '\n';
+    std::cerr << "show device configuration\n";
+    std::cerr.flush();
     return EXIT_FAILURE;
   }
 
+  Utils::logger().setLevel(Utils::Logger::ERROR);
   Mechanics::Device::fromFile(argv[1]).print(std::cout);
 
   return EXIT_SUCCESS;
