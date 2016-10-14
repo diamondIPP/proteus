@@ -97,11 +97,13 @@ void Storage::Track::print(std::ostream& os, const std::string& prefix) const
   os << prefix << "num clusters: " << m_clusters.size() << '\n';
   os << prefix << "global state:\n";
   m_state.print(os, prefix + "  ");
-  os << prefix << "local states:\n";
-  for (auto is = m_localStates.begin(); is != m_localStates.end(); ++is) {
-    const auto& sensorId = is->first;
-    const auto& state = is->second;
-    os << prefix << "  sensor " << sensorId << ":\n";
-    state.print(os, prefix + "    ");
+  if (!m_localStates.empty()) {
+    os << prefix << "local states:\n";
+    for (auto is = m_localStates.begin(); is != m_localStates.end(); ++is) {
+      const auto& sensorId = is->first;
+      const auto& state = is->second;
+      os << prefix << "  sensor " << sensorId << ":\n";
+      state.print(os, prefix + "    ");
+    }
   }
 }
