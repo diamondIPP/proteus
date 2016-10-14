@@ -42,13 +42,6 @@ public:
   void generateTracks(Storage::Event* event, double beamAngleX = 0,
                       double beamAngleY = 0, int maskedPlane = -1) const;
 
-  static int linearFit(const unsigned int npoints, const double* independant,
-                       const double* dependant, const double* uncertainty,
-                       double& slope, double& slopeErr, double& intercept,
-                       double& interceptErr, double& chi2, double& covariance);
-
-  static void fitTrackToClusters(Storage::Track* track);
-
   bool getCalcIntercepts() { return _calcIntercepts; }
   std::string name() const;
   void process(Storage::Event& event) const;

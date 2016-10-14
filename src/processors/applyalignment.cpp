@@ -1,7 +1,7 @@
 #include "applyalignment.h"
 
 #include "mechanics/device.h"
-#include "processors/trackmaker.h"
+#include "processors/tracking.h"
 #include "storage/cluster.h"
 #include "storage/event.h"
 #include "storage/hit.h"
@@ -40,8 +40,7 @@ void Processors::applyAlignment(Storage::Event* event,
       plane->getCluster(icluster)->transformToGlobal(pixelToGlobal);
   }
 
-  // Apply alignment to tracks
-  for (unsigned int itrack = 0; itrack < event->numTracks(); itrack++) {
-    Processors::TrackMaker::fitTrackToClusters(event->getTrack(itrack));
-  }
+  // refit tracks to accomodate possible alignment changes
+  for (unsigned int itrack = 0; itrack < event->numTracks(); itrack++)
+    Processors::fitTrack(*event->getTrack(itrack));
 }

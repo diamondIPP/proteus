@@ -8,6 +8,7 @@
 
 #include "mechanics/device.h"
 #include "processors/processors.h"
+#include "processors/tracking.h"
 #include "storage/event.h"
 
 #ifndef VERBOSE
@@ -101,7 +102,7 @@ void Processors::TrackMaker::searchPlane(Track* track,
       // This track can't continue and doesn't meet the cluster requirement
       delete trialTrack;
     } else {
-      fitTrackToClusters(trialTrack);
+      fitTrack(*trialTrack);
       candidates.push_back(trialTrack);
     }
   }
@@ -228,157 +229,6 @@ void Processors::TrackMaker::generateTracks(Event* event,
       //   bestCandidate->getCluster(i)->setTrack(bestCandidate);
     }
   }
-}
-
-int Processors::TrackMaker::linearFit(const unsigned int npoints,
-                                      const double* independant,
-                                      const double* dependant,
-                                      const double* uncertainty,
-                                      double& slope,
-                                      double& slopeErr,
-                                      double& intercept,
-                                      double& interceptErr,
-                                      double& chi2,
-                                      double& covariance)
-{
-  if (npoints < 3) {
-    if (VERBOSE)
-      cout << "WARN: can't fit a line to less than 3 points";
-    return -1;
-  }
-
-  double* err = new double[npoints];
-
-  slope = 0;
-  slopeErr = 0;
-  intercept = 0;
-  interceptErr = 0;
-  chi2 = 0;
-  covariance = 0;
-
-  // Check the uncertainties for problems
-  for (unsigned int i = 0; i < npoints; i++) {
-    assert(uncertainty[i] >= 0 &&
-           "Processors: negative uncertainty for fit point");
-
-    // Check if no uncertainty is specified (zeros are exact in binary)
-    if (uncertainty[i] == 0.0)
-      err[i] = 1.0;
-    else
-      err[i] = uncertainty[i];
-  }
-
-  // Regression variables
-  double ss = 0;
-  double sx = 0;
-  double sy = 0;
-  double sxoss = 0;
-  double st2 = 0;
-
-  for (unsigned int i = 0; i < npoints; i++) {
-    const double wt = 1.0 / pow(uncertainty[i], 2);
-    // Check for divison by 0
-    if (!(wt <= DBL_MAX && wt >= -DBL_MAX)) {
-      if (VERBOSE)
-        cout << "WARN: regresssion divided by 0 uncertainty" << endl;
-      return -1;
-    }
-    ss += wt;
-    sx += independant[i] * wt;
-    sy += dependant[i] * wt;
-  }
-
-  sxoss = sx / ss;
-
-  for (unsigned int i = 0; i < npoints; i++) {
-    const double t = (independant[i] - sxoss) / uncertainty[i];
-    st2 += t * t;
-    slope += t * dependant[i] / uncertainty[i];
-  }
-
-  slope /= st2;
-  intercept = (sy - sx * slope) / ss;
-
-  // sy, sx, ss, st2 are good
-
-  slopeErr = sqrt(1.0 / st2);
-  interceptErr = sqrt((1.0 + sx * sx / (ss * st2)) / ss);
-
-  for (unsigned int i = 0; i < npoints; i++)
-    chi2 += pow((dependant[i] - intercept - slope * independant[i]) /
-                    uncertainty[i],
-                2);
-
-  covariance = -sx / (ss * st2);
-
-  delete[] err;
-
-  return 0;
-}
-
-void Processors::TrackMaker::fitTrackToClusters(Track* track)
-{
-  const unsigned int npoints = track->getNumClusters();
-  double* dependant = new double[npoints];
-  double* independant = new double[npoints];
-  double* uncertainty = new double[npoints];
-
-  // Prepare variables for the regression output
-  double originX = 0, originY = 0;
-  double originErrX = 0, originErrY = 0;
-  double slopeX = 0, slopeY = 0;
-  double slopeErrX = 0, slopeErrY = 0;
-  double chi2X = 0, chi2Y = 0;
-  double covarianceX = 0, covarianceY = 0;
-
-  for (unsigned int axis = 0; axis < 2; axis++) {
-    // Fill the arrays with the points dependint on the loop (x or y axis)
-    for (unsigned int npoint = 0; npoint < npoints; npoint++) {
-      if (!axis) {
-        dependant[npoint] = track->getCluster(npoint)->getPosX();
-        uncertainty[npoint] = track->getCluster(npoint)->getPosErrX();
-      } else {
-        dependant[npoint] = track->getCluster(npoint)->getPosY();
-        uncertainty[npoint] = track->getCluster(npoint)->getPosErrY();
-      }
-      independant[npoint] = track->getCluster(npoint)->getPosZ();
-    }
-
-    // Perform the regression
-    if (!axis) {
-      linearFit(npoints,
-                independant,
-                dependant,
-                uncertainty,
-                slopeX,
-                slopeErrX,
-                originX,
-                originErrX,
-                chi2X,
-                covarianceX);
-    } else {
-      linearFit(npoints,
-                independant,
-                dependant,
-                uncertainty,
-                slopeY,
-                slopeErrY,
-                originY,
-                originErrY,
-                chi2Y,
-                covarianceY);
-    }
-  }
-
-  TrackState state(originX, originY, slopeX, slopeY);
-  state.setErrU(originErrX, slopeErrX, covarianceX);
-  state.setErrV(originErrY, slopeErrY, covarianceY);
-  track->setGlobalState(state);
-  track->setGoodnessOfFit(chi2X + chi2Y, 2 * (npoints - 2));
-
-  delete[] dependant;
-  delete[] independant;
-  delete[] uncertainty;
 }
 
 Processors::TrackMaker::TrackMaker(double maxClusterDist,
