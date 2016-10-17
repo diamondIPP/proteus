@@ -11,6 +11,7 @@
 #include <initializer_list>
 #include <limits>
 #include <ostream>
+#include <type_traits>
 
 namespace Utils {
 
@@ -72,12 +73,37 @@ struct Box {
       status &= axes[i].isInside(x[i]);
     return status;
   }
+  template <typename... Us,
+            typename = typename std::enable_if<sizeof...(Us) == N>::type>
+  bool isInside(Us... x) const
+  {
+    return isInside(Point{static_cast<T>(x)...});
+  }
 
+  Box() = default;
   Box(std::initializer_list<Axis> intervals)
   {
     std::copy(intervals.begin(), intervals.end(), axes.begin());
   }
 };
+
+template <typename T0, typename T1, Endpoints ENDPOINTS>
+Interval<T0, ENDPOINTS> intersection(const Interval<T0, ENDPOINTS>& interval0,
+                                     const Interval<T1, ENDPOINTS>& interval1)
+{
+  return {std::max<T0>(interval0.min, interval1.min),
+          std::min<T0>(interval0.max, interval1.max)};
+}
+
+template <typename T0, typename T1, size_t N, Endpoints ENDPOINTS>
+Box<N, T0, ENDPOINTS> intersection(const Box<N, T0, ENDPOINTS>& box0,
+                                   const Box<N, T1, ENDPOINTS>& box1)
+{
+  Box<N, T0, ENDPOINTS> box;
+  for (size_t i = 0; i < N; ++i)
+    box.axes[i] = intersection(box0.axes[i], box1.axes[i]);
+  return box;
+}
 
 template <typename T, Endpoints ENDPOINTS>
 std::ostream& operator<<(std::ostream& os,
