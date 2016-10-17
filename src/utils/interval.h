@@ -3,8 +3,8 @@
  * \created 2016-08
  */
 
-#ifndef JU_INTERVAL_H
-#define JU_INTERVAL_H
+#ifndef PT_INTERVAL_H
+#define PT_INTERVAL_H
 
 #include <algorithm>
 #include <array>
@@ -97,4 +97,4 @@ std::ostream& operator<<(std::ostream& os,
 
 } // namespace Utils
 
-#endif // JU_INTERVAL_H
+#endif // PT_INTERVAL_H
