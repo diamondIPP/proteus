@@ -207,47 +207,43 @@ Analyzers::UnbiasedResiduals::UnbiasedResiduals(const Mechanics::Device& device,
                                                 TDirectory* parent)
     : m_device(device)
 {
+  using Mechanics::Sensor;
+
   TDirectory* dir = parent->mkdir("UnbiasedResiduals");
 
   for (Index isensor = 0; isensor < device.numSensors(); ++isensor) {
-    const Mechanics::Sensor& sensor = *device.getSensor(isensor);
+    const Sensor& sensor = *device.getSensor(isensor);
 
-    auto envelope = sensor.sensitiveAreaLocal();
-    double minU = envelope[0];
-    double maxU = envelope[1];
-    double minV = envelope[2];
-    double maxV = envelope[3];
     double maxDist = 10 * std::max(sensor.pitchCol(), sensor.pitchRow());
     double maxSlope = 0.001;
     size_t nBins = 10 * 16;
+    Sensor::Area area = sensor.sensitiveAreaLocal();
+    Sensor::Area::Axis dist = {-maxDist, maxDist};
+    Sensor::Area::Axis slope = {-maxSlope, maxSlope};
 
     auto makeH2 = [&](const char* suffix,
-                      double min0,
-                      double max0,
-                      double min1,
-                      double max1) {
+                      const Sensor::Area::Axis& bounds0,
+                      const Sensor::Area::Axis& bounds1) {
       TH2D* h = new TH2D((sensor.name() + suffix).c_str(),
                          "",
                          nBins,
-                         min0,
-                         max0,
+                         bounds0.min,
+                         bounds0.max,
                          nBins,
-                         min1,
-                         max1);
+                         bounds1.min,
+                         bounds1.max);
       h->SetDirectory(dir);
       return h;
     };
-    // clang-format off
-    m_res.push_back(makeH2("-res", -maxDist, maxDist, -maxDist, maxDist));
-    m_resUtrackU.push_back(makeH2("-resUtrackU", minU, maxU, -maxDist, maxDist));
-    m_resUtrackV.push_back(makeH2("-resUtrackV", minV, maxV, -maxDist, maxDist));
-    m_resVtrackU.push_back(makeH2("-resVtrackU", minU, maxU, -maxDist, maxDist));
-    m_resVtrackV.push_back(makeH2("-resVtrackV", minV, maxV, -maxDist, maxDist));
-    m_resUslopeU.push_back(makeH2("-resUslopeU", -maxSlope, maxSlope, -maxDist, maxDist));
-    m_resUslopeV.push_back(makeH2("-resUslopeV", -maxSlope, maxSlope, -maxDist, maxDist));
-    m_resVslopeU.push_back(makeH2("-resVslopeU", -maxSlope, maxSlope, -maxDist, maxDist));
-    m_resVslopeV.push_back(makeH2("-resVslopeV", -maxSlope, maxSlope, -maxDist, maxDist));
-    // clang-format on
+    m_res.push_back(makeH2("-res", dist, dist));
+    m_resUtrackU.push_back(makeH2("-resUtrackU", area.axes[0], dist));
+    m_resUtrackV.push_back(makeH2("-resUtrackV", area.axes[0], dist));
+    m_resVtrackU.push_back(makeH2("-resVtrackU", area.axes[1], dist));
+    m_resVtrackV.push_back(makeH2("-resVtrackV", area.axes[1], dist));
+    m_resUslopeU.push_back(makeH2("-resUslopeU", slope, dist));
+    m_resUslopeV.push_back(makeH2("-resUslopeV", slope, dist));
+    m_resVslopeU.push_back(makeH2("-resVslopeU", slope, dist));
+    m_resVslopeV.push_back(makeH2("-resVslopeV", slope, dist));
   }
 }
 
