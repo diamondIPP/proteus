@@ -50,6 +50,8 @@ set(COMMON_SRC
     processors/processor.cpp
     processors/processors.cpp
     processors/synchronizer.cpp
+    processors/trackfitter.cpp
+    processors/tracking.cpp
     processors/trackmaker.cpp
     processors/trackmatcher.cpp
     storage/cluster.cpp
@@ -58,6 +60,7 @@ set(COMMON_SRC
     storage/track.cpp
     storage/plane.cpp
     storage/storageio.cpp
+    utils/arguments.cpp
     utils/config.cpp
     utils/configparser.cpp
     utils/eventloop.cpp
@@ -80,3 +83,6 @@ target_link_libraries(pt-cfg pt-common)
 add_executable(pt-noise pt-noise.cpp)
 target_include_directories(pt-noise PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries(pt-noise pt-common ${Boost_PROGRAM_OPTIONS_LIBRARY})
+
+add_executable(pt-track pt-track.cpp)
+target_link_libraries(pt-track pt-common)
