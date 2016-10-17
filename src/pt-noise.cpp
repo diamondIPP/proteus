@@ -14,7 +14,8 @@
 
 #include <TFile.h>
 
-#include "analyzers/noise.h"
+#include "analyzers/noisescan.h"
+#include "analyzers/occupancy.h"
 #include "mechanics/device.h"
 #include "storage/storageio.h"
 #include "utils/arguments.h"
@@ -39,8 +40,6 @@ void run_noise(const std::string& input_path, const std::string& output_path)
 
 int main(int argc, char const* argv[])
 {
-  using namespace Analyzers;
-
   Utils::Arguments args("run proteus noise scan");
   if (args.parse(argc, argv))
     return EXIT_FAILURE;
@@ -54,9 +53,10 @@ int main(int argc, char const* argv[])
 
   auto cfg = Utils::Config::readConfig(args.config());
   auto noise =
-      std::make_shared<NoiseAnalyzer>(device, cfg["noise_scan"], hists);
+      std::make_shared<Analyzers::NoiseScan>(device, cfg["noise_scan"], hists);
 
   Utils::EventLoop loop(&input);
+  loop.addAnalyzer(std::make_shared<Analyzers::Occupancy>(&device, hists));
   loop.addAnalyzer(noise);
   loop.run();
 
