@@ -14,6 +14,7 @@ set(COMMON_SRC
     analyzers/examplesingleanalyzer.cpp
     analyzers/hitinfo.cpp
     analyzers/matching.cpp
+    analyzers/noisescan.cpp
     analyzers/occupancy.cpp
     analyzers/singleanalyzer.cpp
     analyzers/syncfluctuation.cpp
