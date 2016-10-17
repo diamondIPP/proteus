@@ -8,7 +8,8 @@
 #include <TH1D.h>
 #include <TH2D.h>
 
-#include "singleanalyzer.h"
+#include "analyzers/singleanalyzer.h"
+#include "utils/definitions.h"
 
 namespace Storage {
 class Event;
@@ -29,12 +30,12 @@ public:
   void postProcessing();
 
   /** Returns Hit occupancy 2D-map for given sensor. */
-  TH2D* getHitOcc(unsigned int nsensor);
+  TH2D* getHitOcc(Index isensor);
   /** Returns Hit occupancy 1D-dist for given sensor.
       postProcessing() must have been called beforehand. */
-  TH1D* getHitOccDist(unsigned int nsensors);
+  TH1D* getHitOccDist(Index isensor);
   /** Returns total number of hits for given sensor. */
-  uint64_t getTotalHitOccupancy(unsigned int sensor);
+  uint64_t getTotalHitOccupancy(Index isensor);
 
 private:
   void bookHistos(const Mechanics::Device& device, TDirectory* dir);
