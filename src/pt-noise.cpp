@@ -14,7 +14,6 @@
 
 #include <TFile.h>
 
-#include "analyzers/eventprinter.h"
 #include "analyzers/noise.h"
 #include "mechanics/device.h"
 #include "storage/storageio.h"
@@ -59,7 +58,6 @@ int main(int argc, char const* argv[])
 
   Utils::EventLoop loop(&input);
   loop.addAnalyzer(noise);
-  // loop.addAnalyzer(std::make_shared<EventPrinter>());
   loop.run();
 
   noise->writeMask(maskPath);
