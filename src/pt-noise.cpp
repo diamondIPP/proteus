@@ -1,6 +1,9 @@
 /**
- * @file run noise scan to find and mask noisy pixels
- * @author Moritz Kiehn <msmk@cern.ch>
+ * \file
+ * \author Moritz Kiehn <msmk@cern.ch>
+ * \date 2016-09
+ *
+ * run noise scan to find noisy pixels and create pixel masks
  */
 
 #include <cstdlib>
@@ -9,73 +12,59 @@
 #include <string>
 #include <vector>
 
-#include <boost/program_options.hpp>
+#include <TFile.h>
 
 #include "analyzers/eventprinter.h"
-#include "loopers/looper.h"
-#include "processors/processors.h"
-#include "processors/clustermaker.h"
+#include "analyzers/noise.h"
+#include "mechanics/device.h"
 #include "storage/storageio.h"
-#include "utils/logger.h"
+#include "utils/arguments.h"
+#include "utils/config.h"
 #include "utils/eventloop.h"
+#include "utils/logger.h"
 
-void run_noise(const std::string& input_path,
-               const std::string& output_path)
+void run_noise(const std::string& input_path, const std::string& output_path)
 {
   Storage::StorageIO input(input_path.c_str(), Storage::INPUT);
   Utils::EventLoop loop(&input);
-  
+
   Processors::Processor* clusterer = new Processors::ClusterMaker(1, 1, 2);
   Analyzers::SingleAnalyzer* printer = new Analyzers::EventPrinter();
-  
+
   loop.addProcessor(std::unique_ptr<Processors::Processor>(clusterer));
   loop.addAnalyzer(std::unique_ptr<Analyzers::SingleAnalyzer>(printer));
-  
+
   Utils::globalLogger().setLevel(Utils::Logger::DEBUG);
   loop.run();
 }
 
 int main(int argc, char const* argv[])
 {
-  namespace po = boost::program_options;
-  using std::string;
+  using namespace Analyzers;
 
-  string argInput;
-  string argOutput;
-  string argDevice;
-  string argGlobal;
-
-  po::options_description options("Judith noise scan");
-  po::positional_options_description positional;
-  // clang-format off
-  options.add_options()
-    ("help,h", "show this help")
-    ("input,i", po::value<string>(&argInput)->required(), "input path")
-    ("output,o", po::value<string>(&argOutput)->required(), "output path");
-    // ("device,d", po::value<string>(&argDevice)->required(), "path to the device configuration")
-    // ("global,g", po::value<string>(&argGlobal)->required(), "path to the global configuration");
-  // clang-format on
-  positional.add("output", 1).add("input", 1);
-
-  try {
-    po::variables_map vm;
-    po::store(po::command_line_parser(argc, argv)
-                  .options(options)
-                  .positional(positional)
-                  .run(),
-              vm);
-    po::notify(vm);
-    if (vm.count("help")) {
-      std::cout << options << std::endl;
-      return EXIT_SUCCESS;
-    }
-    
-    run_noise(argInput, argOutput);
-    
-  } catch (po::error& err) {
-    std::cerr << err.what() << "\n\n" << options << std::endl;
+  Utils::Arguments args("run proteus noise scan");
+  if (args.parse(argc, argv))
     return EXIT_FAILURE;
-  }
-  
+
+  Utils::logger().setLevel(Utils::Logger::INFO);
+
+  Mechanics::Device device = Mechanics::Device::fromFile(args.device());
+  Storage::StorageIO input(args.input().c_str(), Storage::INPUT);
+  TFile* hists = TFile::Open(args.makeOutput("hists.root").c_str(), "RECREATE");
+  std::string maskPath = args.makeOutput("noise_mask.toml");
+
+  auto cfg = Utils::Config::readConfig(args.config());
+  auto noise =
+      std::make_shared<NoiseAnalyzer>(device, cfg["noise_scan"], hists);
+
+  Utils::EventLoop loop(&input);
+  loop.addAnalyzer(noise);
+  // loop.addAnalyzer(std::make_shared<EventPrinter>());
+  loop.run();
+
+  noise->writeMask(maskPath);
+  hists->Write();
+  hists->Close();
+
   return EXIT_SUCCESS;
 }
