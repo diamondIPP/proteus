@@ -184,19 +184,20 @@ bool Mechanics::Sensor::sort(const Sensor* s1, const Sensor* s2)
 //
 //=========================================================
 
-std::array<double, 4> Mechanics::Sensor::sensitiveAreaPixel() const
+Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaPixel() const
 {
-  return {0, static_cast<double>(m_numCols), 0, static_cast<double>(m_numRows)};
+  return {{0, static_cast<double>(m_numCols)},
+          {0, static_cast<double>(m_numRows)}};
 }
 
-std::array<double, 4> Mechanics::Sensor::sensitiveAreaLocal() const
+Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaLocal() const
 {
   auto lowerLeft = transformPixelToLocal(0, 0);
   auto upperRight = transformPixelToLocal(m_numCols, m_numRows);
-  return {lowerLeft.x(), upperRight.x(), lowerLeft.y(), upperRight.y()};
+  return {{lowerLeft.x(), upperRight.x()}, {lowerLeft.y(), upperRight.y()}};
 }
 
-std::array<double, 4> Mechanics::Sensor::sensitiveEnvelopeGlobal() const
+Mechanics::Sensor::Area Mechanics::Sensor::sensitiveEnvelopeGlobal() const
 {
   // TODO 2016-08 msmk: find a smarter way to this, but its Friday
   // transform each corner of the sensitive rectangle
@@ -208,10 +209,10 @@ std::array<double, 4> Mechanics::Sensor::sensitiveEnvelopeGlobal() const
   std::array<double, 4> xs = {minMin.x(), minMax.x(), maxMin.x(), maxMax.x()};
   std::array<double, 4> ys = {minMin.y(), minMax.y(), maxMin.y(), maxMax.y()};
 
-  return {*std::min_element(xs.begin(), xs.end()),
-          *std::max_element(xs.begin(), xs.end()),
-          *std::min_element(ys.begin(), ys.end()),
-          *std::max_element(ys.begin(), ys.end())};
+  return {{*std::min_element(xs.begin(), xs.end()),
+           *std::max_element(xs.begin(), xs.end())},
+          {*std::min_element(ys.begin(), ys.end()),
+           *std::max_element(ys.begin(), ys.end())}};
 }
 
 double Mechanics::Sensor::getOffX() const

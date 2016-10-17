@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "utils/definitions.h"
+#include "utils/interval.h"
 
 namespace Mechanics {
 
@@ -47,6 +48,8 @@ public:
   static Measurement measurementFromName(const std::string& name);
   static std::string measurementName(Measurement measurement);
 
+  using Area = Utils::Box<2, double, Utils::Endpoints::CLOSED>;
+
   /** Construct with an empty transformation (local = global) and no noise.
    *
    * This is the minimal configuration required to have a usable Sensor.
@@ -72,12 +75,12 @@ public:
   double pitchRow() const { return m_pitchRow; }
   double thickness() const { return m_thickness; }
   double xX0() const { return m_xX0; }
-  /** Sensitive area in pixel coordinates [col_min,col_max,row_min,row_max]. */
-  std::array<double, 4> sensitiveAreaPixel() const;
-  /** Sensitive area in local coordinates [u_min,u_max,v_min,v_max]. */
-  std::array<double, 4> sensitiveAreaLocal() const;
-  /** Sensitive envelope in the global xy-plane [x_min,x_max,y_min,y_max]. */
-  std::array<double, 4> sensitiveEnvelopeGlobal() const;
+  /** Sensitive area in pixel coordinates. */
+  Area sensitiveAreaPixel() const;
+  /** Sensitive area in local coordinates. */
+  Area sensitiveAreaLocal() const;
+  /** Sensitive envelope in the global xy-plane. */
+  Area sensitiveEnvelopeGlobal() const;
 
   //
   // geometry related
