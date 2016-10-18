@@ -26,11 +26,17 @@ class Device;
 
 namespace Analyzers {
 
+/** Estimate noisy pixels from hit occupancies.
+ *
+ * Noise estimation uses a local estimate of the expected hit rate to
+ * find pixels that are a certain number of standard deviations away from
+ * this estimate.
+ */
 class NoiseScan : public Analyzer {
 public:
   NoiseScan(const Mechanics::Device& device,
-                const toml::Value& cfg,
-                TDirectory* dir);
+            const toml::Value& cfg,
+            TDirectory* dir);
 
   std::string name() const;
   void analyze(const Storage::Event& event);
@@ -46,9 +52,12 @@ private:
   std::vector<TH2D*> m_occMaps;
   std::vector<TH1D*> m_occPixels;
   std::vector<TH2D*> m_densities;
+  std::vector<TH2D*> m_localSigmas;
+  std::vector<TH1D*> m_localSigmasPixels;
   std::vector<TH2D*> m_pixelMasks;
   uint64_t m_numEvents;
-  double m_maxSigmaAboveAvg, m_maxOccupancy;
+  double m_densityBandwidth;
+  double m_maxSigmaAboveAvg, m_maxRate;
 };
 
 } // namespace Analyzers

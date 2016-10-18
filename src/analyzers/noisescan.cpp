@@ -17,9 +17,10 @@
 using Utils::logger;
 
 Analyzers::NoiseScan::NoiseScan(const Mechanics::Device& device,
-                                        const toml::Value& cfg,
-                                        TDirectory* parent)
+                                const toml::Value& cfg,
+                                TDirectory* parent)
     : m_numEvents(0)
+    , m_densityBandwidth(3)
 {
   using Mechanics::Sensor;
   using Utils::Config::get;
@@ -28,7 +29,7 @@ Analyzers::NoiseScan::NoiseScan(const Mechanics::Device& device,
 
   auto sensorIds = cfg.get<std::vector<int>>("sensor_ids");
   m_maxSigmaAboveAvg = get(cfg, "max_sigma_above_avg", 5.);
-  m_maxOccupancy = get(cfg, "max_occupancy", 1.0);
+  m_maxRate = get(cfg, "max_rate", 1.0);
   Area globalRoi = {
       {get(cfg, "col_min", INT_MIN), get(cfg, "col_max", INT_MAX)},
       {get(cfg, "row_min", INT_MIN), get(cfg, "row_max", INT_MAX)}};
@@ -61,7 +62,9 @@ Analyzers::NoiseScan::NoiseScan(const Mechanics::Device& device,
     m_sensorRois.push_back(roi);
     m_occMaps.push_back(makeMap("-Occupancy"));
     m_occPixels.push_back(makeDist("-OccupancyPixels"));
-    m_densities.push_back(makeMap("-Density"));
+    m_densities.push_back(makeMap("-DensityEstimate"));
+    m_localSigmas.push_back(makeMap("-LocalSignificance"));
+    m_localSigmasPixels.push_back(makeDist("-LocalSignificancePixels"));
     m_pixelMasks.push_back(makeMap("-MaskedPixels"));
   }
 }
@@ -74,15 +77,56 @@ void Analyzers::NoiseScan::analyze(const Storage::Event& event)
     Index id = m_sensorIds[i];
     const Storage::Plane& plane = *event.getPlane(id);
     const Area& roi = m_sensorRois[i];
-    TH2D* occMap = m_occMaps[i];
+    TH2D* occ = m_occMaps[i];
 
     for (size_t j = 0; j < plane.numHits(); ++j) {
       const Storage::Hit& hit = *plane.getHit(j);
       if (roi.isInside(hit.col(), hit.row()))
-        occMap->Fill(hit.col(), hit.row());
+        occ->Fill(hit.col(), hit.row());
     }
   }
   m_numEvents += 1;
+}
+
+/** Estimate the value at the given position from surrounding values.
+ *
+ * Use kernel density estimation w/ an Epanechnikov kernel to estimate the
+ * density at the given point without using the actual value.
+ */
+static double
+estimateLocalDensity(const TH2D* values, int i, int j, double bandwidth)
+{
+  double sumWeights = 0;
+  double sumValues = 0;
+  // with a bounded kernel only a subset of the points need to be considered.
+  // define 2*bandwidth+1 sized window around selected point to speed up
+  // calculation.
+  int bw = std::ceil(std::abs(bandwidth));
+  int imin = std::max(1, i - bw);
+  int imax = std::min(i + bw, values->GetNbinsX());
+  int jmin = std::max(1, j - bw);
+  int jmax = std::min(j + bw, values->GetNbinsY());
+  for (int l = imin; l < imax; ++l) {
+    for (int m = jmin; m < jmax; ++m) {
+      if ((l == i) && (m == j))
+        continue;
+
+      double ui = (l - i) / bandwidth;
+      double uj = (m - j) / bandwidth;
+      double u2 = ui * ui + uj * uj;
+
+      if (1 < u2)
+        continue;
+
+      // Epanechnikov kernel from:
+      // https://en.wikipedia.org/wiki/Kernel_(statistics)
+      double w = 3 * (1 - u2) / 4;
+
+      sumWeights += w;
+      sumValues += w * values->GetBinContent(l, m);
+    }
+  }
+  return sumValues / sumWeights;
 }
 
 void Analyzers::NoiseScan::finalize()
@@ -92,36 +136,60 @@ void Analyzers::NoiseScan::finalize()
   for (size_t i = 0; i < m_sensorIds.size(); ++i) {
     auto id = m_sensorIds[i];
     auto roi = m_sensorRois[i];
-    auto occMap = m_occMaps[i];
+    auto occ = m_occMaps[i];
     auto occPixel = m_occPixels[i];
+    auto density = m_densities[i];
+    auto sigma = m_localSigmas[i];
+    auto sigmaPixels = m_localSigmasPixels[i];
     auto pixelMask = m_pixelMasks[i];
 
-    // rescale hit map to occupancy = hits / event
-    occMap->Sumw2();
-    occMap->Scale(1. / m_numEvents);
-    // reset range for pixel histogram to maximum occupancy
-    occPixel->SetBins(100, 0, occMap->GetMaximum());
+    // estimate local density and noise significance
+    for (auto icol = occ->GetNbinsX(); 0 < icol; --icol) {
+      for (auto irow = occ->GetNbinsY(); 0 < irow; --irow) {
+        auto nhits = occ->GetBinContent(icol, irow);
+        auto den = estimateLocalDensity(occ, icol, irow, m_densityBandwidth);
+        auto sig = (nhits - den) / std::sqrt(den);
 
-    for (auto icol = occMap->GetNbinsX(); 0 < icol; --icol) {
-      for (auto irow = occMap->GetNbinsY(); 0 < irow; --irow) {
-        auto occ = occMap->GetBinContent(icol, irow);
-        // only consider non-empty pixels
-        if (0 < occ)
-          occPixel->Fill(occ);
+        density->SetBinContent(icol, irow, den);
+        sigma->SetBinContent(icol, irow, sig);
+      }
+    }
+    sigma->SetEntries(occ->GetEntries());
+
+    // fill per-pixel significance distribution
+    sigmaPixels->SetBins(
+        sigmaPixels->GetNbinsX(), sigma->GetMinimum(), sigma->GetMaximum());
+    for (auto icol = occ->GetNbinsX(); 0 < icol; --icol) {
+      for (auto irow = occ->GetNbinsY(); 0 < irow; --irow) {
+        sigmaPixels->Fill(sigma->GetBinContent(icol, irow));
       }
     }
 
-    double occMean = occPixel->GetMean();
-    double occStd = occPixel->GetStdDev();
-    double occMaxRel = occMean + m_maxSigmaAboveAvg * occStd;
+    // rescale hit map to occupancy = hits / event
+    occ->Sumw2();
+    occ->Scale(1. / m_numEvents);
+
+    // fill per-pixel rate histogram
+    occPixel->SetBins(occPixel->GetNbinsX(), 0, occ->GetMaximum());
+    for (auto icol = occ->GetNbinsX(); 0 < icol; --icol) {
+      for (auto irow = occ->GetNbinsY(); 0 < irow; --irow) {
+        auto rate = occ->GetBinContent(icol, irow);
+        // only consider non-empty pixels
+        if (0 < rate)
+          occPixel->Fill(rate);
+      }
+    }
+
+    // select noisy pixels
     size_t numNoisyPixels = 0;
-    for (auto icol = occMap->GetNbinsX(); 0 < icol; --icol) {
-      for (auto irow = occMap->GetNbinsY(); 0 < irow; --irow) {
-        double occ = occMap->GetBinContent(icol, irow);
-        // pixel occupancy is a number of stddevs above global average
-        bool isAboveRelative = (occMaxRel < occ);
+    for (auto icol = sigma->GetNbinsX(); 0 < icol; --icol) {
+      for (auto irow = sigma->GetNbinsY(); 0 < irow; --irow) {
+        double sig = sigma->GetBinContent(icol, irow);
+        double rate = occ->GetBinContent(icol, irow);
+        // pixel occupancy is a number of stddevs above local average
+        bool isAboveRelative = (m_maxSigmaAboveAvg < sig);
         // pixel occupancy is above absolute limit
-        bool isAboveAbsolute = (m_maxOccupancy < occ);
+        bool isAboveAbsolute = (m_maxRate < rate);
 
         if (isAboveRelative || isAboveAbsolute) {
           pixelMask->AddBinContent(pixelMask->GetBin(icol, irow));
@@ -134,13 +202,11 @@ void Analyzers::NoiseScan::finalize()
     INFO("noise scan sensor ", id, ":\n");
     INFO("  roi col: ", roi.axes[0], '\n');
     INFO("  roi row: ", roi.axes[1], '\n');
-    INFO("  max occupancy: ", occMap->GetMaximum(), " hits/event\n");
-    INFO("  cut relative: ",
-         occMaxRel,
-         " hits/event == mean + ",
+    INFO("  max occupancy: ", occ->GetMaximum(), " hits/event\n");
+    INFO("  cut relative: local mean + ",
          m_maxSigmaAboveAvg,
-         " * sigma\n");
-    INFO("  cut absolute: ", m_maxOccupancy, " hits/event\n");
+         " * local sigma\n");
+    INFO("  cut absolute: ", m_maxRate, " hits/event\n");
     INFO("  # noisy pixels: ", numNoisyPixels, '\n');
   }
 }
