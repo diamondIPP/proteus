@@ -40,14 +40,6 @@ toml::Value withDefaults(const toml::Value& cfg, const toml::Value& defaults);
 std::vector<toml::Value> perSensor(const toml::Value& cfg,
                                    const toml::Value& defaults);
 
-template <typename T>
-T get(const toml::Value& cfg, const std::string& key, const T& default_value)
-{
-  if (cfg.has(key))
-    return cfg.get<T>(key);
-  return default_value;
-}
-
 } // namespace Config
 } // namespace Utils
 

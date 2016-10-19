@@ -261,12 +261,14 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
   auto types = cfg.get<toml::Table>("sensor_types");
   auto sensors = cfg.get<toml::Array>("sensors");
   for (size_t i = 0; i < sensors.size(); ++i) {
-    auto sensor = sensors[i];
-    if (Utils::Config::get(sensor, "is_masked", false)) {
+    toml::Value defaults = toml::Table{{"name", "plane" + std::to_string(i)},
+                                       {"is_masked", false}};
+    toml::Value sensor = Utils::Config::withDefaults(sensors[i], defaults);
+    if (sensor.get<bool>("is_masked")) {
       device.addMaskedSensor();
       continue;
     }
-    auto name = Utils::Config::get(sensor, "name", "plane" + std::to_string(i));
+    auto name = sensor.get<std::string>("name");
     auto typeName = sensor.get<std::string>("type");
     if (types.count(typeName) == 0) {
       throw std::runtime_error("Device: sensor type '" + typeName +
