@@ -20,53 +20,72 @@ Analyzers::NoiseScan::NoiseScan(const Mechanics::Device& device,
                                 const toml::Value& cfg,
                                 TDirectory* parent)
     : m_numEvents(0)
-    , m_densityBandwidth(3)
 {
   using Mechanics::Sensor;
-  using Utils::Config::get;
+
+  // clang-format off
+  toml::Value defaults = toml::Table{
+    {"density_bandwidth", 2.},
+    {"max_sigma_above_avg", 5.},
+    {"max_rate", 1.}};
+  toml::Value defaultsSensor = toml::Table{
+    {"col_min", INT_MIN},
+    {"col_max", INT_MAX},
+    {"row_min", INT_MIN},
+    {"row_max", INT_MAX}};
+  // clang-format on
+  toml::Value c = Utils::Config::withDefaults(cfg, defaults);
+  std::vector<toml::Value> s = Utils::Config::perSensor(cfg, defaultsSensor);
 
   TDirectory* dir = parent->mkdir("NoiseScan");
 
-  auto sensorIds = cfg.get<std::vector<int>>("sensor_ids");
-  m_maxSigmaAboveAvg = get(cfg, "max_sigma_above_avg", 5.);
-  m_maxRate = get(cfg, "max_rate", 1.0);
-  Area globalRoi = {
-      {get(cfg, "col_min", INT_MIN), get(cfg, "col_max", INT_MAX)},
-      {get(cfg, "row_min", INT_MIN), get(cfg, "row_max", INT_MAX)}};
+  m_densityBandwidth = c.find("density_bandwidth")->asNumber();
+  m_maxSigmaAboveAvg = c.find("max_sigma_above_avg")->asNumber();
+  m_maxRate = c.find("max_rate")->asNumber();
 
-  for (auto id = sensorIds.begin(); id != sensorIds.end(); ++id) {
-    const Sensor* sensor = device.getSensor(*id);
-    Sensor::Area sensorArea = sensor->sensitiveAreaPixel();
-    // define region-of-interest by intersection of sensor sensorArea and cuts
-    Area roi = Utils::intersection(globalRoi, sensorArea);
-
-    auto makeDist = [&](const std::string& suffix) -> TH1D* {
-      TH1D* h1 = new TH1D((sensor->name() + suffix).c_str(), "", 100, 0, 1);
-      h1->SetDirectory(dir);
-      return h1;
-    };
-    auto makeMap = [&](const std::string& suffix) -> TH2D* {
-      TH2D* h2 = new TH2D((sensor->name() + suffix).c_str(),
-                          "",
-                          roi.axes[0].max - roi.axes[0].min,
-                          roi.axes[0].min,
-                          roi.axes[0].max,
-                          roi.axes[1].max - roi.axes[1].min,
-                          roi.axes[1].min,
-                          roi.axes[1].max);
-      h2->SetDirectory(dir);
-      return h2;
-    };
-
-    m_sensorIds.push_back(*id);
-    m_sensorRois.push_back(roi);
-    m_occMaps.push_back(makeMap("-Occupancy"));
-    m_occPixels.push_back(makeDist("-OccupancyPixels"));
-    m_densities.push_back(makeMap("-DensityEstimate"));
-    m_localSigmas.push_back(makeMap("-LocalSignificance"));
-    m_localSigmasPixels.push_back(makeDist("-LocalSignificancePixels"));
-    m_pixelMasks.push_back(makeMap("-MaskedPixels"));
+  // sensor specific
+  for (auto cfgSensor = s.begin(); cfgSensor != s.end(); ++cfgSensor) {
+    int id = cfgSensor->get<int>("id");
+    const Mechanics::Sensor* sensor = device.getSensor(id);
+    // roi is bounded by sensor size
+    Area roi = {
+        {cfgSensor->get<int>("col_min"), cfgSensor->get<int>("col_max")},
+        {cfgSensor->get<int>("row_min"), cfgSensor->get<int>("row_max")}};
+    roi = Utils::intersection(roi, sensor->sensitiveAreaPixel());
+    addSensorHists(dir, id, sensor->name(), roi);
   }
+}
+
+void Analyzers::NoiseScan::addSensorHists(TDirectory* dir,
+                                          int id,
+                                          const std::string& name,
+                                          const Area& roi)
+{
+  auto makeDist = [&](const std::string& suffix) -> TH1D* {
+    TH1D* h1 = new TH1D((name + suffix).c_str(), "", 100, 0, 1);
+    h1->SetDirectory(dir);
+    return h1;
+  };
+  auto makeMap = [&](const std::string& suffix) -> TH2D* {
+    TH2D* h2 = new TH2D((name + suffix).c_str(),
+                        "",
+                        roi.axes[0].max - roi.axes[0].min,
+                        roi.axes[0].min,
+                        roi.axes[0].max,
+                        roi.axes[1].max - roi.axes[1].min,
+                        roi.axes[1].min,
+                        roi.axes[1].max);
+    h2->SetDirectory(dir);
+    return h2;
+  };
+  m_sensorIds.push_back(id);
+  m_sensorRois.push_back(roi);
+  m_occMaps.push_back(makeMap("-Occupancy"));
+  m_occPixels.push_back(makeDist("-OccupancyPixels"));
+  m_densities.push_back(makeMap("-DensityEstimate"));
+  m_localSigmas.push_back(makeMap("-LocalSignificance"));
+  m_localSigmasPixels.push_back(makeDist("-LocalSignificancePixels"));
+  m_pixelMasks.push_back(makeMap("-MaskedPixels"));
 }
 
 std::string Analyzers::NoiseScan::name() const { return "NoiseScan"; }
@@ -207,7 +226,7 @@ void Analyzers::NoiseScan::finalize()
          m_maxSigmaAboveAvg,
          " * local sigma\n");
     INFO("  cut absolute: ", m_maxRate, " hits/event\n");
-    INFO("  # noisy pixels: ", numNoisyPixels, '\n');
+    INFO("  noisy pixels: ", numNoisyPixels, '\n');
   }
 }
 

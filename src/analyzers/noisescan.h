@@ -47,6 +47,11 @@ public:
 private:
   using Area = Utils::Box<2, int, Utils::Endpoints::CLOSED>;
 
+  void addSensorHists(TDirectory* dir,
+                      int id,
+                      const std::string& name,
+                      const Area& roi);
+
   std::vector<int> m_sensorIds;
   std::vector<Area> m_sensorRois;
   std::vector<TH2D*> m_occMaps;
