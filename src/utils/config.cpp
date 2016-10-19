@@ -132,3 +132,31 @@ void Utils::Config::writeConfig(const toml::Value& cfg, const std::string& path)
   cfg.write(&file);
   file.close();
 }
+
+toml::Value Utils::Config::withDefaults(const toml::Value& cfg,
+                                        const toml::Value& defaults)
+{
+  toml::Value combined(defaults);
+  if (!combined.merge(cfg))
+    throw std::runtime_error("Config: could not merge defaults");
+  return combined;
+}
+
+std::vector<toml::Value> Utils::Config::perSensor(const toml::Value& cfg,
+                                                  const toml::Value& defaults)
+{
+  std::vector<toml::Value> sensors =
+      cfg.get<std::vector<toml::Value>>("sensors");
+  toml::Value globals(cfg);
+  globals.eraseChild("sensors");
+
+  for (auto sensor = sensors.begin(); sensor != sensors.end(); ++sensor) {
+    toml::Value combined(defaults);
+    if (!combined.merge(globals))
+      throw std::runtime_error("Config: could not merge globals");
+    if (!combined.merge(*sensor))
+      throw std::runtime_error("Config: could not merge sensor config");
+    std::swap(combined, *sensor);
+  }
+  return sensors;
+}

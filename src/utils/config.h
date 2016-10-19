@@ -1,5 +1,5 @@
-#ifndef __JD_CONFIG_H__
-#define __JD_CONFIG_H__
+#ifndef PT_CONFIG_H
+#define PT_CONFIG_H
 
 #include <string>
 
@@ -26,6 +26,20 @@ toml::Value readConfig(const std::string& path);
 /** Write a toml::Value to file. */
 void writeConfig(const toml::Value& cfg, const std::string& path);
 
+/** Set missing values using the given defaults. */
+toml::Value withDefaults(const toml::Value& cfg, const toml::Value& defaults);
+
+/** Construct per-sensor configuration with optional defaults.
+ *
+ * The input configuration **must** have a list of objects named `sensors`.
+ * This will be used to create a vector of per-sensor configurations, one for
+ * each entry. Entries are created by merging the given defaults, the global
+ * part of the input configuration (without `sensors`), and the per-sensor
+ * configuration.
+ */
+std::vector<toml::Value> perSensor(const toml::Value& cfg,
+                                   const toml::Value& defaults);
+
 template <typename T>
 T get(const toml::Value& cfg, const std::string& key, const T& default_value)
 {
@@ -37,4 +51,4 @@ T get(const toml::Value& cfg, const std::string& key, const T& default_value)
 } // namespace Config
 } // namespace Utils
 
-#endif // __JD_CONFIG_H__
+#endif // PT_CONFIG_H
