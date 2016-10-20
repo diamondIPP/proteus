@@ -1,5 +1,5 @@
-#ifndef STORAGEIO_H
-#define STORAGEIO_H
+#ifndef PT_STORAGEIO_H
+#define PT_STORAGEIO_H
 
 #include <cstdint>
 #include <string>
@@ -93,7 +93,6 @@ namespace Storage {
     // Trees global to the entire event
     TTree*  _tracks;
     TTree*  _eventInfo;
-
     // Tree with configuration info
     TTree* _summaryTree;
 
@@ -125,15 +124,23 @@ namespace Storage {
     Double_t clusterPosErrZ[MAX_CLUSTERS];
     Int_t    clusterInTrack[MAX_CLUSTERS];
 
-    // INTERCEPTS (LOCAL HIT POSITIONS)
-	Int_t numIntercepts;
-	Double_t interceptX[MAX_TRACKS];
-	Double_t interceptY[MAX_TRACKS];
+    // Local track states
+    Int_t numIntercepts;
+    Int_t interceptTrack[MAX_TRACKS];
+    Double_t interceptU[MAX_TRACKS];
+    Double_t interceptV[MAX_TRACKS];
+    Double_t interceptSlopeU[MAX_TRACKS];
+    Double_t interceptSlopeV[MAX_TRACKS];
+    Double_t interceptStdU[MAX_TRACKS];
+    Double_t interceptStdV[MAX_TRACKS];
+    Double_t interceptStdSlopeU[MAX_TRACKS];
+    Double_t interceptStdSlopeV[MAX_TRACKS];
+    Double_t interceptReducedChi2[MAX_TRACKS];
 
     // EVENT INFO
     ULong64_t timeStamp;
-    ULong64_t frameNumber;
     Int_t     triggerOffset;
+    ULong64_t frameNumber;
     Int_t     triggerInfo;
     Int_t     triggerPhase;
     Bool_t    invalid;
@@ -193,11 +200,18 @@ namespace Storage {
     TBranch* bClusterPosErrZ;
     TBranch* bClusterInTrack;
 
-	TBranch* bNumIntercepts;
-    TBranch* bInterceptX;
-    TBranch* bInterceptY;
-
-
+    TBranch* bNumIntercepts;
+    TBranch* bInterceptTrack;
+    TBranch* bInterceptU;
+    TBranch* bInterceptV;
+    TBranch* bInterceptSlopeU;
+    TBranch* bInterceptSlopeV;
+    TBranch* bInterceptStdU;
+    TBranch* bInterceptStdV;
+    TBranch* bInterceptStdSlopeU;
+    TBranch* bInterceptStdSlopeV;
+    TBranch* bInterceptReducedChi2;
+    
     TBranch* bTimeStamp;
     TBranch* bFrameNumber;
     TBranch* bTriggerOffset;
@@ -237,4 +251,4 @@ namespace Storage {
 
 } // end of namespace
 
-#endif // STORAGEIO_H
+#endif // PT_STORAGEIO_H
