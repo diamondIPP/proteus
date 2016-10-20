@@ -1,5 +1,5 @@
-#ifndef __JU_EVENTLOOP_H__
-#define __JU_EVENTLOOP_H__
+#ifndef PT_EVENTLOOP_H
+#define PT_EVENTLOOP_H
 
 #include <cstdint>
 #include <memory>
@@ -30,7 +30,7 @@ class EventLoop {
 public:
   EventLoop(Storage::StorageIO* storage,
             uint64_t startEvent = 0,
-            uint64_t numEvents = 0);
+            uint64_t numEvents = -1);
   ~EventLoop();
 
   void addProcessor(std::shared_ptr<Processors::Processor> processor);
@@ -53,4 +53,4 @@ private:
 
 } // namespace Utils
 
-#endif // __JU_EVENTLOOP_H__
+#endif // PT_EVENTLOOP_H

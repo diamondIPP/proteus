@@ -27,7 +27,7 @@ Utils::EventLoop::EventLoop(Storage::StorageIO* storage,
   assert(storage && "storage is NULL");
 
   uint64_t eventsOnFile = m_storage->getNumEvents();
-  if (numEvents == 0) {
+  if (numEvents == static_cast<uint64_t>(-1)) {
     m_endEvent = eventsOnFile - 1;
   } else {
     m_endEvent = m_startEvent + numEvents - 1;
