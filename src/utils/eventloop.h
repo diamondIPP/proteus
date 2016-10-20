@@ -31,6 +31,10 @@ public:
   EventLoop(Storage::StorageIO* storage,
             uint64_t startEvent = 0,
             uint64_t numEvents = -1);
+  EventLoop(Storage::StorageIO* input,
+            Storage::StorageIO* output,
+            uint64_t startEvent = 0,
+            uint64_t numEvents = -1);
   ~EventLoop();
 
   void addProcessor(std::shared_ptr<Processors::Processor> processor);
@@ -45,7 +49,8 @@ public:
 private:
   uint64_t numEvents() { return m_endEvent - m_startEvent + 1; }
 
-  Storage::StorageIO* m_storage;
+  Storage::StorageIO* m_input;
+  Storage::StorageIO* m_output;
   uint64_t m_startEvent, m_endEvent;
   std::vector<std::shared_ptr<Processors::Processor>> m_processors;
   std::vector<std::shared_ptr<Analyzers::Analyzer>> m_analyzers;

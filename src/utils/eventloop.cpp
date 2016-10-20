@@ -18,15 +18,25 @@
 
 using Utils::logger;
 
-Utils::EventLoop::EventLoop(Storage::StorageIO* storage,
+Utils::EventLoop::EventLoop(Storage::StorageIO* input,
                             uint64_t startEvent,
                             uint64_t numEvents)
-    : m_storage(storage)
+    : EventLoop(input, NULL, startEvent, numEvents)
+{
+}
+
+Utils::EventLoop::EventLoop(Storage::StorageIO* input,
+                            Storage::StorageIO* output,
+                            uint64_t startEvent,
+                            uint64_t numEvents)
+    : m_input(input)
+    , m_output(output)
     , m_startEvent(startEvent)
 {
-  assert(storage && "storage is NULL");
+  assert(input && "input storage is NULL");
+  // output can be NULL
 
-  uint64_t eventsOnFile = m_storage->getNumEvents();
+  uint64_t eventsOnFile = m_input->getNumEvents();
   if (numEvents == static_cast<uint64_t>(-1)) {
     m_endEvent = eventsOnFile - 1;
   } else {
@@ -81,11 +91,12 @@ void Utils::EventLoop::run()
   using Duration = Clock::duration;
   using Time = Clock::time_point;
 
-  Storage::Event event(m_storage->getNumPlanes());
+  Storage::Event event(m_input->getNumPlanes());
   Utils::EventStatistics stats;
   Duration durationWall = Duration::zero();
   Duration durationTotal = Duration::zero();
-  Duration durationIo = Duration::zero();
+  Duration durationInput = Duration::zero();
+  Duration durationOutput = Duration::zero();
   std::vector<Duration> durationProcs(m_processors.size(), Duration::zero());
   std::vector<Duration> durationAnas(m_analyzers.size(), Duration::zero());
 
@@ -104,10 +115,11 @@ void Utils::EventLoop::run()
   Time startWall = Clock::now();
   for (uint64_t ievent = m_startEvent; ievent <= m_endEvent; ievent++) {
 
-    Time startIo = Clock::now();
-    m_storage->readEvent(ievent, &event);
-    durationIo += Clock::now() - startIo;
-
+    {
+      Time start = Clock::now();
+      m_input->readEvent(ievent, &event);
+      durationInput += Clock::now() - start;
+    }
     for (size_t i = 0; i < m_processors.size(); ++i) {
       Time start = Clock::now();
       m_processors[i]->process(event);
@@ -117,6 +129,11 @@ void Utils::EventLoop::run()
       Time start = Clock::now();
       m_analyzers[i]->analyze(event);
       durationAnas[i] += Clock::now() - start;
+    }
+    if (m_output) {
+      Time start = Clock::now();
+      m_output->writeEvent(&event);
+      durationOutput += Clock::now() - start;
     }
 
     stats.fill(event.getNumHits(), event.getNumClusters(), event.numTracks());
@@ -128,7 +145,7 @@ void Utils::EventLoop::run()
     (*a)->finalize();
   }
   durationWall = Clock::now() - startWall;
-  durationTotal = durationIo;
+  durationTotal = durationInput + durationOutput;
   durationTotal += std::accumulate(
       durationProcs.begin(), durationProcs.end(), Duration::zero());
   durationTotal += std::accumulate(
@@ -145,7 +162,9 @@ void Utils::EventLoop::run()
     return (std::chrono::duration<float, std::micro>(dt) / n).count();
   };
   INFO("Timing:\n");
-  INFO("  i/o: ", time_per_event(durationIo), unit, '\n');
+  INFO("  input: ", time_per_event(durationInput), unit, '\n');
+  if (m_output)
+    INFO("  output: ", time_per_event(durationOutput), unit, '\n');
   // INFO("  processors: ", time_per_event(durProcessors), unit);
   INFO("  processors:\n");
   for (size_t i = 0; i < m_processors.size(); ++i) {
@@ -172,10 +191,10 @@ void Utils::EventLoop::run()
 
 std::unique_ptr<Storage::Event> Utils::EventLoop::readStartEvent()
 {
-  return std::unique_ptr<Storage::Event>(m_storage->readEvent(m_startEvent));
+  return std::unique_ptr<Storage::Event>(m_input->readEvent(m_startEvent));
 }
 
 std::unique_ptr<Storage::Event> Utils::EventLoop::readEndEvent()
 {
-  return std::unique_ptr<Storage::Event>(m_storage->readEvent(m_endEvent));
+  return std::unique_ptr<Storage::Event>(m_input->readEvent(m_endEvent));
 }
