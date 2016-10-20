@@ -1,5 +1,5 @@
-#ifndef __JD_EVENTPRINTER_H__
-#define __JD_EVENTPRINTER_H__
+#ifndef PT_EVENTPRINTER_H
+#define PT_EVENTPRINTER_H
 
 #include <memory>
 
@@ -19,4 +19,4 @@ public:
 
 } // namespace Analyzers
 
-#endif // __JD_EVENTPRINTER_H__
+#endif // PT_EVENTPRINTER_H
