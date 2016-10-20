@@ -25,16 +25,16 @@ void Storage::Event::clear()
 
 Storage::Track* Storage::Event::addTrack(const Track& otherTrack)
 {
-  m_tracks.push_back(otherTrack);
-  m_tracks.back().m_index = m_tracks.size() - 1;
-  return &m_tracks.back();
+  m_tracks.emplace_back(new Track(otherTrack));
+  m_tracks.back()->m_index = m_tracks.size() - 1;
+  return m_tracks.back().get();
 }
 
 Storage::Track* Storage::Event::newTrack()
 {
-  m_tracks.push_back(Track());
-  m_tracks.back().m_index = m_tracks.size() - 1;
-  return &m_tracks.back();
+  m_tracks.emplace_back(new Track());
+  m_tracks.back()->m_index = m_tracks.size() - 1;
+  return m_tracks.back().get();
 }
 
 unsigned int Storage::Event::getNumHits() const
@@ -71,7 +71,7 @@ void Storage::Event::print(std::ostream& os, const std::string& prefix) const
   os << prefix << "tracks:\n";
   for (const auto& track : m_tracks) {
     os << prefix << "  track " << itrack++ << ":\n";
-    track.print(os, prefix + "    ");
+    track->print(os, prefix + "    ");
   }
 
   os.flush();

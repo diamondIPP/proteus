@@ -2,6 +2,7 @@
 #define EVENT_H
 
 #include <cstdint>
+#include <memory>
 #include <iosfwd>
 #include <string>
 #include <vector>
@@ -42,8 +43,8 @@ public:
 
   Track* newTrack();
   Index numTracks() const { return static_cast<Index>(m_tracks.size()); }
-  Track* getTrack(Index i) { return &m_tracks.at(i); }
-  const Track* getTrack(Index i) const { return &m_tracks.at(i); }
+  Track* getTrack(Index i) { return m_tracks.at(i).get(); }
+  const Track* getTrack(Index i) const { return m_tracks.at(i).get(); }
 
   // deprecated accessors
   unsigned int getNumHits() const;
@@ -72,7 +73,7 @@ private:
   bool m_invalid;
 
   std::vector<Plane> m_planes;
-  std::vector<Track> m_tracks;
+  std::vector<std::unique_ptr<Track>> m_tracks;
 
   friend class Processors::TrackFinder;
   friend class Processors::TrackMaker;
