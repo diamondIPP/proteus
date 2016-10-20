@@ -74,3 +74,9 @@ void Storage::Cluster::print(std::ostream& os, const std::string& prefix) const
   os << prefix << "size: " << getNumHits() << '\n';
   os.flush();
 }
+
+std::ostream& Storage::operator<<(std::ostream& os, const Cluster& cluster)
+{
+  os << "cr=" << cluster.posPixel() << " size=" << cluster.numHits();
+  return os;
+}

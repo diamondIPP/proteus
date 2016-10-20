@@ -41,6 +41,12 @@ void Storage::TrackState::setErrV(double errV, double errDv, double cov)
   m_covVDv = cov;
 }
 
+std::ostream& Storage::operator<<(std::ostream& os, const TrackState& state)
+{
+  os << "uv=" << state.offset() << " d(uv)=" << state.slope();
+  return os;
+}
+
 Storage::Track::Track()
     : m_state(0, 0, 0, 0)
     , m_redChi2(-1)
@@ -99,16 +105,13 @@ void Storage::TrackState::print(std::ostream& os,
 void Storage::Track::print(std::ostream& os, const std::string& prefix) const
 {
   os << prefix << "chi2/ndf: " << m_redChi2 << '\n';
-  os << prefix << "num clusters: " << m_clusters.size() << '\n';
-  os << prefix << "global state:\n";
-  m_state.print(os, prefix + "  ");
+  os << prefix << "points: " << m_clusters.size() << '\n';
+  os << prefix << "global: " << m_state << '\n';
   if (!m_localStates.empty()) {
-    os << prefix << "local states:\n";
     for (auto is = m_localStates.begin(); is != m_localStates.end(); ++is) {
       const auto& sensorId = is->first;
       const auto& state = is->second;
-      os << prefix << "  sensor " << sensorId << ":\n";
-      state.print(os, prefix + "    ");
+      os << prefix << "  on sensor " << sensorId << ": " << state << '\n';
     }
   }
 }

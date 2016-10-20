@@ -30,8 +30,8 @@ public:
   void setInvalid(bool value) { m_invalid = value; }
 
   uint64_t id() const { return m_id; }
-  uint64_t timeStamp() const { return m_timeStamp; }
   uint64_t frameNumber() const { return m_frameNumber; }
+  uint64_t timeStamp() const { return m_timeStamp; }
   unsigned int triggerOffset() const { return m_triggerOffset; }
   unsigned int triggerInfo() const { return m_triggerInfo; }
   unsigned int triggerPhase() const { return m_triggerPhase; }
@@ -65,8 +65,8 @@ private:
   Track* addTrack(const Track& track);
 
   uint64_t m_id;
-  uint64_t m_timeStamp;
   uint64_t m_frameNumber;
+  uint64_t m_timeStamp;
   unsigned int m_triggerOffset;
   unsigned int m_triggerInfo; // Dammit Andrej!
   unsigned int m_triggerPhase;

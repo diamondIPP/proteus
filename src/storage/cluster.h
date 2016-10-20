@@ -35,6 +35,8 @@ public:
   Hit* getHit(Index i) { return m_hits.at(i); }
   const Hit* getHit(Index i) const { return m_hits.at(i); }
 
+  const Track* track() const { return m_track; }
+
   Index getNumHits() const { return m_hits.size(); }
   double getPixX() const { return posPixel().x(); }
   double getPixY() const { return posPixel().y(); }
@@ -83,6 +85,8 @@ private:
   friend class Event;     // Needs access the constructor and destructor
   friend class StorageIO; // Needs access to the track index
 };
+
+std::ostream& operator<<(std::ostream& os, const Cluster& cluster);
 
 } // namespace Storage
 

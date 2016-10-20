@@ -2,6 +2,8 @@
 
 #include <ostream>
 
+#include "storage/track.h"
+
 void Storage::Plane::clear()
 {
   m_intercepts.clear();
@@ -35,13 +37,25 @@ void Storage::Plane::addIntercept(double posX, double posY)
 
 void Storage::Plane::print(std::ostream& os, const std::string& prefix) const
 {
-  os << prefix << "hits:\n";
-  for (size_t ihit = 0; ihit < m_hits.size(); ++ihit)
-    os << prefix << "  hit " << ihit << ": " << *m_hits[ihit] << '\n';
-  os << prefix << "clusters:\n";
-  for (size_t iclu = 0; iclu < m_clusters.size(); ++iclu) {
-    os << prefix << "  cluster " << iclu << ":\n";
-    m_clusters[iclu]->print(os, prefix + "    ");
+  if (!m_hits.empty()) {
+    os << prefix << "hits:\n";
+    for (size_t ihit = 0; ihit < m_hits.size(); ++ihit) {
+      const Hit& hit = *m_hits[ihit];
+      os << prefix << "  hit " << ihit << ": " << hit;
+      if (hit.cluster())
+        os << " cluster=" << hit.cluster()->getIndex();
+      os << '\n';
+    }
+  }
+  if (!m_clusters.empty()) {
+    os << prefix << "clusters:\n";
+    for (size_t icluster = 0; icluster < m_clusters.size(); ++icluster) {
+      const Cluster& cluster = *m_clusters[icluster];
+      os << prefix << "  cluster " << icluster << ": " << cluster;
+      if (cluster.track())
+        os << " track=" << cluster.track()->getIndex();
+      os << '\n';
+    }
   }
   os.flush();
 }

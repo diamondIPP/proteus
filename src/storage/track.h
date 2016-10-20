@@ -123,6 +123,8 @@ private:
   friend class Processors::TrackMaker;
 };
 
+std::ostream& operator<<(std::ostream& os, const TrackState& state);
+
 } // namespace Storage
 
 #endif // TRACK_H
