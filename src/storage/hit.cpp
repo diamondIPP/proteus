@@ -28,7 +28,7 @@ void Storage::Hit::setCluster(Storage::Cluster* cluster)
 
 std::ostream& Storage::operator<<(std::ostream& os, const Storage::Hit& hit)
 {
-  os << "col=" << hit.col() << ", row=" << hit.row()
-     << ", timing=" << hit.timing() << ", value=" << hit.value();
+  os << "col=" << hit.col() << " row=" << hit.row()
+     << " timing=" << hit.timing() << " value=" << hit.value();
   return os;
 }
