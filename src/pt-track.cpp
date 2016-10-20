@@ -36,12 +36,16 @@ int main(int argc, char const* argv[])
     return EXIT_FAILURE;
 
   auto device = Mechanics::Device::fromFile(args.device());
-  Storage::StorageIO events(args.input(), Storage::INPUT);
+  Storage::StorageIO input(
+      args.input(), Storage::INPUT, device.numSensors());
+  Storage::StorageIO output(
+      args.makeOutput("data.root"), Storage::OUTPUT, device.numSensors());
   TFile hists(args.makeOutput("hists.root").c_str(), "RECREATE");
 
   std::vector<int> locals = {0, 6, 7};
 
-  Utils::EventLoop loop(&events,
+  Utils::EventLoop loop(&input,
+                        &output,
                         args.get<uint64_t>("skip_events"),
                         args.get<uint64_t>("num_events"));
   setupHitMapper(device, loop);
