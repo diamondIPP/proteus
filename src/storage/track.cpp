@@ -60,6 +60,11 @@ void Storage::Track::addLocalState(Index sensor, const TrackState& state)
   m_localStates[sensor] = state;
 }
 
+bool Storage::Track::hasLocalState(Index sensor) const
+{
+  return (0 < m_localStates.count(sensor));
+}
+
 const Storage::TrackState& Storage::Track::localState(Index sensor) const
 {
   return m_localStates.at(sensor);

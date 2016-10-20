@@ -71,8 +71,9 @@ public:
   void setGoodnessOfFit(double reducedChi2) { m_redChi2 = reducedChi2; }
 
   const TrackState& globalState() const { return m_state; }
-  const TrackState& localState(Index sensor) const;
   const TrackStates& localStates() const { return m_localStates; }
+  bool hasLocalState(Index sensor) const;
+  const TrackState& localState(Index sensor) const;
   double reducedChi2() const { return m_redChi2; }
 
   /** Adds the cluster to the track but does not inform the cluster about it. */
