@@ -30,7 +30,7 @@ int main(int argc, char const* argv[])
   if (args.parse(argc, argv))
     return EXIT_FAILURE;
 
-  Utils::logger().setLevel(Utils::Logger::INFO);
+  Utils::logger().setLevel(Utils::Logger::DEBUG);
 
   Mechanics::Device device = Mechanics::Device::fromFile(args.device());
   Storage::StorageIO input(args.input().c_str(), Storage::INPUT);
