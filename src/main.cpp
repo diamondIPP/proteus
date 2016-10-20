@@ -36,7 +36,7 @@
 #include "loopers/processevents.h"
 #include "loopers/synchronize.h"
 #include "loopers/configloopers.h"
-#include "configparser.h"
+#include "utils/configparser.h"
 #include "inputargs.h"
 #include "exception.h"
 

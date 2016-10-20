@@ -51,13 +51,17 @@ set(Common_SRC
     storage/track.cpp
     storage/plane.cpp
     storage/storageio.cpp
+    utils/config.cpp
+    utils/configparser.cpp
     utils/logger.cpp
-    exception.cpp
-    configparser.cpp)
+    exception.cpp)
 
 add_library(pt-common STATIC ${Common_SRC})
 target_include_directories(pt-common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})
 target_link_libraries(pt-common PUBLIC ${ROOT_LIBRARIES})
 
-add_executable(proteus main.cpp configparser.cpp inputargs.cpp)
+add_executable(proteus main.cpp inputargs.cpp)
 target_link_libraries(proteus pt-common)
+
+add_executable(pt-cfg pt-cfg.cpp)
+target_link_libraries(pt-cfg pt-common)

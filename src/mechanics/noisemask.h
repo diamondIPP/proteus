@@ -6,6 +6,7 @@
 #include <set>
 #include <string>
 
+#include "utils/config.h"
 #include "utils/definitions.h"
 
 namespace Mechanics {
@@ -15,13 +16,20 @@ class NoiseMask {
 public:
   using ColumnRowSet = std::set<ColumnRow>;
 
-  /** Construct a noise mask from a configuration file. */
-  static NoiseMask fromFile(const std::string& path);
-
   NoiseMask() = default;
 
-  /** Write the current noise masks and configuration to a file. */
+  /** Construct a noise mask from a configuration file. */
+  static NoiseMask fromFile(const std::string& path);
+  /** Write the noise mask to a configuration file. */
   void writeFile(const std::string& path) const;
+
+  /** Construct noise mask from a configuration object. */
+  static NoiseMask fromConfig(const toml::Value& cfg);
+  /** Convert noise mask into a configuration object. */
+  toml::Value toConfig() const;
+
+  /** Merge masked pixels from another NoiseMask into this NoiseMask. */
+  void merge(const NoiseMask& other);
 
   void maskPixel(Index sensorId, Index col, Index row);
   const ColumnRowSet& getMaskedPixels(Index sensorId) const;

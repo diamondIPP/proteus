@@ -1,0 +1,59 @@
+# global settings **must** appear before any [section] command
+
+alignment = "../alignment-ref.toml"
+noise_mask = ["noise_empty.toml", "noise_fake.toml"]
+
+[device]
+name = "FEI4Tel"
+clock = 40.0
+window = 16
+space_unit = "um"
+time_unit = "ns"
+
+[sensor_types.fei4-si]
+measurement = "pixel_tot"
+cols = 80
+rows = 336
+pitch_col = 250.
+pitch_row = 50.
+thickness = 250.
+x_x0 = 0.005443
+
+[sensor_types.ccpdv4]
+measurement = "ccpdv4_binary"
+cols = 80
+rows = 168
+pitch_col = 250.
+pitch_row = 100.
+thickness = 250.
+x_x0 = 0.005443
+
+# sensors in the order as they appear in the data file
+
+[[sensors]]
+type = "fei4-si"
+
+[[sensors]]
+type = "fei4-si"
+
+[[sensors]]
+type = "fei4-si"
+
+[[sensors]]
+type = "fei4-si"
+
+[[sensors]]
+type = "fei4-si"
+
+[[sensors]]
+type = "fei4-si"
+
+[[sensors]]
+type = "ccpdv4"
+name = "caribou04"
+is_masked = true
+
+[[sensors]]
+type = "ccpdv4"
+name = "caribou06"
+is_masked = true

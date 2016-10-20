@@ -3,7 +3,7 @@
 
 #include <TFile.h>
 
-#include "../configparser.h"
+#include "utils/configparser.h"
 
 namespace Mechanics { class Device; }
 namespace Loopers { class Looper; }
@@ -36,7 +36,7 @@ namespace Analyzers {
 		 std::vector<EventCut*>& eventCuts,
 		 std::vector<TrackCut*>& trackCuts,
 		 std::vector<ClusterCut*>& clusterCuts,
-		 std::vector<HitCut*>& hitCuts);  
+		 std::vector<HitCut*>& hitCuts);
   
   void configLooper(const ConfigParser& config,
 		    Loopers::Looper* looper,

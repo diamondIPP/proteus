@@ -1,0 +1,13 @@
+# this noise map is empty
+
+[[sensors]]
+id = 1
+masked_pixels = []
+
+[[sensors]]
+id = 2
+masked_pixels = []
+
+[[sensors]]
+id = 5
+masked_pixels = []

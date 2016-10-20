@@ -6,7 +6,7 @@
 #include "finealigndut.h"
 #include "synchronize.h"
 #include "noisescan.h"
-#include "../configparser.h"
+#include "utils/configparser.h"
 
 #include <iostream>
 
@@ -62,14 +62,14 @@ namespace Loopers {
       else if (!row->key.compare("bottom y"))
 	noiseScan.setBottomLimitY(ConfigParser::valueToNumerical(row->value));
       else if (!row->key.compare("upper y"))
-	noiseScan.setUpperLimitY(ConfigParser::valueToNumerical(row->value));  
+	noiseScan.setUpperLimitY(ConfigParser::valueToNumerical(row->value));
       else
 	throw "Loopers: can't parse coarse align row";
     }
   }
   
   //=========================================================
-  void configCoarseAlign(const ConfigParser& config, CoarseAlign& coarseAlign) { 
+  void configCoarseAlign(const ConfigParser& config, CoarseAlign& coarseAlign) {
     for (unsigned int i=0; i<config.getNumRows(); i++) {
       const ConfigParser::Row* row = config.getRow(i);
       

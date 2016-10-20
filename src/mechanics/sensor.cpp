@@ -5,14 +5,48 @@
 #include <cassert>
 #include <cmath>
 #include <ostream>
+#include <stdexcept>
 #include <string>
 
+// mapping between measurement enum and names
+struct MeasurementName {
+  Mechanics::Sensor::Measurement measurement;
+  const char* name;
+};
+static const MeasurementName MEAS_NAMES[] = {
+    {Mechanics::Sensor::PIXEL_BINARY, "pixel_binary"},
+    {Mechanics::Sensor::PIXEL_TOT, "pixel_tot"},
+    {Mechanics::Sensor::CCPDV4_BINARY, "ccpdv4_binary"}};
+
+Mechanics::Sensor::Measurement
+Mechanics::Sensor::measurementFromName(const std::string& name)
+{
+  for (auto mn = std::begin(MEAS_NAMES); mn != std::end(MEAS_NAMES); ++mn) {
+    if (name.compare(mn->name) == 0) {
+      return mn->measurement;
+    }
+  }
+  throw std::invalid_argument("invalid sensor measurement name '" + name + "'");
+}
+
+std::string Mechanics::Sensor::measurementName(Measurement measurement)
+{
+  for (auto mn = std::begin(MEAS_NAMES); mn != std::end(MEAS_NAMES); ++mn) {
+    if (mn->measurement == measurement) {
+      return mn->name;
+    }
+  }
+  // This fall-back should never happen
+  throw std::runtime_error("Sensor::Measurement: invalid measurement");
+  return "invalid_measurement";
+}
+
 Mechanics::Sensor::Sensor(const std::string& name,
+                          Measurement measurement,
                           Index numCols,
                           Index numRows,
                           double pitchCol,
                           double pitchRow,
-                          bool isDigital,
                           double thickness,
                           double xX0)
     : m_numCols(numCols)
@@ -21,9 +55,9 @@ Mechanics::Sensor::Sensor(const std::string& name,
     , m_pitchRow(pitchRow)
     , m_thickness(thickness)
     , m_xX0(xX0)
+    , m_measurement(measurement)
     , m_name(name)
     , m_noiseMask(numCols * numRows, false)
-    , m_isDigital(isDigital)
 {
 }
 
@@ -244,6 +278,7 @@ double Mechanics::Sensor::getPosSensitiveY() const
 void Mechanics::Sensor::print(std::ostream& os, const std::string& prefix) const
 {
   os << prefix << "name: " << m_name << '\n';
+  os << prefix << "measurement: " << measurementName(m_measurement) << '\n';
   os << prefix << "columns: " << m_numCols << '\n';
   os << prefix << "rows: " << m_numRows << '\n';
   os << prefix << "pitch column: " << m_pitchCol << '\n';

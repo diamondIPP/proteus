@@ -38,23 +38,33 @@ namespace Mechanics {
  */
 class Sensor {
 public:
+  /** Measurement type of the sensor. */
+  enum Measurement {
+    PIXEL_BINARY, // generic pixel detector with binary measurement
+    PIXEL_TOT,    // generic pixel detector with time-over-treshold measurement
+    CCPDV4_BINARY // HVCMOS ccpd version 4 with address mapping and binary pixel
+  };
+  static Measurement measurementFromName(const std::string& name);
+  static std::string measurementName(Measurement measurement);
+
   /** Construct with an empty transformation (local = global) and no noise.
    *
    * This is the minimal configuration required to have a usable Sensor.
    */
   Sensor(const std::string& name,
+         Measurement measurement,
          Index numCols,
          Index numRows,
          double pitchCol,
          double pitchRow,
-         bool isDigital,
-         double thickness = 0,
-         double xX0 = 0);
+         double thickness,
+         double xX0);
 
   //
   // properties
   //
   const std::string& name() const { return m_name; }
+  Measurement measurement() const { return m_measurement; }
   Index numCols() const { return m_numCols; }
   Index numRows() const { return m_numRows; }
   Index numPixels() const { return m_numCols * m_numRows; }
@@ -111,8 +121,6 @@ public:
   static bool sort(const Sensor* s1, const Sensor* s2);
 
   // \deprecated For backward compatibility.
-  bool getDigital() const { return m_isDigital; }
-  bool getAlignable() const { return true; }
   unsigned int getNumX() const { return m_numCols; }
   unsigned int getNumY() const { return m_numRows; }
   unsigned int getNumPixels() const { return m_numCols * m_numRows; }
@@ -148,9 +156,9 @@ private:
   double m_pitchCol, m_pitchRow; // pitch along column and row direction
   double m_thickness;            // sensor thickness
   double m_xX0;                  // X/X0 (thickness in radiation lengths)
+  Measurement m_measurement;
   std::string m_name;
   std::vector<bool> m_noiseMask;
-  bool m_isDigital;
 };
 
 } // namespace Mechanics

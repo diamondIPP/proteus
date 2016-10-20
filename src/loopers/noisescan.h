@@ -25,7 +25,7 @@ namespace Loopers {
     NoiseScanConfig(const NoiseScanConfig&);
     NoiseScanConfig &operator=(const NoiseScanConfig&);
 
-    void setRuns(std::vector<int>& runs) { _vruns = runs; }
+    void setRuns(const std::vector<int>& runs) { _vruns = runs; }
     void setMaxFactor(double maxFactor) { _maxFactor = maxFactor; }
     void setMaxOccupancy(double maxOccupancy) { _maxOccupancy = maxOccupancy; }
     void setBottomLimitX(int bottomLimitX) { _bottomLimitX = bottomLimitX; }
@@ -33,7 +33,7 @@ namespace Loopers {
     void setBottomLimitY(int bottomLimitY){ _bottomLimitY = bottomLimitY; }
     void setUpperLimitY(int upperLimitY) { _upperLimitY = upperLimitY; }
 
-    std::vector<int> getRuns() const { return _vruns; }
+    const std::vector<int>& getRuns() const { return _vruns; }
     double getMaxFactor() const { return _maxFactor; }
     double getMaxOccupancy() const { return _maxOccupancy; }
     int getBottomLimitX() const { return _bottomLimitX; }

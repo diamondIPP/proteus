@@ -90,7 +90,11 @@ This software is distributed under the terms of the MIT license.
 
 Contributions are expected to be submitted under the same license terms.
 
+<TO BE RENAMED> includes a copy of the [tinytoml][tinytoml].
+[Tinytoml][tinytoml] is distributed under the simplified BSD License.
+
 
 [cmake]: http://www.cmake.org
 [judith]: https://github.com/gmcgoldr/judith
 [paper2014]: http://dx.doi.org/10.1016/j.nima.2014.05.033
+[tinytoml]: https://github.com/mayah/tinytoml

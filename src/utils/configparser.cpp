@@ -1,5 +1,4 @@
 #include "configparser.h"
-#include "exception.h"
 
 #include <cassert>
 #include <string>
@@ -20,10 +19,10 @@ ConfigParser::ConfigParser(const char* filePath,
 {
   _inputFile.open(_filePath);
 
-  if(!_inputFile.is_open()){
-    throw Exception("ConfigParser: failed to open file'"+std::string(filePath)+"'");
-  }
-  
+  if(!_inputFile.is_open())
+    throw std::runtime_error("ConfigParser: failed to open file '" +
+                             std::string(filePath) + "' to read");
+
   _currentHeader = "";
   _currentValue  = "";
   _currentKey    = "";
@@ -52,12 +51,11 @@ void ConfigParser::parseContents(std::ifstream& input) {
       {
 	std::ifstream linked;
 	linked.open(_currentValue.c_str());
-	if (!linked.is_open()){
-	  std::string err("ConfigParser: unable to opened linked configuration '");
-	  err+=_currentValue+"'";
-	  throw Exception(err);
-	}
-	parseContents(linked);
+    if (!linked.is_open())
+      throw std::runtime_error(
+          "ConfigParser: unable to opened linked configuration '" +
+          _currentValue + '\'');
+    parseContents(linked);
       }
     else if (!parseForKey())
       {
