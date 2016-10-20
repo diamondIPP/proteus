@@ -42,8 +42,8 @@ void Analyzers::Occupancy::bookHistos(TDirectory* plotDir){
     const Mechanics::Sensor* sensor = _device->getSensor(nsens);
     
     // (1) pixel hitmap (pix-Y vs pix-X, PIXEL units)
-    sprintf(name,"%s%s_%s%s", _device->getName(), sensor->getName(), "HitOccupancy", _nameSuffix.c_str());
-    sprintf(title,"%s - %s [%s]", _device->getName(), sensor->getName(), "Hit Occupancy");
+    sprintf(name,"%s%s_%s%s", _device->name().c_str(), sensor->name().c_str(), "HitOccupancy", _nameSuffix.c_str());
+    sprintf(title,"%s - %s [%s]", _device->name().c_str(), sensor->name().c_str(), "Hit Occupancy");
     TH2D* hist = new TH2D(name, title,
                           sensor->getNumX(), -0.5, sensor->getNumX()-0.5,
                           sensor->getNumY(), -0.5, sensor->getNumY()-0.5);
@@ -58,8 +58,8 @@ void Analyzers::Occupancy::bookHistos(TDirectory* plotDir){
     const double lowY = sensor->getOffY() - sensor->getPosSensitiveY() / 2.0;
     const double uppY = sensor->getOffY() + sensor->getPosSensitiveY() / 2.0;
 
-    sprintf(name,"%s_%s%s", sensor->getName(), "ClusterOccupancy", _nameSuffix.c_str());
-    sprintf(title,"%s [%s]", sensor->getName(), "Cluster Occupancy");
+    sprintf(name,"%s_%s%s", sensor->name().c_str(), "ClusterOccupancy", _nameSuffix.c_str());
+    sprintf(title,"%s [%s]", sensor->name().c_str(), "Cluster Occupancy");
     TH2D* histClust = new TH2D(name, title,
 			       sensor->getPosNumX(), lowX, uppX,
 			       sensor->getPosNumY(), lowY, uppY);
@@ -102,8 +102,8 @@ void Analyzers::Occupancy::bookHistos(TDirectory* plotDir){
     _clusterOccYZ.push_back(histClustYZ);
     */
 
-    sprintf(name,"%s%s_%s%s", _device->getName(), sensor->getName(), "ClusterOccupancyPix", _nameSuffix.c_str());
-    sprintf(title,"%s - %s [%s[", _device->getName(), sensor->getName(), "Cluster Occupancy (pixels)");
+    sprintf(name,"%s%s_%s%s", _device->name().c_str(), sensor->name().c_str(), "ClusterOccupancyPix", _nameSuffix.c_str());
+    sprintf(title,"%s - %s [%s[", _device->name().c_str(), sensor->name().c_str(), "Cluster Occupancy (pixels)");
     TH2D* histClustPix = new TH2D(name, title,
 				  sensor->getNumX(), -0.5, sensor->getNumX()-0.5,
 				  sensor->getNumY(), -0.5, sensor->getNumY()-0.5);
@@ -213,8 +213,8 @@ void Analyzers::Occupancy::postProcessing(){
   for(unsigned int nsens=0; nsens<_device->getNumSensors(); nsens++){
     const Mechanics::Sensor* sensor = _device->getSensor(nsens);
 
-    sprintf(hname,"%s%s_OccDist", _device->getName(), sensor->getName());
-    sprintf(htitle, "%s - %s [Occupancy distribution]", _device->getName(), sensor->getName());
+    sprintf(hname,"%s%s_OccDist", _device->name().c_str(), sensor->name().c_str());
+    sprintf(htitle, "%s - %s [Occupancy distribution]", _device->name().c_str(), sensor->name().c_str());
     float xmax = vTotalHits[nsens] != 0 ? (double)vMaxHits[nsens]/(double)vTotalHits[nsens] : vMaxHits[nsens];
     TH1D *h = new TH1D(hname, htitle, 100, 0, xmax);
     //TH1D *h = new TH1D(hname, htitle, vMaxHits[nsens]+1, 0, vMaxHits[nsens]+1); // rebin offline if needed
