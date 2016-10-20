@@ -37,6 +37,7 @@ std::string Mechanics::Sensor::measurementName(Measurement measurement)
     }
   }
   // This fall-back should never happen
+  throw std::runtime_error("Sensor::Measurement: invalid measurement");
   return "invalid_measurement";
 }
 
