@@ -38,7 +38,9 @@ int main(int argc, char const* argv[])
 
   auto cfg = Utils::Config::readConfig(args.config());
 
-  Utils::EventLoop loop(&input);
+  Utils::EventLoop loop(&input,
+                        args.get<uint64_t>("skip_events"),
+                        args.get<uint64_t>("num_events"));
   loop.addAnalyzer(std::make_shared<EventPrinter>());
   loop.run();
 

@@ -55,7 +55,9 @@ int main(int argc, char const* argv[])
   auto noise =
       std::make_shared<Analyzers::NoiseScan>(device, cfg["noise_scan"], hists);
 
-  Utils::EventLoop loop(&input);
+  Utils::EventLoop loop(&input,
+                        args.get<uint64_t>("skip_events"),
+                        args.get<uint64_t>("num_events"));
   loop.addAnalyzer(std::make_shared<Analyzers::Occupancy>(&device, hists));
   loop.addAnalyzer(noise);
   loop.run();

@@ -41,7 +41,9 @@ int main(int argc, char const* argv[])
 
   std::vector<int> locals = {0, 6, 7};
 
-  Utils::EventLoop loop(&events);
+  Utils::EventLoop loop(&events,
+                        args.get<uint64_t>("skip_events"),
+                        args.get<uint64_t>("num_events"));
   setupHitMapper(device, loop);
   setupClusterizer(device, loop);
   loop.addProcessor(std::make_shared<ApplyAlignment>(device));
