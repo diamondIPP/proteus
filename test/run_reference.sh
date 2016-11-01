@@ -9,7 +9,7 @@ REF=configs/device-ref.toml
 # FLAGS="--numEvents 100000"
 FLAGS=
 
-RAWFILE=$(realpath $(printf "raw/run%06d.root" $RUN))
+RAWFILE=$(readlink -f $(printf "raw/run%06d.root" $RUN))
 RUNDIR=$(printf "run%06d" $RUN)
 PREFIX=$(printf "output/run%06d-" $RUN)
 
