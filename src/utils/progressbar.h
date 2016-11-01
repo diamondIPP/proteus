@@ -4,8 +4,8 @@
  * \date 2016-08
  */
 
-#ifndef __PROGRESSBAR__
-#define __PROGRESSBAR__
+#ifndef PT_PROGRESSBAR_H
+#define PT_PROGRESSBAR_H
 
 #include <iomanip>
 #include <iostream>
@@ -59,4 +59,4 @@ private:
 
 } // namespace Utils
 
-#endif // __PROGRESSBAR__
+#endif // PT_PROGRESSBAR_H

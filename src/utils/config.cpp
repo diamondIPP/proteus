@@ -1,3 +1,9 @@
+/**
+ * \file
+ * \author Moritz Kiehn (msmk@cern.ch)
+ * \date 2016-09
+ */
+
 #include "config.h"
 
 #include <algorithm>

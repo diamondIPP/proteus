@@ -1,3 +1,9 @@
+/**
+ * \file
+ * \author Moritz Kiehn <msmk@cern.ch>
+ * \date 2016-08
+ */
+
 #include "logger.h"
 
 const char* Utils::Logger::ANSI_RESET = "\x1B[0m";

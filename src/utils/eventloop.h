@@ -1,3 +1,9 @@
+/**
+ * \file
+ * \author Moritz Kiehn <msmk@cern.ch>
+ * \date 2016-08
+ */
+
 #ifndef PT_EVENTLOOP_H
 #define PT_EVENTLOOP_H
 

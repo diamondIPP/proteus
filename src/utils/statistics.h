@@ -1,5 +1,11 @@
-#ifndef __JD_STATISTICS_H__
-#define __JD_STATISTICS_H__
+/**
+ * \file
+ * \author Moritz Kiehn <msmk@cern.ch>
+ * \date 2016-09
+ */
+
+#ifndef PT_STATISTICS_H
+#define PT_STATISTICS_H
 
 #include <cmath>
 #include <limits>
@@ -9,7 +15,8 @@
 namespace Utils {
 
 /** Accumulate summary statistics for a single variable. */
-template <typename T> class StatAccumulator {
+template <typename T>
+class StatAccumulator {
 public:
   StatAccumulator()
       : m_entries(0)
@@ -69,4 +76,4 @@ inline std::ostream& operator<<(std::ostream& os, const StatAccumulator<T>& acc)
 
 } // namespace Utils
 
-#endif // __JD_STATISTICS_H__
+#endif // PT_STATISTICS_H

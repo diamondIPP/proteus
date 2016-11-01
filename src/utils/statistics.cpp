@@ -1,6 +1,12 @@
-#include <sstream>
+/**
+ * \file
+ * \author Moritz Kiehn <msmk@cern.ch>
+ * \date 2016-09
+ */
 
 #include "statistics.h"
+
+#include <sstream>
 
 Utils::EventStatistics::EventStatistics()
     : events(0)
