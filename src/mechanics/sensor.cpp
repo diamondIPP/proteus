@@ -94,53 +94,59 @@ void Mechanics::Sensor::setLocalToGlobal(const Transform3D& l2g)
   m_g2l = l2g.Inverse();
 }
 
-XYPoint Mechanics::Sensor::transformLocalToPixel(const XYZPoint& uvw) const
+// from 2d plane point to 3d space point
+static inline XYZPoint planeToSpace(const Transform3D& transform,
+                                    const XYPoint& uv)
 {
-  return XYPoint((uvw.x() / m_pitchCol) + std::round(m_numCols / 2),
-                 (uvw.y() / m_pitchRow) + std::round(m_numRows / 2));
+  XYZPoint tmp(uv.x(), uv.y(), 0);
+  tmp = transform * tmp;
+  return tmp;
 }
 
-XYPoint Mechanics::Sensor::transformGlobalToPixel(const XYZPoint& xyz) const
+// from 3d space point to 2d plane point. 3d point must be on the plane.
+static inline XYPoint spaceToPlane(const Transform3D& transform,
+                                   const XYZPoint& xyz)
 {
-  return transformLocalToPixel(globalToLocal() * xyz);
+  XYZPoint tmp(transform * xyz);
+  return XYPoint(tmp.x(), tmp.y());
 }
 
-XYZPoint Mechanics::Sensor::transformPixelToLocal(double c, double r) const
+XYPoint Mechanics::Sensor::transformPixelToLocal(const XYPoint& cr) const
 {
-  return XYZPoint(m_pitchCol * (c - std::round(m_numCols / 2)),
-                  m_pitchRow * (r - std::round(m_numRows / 2)),
-                  0);
+  return XYPoint(m_pitchCol * (cr.x() - std::round(m_numCols / 2)),
+                 m_pitchRow * (cr.y() - std::round(m_numRows / 2)));
 }
 
-XYZPoint Mechanics::Sensor::transformPixelToLocal(const XYPoint& cr) const
+XYPoint Mechanics::Sensor::transformLocalToPixel(const XYPoint& uv) const
 {
-  return transformPixelToLocal(cr.x(), cr.y());
+  return XYPoint((uv.x() / m_pitchCol) + std::round(m_numCols / 2),
+                 (uv.y() / m_pitchRow) + std::round(m_numRows / 2));
 }
 
-XYZPoint Mechanics::Sensor::transformGlobalToLocal(const XYZPoint& xyz) const
+XYZPoint Mechanics::Sensor::transformLocalToGlobal(const XYPoint& uv) const
 {
-  return globalToLocal() * xyz;
+  return planeToSpace(m_l2g, uv);
 }
 
-XYZPoint Mechanics::Sensor::transformPixelToGlobal(double c, double r) const
+XYPoint Mechanics::Sensor::transformGlobalToLocal(const XYZPoint& xyz) const
 {
-  return localToGlobal() * transformPixelToLocal(c, r);
+  return spaceToPlane(m_g2l, xyz);
 }
 
 XYZPoint Mechanics::Sensor::transformPixelToGlobal(const XYPoint& cr) const
 {
-  return localToGlobal() * transformPixelToLocal(cr.x(), cr.y());
+  return planeToSpace(m_l2g, transformPixelToLocal(cr));
 }
 
-XYZPoint Mechanics::Sensor::transformLocalToGlobal(const XYZPoint& uvw) const
+XYPoint Mechanics::Sensor::transformGlobalToPixel(const XYZPoint& xyz) const
 {
-  return localToGlobal() * uvw;
+  return transformLocalToPixel(spaceToPlane(m_g2l, xyz));
 }
 
 void Mechanics::Sensor::pixelToSpace(
     double c, double r, double& x, double& y, double& z) const
 {
-  transformPixelToGlobal(c, r).GetCoordinates(x, y, z);
+  transformPixelToGlobal(XYPoint(c, r)).GetCoordinates(x, y, z);
 }
 
 void Mechanics::Sensor::spaceToPixel(
@@ -192,8 +198,8 @@ Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaPixel() const
 
 Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaLocal() const
 {
-  auto lowerLeft = transformPixelToLocal(0, 0);
-  auto upperRight = transformPixelToLocal(m_numCols, m_numRows);
+  XYPoint lowerLeft = transformPixelToLocal(XYPoint(0, 0));
+  XYPoint upperRight = transformPixelToLocal(XYPoint(m_numCols, m_numRows));
   return {{lowerLeft.x(), upperRight.x()}, {lowerLeft.y(), upperRight.y()}};
 }
 
@@ -201,10 +207,10 @@ Mechanics::Sensor::Area Mechanics::Sensor::sensitiveEnvelopeGlobal() const
 {
   // TODO 2016-08 msmk: find a smarter way to this, but its Friday
   // transform each corner of the sensitive rectangle
-  auto minMin = transformPixelToGlobal(0, 0);
-  auto minMax = transformPixelToGlobal(0, m_numRows);
-  auto maxMin = transformPixelToGlobal(m_numCols, 0);
-  auto maxMax = transformPixelToGlobal(m_numCols, m_numRows);
+  XYZPoint minMin = transformPixelToGlobal(XYPoint(0, 0));
+  XYZPoint minMax = transformPixelToGlobal(XYPoint(0, m_numRows));
+  XYZPoint maxMin = transformPixelToGlobal(XYPoint(m_numCols, 0));
+  XYZPoint maxMax = transformPixelToGlobal(XYPoint(m_numCols, m_numRows));
 
   std::array<double, 4> xs = {minMin.x(), minMax.x(), maxMin.x(), maxMax.x()};
   std::array<double, 4> ys = {minMin.y(), minMax.y(), maxMin.y(), maxMax.y()};

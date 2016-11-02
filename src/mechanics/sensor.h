@@ -96,14 +96,12 @@ public:
   //
   // transformations between different coordinate systems
   //
-  XYPoint transformLocalToPixel(const XYZPoint& uvw) const;
-  XYPoint transformGlobalToPixel(const XYZPoint& xyz) const;
-  XYZPoint transformPixelToLocal(double c, double r) const;
-  XYZPoint transformPixelToLocal(const XYPoint& cr) const;
-  XYZPoint transformGlobalToLocal(const XYZPoint& xyz) const;
-  XYZPoint transformPixelToGlobal(double c, double r) const;
+  XYPoint transformPixelToLocal(const XYPoint& cr) const;
+  XYPoint transformLocalToPixel(const XYPoint& uv) const;
+  XYZPoint transformLocalToGlobal(const XYPoint& uv) const;
+  XYPoint transformGlobalToLocal(const XYZPoint& xyz) const;
   XYZPoint transformPixelToGlobal(const XYPoint& cr) const;
-  XYZPoint transformLocalToGlobal(const XYZPoint& uvw) const;
+  XYPoint transformGlobalToPixel(const XYZPoint& xyz) const;
   // \deprecated Use transformations above
   void
   pixelToSpace(double pixX, double pixY, double& x, double& y, double& z) const;
