@@ -133,11 +133,8 @@ Residuals::Residuals(const Mechanics::Device* refDevice,
             << ";Track cluster difference " << (axis ? "X" : "Y") << " ["
             << _device->getSpaceUnit() << "]"
             << ";Clusters / " << 1.0 / binsPerPix << " pixel";
-      TH1D* res1d = new TH1D(name.str().c_str(),
-                             title.str().c_str(),
-                             nbins,
-                             -width / 2.0,
-                             width / 2.0);
+      TH1D* res1d = new TH1D(name.str().c_str(), title.str().c_str(), nbins,
+                             -width / 2.0, width / 2.0);
       res1d->SetDirectory(dir1d);
       if (axis)
         _residualsX.push_back(res1d);
@@ -158,14 +155,9 @@ Residuals::Residuals(const Mechanics::Device* refDevice,
             << ";Track position " << (axis ? "X" : "Y") << " ["
             << _device->getSpaceUnit() << "]"
             << ";Clusters / " << 1.0 / binsPerPix << " pixel";
-      TH2D* resAA = new TH2D(name.str().c_str(),
-                             title.str().c_str(),
-                             nbins,
-                             -width / 2.0,
-                             width / 2.0,
-                             binsY,
-                             -height / 2.0,
-                             height / 2.0);
+      TH2D* resAA =
+          new TH2D(name.str().c_str(), title.str().c_str(), nbins, -width / 2.0,
+                   width / 2.0, binsY, -height / 2.0, height / 2.0);
       resAA->SetDirectory(dir2d);
       if (axis)
         _residualsXX.push_back(resAA);
@@ -185,14 +177,9 @@ Residuals::Residuals(const Mechanics::Device* refDevice,
             << ";Track position " << (axis ? "Y" : "X") << " ["
             << _device->getSpaceUnit() << "]"
             << ";Clusters / " << 1.0 / binsPerPix << " pixel";
-      TH2D* resAB = new TH2D(name.str().c_str(),
-                             title.str().c_str(),
-                             nbins,
-                             -width / 2.0,
-                             width / 2.0,
-                             binsY,
-                             -height / 2.0,
-                             height / 2.0);
+      TH2D* resAB =
+          new TH2D(name.str().c_str(), title.str().c_str(), nbins, -width / 2.0,
+                   width / 2.0, binsY, -height / 2.0, height / 2.0);
       resAB->SetDirectory(dir2d);
       if (axis)
         _residualsXY.push_back(resAB);
@@ -221,17 +208,11 @@ Analyzers::UnbiasedResiduals::UnbiasedResiduals(const Mechanics::Device& device,
     Sensor::Area::Axis dist = {-maxDist, maxDist};
     Sensor::Area::Axis slope = {-maxSlope, maxSlope};
 
-    auto makeH2 = [&](const char* suffix,
-                      const Sensor::Area::Axis& bounds0,
+    auto makeH2 = [&](const char* suffix, const Sensor::Area::Axis& bounds0,
                       const Sensor::Area::Axis& bounds1) {
-      TH2D* h = new TH2D((sensor.name() + suffix).c_str(),
-                         "",
-                         nBins,
-                         bounds0.min,
-                         bounds0.max,
-                         nBins,
-                         bounds1.min,
-                         bounds1.max);
+      TH2D* h =
+          new TH2D((sensor.name() + suffix).c_str(), "", nBins, bounds0.min,
+                   bounds0.max, nBins, bounds1.min, bounds1.max);
       h->SetDirectory(dir);
       return h;
     };
