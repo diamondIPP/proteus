@@ -1,5 +1,5 @@
-#ifndef DEVICE_H
-#define DEVICE_H
+#ifndef PT_DEVICE_H
+#define PT_DEVICE_H
 
 #include <cmath>
 #include <cstdint>
@@ -88,4 +88,4 @@ private:
 
 } // namespace Mechanics
 
-#endif // DEVICE_H
+#endif // PT_DEVICE_H

@@ -1,5 +1,5 @@
-#ifndef NOISEMASK_H
-#define NOISEMASK_H
+#ifndef PT_NOISEMASK_H
+#define PT_NOISEMASK_H
 
 #include <iosfwd>
 #include <map>
@@ -14,8 +14,6 @@ namespace Mechanics {
 /** Store and process masked pixels. */
 class NoiseMask {
 public:
-  using ColumnRowSet = std::set<ColumnRow>;
-
   NoiseMask() = default;
 
   /** Construct a noise mask from a configuration file. */
@@ -32,15 +30,15 @@ public:
   void merge(const NoiseMask& other);
 
   void maskPixel(Index sensorId, Index col, Index row);
-  const ColumnRowSet& getMaskedPixels(Index sensorId) const;
+  const std::set<ColumnRow>& getMaskedPixels(Index sensorId) const;
   size_t getNumMaskedPixels() const;
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
-  std::map<Index, ColumnRowSet> m_maskedPixels;
+  std::map<Index, std::set<ColumnRow>> m_maskedPixels;
 };
 
 } // namespace Mechanics
 
-#endif // NOISEMASK_H
+#endif // PT_NOISEMASK_H

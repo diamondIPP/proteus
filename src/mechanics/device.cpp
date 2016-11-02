@@ -160,8 +160,8 @@ static Mechanics::Device parseDevice(const std::string& path)
       INFO("alignment config: '", pathAlignment, "'\n");
       INFO("noise mask config: '", pathNoiseMask, "'\n");
 
-      Mechanics::Device device(
-          name, clockRate, readOutWindow, spaceUnit, timeUnit);
+      Mechanics::Device device(name, clockRate, readOutWindow, spaceUnit,
+                               timeUnit);
       Mechanics::Alignment alignment;
 
       parseSensors(config, device, alignment);
@@ -253,8 +253,7 @@ Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
 Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
 {
   Device device(cfg.get<std::string>("device.name"),
-                cfg.get<double>("device.clock"),
-                cfg.get<int>("device.window"),
+                cfg.get<double>("device.clock"), cfg.get<int>("device.window"),
                 cfg.get<std::string>("device.space_unit"),
                 cfg.get<std::string>("device.time_unit"));
 
@@ -277,14 +276,10 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
     auto type = types[typeName];
     auto measurement =
         Sensor::measurementFromName(type.get<std::string>("measurement"));
-    device.addSensor(Sensor(name,
-                            measurement,
-                            type.get<int>("cols"),
-                            type.get<int>("rows"),
-                            type.get<double>("pitch_col"),
-                            type.get<double>("pitch_row"),
-                            type.get<double>("thickness"),
-                            type.get<double>("x_x0")));
+    device.addSensor(
+        Sensor(name, measurement, type.get<int>("cols"), type.get<int>("rows"),
+               type.get<double>("pitch_col"), type.get<double>("pitch_row"),
+               type.get<double>("thickness"), type.get<double>("x_x0")));
   }
   return device;
 }

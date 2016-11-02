@@ -1,5 +1,5 @@
-#ifndef SENSOR_H
-#define SENSOR_H
+#ifndef PT_SENSOR_H
+#define PT_SENSOR_H
 
 #include <array>
 #include <cstdint>
@@ -48,7 +48,7 @@ public:
   static Measurement measurementFromName(const std::string& name);
   static std::string measurementName(Measurement measurement);
 
-  using Area = Utils::Box<2, double, Utils::Endpoints::CLOSED>;
+  typedef Utils::Box<2, double, Utils::Endpoints::CLOSED> Area;
 
   /** Construct with an empty transformation (local = global) and no noise.
    *
@@ -166,4 +166,4 @@ private:
 
 } // namespace Mechanics
 
-#endif // SENSOR_H
+#endif // PT_SENSOR_H
