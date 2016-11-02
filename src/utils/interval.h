@@ -1,6 +1,6 @@
 /**
  * \author Moritz Kiehn <msmk@cern.ch>
- * \created 2016-08
+ * \date 2016-08
  */
 
 #ifndef PT_INTERVAL_H
@@ -38,16 +38,11 @@ struct Interval {
 
   /** Construct the default interval encompassing the full range of T. */
   Interval()
-      : min(std::numeric_limits<T>::min())
-      , max(std::numeric_limits<T>::max())
+      : min(std::numeric_limits<T>::min()), max(std::numeric_limits<T>::max())
   {
   }
   /** Construct an interval with the given limits. */
-  Interval(T a, T b)
-      : min(std::min(a, b))
-      , max(std::max(a, b))
-  {
-  }
+  Interval(T a, T b) : min(std::min(a, b)), max(std::max(a, b)) {}
 };
 
 /** N-dimensional box defined by intervals along each axis. */
