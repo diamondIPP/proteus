@@ -22,7 +22,15 @@ template <typename T, Endpoints ENDPOINTS = Endpoints::OPEN_MAX>
 struct Interval {
   T min, max;
 
-  bool isEmpty() const { return (min == max); }
+  /** Check if the interval is empty.
+   *
+   * A closed interval can never be empty. With identical endpoints, the
+   * endpoint(s) itself is the only element.
+   */
+  bool isEmpty() const
+  {
+    return (ENDPOINTS != Endpoints::CLOSED) && (min == max);
+  }
   bool isInside(T x) const
   {
     // compiler should remove unused checks
@@ -53,13 +61,14 @@ struct Box {
 
   std::array<Axis, N> axes;
 
-  /** The box is empty iff all axes are empty. */
+  /** The box is empty if any axis is empty. */
   bool isEmpty() const
   {
-    bool status = true;
-    for (size_t i = 0; i < N; ++i)
-      status &= axes[i].isEmpty();
-    return status;
+    for (size_t i = 0; i < N; ++i) {
+      if (axes[i].isEmpty())
+        return true;
+    }
+    return false;
   }
   bool isInside(Point x) const
   {
