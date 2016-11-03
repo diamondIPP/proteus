@@ -165,7 +165,6 @@ void Utils::EventLoop::run()
   INFO("  input: ", time_per_event(durationInput), unit, '\n');
   if (m_output)
     INFO("  output: ", time_per_event(durationOutput), unit, '\n');
-  // INFO("  processors: ", time_per_event(durProcessors), unit);
   INFO("  processors:\n");
   for (size_t i = 0; i < m_processors.size(); ++i) {
     INFO("    ", m_processors[i]->name(), ": ");
