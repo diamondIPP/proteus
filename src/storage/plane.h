@@ -18,7 +18,7 @@ namespace Storage {
  */
 class Plane {
 public:
-  Index sensorId() const { return m_planeNum; }
+  Index sensorId() const { return m_sensorId; }
 
   Storage::Hit* newHit();
   Index numHits() const { return static_cast<Index>(m_hits.size()); }
@@ -33,13 +33,13 @@ public:
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
-  Plane(Index planeNum);
+  Plane(Index sensorId);
 
   void clear();
 
   std::vector<std::unique_ptr<Hit>> m_hits;
   std::vector<std::unique_ptr<Cluster>> m_clusters;
-  Index m_planeNum;
+  Index m_sensorId;
 
   friend class Event;
 };

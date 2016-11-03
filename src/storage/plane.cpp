@@ -10,7 +10,7 @@ void Storage::Plane::clear()
   m_hits.clear();
 }
 
-Storage::Plane::Plane(Index planeNum) : m_planeNum(planeNum) {}
+Storage::Plane::Plane(Index sensorId) : m_sensorId(sensorId) {}
 
 Storage::Hit* Storage::Plane::newHit()
 {
