@@ -2,8 +2,8 @@
 #define EVENT_H
 
 #include <cstdint>
-#include <memory>
 #include <iosfwd>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -16,6 +16,7 @@ class TrackMaker;
 }
 
 namespace Storage {
+
 class Event {
 public:
   Event(Index numPlanes);
@@ -59,7 +60,6 @@ public:
   unsigned int getTriggerPhase() const { return m_triggerPhase; }
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
-  void print() const;
 
 private:
   Track* addTrack(const Track& track);

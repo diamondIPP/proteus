@@ -77,5 +77,3 @@ void Storage::Event::print(std::ostream& os, const std::string& prefix) const
   }
   os.flush();
 }
-
-void Storage::Event::print() const { print(std::cout); }
