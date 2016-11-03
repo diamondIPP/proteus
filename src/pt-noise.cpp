@@ -23,21 +23,6 @@
 #include "utils/eventloop.h"
 #include "utils/logger.h"
 
-void run_noise(const std::string& input_path, const std::string& output_path)
-{
-  Storage::StorageIO input(input_path.c_str(), Storage::INPUT);
-  Utils::EventLoop loop(&input);
-
-  Processors::Processor* clusterer = new Processors::ClusterMaker(1, 1, 2);
-  Analyzers::SingleAnalyzer* printer = new Analyzers::EventPrinter();
-
-  loop.addProcessor(std::unique_ptr<Processors::Processor>(clusterer));
-  loop.addAnalyzer(std::unique_ptr<Analyzers::SingleAnalyzer>(printer));
-
-  Utils::globalLogger().setLevel(Utils::Logger::DEBUG);
-  loop.run();
-}
-
 int main(int argc, char const* argv[])
 {
   Utils::Arguments args("run proteus noise scan");
