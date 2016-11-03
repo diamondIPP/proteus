@@ -6,9 +6,12 @@ ColumnLimit: 80
 Language: Cpp
 Standard: Cpp11
 AccessModifierOffset: -2
-BinPackArguments: false
+AllowShortFunctionsOnASingleLine: All
+AlwaysBreakTemplateDeclarations: true
+BinPackArguments: true
 BinPackParameters: false
 BreakBeforeBraces: WebKit
 BreakConstructorInitializersBeforeComma: true
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
 PointerAlignment: Left
 ---
