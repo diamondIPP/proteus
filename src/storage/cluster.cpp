@@ -42,8 +42,7 @@ void Storage::Cluster::transformToGlobal(const Transform3D& pixelToGlobal)
   covGlobal = Similarity(transform.Sub<Matrix3>(0, 0), covPixel);
 
   m_xyz = pixelToGlobal * XYZPoint(m_cr.x(), m_cr.y(), 0);
-  m_errXyz.SetXYZ(std::sqrt(covGlobal(0, 0)),
-                  std::sqrt(covGlobal(1, 1)),
+  m_errXyz.SetXYZ(std::sqrt(covGlobal(0, 0)), std::sqrt(covGlobal(1, 1)),
                   std::sqrt(covGlobal(2, 2)));
 }
 
@@ -77,6 +76,6 @@ void Storage::Cluster::print(std::ostream& os, const std::string& prefix) const
 
 std::ostream& Storage::operator<<(std::ostream& os, const Cluster& cluster)
 {
-  os << "cr=" << cluster.posPixel() << " size=" << cluster.numHits();
+  os << "pixel=" << cluster.posPixel() << " size=" << cluster.numHits();
   return os;
 }

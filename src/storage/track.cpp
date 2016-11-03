@@ -5,10 +5,7 @@
 #include "cluster.h"
 
 Storage::TrackState::TrackState(double u, double v, double dU, double dV)
-    : m_offset(u, v)
-    , m_slope(dU, dV)
-    , m_covUDu(0)
-    , m_covVDv(0)
+    : m_offset(u, v), m_slope(dU, dV), m_covUDu(0), m_covVDv(0)
 {
 }
 
@@ -17,10 +14,7 @@ Storage::TrackState::TrackState(const XYPoint& offset, const XYVector& slope)
 {
 }
 
-Storage::TrackState::TrackState()
-    : TrackState(0, 0, 0, 0)
-{
-}
+Storage::TrackState::TrackState() : TrackState(0, 0, 0, 0) {}
 
 void Storage::TrackState::setErrOffset(double errU, double errV)
 {
@@ -41,23 +35,10 @@ void Storage::TrackState::setErrV(double errV, double errDv, double cov)
   m_covVDv = cov;
 }
 
-std::ostream& Storage::operator<<(std::ostream& os, const TrackState& state)
-{
-  os << "uv=" << state.offset() << " d(uv)=" << state.slope();
-  return os;
-}
-
-Storage::Track::Track()
-    : m_state(0, 0, 0, 0)
-    , m_redChi2(-1)
-    , m_index(-1)
-{
-}
+Storage::Track::Track() : m_state(0, 0, 0, 0), m_redChi2(-1), m_index(-1) {}
 
 Storage::Track::Track(const TrackState& globalState)
-    : m_state(globalState)
-    , m_redChi2(-1)
-    , m_index(-1)
+    : m_state(globalState), m_redChi2(-1), m_index(-1)
 {
 }
 
@@ -100,6 +81,12 @@ void Storage::TrackState::print(std::ostream& os,
 {
   os << prefix << "offset: " << offset() << '\n';
   os << prefix << "slope: " << slope() << '\n';
+}
+
+std::ostream& Storage::operator<<(std::ostream& os, const TrackState& state)
+{
+  os << "uv=" << state.offset() << " d(uv)=" << state.slope();
+  return os;
 }
 
 void Storage::Track::print(std::ostream& os, const std::string& prefix) const

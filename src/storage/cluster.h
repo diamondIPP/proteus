@@ -1,5 +1,5 @@
-#ifndef CLUSTER_H
-#define CLUSTER_H
+#ifndef PT_CLUSTER_H
+#define PT_CLUSTER_H
 
 #include <iosfwd>
 #include <string>
@@ -90,4 +90,4 @@ std::ostream& operator<<(std::ostream& os, const Cluster& cluster);
 
 } // namespace Storage
 
-#endif // CLUSTER_H
+#endif // PT_CLUSTER_H

@@ -1,5 +1,5 @@
-#ifndef TRACK_H
-#define TRACK_H
+#ifndef PT_TRACK_H
+#define PT_TRACK_H
 
 #include <iosfwd>
 #include <map>
@@ -127,4 +127,4 @@ std::ostream& operator<<(std::ostream& os, const TrackState& state);
 
 } // namespace Storage
 
-#endif // TRACK_H
+#endif // PT_TRACK_H

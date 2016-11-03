@@ -1,5 +1,5 @@
-#ifndef EVENT_H
-#define EVENT_H
+#ifndef PT_EVENT_H
+#define PT_EVENT_H
 
 #include <cstdint>
 #include <iosfwd>
@@ -81,4 +81,4 @@ private:
 
 } // namespace Storage
 
-#endif // EVENT_H
+#endif // PT_EVENT_H

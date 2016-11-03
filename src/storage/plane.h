@@ -1,5 +1,5 @@
-#ifndef PLANE_H
-#define PLANE_H
+#ifndef PT_PLANE_H
+#define PT_PLANE_H
 
 #include <iosfwd>
 #include <memory>
@@ -46,4 +46,4 @@ private:
 
 } // namespace Storage
 
-#endif // PLANE_H
+#endif // PT_PLANE_H
