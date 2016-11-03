@@ -1,0 +1,2 @@
+*.rst whitespace=-blank-at-eol
+*.md whitespace=-blank-at-eol
