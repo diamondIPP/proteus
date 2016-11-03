@@ -79,10 +79,6 @@ void Loopers::ProcessEvents::loop() {
 
     if (_trackMaker){
       _trackMaker->generateTracks(refEvent, _refDevice->getBeamSlopeX(), _refDevice->getBeamSlopeY());
-      //to convert global track pos to local (lmeng@cern.ch, bristic@cern.ch)
-      if(_trackMaker->getCalcIntercepts()){
-         _trackMaker->calculateIntercepts(refEvent, _refDevice);
-      }
 	}
     
     // Write the event

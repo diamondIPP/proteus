@@ -31,7 +31,7 @@ public:
   TrackMaker(double maxClusterDist,
              unsigned int numSeedPlanes = 1,
              unsigned int minClusters = 3,
-             bool calcIntercepts = false); 
+             bool calcIntercepts = false);
 
   void generateTracks(Storage::Event* event,
                       double beamAngleX = 0,
@@ -44,7 +44,6 @@ public:
                        double& interceptErr, double& chi2, double& covariance);
 
   static void fitTrackToClusters(Storage::Track* track);
-  static void calculateIntercepts(Storage::Event* event, Mechanics::Device* device);
 
   bool getCalcIntercepts(){return _calcIntercepts;}
 };

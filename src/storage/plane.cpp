@@ -6,15 +6,11 @@
 
 void Storage::Plane::clear()
 {
-  m_intercepts.clear();
   m_clusters.clear();
   m_hits.clear();
 }
 
-Storage::Plane::Plane(Index planeNum)
-    : m_planeNum(planeNum)
-{
-}
+Storage::Plane::Plane(Index planeNum) : m_planeNum(planeNum) {}
 
 Storage::Hit* Storage::Plane::newHit()
 {
@@ -28,11 +24,6 @@ Storage::Cluster* Storage::Plane::newCluster()
   m_clusters.back()->m_index = m_clusters.size() - 1;
   m_clusters.back()->m_plane = this;
   return m_clusters.back().get();
-}
-
-void Storage::Plane::addIntercept(double posX, double posY)
-{
-  m_intercepts.push_back(std::pair<double, double>(posX, posY));
 }
 
 void Storage::Plane::print(std::ostream& os, const std::string& prefix) const

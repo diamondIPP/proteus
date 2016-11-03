@@ -30,16 +30,6 @@ public:
   Cluster* getCluster(Index i) { return m_clusters.at(i).get(); }
   const Cluster* getCluster(Index i) const { return m_clusters.at(i).get(); }
 
-  void addIntercept(double posX, double posY);
-  Index numIntercepts() const
-  {
-    return static_cast<Index>(m_intercepts.size());
-  }
-  std::pair<double, double> getIntercept(Index i) const
-  {
-    return m_intercepts.at(i);
-  }
-
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
@@ -49,7 +39,6 @@ private:
 
   std::vector<std::unique_ptr<Hit>> m_hits;
   std::vector<std::unique_ptr<Cluster>> m_clusters;
-  std::vector<std::pair<double, double>> m_intercepts;
   Index m_planeNum;
 
   friend class Event;
