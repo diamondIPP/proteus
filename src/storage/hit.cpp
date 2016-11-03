@@ -6,7 +6,9 @@
 #include "cluster.h"
 
 Storage::Hit::Hit()
-    : m_col(-1)
+    : m_digitalCol(-1)
+    , m_digitalRow(-1)
+    , m_col(-1)
     , m_row(-1)
     , m_timing(-1)
     , m_value(-1)
@@ -28,7 +30,10 @@ void Storage::Hit::setCluster(Storage::Cluster* cluster)
 
 std::ostream& Storage::operator<<(std::ostream& os, const Storage::Hit& hit)
 {
-  os << "col=" << hit.col() << " row=" << hit.row()
-     << " timing=" << hit.timing() << " value=" << hit.value();
+  if ((hit.digitalCol() != hit.col()) || (hit.digitalRow() != hit.row())) {
+    os << "digital=(" << hit.digitalCol() << ", " << hit.digitalRow() << ") ";
+  }
+  os << "pixel=(" << hit.col() << ", " << hit.row() << ") ";
+  os << "timing=" << hit.timing() << " value=" << hit.value();
   return os;
 }
