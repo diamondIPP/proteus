@@ -1,10 +1,10 @@
 /**
  * \author Moritz Kiehn <msmk@cern.ch>
- * \created 2016-08-24
+ * \date 2016-08-24
  */
 
-#ifndef __JU_ANALYZER_H__
-#define __JU_ANALYZER_H__
+#ifndef PT_ANALYZER_H
+#define PT_ANALYZER_H
 
 #include <cstdint>
 #include <string>
@@ -25,4 +25,4 @@ public:
 
 } // namespace Analyzers
 
-#endif // __JU_ANALYZER_H__
+#endif // PT_ANALYZER_H
