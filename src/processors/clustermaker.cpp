@@ -141,7 +141,7 @@ void ClusterMaker::calculateCluster(Storage::Cluster* cluster) const
   // const double errX = (stdevX) ? stdevX : pixErrX;
   // const double errY = (stdevY) ? stdevY : pixErrY;
 
-  cluster->setPosPixel(XYPoint(cogX, cogY));
+  cluster->setPosPixel(cogX, cogY);
   cluster->setErrPixel(pixErrX, pixErrY);
 }
 
