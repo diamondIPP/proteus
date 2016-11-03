@@ -1,10 +1,10 @@
 /**
  * \author Moritz Kiehn <msmk@cern.ch>
- * \created 2016-08-24
+ * \date 2016-08-24
  */
 
-#ifndef __JU_PROCESSOR_H__
-#define __JU_PROCESSOR_H__
+#ifndef PT_PROCESSOR_H
+#define PT_PROCESSOR_H
 
 #include <cstdint>
 #include <string>
@@ -25,4 +25,4 @@ public:
 
 } // namespace Processors
 
-#endif // __JU_PROCESSOR_H__
+#endif // PT_PROCESSOR_HO
