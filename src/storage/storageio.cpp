@@ -796,13 +796,13 @@ namespace Storage {
       // file
       for (int nhit = 0; nhit < numHits; nhit++) {
         Hit* hit = plane->getHit(nhit);
-        hitPixX[nhit] = hit->getPixX();
-        hitPixY[nhit] = hit->getPixY();
+        hitPixX[nhit] = hit->digitalCol();
+        hitPixY[nhit] = hit->digitalRow();
         hitPosX[nhit] = hit->getPosX();
         hitPosY[nhit] = hit->getPosY();
         hitPosZ[nhit] = hit->getPosZ();
-        hitValue[nhit] = hit->getValue();
-        hitTiming[nhit] = hit->getTiming();
+        hitValue[nhit] = hit->value();
+        hitTiming[nhit] = hit->timing();
         hitInCluster[nhit] =
             hit->isInCluster() ? hit->cluster()->getIndex() : -1;
       }
