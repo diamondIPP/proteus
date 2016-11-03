@@ -21,7 +21,6 @@ public:
   Index row() const { return m_row; }
   /** Return the pixel center position in pixel coordinates. */
   XYPoint posPixel() const { return XYPoint(m_col + 0.5, m_row + 0.5); }
-  const XYZPoint& posGlobal() const { return m_xyz; }
   double timing() const { return m_timing; }
   double value() const { return m_value; }
 
@@ -32,9 +31,9 @@ public:
 
   unsigned int getPixX() const { return m_col; }
   unsigned int getPixY() const { return m_row; }
-  double getPosX() const { return posGlobal().x(); }
-  double getPosY() const { return posGlobal().y(); }
-  double getPosZ() const { return posGlobal().z(); }
+  double getPosX() const { return m_xyz.x(); }
+  double getPosY() const { return m_xyz.y(); }
+  double getPosZ() const { return m_xyz.z(); }
   double getValue() const { return m_value; }
   double getTiming() const { return m_timing; }
 
