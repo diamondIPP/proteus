@@ -96,7 +96,7 @@ Processors::fitTrackLocal(const Storage::Track& track,
 
   for (Index icluster = 0; icluster < track.numClusters(); ++icluster) {
     const Storage::Cluster* cluster = track.getCluster(icluster);
-    XYZPoint pos = reference.transformGlobalToLocal(cluster->posGlobal());
+    XYZPoint pos = reference.globalToLocal() * cluster->posGlobal();
     // TODO 2016-10-13 msmk: also transform error to local frame
     fit.addPoint(pos, cluster->errGlobal());
   }
@@ -115,7 +115,7 @@ Processors::fitTrackLocalUnbiased(const Storage::Track& track,
     const Storage::Cluster& cluster = *track.getCluster(icluster);
     if (cluster.sensorId() == referenceId)
       continue;
-    XYZPoint pos = reference.transformGlobalToLocal(cluster.posGlobal());
+    XYZPoint pos = reference.globalToLocal() * cluster.posGlobal();
     // TODO 2016-10-13 msmk: also transform error to local frame
     fit.addPoint(pos, cluster.errGlobal());
   }
