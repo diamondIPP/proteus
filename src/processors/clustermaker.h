@@ -1,5 +1,5 @@
-#ifndef CLUSTERMAKER_H
-#define CLUSTERMAKER_H
+#ifndef PT_CLUSTERMAKER_H
+#define PT_CLUSTERMAKER_H
 
 #include "processor.h"
 
@@ -18,20 +18,22 @@ private:
   const unsigned int _maxSeparationY;
   const double _maxSeparation;
 
-  void addNeighbours(const Storage::Hit* hit, Storage::Plane* plane,
-                     Storage::Cluster* cluster);
-  void calculateCluster(Storage::Cluster* cluster);
+  void addNeighbours(const Storage::Hit* hit,
+                     Storage::Plane* plane,
+                     Storage::Cluster* cluster) const;
+  void calculateCluster(Storage::Cluster* cluster) const;
 
 public:
-  ClusterMaker(unsigned int maxSeparationX, unsigned int maxSeparationY,
+  ClusterMaker(unsigned int maxSeparationX,
+               unsigned int maxSeparationY,
                double maxSeparation);
 
-  void generateClusters(Storage::Event* event, unsigned int planeNum);
+  void generateClusters(Storage::Event* event, unsigned int planeNum) const;
 
   std::string name() const;
-  void process(Storage::Event& event);
+  void process(Storage::Event& event) const;
   void finalize();
 };
 }
 
-#endif  // CLUSTERMAKER_H
+#endif // PT_CLUSTERMAKER_H
