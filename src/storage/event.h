@@ -22,8 +22,8 @@ public:
 
   void clear();
   void setId(uint64_t id) { m_id = id; }
-  void setTimeStamp(uint64_t timeStamp) { m_timeStamp = timeStamp; }
   void setFrameNumber(uint64_t frameNumber) { m_frameNumber = frameNumber; }
+  void setTimeStamp(uint64_t timeStamp) { m_timeStamp = timeStamp; }
   void setTriggerOffset(unsigned int offset) { m_triggerOffset = offset; }
   void setTriggerInfo(unsigned int info) { m_triggerInfo = info; }
   void setTriggerPhase(unsigned int phase) { m_triggerPhase = phase; }

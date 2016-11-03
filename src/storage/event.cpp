@@ -5,8 +5,8 @@
 
 Storage::Event::Event(Index numPlanes)
     : m_id(-1)
-    , m_timeStamp(0)
     , m_frameNumber(0)
+    , m_timeStamp(0)
     , m_triggerOffset(0)
     , m_invalid(false)
 {
