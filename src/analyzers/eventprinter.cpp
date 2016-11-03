@@ -11,8 +11,7 @@ std::shared_ptr<Analyzers::EventPrinter> Analyzers::EventPrinter::make()
 
 std::string Analyzers::EventPrinter::name() const { return "EventPrinter"; }
 
-void Analyzers::EventPrinter::analyze(uint64_t eventId,
-                                      const Storage::Event& event)
+void Analyzers::EventPrinter::analyze(const Storage::Event& event)
 {
   std::cout << "event " << event.id() << ":\n";
   event.print(std::cout, "  ");
