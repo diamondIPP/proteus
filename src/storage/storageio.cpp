@@ -101,7 +101,6 @@ void Storage::StorageIO::openRead(const std::string& path, const std::vector<boo
       intercepts->SetBranchAddress("StdV", interceptStdV, &bInterceptStdV);
       intercepts->SetBranchAddress("StdSlopeU", interceptStdSlopeU, &bInterceptStdSlopeU);
       intercepts->SetBranchAddress("StdSlopeV", interceptStdSlopeV, &bInterceptStdSlopeV);
-      intercepts->SetBranchAddress("ReducedChi2", interceptReducedChi2, &bInterceptReducedChi2);
     }
   }
 
@@ -231,7 +230,6 @@ void Storage::StorageIO::openTruncate(const std::string& path)
     intercepts->Branch("StdV", interceptStdV, "StdV[NIntercepts]/D");
     intercepts->Branch("StdSlopeU", interceptStdSlopeU, "StdSlopeU[NIntercepts]/D");
     intercepts->Branch("StdSlopeV", interceptStdSlopeV, "StdSlopeV[NIntercepts]/D");
-    intercepts->Branch("ReducedChi2", interceptReducedChi2, "ReducedChi2[NIntercepts]/D");
   }
 
   _file->cd();
@@ -448,7 +446,6 @@ namespace Storage {
     interceptStdV[i] = 0;
     interceptStdSlopeU[i] = 0;
     interceptStdSlopeV[i] = 0;
-    interceptReducedChi2[i] = 0;
 	}
 
     numTracks = 0;
@@ -766,7 +763,6 @@ namespace Storage {
         interceptStdV[numIntercepts] = local.errOffset().y();
         interceptStdSlopeU[numIntercepts] = local.errSlope().x();
         interceptStdSlopeV[numIntercepts] = local.errSlope().y();
-        interceptReducedChi2[numIntercepts] = track->reducedChi2();
         numIntercepts += 1;
       }
 

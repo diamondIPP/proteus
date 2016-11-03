@@ -135,7 +135,6 @@ namespace Storage {
     Double_t interceptStdV[MAX_TRACKS];
     Double_t interceptStdSlopeU[MAX_TRACKS];
     Double_t interceptStdSlopeV[MAX_TRACKS];
-    Double_t interceptReducedChi2[MAX_TRACKS];
 
     // EVENT INFO
     ULong64_t timeStamp;
@@ -210,7 +209,6 @@ namespace Storage {
     TBranch* bInterceptStdV;
     TBranch* bInterceptStdSlopeU;
     TBranch* bInterceptStdSlopeV;
-    TBranch* bInterceptReducedChi2;
     
     TBranch* bTimeStamp;
     TBranch* bFrameNumber;
