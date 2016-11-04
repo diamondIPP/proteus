@@ -14,18 +14,17 @@
 using namespace Storage;
 using Utils::logger;
 
-namespace Processors {
-
-void Processors::TrackMaker::searchPlane(Track* track,
+void Processors::TrackMaker::searchPlane(Event* event,
+                                         Track* track,
                                          std::vector<Track*>& candidates,
                                          unsigned int nplane) const
 {
-  assert(nplane < m_event->getNumPlanes() &&
+  assert(nplane < event->getNumPlanes() &&
          "TrackMaker: adding clusters in plane outside event range");
   assert(track && "TrackMaker: can't search plane with a void track");
-  assert((int)nplane != m_maskedPlane && "TrackMaker: ouch");
+  // assert((int)nplane != m_maskedPlane && "TrackMaker: ouch");
 
-  Plane* plane = m_event->getPlane(nplane);
+  Plane* plane = event->getPlane(nplane);
 
   // Search over clusters in this event
   bool matchedCluster = false;
@@ -77,7 +76,7 @@ void Processors::TrackMaker::searchPlane(Track* track,
       continue; // This iteration of the loop isn't necessary
     }
 
-    int planesRemaining = m_event->getNumPlanes() - nplane - 1;
+    int planesRemaining = event->getNumPlanes() - nplane - 1;
     // Adjust for the masked plane if applicable
     if (m_maskedPlane >= 0 && m_maskedPlane > (int)nplane)
       planesRemaining -= 1;
@@ -91,7 +90,7 @@ void Processors::TrackMaker::searchPlane(Track* track,
       const unsigned int nextPlane =
           (m_maskedPlane == (int)nplane + 1) ? nplane + 2 : nplane + 1;
       // This call will delete the trial track when it is done with it
-      searchPlane(trialTrack, candidates, nextPlane);
+      searchPlane(event, trialTrack, candidates, nextPlane);
     } else if (trialTrack->getNumClusters() < m_nPointsMin) {
       // This track can't continue and doesn't meet the cluster requirement
       delete trialTrack;
@@ -115,13 +114,11 @@ void Processors::TrackMaker::generateTracks(Event* event, int maskedPlane) const
     maskedPlane = -1;
   }
 
-  m_event = event;
   m_maskedPlane = maskedPlane;
 
   // This is the number of planes available for tracking (after masking)
-  const unsigned int numPlanes = (m_maskedPlane >= 0)
-                                     ? m_event->getNumPlanes() - 1
-                                     : m_event->getNumPlanes();
+  const unsigned int numPlanes =
+      (m_maskedPlane >= 0) ? event->getNumPlanes() - 1 : event->getNumPlanes();
 
   if (m_nPointsMin > numPlanes)
     throw std::runtime_error(
@@ -145,14 +142,14 @@ void Processors::TrackMaker::generateTracks(Event* event, int maskedPlane) const
     throw std::runtime_error(
         "TrackMaker: can't make tracks with no seed planes");
 
-  assert(numSeedPlanes < m_event->getNumPlanes() &&
+  assert(numSeedPlanes < event->getNumPlanes() &&
          "TrackMaker: num seed planes is outside the plane range");
 
   for (unsigned int nplane = 0; nplane < numSeedPlanes; nplane++) {
     if ((int)nplane == m_maskedPlane)
       continue;
 
-    Plane* plane = m_event->getPlane(nplane);
+    Plane* plane = event->getPlane(nplane);
 
     // Each seed cluster generates a list of candidates from which the best is
     // kept
@@ -170,7 +167,7 @@ void Processors::TrackMaker::generateTracks(Event* event, int maskedPlane) const
 
       const unsigned int nextPlane =
           (maskedPlane == (int)nplane + 1) ? nplane + 2 : nplane + 1;
-      searchPlane(seedTrack, candidates, nextPlane);
+      searchPlane(event, seedTrack, candidates, nextPlane);
 
       const unsigned int numCandidates = candidates.size();
       if (!numCandidates)
@@ -213,7 +210,7 @@ void Processors::TrackMaker::generateTracks(Event* event, int maskedPlane) const
       assert(bestCandidate && "TrackMaker: failed to select a candidate");
 
       // Finalize the best candidate
-      m_event->addTrack(*bestCandidate)->fixClusterAssociation();
+      event->addTrack(*bestCandidate)->fixClusterAssociation();
       delete bestCandidate;
       // for (unsigned int i = 0; i < bestCandidate->getNumClusters(); i++)
       //   bestCandidate->getCluster(i)->setTrack(bestCandidate);
@@ -229,8 +226,6 @@ Processors::TrackMaker::TrackMaker(double maxClusterDist,
     , m_nPointsMin(minClusters)
     , m_beamSlopeX(0)
     , m_beamSlopeY(0)
-    , m_event(0)
-    , m_maskedPlane(-1)
 {
   if (minClusters < 3)
     throw std::runtime_error("TrackMaker: min clusters needs to be at least 3");

@@ -36,10 +36,10 @@ private:
   double m_beamSlopeX;
   double m_beamSlopeY;
 
-  mutable Storage::Event* m_event;
   mutable int m_maskedPlane;
 
-  void searchPlane(Storage::Track* track,
+  void searchPlane(Storage::Event* event,
+                   Storage::Track* track,
                    std::vector<Storage::Track*>& candidates,
                    unsigned int nplane) const;
 };
