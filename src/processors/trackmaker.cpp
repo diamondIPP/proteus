@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <stdexcept>
 #include <vector>
 
 #include "mechanics/device.h"
@@ -107,10 +108,10 @@ void Processors::TrackMaker::generateTracks(Event* event,
                                             int maskedPlane) const
 {
   if (event->getNumPlanes() < 3)
-    throw "TrackMaker: can't generate tracks from event with less than 3 "
-          "planes";
+    throw std::runtime_error(
+        "TrackMaker: can't generate tracks from event with less than 3 planes");
   if (event->getNumTracks() > 0)
-    throw "TrackMaker: tracks already exist for this event";
+    throw std::runtime_error("TrackMaker: tracks already exist for this event");
 
   m_beamSlopeX = beamAngleX;
   m_beamSlopeY = beamAngleY;
@@ -129,7 +130,8 @@ void Processors::TrackMaker::generateTracks(Event* event,
                                      : m_event->getNumPlanes();
 
   if (m_nPointsMin > numPlanes)
-    throw "TrackMaker: min clusters exceeds number of planes";
+    throw std::runtime_error(
+        "TrackMaker: min clusters exceeds number of planes");
 
   const unsigned int maxSeedPlanes = numPlanes - m_nPointsMin + 1;
   unsigned int numSeedPlanes = 0;
@@ -146,7 +148,8 @@ void Processors::TrackMaker::generateTracks(Event* event,
   }
 
   if (numSeedPlanes < 1)
-    throw "TrackMaker: can't make tracks with no seed planes";
+    throw std::runtime_error(
+        "TrackMaker: can't make tracks with no seed planes");
 
   assert(numSeedPlanes < m_event->getNumPlanes() &&
          "TrackMaker: num seed planes is outside the plane range");
@@ -236,9 +239,9 @@ Processors::TrackMaker::TrackMaker(double maxClusterDist,
     , m_calcIntercepts(calcIntercepts)
 {
   if (minClusters < 3)
-    throw "TrackMaker: min clusters needs to be at least 3";
+    throw std::runtime_error("TrackMaker: min clusters needs to be at least 3");
   if (numSeedPlanes < 1)
-    throw "TrackMaker: needs at least one seed plane";
+    throw std::runtime_error("TrackMaker: needs at least one seed plane");
 }
 
 std::string Processors::TrackMaker::name() const { return "TrackMaker"; }
