@@ -83,7 +83,7 @@ void Processors::TrackMaker::searchPlane(Event* event,
 
     assert(planesRemaining >= 0 && "TrackMaker: something went terribly wrong");
 
-    const int requiredClusters = m_nPointsMin - trialTrack->getNumClusters();
+    const int requiredClusters = m_numPointsMin - trialTrack->getNumClusters();
 
     // Check if it makes sense to continue building this track
     if (planesRemaining > 0 && requiredClusters <= planesRemaining) {
@@ -91,7 +91,7 @@ void Processors::TrackMaker::searchPlane(Event* event,
           (m_maskedPlane == (int)nplane + 1) ? nplane + 2 : nplane + 1;
       // This call will delete the trial track when it is done with it
       searchPlane(event, trialTrack, candidates, nextPlane);
-    } else if (trialTrack->getNumClusters() < m_nPointsMin) {
+    } else if (trialTrack->getNumClusters() < m_numPointsMin) {
       // This track can't continue and doesn't meet the cluster requirement
       delete trialTrack;
     } else {
@@ -120,11 +120,11 @@ void Processors::TrackMaker::generateTracks(Event* event, int maskedPlane) const
   const unsigned int numPlanes =
       (m_maskedPlane >= 0) ? event->getNumPlanes() - 1 : event->getNumPlanes();
 
-  if (m_nPointsMin > numPlanes)
+  if (m_numPointsMin > numPlanes)
     throw std::runtime_error(
         "TrackMaker: min clusters exceeds number of planes");
 
-  const unsigned int maxSeedPlanes = numPlanes - m_nPointsMin + 1;
+  const unsigned int maxSeedPlanes = numPlanes - m_numPointsMin + 1;
   unsigned int numSeedPlanes = 0;
   if (m_numSeedPlanes > maxSeedPlanes) {
     numSeedPlanes =
@@ -223,7 +223,7 @@ Processors::TrackMaker::TrackMaker(double maxClusterDist,
                                    unsigned int minClusters)
     : m_distMax(maxClusterDist)
     , m_numSeedPlanes(numSeedPlanes)
-    , m_nPointsMin(minClusters)
+    , m_numPointsMin(minClusters)
     , m_beamSlopeX(0)
     , m_beamSlopeY(0)
 {

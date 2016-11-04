@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "processor.h"
+#include "utils/definitions.h"
 
 namespace Storage {
 class Event;
@@ -30,9 +31,9 @@ public:
   void generateTracks(Storage::Event* event, int maskedPlane = -1) const;
 
 private:
-  const double m_distMax;
-  const unsigned int m_numSeedPlanes;
-  const unsigned int m_nPointsMin;
+  double m_distMax;
+  Index m_numSeedPlanes;
+  Index m_numPointsMin;
   double m_beamSlopeX;
   double m_beamSlopeY;
 
