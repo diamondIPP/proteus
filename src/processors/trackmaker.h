@@ -21,15 +21,13 @@ class TrackMaker : public Processor {
 public:
   TrackMaker(double maxClusterDist,
              unsigned int numSeedPlanes = 1,
-             unsigned int minClusters = 3,
-             bool calcIntercepts = false);
+             unsigned int minClusters = 3);
 
   void generateTracks(Storage::Event* event,
                       double beamAngleX = 0,
                       double beamAngleY = 0,
                       int maskedPlane = -1) const;
 
-  bool getCalcIntercepts() { return m_calcIntercepts; }
   std::string name() const;
   void process(Storage::Event& event) const;
 
@@ -42,7 +40,6 @@ private:
 
   mutable Storage::Event* m_event;
   mutable int m_maskedPlane;
-  bool m_calcIntercepts;
 
   void searchPlane(Storage::Track* track,
                    std::vector<Storage::Track*>& candidates,

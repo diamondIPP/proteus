@@ -229,14 +229,12 @@ void Processors::TrackMaker::generateTracks(Event* event,
 
 Processors::TrackMaker::TrackMaker(double maxClusterDist,
                                    unsigned int numSeedPlanes,
-                                   unsigned int minClusters,
-                                   bool calcIntercepts)
+                                   unsigned int minClusters)
     : m_distMax(maxClusterDist)
     , m_numSeedPlanes(numSeedPlanes)
     , m_nPointsMin(minClusters)
     , m_event(0)
     , m_maskedPlane(-1)
-    , m_calcIntercepts(calcIntercepts)
 {
   if (minClusters < 3)
     throw std::runtime_error("TrackMaker: min clusters needs to be at least 3");
