@@ -1,24 +1,17 @@
 #include "trackmaker.h"
 
 #include <cassert>
-#include <float.h>
-#include <iostream>
-#include <math.h>
+#include <cmath>
 #include <vector>
 
 #include "mechanics/device.h"
 #include "processors/processors.h"
 #include "processors/tracking.h"
 #include "storage/event.h"
-
-#ifndef VERBOSE
-#define VERBOSE 1
-#endif
-
-using std::cout;
-using std::endl;
+#include "utils/logger.h"
 
 using namespace Storage;
+using Utils::logger;
 
 namespace Processors {
 
@@ -122,8 +115,8 @@ void Processors::TrackMaker::generateTracks(Event* event,
   m_beamSlopeX = beamAngleX;
   m_beamSlopeY = beamAngleY;
 
-  if (maskedPlane >= (int)event->getNumPlanes() && VERBOSE) {
-    cout << "WARNING :: TrackMaker: masked plane outside range";
+  if (maskedPlane >= (int)event->getNumPlanes()) {
+    ERROR("TrackMaker: masked plane outside range");
     maskedPlane = -1;
   }
 
@@ -131,8 +124,9 @@ void Processors::TrackMaker::generateTracks(Event* event,
   m_maskedPlane = maskedPlane;
 
   // This is the number of planes available for tracking (after masking)
-  const unsigned int numPlanes =
-      (m_maskedPlane >= 0) ? m_event->getNumPlanes() - 1 : m_event->getNumPlanes();
+  const unsigned int numPlanes = (m_maskedPlane >= 0)
+                                     ? m_event->getNumPlanes() - 1
+                                     : m_event->getNumPlanes();
 
   if (m_nPointsMin > numPlanes)
     throw "TrackMaker: min clusters exceeds number of planes";
@@ -142,8 +136,7 @@ void Processors::TrackMaker::generateTracks(Event* event,
   if (m_numSeedPlanes > maxSeedPlanes) {
     numSeedPlanes =
         maxSeedPlanes; // Requested number of seed planes exceeds max
-    if (VERBOSE)
-      cout << "WARNING :: TrackMaker: too many seed planes, adjusting" << endl;
+    ERROR("TrackMaker: too many seed planes, adjusting");
   } else {
     numSeedPlanes = m_numSeedPlanes; // Requested seed planes is OK
   }
