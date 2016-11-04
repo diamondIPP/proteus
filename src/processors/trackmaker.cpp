@@ -102,19 +102,13 @@ void Processors::TrackMaker::searchPlane(Track* track,
   }
 }
 
-void Processors::TrackMaker::generateTracks(Event* event,
-                                            double beamAngleX,
-                                            double beamAngleY,
-                                            int maskedPlane) const
+void Processors::TrackMaker::generateTracks(Event* event, int maskedPlane) const
 {
   if (event->getNumPlanes() < 3)
     throw std::runtime_error(
         "TrackMaker: can't generate tracks from event with less than 3 planes");
   if (event->getNumTracks() > 0)
     throw std::runtime_error("TrackMaker: tracks already exist for this event");
-
-  m_beamSlopeX = beamAngleX;
-  m_beamSlopeY = beamAngleY;
 
   if (maskedPlane >= (int)event->getNumPlanes()) {
     ERROR("TrackMaker: masked plane outside range");
@@ -233,6 +227,8 @@ Processors::TrackMaker::TrackMaker(double maxClusterDist,
     : m_distMax(maxClusterDist)
     , m_numSeedPlanes(numSeedPlanes)
     , m_nPointsMin(minClusters)
+    , m_beamSlopeX(0)
+    , m_beamSlopeY(0)
     , m_event(0)
     , m_maskedPlane(-1)
 {
@@ -240,6 +236,12 @@ Processors::TrackMaker::TrackMaker(double maxClusterDist,
     throw std::runtime_error("TrackMaker: min clusters needs to be at least 3");
   if (numSeedPlanes < 1)
     throw std::runtime_error("TrackMaker: needs at least one seed plane");
+}
+
+void Processors::TrackMaker::setBeamSlope(double slopeX, double slopeY)
+{
+  m_beamSlopeX = slopeX;
+  m_beamSlopeY = slopeY;
 }
 
 std::string Processors::TrackMaker::name() const { return "TrackMaker"; }

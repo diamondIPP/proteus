@@ -91,6 +91,9 @@ void Loopers::FineAlignDut::loop()
     residuals.addCut(cut1);
     residuals.addCut(cut2);
 
+    _trackMaker->setBeamSlope(_refDevice->getBeamSlopeX(),
+                              _refDevice->getBeamSlopeY());
+
     for (ULong64_t nevent = _startEvent; nevent <= _endEvent; nevent++)
     {
       Storage::Event* refEvent = _refStorage->readEvent(nevent);
@@ -108,9 +111,7 @@ void Loopers::FineAlignDut::loop()
 
       if (refEvent->getNumTracks())
         throw "FineAlign: can't re-track an event, mask the tree in the input";
-      _trackMaker->generateTracks(refEvent,
-                                  _refDevice->getBeamSlopeX(),
-                                  _refDevice->getBeamSlopeY());
+      _trackMaker->generateTracks(refEvent);
 
       residuals.processEvent(refEvent, dutEvent);
 

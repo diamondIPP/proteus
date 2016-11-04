@@ -23,20 +23,18 @@ public:
              unsigned int numSeedPlanes = 1,
              unsigned int minClusters = 3);
 
-  void generateTracks(Storage::Event* event,
-                      double beamAngleX = 0,
-                      double beamAngleY = 0,
-                      int maskedPlane = -1) const;
+  void setBeamSlope(double slopeX, double slopeY);
 
   std::string name() const;
   void process(Storage::Event& event) const;
+  void generateTracks(Storage::Event* event, int maskedPlane = -1) const;
 
 private:
   const double m_distMax;
   const unsigned int m_numSeedPlanes;
   const unsigned int m_nPointsMin;
-  mutable double m_beamSlopeX;
-  mutable double m_beamSlopeY;
+  double m_beamSlopeX;
+  double m_beamSlopeY;
 
   mutable Storage::Event* m_event;
   mutable int m_maskedPlane;
