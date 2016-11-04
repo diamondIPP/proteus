@@ -49,7 +49,7 @@ void Processors::CCPDv4HitMapper::process(Storage::Event& event) const
   }
 }
 
-void Processors::setupHitMapper(const Mechanics::Device& device,
+void Processors::setupHitMappers(const Mechanics::Device& device,
                                 Utils::EventLoop& loop)
 {
   using Mechanics::Sensor;

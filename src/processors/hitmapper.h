@@ -42,7 +42,7 @@ private:
   std::set<Index> m_sensorIds;
 };
 
-void setupHitMapper(const Mechanics::Device& device, Utils::EventLoop& loop);
+void setupHitMappers(const Mechanics::Device& device, Utils::EventLoop& loop);
 
 } // namespace Processors
 

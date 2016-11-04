@@ -104,7 +104,7 @@ private:
   void estimateProperties(Storage::Cluster& cluster) const;
 };
 
-void setupClusterizer(const Mechanics::Device& device, Utils::EventLoop& loop);
+void setupClusterizers(const Mechanics::Device& device, Utils::EventLoop& loop);
 
 } // namespace Processors
 

@@ -147,7 +147,7 @@ void Processors::FastestHitClusterizer::estimateProperties(
   cluster.setTiming(time);
 }
 
-void Processors::setupClusterizer(const Mechanics::Device& device,
+void Processors::setupClusterizers(const Mechanics::Device& device,
                                   Utils::EventLoop& loop)
 {
   using Mechanics::Sensor;

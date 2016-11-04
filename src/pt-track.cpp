@@ -45,8 +45,8 @@ int main(int argc, char const* argv[])
 
   Utils::EventLoop loop(&input, &output, args.get<uint64_t>("skip_events"),
                         args.get<uint64_t>("num_events"));
-  setupHitMapper(device, loop);
-  setupClusterizer(device, loop);
+  setupHitMappers(device, loop);
+  setupClusterizers(device, loop);
   loop.addProcessor(std::make_shared<ApplyAlignment>(device));
   loop.addProcessor(std::make_shared<TrackMaker>(10));
   loop.addProcessor(std::make_shared<StraightTrackFitter>(device, locals));
