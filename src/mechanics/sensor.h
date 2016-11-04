@@ -1,5 +1,5 @@
-#ifndef SENSOR_H
-#define SENSOR_H
+#ifndef PT_SENSOR_H
+#define PT_SENSOR_H
 
 #include <array>
 #include <cstdint>
@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "utils/definitions.h"
+#include "utils/interval.h"
 
 namespace Mechanics {
 
@@ -47,6 +48,8 @@ public:
   static Measurement measurementFromName(const std::string& name);
   static std::string measurementName(Measurement measurement);
 
+  typedef Utils::Box<2, double, Utils::Endpoints::CLOSED> Area;
+
   /** Construct with an empty transformation (local = global) and no noise.
    *
    * This is the minimal configuration required to have a usable Sensor.
@@ -68,14 +71,16 @@ public:
   Index numCols() const { return m_numCols; }
   Index numRows() const { return m_numRows; }
   Index numPixels() const { return m_numCols * m_numRows; }
+  double pitchCol() const { return m_pitchCol; }
+  double pitchRow() const { return m_pitchRow; }
   double thickness() const { return m_thickness; }
   double xX0() const { return m_xX0; }
-  /** Sensitive area in pixel coordinates [col_min,col_max,row_min,row_max]. */
-  std::array<double, 4> sensitiveAreaPixel() const;
-  /** Sensitive area in local coordinates [u_min,u_max,v_min,v_max]. */
-  std::array<double, 4> sensitiveAreaLocal() const;
-  /** Sensitive envelope in the global xy-plane [x_min,x_max,y_min,y_max]. */
-  std::array<double, 4> sensitiveEnvelopeGlobal() const;
+  /** Sensitive area in pixel coordinates. */
+  Area sensitiveAreaPixel() const;
+  /** Sensitive area in local coordinates. */
+  Area sensitiveAreaLocal() const;
+  /** Sensitive envelope in the global xy-plane. */
+  Area sensitiveEnvelopeGlobal() const;
 
   //
   // geometry related
@@ -91,14 +96,12 @@ public:
   //
   // transformations between different coordinate systems
   //
-  XYPoint transformLocalToPixel(const XYZPoint& uvw) const;
-  XYPoint transformGlobalToPixel(const XYZPoint& xyz) const;
-  XYZPoint transformPixelToLocal(double c, double r) const;
-  XYZPoint transformPixelToLocal(const XYPoint& cr) const;
-  XYZPoint transformGlobalToLocal(const XYZPoint& xyz) const;
-  XYZPoint transformPixelToGlobal(double c, double r) const;
+  XYPoint transformPixelToLocal(const XYPoint& cr) const;
+  XYPoint transformLocalToPixel(const XYPoint& uv) const;
+  XYZPoint transformLocalToGlobal(const XYPoint& uv) const;
+  XYPoint transformGlobalToLocal(const XYZPoint& xyz) const;
   XYZPoint transformPixelToGlobal(const XYPoint& cr) const;
-  XYZPoint transformLocalToGlobal(const XYZPoint& uvw) const;
+  XYPoint transformGlobalToPixel(const XYZPoint& xyz) const;
   // \deprecated Use transformations above
   void
   pixelToSpace(double pixX, double pixY, double& x, double& y, double& z) const;
@@ -163,4 +166,4 @@ private:
 
 } // namespace Mechanics
 
-#endif // SENSOR_H
+#endif // PT_SENSOR_H

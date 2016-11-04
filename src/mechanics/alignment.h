@@ -1,5 +1,5 @@
-#ifndef ALIGNMENT_H
-#define ALIGNMENT_H
+#ifndef PT_ALIGNMENT_H
+#define PT_ALIGNMENT_H
 
 #include <iosfwd>
 #include <map>
@@ -74,4 +74,4 @@ private:
 
 } // namespace Mechanics
 
-#endif // ALIGNMENT_H
+#endif // PT_ALIGNMENT_H

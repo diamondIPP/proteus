@@ -14,9 +14,7 @@
 using Utils::logger;
 
 Mechanics::Alignment::Alignment()
-    : m_beamSlopeX(0)
-    , m_beamSlopeY(0)
-    , m_syncRatio(1)
+    : m_beamSlopeX(0), m_beamSlopeY(0), m_syncRatio(1)
 {
 }
 
@@ -105,14 +103,12 @@ Mechanics::Alignment Mechanics::Alignment::fromConfig(const toml::Value& cfg)
 
   auto sensors = cfg.get<toml::Array>("sensors");
   for (auto is = sensors.begin(); is != sensors.end(); ++is) {
-    alignment.setOffset(is->get<int>("id"),
-                        is->get<double>("offset_x"),
+    alignment.setOffset(is->get<int>("id"), is->get<double>("offset_x"),
                         is->get<double>("offset_y"),
                         is->get<double>("offset_z"));
-    alignment.setRotationAngles(is->get<int>("id"),
-                                is->get<double>("rotation_x"),
-                                is->get<double>("rotation_y"),
-                                is->get<double>("rotation_z"));
+    alignment.setRotationAngles(
+        is->get<int>("id"), is->get<double>("rotation_x"),
+        is->get<double>("rotation_y"), is->get<double>("rotation_z"));
   }
   return alignment;
 }

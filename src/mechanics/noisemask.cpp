@@ -109,7 +109,7 @@ toml::Value Mechanics::NoiseMask::toConfig() const
 
   for (auto im = m_maskedPixels.begin(); im != m_maskedPixels.end(); ++im) {
     int id = static_cast<int>(im->first);
-    const ColumnRowSet& pixels = im->second;
+    const auto & pixels = im->second;
 
     toml::Array cfgPixels;
     for (auto ip = pixels.begin(); ip != pixels.end(); ++ip) {
@@ -128,10 +128,9 @@ toml::Value Mechanics::NoiseMask::toConfig() const
 void Mechanics::NoiseMask::merge(const NoiseMask& other)
 {
   for (auto mask = other.m_maskedPixels.begin();
-       mask != other.m_maskedPixels.end();
-       ++mask) {
+       mask != other.m_maskedPixels.end(); ++mask) {
     Index sensorId = mask->first;
-    const ColumnRowSet& pixels = mask->second;
+    const auto& pixels = mask->second;
     m_maskedPixels[sensorId].insert(pixels.begin(), pixels.end());
   }
 }
@@ -141,10 +140,10 @@ void Mechanics::NoiseMask::maskPixel(Index sensorId, Index col, Index row)
   m_maskedPixels[sensorId].emplace(col, row);
 }
 
-const Mechanics::NoiseMask::ColumnRowSet&
+const std::set<ColumnRow>&
 Mechanics::NoiseMask::getMaskedPixels(Index sensorId) const
 {
-  static const ColumnRowSet EMPTY;
+  static const std::set<ColumnRow> EMPTY;
 
   auto mask = m_maskedPixels.find(sensorId);
   if (mask != m_maskedPixels.end())
@@ -171,7 +170,7 @@ void Mechanics::NoiseMask::print(std::ostream& os,
 
   for (auto im = m_maskedPixels.begin(); im != m_maskedPixels.end(); ++im) {
     Index id = im->first;
-    const ColumnRowSet& pixels = im->second;
+    const auto& pixels = im->second;
 
     if (pixels.empty())
       continue;
