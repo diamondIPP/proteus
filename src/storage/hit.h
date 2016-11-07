@@ -37,9 +37,8 @@ public:
   double value() const { return m_value; }
 
   bool isInCluster() const { return (m_cluster != NULL); }
-  Cluster* cluster() { return m_cluster; }
   const Cluster* cluster() const { return m_cluster; }
-  void setCluster(Cluster* cluster);
+  void setCluster(const Cluster* cluster);
 
   unsigned int getPixX() const { return m_col; }
   unsigned int getPixY() const { return m_row; }
@@ -57,7 +56,7 @@ private:
   double m_timing; // Level 1 accept, typically
   double m_value;  // Time over threshold, typically
   XYZPoint m_xyz;
-  Cluster* m_cluster; // The cluster containing this hit
+  const Cluster* m_cluster; // The cluster containing this hit
 
   friend class Plane;     // Access set plane method
   friend class Event;     // Access cluster index

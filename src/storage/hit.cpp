@@ -22,7 +22,7 @@ void Storage::Hit::transformToGlobal(const Transform3D& pixelToGlobal)
   m_xyz = pixelToGlobal * XYZPoint(m_col + 0.5, m_row + 0.5, 0);
 }
 
-void Storage::Hit::setCluster(Storage::Cluster* cluster)
+void Storage::Hit::setCluster(const Storage::Cluster* cluster)
 {
   assert(!m_cluster && "Hit: can't cluster an already clustered hit.");
   m_cluster = cluster;

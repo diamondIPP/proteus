@@ -41,7 +41,11 @@ public:
   Hit* getHit(Index i) { return m_hits.at(i); }
   const Hit* getHit(Index i) const { return m_hits.at(i); }
 
+  bool isInTrack() const { return m_track != NULL; }
   const Track* track() const { return m_track; }
+  /** \deprecated Use `track()` instead. */
+  const Track* getTrack() const { return m_track; }
+  void setTrack(const Track* track);
 
   Index getNumHits() const { return m_hits.size(); }
   double getPixX() const { return m_cr.x(); }
@@ -59,14 +63,13 @@ public:
   double getMatchDistance() const { return m_matchDistance; }
   int getIndex() const { return m_index; }
 
-  void setTrack(Track* track);
-  void setMatchedTrack(Track* track) { m_matchedTrack = track; }
-
-  Track* getTrack() const { return m_track; }
   Track* getMatchedTrack() const { return m_matchedTrack; }
+  void setMatchedTrack(Track* track) { m_matchedTrack = track; }
+  void setMatchDistance(double value) { m_matchDistance = value; }
+
+  /** \deprecated Access via `Plane` already provides that information. */
   Plane* getPlane() const { return m_plane; }
 
-  void setMatchDistance(double value) { m_matchDistance = value; }
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
@@ -83,7 +86,7 @@ private:
 
   int m_index;
   Plane* m_plane;         //<! The plane containing the cluster
-  Track* m_track;         // The track containing this cluster
+  const Track* m_track;   // The track containing this cluster
   Track* m_matchedTrack;  // Track matched to this cluster in DUT analysis (not
                           // stored)
   double m_matchDistance; // Distance to matched track
