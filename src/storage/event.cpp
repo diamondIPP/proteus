@@ -23,18 +23,21 @@ void Storage::Event::clear()
   m_tracks.clear();
 }
 
-Storage::Track* Storage::Event::addTrack(const Track& otherTrack)
+Storage::Track* Storage::Event::addTrack(std::unique_ptr<Storage::Track> track)
 {
-  m_tracks.emplace_back(new Track(otherTrack));
+  m_tracks.push_back(std::move(track));
   m_tracks.back()->m_index = m_tracks.size() - 1;
   return m_tracks.back().get();
 }
 
+Storage::Track* Storage::Event::addTrack(const Track& otherTrack)
+{
+  return addTrack(std::unique_ptr<Track>(new Track(otherTrack)));
+}
+
 Storage::Track* Storage::Event::newTrack()
 {
-  m_tracks.emplace_back(new Track());
-  m_tracks.back()->m_index = m_tracks.size() - 1;
-  return m_tracks.back().get();
+  return addTrack(std::unique_ptr<Track>(new Track()));
 }
 
 unsigned int Storage::Event::getNumHits() const

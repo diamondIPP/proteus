@@ -62,6 +62,7 @@ public:
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
+  Track* addTrack(std::unique_ptr<Track> track);
   Track* addTrack(const Track& track);
 
   uint64_t m_id;
