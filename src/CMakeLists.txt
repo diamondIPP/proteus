@@ -50,6 +50,7 @@ set(COMMON_SRC
     processors/processor.cpp
     processors/processors.cpp
     processors/synchronizer.cpp
+    processors/trackfinder.cpp
     processors/trackfitter.cpp
     processors/tracking.cpp
     processors/trackmaker.cpp
