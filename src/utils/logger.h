@@ -106,6 +106,28 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& things)
   return printContainer(os, things);
 }
 
+// print utilities for std containers
+
+template <typename Container>
+std::ostream& printContainer(std::ostream& os, const Container& things)
+{
+  auto it = std::begin(things);
+  auto end = std::end(things);
+  os << '[';
+  if (it != end)
+    os << *it;
+  for (++it; it != end; ++it)
+    os << ", " << *it;
+  os << ']';
+  return os;
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& things)
+{
+  return printContainer(os, things);
+}
+
 } // namespace Utils
 
 /* Define a `logger()` function that returns either the global logger
