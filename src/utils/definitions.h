@@ -22,9 +22,9 @@
 #include <Math/Vector2D.h>
 #include <Math/Vector3D.h>
 
-using Index = unsigned int;
+typedef unsigned int Index;
 // Digital matrix position defined by column and row index
-using ColumnRow = std::pair<Index, Index>;
+typedef std::pair<Index, Index> ColumnRow;
 
 // commonly used geometry types
 typedef ROOT::Math::XYPoint XYPoint;
