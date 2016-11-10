@@ -41,7 +41,7 @@ int main(int argc, char const* argv[])
                             device.numSensors());
   TFile hists(args.makeOutput("hists.root").c_str(), "RECREATE");
 
-  std::vector<int> locals = {0, 6, 7};
+  std::vector<Index> locals = {0, 6, 7};
 
   Utils::EventLoop loop(&input, &output, args.get<uint64_t>("skip_events"),
                         args.get<uint64_t>("num_events"));
