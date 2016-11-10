@@ -18,10 +18,10 @@ using Storage::TrackState;
 using Utils::logger;
 
 Processors::TrackFinder::TrackFinder(const Mechanics::Device& device,
-                                     const std::vector<int> sensors,
+                                     const std::vector<Index> sensors,
                                      Index clustersMin,
                                      double distanceSigmaMax)
-    : m_tracking(std::begin(sensors), std::end(sensors))
+    : m_tracking(sensors)
     , m_clustersMin(clustersMin)
     , m_distSigmaMax(distanceSigmaMax)
     , m_beamDirection(device.beamDirection())

@@ -28,7 +28,7 @@ namespace Processors {
 class TrackFinder : public Processor {
 public:
   TrackFinder(const Mechanics::Device& device,
-              const std::vector<int> sensors,
+              const std::vector<Index> sensors,
               Index clustersMin,
               double distanceSigmaMax);
 
