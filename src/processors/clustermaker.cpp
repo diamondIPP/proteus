@@ -144,10 +144,8 @@ void ClusterMaker::calculateCluster(Storage::Cluster* cluster)
   //const double errX = (stdevX) ? stdevX : pixErrX;
   //const double errY = (stdevY) ? stdevY : pixErrY;
 
-  XYVector err(pixErrX, pixErrY);
-
   cluster->setPosPixel(XYPoint(cogX, cogY));
-  cluster->setErrPixel(err);
+  cluster->setErrPixel(pixErrX, pixErrY);
 }
 
 ClusterMaker::ClusterMaker(unsigned int maxSeparationX, unsigned int maxSeparationY,
