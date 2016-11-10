@@ -30,6 +30,10 @@ public:
 
   Index sensorId() const;
 
+  int size() const { return static_cast<int>(m_hits.size()); }
+  int sizeCol() const;
+  int sizeRow() const;
+
   void addHit(Hit* hit);
   Index numHits() const { return static_cast<Index>(m_hits.size()); }
   Hit* getHit(Index i) { return m_hits.at(i); }

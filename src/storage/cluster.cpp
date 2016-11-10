@@ -48,7 +48,33 @@ void Storage::Cluster::transformToGlobal(const Transform3D& pixelToGlobal)
 
 Index Storage::Cluster::sensorId() const { return m_plane->sensorId(); }
 
-void Storage::Cluster::setTrack(Storage::Track* track)
+int Storage::Cluster::sizeCol() const
+{
+  if (m_hits.empty())
+    return 0;
+  int imin = INT_MAX;
+  int imax = INT_MIN;
+  for (auto hit = m_hits.begin(); hit != m_hits.end(); ++hit) {
+    imin = std::min<int>(imin, (*hit)->col());
+    imax = std::max<int>(imax, (*hit)->col());
+  }
+  return imax - imin + 1;
+}
+
+int Storage::Cluster::sizeRow() const
+{
+  if (m_hits.empty())
+    return 0;
+  int imin = INT_MAX;
+  int imax = INT_MIN;
+  for (auto hit = m_hits.begin(); hit != m_hits.end(); ++hit) {
+    imin = std::min<int>(imin, (*hit)->row());
+    imax = std::max<int>(imax, (*hit)->row());
+  }
+  return imax - imin + 1;
+}
+
+void Storage::Cluster::setTrack(const Storage::Track* track)
 {
   assert(!m_track && "Cluster: can't use a cluster for more than one track");
   m_track = track;
