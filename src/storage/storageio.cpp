@@ -663,9 +663,9 @@ namespace Storage {
       // Generate the cluster objects
       for (int ncluster = 0; ncluster < numClusters; ncluster++) {
         Cluster* cluster = plane->newCluster();
-        cluster->setPosPixel({clusterPixX[ncluster], clusterPixY[ncluster]});
+        cluster->setPosPixel(clusterPixX[ncluster], clusterPixY[ncluster]);
         cluster->setErrPixel(
-            {clusterPixErrX[ncluster], clusterPixErrY[ncluster]});
+            clusterPixErrX[ncluster], clusterPixErrY[ncluster]);
 
         // If this cluster is in a track, mark this (and the tracks tree is
         // active)
@@ -759,10 +759,10 @@ namespace Storage {
         interceptV[numIntercepts] = local.offset().y();
         interceptSlopeU[numIntercepts] = local.slope().x();
         interceptSlopeV[numIntercepts] = local.slope().y();
-        interceptStdU[numIntercepts] = local.errOffset().x();
-        interceptStdV[numIntercepts] = local.errOffset().y();
-        interceptStdSlopeU[numIntercepts] = local.errSlope().x();
-        interceptStdSlopeV[numIntercepts] = local.errSlope().y();
+        interceptStdU[numIntercepts] = local.stdOffsetU();
+        interceptStdV[numIntercepts] = local.stdOffsetV();
+        interceptStdSlopeU[numIntercepts] = local.stdSlopeU();
+        interceptStdSlopeV[numIntercepts] = local.stdSlopeV();
         numIntercepts += 1;
       }
 
