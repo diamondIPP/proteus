@@ -41,11 +41,11 @@ public:
   Hit* getHit(Index i) { return m_hits.at(i); }
   const Hit* getHit(Index i) const { return m_hits.at(i); }
 
+  void setTrack(const Track* track);
   bool isInTrack() const { return m_track != NULL; }
   const Track* track() const { return m_track; }
   /** \deprecated Use `track()` instead. */
   const Track* getTrack() const { return m_track; }
-  void setTrack(const Track* track);
 
   Index getNumHits() const { return m_hits.size(); }
   double getPixX() const { return m_cr.x(); }

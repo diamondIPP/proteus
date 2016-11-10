@@ -36,9 +36,9 @@ public:
   double timing() const { return m_timing; }
   double value() const { return m_value; }
 
+  void setCluster(const Cluster* cluster);
   bool isInCluster() const { return (m_cluster != NULL); }
   const Cluster* cluster() const { return m_cluster; }
-  void setCluster(const Cluster* cluster);
 
   unsigned int getPixX() const { return m_col; }
   unsigned int getPixY() const { return m_row; }
