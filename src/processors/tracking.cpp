@@ -12,20 +12,12 @@ struct LineFitter1D {
   double d_inv;
 
   double offset() const { return (sxx * sy - sx * sxy) * d_inv; }
-  double offsetVar() const { return sxx * d_inv; }
   double slope() const { return (s * sxy - sx * sy) * d_inv; }
-  double slopeVar() const { return s * d_inv; }
+  double varOffset() const { return sxx * d_inv; }
+  double varSlope() const { return s * d_inv; }
   double cov() const { return -sx * d_inv; }
 
-  LineFitter1D()
-      : s(0)
-      , sx(0)
-      , sy(0)
-      , sxx(0)
-      , sxy(0)
-      , d_inv(0)
-  {
-  }
+  LineFitter1D() : s(0), sx(0), sy(0), sxx(0), sxy(0), d_inv(0) {}
   void addPoint(double x, double y, double w = 1)
   {
     s += w;
@@ -45,15 +37,15 @@ struct SimpleStraightFitter {
   Storage::TrackState state() const
   {
     Storage::TrackState s(u.offset(), v.offset(), u.slope(), v.slope());
-    s.setErrU(std::sqrt(u.offsetVar()), std::sqrt(u.slopeVar()), u.cov());
-    s.setErrV(std::sqrt(v.offsetVar()), std::sqrt(v.slopeVar()), v.cov());
+    s.setCovU(u.varOffset(), u.varSlope(), u.cov());
+    s.setCovV(v.varOffset(), v.varSlope(), v.cov());
     return s;
   }
 
-  void addPoint(const XYZPoint& pos, const XYZVector& err)
+  void addPoint(const XYZPoint& pos, const SymMatrix3& cov)
   {
-    u.addPoint(pos.z(), pos.x(), 1 / (err.x() * err.x()));
-    v.addPoint(pos.z(), pos.y(), 1 / (err.y() * err.y()));
+    u.addPoint(pos.z(), pos.x(), 1.0 / cov(0, 0));
+    v.addPoint(pos.z(), pos.y(), 1.0 / cov(1, 1));
   }
   void fit()
   {
@@ -68,7 +60,7 @@ void Processors::fitTrack(Storage::Track& track)
 
   for (Index icluster = 0; icluster < track.numClusters(); ++icluster) {
     const Storage::Cluster& cluster = *track.getCluster(icluster);
-    fit.addPoint(cluster.posGlobal(), cluster.errGlobal());
+    fit.addPoint(cluster.posGlobal(), cluster.covGlobal());
   }
   fit.fit();
 
@@ -77,10 +69,11 @@ void Processors::fitTrack(Storage::Track& track)
   double chi2 = 0;
   for (Index icluster = 0; icluster < track.numClusters(); ++icluster) {
     const Storage::Cluster& cluster = *track.getCluster(icluster);
+
     XYPoint t = state.offset() + state.slope() * cluster.posGlobal().z();
-    double resX = (cluster.posGlobal().x() - t.x()) / cluster.errGlobal().x();
-    double resY = (cluster.posGlobal().y() - t.y()) / cluster.errGlobal().y();
-    chi2 += resX * resX + resY * resY;
+    Vector2 res(cluster.posGlobal().x() - t.x(),
+                cluster.posGlobal().y() - t.y());
+    chi2 += mahalanobisSquared(cluster.covGlobal().Sub<SymMatrix2>(0, 0), res);
   }
 
   // update track in-place
@@ -98,7 +91,7 @@ Processors::fitTrackLocal(const Storage::Track& track,
     const Storage::Cluster* cluster = track.getCluster(icluster);
     XYZPoint pos = reference.globalToLocal() * cluster->posGlobal();
     // TODO 2016-10-13 msmk: also transform error to local frame
-    fit.addPoint(pos, cluster->errGlobal());
+    fit.addPoint(pos, cluster->covGlobal());
   }
   fit.fit();
   return fit.state();
@@ -117,7 +110,7 @@ Processors::fitTrackLocalUnbiased(const Storage::Track& track,
       continue;
     XYZPoint pos = reference.globalToLocal() * cluster.posGlobal();
     // TODO 2016-10-13 msmk: also transform error to local frame
-    fit.addPoint(pos, cluster.errGlobal());
+    fit.addPoint(pos, cluster.covGlobal());
   }
   fit.fit();
   return fit.state();
