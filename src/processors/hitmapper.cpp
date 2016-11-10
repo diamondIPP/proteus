@@ -6,11 +6,19 @@
 
 #include "hitmapper.h"
 
-#include <set>
-
 #include "mechanics/device.h"
 #include "storage/event.h"
 #include "utils/eventloop.h"
+#include "utils/logger.h"
+
+using Utils::logger;
+
+Processors::CCPDv4HitMapper::CCPDv4HitMapper(
+    const std::vector<Index>& sensorIds)
+    : m_sensorIds(sensorIds)
+{
+  DEBUG("map FE-I4 to CCPDv4 for sensors ", m_sensorIds, '\n');
+}
 
 std::string Processors::CCPDv4HitMapper::name() const
 {
@@ -50,16 +58,16 @@ void Processors::CCPDv4HitMapper::process(Storage::Event& event) const
 }
 
 void Processors::setupHitMappers(const Mechanics::Device& device,
-                                Utils::EventLoop& loop)
+                                 Utils::EventLoop& loop)
 {
   using Mechanics::Sensor;
 
-  std::set<Index> ccpdv4;
+  std::vector<Index> ccpdv4;
 
   for (Index isensor = 0; isensor < device.numSensors(); ++isensor) {
     const Sensor* sensor = device.getSensor(isensor);
     if (sensor->measurement() == Sensor::CCPDV4_BINARY)
-      ccpdv4.insert(isensor);
+      ccpdv4.push_back(isensor);
   }
 
   if (!ccpdv4.empty())

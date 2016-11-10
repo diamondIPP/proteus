@@ -7,9 +7,10 @@
 #ifndef PT_TRACKFITTER_H
 #define PT_TRACKFITTER_H
 
-#include <set>
+#include <vector>
 
 #include "processors/processor.h"
+#include "utils/definitions.h"
 
 namespace Mechanics {
 class Device;
@@ -25,20 +26,15 @@ namespace Processors {
  */
 class StraightTrackFitter : public Processor {
 public:
-  template <typename Container>
   StraightTrackFitter(const Mechanics::Device& device,
-                      const Container& sensorIds)
-      : m_device(device)
-      , m_sensorIds(std::begin(sensorIds), std::end(sensorIds))
-  {
-  }
+                      const std::vector<Index>& sensorIds);
 
   std::string name() const;
   void process(Storage::Event& event) const;
 
 private:
   const Mechanics::Device& m_device;
-  std::set<int> m_sensorIds;
+  std::vector<Index> m_sensorIds;
 };
 
 } // namespace Processors

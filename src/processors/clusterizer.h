@@ -7,12 +7,10 @@
 #ifndef PT_CLUSTERIZER_H
 #define PT_CLUSTERIZER_H
 
-#include <set>
-#include <string>
+#include <vector>
 
 #include "processors/processor.h"
 #include "utils/definitions.h"
-#include "utils/logger.h"
 
 namespace Mechanics {
 class Device;
@@ -33,28 +31,17 @@ public:
   void process(Storage::Event& event) const;
 
 protected:
-  template <typename Container>
   BaseClusterizer(const std::string& name,
                   const Mechanics::Device& device,
-                  const Container& sensorIds)
-      : m_name(name)
-      , m_device(device)
-      , m_sensorIds(std::begin(sensorIds), std::end(sensorIds))
-      , m_maxDistSquared(1)
-  {
-    using Utils::logger;
-    DEBUG(m_name, " sensors:\n");
-    for (auto id = m_sensorIds.begin(); id != m_sensorIds.end(); ++id)
-      DEBUG("  ", *id, '\n');
-  }
+                  const std::vector<Index>& sensorIds);
 
 private:
   virtual void estimateProperties(Storage::Cluster& cluster) const = 0;
 
-  std::string m_name;
+  std::vector<Index> m_sensorIds;
   const Mechanics::Device& m_device;
-  std::set<Index> m_sensorIds;
   double m_maxDistSquared;
+  std::string m_name;
 };
 
 /** Cluster hits and average the position with equal weights for all hits.
@@ -63,11 +50,8 @@ private:
  */
 class BinaryClusterizer : public BaseClusterizer {
 public:
-  template <typename Container>
-  BinaryClusterizer(const Mechanics::Device& device, const Container& sensorIds)
-      : BaseClusterizer("BinaryClusterizer", device, sensorIds)
-  {
-  }
+  BinaryClusterizer(const Mechanics::Device& device,
+                    const std::vector<Index>& sensorIds);
 
 private:
   void estimateProperties(Storage::Cluster& cluster) const;
@@ -79,12 +63,8 @@ private:
  */
 class ValueWeightedClusterizer : public BaseClusterizer {
 public:
-  template <typename Container>
   ValueWeightedClusterizer(const Mechanics::Device& device,
-                           const Container& sensorIds)
-      : BaseClusterizer("ValueWeightedClusterizer", device, sensorIds)
-  {
-  }
+                           const std::vector<Index>& sensorIds);
 
 private:
   void estimateProperties(Storage::Cluster& cluster) const;
@@ -93,12 +73,8 @@ private:
 /** Cluster hits and take position and timing only from the fastest hit. */
 class FastestHitClusterizer : public BaseClusterizer {
 public:
-  template <typename Container>
   FastestHitClusterizer(const Mechanics::Device& device,
-                        const Container& sensorIds)
-      : BaseClusterizer("FastestHitClusterizer", device, sensorIds)
-  {
-  }
+                        const std::vector<Index>& sensorIds);
 
 private:
   void estimateProperties(Storage::Cluster& cluster) const;
