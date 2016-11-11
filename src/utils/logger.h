@@ -1,6 +1,5 @@
 /**
  * \file
- * \brief Logging utilities
  * \author Moritz Kiehn <msmk@cern.ch>
  * \date 2016-08
  */
@@ -9,34 +8,40 @@
 #define PT_LOGGER_H
 
 #include <iostream>
+#include <string>
+#include <vector>
 
 namespace Utils {
 
-/** A logger object with predefined log level.
+/** A logger object with global log level.
  *
- * The logger provides a set of logging functions, one for each
- * predefined log level. Each function, `error`, `info`, debug` can be
- * called with a variable number of arguments that will be printed in
- * the given order to a predefined stream. Any type for which an
- * `operator<<(std::ostream&, ...)` is defined can be used, e.g.
+ * The logger provides logging functions for each predefined log level. Each
+ * function, `error`, `info`, debug` can be called with a variable number of
+ * arguments. They will be printed in the given order to a predefined stream.
+ * Any type for which an `operator<<(std::ostream&, ...)` is defined can be
+ * used, e.g.
  *
  *     Utils::Logger log;
  *     double x = 1.2;
  *     int y = 100;
  *     log.error("x = ", x, " y = ", y, '\n');
  *
+ * Each logger has an optional prefix to easily identify the information
+ * source. The log level is global and shared among all loggers.
  */
 class Logger {
 public:
-  enum Level { ERROR = 0, INFO, DEBUG };
+  enum Level { ERROR = 0, INFO = 1, DEBUG = 2 };
 
-  explicit Logger(Level lvl = Level::DEBUG) : _lvl(lvl) {}
+  static void setGlobalLevel(Level lvl) { s_level = lvl; }
+  static Logger& globalLogger();
 
-  void setLevel(Level lvl) { _lvl = lvl; }
+  Logger(std::string name);
+
   template <typename... Ts>
   void error(const Ts&... things)
   {
-    log(Level::ERROR, ANSI_BOLD, ANSI_RED, things..., ANSI_RESET);
+    log(Level::ERROR, things...);
   }
   template <typename... Ts>
   void info(const Ts&... things)
@@ -46,15 +51,10 @@ public:
   template <typename... Ts>
   void debug(const Ts&... things)
   {
-    log(Level::DEBUG, ANSI_ITALIC, things..., ANSI_RESET);
+    log(Level::DEBUG, things...);
   }
 
 private:
-  static const char* ANSI_RESET;
-  static const char* ANSI_BOLD;
-  static const char* ANSI_ITALIC;
-  static const char* ANSI_RED;
-
   template <typename T>
   static void print(std::ostream& os, const T& thing)
   {
@@ -73,32 +73,71 @@ private:
   template <typename... Ts>
   void log(Level lvl, const Ts&... things)
   {
-    if (lvl <= _lvl)
-      print(stream(lvl), things...);
+    if (lvl <= s_level)
+      print(stream(lvl), LEVEL_PREFIX[lvl], m_prefix, things..., RESET);
   }
 
-  Level _lvl;
+  static const char* LEVEL_PREFIX[3];
+  static const char* RESET;
+  static Logger s_global;
+  static Level s_level;
+  std::string m_prefix;
 };
 
-Logger& logger();
+// print utilities for std containers
+
+template <typename Container>
+std::ostream& printContainer(std::ostream& os, const Container& things)
+{
+  auto it = std::begin(things);
+  auto end = std::end(things);
+  os << '[';
+  if (it != end)
+    os << *it;
+  for (++it; it != end; ++it)
+    os << ", " << *it;
+  os << ']';
+  return os;
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& things)
+{
+  return printContainer(os, things);
+}
 
 } // namespace Utils
+
+/* Define a `logger()` function that returns either the global logger
+ * or a static local logger.
+ */
+#define PT_SETUP_GLOBAL_LOGGER                                                 \
+  static inline Utils::Logger& logger()                                        \
+  {                                                                            \
+    return Utils::Logger::globalLogger();                                      \
+  }
+#define PT_SETUP_LOCAL_LOGGER(name)                                            \
+  static Utils::Logger name##LocalLogger(#name);                               \
+  static inline Utils::Logger& logger() { return name##LocalLogger; }
 
 /* Convenience macros to use the logger.
  *
  * These macros expect a `logger()` function to be available that
- * returns a reference to a `Logger` object. This allows usage of a
- * class specific logger by implementing the necessary private method
- * of the given name or to use the global logger by importing the
- * global logger function at the beginning of the file, i.e.
- *
- *     using Utils::logger;
- *
+ * returns a reference to a `Logger` object. This can be either defined
+ * at file scope by using the `PT_SETUP_..._LOGGER` macros or by implementing
+ * a private class method to use a class-specific logger.
  */
-// clang-format off
-#define ERROR(...) do { logger().error("ERROR: ", __VA_ARGS__); } while(false)
-#define INFO(...) do { logger().info(__VA_ARGS__); } while(false)
-#define DEBUG(...) do { logger().debug("DEBUG ", __FUNCTION__, ": ", __VA_ARGS__); } while(false)
-// clang-format on
+#define ERROR(...)                                                             \
+  do {                                                                         \
+    logger().error(__VA_ARGS__);                                               \
+  } while (false)
+#define INFO(...)                                                              \
+  do {                                                                         \
+    logger().info(__VA_ARGS__);                                                \
+  } while (false)
+#define DEBUG(...)                                                             \
+  do {                                                                         \
+    logger().debug('(', __FILE__, ':', __LINE__, ") ", __VA_ARGS__);           \
+  } while (false)
 
 #endif // PT_LOGGER_H

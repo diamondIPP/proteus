@@ -6,13 +6,33 @@
 
 #include "logger.h"
 
-const char* Utils::Logger::ANSI_RESET = "\x1B[0m";
-const char* Utils::Logger::ANSI_BOLD = "\x1B[1m";
-const char* Utils::Logger::ANSI_ITALIC = "\x1B[3m";
-const char* Utils::Logger::ANSI_RED = "\x1B[31m";
+#define ANSI_RESET "\x1B[0m"
+#define ANSI_BOLD "\x1B[1m"
+#define ANSI_ITALIC "\x1B[3m"
+#define ANSI_RED "\x1B[31m"
 
-Utils::Logger& Utils::logger()
+// per-level prefix
+// clang-format off
+const char* Utils::Logger::LEVEL_PREFIX[3] = {
+    ANSI_BOLD ANSI_RED "ERROR|",
+                       "INFO |",
+    ANSI_ITALIC        "DEBUG|",
+};
+const char* Utils::Logger::RESET = ANSI_RESET;
+// clang-format on
+
+// global logger w/o specific name
+Utils::Logger Utils::Logger::s_global("");
+// default global log-level
+Utils::Logger::Level Utils::Logger::s_level = Utils::Logger::Level::DEBUG;
+
+Utils::Logger::Logger(std::string name) : m_prefix(std::move(name))
 {
-  static Logger s_logger;
-  return s_logger;
+  if (!m_prefix.empty()) {
+    m_prefix += "| ";
+  } else {
+    m_prefix = ' ';
+  }
 }
+
+Utils::Logger& Utils::Logger::globalLogger() { return s_global; }
