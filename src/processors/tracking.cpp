@@ -29,6 +29,7 @@ struct LineFitter1D {
   void fit() { d_inv = 1 / (s * sxx - sx * sx); }
 };
 
+/** Fit a 3D straight line assuming a propagation along the third dimension. */
 struct SimpleStraightFitter {
   LineFitter1D u, v;
 
@@ -42,10 +43,14 @@ struct SimpleStraightFitter {
     return s;
   }
 
+  void addPoint(const XYZPoint& pos, double wu = 1, double wv = 1)
+  {
+    u.addPoint(pos.z(), pos.x(), wu);
+    v.addPoint(pos.z(), pos.y(), wv);
+  }
   void addPoint(const XYZPoint& pos, const SymMatrix3& cov)
   {
-    u.addPoint(pos.z(), pos.x(), 1.0 / cov(0, 0));
-    v.addPoint(pos.z(), pos.y(), 1.0 / cov(1, 1));
+    addPoint(pos, 1 / cov(0, 0), 1 / cov(1, 1));
   }
   void fit()
   {
@@ -53,6 +58,24 @@ struct SimpleStraightFitter {
     v.fit();
   }
 };
+
+// Calculate chi2 value for a simple straight track fit.
+static inline double straightChi2(Storage::Track& track)
+{
+  const Storage::TrackState& state = track.globalState();
+
+  double chi2 = 0;
+  for (Index icluster = 0; icluster < track.numClusters(); ++icluster) {
+    const Storage::Cluster& cluster = *track.getCluster(icluster);
+    // xy residual at the z-position of the cluster
+    XYPoint trk(state.offset() + state.slope() * cluster.posGlobal().z());
+    Vector2 res(cluster.posGlobal().x() - trk.x(),
+                cluster.posGlobal().y() - trk.y());
+    // z-covariance is ignored in simple straight fit anyways
+    chi2 += mahalanobisSquared(cluster.covGlobal().Sub<SymMatrix2>(0, 0), res);
+  }
+  return chi2;
+}
 
 void Processors::fitTrack(Storage::Track& track)
 {
@@ -63,22 +86,8 @@ void Processors::fitTrack(Storage::Track& track)
     fit.addPoint(cluster.posGlobal(), cluster.covGlobal());
   }
   fit.fit();
-
-  // compute chi2 for fitted track
-  Storage::TrackState state = fit.state();
-  double chi2 = 0;
-  for (Index icluster = 0; icluster < track.numClusters(); ++icluster) {
-    const Storage::Cluster& cluster = *track.getCluster(icluster);
-
-    XYPoint t = state.offset() + state.slope() * cluster.posGlobal().z();
-    Vector2 res(cluster.posGlobal().x() - t.x(),
-                cluster.posGlobal().y() - t.y());
-    chi2 += mahalanobisSquared(cluster.covGlobal().Sub<SymMatrix2>(0, 0), res);
-  }
-
-  // update track in-place
-  track.setGlobalState(state);
-  track.setGoodnessOfFit(chi2, 2 * (track.numClusters() - 2));
+  track.setGlobalState(fit.state());
+  track.setGoodnessOfFit(straightChi2(track), 2 * (track.numClusters() - 2));
 }
 
 Storage::TrackState
