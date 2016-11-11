@@ -11,7 +11,7 @@
 #include "utils/configparser.h"
 #include "utils/logger.h"
 
-using Utils::logger;
+PT_SETUP_GLOBAL_LOGGER
 
 static void parseLine(std::stringstream& line, Index& nsens, Index& x, Index& y)
 {

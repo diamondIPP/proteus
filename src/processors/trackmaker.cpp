@@ -23,6 +23,8 @@ using std::endl;
 
 using namespace Storage;
 
+PT_SETUP_GLOBAL_LOGGER
+
 namespace Processors {
 
 void TrackMaker::searchPlane(Track* track, std::vector<Track*>& candidates,

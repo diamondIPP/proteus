@@ -21,7 +21,7 @@
 #include "storage/track.h"
 #include "utils/logger.h"
 
-using Utils::logger;
+PT_SETUP_GLOBAL_LOGGER
 
 void Storage::StorageIO::openRead(const std::string& path, const std::vector<bool>* planeMask)
 {

@@ -9,7 +9,7 @@
 #include "utils/configparser.h"
 #include "utils/logger.h"
 
-using Utils::logger;
+PT_SETUP_GLOBAL_LOGGER
 
 Mechanics::Device::Device(const std::string& name,
                           double clockRate,

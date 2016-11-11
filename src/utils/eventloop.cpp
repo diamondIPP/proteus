@@ -16,7 +16,7 @@
 #include "utils/progressbar.h"
 #include "utils/statistics.h"
 
-using Utils::logger;
+PT_SETUP_LOCAL_LOGGER(EventLoop)
 
 Utils::EventLoop::EventLoop(Storage::StorageIO* input,
                             uint64_t startEvent,
@@ -29,9 +29,7 @@ Utils::EventLoop::EventLoop(Storage::StorageIO* input,
                             Storage::StorageIO* output,
                             uint64_t startEvent,
                             uint64_t numEvents)
-    : m_input(input)
-    , m_output(output)
-    , m_startEvent(startEvent)
+    : m_input(input), m_output(output), m_startEvent(startEvent)
 {
   assert(input && "input storage is NULL");
   // output can be NULL
@@ -146,10 +144,10 @@ void Utils::EventLoop::run()
   }
   durationWall = Clock::now() - startWall;
   durationTotal = durationInput + durationOutput;
-  durationTotal += std::accumulate(
-      durationProcs.begin(), durationProcs.end(), Duration::zero());
-  durationTotal += std::accumulate(
-      durationAnas.begin(), durationAnas.end(), Duration::zero());
+  durationTotal += std::accumulate(durationProcs.begin(), durationProcs.end(),
+                                   Duration::zero());
+  durationTotal += std::accumulate(durationAnas.begin(), durationAnas.end(),
+                                   Duration::zero());
 
   // print common event statistics
   INFO("\nEvent Statistics:\n", stats.str("  "), '\n');
@@ -167,13 +165,13 @@ void Utils::EventLoop::run()
     INFO("  output: ", time_per_event(durationOutput), unit, '\n');
   INFO("  processors:\n");
   for (size_t i = 0; i < m_processors.size(); ++i) {
-    INFO("    ", m_processors[i]->name(), ": ");
-    INFO(time_per_event(durationProcs[i]), unit, '\n');
+    INFO("    ", m_processors[i]->name(), ": ",
+         time_per_event(durationProcs[i]), unit, '\n');
   }
   INFO("  analyzers:\n");
   for (size_t i = 0; i < m_analyzers.size(); ++i) {
-    INFO("    ", m_analyzers[i]->name(), ": ");
-    INFO(time_per_event(durationAnas[i]), unit, '\n');
+    INFO("    ", m_analyzers[i]->name(), ": ", time_per_event(durationAnas[i]),
+         unit, '\n');
   }
   INFO("  combined: ", time_per_event(durationTotal), unit, '\n');
   INFO("  total (clocked): ",

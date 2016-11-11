@@ -11,7 +11,7 @@
 #include "utils/configparser.h"
 #include "utils/logger.h"
 
-using Utils::logger;
+PT_SETUP_GLOBAL_LOGGER
 
 Mechanics::Alignment::Alignment()
     : m_beamSlopeX(0), m_beamSlopeY(0), m_syncRatio(1)
