@@ -4,28 +4,40 @@
 #include <iostream>
 
 Storage::Event::Event(Index numPlanes)
-    : m_timeStamp(0)
+    : m_id(-1)
     , m_frameNumber(0)
+    , m_timeStamp(0)
     , m_triggerOffset(0)
     , m_invalid(false)
 {
-  for (Index iplane = 0; iplane < numPlanes; ++iplane) {
-    m_planes.push_back(Plane(iplane));
+  for (Index isensor = 0; isensor < numPlanes; ++isensor) {
+    m_planes.push_back(Plane(isensor));
   }
+}
+
+void Storage::Event::clear()
+{
+  for (auto plane = m_planes.begin(); plane != m_planes.end(); ++plane) {
+    plane->clear();
+  }
+  m_tracks.clear();
+}
+
+Storage::Track* Storage::Event::addTrack(std::unique_ptr<Storage::Track> track)
+{
+  m_tracks.push_back(std::move(track));
+  m_tracks.back()->m_index = m_tracks.size() - 1;
+  return m_tracks.back().get();
 }
 
 Storage::Track* Storage::Event::addTrack(const Track& otherTrack)
 {
-  m_tracks.push_back(otherTrack);
-  m_tracks.back().m_index = m_tracks.size() - 1;
-  return &m_tracks.back();
+  return addTrack(std::unique_ptr<Track>(new Track(otherTrack)));
 }
 
 Storage::Track* Storage::Event::newTrack()
 {
-  m_tracks.push_back(Track());
-  m_tracks.back().m_index = m_tracks.size() - 1;
-  return &m_tracks.back();
+  return addTrack(std::unique_ptr<Track>(new Track()));
 }
 
 unsigned int Storage::Event::getNumHits() const
@@ -45,27 +57,26 @@ unsigned int Storage::Event::getNumClusters() const
 
 void Storage::Event::print(std::ostream& os, const std::string& prefix) const
 {
-  size_t iplane = 0;
-  size_t itrack = 0;
+  os << prefix << "frame number: " << frameNumber() << '\n';
+  os << prefix << "time stamp: " << timeStamp() << '\n';
+  os << prefix << "trigger offset: " << triggerOffset() << '\n';
+  os << prefix << "invalid: " << invalid() << '\n';
 
-  os << prefix << "time stamp: " << getTimeStamp() << '\n';
-  os << prefix << "frame number: " << getFrameNumber() << '\n';
-  os << prefix << "trigger offset: " << getTriggerOffset() << '\n';
-  os << prefix << "invalid: " << getInvalid() << '\n';
-
-  os << prefix << "planes:\n";
-  for (const auto& plane : m_planes) {
-    os << prefix << "  plane " << iplane++ << ":\n";
-    plane.print(os, prefix + "    ");
+  os << prefix << "sensors:\n";
+  for (size_t isensor = 0; isensor < m_planes.size(); ++isensor) {
+    const Storage::Plane& sensorEvent = m_planes[isensor];
+    // only print non-empty sensor events
+    if ((0 < sensorEvent.numHits()) && (0 < sensorEvent.numClusters())) {
+      os << prefix << "  sensor " << isensor << ":\n";
+      sensorEvent.print(os, prefix + "    ");
+    }
   }
-
-  os << prefix << "tracks:\n";
-  for (const auto& track : m_tracks) {
-    os << prefix << "  track " << itrack++ << ":\n";
-    track.print(os, prefix + "    ");
+  if (!m_tracks.empty()) {
+    os << prefix << "tracks:\n";
+    for (size_t itrack = 0; itrack < m_tracks.size(); ++itrack) {
+      os << prefix << "  track " << itrack << ":\n";
+      m_tracks[itrack]->print(os, prefix + "    ");
+    }
   }
-
   os.flush();
 }
-
-void Storage::Event::print() const { print(std::cout); }

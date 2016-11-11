@@ -1,5 +1,5 @@
-#ifndef CLUSTER_H
-#define CLUSTER_H
+#ifndef PT_CLUSTER_H
+#define PT_CLUSTER_H
 
 #include <iosfwd>
 #include <string>
@@ -16,62 +16,77 @@ class Plane;
 class Cluster {
 public:
   void setPosPixel(const XYPoint& cr) { m_cr = cr; }
-  void setErrPixel(const XYVector& err) { m_errCr = err; }
+  void setPosPixel(double col, double row) { m_cr.SetXY(col, row); }
+  void setCovPixel(const SymMatrix2& cov) { m_covCr = cov; }
+  void setErrPixel(double stdCol, double stdRow);
+  void setTiming(double timing) { m_timing = timing; }
   /** Set global position using the transform from pixel to global coords. */
   void transformToGlobal(const Transform3D& pixelToGlobal);
 
   const XYPoint& posPixel() const { return m_cr; }
   const XYZPoint& posGlobal() const { return m_xyz; }
-  const XYVector& errPixel() const { return m_errCr; }
-  const XYZVector& errGlobal() const { return m_errXyz; }
+  const SymMatrix2& covPixel() const { return m_covCr; }
+  const SymMatrix3& covGlobal() const { return m_covXyz; }
   double timing() const { return m_timing; }
   double value() const { return m_value; }
+
+  Index sensorId() const;
+
+  int size() const { return static_cast<int>(m_hits.size()); }
+  int sizeCol() const;
+  int sizeRow() const;
 
   void addHit(Hit* hit);
   Index numHits() const { return static_cast<Index>(m_hits.size()); }
   Hit* getHit(Index i) { return m_hits.at(i); }
   const Hit* getHit(Index i) const { return m_hits.at(i); }
 
+  void setTrack(const Track* track);
+  bool isInTrack() const { return m_track != NULL; }
+  const Track* track() const { return m_track; }
+  /** \deprecated Use `track()` instead. */
+  const Track* getTrack() const { return m_track; }
+
   Index getNumHits() const { return m_hits.size(); }
-  double getPixX() const { return posPixel().x(); }
-  double getPixY() const { return posPixel().y(); }
-  double getPixErrX() const { return errPixel().x(); }
-  double getPixErrY() const { return errPixel().y(); }
-  double getPosX() const { return posGlobal().x(); }
-  double getPosY() const { return posGlobal().y(); }
-  double getPosZ() const { return posGlobal().z(); }
-  double getPosErrX() const { return errGlobal().x(); }
-  double getPosErrY() const { return errGlobal().y(); }
-  double getPosErrZ() const { return errGlobal().z(); }
+  double getPixX() const { return m_cr.x(); }
+  double getPixY() const { return m_cr.y(); }
+  double getPixErrX() const { return std::sqrt(m_covCr(0, 0)); }
+  double getPixErrY() const { return std::sqrt(m_covCr(1, 1)); }
+  double getPosX() const { return m_xyz.x(); }
+  double getPosY() const { return m_xyz.y(); }
+  double getPosZ() const { return m_xyz.z(); }
+  double getPosErrX() const { return std::sqrt(m_covXyz(0, 0)); }
+  double getPosErrY() const { return std::sqrt(m_covXyz(1, 1)); }
+  double getPosErrZ() const { return std::sqrt(m_covXyz(2, 2)); }
   double getTiming() const { return timing(); }
   double getValue() const { return value(); }
   double getMatchDistance() const { return m_matchDistance; }
   int getIndex() const { return m_index; }
 
-  void setTrack(Track* track);
-  void setMatchedTrack(Track* track) { m_matchedTrack = track; }
-
-  Track* getTrack() const { return m_track; }
   Track* getMatchedTrack() const { return m_matchedTrack; }
+  void setMatchedTrack(Track* track) { m_matchedTrack = track; }
+  void setMatchDistance(double value) { m_matchDistance = value; }
+
+  /** \deprecated Access via `Plane` already provides that information. */
   Plane* getPlane() const { return m_plane; }
 
-  void setMatchDistance(double value) { m_matchDistance = value; }
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
   Cluster(); // The Event class manages the memory, not the user
 
   XYPoint m_cr;
-  XYVector m_errCr;
+  SymMatrix2 m_covCr;
   double m_timing; // The timing of the underlying hits
   double m_value;  // The combined value of all its hits
   XYZPoint m_xyz;
-  XYZVector m_errXyz;
+  SymMatrix3 m_covXyz;
+
   std::vector<Hit*> m_hits; // List of hits composing the cluster
 
   int m_index;
   Plane* m_plane;         //<! The plane containing the cluster
-  Track* m_track;         // The track containing this cluster
+  const Track* m_track;   // The track containing this cluster
   Track* m_matchedTrack;  // Track matched to this cluster in DUT analysis (not
                           // stored)
   double m_matchDistance; // Distance to matched track
@@ -81,6 +96,8 @@ private:
   friend class StorageIO; // Needs access to the track index
 };
 
+std::ostream& operator<<(std::ostream& os, const Cluster& cluster);
+
 } // namespace Storage
 
-#endif // CLUSTER_H
+#endif // PT_CLUSTER_H

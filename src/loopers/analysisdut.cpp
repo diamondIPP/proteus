@@ -49,10 +49,10 @@ void Loopers::AnalysisDut::loop() {
 		<< "========================\n";
       
       std::cout << "\n**** refEvent *** " << std::endl;
-      refEvent->print();
+      refEvent->print(std::cout);
       
       std::cout << "\n**** dutEvent **** " << std::endl;
-      dutEvent->print();
+      dutEvent->print(std::cout);
     }
 
     
@@ -85,7 +85,7 @@ void Loopers::AnalysisDut::loop() {
 
   } // end loop in events
 
-  // single analyzers post-processing 
+  // single analyzers post-processing
   for (unsigned int i=0; i<_numSingleAnalyzers; i++)
     _singleAnalyzers.at(i)->postProcessing();
   
@@ -93,4 +93,3 @@ void Loopers::AnalysisDut::loop() {
   for (unsigned int i=0; i<_numDualAnalyzers; i++)
     _dualAnalyzers.at(i)->postProcessing();
 }
-

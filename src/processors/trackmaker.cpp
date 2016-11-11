@@ -180,7 +180,7 @@ void TrackMaker::generateTracks(Event* event,
 
       std::vector<Track*> candidates;
       TrackState state(cluster->getPosX(), cluster->getPosY());
-      state.setErrOffset(cluster->getPosErrX(), cluster->getPosErrY());
+      state.setCovOffset(cluster->covGlobal().Sub<SymMatrix2>(0,0));
       Track* seedTrack = new Track(state);
       seedTrack->addCluster(cluster);
 
@@ -363,14 +363,11 @@ void TrackMaker::fitTrackToClusters(Track* track)
     }
   }
 
-  // Get a chi2 normalized to the number of DOF
-  const double chi2 = (chi2X + chi2Y) / (2.0 * (double)(npoints - 2));
-
   TrackState state(originX, originY, slopeX, slopeY);
   state.setErrU(originErrX, slopeErrX, covarianceX);
   state.setErrV(originErrY, slopeErrY, covarianceY);
   track->setGlobalState(state);
-  track->setChi2(chi2);
+  track->setGoodnessOfFit(chi2X + chi2Y, 2 * (npoints - 2));
 
   delete[] dependant;
   delete[] independant;
@@ -393,39 +390,4 @@ TrackMaker::TrackMaker(double maxClusterDist,
     throw "TrackMaker: needs at least one seed plane";
 }
 
-// to convert global track position to local (lmeng@cern.ch, bristic@cern.ch)
-void TrackMaker::calculateIntercepts(Storage::Event* event, Mechanics::Device* device) {
-	// loop over each track and each plane
-	for (unsigned int ntrack = 0; ntrack < event->getNumTracks(); ntrack++) {
-		for (unsigned int nplane = 0; nplane < event->getNumPlanes(); nplane++) {
-			
-			Storage::Track* track = event->getTrack(ntrack);
-			Mechanics::Sensor* sensor = device->getSensor(nplane);
-			
-			double tx = 0, ty = 0, tz = 0;
-			Processors::trackSensorIntercept(track, sensor, tx, ty, tz); // getting this global intercepts (origin at centre of sensor)
-
-			double px = 0, py = 0;
-			sensor->spaceToPixel(tx, ty, tz, px, py);	// this function adds halfX and halfY
-			
-			// calculate distances from pixel position
-			double posX = px*sensor->getPitchX();
-			double posY = py*sensor->getPitchY();
-			
-			// restore origin to center of sensor
-			const double halfX = sensor->getSensitiveX() / 2.0;
-			const double halfY = sensor->getSensitiveY() / 2.0;
-			
-			posX -= halfX;
-			posY -= halfY;
-			
-			Storage::Plane *plane = event->getPlane(nplane);
-			plane->addIntercept(posX, posY);
-			
-		}
-	}
-}
-	
-	
-	
 }

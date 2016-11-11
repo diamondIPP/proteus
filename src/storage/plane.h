@@ -1,7 +1,8 @@
-#ifndef PLANE_H
-#define PLANE_H
+#ifndef PT_PLANE_H
+#define PT_PLANE_H
 
 #include <iosfwd>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -17,41 +18,32 @@ namespace Storage {
  */
 class Plane {
 public:
-  Index planeNumber() const { return m_planeNum; }
+  Index sensorId() const { return m_sensorId; }
 
   Storage::Hit* newHit();
   Index numHits() const { return static_cast<Index>(m_hits.size()); }
-  Hit* getHit(Index i) { return &m_hits.at(i); }
-  const Hit* getHit(Index i) const { return &m_hits.at(i); }
+  Hit* getHit(Index i) { return m_hits.at(i).get(); }
+  const Hit* getHit(Index i) const { return m_hits.at(i).get(); }
 
   Storage::Cluster* newCluster();
   Index numClusters() const { return static_cast<Index>(m_clusters.size()); }
-  Cluster* getCluster(Index i) { return &m_clusters.at(i); }
-  const Cluster* getCluster(Index i) const { return &m_clusters.at(i); }
-
-  void addIntercept(double posX, double posY);
-  Index numIntercepts() const
-  {
-    return static_cast<Index>(m_intercepts.size());
-  }
-  std::pair<double, double> getIntercept(Index i) const
-  {
-    return m_intercepts.at(i);
-  }
+  Cluster* getCluster(Index i) { return m_clusters.at(i).get(); }
+  const Cluster* getCluster(Index i) const { return m_clusters.at(i).get(); }
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
-  Plane(Index planeNum);
+  Plane(Index sensorId);
 
-  std::vector<Hit> m_hits;
-  std::vector<Cluster> m_clusters;
-  std::vector<std::pair<double, double>> m_intercepts;
-  Index m_planeNum;
+  void clear();
+
+  std::vector<std::unique_ptr<Hit>> m_hits;
+  std::vector<std::unique_ptr<Cluster>> m_clusters;
+  Index m_sensorId;
 
   friend class Event;
 };
 
 } // namespace Storage
 
-#endif // PLANE_H
+#endif // PT_PLANE_H

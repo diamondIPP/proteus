@@ -1,6 +1,7 @@
-#ifndef TRACK_H
-#define TRACK_H
+#ifndef PT_TRACK_H
+#define PT_TRACK_H
 
+#include <cmath>
 #include <iosfwd>
 #include <map>
 #include <string>
@@ -28,16 +29,22 @@ public:
   TrackState(const XYPoint& offset, const XYVector& slope = XYVector(0, 0));
   TrackState(double u, double v, double dU = 0, double dV = 0);
 
-  void setErrOffset(double errU, double errV);
-  void setErrU(double errU, double errDu, double cov = 0);
-  void setErrV(double errV, double errDv, double cov = 0);
+  void setCovOffset(const SymMatrix2& cov) { m_cov.Place_at(cov, U, U); };
+  void setCovU(double varOffset, double varSlope, double cov = 0);
+  void setCovV(double varOffset, double varSlope, double cov = 0);
+  void setErrU(double stdOffset, double stdSlope, double cov = 0);
+  void setErrV(double stdOffset, double stdSlope, double cov = 0);
 
   /** Plane offset in local coordinates. */
   const XYPoint& offset() const { return m_offset; }
+  SymMatrix2 covOffset() const { return m_cov.Sub<SymMatrix2>(U, U); }
+  double stdOffsetU() const { return std::sqrt(m_cov(U, U)); }
+  double stdOffsetV() const { return std::sqrt(m_cov(V, V)); }
   /** Slope in local coordinates. */
   const XYVector& slope() const { return m_slope; }
-  const XYVector& errOffset() const { return m_errOffset; }
-  const XYVector& errSlope() const { return m_errSlope; }
+  SymMatrix2 covSlope() const { return m_cov.Sub<SymMatrix2>(DU, DU); }
+  double stdSlopeU() const { return std::sqrt(m_cov(DU, DU)); }
+  double stdSlopeV() const { return std::sqrt(m_cov(DV, DV)); }
 
   /** Full position in the local coordinates. */
   XYZPoint posLocal() const { return XYZPoint(m_offset.x(), m_offset.y(), 0); }
@@ -45,10 +52,11 @@ public:
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
+  enum { U = 0, V = 1, DU = 2, DV = 3 };
+
   XYPoint m_offset;
   XYVector m_slope;
-  XYVector m_errOffset, m_errSlope;
-  double m_covUDu, m_covVDv;
+  SymMatrix4 m_cov;
 
   friend class Track;
 };
@@ -60,18 +68,18 @@ private:
  */
 class Track {
 public:
-  typedef std::map<Index, TrackState> TrackStates;
-
   Track();
   Track(const TrackState& globalState);
 
   void addLocalState(Index sensor, const TrackState& state);
   void setGlobalState(const TrackState& state) { m_state = state; }
-  void setChi2(double chi2) { m_chi2 = chi2; }
+  void setGoodnessOfFit(double chi2, int ndf) { m_redChi2 = chi2 / ndf; }
+  void setGoodnessOfFit(double reducedChi2) { m_redChi2 = reducedChi2; }
 
   const TrackState& globalState() const { return m_state; }
+  bool hasLocalState(Index sensor) const;
   const TrackState& localState(Index sensor) const;
-  const TrackStates& localStates() const { return m_localStates; }
+  double reducedChi2() const { return m_redChi2; }
 
   /** Adds the cluster to the track but does not inform the cluster about it. */
   void addCluster(Cluster* cluster);
@@ -93,23 +101,23 @@ public:
   }
   double getOriginX() const { return m_state.offset().x(); }
   double getOriginY() const { return m_state.offset().y(); }
-  double getOriginErrX() const { return m_state.errOffset().x(); }
-  double getOriginErrY() const { return m_state.errOffset().y(); }
+  double getOriginErrX() const { return m_state.stdOffsetU(); }
+  double getOriginErrY() const { return m_state.stdOffsetV(); }
   double getSlopeX() const { return m_state.slope().x(); }
   double getSlopeY() const { return m_state.slope().y(); }
-  double getSlopeErrX() const { return m_state.errSlope().x(); }
-  double getSlopeErrY() const { return m_state.errSlope().y(); }
-  double getCovarianceX() const { return m_state.m_covUDu; }
-  double getCovarianceY() const { return m_state.m_covVDv; }
-  double getChi2() const { return m_chi2; }
+  double getSlopeErrX() const { return m_state.stdSlopeU(); }
+  double getSlopeErrY() const { return m_state.stdSlopeV(); }
+  double getCovarianceX() const { return m_state.m_cov(0, 2); }
+  double getCovarianceY() const { return m_state.m_cov(1, 3); }
+  double getChi2() const { return m_redChi2; }
   int getIndex() const { return m_index; }
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
   TrackState m_state;
-  TrackStates m_localStates;
-  double m_chi2;
+  std::map<Index, TrackState> m_localStates;
+  double m_redChi2;
   int m_index;
 
   std::vector<Cluster*> m_clusters;
@@ -120,6 +128,8 @@ private:
   friend class Processors::TrackMaker;
 };
 
+std::ostream& operator<<(std::ostream& os, const TrackState& state);
+
 } // namespace Storage
 
-#endif // TRACK_H
+#endif // PT_TRACK_H
