@@ -56,8 +56,7 @@ typedef ROOT::Math::SVector<double, 4> Vector4;
  *
  * The vector elements are weighted with the inverse of a covariance matrix.
  * This is a multi-dimensional generalization of the pull / significance
- * measure. In the case of a Gaussian distribution this is also equivalent
- * to chi2.
+ * measure.
  */
 template <typename T, unsigned int D1>
 inline double mahalanobisSquared(
@@ -65,9 +64,9 @@ inline double mahalanobisSquared(
     const ROOT::Math::SVector<T, D1>& x)
 {
   ROOT::Math::SMatrix<T, D1, D1, ROOT::Math::MatRepSym<T, D1>> weight(cov);
-  int fail;
-  weight.InverseChol(fail);
-  assert(!fail && "Covariance inversion failed");
+  if (!weight.InvertChol())
+    throw std::runtime_error(
+        "Covariance inversion failed for Mahalanobis distance");
   return ROOT::Math::Similarity(weight, x);
 }
 
