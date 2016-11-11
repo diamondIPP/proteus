@@ -33,8 +33,13 @@ void Storage::Cluster::transformToGlobal(const Transform3D& pixelToGlobal)
   Matrix34 transform;
   pixelToGlobal.GetTransformMatrix(transform);
 
+  SymMatrix3 covPixel;
+  covPixel.Place_at(m_covCr, 0, 0);
+  // avoid singular matrix by setting local w-error to sensor thickness
+  covPixel(2, 2) = 1.0 / 12.0;
+
   m_xyz = pixelToGlobal * XYZPoint(m_cr.x(), m_cr.y(), 0);
-  m_covXyz = Similarity(transform.Sub<Matrix32>(0, 0), m_covCr);
+  m_covXyz = Similarity(transform.Sub<Matrix3>(0, 0), covPixel);
 }
 
 Index Storage::Cluster::sensorId() const { return m_plane->sensorId(); }
