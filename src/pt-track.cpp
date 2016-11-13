@@ -18,8 +18,8 @@
 #include "processors/clusterizer.h"
 #include "processors/clustermaker.h"
 #include "processors/hitmapper.h"
+#include "processors/trackfinder.h"
 #include "processors/trackfitter.h"
-#include "processors/trackmaker.h"
 #include "storage/event.h"
 #include "storage/storageio.h"
 #include "utils/arguments.h"
@@ -35,29 +35,37 @@ int main(int argc, char const* argv[])
   if (args.parse(argc, argv))
     return EXIT_FAILURE;
 
-  auto device = Mechanics::Device::fromFile(args.device());
-  Storage::StorageIO input(args.input(), Storage::INPUT, device.numSensors());
+  // setup configuration
+  uint64_t skipEvents = args.get<uint64_t>("skip_events");
+  uint64_t numEvents = args.get<uint64_t>("num_events");
+
+  Mechanics::Device dev = Mechanics::Device::fromFile(args.device());
+
+  toml::Value cfg = Utils::Config::readConfig(args.config());
+  toml::Value cfgTrk = cfg["track"];
+  auto sensorIds = cfgTrk.get<std::vector<Index>>("sensor_ids");
+  auto numPointsMin = cfgTrk.get<int>("num_points_min");
+  auto distSigmaMax = cfgTrk.get<double>("distance_sigma_max");
+
+  Storage::StorageIO input(args.input(), Storage::INPUT, dev.numSensors());
   Storage::StorageIO output(args.makeOutput("data.root"), Storage::OUTPUT,
-                            device.numSensors());
+                            dev.numSensors());
   TFile hists(args.makeOutput("hists.root").c_str(), "RECREATE");
 
-  std::vector<Index> locals = {0, 6, 7};
-
-  Utils::EventLoop loop(&input, &output, args.get<uint64_t>("skip_events"),
-                        args.get<uint64_t>("num_events"));
-  setupHitMappers(device, loop);
-  setupClusterizers(device, loop);
-  loop.addProcessor(std::make_shared<ApplyAlignment>(device));
-  loop.addProcessor(std::make_shared<TrackMaker>(10));
-  loop.addProcessor(std::make_shared<StraightTrackFitter>(device, locals));
-  loop.addAnalyzer(std::make_shared<EventInfo>(&device, &hists));
-  loop.addAnalyzer(std::make_shared<HitInfo>(&device, &hists));
-  loop.addAnalyzer(std::make_shared<ClusterInfo>(&device, &hists));
-  loop.addAnalyzer(std::make_shared<TrackInfo>(&device, &hists));
-  loop.addAnalyzer(std::make_shared<Occupancy>(&device, &hists));
-  loop.addAnalyzer(std::make_shared<Correlation>(&device, &hists));
-  loop.addAnalyzer(std::make_shared<Residuals>(&device, &hists));
-  loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(device, &hists));
+  Utils::EventLoop loop(&input, &output, skipEvents, numEvents);
+  setupHitMappers(dev, loop);
+  setupClusterizers(dev, loop);
+  loop.addProcessor(std::make_shared<ApplyAlignment>(dev));
+  loop.addProcessor(std::make_shared<TrackFinder>(dev, sensorIds, numPointsMin,
+                                                  distSigmaMax));
+  loop.addAnalyzer(std::make_shared<EventInfo>(&dev, &hists));
+  loop.addAnalyzer(std::make_shared<HitInfo>(&dev, &hists));
+  loop.addAnalyzer(std::make_shared<ClusterInfo>(&dev, &hists));
+  loop.addAnalyzer(std::make_shared<TrackInfo>(&dev, &hists));
+  loop.addAnalyzer(std::make_shared<Occupancy>(&dev, &hists));
+  loop.addAnalyzer(std::make_shared<Correlation>(&dev, &hists));
+  loop.addAnalyzer(std::make_shared<Residuals>(&dev, &hists));
+  loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(dev, &hists));
   loop.run();
 
   hists.Write();
