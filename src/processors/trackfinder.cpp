@@ -19,24 +19,20 @@ using Utils::logger;
 
 Processors::TrackFinder::TrackFinder(const Mechanics::Device& device,
                                      const std::vector<Index> sensors,
-                                     Index clustersMin,
+                                     Index numClustersMin,
                                      double distanceSigmaMax)
-    : m_tracking(sensors)
-    , m_clustersMin(clustersMin)
+    : m_sensors(sensors)
+    , m_numSeedSensors(1 + sensors.size() - numClustersMin)
+    , m_numClustersMin(numClustersMin)
     , m_distSigmaMax(distanceSigmaMax)
     , m_beamDirection(device.beamDirection())
 {
   if (sensors.size() < 2)
     throw std::runtime_error("Need at least two sensors two find tracks");
-  if (sensors.size() < clustersMin)
+  if (sensors.size() < numClustersMin)
     throw std::runtime_error(
         "Number of tracking sensors < minimum number of clusters");
-
   // TODO 2016-11 msmk: check that sensor ids are unique
-
-  size_t seedSensors = 1 + sensors.size() - clustersMin;
-  m_seeding.resize(seedSensors);
-  std::copy(sensors.begin(), sensors.begin() + seedSensors, m_seeding.begin());
 }
 
 std::string Processors::TrackFinder::name() const { return "TrackFinder"; }
@@ -47,7 +43,8 @@ void Processors::TrackFinder::process(Storage::Event& event) const
 
   // start a track search from each seed sensor.
 
-  for (auto seed = m_seeding.begin(); seed != m_seeding.end(); ++seed) {
+  for (auto seed = m_sensors.begin();
+       seed != m_sensors.begin() + m_numSeedSensors; ++seed) {
     Plane& seedSensorEvent = *event.getPlane(*seed);
 
     // generate track candidates from unused clusters on the seed sensor
@@ -60,9 +57,9 @@ void Processors::TrackFinder::process(Storage::Event& event) const
       candidates.push_back(TrackPtr(new Track()));
       candidates.back()->addCluster(cluster);
     }
-
-    for (auto id = m_tracking.begin(); id != m_tracking.end(); ++id) {
-      // ignore seed sensor to avoid adding the same cluster twice
+    // search for additional hits on all other sensors
+    for (auto id = m_sensors.begin(); id != m_sensors.end(); ++id) {
+      // ignore seed sensor to prevent adding the same cluster twice
       if (*id == *seed)
         continue;
       searchSensor(*event.getPlane(*id), candidates);
@@ -78,7 +75,7 @@ void Processors::TrackFinder::process(Storage::Event& event) const
 void Processors::TrackFinder::searchSensor(
     Storage::Plane& sensorEvent, std::vector<TrackPtr>& candidates) const
 {
-  // ensure we loop only over the initial candidates and not the added ones
+  // we must loop only over the initial candidates and not the added ones
   Index numTracks = static_cast<Index>(candidates.size());
   for (Index itrack = 0; itrack < numTracks; ++itrack) {
     Storage::Track& track = *candidates[itrack];
@@ -114,7 +111,10 @@ void Processors::TrackFinder::searchSensor(
         candidates.back()->addCluster(curr);
       }
     }
-    // first matched cluster can be only be added after
+    // first matched cluster can be only be added after all other clusters
+    // have been considered. otherwise it would be already added to the
+    // candidate when it bifurcates and the new candidate would have two
+    // clusters on this sensor.
     if (matched)
       track.addCluster(matched);
   }
@@ -147,7 +147,7 @@ void Processors::TrackFinder::selectTracks(std::vector<TrackPtr>& candidates,
     Storage::Track& track = **itrack;
 
     // too short
-    if (track.numClusters() < m_clustersMin)
+    if (track.numClusters() < m_numClustersMin)
       continue;
 
     // check that all constituent clusters are still unused

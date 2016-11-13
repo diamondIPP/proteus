@@ -22,14 +22,16 @@ namespace Processors {
  * Matching clusters are searched for only on the selected sensors in the order
  * in which they are given. In case of ambiguities, the track bifurcates info
  * multiple candidates. Ambiguities are resolved after all track candidates
- * have been found. Clusters are associated exclusively to the best track, i.e.
- * the one with the highest number of hits and the lowest chi2 value.
+ * have been found by associating clusters exclusively to the best candidate,
+ * i.e. the one with the highest number of hits and the lowest chi2 value, to
+ * form a track. Successive candidates that contain clusters that are already
+ * used are dropped.
  */
 class TrackFinder : public Processor {
 public:
   TrackFinder(const Mechanics::Device& device,
               const std::vector<Index> sensors,
-              Index clustersMin,
+              Index numClustersMin,
               double distanceSigmaMax);
 
   std::string name() const;
@@ -44,9 +46,9 @@ private:
   void selectTracks(std::vector<TrackPtr>& candidates,
                     Storage::Event& event) const;
 
-  std::vector<Index> m_seeding;
-  std::vector<Index> m_tracking;
-  Index m_clustersMin;
+  std::vector<Index> m_sensors;
+  size_t m_numSeedSensors;
+  Index m_numClustersMin;
   double m_distSigmaMax;
   XYZVector m_beamDirection;
 };
