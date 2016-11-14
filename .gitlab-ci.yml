@@ -2,18 +2,18 @@ image: xbane/repo:slc6-base
 
 stages:
   - build
-  - run_reference
-  - run_dut
-
-cache:
-  paths:
-    - "test/raw"
+  - data
+  - test
 
 before_script:
     - export GCC_VERSION=4.8.1
     - export ROOT_VERSION=5.34.36
     - export DISPLAY=""
     - source .gitlab-ci.d/init_x86_64.sh
+
+cache:
+  paths:
+    - "test/raw"
 
 build:
   stage: build
@@ -22,30 +22,33 @@ build:
     - ./build.sh
   artifacts:
     paths:
-      - "test/build/bin/proteus"
       - "test/build/activate.sh"
+      - "test/build/bin/proteus"
+      - "test/build/bin/pt-analysis"
+      - "test/build/bin/pt-cfg"
+      - "test/build/bin/pt-noisescan"
+      - "test/build/bin/pt-track"
 
-test_reference:
-  stage: run_reference
+download_data:
+  state: data
   script:
     - cd test
     - ./download_data.sh
-    - ./run_reference.sh
-  artifacts:
-    paths:
-    #- "test/run000875"
-    #- "test/run001066"
 
-test_dut:
-# DUT tests not ready, yet
-  when: manual
-  stage: run_dut
+test_run000875:
+  stage: test
   script:
     - cd test
-    - ./download_data.sh
-    - ./run_dut.sh
-  artifacts:
-    paths:
-      - "test/run000875"
-      - "test/run001066"
-      
+    - ./run_telescope.sh 875
+
+test_run001066:
+  stage: test
+  script:
+    - cd test
+    - ./run_telescope.sh 1066
+
+test_run001066_old:
+  state: test
+  script:
+    - cd test
+    - ./old-run_reference.sh 1066
