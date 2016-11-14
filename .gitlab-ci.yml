@@ -48,7 +48,7 @@ test_run001066:
     - ./run_telescope.sh 1066
 
 test_run001066_old:
-  state: test
+  stage: test
   script:
     - cd test
     - ./old-run_reference.sh 1066
