@@ -8,7 +8,7 @@
 
 #include "utils/logger.h"
 
-using Utils::logger;
+PT_SETUP_GLOBAL_LOGGER
 
 Utils::Arguments::Optional::Optional(char abbreviation_,
                                      const std::string& name_,
@@ -94,7 +94,7 @@ bool Utils::Arguments::parse(int argc, char const* argv[])
 
     if ((arg.find("--") == 0) && (2 < arg.size())) {
       // long optional argument
-      DEBUG("long option: ", arg, ' ', argv[i + 1], '\n');
+      DEBUG("long option: ", arg, ' ', argv[i + 1]);
       Optional* opt = find(arg.substr(2), 0);
       if (!opt) {
         std::cerr << "unknown long option '" << arg << "'\n\n";
@@ -103,7 +103,7 @@ bool Utils::Arguments::parse(int argc, char const* argv[])
       if ((i + 1) < argc)
         opt->value = argv[++i];
     } else if ((arg.find("-") == 0) && (1 < arg.size())) {
-      DEBUG("short option: ", arg, ' ', argv[i + 1], '\n');
+      DEBUG("short option: ", arg, ' ', argv[i + 1]);
       // short optional argument
       Optional* opt = find("", arg[1]);
       if (!opt) {
@@ -113,7 +113,7 @@ bool Utils::Arguments::parse(int argc, char const* argv[])
       if ((i + 1) < argc)
         opt->value = argv[++i];
     } else {
-      DEBUG("positional argument: ", arg, '\n');
+      DEBUG("positional argument: ", arg);
       // positional argument
       m_positional.emplace_back(std::move(arg));
     }

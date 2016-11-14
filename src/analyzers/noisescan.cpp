@@ -14,7 +14,7 @@
 #include "storage/plane.h"
 #include "utils/logger.h"
 
-using Utils::logger;
+PT_SETUP_GLOBAL_LOGGER
 
 Analyzers::NoiseScan::NoiseScan(const Mechanics::Device& device,
                                 const toml::Value& cfg,
@@ -147,8 +147,6 @@ estimateLocalDensity(const TH2D* values, int i, int j, double bandwidth)
 
 void Analyzers::NoiseScan::finalize()
 {
-  INFO('\n');
-
   for (size_t i = 0; i < m_sensorIds.size(); ++i) {
     auto id = m_sensorIds[i];
     auto roi = m_sensorRois[i];
@@ -215,14 +213,14 @@ void Analyzers::NoiseScan::finalize()
     }
     pixelMask->SetEntries(numNoisyPixels);
 
-    INFO("noise scan sensor ", id, ":\n");
-    INFO("  roi col: ", roi.axes[0], '\n');
-    INFO("  roi row: ", roi.axes[1], '\n');
-    INFO("  max occupancy: ", occ->GetMaximum(), " hits/event\n");
+    INFO("noise scan sensor ", id, ":");
+    INFO("  roi col: ", roi.axes[0]);
+    INFO("  roi row: ", roi.axes[1]);
+    INFO("  max occupancy: ", occ->GetMaximum(), " hits/event");
     INFO("  cut relative: local mean + ", m_maxSigmaAboveAvg,
-         " * local sigma\n");
-    INFO("  cut absolute: ", m_maxRate, " hits/event\n");
-    INFO("  noisy pixels: ", numNoisyPixels, '\n');
+         " * local sigma");
+    INFO("  cut absolute: ", m_maxRate, " hits/event");
+    INFO("  noisy pixels: ", numNoisyPixels);
   }
 }
 

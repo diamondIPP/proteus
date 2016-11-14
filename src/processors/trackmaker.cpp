@@ -12,7 +12,8 @@
 #include "utils/logger.h"
 
 using namespace Storage;
-using Utils::logger;
+
+PT_SETUP_GLOBAL_LOGGER
 
 void Processors::TrackMaker::searchPlane(Event* event,
                                          Track* track,
@@ -161,7 +162,7 @@ void Processors::TrackMaker::generateTracks(Event* event, int maskedPlane) const
 
       std::vector<Track*> candidates;
       TrackState state(cluster->getPosX(), cluster->getPosY());
-      state.setCovOffset(cluster->covGlobal().Sub<SymMatrix2>(0,0));
+      state.setCovOffset(cluster->covGlobal().Sub<SymMatrix2>(0, 0));
       Track* seedTrack = new Track(state);
       seedTrack->addCluster(cluster);
 

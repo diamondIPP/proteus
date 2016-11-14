@@ -15,7 +15,8 @@ using Storage::Event;
 using Storage::Plane;
 using Storage::Track;
 using Storage::TrackState;
-using Utils::logger;
+
+PT_SETUP_GLOBAL_LOGGER
 
 Processors::TrackFinder::TrackFinder(const Mechanics::Device& device,
                                      const std::vector<Index> sensors,

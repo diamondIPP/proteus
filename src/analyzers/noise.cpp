@@ -153,10 +153,10 @@ void Analyzers::NoiseAnalyzer::finalize()
       }
     }
 
-    INFO("Noise sensor ", id, ":\n");
-    INFO("  roi col: [", m_roi.axes[0].min, ", ", m_roi.axes[0].max, "]\n");
-    INFO("  roi row: [", m_roi.axes[1].min, ", ", m_roi.axes[1].max, "]\n");
-    INFO("  max occupancy: ", occMap->GetMaximum(), " hits/event\n");
+    INFO("Noise sensor ", id, ":");
+    INFO("  roi col: [", m_roi.axes[0].min, ", ", m_roi.axes[0].max, "]");
+    INFO("  roi row: [", m_roi.axes[1].min, ", ", m_roi.axes[1].max, "]");
+    INFO("  max occupancy: ", occMap->GetMaximum(), " hits/event");
   }
 
   std::cout << "Generated Noise Mask:\n";

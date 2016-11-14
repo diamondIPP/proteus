@@ -14,7 +14,7 @@
 #include "utils/eventloop.h"
 #include "utils/logger.h"
 
-using Utils::logger;
+PT_SETUP_GLOBAL_LOGGER
 
 /** Check if the given hit is unconnected to the cluster. */
 struct Unconnected {
@@ -68,8 +68,7 @@ Processors::BaseClusterizer::BaseClusterizer(
     , m_maxDistSquared(1)
     , m_name(name)
 {
-  using Utils::logger;
-  DEBUG(m_name, " sensors: ", m_sensorIds, '\n');
+  DEBUG(m_name, " sensors: ", m_sensorIds);
 }
 
 std::string Processors::BaseClusterizer::name() const { return m_name; }

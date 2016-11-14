@@ -11,13 +11,13 @@
 #include "utils/eventloop.h"
 #include "utils/logger.h"
 
-using Utils::logger;
+PT_SETUP_GLOBAL_LOGGER
 
 Processors::CCPDv4HitMapper::CCPDv4HitMapper(
     const std::vector<Index>& sensorIds)
     : m_sensorIds(sensorIds)
 {
-  DEBUG("map FE-I4 to CCPDv4 for sensors ", m_sensorIds, '\n');
+  DEBUG("map FE-I4 to CCPDv4 for sensors ", m_sensorIds);
 }
 
 std::string Processors::CCPDv4HitMapper::name() const

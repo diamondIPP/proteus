@@ -11,13 +11,13 @@
 #include "storage/event.h"
 #include "utils/logger.h"
 
-using Utils::logger;
+PT_SETUP_GLOBAL_LOGGER
 
 Processors::StraightTrackFitter::StraightTrackFitter(
     const Mechanics::Device& device, const std::vector<Index>& sensorIds)
     : m_device(device), m_sensorIds(std::begin(sensorIds), std::end(sensorIds))
 {
-  DEBUG("fit on sensors: ", m_sensorIds, '\n');
+  DEBUG("fit on sensors: ", m_sensorIds);
 }
 
 std::string Processors::StraightTrackFitter::name() const
