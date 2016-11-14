@@ -13,7 +13,7 @@ before_script:
 
 cache:
   paths:
-    - "test/raw"
+    - test/raw/
 
 build:
   stage: build
@@ -22,18 +22,18 @@ build:
     - ./build.sh
   artifacts:
     paths:
-      - "test/build/activate.sh"
-      - "test/build/bin/proteus"
-      - "test/build/bin/pt-analysis"
-      - "test/build/bin/pt-cfg"
-      - "test/build/bin/pt-noisescan"
-      - "test/build/bin/pt-track"
+      - test/build/activate.sh
+      - test/build/bin/
 
 download_data:
   stage: data
   script:
     - cd test
     - ./download_data.sh
+  artifacts:
+    untracked: true
+    paths:
+      - test/raw/
 
 test_run000875:
   stage: test
@@ -47,7 +47,7 @@ test_run001066:
     - cd test
     - ./run_telescope.sh 1066
 
-test_run001066_old:
+test_old_run001066:
   stage: test
   script:
     - cd test
