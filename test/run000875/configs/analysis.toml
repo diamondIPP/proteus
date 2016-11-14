@@ -1,0 +1,4 @@
+[track]
+sensor_ids = [0, 1, 2, 3, 4, 5]
+num_points_min = 4
+distance_sigma_max = 10.
