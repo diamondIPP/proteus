@@ -45,7 +45,7 @@ public:
   void writeMask(const std::string& path);
 
 private:
-  using Area = Utils::Box<2, int, Utils::Endpoints::CLOSED>;
+  using Area = Utils::Box<2, int>;
 
   void addSensorHists(TDirectory* dir,
                       int id,

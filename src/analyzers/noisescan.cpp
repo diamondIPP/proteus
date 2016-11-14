@@ -48,9 +48,10 @@ Analyzers::NoiseScan::NoiseScan(const Mechanics::Device& device,
     int id = cfgSensor->get<int>("id");
     const Mechanics::Sensor* sensor = device.getSensor(id);
     // roi is bounded by sensor size
-    Area roi = {
-        {cfgSensor->get<int>("col_min"), cfgSensor->get<int>("col_max")},
-        {cfgSensor->get<int>("row_min"), cfgSensor->get<int>("row_max")}};
+    Area roi(Area::Axis(cfgSensor->get<int>("col_min"),
+                        cfgSensor->get<int>("col_max")),
+             Area::Axis(cfgSensor->get<int>("row_min"),
+                        cfgSensor->get<int>("row_max")));
     roi = Utils::intersection(roi, sensor->sensitiveAreaPixel());
     addSensorHists(dir, id, sensor->name(), roi);
   }
@@ -67,14 +68,10 @@ void Analyzers::NoiseScan::addSensorHists(TDirectory* dir,
     return h1;
   };
   auto makeMap = [&](const std::string& suffix) -> TH2D* {
-    TH2D* h2 = new TH2D((name + suffix).c_str(),
-                        "",
-                        roi.axes[0].max - roi.axes[0].min,
-                        roi.axes[0].min,
-                        roi.axes[0].max,
-                        roi.axes[1].max - roi.axes[1].min,
-                        roi.axes[1].min,
-                        roi.axes[1].max);
+    TH2D* h2 = new TH2D((name + suffix).c_str(), "",
+                        roi.axes[0].max - roi.axes[0].min, roi.axes[0].min,
+                        roi.axes[0].max, roi.axes[1].max - roi.axes[1].min,
+                        roi.axes[1].min, roi.axes[1].max);
     h2->SetDirectory(dir);
     return h2;
   };
@@ -176,8 +173,8 @@ void Analyzers::NoiseScan::finalize()
     sigma->SetEntries(occ->GetEntries());
 
     // fill per-pixel significance distribution
-    sigmaPixels->SetBins(
-        sigmaPixels->GetNbinsX(), sigma->GetMinimum(), sigma->GetMaximum());
+    sigmaPixels->SetBins(sigmaPixels->GetNbinsX(), sigma->GetMinimum(),
+                         sigma->GetMaximum());
     for (auto icol = occ->GetNbinsX(); 0 < icol; --icol) {
       for (auto irow = occ->GetNbinsY(); 0 < irow; --irow) {
         sigmaPixels->Fill(sigma->GetBinContent(icol, irow));
@@ -222,8 +219,7 @@ void Analyzers::NoiseScan::finalize()
     INFO("  roi col: ", roi.axes[0], '\n');
     INFO("  roi row: ", roi.axes[1], '\n');
     INFO("  max occupancy: ", occ->GetMaximum(), " hits/event\n");
-    INFO("  cut relative: local mean + ",
-         m_maxSigmaAboveAvg,
+    INFO("  cut relative: local mean + ", m_maxSigmaAboveAvg,
          " * local sigma\n");
     INFO("  cut absolute: ", m_maxRate, " hits/event\n");
     INFO("  noisy pixels: ", numNoisyPixels, '\n');
