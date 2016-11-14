@@ -105,8 +105,9 @@ Processors::BinaryClusterizer::BinaryClusterizer(
 {
 }
 
-// 1 / 12 factor from pixel size to stddev of equivalent gaussian
-static const Vector3 HIT_COV_ENTRIES(1.0 / 12., 0, 1.0 / 12.);
+// 1/12 factor from pixel size to stddev of equivalent gaussian
+static const Vector3 HIT_COV_ENTRIES(1. / 12., 0., 1. / 12.);
+// set upper triangular part of the covariance matrix
 static const SymMatrix2 HIT_COV(HIT_COV_ENTRIES, false);
 
 void Processors::BinaryClusterizer::estimateProperties(
@@ -114,18 +115,20 @@ void Processors::BinaryClusterizer::estimateProperties(
 {
   XYPoint pos;
   double time = std::numeric_limits<double>::max();
-  double scale = 1 / cluster.numHits();
 
   for (Index ihit = 0; ihit < cluster.numHits(); ++ihit) {
     const Storage::Hit* hit = cluster.getHit(ihit);
-    pos += scale * XYVector(hit->posPixel());
+    pos += XYVector(hit->posPixel());
     time = std::min(time, hit->timing());
   }
+  pos /= cluster.numHits();
 
-  // TODO 2016-10-13 msmk: correctly estimate errors
+  SymMatrix2 cov = HIT_COV;
+  cov(0, 0) /= cluster.sizeCol();
+  cov(1, 1) /= cluster.sizeRow();
 
   cluster.setPosPixel(pos);
-  cluster.setCovPixel(HIT_COV);
+  cluster.setCovPixel(cov);
   cluster.setTiming(time);
 }
 
@@ -150,10 +153,13 @@ void Processors::ValueWeightedClusterizer::estimateProperties(
   }
   pos /= weight;
 
-  // TODO 2016-10-13 msmk: correctly estimate errors
+  // TODO 2016-11-14 msmk: consider also the value weighting
+  SymMatrix2 cov = HIT_COV;
+  cov(0, 0) /= cluster.sizeCol();
+  cov(1, 1) /= cluster.sizeRow();
 
   cluster.setPosPixel(pos);
-  cluster.setCovPixel(HIT_COV);
+  cluster.setCovPixel(cov);
   cluster.setTiming(time);
 }
 
