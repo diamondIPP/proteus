@@ -13,6 +13,7 @@
 #include "../mechanics/device.h"
 #include "../mechanics/sensor.h"
 #include "../processors/processors.h"
+#include "utils/logger.h"
 
 #ifndef VERBOSE
 #define VERBOSE 1

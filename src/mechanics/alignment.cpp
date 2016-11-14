@@ -28,14 +28,14 @@ Mechanics::Alignment Mechanics::Alignment::fromFile(const std::string& path)
     // fall-back to old format
     alignment = fromConfig(ConfigParser(path.c_str()));
   }
-  INFO("read alignment from '", path, "'\n");
+  INFO("read alignment from '", path, "'");
   return alignment;
 }
 
 void Mechanics::Alignment::writeFile(const std::string& path) const
 {
   Utils::Config::writeConfig(toConfig(), path);
-  INFO("wrote alignment to '", path, "'\n");
+  INFO("wrote alignment to '", path, "'");
 }
 
 Mechanics::Alignment

@@ -120,7 +120,10 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& things)
   static Utils::Logger name##LocalLogger(#name);                               \
   static inline Utils::Logger& logger() { return name##LocalLogger; }
 
-/* Convenience macros to use the logger.
+/* Convenience macros to log a message use the logger.
+ *
+ * The macros should be used to log a single message. The message **must not**
+ * end in a newline.
  *
  * These macros expect a `logger()` function to be available that
  * returns a reference to a `Logger` object. This can be either defined
@@ -129,15 +132,15 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& things)
  */
 #define ERROR(...)                                                             \
   do {                                                                         \
-    logger().error(__VA_ARGS__);                                               \
+    logger().error(__VA_ARGS__, '\n');                                         \
   } while (false)
 #define INFO(...)                                                              \
   do {                                                                         \
-    logger().info(__VA_ARGS__);                                                \
+    logger().info(__VA_ARGS__, '\n');                                          \
   } while (false)
 #define DEBUG(...)                                                             \
   do {                                                                         \
-    logger().debug('(', __FILE__, ':', __LINE__, ") ", __VA_ARGS__);           \
+    logger().debug('(', __FILE__, ':', __LINE__, ") ", __VA_ARGS__, '\n');     \
   } while (false)
 
 #endif // PT_LOGGER_H

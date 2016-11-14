@@ -99,14 +99,14 @@ void Utils::EventLoop::run()
   std::vector<Duration> durationAnas(m_analyzers.size(), Duration::zero());
 
   if (!m_processors.empty()) {
-    DEBUG("configured processors:\n");
+    DEBUG("configured processors:");
     for (auto p = m_processors.begin(); p != m_processors.end(); ++p)
-      DEBUG("  ", (*p)->name(), '\n');
+      DEBUG("  ", (*p)->name());
   }
   if (!m_analyzers.empty()) {
-    DEBUG("configured analyzers:\n");
+    DEBUG("configured analyzers:");
     for (auto a = m_analyzers.begin(); a != m_analyzers.end(); ++a)
-      DEBUG("  ", (*a)->name(), '\n');
+      DEBUG("  ", (*a)->name());
   }
 
   Utils::ProgressBar progress;
@@ -150,7 +150,7 @@ void Utils::EventLoop::run()
                                    Duration::zero());
 
   // print common event statistics
-  INFO("\nEvent Statistics:\n", stats.str("  "), '\n');
+  INFO("\nEvent Statistics:\n", stats.str("  "));
 
   // print timing
   // allow fractional tics when calculating time per event
@@ -159,31 +159,31 @@ void Utils::EventLoop::run()
     float n = m_endEvent - m_startEvent + 1;
     return (std::chrono::duration<float, std::micro>(dt) / n).count();
   };
-  INFO("Timing:\n");
-  INFO("  input: ", time_per_event(durationInput), unit, '\n');
+  INFO("Timing:");
+  INFO("  input: ", time_per_event(durationInput), unit);
   if (m_output)
-    INFO("  output: ", time_per_event(durationOutput), unit, '\n');
-  INFO("  processors:\n");
+    INFO("  output: ", time_per_event(durationOutput), unit);
+  INFO("  processors:");
   for (size_t i = 0; i < m_processors.size(); ++i) {
     INFO("    ", m_processors[i]->name(), ": ",
-         time_per_event(durationProcs[i]), unit, '\n');
+         time_per_event(durationProcs[i]), unit);
   }
-  INFO("  analyzers:\n");
+  INFO("  analyzers:");
   for (size_t i = 0; i < m_analyzers.size(); ++i) {
     INFO("    ", m_analyzers[i]->name(), ": ", time_per_event(durationAnas[i]),
-         unit, '\n');
+         unit);
   }
-  INFO("  combined: ", time_per_event(durationTotal), unit, '\n');
+  INFO("  combined: ", time_per_event(durationTotal), unit);
   INFO("  total (clocked): ",
        std::chrono::duration_cast<std::chrono::minutes>(durationTotal).count(),
        " min ",
        std::chrono::duration_cast<std::chrono::seconds>(durationTotal).count(),
-       " s\n");
+       " s");
   INFO("  total (wall): ",
        std::chrono::duration_cast<std::chrono::minutes>(durationWall).count(),
        " min ",
        std::chrono::duration_cast<std::chrono::seconds>(durationWall).count(),
-       " s\n");
+       " s");
 }
 
 std::unique_ptr<Storage::Event> Utils::EventLoop::readStartEvent()

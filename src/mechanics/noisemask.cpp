@@ -42,7 +42,7 @@ static void parseFile(const std::string& path, Mechanics::NoiseMask& mask)
   std::fstream input(path, std::ios_base::in);
 
   if (!input) {
-    ERROR("failed to open file '", path, "'\n");
+    ERROR("failed to open file '", path, "'");
   }
 
   std::stringstream comments;
@@ -73,14 +73,14 @@ Mechanics::NoiseMask Mechanics::NoiseMask::fromFile(const std::string& path)
   } else {
     parseFile(path, mask);
   }
-  INFO("read noise mask from '", path, "'\n");
+  INFO("read noise mask from '", path, "'");
   return mask;
 }
 
 void Mechanics::NoiseMask::writeFile(const std::string& path) const
 {
   Utils::Config::writeConfig(toConfig(), path);
-  INFO("wrote noise mask to '", path, "'\n");
+  INFO("wrote noise mask to '", path, "'");
 }
 
 Mechanics::NoiseMask Mechanics::NoiseMask::fromConfig(const toml::Value& cfg)
