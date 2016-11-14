@@ -1,20 +1,4 @@
-[noise_scan]
-sensor_ids = [1, 2, 5]
-max_sigma_above_avg = 1.5
-max_occupancy = 0.1
-col_min = 35
-col_max = 48
-row_min = 139
-row_max = 179
-
-[align]
-tracking_sensor_ids = [0, 1, 2, 3, 4, 5]
-alignment_sensor_ids = [1, 2, 3, 4]
-distance_sigma_max = 4.0
-reduced_chi2_max = 5.0
-method = "residuals" # local_chi2, global_chi2
-
 [track]
 sensor_ids = [0, 1, 2, 3, 4, 5]
-num_points_min = 5
-distance_sigma_max = 4.0
+num_points_min = 4
+distance_sigma_max = 10.

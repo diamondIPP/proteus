@@ -1,0 +1,22 @@
+[noisescan]
+max_sigma_above_avg =  5.0
+max_rate = 0.1
+density_bandwidth = 3.0
+
+[[noisescan.sensors]]
+id = 0
+
+[[noisescan.sensors]]
+id = 1
+
+[[noisescan.sensors]]
+id = 2
+
+[[noisescan.sensors]]
+id = 3
+
+[[noisescan.sensors]]
+id = 4
+
+[[noisescan.sensors]]
+id = 5

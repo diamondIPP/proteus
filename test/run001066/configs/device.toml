@@ -1,7 +1,7 @@
 # global settings **must** appear before any [section] command
 
-alignment = "../alignment-ref.toml"
-noise_mask = ["noise_empty.toml", "noise_fake.toml"]
+alignment = "../alignment.toml"
+noise_mask = ["../mask_tel.toml", "../mask_dut0.toml"]
 
 [device]
 name = "FEI4Tel"
