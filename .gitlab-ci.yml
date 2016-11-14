@@ -30,7 +30,7 @@ build:
       - "test/build/bin/pt-track"
 
 download_data:
-  state: data
+  stage: data
   script:
     - cd test
     - ./download_data.sh
