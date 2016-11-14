@@ -192,15 +192,16 @@ bool Mechanics::Sensor::sort(const Sensor* s1, const Sensor* s2)
 
 Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaPixel() const
 {
-  return {{0, static_cast<double>(m_numCols)},
-          {0, static_cast<double>(m_numRows)}};
+  return Area(Area::Axis(0, static_cast<double>(m_numCols)),
+              Area::Axis(0, static_cast<double>(m_numRows)));
 }
 
 Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaLocal() const
 {
   XYPoint lowerLeft = transformPixelToLocal(XYPoint(0, 0));
   XYPoint upperRight = transformPixelToLocal(XYPoint(m_numCols, m_numRows));
-  return {{lowerLeft.x(), upperRight.x()}, {lowerLeft.y(), upperRight.y()}};
+  return Area(Area::Axis(lowerLeft.x(), upperRight.x()),
+              Area::Axis(lowerLeft.y(), upperRight.y()));
 }
 
 Mechanics::Sensor::Area Mechanics::Sensor::sensitiveEnvelopeGlobal() const
@@ -215,10 +216,10 @@ Mechanics::Sensor::Area Mechanics::Sensor::sensitiveEnvelopeGlobal() const
   std::array<double, 4> xs = {minMin.x(), minMax.x(), maxMin.x(), maxMax.x()};
   std::array<double, 4> ys = {minMin.y(), minMax.y(), maxMin.y(), maxMax.y()};
 
-  return {{*std::min_element(xs.begin(), xs.end()),
-           *std::max_element(xs.begin(), xs.end())},
-          {*std::min_element(ys.begin(), ys.end()),
-           *std::max_element(ys.begin(), ys.end())}};
+  return Area(Area::Axis(*std::min_element(xs.begin(), xs.end()),
+                         *std::max_element(xs.begin(), xs.end())),
+              Area::Axis(*std::min_element(ys.begin(), ys.end()),
+                         *std::max_element(ys.begin(), ys.end())));
 }
 
 double Mechanics::Sensor::getOffX() const
