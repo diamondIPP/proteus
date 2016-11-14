@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "utils/definitions.h"
+#include "utils/interval.h"
 
 namespace Storage {
 
@@ -15,6 +16,8 @@ class Plane;
 
 class Cluster {
 public:
+  typedef Utils::Box<2, int> Area;
+
   void setPosPixel(const XYPoint& cr) { m_cr = cr; }
   void setPosPixel(double col, double row) { m_cr.SetXY(col, row); }
   void setCovPixel(const SymMatrix2& cov) { m_covCr = cov; }
@@ -32,6 +35,11 @@ public:
 
   Index sensorId() const;
 
+  /** The area enclosing the cluster.
+   *
+   * \return Returns an empty area for an empty cluster w/o hits.
+   */
+  Area area() const;
   int size() const { return static_cast<int>(m_hits.size()); }
   int sizeCol() const;
   int sizeRow() const;
