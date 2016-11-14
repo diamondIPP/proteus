@@ -1,6 +1,6 @@
 # global settings **must** appear for any [section]
 
-alignment = "../alignment-ref.toml"
+alignment = "../alignment.toml"
 # no noise masks
 
 [device]
