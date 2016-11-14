@@ -34,11 +34,11 @@ int main(int argc, char const* argv[])
   Mechanics::Device device = Mechanics::Device::fromFile(args.device());
   Storage::StorageIO input(args.input().c_str(), Storage::INPUT);
   TFile* hists = TFile::Open(args.makeOutput("hists.root").c_str(), "RECREATE");
-  std::string maskPath = args.makeOutput("noise_mask.toml");
+  std::string maskPath = args.makeOutput("mask.toml");
 
   auto cfg = Utils::Config::readConfig(args.config());
   auto noise =
-      std::make_shared<Analyzers::NoiseScan>(device, cfg["noise_scan"], hists);
+      std::make_shared<Analyzers::NoiseScan>(device, cfg["noisescan"], hists);
 
   Utils::EventLoop loop(&input,
                         args.get<uint64_t>("skip_events"),
