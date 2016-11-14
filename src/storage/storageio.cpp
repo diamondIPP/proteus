@@ -21,7 +21,7 @@
 #include "storage/track.h"
 #include "utils/logger.h"
 
-PT_SETUP_GLOBAL_LOGGER
+PT_SETUP_LOCAL_LOGGER(StorageIO)
 
 void Storage::StorageIO::openRead(const std::string& path, const std::vector<bool>* planeMask)
 {
@@ -30,7 +30,7 @@ void Storage::StorageIO::openRead(const std::string& path, const std::vector<boo
     throw std::runtime_error("Could not open file '" + path + "' for reading.");
 
   if (_numPlanes)
-    INFO("StorageIO: disregarding specified number of planes");
+    INFO("disregarding specified number of planes");
 
   _numPlanes = 0; // Determine num planes from file structure
 
@@ -585,7 +585,7 @@ namespace Storage {
   std::vector<int> StorageIO::getRuns() const {
     std::vector<int> vec;
     if(!_summaryTree){
-      ERROR("[StorageIO::getRuns()] WARNING no summaryTree, can't get run info");
+      ERROR("no summaryTree, can't get run info");
     }
     else{
       _summaryTree->GetEntry(0);
