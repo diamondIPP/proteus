@@ -24,7 +24,7 @@ using namespace std;
 Analyzers::Occupancy::Occupancy(const Mechanics::Device* device,
 				TDirectory* dir,
 				const char* suffix) :
-  SingleAnalyzer(device,dir,suffix)
+  SingleAnalyzer(device,dir,suffix, "Occupancy")
 {
   assert(device && "Analyzer: can't initialize with null device");
   

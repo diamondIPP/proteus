@@ -83,7 +83,7 @@ TrackInfo::TrackInfo(const Mechanics::Device* device,
                      double maxSlope,
                      double increaseArea) :
   // Base class is initialized here and manages directory / device
-  SingleAnalyzer(device, dir, suffix)
+  SingleAnalyzer(device, dir, suffix, "TrackInfo")
 {
   assert(device && "Analyzer: can't initialize with null device");
 

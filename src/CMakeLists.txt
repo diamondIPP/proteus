@@ -1,4 +1,5 @@
 set(COMMON_SRC
+    analyzers/analyzer.cpp
     analyzers/baseanalyzer.cpp
     analyzers/clusterinfo.cpp
     analyzers/configanalyzers.cpp
@@ -42,6 +43,7 @@ set(COMMON_SRC
     processors/synchronizer.cpp
     processors/clustermaker.cpp
     processors/configprocessors.cpp
+    processors/processor.cpp
     processors/processors.cpp
     processors/trackmaker.cpp
     processors/trackmatcher.cpp
@@ -53,8 +55,9 @@ set(COMMON_SRC
     storage/storageio.cpp
     utils/config.cpp
     utils/configparser.cpp
+    utils/eventloop.cpp
     utils/logger.cpp
-    exception.cpp)
+    utils/statistics.cpp)
 
 add_library(pt-common STATIC ${COMMON_SRC})
 target_include_directories(pt-common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})

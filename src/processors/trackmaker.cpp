@@ -390,4 +390,7 @@ TrackMaker::TrackMaker(double maxClusterDist,
     throw "TrackMaker: needs at least one seed plane";
 }
 
+std::string TrackMaker::name() const { return "TrackMaker"; }
+void TrackMaker::process(Storage::Event& event) const {}
+
 }

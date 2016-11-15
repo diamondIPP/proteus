@@ -19,11 +19,11 @@ namespace Loopers {
 	   unsigned int eventSkip = 1,
 	   int printLevel=0);
     
-    virtual ~Looper();    
-    void progressBar(ULong64_t nevent);        
+    virtual ~Looper();
+    void progressBar(ULong64_t nevent);
     virtual void print() const;
     
-    /** Pure virtual function (derived classes must 
+    /** Pure virtual function (derived classes must
 	implement this function) */
     virtual void loop() = 0;
     
@@ -47,10 +47,10 @@ namespace Loopers {
     ULong64_t _totalEvents;
     ULong64_t _endEvent;
 
-    unsigned int _numSingleAnalyzers;    
+    unsigned int _numSingleAnalyzers;
     std::vector<Analyzers::SingleAnalyzer*> _singleAnalyzers;
     
-    unsigned int _numDualAnalyzers;    
+    unsigned int _numDualAnalyzers;
     std::vector<Analyzers::DualAnalyzer*> _dualAnalyzers;
 
     int _printLevel;

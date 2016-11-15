@@ -1,10 +1,12 @@
 /**
- * @brief Logging utilities
- * @author Moritz Kiehn <msmk@cern.ch>
+ * \file
+ * \brief Logging utilities
+ * \author Moritz Kiehn <msmk@cern.ch>
+ * \date 2016-08
  */
 
-#ifndef __LOGGER_H__
-#define __LOGGER_H__
+#ifndef PT_LOGGER_H
+#define PT_LOGGER_H
 
 #include <iostream>
 
@@ -28,26 +30,33 @@ class Logger {
 public:
   enum Level { ERROR = 0, INFO, DEBUG };
 
-  explicit Logger(Level lvl = Level::DEBUG)
-      : _lvl(lvl)
-  {
-  }
+  explicit Logger(Level lvl = Level::DEBUG) : _lvl(lvl) {}
+
   void setLevel(Level lvl) { _lvl = lvl; }
-  template <typename... Ts> void error(const Ts&... things)
+  template <typename... Ts>
+  void error(const Ts&... things)
   {
-    log(Level::ERROR, things...);
+    log(Level::ERROR, ANSI_BOLD, ANSI_RED, things..., ANSI_RESET);
   }
-  template <typename... Ts> void info(const Ts&... things)
+  template <typename... Ts>
+  void info(const Ts&... things)
   {
     log(Level::INFO, things...);
   }
-  template <typename... Ts> void debug(const Ts&... things)
+  template <typename... Ts>
+  void debug(const Ts&... things)
   {
-    log(Level::DEBUG, things...);
+    log(Level::DEBUG, ANSI_ITALIC, things..., ANSI_RESET);
   }
 
 private:
-  template <typename T> static void print(std::ostream& os, const T& thing)
+  static const char* ANSI_RESET;
+  static const char* ANSI_BOLD;
+  static const char* ANSI_ITALIC;
+  static const char* ANSI_RED;
+
+  template <typename T>
+  static void print(std::ostream& os, const T& thing)
   {
     os << thing;
   }
@@ -61,7 +70,8 @@ private:
   {
     return (lvl <= Level::ERROR) ? std::cerr : std::cout;
   }
-  template <typename... Ts> void log(Level lvl, const Ts&... things)
+  template <typename... Ts>
+  void log(Level lvl, const Ts&... things)
   {
     if (lvl <= _lvl)
       print(stream(lvl), things...);
@@ -72,7 +82,7 @@ private:
 
 Logger& logger();
 
-}  // namespace Utils
+} // namespace Utils
 
 /* Convenience macros to use the logger.
  *
@@ -85,8 +95,10 @@ Logger& logger();
  *     using Utils::logger;
  *
  */
-#define ERROR(...) do { logger().error(__VA_ARGS__); } while(false)
+// clang-format off
+#define ERROR(...) do { logger().error("ERROR: ", __VA_ARGS__); } while(false)
 #define INFO(...) do { logger().info(__VA_ARGS__); } while(false)
-#define DEBUG(...) do { logger().debug(__VA_ARGS__); } while(false)
+#define DEBUG(...) do { logger().debug("DEBUG ", __FUNCTION__, ": ", __VA_ARGS__); } while(false)
+// clang-format on
 
-#endif  // __LOGGER_H__
+#endif // PT_LOGGER_H

@@ -25,13 +25,14 @@ namespace Analyzers {
   protected:
     BaseAnalyzer(TDirectory* dir,
 		 const char* nameSuffix,
-		 const char* analyzerName);    
+		 const char* analyzerName);
     
     TDirectory* makeGetDirectory(const char* dirName);
     
     virtual ~BaseAnalyzer();
     
   public:
+    const std::string& name() const { return _analyzerName; }
     void setAnalyzerName(const std::string name);
 
     void addCut(const EventCut* cut);
@@ -55,13 +56,13 @@ namespace Analyzers {
 
   private:
     std::vector<const EventCut*> _eventCuts;
-    unsigned int _numEventCuts;    
+    unsigned int _numEventCuts;
 
     std::vector<const TrackCut*> _trackCuts;
-    unsigned int _numTrackCuts;    
+    unsigned int _numTrackCuts;
     
     std::vector<const ClusterCut*> _clusterCuts;
-    unsigned int _numClusterCuts;	
+    unsigned int _numClusterCuts;
     
     std::vector<const HitCut*> _hitCuts;
     unsigned int _numHitCuts;

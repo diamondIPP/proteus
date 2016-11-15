@@ -70,7 +70,7 @@ EventInfo::EventInfo(const Mechanics::Device* device,
                      const char* suffix,
                      unsigned int maxTracks) :
   // Base class is initialized here and manages directory / device
-  SingleAnalyzer(device, dir, suffix),
+  SingleAnalyzer(device, dir, suffix, "EventInfo"),
   _eventsVsTime(0),
   _tracksVsTime(0),
   _clustersVsTime(0)

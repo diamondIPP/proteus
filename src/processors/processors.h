@@ -1,6 +1,8 @@
 #ifndef PROCESSORS_H
 #define PROCESSORS_H
 
+#include <cstdint>
+
 #include <TVirtualPad.h>
 #include <TH1D.h>
 #include <TH2D.h>
@@ -19,11 +21,11 @@ namespace Processors {
 TF1* fitPixelBeam(TH1D* hist, double pixWidth, double beamSigma, bool display = false);
 
 void fitGaussian(
-    TH1D* hist, 
+    TH1D* hist,
     double& mean,
-    double& sigma, 
-    double& max, 
-    double& background, 
+    double& sigma,
+    double& max,
+    double& background,
     bool display = false);
 
 void fitGaussian(
@@ -33,7 +35,7 @@ void fitGaussian(
     bool display = false);
 
 void residualAlignment(TH2D* residualX, TH2D* residualY, double& offsetX,
-                       double& offsetY, double& rotation, 
+                       double& offsetY, double& rotation,
                        double relaxation = 0.8, bool display = false);
 
 void applyAlignment(Storage::Event* event, const Mechanics::Device* device);

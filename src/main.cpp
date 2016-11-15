@@ -1,4 +1,4 @@
-#include <iostream>
+// #include <iostream>
 #include <vector>
 #include <string.h>
 #include <iomanip>
@@ -38,7 +38,6 @@
 #include "loopers/configloopers.h"
 #include "utils/configparser.h"
 #include "inputargs.h"
-#include "exception.h"
 
 using namespace std;
 
@@ -58,7 +57,7 @@ void convert(const char* input,
 			convert.processFile(triggers);
 		}
   }
-   catch(Exception &e){
+   catch(const std::exception &e){
     cout << e.what() << endl;
    }
    catch (const char* e){
@@ -94,7 +93,7 @@ void synchronize(const char* refInputName,
     Loopers::configSynchronize(runConfig, looper);
     looper.loop();
   }
-  catch(Exception &e){
+  catch(const std::exception &e){
     cout << e.what() << endl;
   }
   catch (const char* e) {
@@ -134,7 +133,7 @@ void applyMask(const char* inputName,
 
     looper.loop();
   }
-  catch(Exception &e){
+  catch(const std::exception &e){
     cout << e.what() << endl;
   }
   catch (const char* e){
@@ -163,7 +162,7 @@ void noiseScan(const char* inputName,
     if(printLevel>0) looper.print();
     looper.loop();
   }
-  catch(Exception &e){
+  catch(const std::exception &e){
     cout << e.what() << endl;
   }
   catch (const char* e){
@@ -194,7 +193,7 @@ void coarseAlign(const char* inputName,
 
     delete clusterMaker;
   }
-  catch(Exception &e){
+  catch(const std::exception &e){
     cout << e.what() << endl;
   }
   catch (const char* e){
@@ -231,7 +230,7 @@ void coarseAlignDUT(const char* refInputName,
     if(printLevel>0) looper.print();
     looper.loop();
   }
-   catch(Exception &e){
+   catch(const std::exception &e){
     cout << e.what() << endl;
   }
   catch (const char* e){
@@ -266,7 +265,7 @@ void fineAlign(const char* inputName,
     delete trackMaker;
     delete clusterMaker;
   }
-   catch(Exception &e){
+   catch(const std::exception &e){
     cout << e.what() << endl;
   }
   catch (const char* e){
@@ -305,7 +304,7 @@ void fineAlignDUT(const char* refInputName,
     delete trackMaker;
     delete clusterMaker;
   }
-  catch(Exception &e){
+  catch(const std::exception &e){
     cout << e.what() << endl;
   }
   catch (const char* e){
@@ -367,7 +366,7 @@ void process(const char* inputName,
     delete clusterMaker;
     if(trackMaker) delete trackMaker;
   }
-   catch(Exception &e){
+   catch(const std::exception &e){
     cout << e.what() << endl;
   }
   catch (const char* e) {
@@ -412,7 +411,7 @@ void analysis(const char* inputName,
 	delete results;
       }
     }
-   catch(Exception &e){
+   catch(const std::exception &e){
     cout << e.what() << endl;
   }
   catch (const char* e){
@@ -469,7 +468,7 @@ void analysisDUT(const char* refInputName,
 
       delete trackMatcher;
     }
-  catch(Exception &e){
+  catch(const std::exception &e){
     cout << e.what() << endl;
   }
   catch(const char* e){

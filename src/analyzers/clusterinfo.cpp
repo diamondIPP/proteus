@@ -27,7 +27,7 @@ Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
                          unsigned int totBins,
                          unsigned int maxClusterSize) :
   // Base class is initialized here and manages directory / device
-  SingleAnalyzer(device, dir, suffix),
+  SingleAnalyzer(device, dir, suffix, "ClusterInfo"),
   _totBins(totBins)
 {
   assert(device && "Analyzer: can't initialize with null device");
