@@ -5,7 +5,7 @@
 #include "mechanics/device.h"
 #include "utils/configparser.h"
 #include "trackmaker.h"
-#include "trackmatcher.h"
+#include "matcher.h"
 #include "clustermaker.h"
 
 namespace Processors {

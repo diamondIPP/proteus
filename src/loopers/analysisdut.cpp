@@ -10,7 +10,7 @@
 #include "../storage/event.h"
 #include "../analyzers/singleanalyzer.h"
 #include "../analyzers/dualanalyzer.h"
-#include "../processors/trackmatcher.h"
+#include "../processors/matcher.h"
 
 //=========================================================
 Loopers::AnalysisDut::AnalysisDut(Storage::StorageIO* refInput,

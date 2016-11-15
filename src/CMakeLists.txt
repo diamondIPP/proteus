@@ -49,6 +49,7 @@ set(COMMON_SRC
     processors/eventdepictor.cpp
     processors/hitmapper.cpp
     processors/largesynchronizer.cpp
+    processors/matcher.cpp
     processors/processor.cpp
     processors/processors.cpp
     processors/synchronizer.cpp
@@ -56,7 +57,6 @@ set(COMMON_SRC
     processors/trackfitter.cpp
     processors/tracking.cpp
     processors/trackmaker.cpp
-    processors/trackmatcher.cpp
     storage/cluster.cpp
     storage/event.cpp
     storage/hit.cpp

@@ -1,4 +1,4 @@
-#include "trackmatcher.h"
+#include "matcher.h"
 
 #include <cassert>
 
