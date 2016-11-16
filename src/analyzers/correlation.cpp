@@ -2,7 +2,8 @@
 
 #include <cassert>
 #include <cmath>
-#include <sstream>
+#include <stdexcept>
+#include <string>
 
 #include "mechanics/device.h"
 #include "storage/event.h"
@@ -14,157 +15,93 @@ void Analyzers::Correlation::processEvent(const Storage::Event* event)
   // Throw an error for sensor / plane mismatch
   eventDeviceAgree(event);
 
-  // Check if the event passes the cuts
   if (!checkCuts(event))
     return;
 
-  for (unsigned int nsens = 0; nsens < _device->getNumSensors() - 1; nsens++) {
-    const Storage::Plane* plane0 = event->getPlane(nsens);
-    const Storage::Plane* plane1 = event->getPlane(nsens + 1);
+  for (auto hist = m_hists.begin(); hist != m_hists.end(); ++hist) {
+    const Storage::Plane& plane0 = *event->getPlane(hist->id0);
+    const Storage::Plane& plane1 = *event->getPlane(hist->id1);
 
-    TH2D* corrX = m_corrX.at(nsens);
-    TH2D* corrY = m_corrY.at(nsens);
-    TH1D* alignX = m_diffX.at(nsens);
-    TH1D* alignY = m_diffY.at(nsens);
-
-    for (unsigned int ncluster0 = 0; ncluster0 < plane0->numClusters();
-         ncluster0++) {
-      const Storage::Cluster* cluster0 = plane0->getCluster(ncluster0);
-
-      // Check if the cluster passes the cuts
+    for (Index ic0 = 0; ic0 < plane0.numClusters(); ++ic0) {
+      const Storage::Cluster* cluster0 = plane0.getCluster(ic0);
+      const XYZPoint& xyz0 = cluster0->posGlobal();
       if (!checkCuts(cluster0))
         continue;
 
-      for (unsigned int ncluster1 = 0; ncluster1 < plane1->numClusters();
-           ncluster1++) {
-        const Storage::Cluster* cluster1 = plane1->getCluster(ncluster1);
-
-        // Check if the cluster passes the cuts
+      for (Index ic1 = 0; ic1 < plane1.numClusters(); ++ic1) {
+        const Storage::Cluster* cluster1 = plane1.getCluster(ic1);
+        const XYZPoint& xyz1 = cluster1->posGlobal();
         if (!checkCuts(cluster1))
           continue;
 
-        corrX->Fill(cluster0->getPosX(), cluster1->getPosX());
-        corrY->Fill(cluster0->getPosY(), cluster1->getPosY());
-        alignX->Fill(cluster1->getPosX() - cluster0->getPosX());
-        alignY->Fill(cluster1->getPosY() - cluster0->getPosY());
+        hist->corrX->Fill(xyz0.x(), xyz1.x());
+        hist->corrY->Fill(xyz0.y(), xyz1.y());
+        hist->diffX->Fill(xyz1.x() - xyz0.x());
+        hist->diffY->Fill(xyz1.y() - xyz0.y());
       }
     }
   }
 }
 
-void Analyzers::Correlation::postProcessing() {} // Needs to be declared even if
-                                                 // not used
+void Analyzers::Correlation::postProcessing() {}
 
-void Analyzers::Correlation::initializeHist(const Mechanics::Sensor* sensor0,
-                                            const Mechanics::Sensor* sensor1)
+void Analyzers::Correlation::addHist(const Mechanics::Sensor& sensor0,
+                                     const Mechanics::Sensor& sensor1,
+                                     TDirectory* dir)
 {
-  std::stringstream name;  // Build name strings for each histo
-  std::stringstream title; // Build title strings for each histo
+  int nbins = 100;
+  auto makeCorr = [&](int axis) -> TH2D* {
+    std::string aname = (axis = 0) ? "X" : "Y";
+    std::string name = sensor0.name() + "-" + sensor1.name() + "-Corr" + aname;
+    std::string xlabel = sensor0.name() + " cluster " + aname;
+    std::string ylabel = sensor1.name() + " cluster " + aname;
+    auto range0 = sensor0.sensitiveEnvelopeGlobal().axes[axis];
+    auto range1 = sensor1.sensitiveEnvelopeGlobal().axes[axis];
+    TH2D* h = new TH2D(name.c_str(), "", nbins, range0.min, range0.max, nbins,
+                       range1.min, range1.max);
+    h->GetXaxis()->SetTitle(xlabel.c_str());
+    h->GetYaxis()->SetTitle(ylabel.c_str());
+    h->SetDirectory(dir);
+    return h;
+  };
+  auto makeDiff = [&](int axis) -> TH1D* {
+    std::string aname = (axis = 0) ? "X" : "Y";
+    std::string name = sensor0.name() + "-" + sensor1.name() + "-Diff" + aname;
+    std::string xlabel =
+        sensor1.name() + " - " + sensor0.name() + " cluster " + aname;
+    auto range0 = sensor0.sensitiveEnvelopeGlobal().axes[axis];
+    auto range1 = sensor0.sensitiveEnvelopeGlobal().axes[axis];
+    auto length = (range0.length() + range1.length()) / 2;
+    TH1D* h = new TH1D(name.c_str(), "", nbins, -length, length);
+    h->GetXaxis()->SetTitle(xlabel.c_str());
+    h->SetDirectory(dir);
+    return h;
+  };
 
-  std::stringstream axisTitleX;
-  std::stringstream axisTitleY;
-  std::stringstream axisTitle;
-
-  axisTitle << "Clusters";
-
-  for (unsigned int axis = 0; axis < 2; axis++) {
-    // Generate the name and title of the correlation plot for this sensor and
-    // axis
-    name.str("");
-    title.str("");
-    name << sensor1->getName() << "To" << sensor0->getName()
-         << ((axis) ? "X" : "Y") << _nameSuffix;
-    title << " " << sensor1->getName() << " To "
-          << " " << sensor0->getName() << ((axis) ? " X" : " Y");
-
-    // Get the number of pixels for the axis
-    const unsigned int npix0 =
-        (axis) ? sensor0->getNumX() : sensor0->getPosNumY();
-    const unsigned int npix1 =
-        (axis) ? sensor1->getNumX() : sensor1->getPosNumY();
-
-    const double sens0Low =
-        (axis) ? sensor0->getOffX() - sensor0->getPosSensitiveX() / 2.0
-               : sensor0->getOffY() - sensor0->getPosSensitiveY() / 2.0;
-    const double sens0Upp =
-        (axis) ? sensor0->getOffX() + sensor0->getPosSensitiveX() / 2.0
-               : sensor0->getOffY() + sensor0->getPosSensitiveY() / 2.0;
-
-    const double sens1Low =
-        (axis) ? sensor1->getOffX() - sensor1->getPosSensitiveX() / 2.0
-               : sensor1->getOffY() - sensor1->getPosSensitiveY() / 2.0;
-    const double sens1Upp =
-        (axis) ? sensor1->getOffX() + sensor1->getPosSensitiveX() / 2.0
-               : sensor1->getOffY() + sensor1->getPosSensitiveY() / 2.0;
-
-    // Generate the histogram and label its axis
-    TH2D* corr = new TH2D(name.str().c_str(), title.str().c_str(), npix0,
-                          sens0Low, sens0Upp, npix1, sens1Low, sens1Upp);
-
-    axisTitleX.str("");
-    axisTitleY.str("");
-    axisTitleX << ((axis) ? "X " : "Y ") << " position on "
-               << sensor0->getName() << " [" << _device->getSpaceUnit() << "]";
-    axisTitleY << ((axis) ? "X " : "Y ") << " position on "
-               << sensor1->getName() << " [" << _device->getSpaceUnit() << "]";
-
-    corr->GetXaxis()->SetTitle(axisTitleX.str().c_str());
-    corr->GetYaxis()->SetTitle(axisTitleY.str().c_str());
-    corr->GetZaxis()->SetTitle(axisTitle.str().c_str());
-
-    // Add to the vector of histograms for future access during filling
-    corr->SetDirectory(_corrDir);
-    if (axis)
-      m_corrX.push_back(corr);
-    else
-      m_corrY.push_back(corr);
-
-    // Repeat for the alignment histograms
-    name.str("");
-    title.str("");
-    name << sensor1->getName() << "To" << sensor0->getName()
-         << ((axis) ? "X" : "Y") << _nameSuffix;
-    title << " " << sensor1->getName() << " To " << sensor0->getName()
-          << ((axis) ? " X" : " Y");
-
-    const double sens1Size =
-        (axis) ? sensor1->getPosSensitiveX() : sensor1->getPosSensitiveY();
-
-    // Aliasing issue if you don't subtract from npix
-    TH1D* align = new TH1D(name.str().c_str(), title.str().c_str(),
-                           2 * npix1 - 1, -sens1Size, sens1Size);
-
-    axisTitleX.str("");
-    axisTitleX << ((axis) ? "X " : "Y ") << " position difference"
-               << " [" << _device->getSpaceUnit() << "]";
-
-    align->GetXaxis()->SetTitle(axisTitleX.str().c_str());
-    align->GetYaxis()->SetTitle(axisTitle.str().c_str());
-
-    align->SetDirectory(_alignDir);
-    if (axis)
-      m_diffX.push_back(align);
-    else
-      m_diffY.push_back(align);
-  }
+  CorrelationHists hist;
+  hist.id0 = sensor0.id();
+  hist.id1 = sensor1.id();
+  hist.corrX = makeCorr(0);
+  hist.corrY = makeCorr(1);
+  hist.diffX = makeDiff(0);
+  hist.diffY = makeDiff(1);
+  m_hists.push_back(hist);
 }
 
-TH1D* Analyzers::Correlation::getAlignmentPlotX(unsigned int nsensor)
+TH1D* Analyzers::Correlation::getAlignmentPlotX(Index sensorId)
 {
-  if (nsensor == 0)
-    throw "Correlation: no plot exists for sensor 0";
-  nsensor -= 1;
-  validSensor(nsensor);
-  return m_diffX.at(nsensor);
+  if (sensorId == 0)
+    throw std::runtime_error("Correlation: no plot exists for sensor 0");
+  // TODO 2016-11-16 msmk: check if correct histogram
+  return m_hists.at(sensorId - 1).diffX;
 }
 
-TH1D* Analyzers::Correlation::getAlignmentPlotY(unsigned int nsensor)
+TH1D* Analyzers::Correlation::getAlignmentPlotY(Index sensorId)
 {
-  if (nsensor == 0)
-    throw "Correlation: no plot exists for sensor 0";
-  nsensor -= 1;
-  validSensor(nsensor);
-  return m_diffY.at(nsensor);
+  if (sensorId == 0)
+    throw std::runtime_error("Correlation: no plot exists for sensor 0");
+  // TODO 2016-11-16 msmk: check if correct histogram
+  return m_hists.at(sensorId - 1).diffY;
 }
 
 Analyzers::Correlation::Correlation(const Mechanics::Device* device,
@@ -175,10 +112,8 @@ Analyzers::Correlation::Correlation(const Mechanics::Device* device,
 {
   assert(device && "Analyzer: can't initialize with null device");
 
-  // Makes or gets a directory called from inside _dir with this name
-  _corrDir = makeGetDirectory("Correlations");
-  _alignDir = makeGetDirectory("Alignment");
-
-  for (unsigned int nsens = 0; nsens < _device->getNumSensors() - 1; nsens++)
-    initializeHist(_device->getSensor(nsens), _device->getSensor(nsens + 1));
+  TDirectory* corrDir = makeGetDirectory("Correlations");
+  for (Index sensorId = 0; (sensorId + 1) < device->numSensors(); ++sensorId)
+    addHist(*_device->getSensor(sensorId), *_device->getSensor(sensorId + 1),
+            corrDir);
 }

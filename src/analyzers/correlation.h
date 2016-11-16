@@ -8,6 +8,7 @@
 #include <TH2D.h>
 
 #include "analyzers/singleanalyzer.h"
+#include "utils/definitions.h"
 
 namespace Storage {
 class Event;
@@ -28,23 +29,23 @@ public:
   void processEvent(const Storage::Event* event);
   void postProcessing();
 
-  TH1D* getAlignmentPlotX(unsigned int nsensor);
-  TH1D* getAlignmentPlotY(unsigned int nsensor);
+  TH1D* getAlignmentPlotX(Index sensorId);
+  TH1D* getAlignmentPlotY(Index sensorId);
 
 private:
-  std::vector<TH2D*> m_corrX; // Correlation in X
-  std::vector<TH2D*> m_corrY;
-  std::vector<TH1D*> m_diffX; // Alignment (correlation "residual") in X
-  std::vector<TH1D*> m_diffY;
+  // Shared function to initialize the correlation hist between two sensors
+  void addHist(const Mechanics::Sensor& sensor0,
+               const Mechanics::Sensor& sensor1,
+               TDirectory* dir);
 
-  // This analyzer uses two directories which need to be accessed by
-  // initializeHist
-  TDirectory* _corrDir;
-  TDirectory* _alignDir;
-
-  // Shared function to initialze any correlation hist between two sensors
-  void initializeHist(const Mechanics::Sensor* sensor0,
-                      const Mechanics::Sensor* sensor1);
+  struct CorrelationHists {
+    Index id0, id1;
+    TH2D* corrX;
+    TH2D* corrY;
+    TH1D* diffX;
+    TH1D* diffY;
+  };
+  std::vector<CorrelationHists> m_hists;
 };
 
 } // namespace Analyzers
