@@ -54,10 +54,16 @@ public:
   const Hit* getHit(Index i) const { return m_hits.at(i); }
 
   void setTrack(const Track* track);
-  bool isInTrack() const { return m_track != NULL; }
+  bool isInTrack() const { return (m_track != NULL); }
   const Track* track() const { return m_track; }
   /** \deprecated Use `track()` instead. */
   const Track* getTrack() const { return m_track; }
+
+  void setMatchedTrack(const Track* track) { m_matched = track; }
+  bool hasMatchedTrack() const { return (m_matched != NULL); }
+  const Track* matchedTrack() const { return m_matched; }
+  /** \deprecated Use `matchedTrack()` instead. */
+  const Track* getMatchedTrack() const { return m_matched; }
 
   Index getNumHits() const { return m_hits.size(); }
   double getPixX() const { return m_cr.x(); }
@@ -72,12 +78,9 @@ public:
   double getPosErrZ() const { return std::sqrt(m_xyzCov(2, 2)); }
   double getTiming() const { return time(); }
   double getValue() const { return value(); }
+  void setMatchDistance(double value) { m_matchDistance = value; }
   double getMatchDistance() const { return m_matchDistance; }
   int getIndex() const { return m_index; }
-
-  Track* getMatchedTrack() const { return m_matchedTrack; }
-  void setMatchedTrack(Track* track) { m_matchedTrack = track; }
-  void setMatchDistance(double value) { m_matchDistance = value; }
 
   /** \deprecated Access via `Plane` already provides that information. */
   Plane* getPlane() const { return m_plane; }
@@ -101,7 +104,7 @@ private:
   int m_index;
   Plane* m_plane;         //<! The plane containing the cluster
   const Track* m_track;   // The track containing this cluster
-  Track* m_matchedTrack;  // Track matched to this cluster in DUT analysis (not
+  const Track* m_matched; // Track matched to this cluster in DUT analysis (not
                           // stored)
   double m_matchDistance; // Distance to matched track
 

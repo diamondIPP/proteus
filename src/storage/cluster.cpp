@@ -18,7 +18,7 @@ Storage::Cluster::Cluster()
     , m_value(-1)
     , m_plane(NULL)
     , m_track(NULL)
-    , m_matchedTrack(NULL)
+    , m_matched(NULL)
     , m_matchDistance(-1)
 {
 }
