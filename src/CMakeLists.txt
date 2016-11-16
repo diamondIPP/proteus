@@ -82,8 +82,7 @@ add_executable(pt-cfg pt-cfg.cpp)
 target_link_libraries(pt-cfg pt-common)
 
 add_executable(pt-noisescan pt-noisescan.cpp)
-target_include_directories(pt-noisescan PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries(pt-noisescan pt-common ${Boost_PROGRAM_OPTIONS_LIBRARY})
+target_link_libraries(pt-noisescan pt-common)
 
 add_executable(pt-track pt-track.cpp)
 target_link_libraries(pt-track pt-common)
