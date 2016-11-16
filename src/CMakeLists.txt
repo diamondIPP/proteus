@@ -15,6 +15,7 @@ set(COMMON_SRC
     analyzers/exampledualanalyzer.cpp
     analyzers/examplesingleanalyzer.cpp
     analyzers/hitinfo.cpp
+    analyzers/matchexporter.cpp
     analyzers/matching.cpp
     analyzers/noisescan.cpp
     analyzers/occupancy.cpp
