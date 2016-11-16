@@ -1,22 +1,86 @@
 #include "matcher.h"
 
+#include <algorithm>
 #include <cassert>
+#include <vector>
 
 #include "mechanics/device.h"
-#include "mechanics/sensor.h"
 #include "processors/processors.h"
-#include "storage/cluster.h"
 #include "storage/event.h"
-#include "storage/plane.h"
-#include "storage/track.h"
 
-//=========================================================
+Processors::Matcher::Matcher(const Mechanics::Device& device, Index sensorId)
+    : m_sensor(*device.getSensor(sensorId))
+    , m_sensorId(sensorId)
+    , m_name("matcher_" + device.getSensor(sensorId)->name())
+{
+}
+
+std::string Processors::Matcher::name() const { return m_name; }
+
+struct Pair {
+  Storage::Track* track;
+  Storage::Cluster* cluster;
+
+  bool distance(Index sensorId, const Mechanics::Sensor& sensor) const
+  {
+    const Storage::TrackState& state = track->getLocalState(sensorId);
+    XYPoint pos = sensor.transformPixelToLocal(cluster->posPixel());
+    Vector2 delta(pos.x() - state.offset().x(), pos.y() - state.offset().y());
+    // TODO 2016-11-15 msmk: use combined track + cluster covariance
+    return mahalanobisSquared(state.covOffset(), delta);
+  }
+};
+
+struct PairDistanceCmp {
+  Index sensorId;
+  const Mechanics::Sensor& sensor;
+
+  bool operator()(const Pair& a, const Pair& b) const
+  {
+    return a.distance(sensorId, sensor) < b.distance(sensorId, sensor);
+  }
+};
+
+void Processors::Matcher::process(Storage::Event& event) const
+{
+  std::vector<Pair> pairs;
+  Storage::Plane& plane = *event.getPlane(m_sensorId);
+
+  pairs.reserve(event.numTracks() * plane.numClusters());
+
+  // list all (reasonable) track/cluster combinations
+  for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
+    Storage::Track* track = event.getTrack(itrack);
+    if (!track->hasLocalState(m_sensorId))
+      continue;
+    for (Index icluster = 0; icluster < plane.numClusters(); ++icluster) {
+      Storage::Cluster* cluster = plane.getCluster(icluster);
+      // TODO 2016-11-15 msmk: only consider combinations w/ maximum distance
+      pairs.push_back(Pair{track, cluster});
+    }
+  }
+
+  // sort by pair distance, closest distance first
+  std::sort(pairs.begin(), pairs.end(), PairDistanceCmp{m_sensorId, m_sensor});
+
+  // select unique matches, closest distance first
+  for (auto pair = pairs.begin(); pair != pairs.end(); ++pair) {
+    Storage::Track* track = pair->track;
+    Storage::Cluster* cluster = pair->cluster;
+    // ignore any pairs where either part is already matched
+    if (track->hasMatchedCluster(m_sensorId) || cluster->hasMatchedTrack())
+      continue;
+    // fix matching
+    track->setMatchedCluster(m_sensorId, cluster);
+    cluster->setMatchedTrack(track);
+  }
+}
+
 Processors::TrackMatcher::TrackMatcher(const Mechanics::Device* device)
     : _device(device)
 {
 }
 
-//=========================================================
 void Processors::TrackMatcher::matchEvent(Storage::Event* refEvent,
                                           Storage::Event* dutEvent)
 {
@@ -37,7 +101,6 @@ void Processors::TrackMatcher::matchEvent(Storage::Event* refEvent,
   }
 }
 
-//=========================================================
 void Processors::TrackMatcher::matchTracksToClusters(
     Storage::Event* trackEvent,
     Storage::Plane* clustersPlane,
@@ -75,14 +138,13 @@ void Processors::TrackMatcher::matchTracksToClusters(
 
     // If is a match, store this in the event
     if (match) {
-      track->addMatchedCluster(match);
+      track->setMatchedCluster(clustersPlane->sensorId(), match);
       match->setMatchedTrack(track);
       match->setMatchDistance(nearestDist);
     }
   }
 }
 
-//=========================================================
 void Processors::TrackMatcher::matchClustersToTracks(
     Storage::Event* trackEvent,
     Storage::Plane* clustersPlane,
@@ -122,7 +184,7 @@ void Processors::TrackMatcher::matchClustersToTracks(
 
     // If is a match, store this in the event
     if (match) {
-      match->addMatchedCluster(cluster);
+      match->setMatchedCluster(clustersPlane->sensorId(), cluster);
       cluster->setMatchedTrack(match);
       cluster->setMatchDistance(nearestDist);
     }
