@@ -21,3 +21,6 @@ distance_sigma_max = 4.0
 num_points_min = 5
 # no chi2 cut
 # reduced_chi2_max = -1
+
+[match]
+sensor_ids = [6, 7]

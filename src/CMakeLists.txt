@@ -87,6 +87,9 @@ target_link_libraries(pt-align pt-common)
 add_executable(pt-cfg pt-cfg.cpp)
 target_link_libraries(pt-cfg pt-common)
 
+add_executable(pt-match pt-match.cpp)
+target_link_libraries(pt-match pt-common)
+
 add_executable(pt-noisescan pt-noisescan.cpp)
 target_link_libraries(pt-noisescan pt-common)
 
