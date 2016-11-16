@@ -41,7 +41,8 @@ std::string Mechanics::Sensor::measurementName(Measurement measurement)
   return "invalid_measurement";
 }
 
-Mechanics::Sensor::Sensor(const std::string& name,
+Mechanics::Sensor::Sensor(Index id,
+                          const std::string& name,
                           Measurement measurement,
                           Index numCols,
                           Index numRows,
@@ -56,6 +57,7 @@ Mechanics::Sensor::Sensor(const std::string& name,
     , m_thickness(thickness)
     , m_xX0(xX0)
     , m_measurement(measurement)
+    , m_id(id)
     , m_name(name)
     , m_noiseMask(numCols * numRows, false)
 {
@@ -285,6 +287,7 @@ double Mechanics::Sensor::getPosSensitiveY() const
 
 void Mechanics::Sensor::print(std::ostream& os, const std::string& prefix) const
 {
+  os << prefix << "id: " << m_id << '\n';
   os << prefix << "name: " << m_name << '\n';
   os << prefix << "measurement: " << measurementName(m_measurement) << '\n';
   os << prefix << "columns: " << m_numCols << '\n';

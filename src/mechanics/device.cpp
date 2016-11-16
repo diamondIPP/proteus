@@ -67,7 +67,8 @@ static void parseSensors(const ConfigParser& config,
 
         Sensor::Measurement m = (digi ? Sensor::Measurement::PixelBinary
                                       : Sensor::Measurement::PixelTot);
-        Sensor sensor(name, m, cols, rows, pitchX, pitchY, depth, xox0);
+        Sensor sensor(sensorCounter, name, m, cols, rows, pitchX, pitchY, depth,
+                      xox0);
         device.addSensor(sensor);
         alignment.setOffset(sensorCounter, offX, offY, offZ);
         alignment.setRotationAngles(sensorCounter, rotX, rotY, rotZ);
@@ -286,10 +287,10 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
     auto type = types[typeName];
     auto measurement =
         Sensor::measurementFromName(type.get<std::string>("measurement"));
-    device.addSensor(
-        Sensor(name, measurement, type.get<int>("cols"), type.get<int>("rows"),
-               type.get<double>("pitch_col"), type.get<double>("pitch_row"),
-               type.get<double>("thickness"), type.get<double>("x_x0")));
+    device.addSensor(Sensor(
+        i, name, measurement, type.get<int>("cols"), type.get<int>("rows"),
+        type.get<double>("pitch_col"), type.get<double>("pitch_row"),
+        type.get<double>("thickness"), type.get<double>("x_x0")));
   }
   return device;
 }

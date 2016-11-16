@@ -54,7 +54,8 @@ public:
    *
    * This is the minimal configuration required to have a usable Sensor.
    */
-  Sensor(const std::string& name,
+  Sensor(Index id,
+         const std::string& name,
          Measurement measurement,
          Index numCols,
          Index numRows,
@@ -63,10 +64,13 @@ public:
          double thickness,
          double xX0);
 
+  // identification
+  Index id() const { return m_id; }
+  const std::string& name() const { return m_name; }
+
   //
   // properties
   //
-  const std::string& name() const { return m_name; }
   Measurement measurement() const { return m_measurement; }
   Index numCols() const { return m_numCols; }
   Index numRows() const { return m_numRows; }
@@ -160,6 +164,7 @@ private:
   double m_thickness;            // sensor thickness
   double m_xX0;                  // X/X0 (thickness in radiation lengths)
   Measurement m_measurement;
+  Index m_id;
   std::string m_name;
   std::vector<bool> m_noiseMask;
 };
