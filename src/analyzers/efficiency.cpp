@@ -659,20 +659,21 @@ void Analyzers::Efficiency::processEvent(const Storage::Event *refEvent,
       matches.push_back(0); // No matches
 
     // Get the matches from the track
-    for (unsigned int nmatch = 0; nmatch < track->getNumMatchedClusters(); nmatch++) {
-      Storage::Cluster *cluster = track->getMatchedCluster(nmatch);
-
-      // Check if this cluster passes the cuts
-      if (!checkCuts(cluster))
-        continue;
-
-        //Bilbao@cern.ch:Cut for cluster size (also in DUTresiduals to affect all eff.root results)
-        /*if(cluster->getNumHits()==1){
-        std::cout << cluster->getNumHits() << std::endl;
-            continue;}*/
-
-      matches.at(cluster->getPlane()->sensorId()) = cluster;
-    }
+    // NOTE 2016-11-15 msmk: disable for now due to incompatible api changes
+    // for (unsigned int nmatch = 0; nmatch < track->getNumMatchedClusters(); nmatch++) {
+    //   Storage::Cluster *cluster = track->getMatchedCluster(nmatch);
+    //
+    //   // Check if this cluster passes the cuts
+    //   if (!checkCuts(cluster))
+    //     continue;
+    //
+    //     //Bilbao@cern.ch:Cut for cluster size (also in DUTresiduals to affect all eff.root results)
+    //     /*if(cluster->getNumHits()==1){
+    //     std::cout << cluster->getNumHits() << std::endl;
+    //         continue;}*/
+    //
+    //   matches.at(cluster->getPlane()->sensorId()) = cluster;
+    // }
 
     assert(matches.size() == _dutDevice->getNumSensors() &&
            _relativeToSensor < (int)_dutDevice->getNumSensors() &&

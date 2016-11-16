@@ -161,15 +161,16 @@ void Analyzers::Matching::processEvent(const Storage::Event* refEvent,
       matches.push_back(0); // No matches
 
     // Get the matches from the track
-    for(unsigned int nmatch=0; nmatch<track->getNumMatchedClusters(); nmatch++){
-      Storage::Cluster* cluster = track->getMatchedCluster(nmatch);
-      
-      // Check if this cluster passes the cuts
-      if (!checkCuts(cluster))
-        continue;
-
-      matches.at(cluster->getPlane()->sensorId()) = cluster;
-    }
+    // NOTE 2016-11-15 msmk: disabled for now due to incompatible api changes
+    // for(unsigned int nmatch=0; nmatch<track->getNumMatchedClusters(); nmatch++){
+    //   Storage::Cluster* cluster = track->getMatchedCluster(nmatch);
+    //
+    //   // Check if this cluster passes the cuts
+    //   if (!checkCuts(cluster))
+    //     continue;
+    //
+    //   matches.at(cluster->getPlane()->sensorId()) = cluster;
+    // }
 
     for (unsigned int nsens=0; nsens<_dutDevice->getNumSensors(); nsens++){
       const Mechanics::Sensor* sensor = _dutDevice->getSensor(nsens);

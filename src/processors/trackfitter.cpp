@@ -32,7 +32,7 @@ void Processors::StraightTrackFitter::process(Storage::Event& event) const
 
     for (auto id = m_sensorIds.begin(); id != m_sensorIds.end(); ++id) {
       const Mechanics::Sensor& sensor = *m_device.getSensor(*id);
-      track.addLocalState(*id, fitTrackLocal(track, sensor));
+      track.setLocalState(*id, fitTrackLocal(track, sensor));
     }
   }
 }

@@ -657,7 +657,7 @@ namespace Storage {
         local.setErrV(
             interceptStdV[iintercept], interceptStdSlopeV[iintercept], 0);
         event->getTrack(interceptTrack[iintercept])
-            ->addLocalState(nplane, std::move(local));
+            ->setLocalState(nplane, std::move(local));
       }
 
       // Generate the cluster objects
@@ -752,7 +752,7 @@ namespace Storage {
         const Track* track = event->getTrack(itrack);
         if (!track->hasLocalState(nplane))
           continue;
-        const TrackState& local = track->localState(nplane);
+        const TrackState& local = track->getLocalState(nplane);
         interceptTrack[numIntercepts] = itrack;
         interceptU[numIntercepts] = local.offset().x();
         interceptV[numIntercepts] = local.offset().y();
