@@ -68,9 +68,7 @@ public:
   Index id() const { return m_id; }
   const std::string& name() const { return m_name; }
 
-  //
-  // properties
-  //
+  // local properties
   Measurement measurement() const { return m_measurement; }
   Index numCols() const { return m_numCols; }
   Index numRows() const { return m_numRows; }
@@ -83,12 +81,14 @@ public:
   Area sensitiveAreaPixel() const;
   /** Sensitive area in local coordinates. */
   Area sensitiveAreaLocal() const;
-  /** Sensitive envelope in the global xy-plane. */
-  Area sensitiveEnvelopeGlobal() const;
 
-  //
-  // geometry related
-  //
+  // global properties
+  /** Projected envelope in the xy-plane of the sensitive area. */
+  Area projectedEnvelopeXY() const;
+  /** Projected pitch along the global x and y axes. */
+  Vector2 projectedPitchXY() const;
+
+  // geometry
   XYZPoint origin() const;
   XYZVector normal() const;
   const Transform3D& localToGlobal() const { return m_l2g; }
