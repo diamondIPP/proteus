@@ -13,6 +13,7 @@
 #include "../mechanics/device.h"
 #include "../mechanics/sensor.h"
 #include "../processors/processors.h"
+#include "utils/logger.h"
 
 #ifndef VERBOSE
 #define VERBOSE 1
@@ -22,6 +23,8 @@ using std::cout;
 using std::endl;
 
 using namespace Storage;
+
+PT_SETUP_GLOBAL_LOGGER
 
 namespace Processors {
 

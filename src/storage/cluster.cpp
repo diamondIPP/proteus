@@ -4,12 +4,12 @@
 #include <climits>
 #include <ostream>
 
-#include "hit.h"
-#include "plane.h"
-#include "track.h"
+#include "storage/hit.h"
+#include "storage/plane.h"
+#include "storage/track.h"
+#include "utils/logger.h"
 
-using std::cout;
-using std::endl;
+PT_SETUP_LOCAL_LOGGER(Cluster)
 
 Storage::Cluster::Cluster()
     : m_timing(-1)

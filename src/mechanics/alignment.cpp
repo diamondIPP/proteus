@@ -11,7 +11,7 @@
 #include "utils/configparser.h"
 #include "utils/logger.h"
 
-using Utils::logger;
+PT_SETUP_GLOBAL_LOGGER
 
 Mechanics::Alignment::Alignment()
     : m_beamSlopeX(0), m_beamSlopeY(0), m_syncRatio(1)
@@ -28,14 +28,14 @@ Mechanics::Alignment Mechanics::Alignment::fromFile(const std::string& path)
     // fall-back to old format
     alignment = fromConfig(ConfigParser(path.c_str()));
   }
-  INFO("read alignment from '", path, "'\n");
+  INFO("read alignment from '", path, "'");
   return alignment;
 }
 
 void Mechanics::Alignment::writeFile(const std::string& path) const
 {
   Utils::Config::writeConfig(toConfig(), path);
-  INFO("wrote alignment to '", path, "'\n");
+  INFO("wrote alignment to '", path, "'");
 }
 
 Mechanics::Alignment

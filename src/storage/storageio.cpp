@@ -21,7 +21,7 @@
 #include "storage/track.h"
 #include "utils/logger.h"
 
-using Utils::logger;
+PT_SETUP_LOCAL_LOGGER(StorageIO)
 
 void Storage::StorageIO::openRead(const std::string& path, const std::vector<bool>* planeMask)
 {
@@ -30,7 +30,7 @@ void Storage::StorageIO::openRead(const std::string& path, const std::vector<boo
     throw std::runtime_error("Could not open file '" + path + "' for reading.");
 
   if (_numPlanes)
-    INFO("StorageIO: disregarding specified number of planes\n");
+    INFO("disregarding specified number of planes");
 
   _numPlanes = 0; // Determine num planes from file structure
 
@@ -319,11 +319,11 @@ namespace Storage {
     }
 
     // debug info
-    INFO("file path: ", _file->GetPath(), '\n');
-    INFO("file mode: ", (_fileMode ? "OUTPUT" : "INPUT"), '\n');
-    INFO("planes: ", _numPlanes, '\n');
-    INFO("tree mask: ", treeMask, '\n');
-    INFO(printSummaryTree(), '\n');
+    INFO("file path: ", _file->GetPath());
+    INFO("file mode: ", (_fileMode ? "OUTPUT" : "INPUT"));
+    INFO("planes: ", _numPlanes);
+    INFO("tree mask: ", treeMask);
+    INFO(printSummaryTree());
 
     if (_numPlanes < 1)
       throw std::runtime_error("StorageIO: didn't initialize any planes");
@@ -392,10 +392,10 @@ namespace Storage {
 	 is done just once (not a per-event tree) */
       _summaryTree->Fill();
 
-      INFO("file path: ", _file->GetPath(), '\n');
-      INFO("file mode: ", (_fileMode ? "OUTPUT" : "INPUT"), '\n');
-      INFO("planes: ", _numPlanes, '\n');
-      INFO(printSummaryTree(), '\n');
+      INFO("file path: ", _file->GetPath());
+      INFO("file mode: ", (_fileMode ? "OUTPUT" : "INPUT"));
+      INFO("planes: ", _numPlanes);
+      INFO(printSummaryTree());
       _file->Write();
       delete _file;
     }
@@ -487,7 +487,7 @@ namespace Storage {
     std::ostringstream out;
 
     if(!_summaryTree) {
-      ERROR("no summaryTree found\n");
+      ERROR("no summaryTree found");
       return out.str();
     }
 
@@ -527,7 +527,7 @@ namespace Storage {
     assert( _fileMode != INPUT && "StorageIO: can't set runs in input mode" );
 
     if( vruns.empty() ){
-      ERROR("no --runs option detected; summaryTree saved without run info\n");
+      ERROR("no --runs option detected; summaryTree saved without run info");
       return;
     }
 
@@ -544,7 +544,7 @@ namespace Storage {
   {
     const Loopers::NoiseScanConfig* config = NULL;
     if (!config) {
-      ERROR("[StorageIO::setNoiseMaskData] WARNING: no NoiseScanConfig info found\n");
+      ERROR("[StorageIO::setNoiseMaskData] WARNING: no NoiseScanConfig info found");
       return;
     }
 
@@ -585,7 +585,7 @@ namespace Storage {
   std::vector<int> StorageIO::getRuns() const {
     std::vector<int> vec;
     if(!_summaryTree){
-      ERROR("[StorageIO::getRuns()] WARNING no summaryTree, can't get run info\n");
+      ERROR("no summaryTree, can't get run info");
     }
     else{
       _summaryTree->GetEntry(0);

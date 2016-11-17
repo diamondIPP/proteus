@@ -9,7 +9,7 @@
 #include "utils/configparser.h"
 #include "utils/logger.h"
 
-using Utils::logger;
+PT_SETUP_GLOBAL_LOGGER
 
 Mechanics::Device::Device(const std::string& name,
                           double clockRate,
@@ -156,9 +156,9 @@ static Mechanics::Device parseDevice(const std::string& path)
 
     if (row->isHeader && !row->header.compare("End Device")) {
 
-      INFO("device config: '", path, "'\n");
-      INFO("alignment config: '", pathAlignment, "'\n");
-      INFO("noise mask config: '", pathNoiseMask, "'\n");
+      INFO("device config: '", path, "'");
+      INFO("alignment config: '", pathAlignment, "'");
+      INFO("noise mask config: '", pathNoiseMask, "'");
 
       Mechanics::Device device(name, clockRate, readOutWindow, spaceUnit,
                                timeUnit);
@@ -211,7 +211,7 @@ Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
   using namespace Utils::Config;
 
   std::string dir = pathDirname(path);
-  DEBUG("config base dir '", dir, "'\n");
+  DEBUG("config base dir '", dir, "'");
 
   if (pathExtension(path) == "toml") {
     auto cfg = readConfig(path);

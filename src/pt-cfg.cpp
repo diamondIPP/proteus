@@ -22,7 +22,7 @@ int main(int argc, char const* argv[])
     return EXIT_FAILURE;
   }
 
-  Utils::logger().setLevel(Utils::Logger::ERROR);
+  Utils::Logger::setGlobalLevel(Utils::Logger::ERROR);
   Mechanics::Device::fromFile(argv[1]).print(std::cout);
 
   return EXIT_SUCCESS;
