@@ -12,6 +12,7 @@
 #include "../mechanics/device.h"
 #include "../mechanics/sensor.h"
 #include "../mechanics/alignment.h"
+#include "../processors/applyalignment.h"
 #include "../processors/processors.h"
 #include "../processors/clustermaker.h"
 #include "../processors/trackmaker.h"
@@ -146,6 +147,9 @@ void Loopers::FineAlign::loop()
       residuals.addCut(cut1);
       residuals.addCut(cut2);
 
+      _trackMaker->setBeamSlope(_refDevice->getBeamSlopeX(),
+                                _refDevice->getBeamSlopeY());
+
       for (ULong64_t nevent = _startEvent; nevent <= _endEvent; nevent++) {
         Storage::Event* refEvent = _refStorage->readEvent(nevent);
 
@@ -161,10 +165,7 @@ void Loopers::FineAlign::loop()
         if (refEvent->getNumTracks())
           throw "FineAlign: can't re-track an event, mask the tree in the "
                 "input";
-        _trackMaker->generateTracks(refEvent,
-                                    _refDevice->getBeamSlopeX(),
-                                    _refDevice->getBeamSlopeY(),
-                                    nsens);
+        _trackMaker->generateTracks(refEvent, nsens);
 
         // For the average track slopes
         for (unsigned int ntrack = 0; ntrack < refEvent->getNumTracks();

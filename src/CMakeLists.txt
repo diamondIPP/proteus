@@ -9,10 +9,12 @@ set(COMMON_SRC
     analyzers/dutcorrelation.cpp
     analyzers/dutdepiction.cpp
     analyzers/eventinfo.cpp
+    analyzers/eventprinter.cpp
     analyzers/exampledualanalyzer.cpp
     analyzers/examplesingleanalyzer.cpp
     analyzers/hitinfo.cpp
     analyzers/matching.cpp
+    analyzers/noisescan.cpp
     analyzers/occupancy.cpp
     analyzers/singleanalyzer.cpp
     analyzers/syncfluctuation.cpp
@@ -38,13 +40,19 @@ set(COMMON_SRC
     mechanics/noisemask.cpp
     mechanics/alignment.cpp
     mechanics/sensor.cpp
-    processors/eventdepictor.cpp
-    processors/largesynchronizer.cpp
-    processors/synchronizer.cpp
+    processors/applyalignment.cpp
     processors/clustermaker.cpp
+    processors/clusterizer.cpp
     processors/configprocessors.cpp
+    processors/eventdepictor.cpp
+    processors/hitmapper.cpp
+    processors/largesynchronizer.cpp
     processors/processor.cpp
     processors/processors.cpp
+    processors/synchronizer.cpp
+    processors/trackfinder.cpp
+    processors/trackfitter.cpp
+    processors/tracking.cpp
     processors/trackmaker.cpp
     processors/trackmatcher.cpp
     storage/cluster.cpp
@@ -53,6 +61,7 @@ set(COMMON_SRC
     storage/track.cpp
     storage/plane.cpp
     storage/storageio.cpp
+    utils/arguments.cpp
     utils/config.cpp
     utils/configparser.cpp
     utils/eventloop.cpp
@@ -66,5 +75,14 @@ target_link_libraries(pt-common PUBLIC ${ROOT_LIBRARIES})
 add_executable(proteus main.cpp inputargs.cpp)
 target_link_libraries(proteus pt-common)
 
+add_executable(pt-analysis pt-analysis.cpp)
+target_link_libraries(pt-analysis pt-common)
+
 add_executable(pt-cfg pt-cfg.cpp)
 target_link_libraries(pt-cfg pt-common)
+
+add_executable(pt-noisescan pt-noisescan.cpp)
+target_link_libraries(pt-noisescan pt-common)
+
+add_executable(pt-track pt-track.cpp)
+target_link_libraries(pt-track pt-common)

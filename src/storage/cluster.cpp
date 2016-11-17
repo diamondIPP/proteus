@@ -33,37 +33,37 @@ void Storage::Cluster::transformToGlobal(const Transform3D& pixelToGlobal)
   Matrix34 transform;
   pixelToGlobal.GetTransformMatrix(transform);
 
+  SymMatrix3 covPixel;
+  covPixel.Place_at(m_covCr, 0, 0);
+  // avoid singular matrix by setting local w-error to sensor thickness
+  covPixel(2, 2) = 1.0 / 12.0;
+
   m_xyz = pixelToGlobal * XYZPoint(m_cr.x(), m_cr.y(), 0);
-  m_covXyz = Similarity(transform.Sub<Matrix32>(0, 0), m_covCr);
+  m_covXyz = Similarity(transform.Sub<Matrix3>(0, 0), covPixel);
 }
 
 Index Storage::Cluster::sensorId() const { return m_plane->sensorId(); }
 
-int Storage::Cluster::sizeCol() const
+Storage::Cluster::Area Storage::Cluster::area() const
 {
-  if (m_hits.empty())
-    return 0;
-  int imin = INT_MAX;
-  int imax = INT_MIN;
-  for (auto hit = m_hits.begin(); hit != m_hits.end(); ++hit) {
-    imin = std::min<int>(imin, (*hit)->col());
-    imax = std::max<int>(imax, (*hit)->col());
+  if (m_hits.empty()) {
+    // empty area anchored outside the sensitive sensor area
+    return Area(Area::Axis(-1, -1), Area::Axis(-1, -1));
   }
-  return imax - imin + 1;
+
+  Area::Axis col(m_hits.front()->col(), m_hits.front()->col() + 1);
+  Area::Axis row(m_hits.front()->row(), m_hits.front()->row() + 1);
+  for (auto hit = ++m_hits.begin(); hit != m_hits.end(); ++hit) {
+    col.min = std::min(col.min, static_cast<int>((*hit)->col()));
+    col.max = std::max(col.max, static_cast<int>((*hit)->col()) + 1);
+    row.min = std::min(row.min, static_cast<int>((*hit)->row()));
+    row.max = std::max(row.max, static_cast<int>((*hit)->row()) + 1);
+  }
+  return Area(col, row);
 }
 
-int Storage::Cluster::sizeRow() const
-{
-  if (m_hits.empty())
-    return 0;
-  int imin = INT_MAX;
-  int imax = INT_MIN;
-  for (auto hit = m_hits.begin(); hit != m_hits.end(); ++hit) {
-    imin = std::min<int>(imin, (*hit)->row());
-    imax = std::max<int>(imax, (*hit)->row());
-  }
-  return imax - imin + 1;
-}
+int Storage::Cluster::sizeCol() const { return area().axes[0].length(); }
+int Storage::Cluster::sizeRow() const { return area().axes[1].length(); }
 
 void Storage::Cluster::setTrack(const Storage::Track* track)
 {

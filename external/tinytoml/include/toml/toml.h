@@ -39,6 +39,7 @@ template<typename T> struct call_traits_ref {
 template<typename T> struct call_traits;
 template<> struct call_traits<bool> : public internal::call_traits_value<bool> {};
 template<> struct call_traits<int> : public internal::call_traits_value<int> {};
+template<> struct call_traits<unsigned int> : public internal::call_traits_value<unsigned int> {};
 template<> struct call_traits<int64_t> : public internal::call_traits_value<int64_t> {};
 template<> struct call_traits<double> : public internal::call_traits_value<double> {};
 template<> struct call_traits<std::string> : public internal::call_traits_ref<std::string> {};
@@ -72,6 +73,7 @@ public:
     Value() : type_(NULL_TYPE), null_(nullptr) {}
     Value(bool v) : type_(BOOL_TYPE), bool_(v) {}
     Value(int v) : type_(INT_TYPE), int_(v) {}
+    Value(unsigned int v) : type_(INT_TYPE), int_(static_cast<int>(v)) {}
     Value(int64_t v) : type_(INT_TYPE), int_(v) {}
     Value(double v) : type_(DOUBLE_TYPE), double_(v) {}
     Value(const std::string& v) : type_(STRING_TYPE), string_(new std::string(v)) {}
@@ -1097,6 +1099,11 @@ template<> struct Value::ValueConverter<int>
     bool is(const Value& v) { return v.type() == Value::INT_TYPE; }
     int to(const Value& v) { v.assureType<int>(); return static_cast<int>(v.int_); }
 };
+template<> struct Value::ValueConverter<unsigned int>
+{
+    bool is(const Value& v) { return (v.type() == Value::INT_TYPE) && (0 <= v.int_); }
+    int to(const Value& v) { v.assureType<unsigned int>(); return static_cast<unsigned int>(v.int_); }
+};
 template<> struct Value::ValueConverter<double>
 {
     bool is(const Value& v) { return v.type() == Value::DOUBLE_TYPE; }
@@ -1156,6 +1163,7 @@ namespace internal {
 template<typename T> inline const char* type_name();
 template<> inline const char* type_name<bool>() { return "bool"; }
 template<> inline const char* type_name<int>() { return "int"; }
+template<> inline const char* type_name<unsigned int>() { return "int"; }
 template<> inline const char* type_name<int64_t>() { return "int64_t"; }
 template<> inline const char* type_name<double>() { return "double"; }
 template<> inline const char* type_name<std::string>() { return "string"; }

@@ -21,9 +21,9 @@ x_x0 = 0.005443
 
 [sensor_types.ccpdv4]
 measurement = "ccpdv4_binary"
-cols = 80
+cols = 160
 rows = 168
-pitch_col = 250.
+pitch_col = 125.
 pitch_row = 100.
 thickness = 250.
 x_x0 = 0.005443

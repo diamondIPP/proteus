@@ -5,22 +5,25 @@
 
 #include <Rtypes.h>
 
-#include "../storage/storageio.h"
-#include "../storage/event.h"
+#include "../analyzers/dualanalyzer.h"
+#include "../analyzers/singleanalyzer.h"
 #include "../mechanics/device.h"
 #include "../mechanics/sensor.h"
-#include "../processors/processors.h"
+#include "../processors/applyalignment.h"
 #include "../processors/clustermaker.h"
+#include "../processors/processors.h"
 #include "../processors/trackmaker.h"
-#include "../analyzers/singleanalyzer.h"
-#include "../analyzers/dualanalyzer.h"
+#include "../storage/event.h"
+#include "../storage/storageio.h"
 
 namespace Loopers {
 
 void ExampleLooper::loop()
 {
-  for (ULong64_t nevent = _startEvent; nevent <= _endEvent; nevent++)
-  {
+  _trackMaker->setBeamSlope(_refDevice->getBeamSlopeX(),
+                            _refDevice->getBeamSlopeY());
+
+  for (ULong64_t nevent = _startEvent; nevent <= _endEvent; nevent++) {
     Storage::Event* refEvent = _refStorage->readEvent(nevent);
     Storage::Event* dutEvent = _dutStorage->readEvent(nevent);
 
@@ -35,13 +38,9 @@ void ExampleLooper::loop()
     Processors::applyAlignment(dutEvent, _dutDevice);
 
     if (refEvent->getNumTracks() == 0)
-      _trackMaker->generateTracks(refEvent,
-                                  _refDevice->getBeamSlopeX(),
-                                  _refDevice->getBeamSlopeY());
+      _trackMaker->generateTracks(refEvent);
     if (dutEvent->getNumTracks() == 0)
-      _trackMaker->generateTracks(dutEvent,
-                                  _dutDevice->getBeamSlopeX(),
-                                  _dutDevice->getBeamSlopeY());
+      _trackMaker->generateTracks(dutEvent);
 
     for (unsigned int i = 0; i < _numSingleAnalyzers; i++)
       _singleAnalyzers.at(i)->processEvent(refEvent);
@@ -70,14 +69,15 @@ ExampleLooper::ExampleLooper(Mechanics::Device* refDevice,
                              Storage::StorageIO* dutInput,
                              ULong64_t startEvent,
                              ULong64_t numEvents,
-                             unsigned int eventSkip) :
-  Looper(refInput, dutInput, startEvent, numEvents, eventSkip),
-  _refDevice(refDevice),
-  _dutDevice(dutDevice),
-  //  _refOutput(refOutput),
-  //_dutOutput(dutOutput),
-  _clusterMaker(clusterMaker),
-  _trackMaker(trackMaker)
+                             unsigned int eventSkip)
+    : Looper(refInput, dutInput, startEvent, numEvents, eventSkip)
+    , _refDevice(refDevice)
+    , _dutDevice(dutDevice)
+    ,
+    //  _refOutput(refOutput),
+    //_dutOutput(dutOutput),
+    _clusterMaker(clusterMaker)
+    , _trackMaker(trackMaker)
 {
   assert(refInput && dutInput && refDevice && dutDevice && refOutput &&
          dutOutput && clusterMaker && trackMaker &&
@@ -86,5 +86,4 @@ ExampleLooper::ExampleLooper(Mechanics::Device* refDevice,
          dutInput->getNumPlanes() == dutDevice->getNumSensors() &&
          "Loopers: number of planes / sensors mis-match");
 }
-
 }

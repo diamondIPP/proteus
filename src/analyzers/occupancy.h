@@ -1,59 +1,53 @@
-#ifndef OCCUPANCY_H_
-#define OCCUPANCY_H_
+#ifndef PT_OCCUPANCY_H
+#define PT_OCCUPANCY_H
 
+#include <cstdint>
 #include <vector>
 
-#include <Rtypes.h>
-#include <TH2D.h>
-#include <TH1D.h>
 #include <TDirectory.h>
+#include <TH1D.h>
+#include <TH2D.h>
 
-#include "singleanalyzer.h"
+#include "analyzers/singleanalyzer.h"
+#include "utils/definitions.h"
 
-namespace Storage { class Event; }
-namespace Mechanics { class Device; }
+namespace Storage {
+class Event;
+}
+namespace Mechanics {
+class Device;
+}
 
 namespace Analyzers {
-  
-  class Occupancy : public SingleAnalyzer {
-  public:
-    Occupancy(const Mechanics::Device* device,
-	      TDirectory* dir,
-	      const char* suffix="");
 
-    void processEvent(const Storage::Event* event);
+class Occupancy : public SingleAnalyzer {
+public:
+  Occupancy(const Mechanics::Device* device,
+            TDirectory* dir,
+            const char* suffix = "");
 
-    /** Creates and fills the 1D occupancy histograms.*/
-    void postProcessing();
+  void processEvent(const Storage::Event* event);
+  void postProcessing();
 
-    /** Returns Hit occupancy 2D-map for given sensor. */
-    TH2D* getHitOcc(unsigned int nsensor);
+  /** Returns Hit occupancy 2D-map for given sensor. */
+  TH2D* getHitOcc(Index isensor);
+  /** Returns Hit occupancy 1D-dist for given sensor.
+      postProcessing() must have been called beforehand. */
+  TH1D* getHitOccDist(Index isensor);
+  /** Returns total number of hits for given sensor. */
+  uint64_t getTotalHitOccupancy(Index isensor);
 
-    /** Returns Hit occupancy 1D-dist for given sensor. 
-	postProcessing() must have been called beforehand. */
-    TH1D* getHitOccDist(unsigned int nsensors);
+private:
+  void bookHistos(const Mechanics::Device& device, TDirectory* dir);
 
-    /** Returns total number of hits for given sensor. */
-    ULong64_t getTotalHitOccupancy(unsigned int sensor);
-    
-  private:
-    void bookHistos(TDirectory *plotdir);
-    
-  private:
-    std::vector<ULong64_t> _totalHitOccupancy; /*!< Total number of hits in each plane
-						 (sum of hits for all events). */
-    
-    std::vector<TH2D*> _hitOcc; //!< pixel hitmaps
-    
-    std::vector<TH2D*> _clusterOcc; //!< cluster positions (XY) 2D-histos.
-    //std::vector<TH2D*> _clusterOccXZ;
-    //std::vector<TH2D*> _clusterOccYZ;
-    std::vector<TH2D*> _clusterOccPix;//!< cluster positions (pixel units) 2D-histos.
-    
-    std::vector<TH1D*> _occDist; //!< Occupancy 1D-distributions (number of hits/trigger).
-    
-  }; // end of class
-  
-} // end of namespace
+  uint64_t m_numEvents;
+  std::vector<TH2D*> m_occHits;         //!< pixel hitmaps
+  std::vector<TH2D*> m_occClustersHits; //!< clustered hit positions
+  std::vector<TH2D*> m_occClusters;     //!< cluster positions (XY) 2D-histos.
+  std::vector<TH1D*>
+      m_occPixels; //!< Occupancy 1D-distributions (number of hits/trigger).
+};
 
-#endif // HITOCCUPANCY_H
+} // namespace Analyzers
+
+#endif // PT_OCCUPANCY_H

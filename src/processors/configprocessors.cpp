@@ -50,7 +50,7 @@ namespace Processors {
     double maxClusterSep = -1;
     unsigned int numSeedPlanes = 1;
     unsigned int minClusters = 3;
-    bool calcIntercepts = false;
+    // bool calcIntercepts = false;
     
     const char* header = align ? "Tracking Align" : "Tracking";
     const char* footer = align ? "End Tracking Align" : "End Tracking";
@@ -59,7 +59,7 @@ namespace Processors {
       const ConfigParser::Row* row = config.getRow(i);
       
       if (row->isHeader && !row->header.compare(footer))
-	return new TrackMaker(maxClusterSep, numSeedPlanes, minClusters, calcIntercepts);
+	return new TrackMaker(maxClusterSep, numSeedPlanes, minClusters);
       
       if (row->isHeader)
 	continue;
@@ -73,8 +73,8 @@ namespace Processors {
 	minClusters = ConfigParser::valueToNumerical(row->value);
       else if (!row->key.compare("max cluster dist"))
 	maxClusterSep = ConfigParser::valueToNumerical(row->value);
-	  else if (!row->key.compare("calculate intercepts"))
-	calcIntercepts = ConfigParser::valueToLogical(row->value);
+	//   else if (!row->key.compare("calculate intercepts"))
+	// calcIntercepts = ConfigParser::valueToLogical(row->value);
       else
 	throw "Processors: can't parse track maker row";
     }

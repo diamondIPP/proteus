@@ -22,6 +22,7 @@ template <typename T, Endpoints ENDPOINTS = Endpoints::OPEN_MAX>
 struct Interval {
   T min, max;
 
+  T length() const { return max - min; }
   /** Check if the interval is empty.
    *
    * A closed interval can never be empty. With identical endpoints, the
@@ -61,19 +62,25 @@ struct Box {
 
   std::array<Axis, N> axes;
 
+  T volume() const
+  {
+    double vol = axes[0].length();
+    for (size_t i = 1; i < N; ++i)
+      vol *= axes[i].length();
+    return vol;
+  }
   /** The box is empty if any axis is empty. */
   bool isEmpty() const
   {
-    for (size_t i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i)
       if (axes[i].isEmpty())
         return true;
-    }
     return false;
   }
   bool isInside(Point x) const
   {
-    bool status = true;
-    for (size_t i = 0; i < N; ++i)
+    bool status = axes[0].isInside(x[0]);
+    for (size_t i = 1; i < N; ++i)
       status &= axes[i].isInside(x[i]);
     return status;
   }
@@ -85,9 +92,10 @@ struct Box {
   }
 
   Box() = default;
-  Box(std::initializer_list<Axis> intervals)
+  template <typename... Intervals,
+            typename = typename std::enable_if<sizeof...(Intervals) == N>::type>
+  Box(Intervals&&... axes_) : axes{std::forward<Intervals>(axes_)...}
   {
-    std::copy(intervals.begin(), intervals.end(), axes.begin());
   }
 };
 
@@ -99,7 +107,7 @@ Interval<T0, ENDPOINTS> intersection(const Interval<T0, ENDPOINTS>& interval0,
           std::min<T0>(interval0.max, interval1.max)};
 }
 
-template <typename T0, typename T1, size_t N, Endpoints ENDPOINTS>
+template <size_t N, typename T0, typename T1, Endpoints ENDPOINTS>
 Box<N, T0, ENDPOINTS> intersection(const Box<N, T0, ENDPOINTS>& box0,
                                    const Box<N, T1, ENDPOINTS>& box1)
 {

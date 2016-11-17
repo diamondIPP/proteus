@@ -48,7 +48,7 @@ public:
   static Measurement measurementFromName(const std::string& name);
   static std::string measurementName(Measurement measurement);
 
-  typedef Utils::Box<2, double, Utils::Endpoints::CLOSED> Area;
+  typedef Utils::Box<2, double> Area;
 
   /** Construct with an empty transformation (local = global) and no noise.
    *

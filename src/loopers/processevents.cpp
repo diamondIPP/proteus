@@ -11,6 +11,7 @@
 #include "../mechanics/device.h"
 #include "../mechanics/sensor.h"
 #include "../processors/processors.h"
+#include "../processors/applyalignment.h"
 #include "../processors/clustermaker.h"
 #include "../processors/trackmaker.h"
 #include "../analyzers/singleanalyzer.h"
@@ -63,6 +64,11 @@ void Loopers::ProcessEvents::loop() {
   ULong64_t statMostTracksEvent = 0;
   unsigned int statMostTracks = 0;
 
+  if (_trackMaker) {
+    _trackMaker->setBeamSlope(_refDevice->getBeamSlopeX(),
+                              _refDevice->getBeamSlopeY());
+  }
+
   for (ULong64_t nevent=_startEvent; nevent<=_endEvent; nevent++){
     Storage::Event* refEvent = _refStorage->readEvent(nevent);
     
@@ -78,7 +84,7 @@ void Loopers::ProcessEvents::loop() {
       throw "ProcessEvents: can't re-track an event, mask the tree in the input";
 
     if (_trackMaker){
-      _trackMaker->generateTracks(refEvent, _refDevice->getBeamSlopeX(), _refDevice->getBeamSlopeY());
+      _trackMaker->generateTracks(refEvent);
 	}
     
     // Write the event

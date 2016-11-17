@@ -1,9 +1,10 @@
-#ifndef TRACKMAKER_H
-#define TRACKMAKER_H
+#ifndef PT_TRACKMAKER_H
+#define PT_TRACKMAKER_H
 
 #include <vector>
 
 #include "processor.h"
+#include "utils/definitions.h"
 
 namespace Storage {
 class Event;
@@ -18,42 +19,32 @@ class Sensor;
 namespace Processors {
 
 class TrackMaker : public Processor {
-private:
-  const double _maxClusterDist;
-  const unsigned int _numSeedPlanes;
-  const unsigned int _minClusters;
-  double _beamAngleX;
-  double _beamAngleY;
-
-  Storage::Event* _event;
-  int _maskedPlane;
-  bool _calcIntercepts;
-
-  void searchPlane(Storage::Track* track,
-                   std::vector<Storage::Track*>& candidates,
-                   unsigned int nplane);
-
 public:
   TrackMaker(double maxClusterDist,
              unsigned int numSeedPlanes = 1,
-             unsigned int minClusters = 3,
-             bool calcIntercepts = false);
+             unsigned int minClusters = 3);
 
-  void generateTracks(Storage::Event* event, double beamAngleX = 0,
-                      double beamAngleY = 0, int maskedPlane = -1);
+  void setBeamSlope(double slopeX, double slopeY);
 
-  static int linearFit(const unsigned int npoints, const double* independant,
-                       const double* dependant, const double* uncertainty,
-                       double& slope, double& slopeErr, double& intercept,
-                       double& interceptErr, double& chi2, double& covariance);
-
-  static void fitTrackToClusters(Storage::Track* track);
-
-  bool getCalcIntercepts() { return _calcIntercepts; }
   std::string name() const;
   void process(Storage::Event& event) const;
+  void generateTracks(Storage::Event* event, int maskedPlane = -1) const;
+
+private:
+  double m_distMax;
+  Index m_numSeedPlanes;
+  Index m_numPointsMin;
+  double m_beamSlopeX;
+  double m_beamSlopeY;
+
+  mutable int m_maskedPlane;
+
+  void searchPlane(Storage::Event* event,
+                   Storage::Track* track,
+                   std::vector<Storage::Track*>& candidates,
+                   unsigned int nplane) const;
 };
 
-}  // namespace Processors
+} // namespace Processors
 
-#endif  // TRACKMAKER_H
+#endif // PT_TRACKMAKER_H

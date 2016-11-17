@@ -10,11 +10,35 @@
 #include "storage/hit.h"
 #include "storage/plane.h"
 
-namespace Processors {
+Processors::ClusterMaker::ClusterMaker(int maxSeparationCol,
+                                       int maxSeparationRow,
+                                       double maxSeparationColRow)
+    : m_maxSeparationCol(maxSeparationCol)
+    , m_maxSeparationRow(maxSeparationRow)
+    , m_maxSeparationColRowSquared(maxSeparationColRow * maxSeparationColRow)
+{
+  if (maxSeparationCol < 0)
+    throw std::runtime_error(
+        "ClusterMaker: maximum column distance must be positive");
+  if (maxSeparationRow < 0)
+    throw std::runtime_error(
+        "ClusterMaker: maximum row distance must be positive");
+  if (maxSeparationColRow < 0)
+    throw std::runtime_error(
+        "ClusterMaker: maximum column/row distance must be positive");
+}
 
-void ClusterMaker::addNeighbours(const Storage::Hit* hit,
-                                 Storage::Plane* plane,
-                                 Storage::Cluster* cluster) const
+std::string Processors::ClusterMaker::name() const { return "ClusterMaker"; }
+
+void Processors::ClusterMaker::process(Storage::Event& event) const
+{
+  for (unsigned int i = 0; i < event.getNumPlanes(); ++i)
+    generateClusters(&event, i);
+}
+
+void Processors::ClusterMaker::addNeighbours(const Storage::Hit* hit,
+                                             Storage::Plane* plane,
+                                             Storage::Cluster* cluster) const
 {
   // Go through all hits
   for (unsigned int nhit = 0; nhit < plane->numHits(); nhit++) {
@@ -26,17 +50,17 @@ void ClusterMaker::addNeighbours(const Storage::Hit* hit,
       continue;
 
     // If a maximum separation has been defined in real coordinates, check now
-    if (_maxSeparation > 0) {
+    if (m_maxSeparationColRowSquared > 0) {
       const double distX = compare->getPosX() - hit->getPosX();
       const double distY = compare->getPosY() - hit->getPosY();
-      const double dist = sqrt(pow(distX, 2) + pow(distY, 2));
-      if (dist > _maxSeparation)
+      const double dist = pow(distX, 2) + pow(distY, 2);
+      if (dist > m_maxSeparationColRowSquared)
         continue;
     } else {
       //   std::cout<< _maxSeparationX<<std::endl;
       const int distX = compare->getPixX() - hit->getPixX();
       const int distY = compare->getPixY() - hit->getPixY();
-      if (fabs(distX) > _maxSeparationX || fabs(distY) > _maxSeparationY)
+      if (fabs(distX) > m_maxSeparationCol || fabs(distY) > m_maxSeparationRow)
         continue;
     }
 
@@ -48,8 +72,8 @@ void ClusterMaker::addNeighbours(const Storage::Hit* hit,
   }
 }
 
-void ClusterMaker::generateClusters(Storage::Event* event,
-                                    unsigned int planeNum) const
+void Processors::ClusterMaker::generateClusters(Storage::Event* event,
+                                                unsigned int planeNum) const
 {
   Storage::Plane* plane = event->getPlane(planeNum);
   if (plane->numClusters() > 0)
@@ -75,7 +99,7 @@ void ClusterMaker::generateClusters(Storage::Event* event,
     calculateCluster(plane->getCluster(i));
 }
 
-void ClusterMaker::calculateCluster(Storage::Cluster* cluster) const
+void Processors::ClusterMaker::calculateCluster(Storage::Cluster* cluster) const
 {
   const double rt12 = 1.0 / sqrt(12);
   double pixErrX = rt12;
@@ -141,29 +165,6 @@ void ClusterMaker::calculateCluster(Storage::Cluster* cluster) const
   // const double errX = (stdevX) ? stdevX : pixErrX;
   // const double errY = (stdevY) ? stdevY : pixErrY;
 
-  cluster->setPosPixel(XYPoint(cogX, cogY));
+  cluster->setPosPixel(cogX, cogY);
   cluster->setErrPixel(pixErrX, pixErrY);
 }
-
-ClusterMaker::ClusterMaker(unsigned int maxSeparationX,
-                           unsigned int maxSeparationY,
-                           double maxSeparation)
-    : _maxSeparationX(maxSeparationX)
-    , _maxSeparationY(maxSeparationY)
-    , _maxSeparation(maxSeparation)
-{
-  if (_maxSeparation < 0)
-    throw "ClusterMaker: max separation must be positive";
-}
-
-std::string ClusterMaker::name() const { return "ClusterMaker"; }
-
-void ClusterMaker::process(Storage::Event& event) const
-{
-  for (unsigned int i = 0; i < event.getNumPlanes(); ++i)
-    generateClusters(&event, i);
-}
-
-void ClusterMaker::finalize() {}
-
-} // namespace Processors

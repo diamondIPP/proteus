@@ -27,7 +27,16 @@ namespace Analyzers {
     void postProcessing();
     
   private:
-    std::vector<TH1D*> _clusterSize;
+    struct ClusterHists {
+      TH1D* size;
+      TH2D* sizeColSize;
+      TH2D* sizeRowSize;
+      TH2D* sizeRowSizeCol;
+      TH1D* uncCol;
+      TH1D* uncRow;
+    };
+
+    std::vector<ClusterHists> m_hists;
     std::vector<TH1D*> _tot;
     std::vector<TH2D*> _totSize;
     std::vector<TH1D*> _clustersVsTime;
