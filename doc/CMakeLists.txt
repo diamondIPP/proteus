@@ -10,10 +10,10 @@ else()
   message(STATUS "Enable documentation")
 endif()
 
-set(DOC_SRC configuration.rst
-            contribution.rst
-            index.rst
-            internal.rst)
+set(DOC_SRC basic_steps.rst
+            configuration_files.rst
+            contribution_guide.rst
+            index.rst)
 
 configure_file(conf.py.in ${CMAKE_CURRENT_BINARY_DIR}/conf.py @ONLY)
 configure_file(doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/doxyfile @ONLY)

@@ -11,9 +11,9 @@ Contents:
 .. toctree::
    :maxdepth: 2
    
+   basic_steps
    configuration_files
    contribution_guide
-   internal
 
 Indices and tables
 ==================
