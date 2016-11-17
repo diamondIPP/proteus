@@ -2,10 +2,10 @@ Configuration Files
 ===================
 
 All configuration files are using the `TOML configuration file format
-<https://github.com/toml-lang/toml>`. This is a simple ini-like file
+<https://github.com/toml-lang/toml>`_. This is a simple ini-like file
 format that is easy to read and write. It looks like this:
 
-.. code-block: toml
+.. code-block:: toml
     
     [device]
     name = "FEI4Tel"
@@ -31,7 +31,7 @@ The paths can be either absolute or relative. In the latter case they
 are interpreted relative to the directory of the device configuration
 file.
 
-.. code-block: toml
+.. code-block:: toml
 
     alignment = "path/relative/to/device/config.toml"
     noise_mask = "/or/an/absolute/path.toml"
@@ -40,14 +40,14 @@ The noise mask can also be set from multiple files, e.g. separate
 files for the telescope and the device-under-test, by providing a list
 of files:
 
-.. code-block: toml
+.. code-block:: toml
 
     noise_mask = ["file1.toml", "file2.toml"]
 
 Sensor types are defined by name and configure the pixel sensor
 properties required for the analysis.
 
-.. code-block: toml
+.. code-block:: toml
 
     [sensor_types.fei4-si]
     cols = 80
@@ -62,7 +62,7 @@ For each sensor only the sensor type is required. The sensor type
 configuration file. An optional name can be provided otherwise one is
 automatically generated.
 
-.. code-block: toml
+.. code-block:: toml
 
     [[sensors]]
     type = "fei4-si"

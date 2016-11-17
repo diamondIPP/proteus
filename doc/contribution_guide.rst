@@ -73,9 +73,9 @@ compatible with Scientific Linux 6.x. The default compiler on Scientific Linux
 listed in the `GCC 4.4 C++0x support status
 <https://gcc.gnu.org/gcc-4.4/cxx0x_status.html>`_ can be used where appropriate.
 
-A good general guideline for modern C++ usage is the `CppCoreGuidelines
-<https://github.com/isocpp/CppCoreGuidelines>`_ and a few other anecdotal tips
-are listed here.
+A good general guideline for modern C++ usage can be found in the
+`CppCoreGuidelines <https://github.com/isocpp/CppCoreGuidelines>`_. A few other
+anecdotal tips are listed here.
 
 *   Write code that is easy to understand for humans instead of code that
     you hope is easier for the compiler to optimize. It's usually not
@@ -84,7 +84,7 @@ are listed here.
     your intentions and assumptions. What the code does can be figured
     out by reading the code itself; your intentions probably not.
 *   Non-trivial should describe their parameters using `doxygen-style
-    <http://doxygen.org>` comments. They should be placed in the
+    <http://doxygen.org>`_ comments. They should be placed in the
     headers and look like this:
 
     .. code-block:: cpp
@@ -107,7 +107,7 @@ are listed here.
     smart pointer, e.g. ``std::unique_ptr<...>``, when you will
     transfer ownership at some point.
 *   Always explicitly transfer ownership of objects using a
-    `std::unique_ptr<...>` or return by value. Returning a pointer or
+    ``std::unique_ptr<...>`` or return by value. Returning a pointer or
     a reference to an object is fine but does *not* imply transfer of
     ownership, e.g. having to manually delete the object.
 
@@ -127,7 +127,7 @@ are listed here.
     contains only purely virtual methods.
 *   An accessor method for an invariant of an object, i.e. something
     that is a readily available property of the object, does not
-    require a `get...()` prefix. It's redundant. However, methods that
+    require a ``get...()`` prefix. It's redundant. However, methods that
     require computation should be named appropriately.
 
     .. code-block:: cpp
@@ -151,8 +151,7 @@ are listed here.
         
         (0 < x) && (x < 10)
 
-*   Do not use ``using namespace ...;`` --- especially not ``using
-    namespace std;`` --- in a header file to avoid littering the
-    global namespace.
+*   Do not use ``using namespace ...;`` in a header file to avoid littering the
+    global namespace. Especially not ``using namespace std;``.
 *   All switch statements must have a ``default`` clause and each clause
     should end with a ``break``;
