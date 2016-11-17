@@ -13,6 +13,7 @@ Contents:
    
    configuration
    contribution
+   internal
 
 Indices and tables
 ==================
