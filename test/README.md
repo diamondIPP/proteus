@@ -8,11 +8,11 @@ when changing the code.
 
 **WARNING** This is *work-in-progress*
 
-The following commands will build the software and run a full analysis chain.
+The following commands will build the software and run an example analysis
+chain.
 
     ./build.sh
-    ./run_reference.sh
-    ./run_dut.sh
+    ./run_telescope.sh
 
 
 Run 875
