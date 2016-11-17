@@ -11,7 +11,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
    
-   configuration
+   configuration_files
    contribution_guide
    internal
 
