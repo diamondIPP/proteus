@@ -12,7 +12,7 @@ Contents:
    :maxdepth: 2
    
    configuration
-   contribution
+   contribution_guide
    internal
 
 Indices and tables
