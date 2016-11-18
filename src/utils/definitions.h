@@ -51,6 +51,7 @@ typedef ROOT::Math::SMatrix<double, 4, 4, ROOT::Math::MatRepSym<double, 4>>
 typedef ROOT::Math::SVector<double, 2> Vector2;
 typedef ROOT::Math::SVector<double, 3> Vector3;
 typedef ROOT::Math::SVector<double, 4> Vector4;
+typedef ROOT::Math::SVector<double, 6> Vector6;
 
 /** Squared Mahalanobis distance / norm of a vector.
  *
