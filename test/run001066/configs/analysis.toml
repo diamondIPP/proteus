@@ -1,13 +1,20 @@
 [align]
-# sensors that should be aligned
-sensor_ids = [1, 2, 3, 4]
-# sensors that should be ignored
-ignore_ids = [6, 7]
-distance_sigma_max = 4.0
-reduced_chi2_max = 5.0
 method = "residuals" # local_chi2, global_chi2
+# sensors that are used to compute the alignment, e.g. to build tracks
+sensor_ids = [0, 1, 2, 3, 4, 5]
+# sensors which should be aligned (must be a subset of sensor_ids)
+align_ids = [1, 2, 3, 4, 5]
+# number of iterative alignment steps
+num_steps = 4
+# distance cut to assign clusters to the track (only for track-based alignment)
+distance_sigma_max = 4.0
+# only consider tracks with a chi2 value (only for track-based alignment)
+reduced_chi2_max = 5.0
 
 [track]
+# sensors that are used to build the tracks
 sensor_ids = [0, 1, 2, 3, 4, 5]
-num_points_min = 4
-distance_sigma_max = 10.
+# distance cut to assign clusters to the track
+distance_sigma_max = 4.0
+# minimum number of points of the track
+num_points_min = 5
