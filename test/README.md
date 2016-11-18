@@ -9,10 +9,12 @@ when changing the code.
 **WARNING** This is *work-in-progress*
 
 The following commands will build the software and run an example analysis
-chain.
+chain for one of the example datasets
 
     ./build.sh
-    ./run_telescope.sh
+    ./download_data.sh
+    ./run_telescope.sh <RUN>
+    ./run_dut0.sh <RUN>
 
 
 Run 875
