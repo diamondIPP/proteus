@@ -1,4 +1,4 @@
-# Empty noise mask for the full device
+# empty noise mask for the telescope part
 
 [[sensors]]
 id = 0
@@ -22,12 +22,4 @@ masked_pixels = []
 
 [[sensors]]
 id = 5
-masked_pixels = []
-
-[[sensors]]
-id = 6
-masked_pixels = []
-
-[[sensors]]
-id = 7
 masked_pixels = []

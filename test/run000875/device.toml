@@ -1,7 +1,7 @@
-# global settings **must** appear before any [section] command
+# global settings **must** appear before any [section]
 
-alignment = "../alignment.toml"
-noise_mask = ["../mask_tel.toml", "../mask_dut0.toml"]
+alignment = "geometry/unaligned.toml"
+# no noise masks
 
 [device]
 name = "FEI4Tel"
@@ -29,29 +29,36 @@ thickness = 250.
 x_x0 = 0.005443
 
 # sensors in the order as they appear in the data file
+# the index in this list corresponds to the sensor id in other configs
 
 [[sensors]]
 type = "fei4-si"
+name = "tel0"
 
 [[sensors]]
 type = "fei4-si"
+name = "tel1"
 
 [[sensors]]
 type = "fei4-si"
+name = "tel2"
 
 [[sensors]]
 type = "fei4-si"
+name = "tel3"
 
 [[sensors]]
 type = "fei4-si"
+name = "tel4"
 
 [[sensors]]
 type = "fei4-si"
+name = "tel5"
 
 [[sensors]]
 type = "ccpdv4"
-name = "caribou04"
+name = "dut0"
 
 [[sensors]]
 type = "ccpdv4"
-name = "caribou06"
+name = "dut1"
