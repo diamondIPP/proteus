@@ -18,3 +18,4 @@ mkdir -p output
 # determine noise masks
 pt-noisescan $FLAGS -c configs/noisescan_dut0.toml $RAWFILE ${PREFIX}noisescan_dut0
 # TODO 2016-11-14 msmk: run alignment
+# TODO 2016-11-18 msmk: run analysis

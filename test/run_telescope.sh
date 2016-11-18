@@ -16,6 +16,6 @@ mkdir -p output
 
 # determine noise masks
 pt-noisescan $FLAGS -c configs/noisescan_tel.toml $RAWFILE ${PREFIX}noisescan_tel
+# TODO 2016-11-14 msmk: run alignment
 # clusterize and find tracks
 pt-track $FLAGS -c configs/analysis.toml $RAWFILE ${PREFIX}unaligned
-# TODO 2016-11-14 msmk: run alignment
