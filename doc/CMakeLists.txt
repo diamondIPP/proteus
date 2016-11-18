@@ -1,10 +1,10 @@
-find_package(Doxygen 1.8 REQUIRED)
+find_package(Doxygen 1.6)
 find_program(SPHINX_EXECUTABLE
              NAMES sphinx-build sphinx-build-3
              DOC "Sphinx documentation generator")
 
 if(NOT Doxygen_FOUND OR NOT SPHINX_EXECUTABLE)
-  message(WARNING "Doxygen or Sphinx are not available: disable documentation")
+  message(WARNING "Disable documentation: Doxygen or Sphinx not available")
   return()
 else()
   message(STATUS "Enable documentation")
