@@ -3,8 +3,7 @@
 # run the processing chain for the reference telescope
 
 RUN=${1-1066}
-DEV=configs/device.toml
-FLAGS="-d configs/device.toml" # e.g. -n 10000, to process 10k events
+FLAGS="-d device.toml" # e.g. -n 10000, to process 10k events
 
 RAWFILE=$(readlink -f $(printf "raw/run%06d.root" $RUN))
 RUNDIR=$(printf "run%06d" $RUN)
@@ -13,9 +12,6 @@ PREFIX=$(printf "output/run%06d-" $RUN)
 source build/activate.sh
 cd $RUNDIR
 
-cp -f comparison/unaligned.toml alignment.toml
-cp -f comparison/mask_empty.toml mask_tel.toml
-cp -f comparison/mask_empty.toml mask_dut0.toml
 mkdir -p output
 
 # determine noise masks
