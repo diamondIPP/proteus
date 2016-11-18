@@ -21,11 +21,13 @@ Run 875
 -------
 
 *   Part of the published 2015 data
-*   Setup, device-under-test?
+*   Around 1M events
+*   Setup and device-under-tests are not completely clear
 
 Run 1066
 --------
 
+*   **Prefer this dataset for tests**
 *   Unpublished data from the July 2016 campaign at SPS
 *   Six layer FEI4 telescope
 *   Two irradiated CCPDv4 device-under-tests
