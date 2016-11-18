@@ -17,6 +17,7 @@ time_unit = "ns"
 
 # define all possible sensor types in this setup
 # this will be accessed by name later on
+# pitch and thickness in um
 
 [sensor_types.fei4-si]
 measurement = "pixel_tot"

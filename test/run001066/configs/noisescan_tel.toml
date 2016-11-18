@@ -1,22 +1,46 @@
 [noisescan]
-max_sigma_above_avg =  5.0
+max_sigma_above_avg = 5.0
 max_rate = 0.1
-density_bandwidth = 3.0
+density_bandwidth = 2.0
 
 [[noisescan.sensors]]
 id = 0
+col_min = 33
+col_max = 48
+row_min = 146
+row_max = 188
 
 [[noisescan.sensors]]
 id = 1
+col_min = 36
+col_max = 45
+row_min = 144
+row_max = 221
 
 [[noisescan.sensors]]
 id = 2
+col_min = 34
+col_max = 50
+row_min = 138
+row_max = 181
 
 [[noisescan.sensors]]
 id = 3
+col_min = 33
+col_max = 49
+row_min = 142
+row_max = 185
 
 [[noisescan.sensors]]
 id = 4
+col_min = 34
+col_max = 42
+row_min = 130
+row_max = 212
 
 [[noisescan.sensors]]
 id = 5
+col_min = 30
+col_max = 46
+row_min = 155
+row_max = 198
