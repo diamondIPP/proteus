@@ -4,7 +4,11 @@
 #include <TGraph.h>
 #include <TTree.h>
 
+#include "alignment/correlationaligner.h"
+#include "alignment/residualsaligner.h"
 #include "analyzers/correlation.h"
+#include "analyzers/residuals.h"
+#include "analyzers/trackinfo.h"
 #include "mechanics/device.h"
 #include "processors/applyalignment.h"
 #include "processors/clusterizer.h"
@@ -97,8 +101,11 @@ struct Steps {
   }
 };
 
+enum class Method { CORRELATION, RESIDUALS };
+
 int main(int argc, char const* argv[])
 {
+  using namespace Alignment;
   using namespace Analyzers;
   using namespace Mechanics;
   using namespace Processors;
@@ -116,51 +123,65 @@ int main(int argc, char const* argv[])
   // the sensors that should be aligned
   auto sensorIds = cfg.get<std::vector<Index>>("sensor_ids");
   auto alignIds = cfg.get<std::vector<Index>>("align_ids");
-  int numSteps = cfg.get<int>("num_steps");
+  auto methodName = cfg.get<std::string>("method");
+  Method method = Method::CORRELATION;
+  int numSteps = 0;
+  double distSigmaMax = -1;
+  double redChi2Max = -1;
 
-  double distSigmaMax = 10.;
+  if (methodName == "correlation") {
+    method = Method::CORRELATION;
+    numSteps = 1;
+  } else if (methodName == "residuals") {
+    method = Method::RESIDUALS;
+    numSteps = cfg.get<int>("num_steps");
+    distSigmaMax = cfg.get<double>("distance_sigma_max");
+    redChi2Max = cfg.get<double>("reduced_chi2_max");
+  } else {
+    throw std::runtime_error("alignment method '" + methodName +
+                             "' is unknown");
+  }
 
   Storage::StorageIO input(args.input(), Storage::INPUT, device.numSensors());
   TFile hists(args.makeOutput("hists.root").c_str(), "RECREATE");
-
-  Steps corrections;
+  // Steps corrections;
 
   for (int step = 0; step < numSteps; ++step) {
     TDirectory* stepDir = hists.mkdir(("Step" + std::to_string(step)).c_str());
 
-    INFO("alignment step ", step, "/", numSteps);
+    INFO("alignment step ", step + 1, "/", numSteps);
 
+    // common event loop elements for all alignment methods
     Utils::EventLoop loop(&input, skipEvents, numEvents);
     setupHitMappers(device, loop);
     setupClusterizers(device, loop);
     loop.addProcessor(std::make_shared<ApplyAlignment>(device));
-    // coarse method w/o tracks using only cluster residuals
+    // setup aligment method specific loop logic
+    std::shared_ptr<Aligner> aligner;
+    if (method == Method::CORRELATION) {
+      // coarse method w/o tracks using only cluster correlations
 
-    auto corr = std::make_shared<Correlation>(device, sensorIds, stepDir);
-    loop.addAnalyzer(corr);
+      auto corr = std::make_shared<Correlation>(device, sensorIds, stepDir);
+      aligner = std::make_shared<CorrelationAligner>(device, alignIds, corr);
+      loop.addAnalyzer(corr);
+      loop.addAnalyzer(aligner);
 
-    // loop.addProcessor(std::make_shared<StraightTrackFitter>(device, locals));
-    // loop.addAnalyzer(std::make_shared<TrackInfo>(&device, &hists));
-    // loop.addAnalyzer(std::make_shared<Residuals>(&device, &hists));
-    // loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(device, &hists));
-    loop.run();
+    } else if (method == Method::RESIDUALS) {
+      // use unbiased residuals of tracks to align
 
-    Alignment a = device.alignment();
-
-    double deltaX = 0;
-    double deltaY = 0;
-    for (auto id = alignIds.begin(); id != alignIds.end(); ++id) {
-      deltaX -= corr->getHistDiffX(*id - 1, *id)->GetMean();
-      deltaY -= corr->getHistDiffY(*id - 1, *id)->GetMean();
-
-      corrections.addStep(*id, deltaX, deltaY, 0, 0, 0, 0);
-      a.correctOffset(*id, deltaX, deltaY, 0);
+      loop.addProcessor(std::make_shared<TrackFinder>(
+          device, sensorIds, sensorIds.size(), distSigmaMax));
+      loop.addAnalyzer(std::make_shared<TrackInfo>(&device, stepDir));
+      loop.addAnalyzer(std::make_shared<Residuals>(&device, stepDir));
+      aligner = std::make_shared<ResidualsAligner>(device, alignIds, stepDir);
+      loop.addAnalyzer(aligner);
     }
 
-    device.applyAlignment(a);
+    loop.run();
+    device.applyAlignment(aligner->updatedGeometry());
   }
 
-  corrections.writeGraphs(device, &hists);
+  // corrections.writeGraphs(device, &hists);
 
   device.alignment().writeFile(args.makeOutput("geo.toml"));
   hists.Write();
