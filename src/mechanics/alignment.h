@@ -42,6 +42,8 @@ public:
                              double dalpha,
                              double dbeta,
                              double dgamma);
+  /** Update using small corrections to the local sensor orientation. */
+  void correctLocal(Index sensorId, const Vector3& dq, const Matrix3& dr);
 
   /** Beam direction in the global coordinate system. */
   XYZVector beamDirection() const;

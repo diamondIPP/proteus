@@ -208,6 +208,26 @@ void Mechanics::Alignment::correctRotationAngles(Index sensorId,
   params.rotationZ += dgamma;
 }
 
+void Mechanics::Alignment::correctLocal(Index sensorId,
+                                        const Vector3& dq,
+                                        const Matrix3& dr)
+{
+  auto& params = m_geo.at(sensorId);
+
+  // construct new local to global transformation with corrections
+  Translation3D corrOff(dq[0], dq[1], dq[2]);
+  Rotation3D corrRot;
+  corrRot.SetRotationMatrix(dr);
+  Transform3D l2g = getLocalToGlobal(sensorId) * corrRot * corrOff;
+  // offset params can be read of directly
+  l2g.Translation().GetComponents(params.offsetX, params.offsetY,
+                                  params.offsetZ);
+  // rotation matrix needs to be converted back into parameters
+  RotationZYX rot;
+  l2g.GetRotation(rot);
+  rot.GetComponents(params.rotationZ, params.rotationY, params.rotationX);
+}
+
 XYZVector Mechanics::Alignment::beamDirection() const
 {
   return XYZVector(m_beamSlopeX, m_beamSlopeY, 1);
