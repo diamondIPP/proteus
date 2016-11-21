@@ -48,8 +48,10 @@ Mechanics::Alignment Alignment::ResidualsAligner::updatedGeometry() const
 {
   Mechanics::Alignment geo = m_device.alignment();
 
-  double slopeX = m_trackSlope->GetMean(1);
-  double slopeY = m_trackSlope->GetMean(2);
+  double scale = 0.5;
+
+  double slopeX = scale * m_trackSlope->GetMean(1);
+  double slopeY = scale * m_trackSlope->GetMean(2);
   geo.setBeamSlope(slopeX, slopeY);
 
   INFO("mean track slope:");
@@ -59,7 +61,7 @@ Mechanics::Alignment Alignment::ResidualsAligner::updatedGeometry() const
   for (auto id = m_alignIds.begin(); id != m_alignIds.end(); ++id) {
     const TH2D* resUV = m_res.getResidualUV(*id);
 
-    Vector3 dq(-resUV->GetMean(1), -resUV->GetMean(2), 0);
+    Vector3 dq(-scale * resUV->GetMean(1), -scale * resUV->GetMean(2), 0);
     Matrix3 dr = ROOT::Math::SMatrixIdentity();
     geo.correctLocal(*id, dq, dr);
 
