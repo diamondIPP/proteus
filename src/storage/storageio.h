@@ -13,9 +13,9 @@
  * hit information. BUT these arrays are generated ONLY ONCE and re-used
  * to load events. Vectors could have been used in the ROOT file format, but
  * they would need to be constructed at each event reading step. */
-#define MAX_TRACKS 1000
-#define MAX_CLUSTERS 1000
-#define MAX_HITS 1000
+#define MAX_TRACKS 10000
+#define MAX_CLUSTERS 10000
+#define MAX_HITS 10000
 
 #define MAX_RUNS 1000
 #define MAX_NOISY 20000
