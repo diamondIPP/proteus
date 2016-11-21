@@ -1,4 +1,6 @@
 set(COMMON_SRC
+    alignment/correlationaligner.cpp
+    alignment/residualsaligner.cpp
     analyzers/analyzer.cpp
     analyzers/baseanalyzer.cpp
     analyzers/clusterinfo.cpp
