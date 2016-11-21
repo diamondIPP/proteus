@@ -111,6 +111,7 @@ void Utils::EventLoop::run()
 
   Utils::ProgressBar progress;
   Time startWall = Clock::now();
+  progress.update(0);
   for (uint64_t ievent = m_startEvent; ievent <= m_endEvent; ievent++) {
 
     {
