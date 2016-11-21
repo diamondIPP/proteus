@@ -186,10 +186,10 @@ void Mechanics::Alignment::setRotationAngles(Index sensorId,
   params.rotationZ = rotZ;
 }
 
-void Mechanics::Alignment::correctOffset(Index sensorId,
-                                         double dx,
-                                         double dy,
-                                         double dz)
+void Mechanics::Alignment::correctGlobalOffset(Index sensorId,
+                                               double dx,
+                                               double dy,
+                                               double dz)
 {
   auto& params = m_geo.at(sensorId);
   params.offsetX += dx;

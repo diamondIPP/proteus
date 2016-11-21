@@ -95,7 +95,7 @@ void Loopers::CoarseAlign::loop(){
     std::cout << "Gaussian mean: X= " << offsetX << "  Y= " << offsetY << std::endl;
     std::cout << "Cummulative    X= " << cummulativeX << "  Y= " << cummulativeY << std::endl;
 
-    newAlignment.correctOffset(nsensor, cummulativeX, cummulativeY, 0);
+    newAlignment.correctGlobalOffset(nsensor, cummulativeX, cummulativeY, 0);
   }
 
 	std::cout << "New alignment:\n";

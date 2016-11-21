@@ -35,8 +35,8 @@ public:
   void setOffset(Index sensorId, const XYZPoint& offset);
   void setOffset(Index sensorId, double x, double y, double z);
   void setRotationAngles(Index sensorId, double rotX, double rotY, double rotZ);
-  /** Change the offset by small values relative to the current position. */
-  void correctOffset(Index sensorId, double dx, double dy, double dz);
+  /** Change the global offset by small values. */
+  void correctGlobalOffset(Index sensorId, double dx, double dy, double dz);
   /** Change the rotation by small values around the current rotation angles. */
   void correctRotationAngles(Index sensorId,
                              double dalpha,

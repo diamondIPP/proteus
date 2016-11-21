@@ -205,7 +205,7 @@ void Loopers::FineAlign::loop()
         std::cout << "Fine alignment with residuals:" << std::endl;
         std::cout << "   Sensor: " << nsens << ", Xcorrection: " << offsetX
                   << ", Ycorrection: " << offsetY << std::endl;
-        newAlignment.correctOffset(nsens, offsetX, offsetY, 0);
+        newAlignment.correctGlobalOffset(nsens, offsetX, offsetY, 0);
         // rotation1[nsens] = rotation;
       } else {
         double offsetX = 0, offsetY = 0, rotation = 0;
@@ -222,7 +222,7 @@ void Loopers::FineAlign::loop()
         std::cout << "Sensor: " << nsens << ", Xcorrection: " << offsetX
                   << ", Ycorrection: " << offsetY
                   << ", Zcorrection: " << rotation << std::endl;
-        newAlignment.correctOffset(nsens, offsetX, offsetY, 0);
+        newAlignment.correctGlobalOffset(nsens, offsetX, offsetY, 0);
         newAlignment.correctRotationAngles(nsens, 0, 0, rotation);
         // std::cout << "Sensor: " << nsens << ", Xoffset: " <<
         // sensor->getOffX()<< ", Yoffset: " << sensor->getOffY() << ", Zoffset:
