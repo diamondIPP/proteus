@@ -9,6 +9,7 @@
 
 #include "analyzers/analyzer.h"
 #include "analyzers/singleanalyzer.h"
+#include "utils/definitions.h"
 
 namespace Storage {
 class Event;
@@ -57,17 +58,23 @@ public:
   void analyze(const Storage::Event& event);
   void finalize();
 
+  const TH2D* getResidualUV(Index sensorId) const;
+
 private:
+  struct Hists {
+    TH2D* res;
+    TH2D* trackUResU;
+    TH2D* trackUResV;
+    TH2D* trackVResU;
+    TH2D* trackVResV;
+    TH2D* slopeUResU;
+    TH2D* slopeUResV;
+    TH2D* slopeVResU;
+    TH2D* slopeVResV;
+  };
+
   const Mechanics::Device& m_device;
-  std::vector<TH2D*> m_res;
-  std::vector<TH2D*> m_resUtrackU;
-  std::vector<TH2D*> m_resUtrackV;
-  std::vector<TH2D*> m_resVtrackU;
-  std::vector<TH2D*> m_resVtrackV;
-  std::vector<TH2D*> m_resUslopeU;
-  std::vector<TH2D*> m_resUslopeV;
-  std::vector<TH2D*> m_resVslopeU;
-  std::vector<TH2D*> m_resVslopeV;
+  std::vector<Hists> m_hists;
 };
 
 } // namespace Analyzers
