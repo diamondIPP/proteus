@@ -14,10 +14,3 @@ Contents:
    basic_steps
    configuration_files
    contribution_guide
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
