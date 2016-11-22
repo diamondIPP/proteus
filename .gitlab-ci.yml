@@ -30,7 +30,7 @@ test_run000875:
   stage: test
   script:
     - cd test
-    - ./download_data.sh
+    - ./download_data.py
     - ./run_telescope.sh 875
     - ./run_dut0.sh 875
 
@@ -38,7 +38,7 @@ test_run001066:
   stage: test
   script:
     - cd test
-    - ./download_data.sh
+    - ./download_data.py
     - ./run_telescope.sh 1066
     - ./run_dut0.sh 1066
 
@@ -46,5 +46,5 @@ test_old_run001066:
   stage: test
   script:
     - cd test
-    - ./download_data.sh
+    - ./download_data.py
     - ./old-run_reference.sh 1066
