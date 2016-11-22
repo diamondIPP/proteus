@@ -12,7 +12,7 @@ The following commands will build the software and run an example analysis
 chain for one of the example datasets
 
     ./build.sh
-    ./download_data.sh
+    ./download_data.py
     ./run_telescope.sh <RUN>
     ./run_dut0.sh <RUN>
 
