@@ -1,0 +1,25 @@
+# empty noise mask for the telescope part
+
+[[sensors]]
+id = 0
+masked_pixels = []
+
+[[sensors]]
+id = 1
+masked_pixels = []
+
+[[sensors]]
+id = 2
+masked_pixels = []
+
+[[sensors]]
+id = 3
+masked_pixels = []
+
+[[sensors]]
+id = 4
+masked_pixels = []
+
+[[sensors]]
+id = 5
+masked_pixels = []

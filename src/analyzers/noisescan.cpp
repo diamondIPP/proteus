@@ -1,6 +1,6 @@
 /**
  * \author Morit Kiehn <msmk@cern.ch>
- * \created 2016-08
+ * \date 2016-08
  */
 
 #include "noisescan.h"

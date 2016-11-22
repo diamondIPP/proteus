@@ -1,5 +1,5 @@
-Proteus --- Pixel telescope software
-====================================
+Proteus --- Pixel telescope reconstruction
+==========================================
 
 Proteus is a software to reconstruct and analyze beam telescope
 measurements. It started as a fork of the [Judith][judith] software but
@@ -24,14 +24,13 @@ environment. By sourcing it via
 
     source build/activate.sh
 
-the `proteus` binary can be called directly without specifying its
-location explicitly.
+the `pt-...` binaries can be called directly without specifying its location
+explicitly.
 
-The `test` directory contains example configurations and additional information
-on how to use them.
+The `test` directory contains example configurations.
 
-Additional information including the coding and contribution guide can be found
-in the `doc/` directory.
+A introduction guide and additional information including the coding and
+contribution guide can be found in the `doc/` directory.
 
 Authors
 -------
@@ -92,8 +91,8 @@ This software is distributed under the terms of the MIT license.
 
 Contributions are expected to be submitted under the same license terms.
 
-<TO BE RENAMED> includes a copy of the [tinytoml][tinytoml].
-[Tinytoml][tinytoml] is distributed under the simplified BSD License.
+Proteus includes a copy of the [tinytoml][tinytoml]. [Tinytoml][tinytoml] is
+distributed under the simplified BSD License.
 
 
 [cmake]: http://www.cmake.org

@@ -1,14 +1,23 @@
 # global settings **must** appear before any [section] command
 
-alignment = "../alignment-ref.toml"
-noise_mask = []
+alignment = "geometry/unaligned.toml"
+# only to demonstrate the setting.
+# leaving out the `noise_mask` setting altogether has the same effect
+# as adding empty masks.
+noise_mask = ["masks/mask_tel_empty.toml",
+              "masks/mask_duts_empty.toml"]
 
+# common global device settings
 [device]
 name = "FEI4Tel"
 clock = 40.0
 window = 16
 space_unit = "um"
 time_unit = "ns"
+
+# define all possible sensor types in this setup
+# this will be accessed by name later on
+# pitch and thickness in um
 
 [sensor_types.fei4-si]
 measurement = "pixel_tot"
@@ -21,39 +30,44 @@ x_x0 = 0.005443
 
 [sensor_types.ccpdv4]
 measurement = "ccpdv4_binary"
-cols = 80
+cols = 160
 rows = 168
-pitch_col = 250.
+pitch_col = 125.
 pitch_row = 100.
 thickness = 250.
 x_x0 = 0.005443
 
 # sensors in the order as they appear in the data file
+# the index in this list corresponds to the sensor id in other configs
 
 [[sensors]]
 type = "fei4-si"
+name = "tel0"
 
 [[sensors]]
 type = "fei4-si"
+name = "tel1"
 
 [[sensors]]
 type = "fei4-si"
+name = "tel2"
 
 [[sensors]]
 type = "fei4-si"
+name = "tel3"
 
 [[sensors]]
 type = "fei4-si"
+name = "tel4"
 
 [[sensors]]
 type = "fei4-si"
+name = "tel5"
 
 [[sensors]]
 type = "ccpdv4"
 name = "caribou04"
-is_masked = true
 
 [[sensors]]
 type = "ccpdv4"
 name = "caribou06"
-is_masked = true

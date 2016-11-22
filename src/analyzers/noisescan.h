@@ -1,6 +1,6 @@
 /**
  * \author Moritz Kiehn <msmk@cern.ch>
- * \created 2016-08
+ * \date 2016-08
  *
  * This is a conversion of the standalone `NoiseScanLooper` into a
  * reusable analyzer.

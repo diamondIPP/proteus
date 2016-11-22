@@ -2,12 +2,7 @@ image: xbane/repo:slc6-base
 
 stages:
   - build
-  - run_reference
-  - run_dut
-
-cache:
-  paths:
-    - "test/raw"
+  - test
 
 before_script:
     - export GCC_VERSION=4.8.1
@@ -22,30 +17,34 @@ build:
     - ./build.sh
   artifacts:
     paths:
-      - "test/build/bin/proteus"
-      - "test/build/activate.sh"
+      - test/build/activate.sh
+      - test/build/bin/
 
-test_reference:
-  stage: run_reference
+# global cache that should be shared among all jobs
+cache:
+  key: data
+  paths:
+    - test/raw/
+
+test_run000875:
+  stage: test
   script:
     - cd test
-    - ./download_data.sh
-    - ./run_reference.sh
-  artifacts:
-    paths:
-    #- "test/run000875"
-    #- "test/run001066"
+    - ./download_data.py
+    - ./run_telescope.sh 875
+    - ./run_dut0.sh 875
 
-test_dut:
-# DUT tests not ready, yet
-  when: manual
-  stage: run_dut
+test_run001066:
+  stage: test
   script:
     - cd test
-    - ./download_data.sh
-    - ./run_dut.sh
-  artifacts:
-    paths:
-      - "test/run000875"
-      - "test/run001066"
-      
+    - ./download_data.py
+    - ./run_telescope.sh 1066
+    - ./run_dut0.sh 1066
+
+test_old_run001066:
+  stage: test
+  script:
+    - cd test
+    - ./download_data.py
+    - ./old-run_reference.sh 1066

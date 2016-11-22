@@ -16,7 +16,7 @@ PREFIX=$(printf "output/run%06d-" $RUN)
 source build/activate.sh
 cd $RUNDIR
 
-cp -f comparison/unaligned.toml alignment-ref.toml
+cp -f geometry/unaligned.toml alignment-ref.toml
 mkdir -p output
 
 # assume noise-free telescope; no noise mask

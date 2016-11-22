@@ -1,6 +1,3 @@
-# Example configs (Can be added manually with git add -f)
-configs/*
-
 # Data files and logs
 *.dat
 *.log
@@ -34,7 +31,6 @@ build/
 *.lib
 
 # Executables
-Judith
 *.exe
 *.out
 *.app
