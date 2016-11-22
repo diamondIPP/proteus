@@ -2,7 +2,6 @@ image: xbane/repo:slc6-base
 
 stages:
   - build
-  - data
   - test
 
 before_script:
@@ -10,10 +9,6 @@ before_script:
     - export ROOT_VERSION=5.34.36
     - export DISPLAY=""
     - source .gitlab-ci.d/init_x86_64.sh
-
-cache:
-  paths:
-    - test/raw/
 
 build:
   stage: build
@@ -25,20 +20,17 @@ build:
       - test/build/activate.sh
       - test/build/bin/
 
-download_data:
-  stage: data
-  script:
-    - cd test
-    - ./download_data.sh
-  artifacts:
-    untracked: true
-    paths:
-      - test/raw/
+# global cache that should be shared among all jobs
+cache:
+  key: data
+  paths:
+    - test/raw/
 
 test_run000875:
   stage: test
   script:
     - cd test
+    - ./download_data.sh
     - ./run_telescope.sh 875
     - ./run_dut0.sh 875
 
@@ -46,6 +38,7 @@ test_run001066:
   stage: test
   script:
     - cd test
+    - ./download_data.sh
     - ./run_telescope.sh 1066
     - ./run_dut0.sh 1066
 
@@ -53,4 +46,5 @@ test_old_run001066:
   stage: test
   script:
     - cd test
+    - ./download_data.sh
     - ./old-run_reference.sh 1066
