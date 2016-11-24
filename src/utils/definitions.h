@@ -58,12 +58,12 @@ typedef ROOT::Math::SVector<double, 4> Vector4;
  * This is a multi-dimensional generalization of the pull / significance
  * measure.
  */
-template <typename T, unsigned int D1>
+template <typename T, unsigned int kD1>
 inline double mahalanobisSquared(
-    const ROOT::Math::SMatrix<T, D1, D1, ROOT::Math::MatRepSym<T, D1>>& cov,
-    const ROOT::Math::SVector<T, D1>& x)
+    const ROOT::Math::SMatrix<T, kD1, kD1, ROOT::Math::MatRepSym<T, kD1>>& cov,
+    const ROOT::Math::SVector<T, kD1>& x)
 {
-  ROOT::Math::SMatrix<T, D1, D1, ROOT::Math::MatRepSym<T, D1>> weight(cov);
+  ROOT::Math::SMatrix<T, kD1, kD1, ROOT::Math::MatRepSym<T, kD1>> weight(cov);
   if (!weight.InvertChol())
     throw std::runtime_error(
         "Covariance inversion failed for Mahalanobis distance");
@@ -71,10 +71,10 @@ inline double mahalanobisSquared(
 }
 
 /** Mahalanobis distance / norm of a vector. */
-template <typename T, unsigned int D1>
+template <typename T, unsigned int kD1>
 inline double mahalanobis(
-    const ROOT::Math::SMatrix<T, D1, D1, ROOT::Math::MatRepSym<T, D1>>& cov,
-    const ROOT::Math::SVector<T, D1>& x)
+    const ROOT::Math::SMatrix<T, kD1, kD1, ROOT::Math::MatRepSym<T, kD1>>& cov,
+    const ROOT::Math::SVector<T, kD1>& x)
 {
   return std::sqrt(mahalanobisSquared(cov, x));
 }
