@@ -168,7 +168,7 @@ void Mechanics::Alignment::setOffset(Index sensorId,
                                      double z)
 {
   // will automatically create a missing GeoParams
-  auto& params = m_geo.at(sensorId);
+  auto& params = m_geo[sensorId];
   params.offsetX = x;
   params.offsetY = y;
   params.offsetZ = z;
@@ -180,7 +180,7 @@ void Mechanics::Alignment::setRotationAngles(Index sensorId,
                                              double rotZ)
 {
   // will automatically create a missing GeoParams
-  auto& params = m_geo.at(sensorId);
+  auto& params = m_geo[sensorId];
   params.rotationX = rotX;
   params.rotationY = rotY;
   params.rotationZ = rotZ;
