@@ -20,6 +20,10 @@ class Arguments {
 public:
   Arguments(const char* description);
 
+  /** Add an optional commandline argument. */
+  template <typename T>
+  void addOption(char key, std::string name, std::string help, T value = T());
+
   /** Parse command lines and return true on error. */
   bool parse(int argc, char const* argv[]);
 
@@ -30,38 +34,35 @@ public:
   /** Construct full output path from known output prefix and name. */
   std::string makeOutput(const std::string& name) const;
   /** Access an optional argument and convert it to the requested type. */
-  template <typename T> T get(const std::string& name) const;
+  template <typename T>
+  T get(const std::string& name) const;
 
   void print(std::ostream& os) const;
 
 private:
-  struct Optional {
+  struct Option {
     const std::string name;
     const std::string help;
     std::string value;
     const char abbreviation;
-
-    Optional(char abbreviation_,
-             const std::string& name_,
-             const std::string& help_,
-             const std::string& default_ = std::string());
   };
 
+  Option* find(const std::string& name, char abbreviation);
+  const Option* find(const std::string& name, char abbreviation) const;
   void printHelp(const std::string& arg0) const;
-  Optional* find(const std::string& name, char abbreviation);
-  const Optional* find(const std::string& name, char abbreviation) const;
 
   const std::string m_description;
-  std::vector<std::string> m_positional;
-  std::vector<Optional> m_optional;
+  std::vector<std::string> m_positionals;
+  std::vector<Option> m_options;
   std::string m_input, m_outputPrefix;
 };
 
 } // namespace Utils
 
-template <typename T> T Utils::Arguments::get(const std::string& name) const
+template <typename T>
+inline T Utils::Arguments::get(const std::string& name) const
 {
-  const Optional* opt = find(name, 0);
+  const Option* opt = find(name, 0);
   if (!opt)
     throw std::runtime_error("Arguments: option '" + name +
                              "' does not exists");
@@ -69,6 +70,19 @@ template <typename T> T Utils::Arguments::get(const std::string& name) const
   T ret;
   std::istringstream(opt->value) >> ret;
   return ret;
+}
+
+template <typename T>
+inline void Utils::Arguments::addOption(char key,
+                                        std::string name,
+                                        std::string help,
+                                        T value)
+{
+  // value is always stored as string
+  std::ostringstream sval;
+  sval << value;
+  Option opt = {std::move(name), std::move(help), sval.str(), key};
+  m_options.push_back(std::move(opt));
 }
 
 #endif // PT_ARGUMENTS_H
