@@ -1,0 +1,14 @@
+# coarse alignment using cluster correlation
+[align]
+# which method should be used to compute the alignment
+method = "residuals" # correlation, residuals, chi2_local
+# sensors that are used to compute the alignment, e.g. to build tracks
+sensor_ids = [0, 1, 2, 3, 4, 5]
+# sensors which should be aligned (must be a subset of sensor_ids)
+align_ids = [1, 2, 3, 4]
+# number of iterative alignment steps
+num_steps = 10
+# distance cut to assign clusters to the track (only for track-based alignment)
+distance_sigma_max = 4.0
+# only consider tracks with a chi2 value (only for track-based alignment)
+reduced_chi2_max = 5.0

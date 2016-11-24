@@ -16,5 +16,11 @@ cd $RUNDIR
 mkdir -p output
 
 pt-noisescan $FLAGS -d $DEV -c configs/noisescan_tel.toml $RAWFILE ${PREFIX}noisescan_tel
-# TODO 2016-11-14 msmk: run alignment
-pt-track $FLAGS -d $DEV -c configs/analysis.toml $RAWFILE ${PREFIX}unaligned
+pt-align $FLAGS -d $DEV -c configs/align_tel_coarse.toml \
+  $RAWFILE ${PREFIX}align0
+pt-align $FLAGS -d $DEV -c configs/align_tel_fine.toml \
+  -g ${PREFIX}align0-geo.toml \
+  $RAWFILE ${PREFIX}align1
+pt-track $FLAGS -d $DEV -c configs/analysis.toml \
+  -g ${PREFIX}align1-geo.toml \
+  $RAWFILE ${PREFIX}track
