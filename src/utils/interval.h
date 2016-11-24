@@ -15,10 +15,10 @@
 
 namespace Utils {
 
-enum class Endpoints { CLOSED, OPEN, OPEN_MIN, OPEN_MAX };
+enum class Endpoints { Closed, Open, OpenMin, OpenMax };
 
 /** An interval on a single ordered axes. */
-template <typename T, Endpoints ENDPOINTS = Endpoints::OPEN_MAX>
+template <typename T, Endpoints kEndpoints = Endpoints::OpenMax>
 struct Interval {
   T min, max;
 
@@ -30,18 +30,18 @@ struct Interval {
    */
   bool isEmpty() const
   {
-    return (ENDPOINTS != Endpoints::CLOSED) && (min == max);
+    return (kEndpoints != Endpoints::Closed) && (min == max);
   }
   bool isInside(T x) const
   {
     // compiler should remove unused checks
-    if (ENDPOINTS == Endpoints::CLOSED)
+    if (kEndpoints == Endpoints::Closed)
       return (min <= x) && (x <= max);
-    if (ENDPOINTS == Endpoints::OPEN)
+    if (kEndpoints == Endpoints::Open)
       return (min < x) && (x < max);
-    if (ENDPOINTS == Endpoints::OPEN_MIN)
+    if (kEndpoints == Endpoints::OpenMin)
       return (min < x) && (x <= max);
-    // default is OPEN_MAX
+    // default is OpenMax
     return (min <= x) && (x < max);
   }
 
@@ -55,9 +55,9 @@ struct Interval {
 };
 
 /** N-dimensional box defined by intervals along each axis. */
-template <size_t N, typename T, Endpoints ENDPOINTS = Endpoints::OPEN_MAX>
+template <size_t N, typename T, Endpoints kEndpoints = Endpoints::OpenMax>
 struct Box {
-  typedef Interval<T, ENDPOINTS> Axis;
+  typedef Interval<T, kEndpoints> Axis;
   typedef std::array<T, N> Point;
 
   std::array<Axis, N> axes;
@@ -99,35 +99,35 @@ struct Box {
   }
 };
 
-template <typename T0, typename T1, Endpoints ENDPOINTS>
-Interval<T0, ENDPOINTS> intersection(const Interval<T0, ENDPOINTS>& interval0,
-                                     const Interval<T1, ENDPOINTS>& interval1)
+template <typename T0, typename T1, Endpoints kEndpoints>
+Interval<T0, kEndpoints> intersection(const Interval<T0, kEndpoints>& interval0,
+                                      const Interval<T1, kEndpoints>& interval1)
 {
   return {std::max<T0>(interval0.min, interval1.min),
           std::min<T0>(interval0.max, interval1.max)};
 }
 
-template <size_t N, typename T0, typename T1, Endpoints ENDPOINTS>
-Box<N, T0, ENDPOINTS> intersection(const Box<N, T0, ENDPOINTS>& box0,
-                                   const Box<N, T1, ENDPOINTS>& box1)
+template <size_t N, typename T0, typename T1, Endpoints kEndpoints>
+Box<N, T0, kEndpoints> intersection(const Box<N, T0, kEndpoints>& box0,
+                                    const Box<N, T1, kEndpoints>& box1)
 {
-  Box<N, T0, ENDPOINTS> box;
+  Box<N, T0, kEndpoints> box;
   for (size_t i = 0; i < N; ++i)
     box.axes[i] = intersection(box0.axes[i], box1.axes[i]);
   return box;
 }
 
-template <typename T, Endpoints ENDPOINTS>
+template <typename T, Endpoints kEndpoints>
 std::ostream& operator<<(std::ostream& os,
-                         const Interval<T, ENDPOINTS>& interval)
+                         const Interval<T, kEndpoints>& interval)
 {
-  if (ENDPOINTS == Endpoints::CLOSED) {
+  if (kEndpoints == Endpoints::Closed) {
     os << '[' << interval.min << ", " << interval.max << ']';
-  } else if (ENDPOINTS == Endpoints::OPEN) {
+  } else if (kEndpoints == Endpoints::Open) {
     os << '(' << interval.min << ", " << interval.max << ')';
-  } else if (ENDPOINTS == Endpoints::OPEN_MIN) {
+  } else if (kEndpoints == Endpoints::OpenMin) {
     os << '(' << interval.min << ", " << interval.max << ']';
-  } else /* OPEN_MAX */ {
+  } else /* OpenMax */ {
     os << '[' << interval.min << ", " << interval.max << ')';
   }
   return os;
