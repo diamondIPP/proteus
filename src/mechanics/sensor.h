@@ -40,10 +40,10 @@ namespace Mechanics {
 class Sensor {
 public:
   /** Measurement type of the sensor. */
-  enum Measurement {
-    PIXEL_BINARY, // generic pixel detector with binary measurement
-    PIXEL_TOT,    // generic pixel detector with time-over-treshold measurement
-    CCPDV4_BINARY // HVCMOS ccpd version 4 with address mapping and binary pixel
+  enum class Measurement {
+    PixelBinary, // generic pixel detector with binary measurement
+    PixelTot,    // generic pixel detector with time-over-treshold measurement
+    Ccpdv4Binary // HVCMOS ccpd version 4 with address mapping and binary pixel
   };
   static Measurement measurementFromName(const std::string& name);
   static std::string measurementName(Measurement measurement);

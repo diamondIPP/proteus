@@ -199,11 +199,11 @@ void Processors::setupClusterizers(const Mechanics::Device& device,
   for (Index isensor = 0; isensor < device.numSensors(); ++isensor) {
     const Mechanics::Sensor* sensor = device.getSensor(isensor);
     switch (sensor->measurement()) {
-    case Sensor::PIXEL_BINARY:
-    case Sensor::CCPDV4_BINARY:
+    case Sensor::Measurement::PixelBinary:
+    case Sensor::Measurement::Ccpdv4Binary:
       binary.push_back(isensor);
       break;
-    case Sensor::PIXEL_TOT:
+    case Sensor::Measurement::PixelTot:
       weighted.push_back(isensor);
     }
   }

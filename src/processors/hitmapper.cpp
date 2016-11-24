@@ -66,7 +66,7 @@ void Processors::setupHitMappers(const Mechanics::Device& device,
 
   for (Index isensor = 0; isensor < device.numSensors(); ++isensor) {
     const Sensor* sensor = device.getSensor(isensor);
-    if (sensor->measurement() == Sensor::CCPDV4_BINARY)
+    if (sensor->measurement() == Sensor::Measurement::Ccpdv4Binary)
       ccpdv4.push_back(isensor);
   }
 
