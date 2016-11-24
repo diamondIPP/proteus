@@ -41,9 +41,8 @@ static void parseFile(const std::string& path, Mechanics::NoiseMask& mask)
 {
   std::fstream input(path, std::ios_base::in);
 
-  if (!input) {
-    ERROR("failed to open file '", path, "'");
-  }
+  if (!input)
+    throw std::runtime_error("NoiseMask: failed to open file '" + path + "'");
 
   std::stringstream comments;
   while (input) {
@@ -109,7 +108,7 @@ toml::Value Mechanics::NoiseMask::toConfig() const
 
   for (auto im = m_maskedPixels.begin(); im != m_maskedPixels.end(); ++im) {
     int id = static_cast<int>(im->first);
-    const auto & pixels = im->second;
+    const auto& pixels = im->second;
 
     toml::Array cfgPixels;
     for (auto ip = pixels.begin(); ip != pixels.end(); ++ip) {
