@@ -32,6 +32,7 @@ int main(int argc, char const* argv[])
   using namespace Processors;
 
   Utils::Arguments args("run proteus telescope processing");
+  args.addOption('g', "geometry", "use a separate geometry file", "");
   if (args.parse(argc, argv))
     return EXIT_FAILURE;
 
@@ -40,6 +41,12 @@ int main(int argc, char const* argv[])
   uint64_t numEvents = args.get<uint64_t>("num_events");
 
   Mechanics::Device dev = Mechanics::Device::fromFile(args.device());
+  // override geometry if requested
+  auto geoPath = args.get<std::string>("geometry");
+  if (!geoPath.empty()) {
+    auto geo = Mechanics::Alignment::fromFile(geoPath);
+    dev.applyAlignment(geo);
+  }
 
   toml::Value cfg = Utils::Config::readConfig(args.config());
   toml::Value cfgTrk = cfg["track"];

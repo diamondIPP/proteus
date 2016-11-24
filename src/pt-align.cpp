@@ -111,12 +111,21 @@ int main(int argc, char const* argv[])
   using namespace Processors;
 
   Utils::Arguments args("align selected sensors");
+  args.addOption('g', "geometry", "use a separate geometry file", "");
+
   if (args.parse(argc, argv))
     return EXIT_FAILURE;
 
   uint64_t skipEvents = args.get<uint64_t>("skip_events");
   uint64_t numEvents = args.get<uint64_t>("num_events");
   Device device = Device::fromFile(args.device());
+  // override geometry if requested
+  auto geoPath = args.get<std::string>("geometry");
+  if (!geoPath.empty()) {
+    auto geo = Mechanics::Alignment::fromFile(geoPath);
+    device.applyAlignment(geo);
+  }
+
   toml::Value cfg = Utils::Config::readConfig(args.config())["align"];
 
   // select alignment scope, i.e. the sensors that are considered as input and
