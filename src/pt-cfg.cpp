@@ -12,6 +12,8 @@
 #include "mechanics/noisemask.h"
 #include "utils/logger.h"
 
+PT_SETUP_GLOBAL_LOGGER
+
 int main(int argc, char const* argv[])
 {
   if (argc != 2) {
@@ -30,20 +32,20 @@ int main(int argc, char const* argv[])
   try {
     Mechanics::Device::fromFile(path).print(std::cout);
     return EXIT_SUCCESS;
-  } catch (...) {
-    // ignore to try the next configuration
+  } catch (const std::exception& e) {
+    INFO("not a device config: ", e.what());
   }
   try {
     Mechanics::Alignment::fromFile(path).print(std::cout);
     return EXIT_SUCCESS;
-  } catch (...) {
-    // ignore to try the next configuration
+  } catch (const std::exception& e) {
+    INFO("not a geometry config: ", e.what());
   }
   try {
     Mechanics::NoiseMask::fromFile(path).print(std::cout);
     return EXIT_SUCCESS;
-  } catch (...) {
-    // ignore error to print human-readable messages
+  } catch (const std::exception& e) {
+    INFO("not a mask file: ", e.what());
   }
   // reached only if nothing works
   std::cerr << '\'' << path << "' is not a valid configuration file\n";
