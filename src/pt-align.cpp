@@ -126,34 +126,31 @@ int main(int argc, char const* argv[])
     device.setGeometry(geo);
   }
 
-  toml::Value cfg = Utils::Config::readConfig(args.config())["align"];
-
+  toml::Value cfgAll = Utils::Config::readConfig(args.config());
+  toml::Value defaults = toml::Table{
+      {"num_steps", 10}, {"distance_sigma_max", 5.}, {"reduced_chi2_max", -1.}};
+  toml::Value cfg = Utils::Config::withDefaults(cfgAll["align"], defaults);
   // select alignment scope, i.e. the sensors that are considered as input and
   // the sensors that should be aligned
   auto sensorIds = cfg.get<std::vector<Index>>("sensor_ids");
   auto alignIds = cfg.get<std::vector<Index>>("align_ids");
   auto methodName = cfg.get<std::string>("method");
-  Method method = Method::CORRELATION;
-  int numSteps = 0;
-  double distSigmaMax = -1;
-  double redChi2Max = -1;
+  auto numSteps = cfg.get<int>("num_steps");
+  double distSigmaMax = cfg.get<double>("distance_sigma_max");
+  double redChi2Max = cfg.get<double>("reduced_chi2_max");
 
+  Method method = Method::CORRELATION;
   if (methodName == "correlation") {
     method = Method::CORRELATION;
     numSteps = 1;
   } else if (methodName == "residuals") {
     method = Method::RESIDUALS;
-    numSteps = cfg.get<int>("num_steps");
-    distSigmaMax = cfg.get<double>("distance_sigma_max");
-    redChi2Max = cfg.get<double>("reduced_chi2_max");
   } else {
-    throw std::runtime_error("alignment method '" + methodName +
-                             "' is unknown");
+    throw std::runtime_error("unknown alignment method '" + methodName + '\'');
   }
 
   Storage::StorageIO input(args.input(), Storage::INPUT, device.numSensors());
   TFile hists(args.makeOutput("hists.root").c_str(), "RECREATE");
-  // Steps corrections;
 
   for (int step = 0; step < numSteps; ++step) {
     TDirectory* stepDir = hists.mkdir(("Step" + std::to_string(step)).c_str());
@@ -176,10 +173,10 @@ int main(int argc, char const* argv[])
       loop.addAnalyzer(aligner);
 
     } else if (method == Method::RESIDUALS) {
-      // use unbiased residuals of tracks to align
+      // use (unbiased) track residuals to align
 
       loop.addProcessor(std::make_shared<TrackFinder>(
-          device, sensorIds, sensorIds.size(), distSigmaMax));
+          device, sensorIds, distSigmaMax, sensorIds.size(), redChi2Max));
       loop.addAnalyzer(std::make_shared<TrackInfo>(&device, stepDir));
       loop.addAnalyzer(std::make_shared<Residuals>(&device, stepDir));
       loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(device, stepDir));
