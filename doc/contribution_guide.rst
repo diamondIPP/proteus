@@ -16,20 +16,19 @@ i.e. change only one thing at a time to simplify review.
 Coding Style
 ------------
 
-Use ``UpperCamelCase`` for type names and ``lowerCamelCase`` for
-functions, methods, and variables. Member variables use the same
-convention but should be prefixed ``m_...``. Example identifiers would
-look as follows:
+Use ``UpperCamelCase`` for type names and ``lowerCamelCase`` for functions,
+methods, and variables. Member variables use the same convention but should be
+prefixed by ``m_...``. Static member variables should be prefixed by ``s_...``.
+Enum values are named like type names. Constant should be prefixed by ``k...``.
+Example identifiers would look as follows:
 
 *   ``ComplicatedNamedClass``, ``AnotherStruct``, ``EnumType``
 *   ``doSomething(...)``, ``thing.doSomething(...)``
 *   ``aVariable``, ``m_aMemberVariable``
-*   ``A_CONSTANT``, ``ENUM_VALUE``
+*   ``kTheConstant``, ``EnumValue``
 *   ``MACRO_THAT_DOES_SOMETHING(...)``
 
-Namespaces are named using the same rules as type names. Using the same style
-for macros, constant, and enums is kept to be consistent with existing code. In
-any case, you do not plan to use macros, right?
+Namespaces are named using the same rules as type names.
 
 Use 2 spaces for indentation, with the following brace placement:
 

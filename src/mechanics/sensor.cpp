@@ -14,9 +14,9 @@ struct MeasurementName {
   const char* name;
 };
 static const MeasurementName MEAS_NAMES[] = {
-    {Mechanics::Sensor::PIXEL_BINARY, "pixel_binary"},
-    {Mechanics::Sensor::PIXEL_TOT, "pixel_tot"},
-    {Mechanics::Sensor::CCPDV4_BINARY, "ccpdv4_binary"}};
+    {Mechanics::Sensor::Measurement::PixelBinary, "pixel_binary"},
+    {Mechanics::Sensor::Measurement::PixelTot, "pixel_tot"},
+    {Mechanics::Sensor::Measurement::Ccpdv4Binary, "ccpdv4_binary"}};
 
 Mechanics::Sensor::Measurement
 Mechanics::Sensor::measurementFromName(const std::string& name)

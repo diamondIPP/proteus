@@ -42,9 +42,9 @@ public:
   double stdOffsetV() const { return std::sqrt(m_cov(V, V)); }
   /** Slope in local coordinates. */
   const XYVector& slope() const { return m_slope; }
-  SymMatrix2 covSlope() const { return m_cov.Sub<SymMatrix2>(DU, DU); }
-  double stdSlopeU() const { return std::sqrt(m_cov(DU, DU)); }
-  double stdSlopeV() const { return std::sqrt(m_cov(DV, DV)); }
+  SymMatrix2 covSlope() const { return m_cov.Sub<SymMatrix2>(Du, Du); }
+  double stdSlopeU() const { return std::sqrt(m_cov(Du, Du)); }
+  double stdSlopeV() const { return std::sqrt(m_cov(Dv, Dv)); }
 
   /** Full position in the local coordinates. */
   XYZPoint posLocal() const { return XYZPoint(m_offset.x(), m_offset.y(), 0); }
@@ -52,7 +52,7 @@ public:
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
-  enum { U = 0, V = 1, DU = 2, DV = 3 };
+  enum { U = 0, V = 1, Du = 2, Dv = 3 };
 
   XYPoint m_offset;
   XYVector m_slope;

@@ -65,8 +65,8 @@ static void parseSensors(const ConfigParser& config,
         if (name.empty())
           name = "Plane" + std::to_string(sensorCounter);
 
-        Sensor::Measurement m = (digi ? Sensor::Measurement::PIXEL_BINARY
-                                      : Sensor::Measurement::PIXEL_TOT);
+        Sensor::Measurement m = (digi ? Sensor::Measurement::PixelBinary
+                                      : Sensor::Measurement::PixelTot);
         Sensor sensor(name, m, cols, rows, pitchX, pitchY, depth, xox0);
         device.addSensor(sensor);
         alignment.setOffset(sensorCounter, offX, offY, offZ);
