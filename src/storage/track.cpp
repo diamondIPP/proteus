@@ -20,22 +20,22 @@ void Storage::TrackState::setCovU(double varOffset, double varSlope, double cov)
 {
   m_cov(U, U) = varOffset;
   m_cov(U, V) = 0;
-  m_cov(U, DU) = cov;
-  m_cov(U, DV) = 0;
-  m_cov(DU, V) = 0;
-  m_cov(DU, DU) = varSlope;
-  m_cov(DU, DV) = 0;
+  m_cov(U, Du) = cov;
+  m_cov(U, Dv) = 0;
+  m_cov(Du, V) = 0;
+  m_cov(Du, Du) = varSlope;
+  m_cov(Du, Dv) = 0;
 }
 
 void Storage::TrackState::setCovV(double varOffset, double varSlope, double cov)
 {
   m_cov(V, U) = 0;
   m_cov(V, V) = varOffset;
-  m_cov(V, DU) = 0;
-  m_cov(V, DV) = cov;
-  m_cov(DV, U) = 0;
-  m_cov(DV, DU) = 0;
-  m_cov(DV, DV) = varSlope;
+  m_cov(V, Du) = 0;
+  m_cov(V, Dv) = cov;
+  m_cov(Dv, U) = 0;
+  m_cov(Dv, Du) = 0;
+  m_cov(Dv, Dv) = varSlope;
 }
 
 void Storage::TrackState::setErrU(double stdOffset, double stdSlope, double cov)
