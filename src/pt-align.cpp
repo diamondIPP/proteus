@@ -173,6 +173,7 @@ int main(int argc, char const* argv[])
           device, sensorIds, sensorIds.size(), distSigmaMax));
       loop.addAnalyzer(std::make_shared<TrackInfo>(&device, stepDir));
       loop.addAnalyzer(std::make_shared<Residuals>(&device, stepDir));
+      loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(device, stepDir));
       aligner = std::make_shared<ResidualsAligner>(device, alignIds, stepDir);
       loop.addAnalyzer(aligner);
     }

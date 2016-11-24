@@ -15,16 +15,13 @@ class Device;
 
 namespace Alignment {
 
-/** Align sensors in the xy-plane and z-rotations using track residuals.
- *
- * \warning Instantiates Analyzers::UnbiasedResiduals internally. This Analyzer
- *          should therefore not be manually added to the event loop.
- */
+/** Align sensors in the xy-plane using track residuals. */
 class ResidualsAligner : public Aligner {
 public:
   ResidualsAligner(const Mechanics::Device& device,
                    const std::vector<Index>& alignIds,
-                   TDirectory* dir);
+                   TDirectory* dir,
+                   double damping = 1);
 
   std::string name() const;
   void analyze(const Storage::Event& event);
@@ -33,10 +30,16 @@ public:
   Mechanics::Alignment updatedGeometry() const;
 
 private:
+  struct Histograms {
+    Index sensorId;
+    TH1D* deltaU;
+    TH1D* deltaV;
+  };
+
   const Mechanics::Device& m_device;
-  std::vector<Index> m_alignIds;
-  Analyzers::UnbiasedResiduals m_res;
+  std::vector<Histograms> m_hists;
   TH2D* m_trackSlope;
+  double m_damping;
 };
 
 } // namespace Alignment
