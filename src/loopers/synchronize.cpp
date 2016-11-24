@@ -169,8 +169,8 @@ void Synchronize::calculateSyncRatio()
   if (desyncEvent)
     throw "Synchronize: initial desynchronization, synchronize with another file first";
 
-  _dutDevice->geometry().writeFile(_dutDevice->pathAlignment());
-  _refDevice->geometry().writeFile(_refDevice->pathAlignment());
+  _dutDevice->geometry().writeFile(_dutDevice->pathGeometry());
+  _refDevice->geometry().writeFile(_refDevice->pathGeometry());
 }
 
 bool Synchronize::findLargeOffset(unsigned int nevent,

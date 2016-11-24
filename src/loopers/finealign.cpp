@@ -324,7 +324,7 @@ void Loopers::FineAlign::loop()
   }
   out_file->Close();
 
-  _refDevice->geometry().writeFile(_refDevice->pathAlignment());
+  _refDevice->geometry().writeFile(_refDevice->pathGeometry());
 }
 
 void Loopers::FineAlign::setNumIterations(unsigned int value) { _numIterations = value; }

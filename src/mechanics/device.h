@@ -29,7 +29,7 @@ public:
   static Device fromConfig(const toml::Value& cfg);
 
   const std::string& name() const { return m_name; }
-  const std::string& pathAlignment() const { return m_pathAlignment; }
+  const std::string& pathGeometry() const { return m_pathGeometry; }
   const std::string& pathNoiseMask() const { return m_pathNoiseMask; }
 
   void addSensor(const Sensor& sensor);
@@ -79,7 +79,7 @@ private:
   double m_clockRate;
   unsigned int m_readoutWindow;
   uint64_t m_timeStart, m_timeEnd;
-  std::string m_pathAlignment, m_pathNoiseMask;
+  std::string m_pathGeometry, m_pathNoiseMask;
   std::string m_spaceUnit;
   std::string m_timeUnit;
   std::vector<bool> m_sensorMask;

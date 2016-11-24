@@ -222,7 +222,7 @@ Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
     if (cfgAlign && cfgAlign->is<std::string>()) {
       auto p = pathRebaseIfRelative(cfgAlign->as<std::string>(), dir);
       device.setGeometry(Alignment::fromFile(p));
-      device.m_pathAlignment = p;
+      device.m_pathGeometry = p;
     } else if (cfgAlign) {
       device.setGeometry(Alignment::fromConfig(*cfgAlign));
     }
@@ -367,9 +367,9 @@ void Mechanics::Device::print(std::ostream& os, const std::string& prefix) const
     os << prefix << "sensor " << sensorId << ":\n";
     getSensor(sensorId)->print(os, prefix + "  ");
   }
-  os << prefix << "alignment:\n";
-  if (!m_pathAlignment.empty())
-    os << prefix << "  path: " << m_pathAlignment << '\n';
+  os << prefix << "geometry:\n";
+  if (!m_pathGeometry.empty())
+    os << prefix << "  path: " << m_pathGeometry << '\n';
   m_geometry.print(os, prefix + "  ");
   os << prefix << "noise mask:\n";
   if (!m_pathNoiseMask.empty())

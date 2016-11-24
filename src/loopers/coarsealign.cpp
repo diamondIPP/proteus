@@ -102,7 +102,7 @@ void Loopers::CoarseAlign::loop(){
 	newAlignment.print(std::cout);
 
   // create output alignment file
-  newAlignment.writeFile(_refDevice->pathAlignment());
+  newAlignment.writeFile(_refDevice->pathGeometry());
 }
 
 //=========================================================
