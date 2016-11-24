@@ -168,7 +168,7 @@ void Mechanics::Alignment::setOffset(Index sensorId,
                                      double z)
 {
   // will automatically create a missing GeoParams
-  auto& params = m_geo[sensorId];
+  auto& params = m_geo.at(sensorId);
   params.offsetX = x;
   params.offsetY = y;
   params.offsetZ = z;
@@ -180,7 +180,7 @@ void Mechanics::Alignment::setRotationAngles(Index sensorId,
                                              double rotZ)
 {
   // will automatically create a missing GeoParams
-  auto& params = m_geo[sensorId];
+  auto& params = m_geo.at(sensorId);
   params.rotationX = rotX;
   params.rotationY = rotY;
   params.rotationZ = rotZ;
@@ -191,7 +191,7 @@ void Mechanics::Alignment::correctOffset(Index sensorId,
                                          double dy,
                                          double dz)
 {
-  auto& params = m_geo[sensorId];
+  auto& params = m_geo.at(sensorId);
   params.offsetX += dx;
   params.offsetY += dy;
   params.offsetZ += dz;
@@ -202,7 +202,7 @@ void Mechanics::Alignment::correctRotationAngles(Index sensorId,
                                                  double dbeta,
                                                  double dgamma)
 {
-  auto& params = m_geo[sensorId];
+  auto& params = m_geo.at(sensorId);
   params.rotationX += dalpha;
   params.rotationY += dbeta;
   params.rotationZ += dgamma;
@@ -222,21 +222,28 @@ void Mechanics::Alignment::setBeamSlope(double slopeX, double slopeY)
 void Mechanics::Alignment::print(std::ostream& os,
                                  const std::string& prefix) const
 {
+  const double RAD2DEG = 180 / M_PI;
+
   os << prefix << "beam:\n"
      << prefix << "  slope X: " << m_beamSlopeX << '\n'
      << prefix << "  slope Y: " << m_beamSlopeY << '\n';
 
   for (auto ip = m_geo.begin(); ip != m_geo.end(); ++ip) {
-    Index i = ip->first;
+    Index sensorId = ip->first;
     const GeoParams& p = ip->second;
+    Vector3 unitU, unitV, unitW;
+    getLocalToGlobal(sensorId).Rotation().GetComponents(unitU, unitV, unitW);
 
-    os << prefix << "sensor " << i << ":\n";
-    os << prefix << "  offset X: " << p.offsetX << '\n'
-       << prefix << "  offset Y: " << p.offsetY << '\n'
-       << prefix << "  offset Z: " << p.offsetZ << '\n';
-    os << prefix << "  rotation X: " << p.rotationX << '\n'
-       << prefix << "  rotation Y: " << p.rotationY << '\n'
-       << prefix << "  rotation Z: " << p.rotationZ << '\n';
+    os << prefix << "sensor " << sensorId << ":\n";
+    os << prefix << "  offset x: " << p.offsetX << '\n'
+       << prefix << "  offset y: " << p.offsetY << '\n'
+       << prefix << "  offset z: " << p.offsetZ << '\n';
+    os << prefix << "  rotation x: " << p.rotationX * RAD2DEG << " deg\n"
+       << prefix << "  rotation y: " << p.rotationY * RAD2DEG << " deg\n"
+       << prefix << "  rotation z: " << p.rotationZ * RAD2DEG << " deg\n";
+    os << prefix << "  unit vector u: [" << unitU << "]\n"
+       << prefix << "  unit vector v: [" << unitV << "]\n"
+       << prefix << "  unit vector w: [" << unitW << "]\n";
   }
   os.flush();
 }
