@@ -256,7 +256,7 @@ void Analyzers::UnbiasedResiduals::analyze(const Storage::Event& event)
 
       // refit track w/o selected sensor
       Storage::TrackState state =
-          Processors::fitTrackLocalUnbiased(track, sensor, sensorId);
+          Processors::fitTrackLocalUnbiased(track, sensor);
       XYPoint clu = sensor.transformPixelToLocal(cluster.posPixel());
       XYVector res = clu - state.offset();
 

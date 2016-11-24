@@ -25,7 +25,7 @@ void fitTrack(Storage::Track& track);
 Storage::TrackState fitTrackLocal(const Storage::Track& track,
                                   const Mechanics::Sensor& reference);
 
-/** Fit track to clusters ignoring any measurements on the reference sensor.
+/** Fit track to clusters ignoring the measurement on the reference sensor.
  *
  * \param[in] track Only the track clusters are used.
  * \param[in] reference Reference sensor that defines the local coordinates.
@@ -33,8 +33,7 @@ Storage::TrackState fitTrackLocal(const Storage::Track& track,
  * \return Fitted state in local coordinates on the reference sensor.
  */
 Storage::TrackState fitTrackLocalUnbiased(const Storage::Track& track,
-                                          const Mechanics::Sensor& reference,
-                                          Index referenceId);
+                                          const Mechanics::Sensor& reference);
 
 } // namespace Processors
 
