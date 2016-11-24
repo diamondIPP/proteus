@@ -13,6 +13,21 @@
 
 namespace Utils {
 
+// support << operator for std::vector
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& things)
+{
+  auto it = things.begin();
+  auto end = things.end();
+  os << '[';
+  if (it != end)
+    os << *it;
+  for (++it; it != end; ++it)
+    os << ", " << *it;
+  os << ']';
+  return os;
+}
+
 /** A logger object with global log level.
  *
  * The logger provides logging functions for each predefined log level. Each
@@ -84,28 +99,6 @@ private:
   static Level s_level;
   std::string m_prefix;
 };
-
-// print utilities for std containers
-
-template <typename Container>
-std::ostream& printContainer(std::ostream& os, const Container& things)
-{
-  auto it = std::begin(things);
-  auto end = std::end(things);
-  os << '[';
-  if (it != end)
-    os << *it;
-  for (++it; it != end; ++it)
-    os << ", " << *it;
-  os << ']';
-  return os;
-}
-
-template <typename T>
-std::ostream& operator<<(std::ostream& os, const std::vector<T>& things)
-{
-  return printContainer(os, things);
-}
 
 } // namespace Utils
 
