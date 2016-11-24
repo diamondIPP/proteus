@@ -13,18 +13,18 @@
 
 // per-level prefix
 // clang-format off
-const char* Utils::Logger::LEVEL_PREFIX[3] = {
+const char* const Utils::Logger::kLevelPrefix[3] = {
     ANSI_BOLD ANSI_RED "ERROR|",
                        "INFO |",
     ANSI_ITALIC        "DEBUG|",
 };
-const char* Utils::Logger::RESET = ANSI_RESET;
+const char* const Utils::Logger::kReset = ANSI_RESET;
 // clang-format on
 
 // global logger w/o specific name
 Utils::Logger Utils::Logger::s_global("");
 // default global log-level
-Utils::Logger::Level Utils::Logger::s_level = Utils::Logger::Level::DEBUG;
+Utils::Logger::Level Utils::Logger::s_level = Utils::Logger::Level::Debug;
 
 Utils::Logger::Logger(std::string name) : m_prefix(std::move(name))
 {

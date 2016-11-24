@@ -31,7 +31,7 @@ namespace Utils {
  */
 class Logger {
 public:
-  enum Level { ERROR = 0, INFO = 1, DEBUG = 2 };
+  enum class Level { Error = 0, Info = 1, Debug = 2 };
 
   static void setGlobalLevel(Level lvl) { s_level = lvl; }
   static Logger& globalLogger();
@@ -41,17 +41,17 @@ public:
   template <typename... Ts>
   void error(const Ts&... things)
   {
-    log(Level::ERROR, things...);
+    log(Level::Error, things...);
   }
   template <typename... Ts>
   void info(const Ts&... things)
   {
-    log(Level::INFO, things...);
+    log(Level::Info, things...);
   }
   template <typename... Ts>
   void debug(const Ts&... things)
   {
-    log(Level::DEBUG, things...);
+    log(Level::Debug, things...);
   }
 
 private:
@@ -68,17 +68,18 @@ private:
   }
   static std::ostream& stream(Level lvl)
   {
-    return (lvl <= Level::ERROR) ? std::cerr : std::cout;
+    return (lvl <= Level::Error) ? std::cerr : std::cout;
   }
   template <typename... Ts>
   void log(Level lvl, const Ts&... things)
   {
     if (lvl <= s_level)
-      print(stream(lvl), LEVEL_PREFIX[lvl], m_prefix, things..., RESET);
+      print(stream(lvl), kLevelPrefix[static_cast<int>(lvl)], m_prefix,
+            things..., kReset);
   }
 
-  static const char* LEVEL_PREFIX[3];
-  static const char* RESET;
+  static const char* const kLevelPrefix[3];
+  static const char* const kReset;
   static Logger s_global;
   static Level s_level;
   std::string m_prefix;
