@@ -20,12 +20,14 @@ PT_SETUP_GLOBAL_LOGGER
 
 Processors::TrackFinder::TrackFinder(const Mechanics::Device& device,
                                      const std::vector<Index> sensors,
+                                     double distanceSigmaMax,
                                      Index numClustersMin,
-                                     double distanceSigmaMax)
+                                     double redChi2Max)
     : m_sensors(sensors)
     , m_numSeedSensors(1 + sensors.size() - numClustersMin)
-    , m_numClustersMin(numClustersMin)
     , m_distSigmaMax(distanceSigmaMax)
+    , m_redChi2Max(redChi2Max)
+    , m_numClustersMin(numClustersMin)
     , m_beamDirection(device.geometry().beamDirection())
 {
   if (sensors.size() < 2)
@@ -147,7 +149,9 @@ void Processors::TrackFinder::selectTracks(std::vector<TrackPtr>& candidates,
   for (auto itrack = candidates.begin(); itrack != candidates.end(); ++itrack) {
     Storage::Track& track = **itrack;
 
-    // too short
+    // apply track cuts
+    if ((0 < m_redChi2Max) && (m_redChi2Max < track.reducedChi2()))
+      continue;
     if (track.numClusters() < m_numClustersMin)
       continue;
 

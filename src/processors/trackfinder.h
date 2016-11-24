@@ -29,10 +29,16 @@ namespace Processors {
  */
 class TrackFinder : public Processor {
 public:
+  /**
+   * \param distanceSigmaMax Matching cut to associate clusters to a candidate
+   * \param numClustersMin Selection cut on number of required clusters
+   * \param redChi2Max Selection cut on chi2/n.d.f., negative value to disable
+   */
   TrackFinder(const Mechanics::Device& device,
               const std::vector<Index> sensors,
+              double distanceSigmaMax,
               Index numClustersMin,
-              double distanceSigmaMax);
+              double redChi2Max = -1);
 
   std::string name() const;
   /** Find tracks and add them to the event. */
@@ -48,8 +54,9 @@ private:
 
   std::vector<Index> m_sensors;
   size_t m_numSeedSensors;
-  Index m_numClustersMin;
   double m_distSigmaMax;
+  double m_redChi2Max;
+  Index m_numClustersMin;
   XYZVector m_beamDirection;
 };
 
