@@ -39,7 +39,6 @@ public:
   const Sensor* getSensor(Index i) const { return &m_sensors.at(i); }
 
   const Alignment& alignment() const { return m_alignment; }
-  XYZVector beamDirection() const { return m_alignment.beamDirection(); }
   /** Store the alignment and apply to all configured sensors. */
   void applyAlignment(const Alignment& alignment);
 
