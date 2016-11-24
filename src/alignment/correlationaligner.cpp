@@ -31,7 +31,7 @@ void Alignment::CorrelationAligner::finalize()
 
 Mechanics::Alignment Alignment::CorrelationAligner::updatedGeometry() const
 {
-  Mechanics::Alignment geo = m_device.alignment();
+  Mechanics::Alignment geo = m_device.geometry();
   double deltaX = 0;
   double deltaY = 0;
 

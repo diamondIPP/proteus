@@ -18,10 +18,10 @@ std::string Processors::ApplyAlignment::name() const
 
 void Processors::ApplyAlignment::process(Storage::Event& event) const
 {
-  applyAlignment(&event, &m_device);
+  setGeometry(&event, &m_device);
 }
 
-void Processors::applyAlignment(Storage::Event* event,
+void Processors::setGeometry(Storage::Event* event,
                                 const Mechanics::Device* device)
 {
   assert(event && device &&

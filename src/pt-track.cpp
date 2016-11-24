@@ -45,7 +45,7 @@ int main(int argc, char const* argv[])
   auto geoPath = args.get<std::string>("geometry");
   if (!geoPath.empty()) {
     auto geo = Mechanics::Alignment::fromFile(geoPath);
-    dev.applyAlignment(geo);
+    dev.setGeometry(geo);
   }
 
   toml::Value cfg = Utils::Config::readConfig(args.config());

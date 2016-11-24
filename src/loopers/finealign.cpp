@@ -124,7 +124,7 @@ void Loopers::FineAlign::loop()
       if (nsens == 0)
         continue; // fdibello in trackmaker nsens is the masked plane
 
-      Mechanics::Alignment newAlignment = _refDevice->alignment();
+      Mechanics::Alignment newAlignment = _refDevice->geometry();
       Mechanics::Sensor* sensor = _refDevice->getSensor(nsens);
 
       // Use broad residual resolution for the first iteration
@@ -160,7 +160,7 @@ void Loopers::FineAlign::loop()
              nplane++)
           _clusterMaker->generateClusters(refEvent, nplane);
 
-        Processors::applyAlignment(refEvent, _refDevice);
+        Processors::setGeometry(refEvent, _refDevice);
 
         if (refEvent->getNumTracks())
           throw "FineAlign: can't re-track an event, mask the tree in the "
@@ -232,7 +232,7 @@ void Loopers::FineAlign::loop()
       }
 
       // update alignment as input for the next iteration
-      _refDevice->applyAlignment(newAlignment);
+      _refDevice->setGeometry(newAlignment);
 
       // fdibello
       ofx[niter][nsens] = sensor->getOffX();
@@ -253,14 +253,14 @@ void Loopers::FineAlign::loop()
       // sigmay[niter][nsens]=sigmaY1;
     }
 
-    Mechanics::Alignment withBeamSlope = _refDevice->alignment();
+    Mechanics::Alignment withBeamSlope = _refDevice->geometry();
 
     // Ajudst the device rotation using the average slopes
     avgSlopeX /= (double)numSlopes;
     avgSlopeY /= (double)numSlopes;
     withBeamSlope.setBeamSlope(avgSlopeX, avgSlopeY);
 
-    _refDevice->applyAlignment(withBeamSlope);
+    _refDevice->setGeometry(withBeamSlope);
 
     cout << endl; // Space between iterations
   }
@@ -324,7 +324,7 @@ void Loopers::FineAlign::loop()
   }
   out_file->Close();
 
-  _refDevice->alignment().writeFile(_refDevice->pathAlignment());
+  _refDevice->geometry().writeFile(_refDevice->pathAlignment());
 }
 
 void Loopers::FineAlign::setNumIterations(unsigned int value) { _numIterations = value; }

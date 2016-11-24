@@ -26,7 +26,7 @@ Processors::TrackFinder::TrackFinder(const Mechanics::Device& device,
     , m_numSeedSensors(1 + sensors.size() - numClustersMin)
     , m_numClustersMin(numClustersMin)
     , m_distSigmaMax(distanceSigmaMax)
-    , m_beamDirection(device.alignment().beamDirection())
+    , m_beamDirection(device.geometry().beamDirection())
 {
   if (sensors.size() < 2)
     throw std::runtime_error("Need at least two sensors two find tracks");

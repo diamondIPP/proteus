@@ -9,7 +9,7 @@ class Device;
 
 namespace Processors {
 
-void applyAlignment(Storage::Event* event, const Mechanics::Device* device);
+void setGeometry(Storage::Event* event, const Mechanics::Device* device);
 
 class ApplyAlignment : public Processor {
 public:

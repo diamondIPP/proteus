@@ -62,7 +62,7 @@ void Loopers::CoarseAlign::loop(){
     for (unsigned int nplane=0; nplane<refEvent->getNumPlanes(); nplane++)
       _clusterMaker->generateClusters(refEvent, nplane);
     
-    Processors::applyAlignment(refEvent, _refDevice);
+    Processors::setGeometry(refEvent, _refDevice);
     
     correlation.processEvent(refEvent);
     
@@ -74,7 +74,7 @@ void Loopers::CoarseAlign::loop(){
   double cummulativeX = 0;
   double cummulativeY = 0;
 
-  Mechanics::Alignment newAlignment = _refDevice->alignment();
+  Mechanics::Alignment newAlignment = _refDevice->geometry();
 
   for(unsigned int nsensor=1; nsensor<_refDevice->getNumSensors(); nsensor++){
     Mechanics::Sensor* sensor = _refDevice->getSensor(nsensor);

@@ -168,9 +168,9 @@ static Mechanics::Device parseDevice(const std::string& path)
       parseSensors(config, device, alignment);
 
       if (!pathAlignment.empty()) {
-        device.applyAlignment(Mechanics::Alignment::fromFile(pathAlignment));
+        device.setGeometry(Mechanics::Alignment::fromFile(pathAlignment));
       } else {
-        device.applyAlignment(alignment);
+        device.setGeometry(alignment);
       }
       if (!pathNoiseMask.empty()) {
         device.applyNoiseMask(Mechanics::NoiseMask::fromFile(pathNoiseMask));
@@ -221,10 +221,10 @@ Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
     auto cfgAlign = cfg.find("alignment");
     if (cfgAlign && cfgAlign->is<std::string>()) {
       auto p = pathRebaseIfRelative(cfgAlign->as<std::string>(), dir);
-      device.applyAlignment(Alignment::fromFile(p));
+      device.setGeometry(Alignment::fromFile(p));
       device.m_pathAlignment = p;
     } else if (cfgAlign) {
-      device.applyAlignment(Alignment::fromConfig(*cfgAlign));
+      device.setGeometry(Alignment::fromConfig(*cfgAlign));
     }
 
     auto cfgMask = cfg.find("noise_mask");
@@ -303,13 +303,13 @@ void Mechanics::Device::addSensor(const Sensor& sensor)
 
 void Mechanics::Device::addMaskedSensor() { m_sensorMask.push_back(true); }
 
-void Mechanics::Device::applyAlignment(const Alignment& alignment)
+void Mechanics::Device::setGeometry(const Alignment& alignment)
 {
-  m_alignment = alignment;
+  m_geometry = alignment;
 
   for (Index sensorId = 0; sensorId < numSensors(); ++sensorId) {
     Sensor* sensor = getSensor(sensorId);
-    sensor->setLocalToGlobal(m_alignment.getLocalToGlobal(sensorId));
+    sensor->setLocalToGlobal(m_geometry.getLocalToGlobal(sensorId));
   }
   // TODO 2016-08-18 msmk: check number of sensors / id consistency
 }
@@ -348,13 +348,13 @@ unsigned int Mechanics::Device::getNumPixels() const
 
 double Mechanics::Device::getBeamSlopeX() const
 {
-  auto dir = m_alignment.beamDirection();
+  auto dir = m_geometry.beamDirection();
   return dir.x() / dir.z();
 }
 
 double Mechanics::Device::getBeamSlopeY() const
 {
-  auto dir = m_alignment.beamDirection();
+  auto dir = m_geometry.beamDirection();
   return dir.y() / dir.z();
 }
 
@@ -370,7 +370,7 @@ void Mechanics::Device::print(std::ostream& os, const std::string& prefix) const
   os << prefix << "alignment:\n";
   if (!m_pathAlignment.empty())
     os << prefix << "  path: " << m_pathAlignment << '\n';
-  m_alignment.print(os, prefix + "  ");
+  m_geometry.print(os, prefix + "  ");
   os << prefix << "noise mask:\n";
   if (!m_pathNoiseMask.empty())
     os << prefix << "  path: " << m_pathNoiseMask << '\n';

@@ -34,8 +34,8 @@ void ExampleLooper::loop()
       for (unsigned int nplane = 0; nplane < dutEvent->getNumPlanes(); nplane++)
         _clusterMaker->generateClusters(dutEvent, nplane);
 
-    Processors::applyAlignment(refEvent, _refDevice);
-    Processors::applyAlignment(dutEvent, _dutDevice);
+    Processors::setGeometry(refEvent, _refDevice);
+    Processors::setGeometry(dutEvent, _dutDevice);
 
     if (refEvent->getNumTracks() == 0)
       _trackMaker->generateTracks(refEvent);

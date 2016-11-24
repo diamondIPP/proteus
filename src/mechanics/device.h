@@ -38,13 +38,13 @@ public:
   Sensor* getSensor(Index i) { return &m_sensors.at(i); }
   const Sensor* getSensor(Index i) const { return &m_sensors.at(i); }
 
-  const Alignment& alignment() const { return m_alignment; }
-  /** Store the alignment and apply to all configured sensors. */
-  void applyAlignment(const Alignment& alignment);
+  /** Store the geometry and apply it to all configured sensors. */
+  void setGeometry(const Alignment& alignment);
+  const Alignment& geometry() const { return m_geometry; }
 
-  const NoiseMask& noiseMask() const { return m_noiseMask; }
   /** Store the noise mask and apply to all configured sensors. */
   void applyNoiseMask(const NoiseMask& noiseMask);
+  const NoiseMask& noiseMask() const { return m_noiseMask; }
 
   uint64_t timeStampStart() const { return m_timeStart; }
   uint64_t timeStampEnd() const { return m_timeEnd; }
@@ -62,9 +62,9 @@ public:
   double getBeamSlopeY() const;
   uint64_t getTimeStart() const { return m_timeStart; }
   uint64_t getTimeEnd() const { return m_timeEnd; }
-  double getSyncRatio() const { return m_alignment.syncRatio(); }
+  double getSyncRatio() const { return m_geometry.syncRatio(); }
   /** \deprecated Use alignment directly */
-  void setSyncRatio(double ratio) { m_alignment.setSyncRatio(ratio); }
+  void setSyncRatio(double ratio) { m_geometry.setSyncRatio(ratio); }
   unsigned int getNumSensors() const { return m_sensors.size(); }
 
   const std::vector<bool>* getSensorMask() const { return &m_sensorMask; }
@@ -74,7 +74,7 @@ public:
 private:
   std::string m_name;
   std::vector<Sensor> m_sensors;
-  Alignment m_alignment;
+  Alignment m_geometry;
   NoiseMask m_noiseMask;
   double m_clockRate;
   unsigned int m_readoutWindow;

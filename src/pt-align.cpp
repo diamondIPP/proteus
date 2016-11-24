@@ -123,7 +123,7 @@ int main(int argc, char const* argv[])
   auto geoPath = args.get<std::string>("geometry");
   if (!geoPath.empty()) {
     auto geo = Mechanics::Alignment::fromFile(geoPath);
-    device.applyAlignment(geo);
+    device.setGeometry(geo);
   }
 
   toml::Value cfg = Utils::Config::readConfig(args.config())["align"];
@@ -188,12 +188,12 @@ int main(int argc, char const* argv[])
     }
 
     loop.run();
-    device.applyAlignment(aligner->updatedGeometry());
+    device.setGeometry(aligner->updatedGeometry());
   }
 
   // corrections.writeGraphs(device, &hists);
 
-  device.alignment().writeFile(args.makeOutput("geo.toml"));
+  device.geometry().writeFile(args.makeOutput("geo.toml"));
   hists.Write();
   hists.Close();
 

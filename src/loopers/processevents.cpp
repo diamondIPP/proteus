@@ -78,7 +78,7 @@ void Loopers::ProcessEvents::loop() {
     for (unsigned int nplane=0; nplane<refEvent->getNumPlanes(); nplane++)
       if (_clusterMaker) _clusterMaker->generateClusters(refEvent, nplane);
     
-    Processors::applyAlignment(refEvent, _refDevice);
+    Processors::setGeometry(refEvent, _refDevice);
     
     if (refEvent->getNumTracks())
       throw "ProcessEvents: can't re-track an event, mask the tree in the input";
