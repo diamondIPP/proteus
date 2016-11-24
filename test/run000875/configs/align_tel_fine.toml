@@ -9,6 +9,6 @@ align_ids = [1, 2, 3, 4]
 # number of iterative alignment steps
 num_steps = 10
 # distance cut to assign clusters to the track (only for track-based alignment)
-distance_sigma_max = 4.0
+distance_sigma_max = 5.0
 # only consider tracks with a chi2 value (only for track-based alignment)
-reduced_chi2_max = 5.0
+reduced_chi2_max = 10.0
