@@ -16,7 +16,7 @@ separate build directory:
     mkdir build
     cd build
     cmake ..
-    make
+    cmake --build .
 
 The resulting binaries will be located in `build/bin`. An additional
 activation script is provided that updates the paths variables in the shell
