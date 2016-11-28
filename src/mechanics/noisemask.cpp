@@ -45,6 +45,7 @@ static void parseFile(const std::string& path, Mechanics::NoiseMask& mask)
     throw std::runtime_error("NoiseMask: failed to open file '" + path + "'");
 
   std::stringstream comments;
+  std::size_t numLines = 0;
   while (input) {
     unsigned int nsens = 0;
     unsigned int x = 0;
@@ -60,7 +61,11 @@ static void parseFile(const std::string& path, Mechanics::NoiseMask& mask)
     std::stringstream lineStream(line);
     parseLine(lineStream, nsens, x, y);
     mask.maskPixel(nsens, x, y);
+    numLines += 1;
   }
+
+  if (numLines == 0)
+    throw std::runtime_error("NoiseMask: empty file '" + path + "'");
 }
 
 Mechanics::NoiseMask Mechanics::NoiseMask::fromFile(const std::string& path)
