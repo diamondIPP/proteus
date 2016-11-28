@@ -14,23 +14,24 @@ using std::endl;
 ConfigParser::ConfigParser(const char* filePath,
 			   int printLevel) :
   _filePath(filePath),
+	_inputFile(filePath, std::ifstream::in | std::ifstream::binary),
   _numRows(0),
   _printLevel(printLevel)
 {
-  _inputFile.open(_filePath);
-
-  if(!_inputFile.is_open())
-    throw std::runtime_error("ConfigParser: failed to open file '" +
-                             std::string(filePath) + "' to read");
+  if (!_inputFile)
+    throw std::runtime_error("ConfigParser: failed to open file '" + _filePath +
+                             "' to read");
 
   _currentHeader = "";
-  _currentValue  = "";
-  _currentKey    = "";
-  _lineBuffer    = "";
+  _currentValue = "";
+  _currentKey = "";
+  _lineBuffer = "";
 
   parseContents(_inputFile);
-  
   _inputFile.close();
+
+  if (_parsedContents.empty())
+    throw std::runtime_error("ConfigParser: empty file '" + _filePath + '\'');
 }
 
 //=========================================================
@@ -160,7 +161,7 @@ int ConfigParser::parseForLink()
 void ConfigParser::print(){
   std::cout << "[ConfigParser::print]" << std::endl;
   std::cout << "  - filePath = " << _filePath << std::endl;
-  std::cout << "  - nRows = " << _numRows    
+  std::cout << "  - nRows = " << _numRows
 	    << ". Showing all lines according to format <header,key,value,isHeader>"
 	    << std::endl;
   const int w = _parsedContents.size() < 100 ? 2 : 3;
@@ -171,7 +172,7 @@ void ConfigParser::print(){
     std::cout  << "     [" << std::setw(w) << cnt << "] " << blank << " <"
 	       << row.header << " , " << row.key  << " , " << row.value
 	       << " , " << row.isHeader << ">" << std::endl;
-  }  
+  }
 }
 
 //=========================================================
@@ -192,8 +193,8 @@ double ConfigParser::valueToNumerical(const string& value) {
 
 //=========================================================
 bool ConfigParser::valueToLogical(const string& value) {
-  if (!value.compare("true") || 
-      !value.compare("on") || 
+  if (!value.compare("true") ||
+      !value.compare("on") ||
       !value.compare("yes") ||
       !value.compare("1"))
     return true;

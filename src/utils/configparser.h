@@ -7,7 +7,7 @@
 #include <vector>
 
 /** @class ConfigParser
- **    
+ **
  ** @brief A class to parse configuration files.
  **
  */
@@ -27,7 +27,7 @@ class ConfigParser{
   const Row* getRow(unsigned int n) const;
   unsigned int getNumRows() const { return _numRows; }
   std::vector<Row> getParsedConents() const { return _parsedContents; }
-  const char* getFilePath() const { return _filePath; }
+  const char* getFilePath() const { return _filePath.c_str(); }
   
   static double valueToNumerical(const std::string& value);
   static bool   valueToLogical(const std::string& value);
@@ -63,9 +63,9 @@ class ConfigParser{
   int parseForKey(); //<! Parse the line buffer for a key
   int parseForLink(); //<! Parse the line for a link to another config
   void parseContents(std::ifstream& input); //<! Parse the entire file's contents
-  
+
  private:
-  const char*   _filePath;
+  std::string   _filePath;
   std::ifstream _inputFile;
   std::string   _lineBuffer;
   std::string   _currentHeader;
@@ -75,7 +75,7 @@ class ConfigParser{
   unsigned int _numRows;
   std::vector<Row> _parsedContents;
 
-  int _printLevel; 
+  int _printLevel;
 
 }; // end of class
 
