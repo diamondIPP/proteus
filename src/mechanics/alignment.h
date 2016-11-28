@@ -12,7 +12,24 @@ class ConfigParser;
 
 namespace Mechanics {
 
-/** Store and process alignment parameters. */
+/** Store and process geometry parameters for the whole setup.
+ *
+ * The geometry of each sensor plane is defined by the position
+ * [x, y, z] of its origin in the global system and by three rotation
+ * angles [alpha, beta, gamma] that define the rotation from the local
+ * to the global system using the 3-2-1 convention. The rotation
+ * matrix is constructed by rotations around each axis as
+ *
+ *    R = R_1(alpha) * R_2(beta) * R_3(gamma),
+ *
+ * i.e. first a rotation by gamma around the local third axis
+ * (w coordinate), then a rotation by beta around the updated second
+ * axis, followed with a roation by alpha around the first axis.
+ *
+ * The class also stores uncertainties for the geometry parameters.
+ * They are only used transiently and are not stored in the geometry
+ * file.
+ */
 class Alignment {
 public:
   Alignment();
@@ -34,19 +51,22 @@ public:
   void setRotationAngles(Index sensorId, double rotX, double rotY, double rotZ);
   /** Change the global offset by small values. */
   void correctGlobalOffset(Index sensorId, double dx, double dy, double dz);
-  /** Change the rotation by small values around the current rotation angles. */
+  /** Change the rotation angles by small values. */
   void correctRotationAngles(Index sensorId,
                              double dalpha,
                              double dbeta,
                              double dgamma);
   /** Add small local corrections du, dv, dw, rotU, rotV, rotW. */
-  void correctLocal(Index sensorId, const Vector6& delta);
+  void
+  correctLocal(Index sensorId, const Vector6& delta, const SymMatrix6& cov);
   /** Check if alignment information exsists for the given sensor. */
   bool hasAlignment(Index sensorId) const;
   /** Transformation from local to global coordinates for the sensor. */
   Transform3D getLocalToGlobal(Index sensorId) const;
-  /** Geometry parameters x, y, z, alpha, beta, gamma for the sensor */
+  /** Geometry parameters x, y, z, alpha, beta, gamma for the sensor. */
   Vector6 getParams(Index sensorId) const;
+  /** Geometry parameters covariance matrix. */
+  const SymMatrix6& getParamsCov(Index sensorId) const;
 
   void setBeamSlope(double slopeX, double slopeY);
   /** Beam direction in the global coordinate system. */
@@ -61,6 +81,7 @@ private:
   struct PlaneParams {
     double offsetX, offsetY, offsetZ;
     double rotationX, rotationY, rotationZ;
+    SymMatrix6 cov;
 
     PlaneParams();
   };

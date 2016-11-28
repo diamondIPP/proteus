@@ -22,6 +22,7 @@ Mechanics::Alignment::PlaneParams::PlaneParams()
     , rotationY(0)
     , rotationZ(0)
 {
+  // covariance should be zero by default constructor
 }
 
 Mechanics::Alignment::Alignment()
@@ -201,24 +202,48 @@ void Mechanics::Alignment::correctRotationAngles(Index sensorId,
   params.rotationZ += dgamma;
 }
 
-void Mechanics::Alignment::correctLocal(Index sensorId, const Vector6& delta)
+void Mechanics::Alignment::correctLocal(Index sensorId,
+                                        const Vector6& delta,
+                                        const SymMatrix6& cov)
 {
   auto& params = m_params.at(sensorId);
 
-  // construct new local to global transformation with corrections
-  Translation3D corrOff(delta[0], delta[1], delta[2]);
+  // small angle approximation
   // clang-format off
-  Rotation3D corrRot(        1,  delta[3], -delta[4],
-                     -delta[3],         1,  delta[5],
-                      delta[4], -delta[5],         1);
+  double coeffs[9] = {
+            1,  delta[3], -delta[4],
+    -delta[3],         1,  delta[5],
+     delta[4], -delta[5],         1};
   // clang-format on
-  Transform3D l2g = getLocalToGlobal(sensorId) * corrRot * corrOff;
-  // convert transformation back into geometry parameters
-  l2g.Translation().GetComponents(params.offsetX, params.offsetY,
-                                  params.offsetZ);
-  RotationZYX rot;
-  l2g.GetRotation(rot);
-  rot.GetComponents(params.rotationZ, params.rotationY, params.rotationX);
+  Matrix3 corrRot(coeffs, 9);
+  Matrix3 rot;
+  Vector3 off;
+  Transform3D old = getLocalToGlobal(sensorId);
+
+  // construct new rotation matrix and offset
+  old.Rotation().GetRotationMatrix(rot);
+  old.Translation().GetComponents(off.begin(), off.end());
+  rot *= corrRot;
+  off += rot * delta.Sub<Vector3>(0);
+
+  // decompose transformation back into offsets and angles
+  params.offsetX = off[0];
+  params.offsetY = off[1];
+  params.offsetZ = off[2];
+  // ROOT WTF: multiple rotation matrix types that do not work together
+  Rotation3D tmp;
+  tmp.SetRotationMatrix(rot);
+  RotationZYX(tmp).GetComponents(params.rotationZ, params.rotationY,
+                                 params.rotationX);
+
+  // Jacobian from local corrections to global geometry parameters
+  // TODO 2016-11-28 msmk: jacobian from local rotU,... to alpha, beta, gamma
+  Matrix6 jac;
+  jac.Place_at(rot, 0, 0);
+  jac(3, 3) = 1;
+  jac(4, 4) = 1;
+  jac(5, 5) = 1;
+  params.cov += ROOT::Math::Similarity(jac, cov);
 }
 
 bool Mechanics::Alignment::hasAlignment(Index sensorId) const
@@ -250,6 +275,11 @@ Vector6 Mechanics::Alignment::getParams(Index sensorId) const
   p[4] = params.rotationY;
   p[5] = params.rotationZ;
   return p;
+}
+
+const SymMatrix6& Mechanics::Alignment::getParamsCov(Index sensorId) const
+{
+  return m_params.at(sensorId).cov;
 }
 
 void Mechanics::Alignment::setBeamSlope(double slopeX, double slopeY)
