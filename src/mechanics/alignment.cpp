@@ -13,6 +13,17 @@
 
 PT_SETUP_GLOBAL_LOGGER
 
+// ensure parameters have sensible defaults
+Mechanics::Alignment::Alignment::PlaneParams()
+    : offsetX(0)
+    , offsetY(0)
+    , offsetZ(0)
+    , rotationX(0)
+    , rotationY(0)
+    , rotationZ(0)
+{
+}
+
 Mechanics::Alignment::Alignment()
     : m_beamSlopeX(0), m_beamSlopeY(0), m_syncRatio(1)
 {
@@ -74,17 +85,17 @@ Mechanics::Alignment::fromConfig(const ConfigParser& config)
     unsigned int isens = std::stoi(row->header.substr(7));
     const double value = ConfigParser::valueToNumerical(row->value);
     if (!row->key.compare("offset x"))
-      alignment.m_geo[isens].offsetX = value;
+      alignment.m_params[isens].offsetX = value;
     else if (!row->key.compare("offset y"))
-      alignment.m_geo[isens].offsetY = value;
+      alignment.m_params[isens].offsetY = value;
     else if (!row->key.compare("offset z"))
-      alignment.m_geo[isens].offsetZ = value;
+      alignment.m_params[isens].offsetZ = value;
     else if (!row->key.compare("rotation x"))
-      alignment.m_geo[isens].rotationX = value;
+      alignment.m_params[isens].rotationX = value;
     else if (!row->key.compare("rotation y"))
-      alignment.m_geo[isens].rotationY = value;
+      alignment.m_params[isens].rotationY = value;
     else if (!row->key.compare("rotation z"))
-      alignment.m_geo[isens].rotationZ = value;
+      alignment.m_params[isens].rotationZ = value;
     else
       throw std::runtime_error("Alignment: failed to parse row");
   }
@@ -122,9 +133,9 @@ toml::Value Mechanics::Alignment::toConfig() const
   cfg["timing"]["sync_ratio"] = m_syncRatio;
 
   cfg["sensors"] = toml::Array();
-  for (auto ig = m_geo.begin(); ig != m_geo.end(); ++ig) {
+  for (auto ig = m_params.begin(); ig != m_params.end(); ++ig) {
     int id = static_cast<int>(ig->first);
-    const GeoParams& params = ig->second;
+    const PlaneParams& params = ig->second;
 
     toml::Value cfgSensor;
     cfgSensor["id"] = id;
@@ -139,24 +150,6 @@ toml::Value Mechanics::Alignment::toConfig() const
   return cfg;
 }
 
-bool Mechanics::Alignment::hasAlignment(Index sensorId) const
-{
-  return (0 < m_geo.count(sensorId));
-}
-
-Transform3D Mechanics::Alignment::getLocalToGlobal(Index sensorId) const
-{
-  auto it = m_geo.find(sensorId);
-  if (it == m_geo.cend())
-    return Transform3D();
-
-  const GeoParams& params = it->second;
-
-  XYZVector off(params.offsetX, params.offsetY, params.offsetZ);
-  RotationZYX rot(params.rotationZ, params.rotationY, params.rotationX);
-  return Transform3D(rot, off);
-}
-
 void Mechanics::Alignment::setOffset(Index sensorId, const XYZPoint& offset)
 {
   setOffset(sensorId, offset.x(), offset.y(), offset.z());
@@ -167,8 +160,8 @@ void Mechanics::Alignment::setOffset(Index sensorId,
                                      double y,
                                      double z)
 {
-  // will automatically create a missing GeoParams
-  auto& params = m_geo[sensorId];
+  // will automatically create a missing PlaneParams
+  auto& params = m_params[sensorId];
   params.offsetX = x;
   params.offsetY = y;
   params.offsetZ = z;
@@ -179,8 +172,8 @@ void Mechanics::Alignment::setRotationAngles(Index sensorId,
                                              double rotY,
                                              double rotZ)
 {
-  // will automatically create a missing GeoParams
-  auto& params = m_geo[sensorId];
+  // will automatically create a missing PlaneParams
+  auto& params = m_params[sensorId];
   params.rotationX = rotX;
   params.rotationY = rotY;
   params.rotationZ = rotZ;
@@ -191,7 +184,7 @@ void Mechanics::Alignment::correctGlobalOffset(Index sensorId,
                                                double dy,
                                                double dz)
 {
-  auto& params = m_geo.at(sensorId);
+  auto& params = m_params.at(sensorId);
   params.offsetX += dx;
   params.offsetY += dy;
   params.offsetZ += dz;
@@ -202,41 +195,72 @@ void Mechanics::Alignment::correctRotationAngles(Index sensorId,
                                                  double dbeta,
                                                  double dgamma)
 {
-  auto& params = m_geo.at(sensorId);
+  auto& params = m_params.at(sensorId);
   params.rotationX += dalpha;
   params.rotationY += dbeta;
   params.rotationZ += dgamma;
 }
 
-void Mechanics::Alignment::correctLocal(Index sensorId,
-                                        const Vector3& dq,
-                                        const Matrix3& dr)
+void Mechanics::Alignment::correctLocal(Index sensorId, const Vector6& delta)
 {
-  auto& params = m_geo.at(sensorId);
+  auto& params = m_params.at(sensorId);
 
   // construct new local to global transformation with corrections
-  Translation3D corrOff(dq[0], dq[1], dq[2]);
-  Rotation3D corrRot;
-  corrRot.SetRotationMatrix(dr);
+  Translation3D corrOff(delta[0], delta[1], delta[2]);
+  // clang-format off
+  Rotation3D corrRot(        1,  delta[3], -delta[4],
+                     -delta[3],         1,  delta[5],
+                      delta[4], -delta[5],         1);
+  // clang-format on
   Transform3D l2g = getLocalToGlobal(sensorId) * corrRot * corrOff;
-  // offset params can be read of directly
+  // convert transformation back into geometry parameters
   l2g.Translation().GetComponents(params.offsetX, params.offsetY,
                                   params.offsetZ);
-  // rotation matrix needs to be converted back into parameters
   RotationZYX rot;
   l2g.GetRotation(rot);
   rot.GetComponents(params.rotationZ, params.rotationY, params.rotationX);
 }
 
-XYZVector Mechanics::Alignment::beamDirection() const
+bool Mechanics::Alignment::hasAlignment(Index sensorId) const
 {
-  return XYZVector(m_beamSlopeX, m_beamSlopeY, 1);
+  return (0 < m_params.count(sensorId));
+}
+
+Transform3D Mechanics::Alignment::getLocalToGlobal(Index sensorId) const
+{
+  auto it = m_params.find(sensorId);
+  if (it == m_params.cend())
+    return Transform3D();
+
+  const PlaneParams& params = it->second;
+
+  XYZVector off(params.offsetX, params.offsetY, params.offsetZ);
+  RotationZYX rot(params.rotationZ, params.rotationY, params.rotationX);
+  return Transform3D(rot, off);
+}
+
+Vector6 Mechanics::Alignment::getParams(Index sensorId) const
+{
+  const PlaneParams& params = m_params.at(sensorId);
+  Vector6 p;
+  p[0] = params.offsetX;
+  p[1] = params.offsetY;
+  p[2] = params.offsetZ;
+  p[3] = params.rotationX;
+  p[4] = params.rotationY;
+  p[5] = params.rotationZ;
+  return p;
 }
 
 void Mechanics::Alignment::setBeamSlope(double slopeX, double slopeY)
 {
   m_beamSlopeX = slopeX;
   m_beamSlopeY = slopeY;
+}
+
+XYZVector Mechanics::Alignment::beamDirection() const
+{
+  return XYZVector(m_beamSlopeX, m_beamSlopeY, 1);
 }
 
 void Mechanics::Alignment::print(std::ostream& os,
