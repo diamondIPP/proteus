@@ -12,7 +12,7 @@
 PT_SETUP_LOCAL_LOGGER(Cluster)
 
 Storage::Cluster::Cluster()
-    : m_timing(-1)
+    : m_time(-1)
     , m_value(-1)
     , m_plane(NULL)
     , m_track(NULL)
@@ -74,7 +74,7 @@ void Storage::Cluster::setTrack(const Storage::Track* track)
 void Storage::Cluster::addHit(Storage::Hit* hit)
 {
   if (m_hits.empty() == 0)
-    m_timing = hit->timing();
+    m_time = hit->time();
   hit->setCluster(this);
   m_hits.push_back(hit);
   // Fill the value and timing from this hit

@@ -22,7 +22,7 @@ public:
   void setPosPixel(double col, double row) { m_cr.SetXY(col, row); }
   void setCovPixel(const SymMatrix2& cov) { m_covCr = cov; }
   void setErrPixel(double stdCol, double stdRow);
-  void setTiming(double timing) { m_timing = timing; }
+  void setTime(double time_) { m_time = time_; }
   /** Set global position using the transform from pixel to global coords. */
   void transformToGlobal(const Transform3D& pixelToGlobal);
 
@@ -30,7 +30,7 @@ public:
   const XYZPoint& posGlobal() const { return m_xyz; }
   const SymMatrix2& covPixel() const { return m_covCr; }
   const SymMatrix3& covGlobal() const { return m_covXyz; }
-  double timing() const { return m_timing; }
+  double time() const { return m_time; }
   double value() const { return m_value; }
 
   Index sensorId() const;
@@ -66,7 +66,7 @@ public:
   double getPosErrX() const { return std::sqrt(m_covXyz(0, 0)); }
   double getPosErrY() const { return std::sqrt(m_covXyz(1, 1)); }
   double getPosErrZ() const { return std::sqrt(m_covXyz(2, 2)); }
-  double getTiming() const { return timing(); }
+  double getTiming() const { return time(); }
   double getValue() const { return value(); }
   double getMatchDistance() const { return m_matchDistance; }
   int getIndex() const { return m_index; }
@@ -85,7 +85,7 @@ private:
 
   XYPoint m_cr;
   SymMatrix2 m_covCr;
-  double m_timing; // The timing of the underlying hits
+  double m_time; // The timing of the underlying hits
   double m_value;  // The combined value of all its hits
   XYZPoint m_xyz;
   SymMatrix3 m_covXyz;

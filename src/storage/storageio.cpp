@@ -689,8 +689,8 @@ namespace Storage {
         Hit* hit = plane->newHit();
         hit->setAddress(hitPixX[nhit], hitPixY[nhit]);
         // hit->setPosGlobal({hitPosX[nhit], hitPosY[nhit], hitPosZ[nhit]});
+        hit->setTime(hitTiming[nhit]);
         hit->setValue(hitValue[nhit]);
-        hit->setTiming(hitTiming[nhit]);
 
         // If this hit is in a cluster, mark this (and the clusters tree is
         // active)
@@ -802,7 +802,7 @@ namespace Storage {
         hitPosY[nhit] = hit->getPosY();
         hitPosZ[nhit] = hit->getPosZ();
         hitValue[nhit] = hit->value();
-        hitTiming[nhit] = hit->timing();
+        hitTiming[nhit] = hit->time();
         hitInCluster[nhit] =
             hit->isInCluster() ? hit->cluster()->getIndex() : -1;
       }

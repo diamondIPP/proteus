@@ -58,7 +58,7 @@ namespace Loopers {
           if (!_refDevice->getSensor(iplane)->isPixelNoisy(col, row)) {
             Storage::Hit* copy = maskedPlane->newHit();
             copy->setAddress(col, row);
-            copy->setTiming(hit->timing());
+            copy->setTime(hit->time());
             copy->setValue(hit->value());
           }
         }
