@@ -111,7 +111,18 @@ struct StepsGraphs {
   }
 };
 
-enum class Method { CORRELATION, RESIDUALS };
+enum class Method { Correlation, Residuals };
+
+Method stringToMethod(const std::string& name)
+{
+  if (name == "correlation") {
+    return Method::Correlation;
+  } else if (name == "residuals") {
+    return Method::Residuals;
+  } else {
+    throw std::runtime_error("unknown alignment method '" + name + '\'');
+  }
+}
 
 int main(int argc, char const* argv[])
 {
@@ -138,26 +149,16 @@ int main(int argc, char const* argv[])
 
   toml::Value cfgAll = Utils::Config::readConfig(args.config());
   toml::Value defaults = toml::Table{
-      {"num_steps", 10}, {"distance_sigma_max", 5.}, {"reduced_chi2_max", -1.}};
+      {"num_steps", 1}, {"distance_sigma_max", 5.}, {"reduced_chi2_max", -1.}};
   toml::Value cfg = Utils::Config::withDefaults(cfgAll["align"], defaults);
   // select alignment scope, i.e. the sensors that are considered as input and
   // the sensors that should be aligned
   auto sensorIds = cfg.get<std::vector<Index>>("sensor_ids");
   auto alignIds = cfg.get<std::vector<Index>>("align_ids");
-  auto methodName = cfg.get<std::string>("method");
+  auto method = stringToMethod(cfg.get<std::string>("method"));
   auto numSteps = cfg.get<int>("num_steps");
   double distSigmaMax = cfg.get<double>("distance_sigma_max");
   double redChi2Max = cfg.get<double>("reduced_chi2_max");
-
-  Method method = Method::CORRELATION;
-  if (methodName == "correlation") {
-    method = Method::CORRELATION;
-    numSteps = 1;
-  } else if (methodName == "residuals") {
-    method = Method::RESIDUALS;
-  } else {
-    throw std::runtime_error("unknown alignment method '" + methodName + '\'');
-  }
 
   Storage::StorageIO input(args.input(), Storage::INPUT, device.numSensors());
   TFile hists(args.makeOutput("hists.root").c_str(), "RECREATE");
@@ -175,7 +176,7 @@ int main(int argc, char const* argv[])
     loop.addProcessor(std::make_shared<ApplyAlignment>(device));
     // setup aligment method specific loop logic
     std::shared_ptr<Aligner> aligner;
-    if (method == Method::CORRELATION) {
+    if (method == Method::Correlation) {
       // coarse method w/o tracks using only cluster correlations
 
       auto corr = std::make_shared<Correlation>(device, sensorIds, stepDir);
@@ -183,7 +184,7 @@ int main(int argc, char const* argv[])
       loop.addAnalyzer(corr);
       loop.addAnalyzer(aligner);
 
-    } else if (method == Method::RESIDUALS) {
+    } else if (method == Method::Residuals) {
       // use (unbiased) track residuals to align
 
       loop.addProcessor(std::make_shared<TrackFinder>(
