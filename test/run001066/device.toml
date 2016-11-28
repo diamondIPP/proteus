@@ -1,11 +1,11 @@
 # global settings **must** appear before any [section] command
 
-alignment = "geometry/unaligned.toml"
+alignment = "geometry/aligned.toml"
 # only to demonstrate the setting.
 # leaving out the `noise_mask` setting altogether has the same effect
 # as adding empty masks.
-noise_mask = ["masks/mask_tel_empty.toml",
-              "masks/mask_duts_empty.toml"]
+noise_mask = ["masks/tel_mask_empty.toml",
+              "masks/duts_mask_empty.toml"]
 
 # common global device settings
 [device]
