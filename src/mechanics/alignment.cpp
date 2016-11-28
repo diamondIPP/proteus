@@ -13,8 +13,8 @@
 
 PT_SETUP_GLOBAL_LOGGER
 
-// ensure parameters have sensible defaults
-Mechanics::Alignment::Alignment::PlaneParams()
+// ensure geometry parameters have sensible defaults
+Mechanics::Alignment::PlaneParams::PlaneParams()
     : offsetX(0)
     , offsetY(0)
     , offsetZ(0)
