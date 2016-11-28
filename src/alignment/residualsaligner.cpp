@@ -100,14 +100,13 @@ Mechanics::Alignment Alignment::ResidualsAligner::updatedGeometry() const
   for (auto hists = m_hists.begin(); hists != m_hists.end(); ++hists) {
     const Mechanics::Sensor& sensor = *m_device.getSensor(hists->sensorId);
 
-    Vector3 dq(-m_damping * hists->deltaU->GetMean(),
-               -m_damping * hists->deltaV->GetMean(), 0);
-    Matrix3 dr = ROOT::Math::SMatrixIdentity();
-    geo.correctLocal(sensor.id(), dq, dr);
+    Vector6 delta(-m_damping * hists->deltaU->GetMean(),
+                  -m_damping * hists->deltaV->GetMean(), 0, 0, 0, 0);
+    geo.correctLocal(sensor.id(), delta);
 
     INFO(sensor.name(), " alignment corrections:");
-    INFO("  delta u:  ", dq[0]);
-    INFO("  delta v:  ", dq[1]);
+    INFO("  delta u:  ", delta[0]);
+    INFO("  delta v:  ", delta[1]);
   }
   return geo;
 }
