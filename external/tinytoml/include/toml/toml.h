@@ -9,6 +9,7 @@
 #include <ctime>
 #include <iomanip>
 #include <istream>
+#include <limits>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -1233,7 +1234,8 @@ inline void Value::write(std::ostream* os, const std::string& keyPrefix, int ind
         (*os) << int_;
         break;
     case DOUBLE_TYPE: {
-        (*os) << std::fixed << std::showpoint << double_;
+        (*os) << std::setprecision(std::numeric_limits<double>::max_digits10);
+        (*os) << std::defaultfloat << std::showpoint << double_;
         break;
     }
     case STRING_TYPE:
