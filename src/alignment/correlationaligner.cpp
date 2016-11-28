@@ -32,16 +32,21 @@ void Alignment::CorrelationAligner::finalize()
 Mechanics::Alignment Alignment::CorrelationAligner::updatedGeometry() const
 {
   Mechanics::Alignment geo = m_device.geometry();
-  double deltaX = 0;
-  double deltaY = 0;
+  double deltaX = 0, deltaXVar = 0;
+  double deltaY = 0, deltaYVar = 0;
 
   for (auto id = m_alignIds.begin(); id != m_alignIds.end(); ++id) {
-    deltaX -= m_corr->getHistDiffX(*id - 1, *id)->GetMean();
-    deltaY -= m_corr->getHistDiffY(*id - 1, *id)->GetMean();
+    const TH1D* hX = m_corr->getHistDiffX(*id - 1, *id);
+    deltaX -= hX->GetMean();
+    deltaXVar += hX->GetMeanError() * hX->GetMeanError();
+
+    const TH1D* hY = m_corr->getHistDiffY(*id - 1, *id);
+    deltaY -= hY->GetMean();
+    deltaYVar += hY->GetMeanError() * hY->GetMeanError();
 
     INFO(m_device.getSensor(*id)->name(), *id, " alignment corrections:");
-    INFO("  delta x:  ", deltaX);
-    INFO("  delta y:  ", deltaY);
+    INFO("  delta x:  ", deltaX, " +- ", std::sqrt(deltaXVar));
+    INFO("  delta y:  ", deltaY, " +- ", std::sqrt(deltaYVar));
 
     geo.correctGlobalOffset(*id, deltaX, deltaY, 0);
   }

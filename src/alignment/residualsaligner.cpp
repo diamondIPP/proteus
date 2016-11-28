@@ -100,13 +100,20 @@ Mechanics::Alignment Alignment::ResidualsAligner::updatedGeometry() const
   for (auto hists = m_hists.begin(); hists != m_hists.end(); ++hists) {
     const Mechanics::Sensor& sensor = *m_device.getSensor(hists->sensorId);
 
-    Vector6 delta(-m_damping * hists->deltaU->GetMean(),
-                  -m_damping * hists->deltaV->GetMean(), 0, 0, 0, 0);
-    geo.correctLocal(sensor.id(), delta);
+    double u = -m_damping * hists->deltaU->GetMean();
+    double uErr = hists->deltaU->GetMeanError();
+    double v = -m_damping * hists->deltaV->GetMean();
+    double vErr = hists->deltaV->GetMeanError();
+
+    Vector6 delta(u, v, 0, 0, 0, 0);
+    SymMatrix6 cov;
+    cov(0, 0) = uErr * uErr;
+    cov(1, 1) = vErr * vErr;
+    geo.correctLocal(sensor.id(), delta, cov);
 
     INFO(sensor.name(), " alignment corrections:");
-    INFO("  delta u:  ", delta[0]);
-    INFO("  delta v:  ", delta[1]);
+    INFO("  delta u:  ", u, " +- ", uErr);
+    INFO("  delta v:  ", v, " +- ", vErr);
   }
   return geo;
 }
