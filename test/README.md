@@ -2,21 +2,24 @@ Test Configurations
 ===================
 
 A set of example runs with configuration files and preconfigured analysis chain.
-Comparison output files containing the expected results are provided. This
-should allow a simple validation of changes to prevent functionality regressions
-when changing the code.
+This should allow a simple validation of changes to prevent functionality
+regressions when changing the code.
 
 **WARNING** This is *work-in-progress*
 
-The following commands will build the software and run an example analysis
-chain for one of the example datasets
+The test scripts assume that the environment is setup such that the `pt-...`
+binaries can be called directly, e.g. by sourcing the `activate.sh` script in
+the build directory. Please see the `README.md` file in the main directory for
+further build instructions.
 
-    ./build.sh
+The following commands will download the example data files and run the analysis
+chain for one of the example dataset with run number 1066:
+
     ./download_data.py
-    ./run_tel_noisescan.sh <RUN>
-    ./run_tel_align.sh <RUN>
-    ./run_track.sh <RUN>
-    ./run_dut0_noisescan.sh <RUN>
+    ./run_tel_noisescan.sh 1066
+    ./run_tel_align.sh 1066
+    ./run_track.sh 1066
+    ./run_dut0_noisescan.sh 1066
 
 
 Run 875

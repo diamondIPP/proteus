@@ -9,9 +9,6 @@ rundir=$(printf "run%06d" $RUN)
 rawfile=$(printf "raw/run%06d.root" $RUN)
 prefix=$(printf "output/run%06d-" $RUN)
 
-source build/activate.sh
-mkdir -p output
-
 pt-track $FLAGS -d ${rundir}/device.toml \
   -c ${rundir}/configs/analysis.toml \
   ${rawfile} ${prefix}track
