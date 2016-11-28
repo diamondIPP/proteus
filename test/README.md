@@ -13,8 +13,10 @@ chain for one of the example datasets
 
     ./build.sh
     ./download_data.py
-    ./run_telescope.sh <RUN>
-    ./run_dut0.sh <RUN>
+    ./run_tel_noisescan.sh <RUN>
+    ./run_tel_align.sh <RUN>
+    ./run_track.sh <RUN>
+    ./run_dut0_noisescan.sh <RUN>
 
 
 Run 875
