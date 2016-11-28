@@ -24,8 +24,20 @@
 
 PT_SETUP_LOCAL_LOGGER(align)
 
-/** Store sensor geometry parameter corrections for all steps. */
-struct SensorCorrections {
+/** Map radian value into equivalent value in [-pi, pi) range. */
+inline double radian_sym(double val)
+{
+  if (val < -M_PI) {
+    return val + 2 * M_PI;
+  } else if (M_PI < val) {
+    return val - 2 * M_PI;
+  } else {
+    return val;
+  }
+}
+
+/** Store sensor geometry parameter corrections for multiple steps. */
+struct SensorStepsGraphs {
   std::vector<double> offset0;
   std::vector<double> offset1;
   std::vector<double> offset2;
@@ -33,19 +45,14 @@ struct SensorCorrections {
   std::vector<double> rotation1;
   std::vector<double> rotation2;
 
-  void addStep(double off0,
-               double off1,
-               double off2,
-               double rot0,
-               double rot1,
-               double rot2)
+  void addStep(const Vector6& delta)
   {
-    offset0.push_back(off0);
-    offset1.push_back(off1);
-    offset2.push_back(off2);
-    rotation0.push_back(rot0);
-    rotation1.push_back(rot1);
-    rotation2.push_back(rot2);
+    offset0.push_back(delta[0]);
+    offset1.push_back(delta[1]);
+    offset2.push_back(delta[2]);
+    rotation0.push_back(radian_sym(delta[3]));
+    rotation1.push_back(radian_sym(delta[4]));
+    rotation2.push_back(radian_sym(delta[5]));
   }
   void writeGraphs(const std::string& prefix, TDirectory* dir) const
   {
@@ -61,7 +68,6 @@ struct SensorCorrections {
       g->GetYaxis()->SetTitle(("Alignment Correction " + name).c_str());
       dir->WriteTObject(g);
     };
-
     makeGraph("Offset0", offset0);
     makeGraph("Offset1", offset1);
     makeGraph("Offset2", offset2);
@@ -71,33 +77,22 @@ struct SensorCorrections {
   }
 };
 
-struct Steps {
-  std::map<Index, SensorCorrections> sensors;
+struct StepsGraphs {
+  std::map<Index, SensorStepsGraphs> sensors;
 
-  void addStep(Index sensorId,
-               double off0,
-               double off1,
-               double off2,
-               double rot0,
-               double rot1,
-               double rot2)
+  void addStep(const std::vector<Index>& sensorIds,
+               const Mechanics::Alignment& before,
+               const Mechanics::Alignment& after)
   {
-    INFO("sensor ", sensorId, " alignment corrections:");
-    INFO("  offset 0:  ", off0);
-    INFO("  offset 1:  ", off1);
-    INFO("  offset 2:  ", off2);
-    INFO("  rotation 0:  ", rot0);
-    INFO("  rotation 1:  ", rot1);
-    INFO("  rotation 2:  ", rot2);
-    sensors[sensorId].addStep(off0, off1, off2, rot0, rot1, rot2);
+    for (auto id = sensorIds.begin(); id != sensorIds.end(); ++id) {
+      Vector6 delta = after.getParams(*id) - before.getParams(*id);
+      sensors[*id].addStep(delta);
+    }
   }
   void writeGraphs(const Mechanics::Device& device, TDirectory* dir) const
   {
-    for (auto it = sensors.begin(); it != sensors.end(); ++it) {
-      Index sensorId = it->first;
-      const auto& corrs = it->second;
-      corrs.writeGraphs(device.getSensor(sensorId)->name(), dir);
-    }
+    for (auto it = sensors.begin(); it != sensors.end(); ++it)
+      it->second.writeGraphs(device.getSensor(it->first)->name(), dir);
   }
 };
 
@@ -151,6 +146,7 @@ int main(int argc, char const* argv[])
 
   Storage::StorageIO input(args.input(), Storage::INPUT, device.numSensors());
   TFile hists(args.makeOutput("hists.root").c_str(), "RECREATE");
+  StepsGraphs steps;
 
   for (int step = 0; step < numSteps; ++step) {
     TDirectory* stepDir = hists.mkdir(("Step" + std::to_string(step)).c_str());
@@ -185,12 +181,16 @@ int main(int argc, char const* argv[])
     }
 
     loop.run();
-    device.setGeometry(aligner->updatedGeometry());
+
+    Mechanics::Alignment newGeo = aligner->updatedGeometry();
+    steps.addStep(alignIds, device.geometry(), newGeo);
+    device.setGeometry(newGeo);
   }
 
   // corrections.writeGraphs(device, &hists);
 
   device.geometry().writeFile(args.makeOutput("geo.toml"));
+  steps.writeGraphs(device, &hists);
   hists.Write();
   hists.Close();
 
