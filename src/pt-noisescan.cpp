@@ -29,8 +29,6 @@ int main(int argc, char const* argv[])
   if (args.parse(argc, argv))
     return EXIT_FAILURE;
 
-  Utils::Logger::setGlobalLevel(Utils::Logger::Level::Info);
-
   Mechanics::Device device = Mechanics::Device::fromFile(args.device());
   Storage::StorageIO input(args.input().c_str(), Storage::INPUT);
   TFile* hists = TFile::Open(args.makeOutput("hists.root").c_str(), "RECREATE");
