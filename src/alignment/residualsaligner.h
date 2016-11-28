@@ -27,7 +27,7 @@ public:
   void analyze(const Storage::Event& event);
   void finalize();
 
-  Mechanics::Alignment updatedGeometry() const;
+  Mechanics::Geometry updatedGeometry() const;
 
 private:
   struct Histograms {

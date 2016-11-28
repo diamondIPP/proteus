@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "mechanics/alignment.h"
+#include "mechanics/geometry.h"
 #include "mechanics/noisemask.h"
 #include "mechanics/sensor.h"
 #include "utils/config.h"
@@ -39,8 +39,8 @@ public:
   const Sensor* getSensor(Index i) const { return &m_sensors.at(i); }
 
   /** Store the geometry and apply it to all configured sensors. */
-  void setGeometry(const Alignment& alignment);
-  const Alignment& geometry() const { return m_geometry; }
+  void setGeometry(const Geometry& geometry);
+  const Geometry& geometry() const { return m_geometry; }
 
   /** Store the noise mask and apply to all configured sensors. */
   void applyNoiseMask(const NoiseMask& noiseMask);
@@ -74,7 +74,7 @@ public:
 private:
   std::string m_name;
   std::vector<Sensor> m_sensors;
-  Alignment m_geometry;
+  Geometry m_geometry;
   NoiseMask m_noiseMask;
   double m_clockRate;
   unsigned int m_readoutWindow;

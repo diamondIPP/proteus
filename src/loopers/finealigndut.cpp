@@ -10,7 +10,7 @@
 #include "../storage/event.h"
 #include "../mechanics/device.h"
 #include "../mechanics/sensor.h"
-#include "../mechanics/alignment.h"
+#include "../mechanics/geometry.h"
 #include "../processors/applyalignment.h"
 #include "../processors/processors.h"
 #include "../processors/clustermaker.h"
@@ -61,7 +61,7 @@ Loopers::FineAlignDut::FineAlignDut(Mechanics::Device* refDevice,
 //=========================================================
 void Loopers::FineAlignDut::loop()
 {
-  Mechanics::Alignment newAlignment = _dutDevice->geometry();
+  Mechanics::Geometry newAlignment = _dutDevice->geometry();
 
   for (unsigned int niter = 0; niter < _numIterations; niter++)
   {

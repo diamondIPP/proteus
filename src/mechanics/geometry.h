@@ -1,5 +1,5 @@
-#ifndef PT_ALIGNMENT_H
-#define PT_ALIGNMENT_H
+#ifndef PT_GEOMETRY_H
+#define PT_GEOMETRY_H
 
 #include <iosfwd>
 #include <map>
@@ -30,19 +30,19 @@ namespace Mechanics {
  * They are only used transiently and are not stored in the geometry
  * file.
  */
-class Alignment {
+class Geometry {
 public:
-  Alignment();
+  Geometry();
 
   /** Construct alignment from a configuration file. */
-  static Alignment fromFile(const std::string& path);
+  static Geometry fromFile(const std::string& path);
   /** Write alignment to a configuration file. */
   void writeFile(const std::string& path) const;
 
   /** Construct alignment from old configuration parser. */
-  static Alignment fromConfig(const ConfigParser& cfg);
+  static Geometry fromConfig(const ConfigParser& cfg);
   /** Construct alignment from a configuration object. */
-  static Alignment fromConfig(const toml::Value& cfg);
+  static Geometry fromConfig(const toml::Value& cfg);
   /** Convert alignment into a configuration object. */
   toml::Value toConfig() const;
 
@@ -59,8 +59,6 @@ public:
   /** Add small local corrections du, dv, dw, rotU, rotV, rotW. */
   void
   correctLocal(Index sensorId, const Vector6& delta, const SymMatrix6& cov);
-  /** Check if alignment information exsists for the given sensor. */
-  bool hasAlignment(Index sensorId) const;
   /** Transformation from local to global coordinates for the sensor. */
   Transform3D getLocalToGlobal(Index sensorId) const;
   /** Geometry parameters x, y, z, alpha, beta, gamma for the sensor. */
@@ -92,4 +90,4 @@ private:
 
 } // namespace Mechanics
 
-#endif // PT_ALIGNMENT_H
+#endif // PT_GEOMETRY_H

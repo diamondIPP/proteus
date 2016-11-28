@@ -11,7 +11,7 @@
 #include "../storage/event.h"
 #include "../mechanics/device.h"
 #include "../mechanics/sensor.h"
-#include "../mechanics/alignment.h"
+#include "../mechanics/geometry.h"
 #include "../processors/applyalignment.h"
 #include "../processors/processors.h"
 #include "../processors/clustermaker.h"
@@ -124,7 +124,7 @@ void Loopers::FineAlign::loop()
       if (nsens == 0)
         continue; // fdibello in trackmaker nsens is the masked plane
 
-      Mechanics::Alignment newAlignment = _refDevice->geometry();
+      Mechanics::Geometry newAlignment = _refDevice->geometry();
       Mechanics::Sensor* sensor = _refDevice->getSensor(nsens);
 
       // Use broad residual resolution for the first iteration
@@ -253,7 +253,7 @@ void Loopers::FineAlign::loop()
       // sigmay[niter][nsens]=sigmaY1;
     }
 
-    Mechanics::Alignment withBeamSlope = _refDevice->geometry();
+    Mechanics::Geometry withBeamSlope = _refDevice->geometry();
 
     // Ajudst the device rotation using the average slopes
     avgSlopeX /= (double)numSlopes;

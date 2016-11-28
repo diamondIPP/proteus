@@ -9,7 +9,7 @@
 #include "../storage/event.h"
 #include "../mechanics/device.h"
 #include "../mechanics/sensor.h"
-#include "../mechanics/alignment.h"
+#include "../mechanics/geometry.h"
 #include "../processors/applyalignment.h"
 #include "../processors/clustermaker.h"
 #include "../processors/processors.h"
@@ -75,7 +75,7 @@ void Loopers::CoarseAlignDut::loop()
     delete dutEvent;
   }
 
-  Mechanics::Alignment newAlignment = _dutDevice->geometry();
+  Mechanics::Geometry newAlignment = _dutDevice->geometry();
 
   for (unsigned int nsensor = 0; nsensor < _dutDevice->getNumSensors(); nsensor++)
   {

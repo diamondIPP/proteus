@@ -39,8 +39,8 @@ set(COMMON_SRC
     loopers/noisescan.cpp
     loopers/processevents.cpp
     mechanics/device.cpp
+    mechanics/geometry.cpp
     mechanics/noisemask.cpp
-    mechanics/alignment.cpp
     mechanics/sensor.cpp
     processors/applyalignment.cpp
     processors/clustermaker.cpp

@@ -44,7 +44,7 @@ int main(int argc, char const* argv[])
   // override geometry if requested
   auto geoPath = args.get<std::string>("geometry");
   if (!geoPath.empty()) {
-    auto geo = Mechanics::Alignment::fromFile(geoPath);
+    auto geo = Mechanics::Geometry::fromFile(geoPath);
     dev.setGeometry(geo);
   }
 

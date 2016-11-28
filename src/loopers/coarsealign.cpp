@@ -10,7 +10,7 @@
 #include "../storage/event.h"
 #include "../mechanics/device.h"
 #include "../mechanics/sensor.h"
-#include "../mechanics/alignment.h"
+#include "../mechanics/geometry.h"
 #include "../processors/applyalignment.h"
 #include "../processors/clustermaker.h"
 #include "../processors/processors.h"
@@ -74,7 +74,7 @@ void Loopers::CoarseAlign::loop(){
   double cummulativeX = 0;
   double cummulativeY = 0;
 
-  Mechanics::Alignment newAlignment = _refDevice->geometry();
+  Mechanics::Geometry newAlignment = _refDevice->geometry();
 
   for(unsigned int nsensor=1; nsensor<_refDevice->getNumSensors(); nsensor++){
     Mechanics::Sensor* sensor = _refDevice->getSensor(nsensor);

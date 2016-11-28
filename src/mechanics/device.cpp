@@ -30,7 +30,7 @@ Mechanics::Device::Device(const std::string& name,
 
 static void parseSensors(const ConfigParser& config,
                          Mechanics::Device& device,
-                         Mechanics::Alignment& alignment)
+                         Mechanics::Geometry& alignment)
 {
   using Mechanics::Sensor;
 
@@ -163,12 +163,12 @@ static Mechanics::Device parseDevice(const std::string& path)
 
       Mechanics::Device device(name, clockRate, readOutWindow, spaceUnit,
                                timeUnit);
-      Mechanics::Alignment alignment;
+      Mechanics::Geometry alignment;
 
       parseSensors(config, device, alignment);
 
       if (!pathAlignment.empty()) {
-        device.setGeometry(Mechanics::Alignment::fromFile(pathAlignment));
+        device.setGeometry(Mechanics::Geometry::fromFile(pathAlignment));
       } else {
         device.setGeometry(alignment);
       }
@@ -221,10 +221,10 @@ Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
     auto cfgAlign = cfg.find("alignment");
     if (cfgAlign && cfgAlign->is<std::string>()) {
       auto p = pathRebaseIfRelative(cfgAlign->as<std::string>(), dir);
-      device.setGeometry(Alignment::fromFile(p));
+      device.setGeometry(Geometry::fromFile(p));
       device.m_pathGeometry = p;
     } else if (cfgAlign) {
-      device.setGeometry(Alignment::fromConfig(*cfgAlign));
+      device.setGeometry(Geometry::fromConfig(*cfgAlign));
     }
 
     auto cfgMask = cfg.find("noise_mask");
@@ -303,9 +303,9 @@ void Mechanics::Device::addSensor(const Sensor& sensor)
 
 void Mechanics::Device::addMaskedSensor() { m_sensorMask.push_back(true); }
 
-void Mechanics::Device::setGeometry(const Alignment& alignment)
+void Mechanics::Device::setGeometry(const Geometry& geometry)
 {
-  m_geometry = alignment;
+  m_geometry = geometry;
 
   for (Index sensorId = 0; sensorId < numSensors(); ++sensorId) {
     Sensor* sensor = getSensor(sensorId);

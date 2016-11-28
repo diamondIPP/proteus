@@ -96,8 +96,8 @@ struct StepsGraphs {
   std::map<Index, SensorStepsGraphs> sensors;
 
   void addStep(const std::vector<Index>& sensorIds,
-               const Mechanics::Alignment& before,
-               const Mechanics::Alignment& after)
+               const Mechanics::Geometry& before,
+               const Mechanics::Geometry& after)
   {
     for (auto id = sensorIds.begin(); id != sensorIds.end(); ++id) {
       Vector6 delta = after.getParams(*id) - before.getParams(*id);
@@ -132,7 +132,7 @@ int main(int argc, char const* argv[])
   // override geometry if requested
   auto geoPath = args.get<std::string>("geometry");
   if (!geoPath.empty()) {
-    auto geo = Mechanics::Alignment::fromFile(geoPath);
+    auto geo = Mechanics::Geometry::fromFile(geoPath);
     device.setGeometry(geo);
   }
 
@@ -197,7 +197,7 @@ int main(int argc, char const* argv[])
 
     loop.run();
 
-    Mechanics::Alignment newGeo = aligner->updatedGeometry();
+    Mechanics::Geometry newGeo = aligner->updatedGeometry();
     steps.addStep(alignIds, device.geometry(), newGeo);
     device.setGeometry(newGeo);
   }

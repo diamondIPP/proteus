@@ -1,4 +1,4 @@
-#include "alignment.h"
+#include "geometry.h"
 
 #include <cassert>
 #include <fstream>
@@ -14,7 +14,7 @@
 PT_SETUP_GLOBAL_LOGGER
 
 // ensure geometry parameters have sensible defaults
-Mechanics::Alignment::PlaneParams::PlaneParams()
+Mechanics::Geometry::PlaneParams::PlaneParams()
     : offsetX(0)
     , offsetY(0)
     , offsetZ(0)
@@ -25,14 +25,14 @@ Mechanics::Alignment::PlaneParams::PlaneParams()
   // covariance should be zero by default constructor
 }
 
-Mechanics::Alignment::Alignment()
+Mechanics::Geometry::Geometry()
     : m_beamSlopeX(0), m_beamSlopeY(0), m_syncRatio(1)
 {
 }
 
-Mechanics::Alignment Mechanics::Alignment::fromFile(const std::string& path)
+Mechanics::Geometry Mechanics::Geometry::fromFile(const std::string& path)
 {
-  Alignment alignment;
+  Geometry alignment;
 
   if (Utils::Config::pathExtension(path) == "toml") {
     alignment = fromConfig(Utils::Config::readConfig(path));
@@ -44,16 +44,15 @@ Mechanics::Alignment Mechanics::Alignment::fromFile(const std::string& path)
   return alignment;
 }
 
-void Mechanics::Alignment::writeFile(const std::string& path) const
+void Mechanics::Geometry::writeFile(const std::string& path) const
 {
   Utils::Config::writeConfig(toConfig(), path);
   INFO("wrote alignment to '", path, "'");
 }
 
-Mechanics::Alignment
-Mechanics::Alignment::fromConfig(const ConfigParser& config)
+Mechanics::Geometry Mechanics::Geometry::fromConfig(const ConfigParser& config)
 {
-  Alignment alignment;
+  Geometry alignment;
 
   for (unsigned int nrow = 0; nrow < config.getNumRows(); nrow++) {
     const ConfigParser::Row* row = config.getRow(nrow);
@@ -71,7 +70,7 @@ Mechanics::Alignment::fromConfig(const ConfigParser& config)
       else if (!row->key.compare("sync ratio"))
         alignment.m_syncRatio = value;
       else
-        throw std::runtime_error("Alignment: failed to parse row");
+        throw std::runtime_error("Geometry: failed to parse row");
       continue;
     }
 
@@ -81,7 +80,7 @@ Mechanics::Alignment::fromConfig(const ConfigParser& config)
     // header format should be "Sensor <#sensor_id>"
     if ((row->header.size() <= 7) ||
         row->header.substr(0, 7).compare("Sensor "))
-      throw std::runtime_error("Alignment: found an invalid header");
+      throw std::runtime_error("Geometry: found an invalid header");
 
     unsigned int isens = std::stoi(row->header.substr(7));
     const double value = ConfigParser::valueToNumerical(row->value);
@@ -98,15 +97,15 @@ Mechanics::Alignment::fromConfig(const ConfigParser& config)
     else if (!row->key.compare("rotation z"))
       alignment.m_params[isens].rotationZ = value;
     else
-      throw std::runtime_error("Alignment: failed to parse row");
+      throw std::runtime_error("Geometry: failed to parse row");
   }
 
   return alignment;
 }
 
-Mechanics::Alignment Mechanics::Alignment::fromConfig(const toml::Value& cfg)
+Mechanics::Geometry Mechanics::Geometry::fromConfig(const toml::Value& cfg)
 {
-  Alignment alignment;
+  Geometry alignment;
 
   alignment.setBeamSlope(cfg.get<double>("beam.slope_x"),
                          cfg.get<double>("beam.slope_y"));
@@ -125,7 +124,7 @@ Mechanics::Alignment Mechanics::Alignment::fromConfig(const toml::Value& cfg)
   return alignment;
 }
 
-toml::Value Mechanics::Alignment::toConfig() const
+toml::Value Mechanics::Geometry::toConfig() const
 {
   toml::Value cfg;
 
@@ -151,15 +150,15 @@ toml::Value Mechanics::Alignment::toConfig() const
   return cfg;
 }
 
-void Mechanics::Alignment::setOffset(Index sensorId, const XYZPoint& offset)
+void Mechanics::Geometry::setOffset(Index sensorId, const XYZPoint& offset)
 {
   setOffset(sensorId, offset.x(), offset.y(), offset.z());
 }
 
-void Mechanics::Alignment::setOffset(Index sensorId,
-                                     double x,
-                                     double y,
-                                     double z)
+void Mechanics::Geometry::setOffset(Index sensorId,
+                                    double x,
+                                    double y,
+                                    double z)
 {
   // will automatically create a missing PlaneParams
   auto& params = m_params[sensorId];
@@ -168,10 +167,10 @@ void Mechanics::Alignment::setOffset(Index sensorId,
   params.offsetZ = z;
 }
 
-void Mechanics::Alignment::setRotationAngles(Index sensorId,
-                                             double rotX,
-                                             double rotY,
-                                             double rotZ)
+void Mechanics::Geometry::setRotationAngles(Index sensorId,
+                                            double rotX,
+                                            double rotY,
+                                            double rotZ)
 {
   // will automatically create a missing PlaneParams
   auto& params = m_params[sensorId];
@@ -180,10 +179,10 @@ void Mechanics::Alignment::setRotationAngles(Index sensorId,
   params.rotationZ = rotZ;
 }
 
-void Mechanics::Alignment::correctGlobalOffset(Index sensorId,
-                                               double dx,
-                                               double dy,
-                                               double dz)
+void Mechanics::Geometry::correctGlobalOffset(Index sensorId,
+                                              double dx,
+                                              double dy,
+                                              double dz)
 {
   auto& params = m_params.at(sensorId);
   params.offsetX += dx;
@@ -191,10 +190,10 @@ void Mechanics::Alignment::correctGlobalOffset(Index sensorId,
   params.offsetZ += dz;
 }
 
-void Mechanics::Alignment::correctRotationAngles(Index sensorId,
-                                                 double dalpha,
-                                                 double dbeta,
-                                                 double dgamma)
+void Mechanics::Geometry::correctRotationAngles(Index sensorId,
+                                                double dalpha,
+                                                double dbeta,
+                                                double dgamma)
 {
   auto& params = m_params.at(sensorId);
   params.rotationX += dalpha;
@@ -202,9 +201,9 @@ void Mechanics::Alignment::correctRotationAngles(Index sensorId,
   params.rotationZ += dgamma;
 }
 
-void Mechanics::Alignment::correctLocal(Index sensorId,
-                                        const Vector6& delta,
-                                        const SymMatrix6& cov)
+void Mechanics::Geometry::correctLocal(Index sensorId,
+                                       const Vector6& delta,
+                                       const SymMatrix6& cov)
 {
   auto& params = m_params.at(sensorId);
 
@@ -246,12 +245,7 @@ void Mechanics::Alignment::correctLocal(Index sensorId,
   params.cov += ROOT::Math::Similarity(jac, cov);
 }
 
-bool Mechanics::Alignment::hasAlignment(Index sensorId) const
-{
-  return (0 < m_params.count(sensorId));
-}
-
-Transform3D Mechanics::Alignment::getLocalToGlobal(Index sensorId) const
+Transform3D Mechanics::Geometry::getLocalToGlobal(Index sensorId) const
 {
   auto it = m_params.find(sensorId);
   if (it == m_params.cend())
@@ -264,7 +258,7 @@ Transform3D Mechanics::Alignment::getLocalToGlobal(Index sensorId) const
   return Transform3D(rot, off);
 }
 
-Vector6 Mechanics::Alignment::getParams(Index sensorId) const
+Vector6 Mechanics::Geometry::getParams(Index sensorId) const
 {
   const PlaneParams& params = m_params.at(sensorId);
   Vector6 p;
@@ -277,24 +271,24 @@ Vector6 Mechanics::Alignment::getParams(Index sensorId) const
   return p;
 }
 
-const SymMatrix6& Mechanics::Alignment::getParamsCov(Index sensorId) const
+const SymMatrix6& Mechanics::Geometry::getParamsCov(Index sensorId) const
 {
   return m_params.at(sensorId).cov;
 }
 
-void Mechanics::Alignment::setBeamSlope(double slopeX, double slopeY)
+void Mechanics::Geometry::setBeamSlope(double slopeX, double slopeY)
 {
   m_beamSlopeX = slopeX;
   m_beamSlopeY = slopeY;
 }
 
-XYZVector Mechanics::Alignment::beamDirection() const
+XYZVector Mechanics::Geometry::beamDirection() const
 {
   return XYZVector(m_beamSlopeX, m_beamSlopeY, 1);
 }
 
-void Mechanics::Alignment::print(std::ostream& os,
-                                 const std::string& prefix) const
+void Mechanics::Geometry::print(std::ostream& os,
+                                const std::string& prefix) const
 {
   const double RAD2DEG = 180 / M_PI;
 

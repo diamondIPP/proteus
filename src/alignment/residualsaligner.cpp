@@ -85,9 +85,9 @@ void Alignment::ResidualsAligner::analyze(const Storage::Event& event)
 
 void Alignment::ResidualsAligner::finalize() {}
 
-Mechanics::Alignment Alignment::ResidualsAligner::updatedGeometry() const
+Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
 {
-  Mechanics::Alignment geo = m_device.geometry();
+  Mechanics::Geometry geo = m_device.geometry();
 
   double slopeX = m_trackSlope->GetMean(1);
   double slopeY = m_trackSlope->GetMean(2);
