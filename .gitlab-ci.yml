@@ -27,7 +27,7 @@ cache:
     - test/raw/
 
 test_configs:
-  state: test
+  stage: test
   script:
     - cd test
     - ./check_configs.sh
