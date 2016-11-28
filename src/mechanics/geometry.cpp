@@ -296,9 +296,9 @@ void Mechanics::Geometry::print(std::ostream& os,
      << prefix << "  slope X: " << m_beamSlopeX << '\n'
      << prefix << "  slope Y: " << m_beamSlopeY << '\n';
 
-  for (auto ip = m_geo.begin(); ip != m_geo.end(); ++ip) {
-    Index sensorId = ip->first;
-    const GeoParams& p = ip->second;
+  for (auto params = m_params.begin(); params != m_params.end(); ++params) {
+    Index sensorId = params->first;
+    const PlaneParams& p = params->second;
     Vector3 unitU, unitV, unitW;
     getLocalToGlobal(sensorId).Rotation().GetComponents(unitU, unitV, unitW);
 

@@ -7,8 +7,8 @@
 #include <iostream>
 #include <string>
 
-#include "mechanics/alignment.h"
 #include "mechanics/device.h"
+#include "mechanics/geometry.h"
 #include "mechanics/noisemask.h"
 #include "utils/logger.h"
 
@@ -36,7 +36,7 @@ int main(int argc, char const* argv[])
     INFO("not a device config: ", e.what());
   }
   try {
-    Mechanics::Alignment::fromFile(path).print(std::cout);
+    Mechanics::Geometry::fromFile(path).print(std::cout);
     return EXIT_SUCCESS;
   } catch (const std::exception& e) {
     INFO("not a geometry config: ", e.what());
