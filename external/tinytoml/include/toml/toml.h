@@ -1235,7 +1235,7 @@ inline void Value::write(std::ostream* os, const std::string& keyPrefix, int ind
         break;
     case DOUBLE_TYPE: {
         (*os) << std::setprecision(std::numeric_limits<double>::max_digits10);
-        (*os) << std::defaultfloat << std::showpoint << double_;
+        (*os) << std::showpoint << double_;
         break;
     }
     case STRING_TYPE:
