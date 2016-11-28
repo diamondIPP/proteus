@@ -23,9 +23,9 @@ Storage::Cluster::Cluster()
 
 void Storage::Cluster::setErrPixel(double stdCol, double stdRow)
 {
-  m_covCr(0, 0) = stdCol * stdCol;
-  m_covCr(0, 1) = 0;
-  m_covCr(1, 1) = stdRow * stdRow;
+  m_crCov(0, 0) = stdCol * stdCol;
+  m_crCov(0, 1) = 0;
+  m_crCov(1, 1) = stdRow * stdRow;
 }
 
 void Storage::Cluster::transformToGlobal(const Transform3D& pixelToGlobal)
@@ -34,12 +34,12 @@ void Storage::Cluster::transformToGlobal(const Transform3D& pixelToGlobal)
   pixelToGlobal.GetTransformMatrix(transform);
 
   SymMatrix3 covPixel;
-  covPixel.Place_at(m_covCr, 0, 0);
+  covPixel.Place_at(m_crCov, 0, 0);
   // avoid singular matrix by setting local w-error to sensor thickness
   covPixel(2, 2) = 1.0 / 12.0;
 
   m_xyz = pixelToGlobal * XYZPoint(m_cr.x(), m_cr.y(), 0);
-  m_covXyz = Similarity(transform.Sub<Matrix3>(0, 0), covPixel);
+  m_xyzCov = Similarity(transform.Sub<Matrix3>(0, 0), covPixel);
 }
 
 Index Storage::Cluster::sensorId() const { return m_plane->sensorId(); }
@@ -83,8 +83,8 @@ void Storage::Cluster::addHit(Storage::Hit* hit)
 
 void Storage::Cluster::print(std::ostream& os, const std::string& prefix) const
 {
-  Vector2 ep = sqrt(m_covCr.Diagonal());
-  Vector3 eg = sqrt(m_covXyz.Diagonal());
+  Vector2 ep = sqrt(m_crCov.Diagonal());
+  Vector3 eg = sqrt(m_xyzCov.Diagonal());
 
   os << prefix << "pixel: " << posPixel() << '\n';
   os << prefix << "pixel stddev: " << ep << '\n';

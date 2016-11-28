@@ -20,16 +20,19 @@ public:
 
   void setPosPixel(const XYPoint& cr) { m_cr = cr; }
   void setPosPixel(double col, double row) { m_cr.SetXY(col, row); }
-  void setCovPixel(const SymMatrix2& cov) { m_covCr = cov; }
+  void setLocal(const XYPoint& uv, const SymMatrix2& cov);
+  void setCovPixel(const SymMatrix2& cov) { m_crCov = cov; }
   void setErrPixel(double stdCol, double stdRow);
   void setTime(double time_) { m_time = time_; }
   /** Set global position using the transform from pixel to global coords. */
   void transformToGlobal(const Transform3D& pixelToGlobal);
 
   const XYPoint& posPixel() const { return m_cr; }
+  const XYPoint& posLocal() const { return m_uv; }
   const XYZPoint& posGlobal() const { return m_xyz; }
-  const SymMatrix2& covPixel() const { return m_covCr; }
-  const SymMatrix3& covGlobal() const { return m_covXyz; }
+  const SymMatrix2& covPixel() const { return m_crCov; }
+  const SymMatrix2& covLocal() const { return m_uvCov; }
+  const SymMatrix3& covGlobal() const { return m_xyzCov; }
   double time() const { return m_time; }
   double value() const { return m_value; }
 
@@ -58,14 +61,14 @@ public:
   Index getNumHits() const { return m_hits.size(); }
   double getPixX() const { return m_cr.x(); }
   double getPixY() const { return m_cr.y(); }
-  double getPixErrX() const { return std::sqrt(m_covCr(0, 0)); }
-  double getPixErrY() const { return std::sqrt(m_covCr(1, 1)); }
+  double getPixErrX() const { return std::sqrt(m_crCov(0, 0)); }
+  double getPixErrY() const { return std::sqrt(m_crCov(1, 1)); }
   double getPosX() const { return m_xyz.x(); }
   double getPosY() const { return m_xyz.y(); }
   double getPosZ() const { return m_xyz.z(); }
-  double getPosErrX() const { return std::sqrt(m_covXyz(0, 0)); }
-  double getPosErrY() const { return std::sqrt(m_covXyz(1, 1)); }
-  double getPosErrZ() const { return std::sqrt(m_covXyz(2, 2)); }
+  double getPosErrX() const { return std::sqrt(m_xyzCov(0, 0)); }
+  double getPosErrY() const { return std::sqrt(m_xyzCov(1, 1)); }
+  double getPosErrZ() const { return std::sqrt(m_xyzCov(2, 2)); }
   double getTiming() const { return time(); }
   double getValue() const { return value(); }
   double getMatchDistance() const { return m_matchDistance; }
@@ -84,11 +87,13 @@ private:
   Cluster(); // The Event class manages the memory, not the user
 
   XYPoint m_cr;
-  SymMatrix2 m_covCr;
-  double m_time; // The timing of the underlying hits
-  double m_value;  // The combined value of all its hits
+  SymMatrix2 m_crCov;
+  double m_time;  // The timing of the underlying hits
+  double m_value; // The combined value of all its hits
+  XYPoint m_uv;
+  SymMatrix2 m_uvCov;
   XYZPoint m_xyz;
-  SymMatrix3 m_covXyz;
+  SymMatrix3 m_xyzCov;
 
   std::vector<Hit*> m_hits; // List of hits composing the cluster
 
@@ -107,5 +112,11 @@ private:
 std::ostream& operator<<(std::ostream& os, const Cluster& cluster);
 
 } // namespace Storage
+
+inline void Storage::Cluster::setLocal(const XYPoint& uv, const SymMatrix2& cov)
+{
+  m_uv = uv;
+  m_uvCov = cov;
+}
 
 #endif // PT_CLUSTER_H
