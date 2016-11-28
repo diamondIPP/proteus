@@ -1,7 +1,7 @@
 #include <numeric>
 
 #include <TFile.h>
-#include <TGraph.h>
+#include <TGraphErrors.h>
 #include <TTree.h>
 
 #include "alignment/correlationaligner.h"
@@ -38,42 +38,57 @@ inline double radian_sym(double val)
 
 /** Store sensor geometry parameter corrections for multiple steps. */
 struct SensorStepsGraphs {
-  std::vector<double> offset0;
-  std::vector<double> offset1;
-  std::vector<double> offset2;
-  std::vector<double> rotation0;
-  std::vector<double> rotation1;
-  std::vector<double> rotation2;
+  std::vector<double> off0;
+  std::vector<double> off1;
+  std::vector<double> off2;
+  std::vector<double> rot0;
+  std::vector<double> rot1;
+  std::vector<double> rot2;
+  std::vector<double> errOff0;
+  std::vector<double> errOff1;
+  std::vector<double> errOff2;
+  std::vector<double> errRot0;
+  std::vector<double> errRot1;
+  std::vector<double> errRot2;
 
-  void addStep(const Vector6& delta)
+  void addStep(const Vector6& delta, const SymMatrix6& cov)
   {
-    offset0.push_back(delta[0]);
-    offset1.push_back(delta[1]);
-    offset2.push_back(delta[2]);
-    rotation0.push_back(radian_sym(delta[3]));
-    rotation1.push_back(radian_sym(delta[4]));
-    rotation2.push_back(radian_sym(delta[5]));
+    off0.push_back(delta[0]);
+    off1.push_back(delta[1]);
+    off2.push_back(delta[2]);
+    rot0.push_back(radian_sym(delta[3]));
+    rot1.push_back(radian_sym(delta[4]));
+    rot2.push_back(radian_sym(delta[5]));
+    // errors
+    errOff0.push_back(std::sqrt(cov(0, 0)));
+    errOff1.push_back(std::sqrt(cov(1, 1)));
+    errOff2.push_back(std::sqrt(cov(2, 2)));
+    errRot0.push_back(std::sqrt(cov(3, 3)));
+    errRot1.push_back(std::sqrt(cov(4, 4)));
+    errRot2.push_back(std::sqrt(cov(5, 5)));
   }
   void writeGraphs(const std::string& prefix, TDirectory* dir) const
   {
     auto makeGraph = [&](const std::string& name,
-                         const std::vector<double>& y) {
-      std::vector<double> x(y.size());
+                         const std::vector<double>& yval,
+                         const std::vector<double>& yerr) {
+      std::vector<double> x(yval.size());
       std::iota(x.begin(), x.end(), 0);
 
-      TGraph* g = new TGraph(x.size(), x.data(), y.data());
+      TGraphErrors* g =
+          new TGraphErrors(x.size(), x.data(), yval.data(), NULL, yerr.data());
       g->SetName((prefix + "-Correction" + name).c_str());
       g->SetTitle("");
       g->GetXaxis()->SetTitle("Step");
       g->GetYaxis()->SetTitle(("Alignment Correction " + name).c_str());
       dir->WriteTObject(g);
     };
-    makeGraph("Offset0", offset0);
-    makeGraph("Offset1", offset1);
-    makeGraph("Offset2", offset2);
-    makeGraph("Rotation0", rotation0);
-    makeGraph("Rotation1", rotation1);
-    makeGraph("Rotation2", rotation2);
+    makeGraph("Offset0", off0, errOff0);
+    makeGraph("Offset1", off1, errOff1);
+    makeGraph("Offset2", off2, errOff2);
+    makeGraph("Rotation0", rot0, errRot0);
+    makeGraph("Rotation1", rot1, errRot1);
+    makeGraph("Rotation2", rot2, errRot2);
   }
 };
 
@@ -86,7 +101,7 @@ struct StepsGraphs {
   {
     for (auto id = sensorIds.begin(); id != sensorIds.end(); ++id) {
       Vector6 delta = after.getParams(*id) - before.getParams(*id);
-      sensors[*id].addStep(delta);
+      sensors[*id].addStep(delta, after.getParamsCov(*id));
     }
   }
   void writeGraphs(const Mechanics::Device& device, TDirectory* dir) const
