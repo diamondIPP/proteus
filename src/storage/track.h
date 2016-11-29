@@ -46,9 +46,6 @@ public:
   double stdSlopeU() const { return std::sqrt(m_cov(Du, Du)); }
   double stdSlopeV() const { return std::sqrt(m_cov(Dv, Dv)); }
 
-  /** Full position in the local coordinates. */
-  XYZPoint posLocal() const { return XYZPoint(m_offset.x(), m_offset.y(), 0); }
-
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
