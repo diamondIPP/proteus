@@ -8,9 +8,12 @@
 #include "processors/processors.h"
 #include "storage/event.h"
 
-Processors::Matcher::Matcher(const Mechanics::Device& device, Index sensorId)
+Processors::Matcher::Matcher(const Mechanics::Device& device,
+                             Index sensorId,
+                             double distanceSigmaMax)
     : m_sensor(*device.getSensor(sensorId))
     , m_sensorId(sensorId)
+    , m_distSquaredMax(distanceSigmaMax * distanceSigmaMax)
     , m_name("Matcher_" + device.getSensor(sensorId)->name())
 {
 }
@@ -21,7 +24,7 @@ struct Pair {
   Storage::Track* track;
   Storage::Cluster* cluster;
 
-  bool distance(const Mechanics::Sensor& sensor) const
+  bool distanceSquared(const Mechanics::Sensor& sensor) const
   {
     const Storage::TrackState& state = track->getLocalState(sensor.id());
     XYPoint pos = sensor.transformPixelToLocal(cluster->posPixel());
@@ -36,7 +39,7 @@ struct PairDistanceCmp {
 
   bool operator()(const Pair& a, const Pair& b) const
   {
-    return a.distance(sensor) < b.distance(sensor);
+    return a.distanceSquared(sensor) < b.distanceSquared(sensor);
   }
 };
 
@@ -53,9 +56,12 @@ void Processors::Matcher::process(Storage::Event& event) const
     if (!track->hasLocalState(m_sensorId))
       continue;
     for (Index icluster = 0; icluster < plane.numClusters(); ++icluster) {
-      Storage::Cluster* cluster = plane.getCluster(icluster);
-      // TODO 2016-11-15 msmk: only consider combinations w/ maximum distance
-      pairs.push_back(Pair{track, cluster});
+      Pair pair = {track, plane.getCluster(icluster)};
+      // preselect by distance if a distance cut is given
+      if ((m_distSquaredMax < 0) ||
+          (pair.distanceSquared(m_sensor) < m_distSquaredMax)) {
+        pairs.push_back(pair);
+      }
     }
   }
 

@@ -27,7 +27,9 @@ namespace Processors {
  */
 class Matcher : public Processor {
 public:
-  Matcher(const Mechanics::Device& device, Index sensorId);
+  Matcher(const Mechanics::Device& device,
+          Index sensorId,
+          double distanceSigmaMax = -1);
 
   std::string name() const;
   void process(Storage::Event& event) const;
@@ -35,6 +37,7 @@ public:
 private:
   const Mechanics::Sensor& m_sensor;
   Index m_sensorId;
+  double m_distSquaredMax;
   std::string m_name;
 };
 
