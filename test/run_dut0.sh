@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/sh -ex
 #
 # run the processing chain for the first dut
 # WARNING assumes that run_telescope.sh has been sucessfully called

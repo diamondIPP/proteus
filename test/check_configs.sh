@@ -1,8 +1,6 @@
-#!/bin/sh
+#!/bin/sh -ex
 #
 # check validity of config files
-
-set -ex # print commands and exit upon error
 
 source build/activate.sh
 
