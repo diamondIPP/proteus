@@ -227,19 +227,29 @@ Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
     }
 
     auto cfgMask = cfg.find("noise_mask");
+    // missing noise masks should not be treated as fatal errors
     // allow overlay of multiple noise masks
     if (cfgMask && cfgMask->is<std::vector<std::string>>()) {
       NoiseMask combined;
       auto paths = cfgMask->as<std::vector<std::string>>();
       for (auto it = paths.begin(); it != paths.end(); ++it) {
-        auto p = pathRebaseIfRelative(*it, dir);
-        combined.merge(NoiseMask::fromFile(p));
+        try {
+          auto path = pathRebaseIfRelative(*it, dir);
+          auto mask = NoiseMask::fromFile(path);
+          combined.merge(mask);
+        } catch (const std::exception& e) {
+          ERROR(e.what());
+        }
       }
       device.applyNoiseMask(combined);
     } else if (cfgMask && cfgMask->is<std::string>()) {
-      auto p = pathRebaseIfRelative(cfgMask->as<std::string>(), dir);
-      device.applyNoiseMask(NoiseMask::fromFile(p));
-      device.m_pathNoiseMask = p;
+      auto path = pathRebaseIfRelative(cfgMask->as<std::string>(), dir);
+      try {
+        device.applyNoiseMask(NoiseMask::fromFile(path));
+        device.m_pathNoiseMask = path;
+      } catch (const std::exception& e) {
+        ERROR(e.what());
+      }
     } else if (cfgMask) {
       device.applyNoiseMask(NoiseMask::fromConfig(*cfgMask));
     }

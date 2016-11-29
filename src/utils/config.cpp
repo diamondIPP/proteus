@@ -118,13 +118,14 @@ toml::Value Utils::Config::readConfigParser(const std::string& path)
 toml::Value Utils::Config::readConfig(const std::string& path)
 {
   std::ifstream file(path, std::ifstream::in | std::ifstream::binary);
-  if (!file.good())
-    throw std::runtime_error("Could not open file '" + path + "' to read");
+  if (!file)
+    throw std::runtime_error("Config: Could not open file '" + path +
+                             "' to read");
 
   toml::ParseResult result = toml::parse(file);
   if (!result.valid())
-    throw std::runtime_error("Could not parse TOML file '" + path + "': " +
-                             result.errorReason);
+    throw std::runtime_error("Config: Could not parse TOML file '" + path +
+                             "': " + result.errorReason);
 
   return std::move(result.value);
 }
@@ -133,7 +134,8 @@ void Utils::Config::writeConfig(const toml::Value& cfg, const std::string& path)
 {
   std::ofstream file(path, std::ofstream::out | std::ofstream::binary);
   if (!file.good())
-    throw std::runtime_error("Could not open file '" + path + "' to write");
+    throw std::runtime_error("Config: Could not open file '" + path +
+                             "' to write");
 
   cfg.write(&file);
   file.close();

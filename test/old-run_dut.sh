@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/sh -ex
 #
 # run the processing chain for the dut
 

@@ -26,6 +26,12 @@ cache:
   paths:
     - test/raw/
 
+test_configs:
+  stage: test
+  script:
+    - cd test
+    - ./check_configs.sh
+
 test_run000875:
   stage: test
   script:
