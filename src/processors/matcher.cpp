@@ -11,7 +11,7 @@
 Processors::Matcher::Matcher(const Mechanics::Device& device, Index sensorId)
     : m_sensor(*device.getSensor(sensorId))
     , m_sensorId(sensorId)
-    , m_name("matcher_" + device.getSensor(sensorId)->name())
+    , m_name("Matcher_" + device.getSensor(sensorId)->name())
 {
 }
 
@@ -21,9 +21,9 @@ struct Pair {
   Storage::Track* track;
   Storage::Cluster* cluster;
 
-  bool distance(Index sensorId, const Mechanics::Sensor& sensor) const
+  bool distance(const Mechanics::Sensor& sensor) const
   {
-    const Storage::TrackState& state = track->getLocalState(sensorId);
+    const Storage::TrackState& state = track->getLocalState(sensor.id());
     XYPoint pos = sensor.transformPixelToLocal(cluster->posPixel());
     Vector2 delta(pos.x() - state.offset().x(), pos.y() - state.offset().y());
     // TODO 2016-11-15 msmk: use combined track + cluster covariance
@@ -32,12 +32,11 @@ struct Pair {
 };
 
 struct PairDistanceCmp {
-  Index sensorId;
   const Mechanics::Sensor& sensor;
 
   bool operator()(const Pair& a, const Pair& b) const
   {
-    return a.distance(sensorId, sensor) < b.distance(sensorId, sensor);
+    return a.distance(sensor) < b.distance(sensor);
   }
 };
 
@@ -61,7 +60,7 @@ void Processors::Matcher::process(Storage::Event& event) const
   }
 
   // sort by pair distance, closest distance first
-  std::sort(pairs.begin(), pairs.end(), PairDistanceCmp{m_sensorId, m_sensor});
+  std::sort(pairs.begin(), pairs.end(), PairDistanceCmp{m_sensor});
 
   // select unique matches, closest distance first
   for (auto pair = pairs.begin(); pair != pairs.end(); ++pair) {
