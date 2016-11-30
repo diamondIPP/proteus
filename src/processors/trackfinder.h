@@ -54,7 +54,7 @@ private:
 
   std::vector<Index> m_sensors;
   size_t m_numSeedSensors;
-  double m_distSigmaMax;
+  double m_distSquaredMax;
   double m_redChi2Max;
   Index m_numClustersMin;
   XYZVector m_beamDirection;

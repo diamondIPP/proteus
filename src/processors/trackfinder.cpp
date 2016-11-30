@@ -25,7 +25,7 @@ Processors::TrackFinder::TrackFinder(const Mechanics::Device& device,
                                      double redChi2Max)
     : m_sensors(sensors)
     , m_numSeedSensors(1 + sensors.size() - numClustersMin)
-    , m_distSigmaMax(distanceSigmaMax)
+    , m_distSquaredMax(distanceSigmaMax * distanceSigmaMax)
     , m_redChi2Max(redChi2Max)
     , m_numClustersMin(numClustersMin)
     , m_beamDirection(device.geometry().beamDirection())
@@ -92,18 +92,13 @@ void Processors::TrackFinder::searchSensor(
       if (curr->isInTrack())
         continue;
 
-      // TODO switch to full covariance matrix
-      const double errX =
-          sqrt(pow(curr->getPosErrX(), 2) + pow(last->getPosErrX(), 2));
-      const double errY =
-          sqrt(pow(curr->getPosErrY(), 2) + pow(last->getPosErrY(), 2));
-      // projected global xy distance w/ beam slope correction
       XYZVector delta = curr->posGlobal() - last->posGlobal();
       delta -= delta.z() * m_beamDirection;
-      // TODO use full mahalanobis distance
-      double sigma = sqrt(pow(delta.x() / errX, 2) + pow(delta.y() / errY, 2));
+      SymMatrix2 cov = last->covGlobal().Sub<SymMatrix2>(0, 0) +
+                       curr->covGlobal().Sub<SymMatrix2>(0, 0);
+      double dist2 = mahalanobisSquared(cov, Vector2(delta.x(), delta.y()));
 
-      if (m_distSigmaMax < sigma)
+      if (m_distSquaredMax < dist2)
         continue;
 
       if (matched == NULL) {
