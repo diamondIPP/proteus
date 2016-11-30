@@ -207,14 +207,14 @@ void Mechanics::Geometry::correctLocal(Index sensorId,
 {
   auto& params = m_params.at(sensorId);
 
-  // small angle approximation
+  // small angle approximation rotation matrix
   // clang-format off
   double coeffs[9] = {
-            1,  delta[3], -delta[4],
-    -delta[3],         1,  delta[5],
-     delta[4], -delta[5],         1};
+           1, -delta[5], -delta[4],
+    delta[5],         1, -delta[3],
+    delta[4],  delta[3],         1};
   // clang-format on
-  Matrix3 corrRot(coeffs, 9);
+  Matrix3 deltaQ(coeffs, 9);
   Matrix3 rot;
   Vector3 off;
   Transform3D old = getLocalToGlobal(sensorId);
@@ -222,7 +222,7 @@ void Mechanics::Geometry::correctLocal(Index sensorId,
   // construct new rotation matrix and offset
   old.Rotation().GetRotationMatrix(rot);
   old.Translation().GetComponents(off.begin(), off.end());
-  rot *= corrRot;
+  rot *= deltaQ;
   off += rot * delta.Sub<Vector3>(0);
 
   // decompose transformation back into offsets and angles

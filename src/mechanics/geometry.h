@@ -56,7 +56,7 @@ public:
                              double dalpha,
                              double dbeta,
                              double dgamma);
-  /** Add small local corrections du, dv, dw, rotU, rotV, rotW. */
+  /** Add small local corrections du, dv, dw, dRotU, dRotV, dRotW. */
   void
   correctLocal(Index sensorId, const Vector6& delta, const SymMatrix6& cov);
   /** Transformation from local to global coordinates for the sensor. */
