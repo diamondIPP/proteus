@@ -22,7 +22,7 @@ void Processors::ApplyAlignment::process(Storage::Event& event) const
 }
 
 void Processors::setGeometry(Storage::Event* event,
-                                const Mechanics::Device* device)
+                             const Mechanics::Device* device)
 {
   assert(event && device &&
          "Processors: can't apply alignment with null event and/or device");
@@ -34,8 +34,6 @@ void Processors::setGeometry(Storage::Event* event,
     const Mechanics::Sensor* sensor = device->getSensor(iplane);
     const Transform3D pixelToGlobal = sensor->constructPixelToGlobal();
 
-    for (unsigned int ihit = 0; ihit < plane->numHits(); ihit++)
-      plane->getHit(ihit)->transformToGlobal(pixelToGlobal);
     for (unsigned int icluster = 0; icluster < plane->numClusters(); icluster++)
       plane->getCluster(icluster)->transformToGlobal(pixelToGlobal);
   }
