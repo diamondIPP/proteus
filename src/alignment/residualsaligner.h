@@ -34,6 +34,7 @@ private:
     Index sensorId;
     TH1D* deltaU;
     TH1D* deltaV;
+    TH1D* deltaGamma;
   };
 
   const Mechanics::Device& m_device;
