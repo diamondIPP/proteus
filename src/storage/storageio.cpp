@@ -663,9 +663,8 @@ namespace Storage {
       // Generate the cluster objects
       for (int ncluster = 0; ncluster < numClusters; ncluster++) {
         Cluster* cluster = plane->newCluster();
-        cluster->setPosPixel(clusterPixX[ncluster], clusterPixY[ncluster]);
-        cluster->setErrPixel(
-            clusterPixErrX[ncluster], clusterPixErrY[ncluster]);
+        cluster->setPixel(clusterPixX[ncluster], clusterPixY[ncluster],
+                          clusterPixErrX[ncluster], clusterPixErrY[ncluster]);
 
         // If this cluster is in a track, mark this (and the tracks tree is
         // active)

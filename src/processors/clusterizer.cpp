@@ -126,8 +126,7 @@ void Processors::BinaryClusterizer::estimateProperties(
   cov(0, 0) /= cluster.sizeCol();
   cov(1, 1) /= cluster.sizeRow();
 
-  cluster.setPosPixel(pos);
-  cluster.setCovPixel(cov);
+  cluster.setPixel(pos, cov);
   cluster.setTime(time);
 }
 
@@ -157,8 +156,7 @@ void Processors::ValueWeightedClusterizer::estimateProperties(
   cov(0, 0) /= cluster.sizeCol();
   cov(1, 1) /= cluster.sizeRow();
 
-  cluster.setPosPixel(pos);
-  cluster.setCovPixel(cov);
+  cluster.setPixel(pos, cov);
   cluster.setTime(time);
 }
 
@@ -182,9 +180,7 @@ void Processors::FastestHitClusterizer::estimateProperties(
     }
   }
 
-  cluster.setPosPixel(pos);
-  // 1 / sqrt(12) factor from pixel size to stddev of equivalent gaussian
-  cluster.setCovPixel(HIT_COV);
+  cluster.setPixel(pos, HIT_COV);
   cluster.setTime(time);
 }
 

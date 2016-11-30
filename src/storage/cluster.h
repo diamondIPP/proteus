@@ -8,6 +8,10 @@
 #include "utils/definitions.h"
 #include "utils/interval.h"
 
+namespace Mechanics {
+class Sensor;
+}
+
 namespace Storage {
 
 class Hit;
@@ -18,14 +22,11 @@ class Cluster {
 public:
   typedef Utils::Box<2, int> Area;
 
-  void setPosPixel(const XYPoint& cr) { m_cr = cr; }
-  void setPosPixel(double col, double row) { m_cr.SetXY(col, row); }
-  void setLocal(const XYPoint& uv, const SymMatrix2& cov);
-  void setCovPixel(const SymMatrix2& cov) { m_crCov = cov; }
-  void setErrPixel(double stdCol, double stdRow);
+  void setPixel(const XYPoint& cr, const SymMatrix2& cov);
+  void setPixel(double col, double row, double stdCol, double stdRow);
   void setTime(double time_) { m_time = time_; }
-  /** Set global position using the transform from pixel to global coords. */
-  void transformToGlobal(const Transform3D& pixelToGlobal);
+  /** Calculate local and global coordinates from the pixel coordinates. */
+  void transform(const Mechanics::Sensor& sensor);
 
   const XYPoint& posPixel() const { return m_cr; }
   const XYPoint& posLocal() const { return m_uv; }
@@ -87,11 +88,11 @@ private:
   Cluster(); // The Event class manages the memory, not the user
 
   XYPoint m_cr;
-  SymMatrix2 m_crCov;
   double m_time;  // The timing of the underlying hits
   double m_value; // The combined value of all its hits
   XYPoint m_uv;
   SymMatrix2 m_uvCov;
+  SymMatrix2 m_crCov;
   XYZPoint m_xyz;
   SymMatrix3 m_xyzCov;
 
@@ -112,11 +113,5 @@ private:
 std::ostream& operator<<(std::ostream& os, const Cluster& cluster);
 
 } // namespace Storage
-
-inline void Storage::Cluster::setLocal(const XYPoint& uv, const SymMatrix2& cov)
-{
-  m_uv = uv;
-  m_uvCov = cov;
-}
 
 #endif // PT_CLUSTER_H

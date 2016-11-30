@@ -31,11 +31,10 @@ void Processors::setGeometry(Storage::Event* event,
 
   for (Index iplane = 0; iplane < event->numPlanes(); iplane++) {
     Storage::Plane* plane = event->getPlane(iplane);
-    const Mechanics::Sensor* sensor = device->getSensor(iplane);
-    const Transform3D pixelToGlobal = sensor->constructPixelToGlobal();
+    const Mechanics::Sensor& sensor = *device->getSensor(iplane);
 
     for (unsigned int icluster = 0; icluster < plane->numClusters(); icluster++)
-      plane->getCluster(icluster)->transformToGlobal(pixelToGlobal);
+      plane->getCluster(icluster)->transform(sensor);
   }
 
   // refit tracks to accomodate possible alignment changes

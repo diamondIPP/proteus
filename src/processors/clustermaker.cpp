@@ -165,6 +165,5 @@ void Processors::ClusterMaker::calculateCluster(Storage::Cluster* cluster) const
   // const double errX = (stdevX) ? stdevX : pixErrX;
   // const double errY = (stdevY) ? stdevY : pixErrY;
 
-  cluster->setPosPixel(cogX, cogY);
-  cluster->setErrPixel(pixErrX, pixErrY);
+  cluster->setPixel(cogX, cogY, pixErrX, pixErrY);
 }
