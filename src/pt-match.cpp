@@ -4,7 +4,7 @@
 #include "analyzers/matchexporter.h"
 #include "analyzers/residuals.h"
 #include "mechanics/device.h"
-#include "processors/applyalignment.h"
+#include "processors/applygeometry.h"
 #include "processors/hitmapper.h"
 #include "processors/matcher.h"
 #include "processors/trackfitter.h"
@@ -37,7 +37,7 @@ int main(int argc, char const* argv[])
 
   Utils::EventLoop loop(&input, skipEvents, numEvents);
   setupHitMappers(device, loop);
-  loop.addProcessor(std::make_shared<ApplyAlignment>(device));
+  loop.addProcessor(std::make_shared<ApplyGeometry>(device));
   loop.addProcessor(std::make_shared<StraightTrackFitter>(device, sensorIds));
   for (auto sensorId : sensorIds)
     loop.addProcessor(std::make_shared<Matcher>(device, sensorId));
