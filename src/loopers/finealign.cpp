@@ -160,7 +160,7 @@ void Loopers::FineAlign::loop()
              nplane++)
           _clusterMaker->generateClusters(refEvent, nplane);
 
-        Processors::setGeometry(refEvent, _refDevice);
+        Processors::applyAlignment(refEvent, _refDevice);
 
         if (refEvent->getNumTracks())
           throw "FineAlign: can't re-track an event, mask the tree in the "

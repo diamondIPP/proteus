@@ -18,11 +18,11 @@ std::string Processors::ApplyAlignment::name() const
 
 void Processors::ApplyAlignment::process(Storage::Event& event) const
 {
-  setGeometry(&event, &m_device);
+  applyAlignment(&event, &m_device);
 }
 
-void Processors::setGeometry(Storage::Event* event,
-                             const Mechanics::Device* device)
+void Processors::applyAlignment(Storage::Event* event,
+                                const Mechanics::Device* device)
 {
   assert(event && device &&
          "Processors: can't apply alignment with null event and/or device");

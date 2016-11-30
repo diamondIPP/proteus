@@ -106,8 +106,8 @@ void Loopers::FineAlignDut::loop()
       for (unsigned int nplane = 0; nplane < dutEvent->getNumPlanes(); nplane++)
         _clusterMaker->generateClusters(dutEvent, nplane);
 
-      Processors::setGeometry(refEvent, _refDevice);
-      Processors::setGeometry(dutEvent, _dutDevice);
+      Processors::applyAlignment(refEvent, _refDevice);
+      Processors::applyAlignment(dutEvent, _dutDevice);
 
       if (refEvent->getNumTracks())
         throw "FineAlign: can't re-track an event, mask the tree in the input";

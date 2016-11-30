@@ -62,7 +62,7 @@ void Loopers::CoarseAlign::loop(){
     for (unsigned int nplane=0; nplane<refEvent->getNumPlanes(); nplane++)
       _clusterMaker->generateClusters(refEvent, nplane);
     
-    Processors::setGeometry(refEvent, _refDevice);
+    Processors::applyAlignment(refEvent, _refDevice);
     
     correlation.processEvent(refEvent);
     
