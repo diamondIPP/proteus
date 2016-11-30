@@ -10,7 +10,7 @@
 #include "analyzers/residuals.h"
 #include "analyzers/trackinfo.h"
 #include "mechanics/device.h"
-#include "processors/applyalignment.h"
+#include "processors/applygeometry.h"
 #include "processors/clusterizer.h"
 #include "processors/hitmapper.h"
 #include "processors/trackfinder.h"
@@ -173,7 +173,7 @@ int main(int argc, char const* argv[])
     Utils::EventLoop loop(&input, skipEvents, numEvents);
     setupHitMappers(device, loop);
     setupClusterizers(device, loop);
-    loop.addProcessor(std::make_shared<ApplyAlignment>(device));
+    loop.addProcessor(std::make_shared<ApplyGeometry>(device));
     // setup aligment method specific loop logic
     std::shared_ptr<Aligner> aligner;
     if (method == Method::Correlation) {

@@ -14,7 +14,7 @@
 #include "analyzers/residuals.h"
 #include "analyzers/trackinfo.h"
 #include "mechanics/device.h"
-#include "processors/applyalignment.h"
+#include "processors/applygeometry.h"
 #include "processors/clusterizer.h"
 #include "processors/clustermaker.h"
 #include "processors/hitmapper.h"
@@ -66,7 +66,7 @@ int main(int argc, char const* argv[])
   Utils::EventLoop loop(&input, &output, skipEvents, numEvents);
   setupHitMappers(dev, loop);
   setupClusterizers(dev, loop);
-  loop.addProcessor(std::make_shared<ApplyAlignment>(dev));
+  loop.addProcessor(std::make_shared<ApplyGeometry>(dev));
   loop.addProcessor(std::make_shared<TrackFinder>(dev, sensorIds, distSigmaMax,
                                                   numPointsMin, redChi2Max));
   loop.addAnalyzer(std::make_shared<EventInfo>(&dev, &hists));

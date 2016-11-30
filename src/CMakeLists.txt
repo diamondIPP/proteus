@@ -42,7 +42,7 @@ set(COMMON_SRC
     mechanics/geometry.cpp
     mechanics/noisemask.cpp
     mechanics/sensor.cpp
-    processors/applyalignment.cpp
+    processors/applygeometry.cpp
     processors/clustermaker.cpp
     processors/clusterizer.cpp
     processors/configprocessors.cpp
