@@ -242,7 +242,7 @@ Analyzers::UnbiasedResiduals::UnbiasedResiduals(const Mechanics::Device& device,
 
 std::string Analyzers::UnbiasedResiduals::UnbiasedResiduals::name() const
 {
-  return "unbiased_residuals";
+  return "UnbiasedResiduals";
 }
 
 void Analyzers::UnbiasedResiduals::analyze(const Storage::Event& event)
