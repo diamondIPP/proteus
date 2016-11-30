@@ -148,8 +148,10 @@ int main(int argc, char const* argv[])
   }
 
   toml::Value cfgAll = Utils::Config::readConfig(args.config());
-  toml::Value defaults = toml::Table{
-      {"num_steps", 1}, {"distance_sigma_max", 5.}, {"reduced_chi2_max", -1.}};
+  toml::Value defaults = toml::Table{{"num_steps", 1},
+                                     {"distance_sigma_max", 5.},
+                                     {"reduced_chi2_max", -1.},
+                                     {"damping", 0.9}};
   toml::Value cfg = Utils::Config::withDefaults(cfgAll["align"], defaults);
   // select alignment scope, i.e. the sensors that are considered as input and
   // the sensors that should be aligned
@@ -159,6 +161,7 @@ int main(int argc, char const* argv[])
   auto numSteps = cfg.get<int>("num_steps");
   double distSigmaMax = cfg.get<double>("distance_sigma_max");
   double redChi2Max = cfg.get<double>("reduced_chi2_max");
+  double damping = cfg.get<double>("damping");
 
   Storage::StorageIO input(args.input(), Storage::INPUT, device.numSensors());
   TFile hists(args.makeOutput("hists.root").c_str(), "RECREATE");
@@ -192,7 +195,8 @@ int main(int argc, char const* argv[])
       loop.addAnalyzer(std::make_shared<TrackInfo>(&device, stepDir));
       loop.addAnalyzer(std::make_shared<Residuals>(&device, stepDir));
       loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(device, stepDir));
-      aligner = std::make_shared<ResidualsAligner>(device, alignIds, stepDir);
+      aligner = std::make_shared<ResidualsAligner>(device, alignIds, stepDir,
+                                                   damping);
       loop.addAnalyzer(aligner);
     }
 
@@ -202,8 +206,6 @@ int main(int argc, char const* argv[])
     steps.addStep(alignIds, device.geometry(), newGeo);
     device.setGeometry(newGeo);
   }
-
-  // corrections.writeGraphs(device, &hists);
 
   device.geometry().writeFile(args.makeOutput("geo.toml"));
   steps.writeGraphs(device, &hists);
