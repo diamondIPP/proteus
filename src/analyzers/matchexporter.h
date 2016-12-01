@@ -14,6 +14,7 @@
 
 #include "analyzers/analyzer.h"
 #include "utils/definitions.h"
+#include "utils/statistics.h"
 
 namespace Mechanics {
 class Device;
@@ -53,6 +54,8 @@ private:
   Index m_sensorId;
   TrackTree m_ttrack;
   ClusterTree m_tcluster;
+  Utils::StatAccumulator<double> m_matched;
+  Utils::StatAccumulator<double> m_unmatchedTracks, m_unmachedClusters;
   std::string m_name;
 };
 

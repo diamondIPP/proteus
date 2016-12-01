@@ -6,13 +6,16 @@
 
 #include "mechanics/device.h"
 #include "storage/event.h"
+#include "utils/logger.h"
+
+PT_SETUP_GLOBAL_LOGGER
 
 Analyzers::MatchExporter::MatchExporter(const Mechanics::Device& device,
                                         Index sensorId,
                                         TDirectory* dir)
     : m_sensor(*device.getSensor(sensorId))
     , m_sensorId(sensorId)
-    , m_name("match_exporter_" + device.getSensor(sensorId)->name())
+    , m_name("MatchExporter_" + device.getSensor(sensorId)->name())
 {
   TDirectory* sub = dir->mkdir(m_sensor.name().c_str());
 
@@ -45,6 +48,8 @@ std::string Analyzers::MatchExporter::name() const { return m_name; }
 
 void Analyzers::MatchExporter::analyze(const Storage::Event& event)
 {
+  Index numMatches = 0;
+
   // export tracks and possible matched clusters
   for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
     const Storage::Track& track = *event.getTrack(itrack);
@@ -59,17 +64,17 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
 
     if (track.hasMatchedCluster(m_sensorId)) {
       const Storage::Cluster& cluster = *track.getMatchedCluster(m_sensorId);
-      XYPoint uv = m_sensor.transformPixelToLocal(cluster.posPixel());
-      Vector2 delta(uv.x() - state.offset().x(), uv.y() - state.offset().y());
-      // TODO 2016-11-15 msmk: use combined track + cluster covariance
-      m_ttrack.dist = mahalanobisSquared(state.covOffset(), delta);
-      m_ttrack.cluU = uv.x();
-      m_ttrack.cluV = uv.y();
+      XYVector delta = cluster.posLocal() - state.offset();
+      SymMatrix2 cov = cluster.covLocal() + state.covOffset();
+      m_ttrack.dist = mahalanobisSquared(cov, delta);
+      m_ttrack.cluU = cluster.posLocal().x();
+      m_ttrack.cluV = cluster.posLocal().y();
       m_ttrack.cluCol = cluster.posPixel().x();
       m_ttrack.cluRow = cluster.posPixel().y();
       m_ttrack.cluSize = cluster.size();
       m_ttrack.cluSizeCol = cluster.sizeCol();
       m_ttrack.cluSizeRow = cluster.sizeRow();
+      numMatches += 1;
     } else {
       m_ttrack.dist = std::numeric_limits<Float_t>::quiet_NaN();
       m_ttrack.cluU = std::numeric_limits<Float_t>::quiet_NaN();
@@ -101,9 +106,16 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
     m_tcluster.sizeRow = cluster.sizeRow();
     m_tcluster.tree->Fill();
   }
+
+  m_matched.fill(numMatches);
+  m_unmatchedTracks.fill(event.numTracks() - numMatches);
+  m_unmachedClusters.fill(plane.numClusters() - numMatches);
 }
 
 void Analyzers::MatchExporter::finalize()
 {
-  // write data?
+  INFO("matching for ", m_sensor.name(), ':');
+  INFO("  matched/event: ", m_matched);
+  INFO("  unmatched tracks/event: ", m_unmatchedTracks);
+  INFO("  unmatched clusters/event: ", m_unmachedClusters);
 }
