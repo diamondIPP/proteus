@@ -4,10 +4,11 @@
 
 # pt-cfg should succeed
 pt-cfg run000875/device.toml
-pt-cfg run000875/geometry/aligned.toml
+pt-cfg run000875/geometry/tel_aligned.toml
 pt-cfg run000875/geometry/unaligned.toml
 pt-cfg run001066/device.toml
 pt-cfg run001066/geometry/aligned.toml
+pt-cfg run001066/geometry/tel_aligned.toml
 pt-cfg run001066/geometry/unaligned.toml
 pt-cfg run001066/masks/duts_mask_empty.toml
 pt-cfg run001066/masks/tel_mask_empty.toml
