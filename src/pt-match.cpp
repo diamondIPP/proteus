@@ -2,6 +2,7 @@
 #include <TTree.h>
 
 #include "analyzers/matchexporter.h"
+#include "analyzers/matching.h"
 #include "analyzers/residuals.h"
 #include "mechanics/device.h"
 #include "processors/applygeometry.h"
@@ -21,12 +22,18 @@ int main(int argc, char const* argv[])
   using namespace Processors;
 
   Utils::Arguments args("match tracks and clusters");
+  args.addOption('g', "geometry", "use a separate geometry file", "");
   if (args.parse(argc, argv))
     return EXIT_FAILURE;
 
   uint64_t skipEvents = args.get<uint64_t>("skip_events");
   uint64_t numEvents = args.get<uint64_t>("num_events");
   Device device = Device::fromFile(args.device());
+  // override geometry if requested
+  auto geoPath = args.get<std::string>("geometry");
+  if (!geoPath.empty())
+    device.setGeometry(Mechanics::Geometry::fromFile(geoPath));
+
   toml::Value cfgAll = Utils::Config::readConfig(args.config());
   toml::Value cfg = cfgAll["match"];
   std::vector<Index> sensorIds = cfg.get<std::vector<Index>>("sensor_ids");
@@ -42,8 +49,10 @@ int main(int argc, char const* argv[])
   for (auto sensorId : sensorIds)
     loop.addProcessor(std::make_shared<Matcher>(device, sensorId));
   loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(device, &hists));
-  for (auto sensorId : sensorIds)
+  for (auto sensorId : sensorIds) {
+    loop.addAnalyzer(std::make_shared<Distances>(device, sensorId, &hists));
     loop.addAnalyzer(std::make_shared<MatchExporter>(device, sensorId, &trees));
+  }
   loop.run();
 
   hists.Write();
