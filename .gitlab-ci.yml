@@ -56,3 +56,4 @@ test_run001066:
     - ./run_tel_align.sh 1066
     - ./run_track.sh 1066
     - ./run_dut0_noisescan.sh 1066
+    - ./run_dut_align.sh 1066
