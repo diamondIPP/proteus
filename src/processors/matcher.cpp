@@ -11,9 +11,9 @@
 Processors::Matcher::Matcher(const Mechanics::Device& device,
                              Index sensorId,
                              double distanceSigmaMax)
-    : m_sensor(*device.getSensor(sensorId))
-    , m_sensorId(sensorId)
-    , m_distSquaredMax(distanceSigmaMax * distanceSigmaMax)
+    : m_sensorId(sensorId)
+    , m_distSquaredMax(
+          (distanceSigmaMax < 0) ? -1 : (distanceSigmaMax * distanceSigmaMax))
     , m_name("Matcher_" + device.getSensor(sensorId)->name())
 {
 }
@@ -24,22 +24,21 @@ struct Pair {
   Storage::Track* track;
   Storage::Cluster* cluster;
 
-  bool distanceSquared(const Mechanics::Sensor& sensor) const
+  bool distanceSquared(Index sensorId) const
   {
-    const Storage::TrackState& state = track->getLocalState(sensor.id());
-    XYPoint pos = sensor.transformPixelToLocal(cluster->posPixel());
-    Vector2 delta(pos.x() - state.offset().x(), pos.y() - state.offset().y());
-    // TODO 2016-11-15 msmk: use combined track + cluster covariance
-    return mahalanobisSquared(state.covOffset(), delta);
+    const Storage::TrackState& state = track->getLocalState(sensorId);
+    XYVector delta = cluster->posLocal() - state.offset();
+    SymMatrix2 cov = cluster->covLocal() + state.covOffset();
+    return mahalanobisSquared(cov, delta);
   }
 };
 
 struct PairDistanceCmp {
-  const Mechanics::Sensor& sensor;
+  Index sensorId;
 
   bool operator()(const Pair& a, const Pair& b) const
   {
-    return a.distanceSquared(sensor) < b.distanceSquared(sensor);
+    return a.distanceSquared(sensorId) < b.distanceSquared(sensorId);
   }
 };
 
@@ -59,14 +58,15 @@ void Processors::Matcher::process(Storage::Event& event) const
       Pair pair = {track, plane.getCluster(icluster)};
       // preselect by distance if a distance cut is given
       if ((m_distSquaredMax < 0) ||
-          (pair.distanceSquared(m_sensor) < m_distSquaredMax)) {
+          (pair.distanceSquared(m_sensorId) < m_distSquaredMax)) {
         pairs.push_back(pair);
       }
+      // pairs.push_back(pair);
     }
   }
 
   // sort by pair distance, closest distance first
-  std::sort(pairs.begin(), pairs.end(), PairDistanceCmp{m_sensor});
+  std::sort(pairs.begin(), pairs.end(), PairDistanceCmp{m_sensorId});
 
   // select unique matches, closest distance first
   for (auto pair = pairs.begin(); pair != pairs.end(); ++pair) {

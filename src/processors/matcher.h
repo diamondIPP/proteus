@@ -27,6 +27,11 @@ namespace Processors {
  */
 class Matcher : public Processor {
 public:
+  /**
+   * \param device The device setup/
+   * \param sensorId The sensor for which matching should be calculated.
+   * \param distanceSigmaMax Maximum matching significance, negativ disables.
+   */
   Matcher(const Mechanics::Device& device,
           Index sensorId,
           double distanceSigmaMax = -1);
@@ -35,7 +40,6 @@ public:
   void process(Storage::Event& event) const;
 
 private:
-  const Mechanics::Sensor& m_sensor;
   Index m_sensorId;
   double m_distSquaredMax;
   std::string m_name;
