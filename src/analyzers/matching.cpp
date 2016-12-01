@@ -19,6 +19,101 @@
 #include "storage/hit.h"
 #include "storage/plane.h"
 #include "storage/track.h"
+#include "utils/root.h"
+
+Analyzers::Distances::Distances(const Mechanics::Device& device,
+                                Index sensorId,
+                                TDirectory* dir)
+    : m_sensorId(sensorId)
+{
+  const Mechanics::Sensor& sensor = *device.getSensor(sensorId);
+  TDirectory* sub = Utils::makeDir(dir, "Distances");
+  int numBins = 100;
+  double rangeU = 2 * sensor.pitchCol();
+  double rangeV = 2 * sensor.pitchRow();
+  double rangeDist = std::max(rangeU, rangeV);
+  double rangeMahalanobis = 10;
+  double rangeTrackU = sensor.sensitiveAreaLocal().axes[0].length() / 2;
+  double rangeTrackV = sensor.sensitiveAreaLocal().axes[1].length() / 2;
+  double rangeTrackDist = std::hypot(rangeTrackU, rangeTrackV);
+
+  auto makeH1 = [&](const char* name, double low, double high) -> TH1D* {
+    TH1D* h =
+        new TH1D((sensor.name() + "-" + name).c_str(), "", numBins, low, high);
+    h->SetDirectory(sub);
+    return h;
+  };
+  m_allDistU = makeH1("AllDistU", -rangeU, rangeU);
+  m_allDistV = makeH1("AllDistV", -rangeV, rangeV);
+  m_allDist = makeH1("AllDist", 0, rangeDist);
+  m_allMahalanobis = makeH1("AllMahalanobis", 0, rangeMahalanobis);
+  m_matchDistU = makeH1("MatchDistU", -rangeU, rangeU);
+  m_matchDistV = makeH1("MatchDistV", -rangeV, rangeV);
+  m_matchDist = makeH1("MatchDist", 0, rangeDist);
+  m_matchMahalanobis = makeH1("MatchMahalanobis", 0, rangeMahalanobis);
+  m_trackDistU = makeH1("TrackDistU", -rangeTrackU, rangeTrackU);
+  m_trackDistV = makeH1("TrackDistV", -rangeTrackV, rangeTrackV);
+  m_trackDist = makeH1("TrackDist", 0, rangeTrackDist);
+}
+
+std::string Analyzers::Distances::name() const { return "Distances"; }
+
+void Analyzers::Distances::analyze(const Storage::Event& event)
+{
+  const Storage::Plane& plane = *event.getPlane(m_sensorId);
+
+  for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
+    const Storage::Track& track = *event.getTrack(itrack);
+    if (!track.hasLocalState(m_sensorId))
+      continue;
+
+    const Storage::TrackState& state = track.getLocalState(m_sensorId);
+
+    // full combinatorics: all clusters to all tracks
+    for (Index icluster = 0; icluster < plane.numClusters(); ++icluster) {
+      const Storage::Cluster& cluster = *plane.getCluster(icluster);
+
+      XYVector delta = cluster.posLocal() - state.offset();
+      SymMatrix2 cov = cluster.covLocal() + state.covOffset();
+      m_allDistU->Fill(delta.x());
+      m_allDistV->Fill(delta.y());
+      m_allDist->Fill(delta.r());
+      m_allMahalanobis->Fill(mahalanobis(cov, delta));
+    }
+
+    // full combinatorics: all tracks to all other tracks
+    for (Index itrack2 = 0; itrack2 < event.numTracks(); ++itrack2) {
+      if (itrack2 == itrack)
+        continue;
+      if (!event.getTrack(itrack)->hasLocalState(m_sensorId))
+        continue;
+
+      const Storage::TrackState& state2 =
+          event.getTrack(itrack2)->getLocalState(m_sensorId);
+      XYVector delta = state2.offset() - state.offset();
+      m_trackDistU->Fill(delta.x());
+      m_trackDistV->Fill(delta.y());
+      m_trackDist->Fill(delta.r());
+    }
+
+    // matching distances
+    if (track.hasMatchedCluster(m_sensorId)) {
+      const Storage::Cluster& cluster = *track.getMatchedCluster(m_sensorId);
+
+      XYVector delta = cluster.posLocal() - state.offset();
+      SymMatrix2 cov = cluster.covLocal() + state.covOffset();
+      m_matchDistU->Fill(delta.x());
+      m_matchDistV->Fill(delta.y());
+      m_matchDist->Fill(delta.r());
+      m_matchMahalanobis->Fill(mahalanobis(cov, delta));
+    }
+  }
+}
+
+void Analyzers::Distances::finalize()
+{
+  // nothing to do
+}
 
 //=========================================================
 Analyzers::Matching::Matching(const Mechanics::Device* refDevice,
