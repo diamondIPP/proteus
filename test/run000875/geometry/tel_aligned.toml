@@ -1,7 +1,7 @@
 
 [beam]
-slope_x = -0.00061472332198704311
-slope_y = 1.7188215002316551e-05
+slope_x = -0.00051783835343474399
+slope_y = 5.9297022599708277e-05
 
 [[sensors]]
 id = 0
@@ -14,48 +14,66 @@ rotation_z = 3.1415926535896999
 
 [[sensors]]
 id = 1
-offset_x = 606.32275562882285
-offset_y = -208.56827135926864
+offset_x = 612.07432171094649
+offset_y = -199.57513099242868
 offset_z = 50000.000000000000
 rotation_x = 0.0000000000000000
 rotation_y = 0.0000000000000000
-rotation_z = 1.5707963267950000
+rotation_z = 1.5736782450431590
 
 [[sensors]]
 id = 2
-offset_x = 375.17382064693959
-offset_y = -477.34114158103438
+offset_x = 383.08667732440335
+offset_y = -473.39378703232967
 offset_z = 100000.00000000000
 rotation_x = 0.0000000000000000
 rotation_y = 0.0000000000000000
-rotation_z = 3.1415926535896999
+rotation_z = -3.1414552032188698
 
 [[sensors]]
 id = 3
-offset_x = 575.43512682863388
-offset_y = -337.50287345930366
+offset_x = 630.11177239983704
+offset_y = -310.81408920463923
 offset_z = 570000.00000000000
 rotation_x = 3.1415926535896999
 rotation_y = 0.0000000000000000
-rotation_z = 0.0000000000000000
+rotation_z = -0.0012119915828039396
 
 [[sensors]]
 id = 4
-offset_x = 620.44775248134829
-offset_y = 259.67663278246692
+offset_x = 680.37204601937515
+offset_y = 276.37039835663268
 offset_z = 625000.00000000000
 rotation_x = 3.1415926535897931
 rotation_y = 9.3258734068513149e-14
-rotation_z = -1.5707963267947935
+rotation_z = -1.5677307066442023
 
 [[sensors]]
 id = 5
-offset_x = 1219.5119632473554
-offset_y = 294.54039242122428
+offset_x = 1285.8346838186162
+offset_y = 303.28020011964816
 offset_z = 675000.00000000000
 rotation_x = 3.1415926535896999
 rotation_y = 0.0000000000000000
-rotation_z = 0.0000000000000000
+rotation_z = 0.0052952900689877680
+
+[[sensors]]
+id = 6
+offset_x = 0.
+offset_y = 0.
+offset_z = 300000.
+rotation_x = 0.
+rotation_y = 0.
+rotation_z = 3.1415926535897
+
+[[sensors]]
+id = 7
+offset_x = 0.
+offset_y = 0.
+offset_z = 400000.
+rotation_x = 0.
+rotation_y = 0.
+rotation_z = 3.1415926535897
 
 [timing]
 sync_ratio = 1.0000000000000000
