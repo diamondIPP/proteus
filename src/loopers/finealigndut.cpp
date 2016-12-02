@@ -10,8 +10,8 @@
 #include "../storage/event.h"
 #include "../mechanics/device.h"
 #include "../mechanics/sensor.h"
-#include "../mechanics/alignment.h"
-#include "../processors/applyalignment.h"
+#include "../mechanics/geometry.h"
+#include "../processors/applygeometry.h"
 #include "../processors/processors.h"
 #include "../processors/clustermaker.h"
 #include "../processors/trackmaker.h"
@@ -61,7 +61,7 @@ Loopers::FineAlignDut::FineAlignDut(Mechanics::Device* refDevice,
 //=========================================================
 void Loopers::FineAlignDut::loop()
 {
-  Mechanics::Alignment newAlignment = _dutDevice->alignment();
+  Mechanics::Geometry newAlignment = _dutDevice->geometry();
 
   for (unsigned int niter = 0; niter < _numIterations; niter++)
   {
@@ -138,7 +138,7 @@ void Loopers::FineAlignDut::loop()
       
       std::cout << "Fine alignment with residuals:" << std::endl;
       std::cout << "   Sensor: " << nsens << ", Xcorrection: " << offsetX << ", Ycorrection: " << offsetY <<  std::endl;
-      newAlignment.correctOffset(nsens, offsetX, offsetY, 0);
+      newAlignment.correctGlobalOffset(nsens, offsetX, offsetY, 0);
       newAlignment.correctRotationAngles(nsens, 0, 0, rotation);
       offsetX=0;
       offsetY=0;
@@ -155,7 +155,7 @@ void Loopers::FineAlignDut::loop()
 		<< "Ycorrection: " << offsetY << ", "
 		<< "Zcorrection: " << rotation
 		<< std::endl;
-			newAlignment.correctOffset(nsens, offsetX, offsetY, 0);
+			newAlignment.correctGlobalOffset(nsens, offsetX, offsetY, 0);
 			newAlignment.correctRotationAngles(nsens, 0, 0, rotation);
       std::cout << "Sensor: " << nsens << ", "
 		<< "Xoffset: " << sensor->getOffX() << ", "
@@ -173,7 +173,7 @@ void Loopers::FineAlignDut::loop()
 
   }
 
-  newAlignment.writeFile(_dutDevice->pathAlignment());
+  newAlignment.writeFile(_dutDevice->pathGeometry());
 }
 
 void Loopers::FineAlignDut::setNumIterations(unsigned int value) { _numIterations = value; }

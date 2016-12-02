@@ -20,13 +20,15 @@ PT_SETUP_GLOBAL_LOGGER
 
 Processors::TrackFinder::TrackFinder(const Mechanics::Device& device,
                                      const std::vector<Index> sensors,
+                                     double distanceSigmaMax,
                                      Index numClustersMin,
-                                     double distanceSigmaMax)
+                                     double redChi2Max)
     : m_sensors(sensors)
     , m_numSeedSensors(1 + sensors.size() - numClustersMin)
+    , m_distSquaredMax(distanceSigmaMax * distanceSigmaMax)
+    , m_redChi2Max(redChi2Max)
     , m_numClustersMin(numClustersMin)
-    , m_distSigmaMax(distanceSigmaMax)
-    , m_beamDirection(device.beamDirection())
+    , m_beamDirection(device.geometry().beamDirection())
 {
   if (sensors.size() < 2)
     throw std::runtime_error("Need at least two sensors two find tracks");
@@ -90,18 +92,13 @@ void Processors::TrackFinder::searchSensor(
       if (curr->isInTrack())
         continue;
 
-      // TODO switch to full covariance matrix
-      const double errX =
-          sqrt(pow(curr->getPosErrX(), 2) + pow(last->getPosErrX(), 2));
-      const double errY =
-          sqrt(pow(curr->getPosErrY(), 2) + pow(last->getPosErrY(), 2));
-      // projected global xy distance w/ beam slope correction
       XYZVector delta = curr->posGlobal() - last->posGlobal();
       delta -= delta.z() * m_beamDirection;
-      // TODO use full mahalanobis distance
-      double sigma = sqrt(pow(delta.x() / errX, 2) + pow(delta.y() / errY, 2));
+      SymMatrix2 cov = last->covGlobal().Sub<SymMatrix2>(0, 0) +
+                       curr->covGlobal().Sub<SymMatrix2>(0, 0);
+      double dist2 = mahalanobisSquared(cov, Vector2(delta.x(), delta.y()));
 
-      if (m_distSigmaMax < sigma)
+      if (m_distSquaredMax < dist2)
         continue;
 
       if (matched == NULL) {
@@ -147,7 +144,9 @@ void Processors::TrackFinder::selectTracks(std::vector<TrackPtr>& candidates,
   for (auto itrack = candidates.begin(); itrack != candidates.end(); ++itrack) {
     Storage::Track& track = **itrack;
 
-    // too short
+    // apply track cuts
+    if ((0 < m_redChi2Max) && (m_redChi2Max < track.reducedChi2()))
+      continue;
     if (track.numClusters() < m_numClustersMin)
       continue;
 

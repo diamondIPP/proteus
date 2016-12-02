@@ -1,4 +1,6 @@
 set(COMMON_SRC
+    alignment/correlationaligner.cpp
+    alignment/residualsaligner.cpp
     analyzers/analyzer.cpp
     analyzers/baseanalyzer.cpp
     analyzers/clusterinfo.cpp
@@ -37,10 +39,10 @@ set(COMMON_SRC
     loopers/noisescan.cpp
     loopers/processevents.cpp
     mechanics/device.cpp
+    mechanics/geometry.cpp
     mechanics/noisemask.cpp
-    mechanics/alignment.cpp
     mechanics/sensor.cpp
-    processors/applyalignment.cpp
+    processors/applygeometry.cpp
     processors/clustermaker.cpp
     processors/clusterizer.cpp
     processors/configprocessors.cpp
@@ -77,6 +79,9 @@ target_link_libraries(proteus pt-common)
 
 add_executable(pt-analysis pt-analysis.cpp)
 target_link_libraries(pt-analysis pt-common)
+
+add_executable(pt-align pt-align.cpp)
+target_link_libraries(pt-align pt-common)
 
 add_executable(pt-cfg pt-cfg.cpp)
 target_link_libraries(pt-cfg pt-common)

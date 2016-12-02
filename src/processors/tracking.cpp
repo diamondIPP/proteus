@@ -108,14 +108,13 @@ Processors::fitTrackLocal(const Storage::Track& track,
 
 Storage::TrackState
 Processors::fitTrackLocalUnbiased(const Storage::Track& track,
-                                  const Mechanics::Sensor& reference,
-                                  Index referenceId)
+                                  const Mechanics::Sensor& reference)
 {
   SimpleStraightFitter fit;
 
   for (Index icluster = 0; icluster < track.numClusters(); ++icluster) {
     const Storage::Cluster& cluster = *track.getCluster(icluster);
-    if (cluster.sensorId() == referenceId)
+    if (cluster.sensorId() == reference.id())
       continue;
     XYZPoint pos = reference.globalToLocal() * cluster.posGlobal();
     // TODO 2016-10-13 msmk: also transform error to local frame

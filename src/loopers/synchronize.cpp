@@ -13,7 +13,7 @@
 #include "../storage/storageio.h"
 #include "../storage/event.h"
 #include "../mechanics/device.h"
-#include "../mechanics/alignment.h"
+#include "../mechanics/geometry.h"
 #include "../processors/synchronizer.h"
 #include "../processors/largesynchronizer.h"
 #include "../analyzers/singleanalyzer.h"
@@ -169,8 +169,8 @@ void Synchronize::calculateSyncRatio()
   if (desyncEvent)
     throw "Synchronize: initial desynchronization, synchronize with another file first";
 
-  _dutDevice->alignment().writeFile(_dutDevice->pathAlignment());
-  _refDevice->alignment().writeFile(_refDevice->pathAlignment());
+  _dutDevice->geometry().writeFile(_dutDevice->pathGeometry());
+  _refDevice->geometry().writeFile(_refDevice->pathGeometry());
 }
 
 bool Synchronize::findLargeOffset(unsigned int nevent,

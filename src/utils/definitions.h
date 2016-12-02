@@ -42,15 +42,19 @@ typedef ROOT::Math::SMatrix<double, 3, 3> Matrix3;
 typedef ROOT::Math::SMatrix<double, 4, 4> Matrix4;
 typedef ROOT::Math::SMatrix<double, 3, 2> Matrix32;
 typedef ROOT::Math::SMatrix<double, 3, 4> Matrix34;
+typedef ROOT::Math::SMatrix<double, 6, 6> Matrix6;
 typedef ROOT::Math::SMatrix<double, 2, 2, ROOT::Math::MatRepSym<double, 2>>
     SymMatrix2;
 typedef ROOT::Math::SMatrix<double, 3, 3, ROOT::Math::MatRepSym<double, 3>>
     SymMatrix3;
 typedef ROOT::Math::SMatrix<double, 4, 4, ROOT::Math::MatRepSym<double, 4>>
     SymMatrix4;
+typedef ROOT::Math::SMatrix<double, 6, 6, ROOT::Math::MatRepSym<double, 6>>
+    SymMatrix6;
 typedef ROOT::Math::SVector<double, 2> Vector2;
 typedef ROOT::Math::SVector<double, 3> Vector3;
 typedef ROOT::Math::SVector<double, 4> Vector4;
+typedef ROOT::Math::SVector<double, 6> Vector6;
 
 /** Squared Mahalanobis distance / norm of a vector.
  *

@@ -118,7 +118,7 @@ void Processors::BinaryClusterizer::estimateProperties(
   for (Index ihit = 0; ihit < cluster.numHits(); ++ihit) {
     const Storage::Hit* hit = cluster.getHit(ihit);
     pos += XYVector(hit->posPixel());
-    time = std::min(time, hit->timing());
+    time = std::min(time, hit->time());
   }
   pos /= cluster.numHits();
 
@@ -126,9 +126,8 @@ void Processors::BinaryClusterizer::estimateProperties(
   cov(0, 0) /= cluster.sizeCol();
   cov(1, 1) /= cluster.sizeRow();
 
-  cluster.setPosPixel(pos);
-  cluster.setCovPixel(cov);
-  cluster.setTiming(time);
+  cluster.setPixel(pos, cov);
+  cluster.setTime(time);
 }
 
 Processors::ValueWeightedClusterizer::ValueWeightedClusterizer(
@@ -147,7 +146,7 @@ void Processors::ValueWeightedClusterizer::estimateProperties(
   for (Index ihit = 0; ihit < cluster.numHits(); ++ihit) {
     const Storage::Hit* hit = cluster.getHit(ihit);
     pos += hit->value() * XYVector(hit->posPixel());
-    time = std::min(time, hit->timing());
+    time = std::min(time, hit->time());
     weight += hit->value();
   }
   pos /= weight;
@@ -157,9 +156,8 @@ void Processors::ValueWeightedClusterizer::estimateProperties(
   cov(0, 0) /= cluster.sizeCol();
   cov(1, 1) /= cluster.sizeRow();
 
-  cluster.setPosPixel(pos);
-  cluster.setCovPixel(cov);
-  cluster.setTiming(time);
+  cluster.setPixel(pos, cov);
+  cluster.setTime(time);
 }
 
 Processors::FastestHitClusterizer::FastestHitClusterizer(
@@ -176,16 +174,14 @@ void Processors::FastestHitClusterizer::estimateProperties(
 
   for (Index ihit = 0; ihit < cluster.numHits(); ++ihit) {
     const Storage::Hit* hit = cluster.getHit(ihit);
-    if (hit->timing() < time) {
+    if (hit->time() < time) {
       pos = hit->posPixel();
-      time = hit->timing();
+      time = hit->time();
     }
   }
 
-  cluster.setPosPixel(pos);
-  // 1 / sqrt(12) factor from pixel size to stddev of equivalent gaussian
-  cluster.setCovPixel(HIT_COV);
-  cluster.setTiming(time);
+  cluster.setPixel(pos, HIT_COV);
+  cluster.setTime(time);
 }
 
 void Processors::setupClusterizers(const Mechanics::Device& device,

@@ -30,7 +30,7 @@ Mechanics::Device::Device(const std::string& name,
 
 static void parseSensors(const ConfigParser& config,
                          Mechanics::Device& device,
-                         Mechanics::Alignment& alignment)
+                         Mechanics::Geometry& alignment)
 {
   using Mechanics::Sensor;
 
@@ -67,7 +67,8 @@ static void parseSensors(const ConfigParser& config,
 
         Sensor::Measurement m = (digi ? Sensor::Measurement::PixelBinary
                                       : Sensor::Measurement::PixelTot);
-        Sensor sensor(name, m, cols, rows, pitchX, pitchY, depth, xox0);
+        Sensor sensor(sensorCounter, name, m, cols, rows, pitchX, pitchY, depth,
+                      xox0);
         device.addSensor(sensor);
         alignment.setOffset(sensorCounter, offX, offY, offZ);
         alignment.setRotationAngles(sensorCounter, rotX, rotY, rotZ);
@@ -162,14 +163,14 @@ static Mechanics::Device parseDevice(const std::string& path)
 
       Mechanics::Device device(name, clockRate, readOutWindow, spaceUnit,
                                timeUnit);
-      Mechanics::Alignment alignment;
+      Mechanics::Geometry alignment;
 
       parseSensors(config, device, alignment);
 
       if (!pathAlignment.empty()) {
-        device.applyAlignment(Mechanics::Alignment::fromFile(pathAlignment));
+        device.setGeometry(Mechanics::Geometry::fromFile(pathAlignment));
       } else {
-        device.applyAlignment(alignment);
+        device.setGeometry(alignment);
       }
       if (!pathNoiseMask.empty()) {
         device.applyNoiseMask(Mechanics::NoiseMask::fromFile(pathNoiseMask));
@@ -220,10 +221,10 @@ Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
     auto cfgAlign = cfg.find("alignment");
     if (cfgAlign && cfgAlign->is<std::string>()) {
       auto p = pathRebaseIfRelative(cfgAlign->as<std::string>(), dir);
-      device.applyAlignment(Alignment::fromFile(p));
-      device.m_pathAlignment = p;
+      device.setGeometry(Geometry::fromFile(p));
+      device.m_pathGeometry = p;
     } else if (cfgAlign) {
-      device.applyAlignment(Alignment::fromConfig(*cfgAlign));
+      device.setGeometry(Geometry::fromConfig(*cfgAlign));
     }
 
     auto cfgMask = cfg.find("noise_mask");
@@ -286,10 +287,10 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
     auto type = types[typeName];
     auto measurement =
         Sensor::measurementFromName(type.get<std::string>("measurement"));
-    device.addSensor(
-        Sensor(name, measurement, type.get<int>("cols"), type.get<int>("rows"),
-               type.get<double>("pitch_col"), type.get<double>("pitch_row"),
-               type.get<double>("thickness"), type.get<double>("x_x0")));
+    device.addSensor(Sensor(
+        i, name, measurement, type.get<int>("cols"), type.get<int>("rows"),
+        type.get<double>("pitch_col"), type.get<double>("pitch_row"),
+        type.get<double>("thickness"), type.get<double>("x_x0")));
   }
   return device;
 }
@@ -302,13 +303,13 @@ void Mechanics::Device::addSensor(const Sensor& sensor)
 
 void Mechanics::Device::addMaskedSensor() { m_sensorMask.push_back(true); }
 
-void Mechanics::Device::applyAlignment(const Alignment& alignment)
+void Mechanics::Device::setGeometry(const Geometry& geometry)
 {
-  m_alignment = alignment;
+  m_geometry = geometry;
 
   for (Index sensorId = 0; sensorId < numSensors(); ++sensorId) {
     Sensor* sensor = getSensor(sensorId);
-    sensor->setLocalToGlobal(m_alignment.getLocalToGlobal(sensorId));
+    sensor->setLocalToGlobal(m_geometry.getLocalToGlobal(sensorId));
   }
   // TODO 2016-08-18 msmk: check number of sensors / id consistency
 }
@@ -347,13 +348,13 @@ unsigned int Mechanics::Device::getNumPixels() const
 
 double Mechanics::Device::getBeamSlopeX() const
 {
-  auto dir = m_alignment.beamDirection();
+  auto dir = m_geometry.beamDirection();
   return dir.x() / dir.z();
 }
 
 double Mechanics::Device::getBeamSlopeY() const
 {
-  auto dir = m_alignment.beamDirection();
+  auto dir = m_geometry.beamDirection();
   return dir.y() / dir.z();
 }
 
@@ -366,10 +367,10 @@ void Mechanics::Device::print(std::ostream& os, const std::string& prefix) const
     os << prefix << "sensor " << sensorId << ":\n";
     getSensor(sensorId)->print(os, prefix + "  ");
   }
-  os << prefix << "alignment:\n";
-  if (!m_pathAlignment.empty())
-    os << prefix << "  path: " << m_pathAlignment << '\n';
-  m_alignment.print(os, prefix + "  ");
+  os << prefix << "geometry:\n";
+  if (!m_pathGeometry.empty())
+    os << prefix << "  path: " << m_pathGeometry << '\n';
+  m_geometry.print(os, prefix + "  ");
   os << prefix << "noise mask:\n";
   if (!m_pathNoiseMask.empty())
     os << prefix << "  path: " << m_pathNoiseMask << '\n';

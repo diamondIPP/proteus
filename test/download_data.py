@@ -34,9 +34,6 @@ def check(path, checksum):
 def download(name, output, checksum):
     source = BASE_SOURCE + name
     target = BASE_TARGET + output
-
-    if not os.path.isdir(BASE_TARGET):
-        os.mkdir(BASE_TARGET)
     if not check(target, checksum):
         print('downloading \'{}\' to \'{}\''.format(source, target))
         urllib.urlretrieve(source, target)

@@ -41,7 +41,8 @@ std::string Mechanics::Sensor::measurementName(Measurement measurement)
   return "invalid_measurement";
 }
 
-Mechanics::Sensor::Sensor(const std::string& name,
+Mechanics::Sensor::Sensor(Index id,
+                          const std::string& name,
                           Measurement measurement,
                           Index numCols,
                           Index numRows,
@@ -56,9 +57,48 @@ Mechanics::Sensor::Sensor(const std::string& name,
     , m_thickness(thickness)
     , m_xX0(xX0)
     , m_measurement(measurement)
+    , m_id(id)
     , m_name(name)
     , m_noiseMask(numCols * numRows, false)
 {
+}
+
+Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaPixel() const
+{
+  return Area(Area::Axis(0, static_cast<double>(m_numCols)),
+              Area::Axis(0, static_cast<double>(m_numRows)));
+}
+
+Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaLocal() const
+{
+  XYPoint lowerLeft = transformPixelToLocal(XYPoint(0, 0));
+  XYPoint upperRight = transformPixelToLocal(XYPoint(m_numCols, m_numRows));
+  return Area(Area::Axis(lowerLeft.x(), upperRight.x()),
+              Area::Axis(lowerLeft.y(), upperRight.y()));
+}
+
+Mechanics::Sensor::Area Mechanics::Sensor::projectedEnvelopeXY() const
+{
+  // TODO 2016-08 msmk: find a smarter way to this, but its Friday
+  // transform each corner of the sensitive rectangle
+  XYZPoint minMin = transformPixelToGlobal(XYPoint(0, 0));
+  XYZPoint minMax = transformPixelToGlobal(XYPoint(0, m_numRows));
+  XYZPoint maxMin = transformPixelToGlobal(XYPoint(m_numCols, 0));
+  XYZPoint maxMax = transformPixelToGlobal(XYPoint(m_numCols, m_numRows));
+
+  std::array<double, 4> xs = {minMin.x(), minMax.x(), maxMin.x(), maxMax.x()};
+  std::array<double, 4> ys = {minMin.y(), minMax.y(), maxMin.y(), maxMax.y()};
+
+  return Area(Area::Axis(*std::min_element(xs.begin(), xs.end()),
+                         *std::max_element(xs.begin(), xs.end())),
+              Area::Axis(*std::min_element(ys.begin(), ys.end()),
+                         *std::max_element(ys.begin(), ys.end())));
+}
+
+Vector2 Mechanics::Sensor::projectedPitchXY() const
+{
+  XYZVector pitchXYZ = m_l2g * XYZVector(m_pitchCol, m_pitchRow, 0);
+  return Vector2(std::abs(pitchXYZ.x()), std::abs(pitchXYZ.y()));
 }
 
 // geometry related methods
@@ -190,38 +230,6 @@ bool Mechanics::Sensor::sort(const Sensor* s1, const Sensor* s2)
 //
 //=========================================================
 
-Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaPixel() const
-{
-  return Area(Area::Axis(0, static_cast<double>(m_numCols)),
-              Area::Axis(0, static_cast<double>(m_numRows)));
-}
-
-Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaLocal() const
-{
-  XYPoint lowerLeft = transformPixelToLocal(XYPoint(0, 0));
-  XYPoint upperRight = transformPixelToLocal(XYPoint(m_numCols, m_numRows));
-  return Area(Area::Axis(lowerLeft.x(), upperRight.x()),
-              Area::Axis(lowerLeft.y(), upperRight.y()));
-}
-
-Mechanics::Sensor::Area Mechanics::Sensor::sensitiveEnvelopeGlobal() const
-{
-  // TODO 2016-08 msmk: find a smarter way to this, but its Friday
-  // transform each corner of the sensitive rectangle
-  XYZPoint minMin = transformPixelToGlobal(XYPoint(0, 0));
-  XYZPoint minMax = transformPixelToGlobal(XYPoint(0, m_numRows));
-  XYZPoint maxMin = transformPixelToGlobal(XYPoint(m_numCols, 0));
-  XYZPoint maxMax = transformPixelToGlobal(XYPoint(m_numCols, m_numRows));
-
-  std::array<double, 4> xs = {minMin.x(), minMax.x(), maxMin.x(), maxMax.x()};
-  std::array<double, 4> ys = {minMin.y(), minMax.y(), maxMin.y(), maxMax.y()};
-
-  return Area(Area::Axis(*std::min_element(xs.begin(), xs.end()),
-                         *std::max_element(xs.begin(), xs.end())),
-              Area::Axis(*std::min_element(ys.begin(), ys.end()),
-                         *std::max_element(ys.begin(), ys.end())));
-}
-
 double Mechanics::Sensor::getOffX() const
 {
   return m_l2g.Translation().Vect().x();
@@ -285,6 +293,7 @@ double Mechanics::Sensor::getPosSensitiveY() const
 
 void Mechanics::Sensor::print(std::ostream& os, const std::string& prefix) const
 {
+  os << prefix << "id: " << m_id << '\n';
   os << prefix << "name: " << m_name << '\n';
   os << prefix << "measurement: " << measurementName(m_measurement) << '\n';
   os << prefix << "columns: " << m_numCols << '\n';

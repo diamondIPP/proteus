@@ -10,29 +10,15 @@
 
 PT_SETUP_GLOBAL_LOGGER
 
-Utils::Arguments::Optional::Optional(char abbreviation_,
-                                     const std::string& name_,
-                                     const std::string& help_,
-                                     const std::string& default_)
-    : name(name_)
-    , help(help_)
-    , value(default_)
-    , abbreviation(abbreviation_)
-{
-}
-
 Utils::Arguments::Arguments(const char* description)
     : m_description(description)
 {
   // default optional arguments
-  m_optional.emplace_back(
-      'd', "device", "device description", "configs/device.toml");
-  m_optional.emplace_back(
-      'c', "config", "configuration", "configs/analysis.toml");
-  m_optional.emplace_back(
-      's', "skip_events", "skip the first n events", std::to_string(0));
-  m_optional.emplace_back(
-      'n', "num_events", "number of events to process", std::to_string(-1));
+  addOption('d', "device", "device configuration file", "configs/device.toml");
+  addOption('c', "config", "analysis configuration file",
+            "configs/analysis.toml");
+  addOption('s', "skip_events", "skip the first n events", 0);
+  addOption('n', "num_events", "number of events to process", -1);
 }
 
 void Utils::Arguments::printHelp(const std::string& arg0) const
@@ -46,7 +32,7 @@ void Utils::Arguments::printHelp(const std::string& arg0) const
   cerr << m_description << '\n';
   cerr << '\n';
   cerr << "options:\n";
-  for (auto opt = m_optional.begin(); opt != m_optional.end(); ++opt) {
+  for (auto opt = m_options.begin(); opt != m_options.end(); ++opt) {
     cerr << "  ";
     if (opt->abbreviation != 0)
       cerr << "-" << opt->abbreviation;
@@ -60,20 +46,20 @@ void Utils::Arguments::printHelp(const std::string& arg0) const
   cerr.flush();
 }
 
-Utils::Arguments::Optional* Utils::Arguments::find(const std::string& name,
+Utils::Arguments::Option* Utils::Arguments::find(const std::string& name,
                                                    char abbreviation)
 {
-  for (auto opt = m_optional.begin(); opt != m_optional.end(); ++opt) {
+  for (auto opt = m_options.begin(); opt != m_options.end(); ++opt) {
     if ((opt->name == name) || (opt->abbreviation == abbreviation))
       return &(*opt);
   }
   return NULL;
 }
 
-const Utils::Arguments::Optional*
+const Utils::Arguments::Option*
 Utils::Arguments::find(const std::string& name, char abbreviation) const
 {
-  for (auto opt = m_optional.begin(); opt != m_optional.end(); ++opt) {
+  for (auto opt = m_options.begin(); opt != m_options.end(); ++opt) {
     if ((opt->name == name) || (opt->abbreviation == abbreviation))
       return &(*opt);
   }
@@ -88,14 +74,14 @@ bool Utils::Arguments::parse(int argc, char const* argv[])
   }
 
   // separated optional flags and positional arguments
-  m_positional.clear();
+  m_positionals.clear();
   for (int i = 1; i < argc; ++i) {
     std::string arg(argv[i]);
 
     if ((arg.find("--") == 0) && (2 < arg.size())) {
       // long optional argument
       DEBUG("long option: ", arg, ' ', argv[i + 1]);
-      Optional* opt = find(arg.substr(2), 0);
+      Option* opt = find(arg.substr(2), 0);
       if (!opt) {
         std::cerr << "unknown long option '" << arg << "'\n\n";
         return true;
@@ -105,7 +91,7 @@ bool Utils::Arguments::parse(int argc, char const* argv[])
     } else if ((arg.find("-") == 0) && (1 < arg.size())) {
       DEBUG("short option: ", arg, ' ', argv[i + 1]);
       // short optional argument
-      Optional* opt = find("", arg[1]);
+      Option* opt = find("", arg[1]);
       if (!opt) {
         std::cerr << "unknown short option '" << arg << "'\n\n";
         return true;
@@ -115,16 +101,16 @@ bool Utils::Arguments::parse(int argc, char const* argv[])
     } else {
       DEBUG("positional argument: ", arg);
       // positional argument
-      m_positional.emplace_back(std::move(arg));
+      m_positionals.emplace_back(std::move(arg));
     }
   }
 
-  if (m_positional.size() != 2) {
+  if (m_positionals.size() != 2) {
     std::cerr << "incorrect number of arguments\n\n";
     return true;
   }
-  m_input = m_positional[0];
-  m_outputPrefix = m_positional[1];
+  m_input = m_positionals[0];
+  m_outputPrefix = m_positionals[1];
   return false;
 }
 

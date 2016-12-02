@@ -4,6 +4,7 @@
 #include <climits>
 #include <ostream>
 
+#include "mechanics/sensor.h"
 #include "storage/hit.h"
 #include "storage/plane.h"
 #include "storage/track.h"
@@ -12,7 +13,8 @@
 PT_SETUP_LOCAL_LOGGER(Cluster)
 
 Storage::Cluster::Cluster()
-    : m_timing(-1)
+    : m_cr(-1, -1)
+    , m_time(-1)
     , m_value(-1)
     , m_plane(NULL)
     , m_track(NULL)
@@ -21,25 +23,35 @@ Storage::Cluster::Cluster()
 {
 }
 
-void Storage::Cluster::setErrPixel(double stdCol, double stdRow)
+void Storage::Cluster::setPixel(const XYPoint& cr, const SymMatrix2& cov)
 {
-  m_covCr(0, 0) = stdCol * stdCol;
-  m_covCr(0, 1) = 0;
-  m_covCr(1, 1) = stdRow * stdRow;
+  m_cr = cr;
+  m_crCov = cov;
 }
 
-void Storage::Cluster::transformToGlobal(const Transform3D& pixelToGlobal)
+void Storage::Cluster::setPixel(double col, double row, double stdCol, double stdRow)
 {
-  Matrix34 transform;
-  pixelToGlobal.GetTransformMatrix(transform);
+  m_cr.SetXY(col, row);
+  m_crCov(0, 0) = stdCol * stdCol;
+  m_crCov(0, 1) = 0;
+  m_crCov(1, 1) = stdRow * stdRow;
+}
 
-  SymMatrix3 covPixel;
-  covPixel.Place_at(m_covCr, 0, 0);
-  // avoid singular matrix by setting local w-error to sensor thickness
-  covPixel(2, 2) = 1.0 / 12.0;
+void Storage::Cluster::transform(const Mechanics::Sensor& sensor)
+{
+  Matrix2 p2l;
+  Matrix3 l2g;
 
-  m_xyz = pixelToGlobal * XYZPoint(m_cr.x(), m_cr.y(), 0);
-  m_covXyz = Similarity(transform.Sub<Matrix3>(0, 0), covPixel);
+  p2l(0, 0) = sensor.pitchCol();
+  p2l(0, 1) = 0;
+  p2l(1, 0) = 0;
+  p2l(1, 1) = sensor.pitchRow();
+  sensor.localToGlobal().Rotation().GetRotationMatrix(l2g);
+
+  m_uv = sensor.transformPixelToLocal(m_cr);
+  m_uvCov = ROOT::Math::Similarity(p2l, m_crCov);
+  m_xyz = sensor.transformLocalToGlobal(m_uv);
+  m_xyzCov = ROOT::Math::Similarity(l2g.Sub<Matrix32>(0, 0), m_uvCov);
 }
 
 Index Storage::Cluster::sensorId() const { return m_plane->sensorId(); }
@@ -74,7 +86,7 @@ void Storage::Cluster::setTrack(const Storage::Track* track)
 void Storage::Cluster::addHit(Storage::Hit* hit)
 {
   if (m_hits.empty() == 0)
-    m_timing = hit->timing();
+    m_time = hit->time();
   hit->setCluster(this);
   m_hits.push_back(hit);
   // Fill the value and timing from this hit
@@ -83,8 +95,8 @@ void Storage::Cluster::addHit(Storage::Hit* hit)
 
 void Storage::Cluster::print(std::ostream& os, const std::string& prefix) const
 {
-  Vector2 ep = sqrt(m_covCr.Diagonal());
-  Vector3 eg = sqrt(m_covXyz.Diagonal());
+  Vector2 ep = sqrt(m_crCov.Diagonal());
+  Vector3 eg = sqrt(m_xyzCov.Diagonal());
 
   os << prefix << "pixel: " << posPixel() << '\n';
   os << prefix << "pixel stddev: " << ep << '\n';

@@ -10,8 +10,8 @@
 #include "../storage/event.h"
 #include "../mechanics/device.h"
 #include "../mechanics/sensor.h"
-#include "../mechanics/alignment.h"
-#include "../processors/applyalignment.h"
+#include "../mechanics/geometry.h"
+#include "../processors/applygeometry.h"
 #include "../processors/clustermaker.h"
 #include "../processors/processors.h"
 #include "../analyzers/singleanalyzer.h"
@@ -74,7 +74,7 @@ void Loopers::CoarseAlign::loop(){
   double cummulativeX = 0;
   double cummulativeY = 0;
 
-  Mechanics::Alignment newAlignment = _refDevice->alignment();
+  Mechanics::Geometry newAlignment = _refDevice->geometry();
 
   for(unsigned int nsensor=1; nsensor<_refDevice->getNumSensors(); nsensor++){
     Mechanics::Sensor* sensor = _refDevice->getSensor(nsensor);
@@ -95,14 +95,14 @@ void Loopers::CoarseAlign::loop(){
     std::cout << "Gaussian mean: X= " << offsetX << "  Y= " << offsetY << std::endl;
     std::cout << "Cummulative    X= " << cummulativeX << "  Y= " << cummulativeY << std::endl;
 
-    newAlignment.correctOffset(nsensor, cummulativeX, cummulativeY, 0);
+    newAlignment.correctGlobalOffset(nsensor, cummulativeX, cummulativeY, 0);
   }
 
 	std::cout << "New alignment:\n";
 	newAlignment.print(std::cout);
 
   // create output alignment file
-  newAlignment.writeFile(_refDevice->pathAlignment());
+  newAlignment.writeFile(_refDevice->pathGeometry());
 }
 
 //=========================================================

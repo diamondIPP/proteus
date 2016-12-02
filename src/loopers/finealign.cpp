@@ -11,8 +11,8 @@
 #include "../storage/event.h"
 #include "../mechanics/device.h"
 #include "../mechanics/sensor.h"
-#include "../mechanics/alignment.h"
-#include "../processors/applyalignment.h"
+#include "../mechanics/geometry.h"
+#include "../processors/applygeometry.h"
 #include "../processors/processors.h"
 #include "../processors/clustermaker.h"
 #include "../processors/trackmaker.h"
@@ -124,7 +124,7 @@ void Loopers::FineAlign::loop()
       if (nsens == 0)
         continue; // fdibello in trackmaker nsens is the masked plane
 
-      Mechanics::Alignment newAlignment = _refDevice->alignment();
+      Mechanics::Geometry newAlignment = _refDevice->geometry();
       Mechanics::Sensor* sensor = _refDevice->getSensor(nsens);
 
       // Use broad residual resolution for the first iteration
@@ -205,7 +205,7 @@ void Loopers::FineAlign::loop()
         std::cout << "Fine alignment with residuals:" << std::endl;
         std::cout << "   Sensor: " << nsens << ", Xcorrection: " << offsetX
                   << ", Ycorrection: " << offsetY << std::endl;
-        newAlignment.correctOffset(nsens, offsetX, offsetY, 0);
+        newAlignment.correctGlobalOffset(nsens, offsetX, offsetY, 0);
         // rotation1[nsens] = rotation;
       } else {
         double offsetX = 0, offsetY = 0, rotation = 0;
@@ -222,7 +222,7 @@ void Loopers::FineAlign::loop()
         std::cout << "Sensor: " << nsens << ", Xcorrection: " << offsetX
                   << ", Ycorrection: " << offsetY
                   << ", Zcorrection: " << rotation << std::endl;
-        newAlignment.correctOffset(nsens, offsetX, offsetY, 0);
+        newAlignment.correctGlobalOffset(nsens, offsetX, offsetY, 0);
         newAlignment.correctRotationAngles(nsens, 0, 0, rotation);
         // std::cout << "Sensor: " << nsens << ", Xoffset: " <<
         // sensor->getOffX()<< ", Yoffset: " << sensor->getOffY() << ", Zoffset:
@@ -232,7 +232,7 @@ void Loopers::FineAlign::loop()
       }
 
       // update alignment as input for the next iteration
-      _refDevice->applyAlignment(newAlignment);
+      _refDevice->setGeometry(newAlignment);
 
       // fdibello
       ofx[niter][nsens] = sensor->getOffX();
@@ -253,14 +253,14 @@ void Loopers::FineAlign::loop()
       // sigmay[niter][nsens]=sigmaY1;
     }
 
-    Mechanics::Alignment withBeamSlope = _refDevice->alignment();
+    Mechanics::Geometry withBeamSlope = _refDevice->geometry();
 
     // Ajudst the device rotation using the average slopes
     avgSlopeX /= (double)numSlopes;
     avgSlopeY /= (double)numSlopes;
     withBeamSlope.setBeamSlope(avgSlopeX, avgSlopeY);
 
-    _refDevice->applyAlignment(withBeamSlope);
+    _refDevice->setGeometry(withBeamSlope);
 
     cout << endl; // Space between iterations
   }
@@ -324,7 +324,7 @@ void Loopers::FineAlign::loop()
   }
   out_file->Close();
 
-  _refDevice->alignment().writeFile(_refDevice->pathAlignment());
+  _refDevice->geometry().writeFile(_refDevice->pathGeometry());
 }
 
 void Loopers::FineAlign::setNumIterations(unsigned int value) { _numIterations = value; }

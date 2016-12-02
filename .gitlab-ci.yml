@@ -13,12 +13,14 @@ before_script:
 build:
   stage: build
   script:
-    - cd test
-    - ./build.sh
+    - mkdir build
+    - cd build
+    - cmake -DCMAKE_BUILD_TYPE=Release ..
+    - cmake --build .
   artifacts:
     paths:
-      - test/build/activate.sh
-      - test/build/bin/
+      - build/activate.sh
+      - build/bin/
 
 # global cache that should be shared among all jobs
 cache:
@@ -29,28 +31,28 @@ cache:
 test_configs:
   stage: test
   script:
+    - source build/activate.sh
     - cd test
     - ./check_configs.sh
 
 test_run000875:
   stage: test
   script:
+    - source build/activate.sh
     - cd test
     - ./download_data.py
-    - ./run_telescope.sh 875
-    - ./run_dut0.sh 875
+    - ./run_tel_noisescan.sh 875 -n 100000
+    - ./run_tel_align.sh 875 -n 100000
+    - ./run_track.sh 875 -n 100000
+    - ./run_dut0_noisescan.sh 875 -n 100000
 
 test_run001066:
   stage: test
   script:
+    - source build/activate.sh
     - cd test
     - ./download_data.py
-    - ./run_telescope.sh 1066
-    - ./run_dut0.sh 1066
-
-test_old_run001066:
-  stage: test
-  script:
-    - cd test
-    - ./download_data.py
-    - ./old-run_reference.sh 1066
+    - ./run_tel_noisescan.sh 1066
+    - ./run_tel_align.sh 1066
+    - ./run_track.sh 1066
+    - ./run_dut0_noisescan.sh 1066

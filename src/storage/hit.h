@@ -9,7 +9,7 @@ namespace Storage {
 
 class Cluster;
 
-/** A sensor hit identified by its address, timing, and value.
+/** A sensor hit identified by its address, time, and value.
  *
  * To support devices where the recorded hit address does not directly
  * correspond to the pixel address in the physical pixel matrix, e.g. CCPDv4,
@@ -22,10 +22,8 @@ public:
   void setAddress(Index col, Index row);
   /** Set only the physical address leaving the digital address untouched. */
   void setPhysicalAddress(Index col, Index row);
+  void setTime(double time_) { m_time = time_; }
   void setValue(double value) { m_value = value; }
-  void setTiming(double timing) { m_timing = timing; }
-  /** Set global position using the transform from pixel to global coords. */
-  void transformToGlobal(const Transform3D& pixelToGlobal);
 
   Index digitalCol() const { return m_digitalCol; }
   Index digitalRow() const { return m_digitalRow; }
@@ -33,7 +31,7 @@ public:
   Index row() const { return m_row; }
   /** Return the pixel center position in pixel coordinates. */
   XYPoint posPixel() const { return XYPoint(col() + 0.5, row() + 0.5); }
-  double timing() const { return m_timing; }
+  double time() const { return m_time; }
   double value() const { return m_value; }
 
   void setCluster(const Cluster* cluster);
@@ -42,20 +40,20 @@ public:
 
   unsigned int getPixX() const { return m_col; }
   unsigned int getPixY() const { return m_row; }
-  double getPosX() const { return m_xyz.x(); }
-  double getPosY() const { return m_xyz.y(); }
-  double getPosZ() const { return m_xyz.z(); }
-  double getValue() const { return m_value; }
-  double getTiming() const { return m_timing; }
+  /** \deprecated Only clusters have global position information. */
+  double getPosX() const { return NAN; }
+  double getPosY() const { return NAN; }
+  double getPosZ() const { return NAN; }
+  double getValue() const { return value(); }
+  double getTiming() const { return time(); }
 
 private:
   Hit(); // Hits memory is managed by the event class
 
   Index m_digitalCol, m_digitalRow;
   Index m_col, m_row;
-  double m_timing; // Level 1 accept, typically
-  double m_value;  // Time over threshold, typically
-  XYZPoint m_xyz;
+  double m_time;            // Level 1 accept, typically
+  double m_value;           // Time over threshold, typically
   const Cluster* m_cluster; // The cluster containing this hit
 
   friend class Plane;     // Access set plane method

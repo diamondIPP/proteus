@@ -12,6 +12,9 @@
 #include "processors/processors.h"
 #include "processors/tracking.h"
 #include "storage/event.h"
+#include "utils/logger.h"
+
+PT_SETUP_GLOBAL_LOGGER
 
 namespace Analyzers {
 
@@ -201,30 +204,39 @@ Analyzers::UnbiasedResiduals::UnbiasedResiduals(const Mechanics::Device& device,
   for (Index isensor = 0; isensor < device.numSensors(); ++isensor) {
     const Sensor& sensor = *device.getSensor(isensor);
 
-    double maxDist = 10 * std::max(sensor.pitchCol(), sensor.pitchRow());
+    int pixels = 3;
+    int nBinsPixel = 20;
+    int nBinsDist = 2 * pixels * nBinsPixel;
+    int nBinsX = 100;
     double maxSlope = 0.001;
-    size_t nBins = 10 * 16;
-    Sensor::Area area = sensor.sensitiveAreaLocal();
-    Sensor::Area::Axis dist = {-maxDist, maxDist};
+    Sensor::Area::Axis rangeU = sensor.sensitiveAreaLocal().axes[0];
+    Sensor::Area::Axis rangeV = sensor.sensitiveAreaLocal().axes[1];
     Sensor::Area::Axis slope = {-maxSlope, maxSlope};
+    Sensor::Area::Axis distU = {-pixels * sensor.pitchCol(),
+                                pixels * sensor.pitchCol()};
+    Sensor::Area::Axis distV = {-pixels * sensor.pitchRow(),
+                                pixels * sensor.pitchRow()};
 
-    auto makeH2 = [&](const char* suffix, const Sensor::Area::Axis& bounds0,
+    auto makeH2 = [&](const char* suffix, size_t nbins0,
+                      const Sensor::Area::Axis& bounds0, size_t nbins1,
                       const Sensor::Area::Axis& bounds1) {
       TH2D* h =
-          new TH2D((sensor.name() + suffix).c_str(), "", nBins, bounds0.min,
-                   bounds0.max, nBins, bounds1.min, bounds1.max);
+          new TH2D((sensor.name() + suffix).c_str(), "", nbins0, bounds0.min,
+                   bounds0.max, nbins1, bounds1.min, bounds1.max);
       h->SetDirectory(dir);
       return h;
     };
-    m_res.push_back(makeH2("-res", dist, dist));
-    m_resUtrackU.push_back(makeH2("-resUtrackU", area.axes[0], dist));
-    m_resUtrackV.push_back(makeH2("-resUtrackV", area.axes[0], dist));
-    m_resVtrackU.push_back(makeH2("-resVtrackU", area.axes[1], dist));
-    m_resVtrackV.push_back(makeH2("-resVtrackV", area.axes[1], dist));
-    m_resUslopeU.push_back(makeH2("-resUslopeU", slope, dist));
-    m_resUslopeV.push_back(makeH2("-resUslopeV", slope, dist));
-    m_resVslopeU.push_back(makeH2("-resVslopeU", slope, dist));
-    m_resVslopeV.push_back(makeH2("-resVslopeV", slope, dist));
+    Hists hists;
+    hists.res = makeH2("-Res", nBinsDist, distU, nBinsDist, distV);
+    hists.trackUResU = makeH2("-TrackUResU", nBinsX, rangeU, nBinsDist, distU);
+    hists.trackUResV = makeH2("-TrackUResV", nBinsX, rangeU, nBinsDist, distV);
+    hists.trackVResU = makeH2("-TrackVResU", nBinsX, rangeV, nBinsDist, distU);
+    hists.trackVResV = makeH2("-TrackVResV", nBinsX, rangeV, nBinsDist, distV);
+    hists.slopeUResU = makeH2("-SlopeUResU", nBinsX, slope, nBinsDist, distU);
+    hists.slopeUResV = makeH2("-SlopeUResV", nBinsX, slope, nBinsDist, distV);
+    hists.slopeVResU = makeH2("-SlopeVResU", nBinsX, slope, nBinsDist, distU);
+    hists.slopeVResV = makeH2("-SlopeVResV", nBinsX, slope, nBinsDist, distV);
+    m_hists.push_back(hists);
   }
 }
 
@@ -244,21 +256,27 @@ void Analyzers::UnbiasedResiduals::analyze(const Storage::Event& event)
 
       // refit track w/o selected sensor
       Storage::TrackState state =
-          Processors::fitTrackLocalUnbiased(track, sensor, sensorId);
+          Processors::fitTrackLocalUnbiased(track, sensor);
       XYPoint clu = sensor.transformPixelToLocal(cluster.posPixel());
       XYVector res = clu - state.offset();
 
-      m_res[sensorId]->Fill(res.x(), res.y());
-      m_resUtrackU[sensorId]->Fill(state.offset().x(), res.x());
-      m_resUtrackV[sensorId]->Fill(state.offset().y(), res.x());
-      m_resVtrackU[sensorId]->Fill(state.offset().x(), res.y());
-      m_resVtrackV[sensorId]->Fill(state.offset().y(), res.y());
-      m_resUslopeU[sensorId]->Fill(state.slope().x(), res.x());
-      m_resUslopeV[sensorId]->Fill(state.slope().y(), res.x());
-      m_resVslopeU[sensorId]->Fill(state.slope().x(), res.y());
-      m_resVslopeV[sensorId]->Fill(state.slope().y(), res.y());
+      Hists& hists = m_hists[sensorId];
+      hists.res->Fill(res.x(), res.y());
+      hists.trackUResU->Fill(state.offset().x(), res.x());
+      hists.trackUResV->Fill(state.offset().x(), res.y());
+      hists.trackVResU->Fill(state.offset().y(), res.x());
+      hists.trackVResV->Fill(state.offset().y(), res.y());
+      hists.slopeUResU->Fill(state.slope().x(), res.x());
+      hists.slopeUResV->Fill(state.slope().x(), res.y());
+      hists.slopeVResU->Fill(state.slope().y(), res.x());
+      hists.slopeVResV->Fill(state.slope().y(), res.y());
     }
   }
 }
 
 void Analyzers::UnbiasedResiduals::finalize() {}
+
+const TH2D* Analyzers::UnbiasedResiduals::getResidualUV(Index sensorId) const
+{
+  return m_hists.at(sensorId).res;
+}

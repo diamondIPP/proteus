@@ -9,8 +9,8 @@
 #include "../storage/event.h"
 #include "../mechanics/device.h"
 #include "../mechanics/sensor.h"
-#include "../mechanics/alignment.h"
-#include "../processors/applyalignment.h"
+#include "../mechanics/geometry.h"
+#include "../processors/applygeometry.h"
 #include "../processors/clustermaker.h"
 #include "../processors/processors.h"
 #include "../analyzers/singleanalyzer.h"
@@ -75,7 +75,7 @@ void Loopers::CoarseAlignDut::loop()
     delete dutEvent;
   }
 
-  Mechanics::Alignment newAlignment = _dutDevice->alignment();
+  Mechanics::Geometry newAlignment = _dutDevice->geometry();
 
   for (unsigned int nsensor = 0; nsensor < _dutDevice->getNumSensors(); nsensor++)
   {
@@ -92,14 +92,14 @@ void Loopers::CoarseAlignDut::loop()
     Processors::fitGaussian(alignY, offsetY, sigmaY, _displayFits);
    std::cout << "Old offset: X= " << sensor->getOffX() << "  Y= " << sensor->getOffY() << std::endl;
 
-   newAlignment.correctOffset(nsensor, -offsetX, -offsetY, 0);
+   newAlignment.correctGlobalOffset(nsensor, -offsetX, -offsetY, 0);
 
    std::cout << "DUT plane: " << nsensor << std::endl;
    std::cout << "gaussian mean: X= " << offsetX << "  Y= " << offsetY << std::endl;
    std::cout << "New offset: X= " << sensor->getOffX() << "  Y= " << sensor->getOffY() << std::endl;
   }
 
-  newAlignment.writeFile(_dutDevice->pathAlignment());
+  newAlignment.writeFile(_dutDevice->pathGeometry());
 }
 
 //=========================================================

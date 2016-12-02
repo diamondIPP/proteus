@@ -11,7 +11,7 @@
 #include "../mechanics/device.h"
 #include "../mechanics/sensor.h"
 #include "../processors/processors.h"
-#include "../processors/applyalignment.h"
+#include "../processors/applygeometry.h"
 #include "../processors/clustermaker.h"
 #include "../processors/trackmaker.h"
 #include "../analyzers/singleanalyzer.h"
