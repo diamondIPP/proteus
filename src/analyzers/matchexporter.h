@@ -35,27 +35,35 @@ public:
   void finalize();
 
 private:
-  struct TrackTree {
-    Float_t trkRedChi2;
-    Float_t trkU, trkV;
-    Float_t dist;
-    Float_t cluU, cluV, cluCol, cluRow;
-    Int_t cluSize, cluSizeCol, cluSizeRow;
-    TTree* tree;
+  struct EventData {
+    Int_t nTracks;
   };
-  struct ClusterTree {
+  struct TrackData {
+    Float_t u, v;
+    Float_t col, row;
+    Float_t redChi2;
+  };
+  struct ClusterData {
     Float_t u, v;
     Float_t col, row;
     Int_t size, sizeCol, sizeRow;
-    TTree* tree;
+  };
+  struct MatchData {
+    Float_t d2;
   };
 
   const Mechanics::Sensor& m_sensor;
   Index m_sensorId;
-  TrackTree m_ttrack;
-  ClusterTree m_tcluster;
-  Utils::StatAccumulator<double> m_matched;
-  Utils::StatAccumulator<double> m_unmatchedTracks, m_unmachedClusters;
+  EventData m_ev;
+  TrackData m_trk;
+  MatchData m_mat;
+  ClusterData m_cluMat;
+  ClusterData m_cluUnm;
+  TTree* m_treeTrk;
+  TTree* m_treeClu;
+  Utils::StatAccumulator<double> m_statMat;
+  Utils::StatAccumulator<double> m_statUnmTrk;
+  Utils::StatAccumulator<double> m_statUnmClu;
   std::string m_name;
 };
 
