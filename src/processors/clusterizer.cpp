@@ -59,16 +59,13 @@ static void cluster(double maxDistSquared,
   }
 }
 
-Processors::BaseClusterizer::BaseClusterizer(
-    const std::string& name,
-    const Mechanics::Device& device,
-    const std::vector<Index>& sensorIds)
-    : m_sensorIds(sensorIds)
-    , m_device(device)
+Processors::BaseClusterizer::BaseClusterizer(const std::string& namePrefix,
+                                             const Mechanics::Device& device,
+                                             Index sensorId)
+    : m_sensor(*device.getSensor(sensorId))
     , m_maxDistSquared(1)
-    , m_name(name)
+    , m_name(namePrefix + "(sensorId=" + std::to_string(sensorId) + ')')
 {
-  DEBUG(m_name, " sensors: ", m_sensorIds);
 }
 
 std::string Processors::BaseClusterizer::name() const { return m_name; }
@@ -76,32 +73,29 @@ std::string Processors::BaseClusterizer::name() const { return m_name; }
 void Processors::BaseClusterizer::process(Storage::Event& event) const
 {
   std::vector<Storage::Hit*> hits;
+  Storage::Plane& plane = *event.getPlane(m_sensor.id());
 
-  for (auto id = m_sensorIds.begin(); id != m_sensorIds.end(); ++id) {
-    const Mechanics::Sensor& sensor = *m_device.getSensor(*id);
-    Storage::Plane& plane = *event.getPlane(*id);
-
-    // don't try to cluster noise hits
-    hits.clear();
-    hits.reserve(plane.numHits());
-    for (Index ihit = 0; ihit < plane.numHits(); ++ihit) {
-      Storage::Hit* hit = plane.getHit(ihit);
-      if (sensor.isPixelNoisy(hit->col(), hit->row()))
-        continue;
-      hits.push_back(hit);
-    }
-    cluster(m_maxDistSquared, hits, plane);
-
-    // estimate cluster properties
-    for (Index icluster = 0; icluster < plane.numClusters(); ++icluster)
-      estimateProperties(*plane.getCluster(icluster));
+  // don't try to cluster noise hits
+  hits.clear();
+  hits.reserve(plane.numHits());
+  for (Index ihit = 0; ihit < plane.numHits(); ++ihit) {
+    Storage::Hit* hit = plane.getHit(ihit);
+    if (m_sensor.isPixelNoisy(hit->col(), hit->row()))
+      continue;
+    hits.push_back(hit);
   }
+  cluster(m_maxDistSquared, hits, plane);
+
+  // estimate cluster properties
+  for (Index icluster = 0; icluster < plane.numClusters(); ++icluster)
+    estimateProperties(*plane.getCluster(icluster));
 }
 
 Processors::BinaryClusterizer::BinaryClusterizer(
-    const Mechanics::Device& device, const std::vector<Index>& sensorIds)
-    : BaseClusterizer("BinaryClusterizer", device, sensorIds)
+    const Mechanics::Device& device, Index sensorId)
+    : BaseClusterizer("BinaryClusterizer", device, sensorId)
 {
+  DEBUG("binary clustering for sensor ", sensorId);
 }
 
 // 1/12 factor from pixel size to stddev of equivalent gaussian
@@ -131,9 +125,10 @@ void Processors::BinaryClusterizer::estimateProperties(
 }
 
 Processors::ValueWeightedClusterizer::ValueWeightedClusterizer(
-    const Mechanics::Device& device, const std::vector<Index>& sensorIds)
-    : BaseClusterizer("ValueWeightedClusterizer", device, sensorIds)
+    const Mechanics::Device& device, Index sensorId)
+    : BaseClusterizer("ValueWeightedClusterizer", device, sensorId)
 {
+  DEBUG("value weighted clustering for sensor ", sensorId);
 }
 
 void Processors::ValueWeightedClusterizer::estimateProperties(
@@ -161,9 +156,10 @@ void Processors::ValueWeightedClusterizer::estimateProperties(
 }
 
 Processors::FastestHitClusterizer::FastestHitClusterizer(
-    const Mechanics::Device& device, const std::vector<Index>& sensorIds)
-    : BaseClusterizer("FastestHitClusterizer", device, sensorIds)
+    const Mechanics::Device& device, Index sensorId)
+    : BaseClusterizer("FastestHitClusterizer", device, sensorId)
 {
+  DEBUG("fastest hit (non-)clustering for sensor ", sensorId);
 }
 
 void Processors::FastestHitClusterizer::estimateProperties(
@@ -187,26 +183,17 @@ void Processors::FastestHitClusterizer::estimateProperties(
 void Processors::setupClusterizers(const Mechanics::Device& device,
                                    Utils::EventLoop& loop)
 {
-  using Mechanics::Sensor;
-
-  std::vector<Index> binary;
-  std::vector<Index> weighted;
-
-  for (Index isensor = 0; isensor < device.numSensors(); ++isensor) {
-    const Mechanics::Sensor* sensor = device.getSensor(isensor);
+  for (Index sensorId = 0; sensorId < device.numSensors(); ++sensorId) {
+    const Mechanics::Sensor* sensor = device.getSensor(sensorId);
     switch (sensor->measurement()) {
-    case Sensor::Measurement::PixelBinary:
-    case Sensor::Measurement::Ccpdv4Binary:
-      binary.push_back(isensor);
+    case Mechanics::Sensor::Measurement::PixelBinary:
+    case Mechanics::Sensor::Measurement::Ccpdv4Binary:
+      loop.addProcessor(std::make_shared<BinaryClusterizer>(device, sensorId));
       break;
-    case Sensor::Measurement::PixelTot:
-      weighted.push_back(isensor);
+    case Mechanics::Sensor::Measurement::PixelTot:
+      loop.addProcessor(
+          std::make_shared<ValueWeightedClusterizer>(device, sensorId));
+      break;
     }
   }
-
-  if (!binary.empty())
-    loop.addProcessor(std::make_shared<BinaryClusterizer>(device, binary));
-  if (!weighted.empty())
-    loop.addProcessor(
-        std::make_shared<ValueWeightedClusterizer>(device, weighted));
 }
