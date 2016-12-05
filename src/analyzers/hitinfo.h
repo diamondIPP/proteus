@@ -24,21 +24,22 @@ public:
           TDirectory* dir,
           const char* suffix = "",
           /* Histogram options */
-          unsigned int lvl1Bins = 16,
-          unsigned int totBins = 16);
+          unsigned int timeBins = 16,
+          unsigned int valueBins = 16);
 
   void processEvent(const Storage::Event* event);
   void postProcessing();
 
 private:
-  std::vector<TH1D*> _lvl1;
-  std::vector<TH1D*> _tot;
-  std::vector<TH2D*> _totMap;
-  std::vector<TH2D*> _timingMap;
-  std::vector<TH2D*> _MapCnt;
+  struct Hists {
+    TH2D* map;
+    TH1D* value;
+    TH1D* time;
+    TH2D* timeMap;
+    TH2D* valueMap;
+  };
 
-  unsigned int _lvl1Bins;
-  unsigned int _totBins;
+  std::vector<Hists> m_hists;
 };
 
 } // namespace Analyzers
