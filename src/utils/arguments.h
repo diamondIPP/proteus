@@ -15,29 +15,32 @@
 
 namespace Utils {
 
-/** Common command line argument parser for proteus programs. */
+/** Command line argument parser. */
 class Arguments {
 public:
-  Arguments(const char* description);
+  Arguments(std::string description);
 
-  /** Add an optional commandline argument. */
+  /** Add an optional command line argument. */
   template <typename T>
   void addOption(char key, std::string name, std::string help, T value = T());
+  /** Add a required positional command line argument. */
+  void addRequiredArgument(std::string name, std::string help = std::string());
 
   /** Parse command lines and return true on error. */
   bool parse(int argc, char const* argv[]);
 
-  const std::string& input() const { return m_input; }
-  const std::string& outputPrefix() const { return m_outputPrefix; }
+  /** Access an optional argument and convert it to the requested type. */
+  template <typename T>
+  T get(const std::string& name) const;
+  template <typename T>
+  T argument(std::size_t idx) const;
+
+  std::string input() const { return argument<std::string>(0); }
+  std::string outputPrefix() const { return argument<std::string>(1); }
   std::string device() const;
   std::string config() const;
   /** Construct full output path from known output prefix and name. */
   std::string makeOutput(const std::string& name) const;
-  /** Access an optional argument and convert it to the requested type. */
-  template <typename T>
-  T get(const std::string& name) const;
-
-  void print(std::ostream& os) const;
 
 private:
   struct Option {
@@ -46,31 +49,22 @@ private:
     std::string value;
     const char abbreviation;
   };
+  struct Position {
+    const std::string name;
+    const std::string help;
+  };
 
+  void printHelp(const std::string& arg0) const;
   Option* find(const std::string& name, char abbreviation);
   const Option* find(const std::string& name, char abbreviation) const;
-  void printHelp(const std::string& arg0) const;
 
   const std::string m_description;
-  std::vector<std::string> m_positionals;
   std::vector<Option> m_options;
-  std::string m_input, m_outputPrefix;
+  std::vector<Position> m_required;
+  std::vector<std::string> m_args;
 };
 
 } // namespace Utils
-
-template <typename T>
-inline T Utils::Arguments::get(const std::string& name) const
-{
-  const Option* opt = find(name, 0);
-  if (!opt)
-    throw std::runtime_error("Arguments: option '" + name +
-                             "' does not exists");
-
-  T ret;
-  std::istringstream(opt->value) >> ret;
-  return ret;
-}
 
 template <typename T>
 inline void Utils::Arguments::addOption(char key,
@@ -83,6 +77,31 @@ inline void Utils::Arguments::addOption(char key,
   sval << value;
   Option opt = {std::move(name), std::move(help), sval.str(), key};
   m_options.push_back(std::move(opt));
+}
+
+template <typename T>
+inline T Utils::Arguments::get(const std::string& name) const
+{
+  const Option* opt = find(name, 0);
+  if (!opt) {
+    throw std::runtime_error("Arguments: option '" + name +
+                             "' does not exists");
+  }
+  T ret;
+  std::istringstream(opt->value) >> ret;
+  return ret;
+}
+
+template <typename T>
+inline T Utils::Arguments::argument(std::size_t idx) const
+{
+  if (m_args.size() <= idx) {
+    throw std::runtime_error("Arguments: argument " + std::to_string(idx) +
+                             "does not exists");
+  }
+  T ret;
+  std::istringstream(m_args[idx]) >> ret;
+  return ret;
 }
 
 #endif // PT_ARGUMENTS_H
