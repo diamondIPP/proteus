@@ -7,8 +7,6 @@
 #ifndef PT_HITMAPPER_H
 #define PT_HITMAPPER_H
 
-#include <vector>
-
 #include "processors/processor.h"
 #include "utils/definitions.h"
 
@@ -24,13 +22,13 @@ namespace Processors {
 /** Map FE-I4 digital address to correct CCPDv4 sensor pixel address. */
 class CCPDv4HitMapper : public Processor {
 public:
-  CCPDv4HitMapper(const std::vector<Index>& sensorIds);
+  CCPDv4HitMapper(Index sensorId);
 
   std::string name() const;
   void process(Storage::Event& event) const;
 
 private:
-  std::vector<Index> m_sensorIds;
+  Index m_sensorId;
 };
 
 void setupHitMappers(const Mechanics::Device& device, Utils::EventLoop& loop);
