@@ -131,17 +131,15 @@ int main(int argc, char const* argv[])
   using namespace Mechanics;
   using namespace Processors;
 
-  Utils::Arguments args("align selected sensors");
-  args.addOption('g', "geometry", "use a separate geometry file", "");
-
+  Utils::DefaultArguments args("align selected sensors");
   if (args.parse(argc, argv))
     return EXIT_FAILURE;
 
-  uint64_t skipEvents = args.get<uint64_t>("skip_events");
-  uint64_t numEvents = args.get<uint64_t>("num_events");
+  uint64_t skipEvents = args.skipEvents();
+  uint64_t numEvents = args.numEvents();
   Device device = Device::fromFile(args.device());
   // override geometry if requested
-  auto geoPath = args.get<std::string>("geometry");
+  auto geoPath = args.geometry();
   if (!geoPath.empty()) {
     auto geo = Mechanics::Geometry::fromFile(geoPath);
     device.setGeometry(geo);

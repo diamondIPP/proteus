@@ -7,6 +7,7 @@
 #ifndef PT_ARGUMENTS_H
 #define PT_ARGUMENTS_H
 
+#include <cstdint>
 #include <ostream>
 #include <sstream>
 #include <stdexcept>
@@ -21,8 +22,10 @@ public:
   Arguments(std::string description);
 
   /** Add an optional command line argument. */
+  void addOption(char key, std::string name, std::string help);
+  /** Add an optional command line argument with a default value. */
   template <typename T>
-  void addOption(char key, std::string name, std::string help, T value = T());
+  void addOption(char key, std::string name, std::string help, T value);
   /** Add a required positional command line argument. */
   void addRequiredArgument(std::string name, std::string help = std::string());
 
@@ -31,16 +34,10 @@ public:
 
   /** Access an optional argument and convert it to the requested type. */
   template <typename T>
-  T get(const std::string& name) const;
+  T option(const std::string& name) const;
+  /** Access the i-th argument and convert it to the request type. */
   template <typename T>
   T argument(std::size_t idx) const;
-
-  std::string input() const { return argument<std::string>(0); }
-  std::string outputPrefix() const { return argument<std::string>(1); }
-  std::string device() const;
-  std::string config() const;
-  /** Construct full output path from known output prefix and name. */
-  std::string makeOutput(const std::string& name) const;
 
 private:
   struct Option {
@@ -64,6 +61,23 @@ private:
   std::vector<std::string> m_args;
 };
 
+/** Default command line arguments for (most) Proteus commands. */
+class DefaultArguments : public Arguments {
+public:
+  DefaultArguments(std::string description);
+
+  std::string input() const { return argument<std::string>(0); }
+  std::string outputPrefix() const { return argument<std::string>(1); }
+  /** Construct full output path from known output prefix and name. */
+  std::string makeOutput(const std::string& name) const;
+
+  std::string device() const;
+  std::string geometry() const;
+  std::string config() const;
+  uint64_t skipEvents() const;
+  uint64_t numEvents() const;
+};
+
 } // namespace Utils
 
 template <typename T>
@@ -80,7 +94,7 @@ inline void Utils::Arguments::addOption(char key,
 }
 
 template <typename T>
-inline T Utils::Arguments::get(const std::string& name) const
+inline T Utils::Arguments::option(const std::string& name) const
 {
   const Option* opt = find(name, 0);
   if (!opt) {

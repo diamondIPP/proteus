@@ -14,14 +14,12 @@ PT_SETUP_GLOBAL_LOGGER
 Utils::Arguments::Arguments(std::string description)
     : m_description(std::move(description))
 {
-  // default optional arguments
-  addOption('d', "device", "device configuration file", "configs/device.toml");
-  addOption('c', "config", "analysis configuration file",
-            "configs/analysis.toml");
-  addOption('s', "skip_events", "skip the first n events", 0);
-  addOption('n', "num_events", "number of events to process", -1);
-  addRequiredArgument("INPUT", "path to the input file");
-  addRequiredArgument("OUTPUT_PREFIX", "output prefix path");
+}
+
+void Utils::Arguments::addOption(char key, std::string name, std::string help)
+{
+  m_options.emplace_back(
+      Option{std::move(name), std::move(help), std::string(), key});
 }
 
 void Utils::Arguments::addRequiredArgument(std::string name, std::string help)
@@ -129,20 +127,48 @@ const Utils::Arguments::Option* Utils::Arguments::find(const std::string& name,
   return NULL;
 }
 
-std::string Utils::Arguments::device() const
+Utils::DefaultArguments::DefaultArguments(std::string description)
+    : Arguments(std::move(description))
 {
-  return get<std::string>("device");
+  // default optional arguments
+  addOption('c', "config", "analysis configuration file", "analysis.toml");
+  addOption('d', "device", "device configuration file", "device.toml");
+  addOption('g', "geometry", "separate geometry file");
+  addOption('s', "skip_events", "skip the first n events", 0);
+  addOption('n', "num_events", "number of events to process", -1);
+  addRequiredArgument("INPUT", "path to the input file");
+  addRequiredArgument("OUTPUT_PREFIX", "output prefix path");
 }
 
-std::string Utils::Arguments::config() const
-{
-  return get<std::string>("config");
-}
-
-std::string Utils::Arguments::makeOutput(const std::string& name) const
+std::string Utils::DefaultArguments::makeOutput(const std::string& name) const
 {
   std::string out = outputPrefix();
   out += '-';
   out += name;
   return out;
+}
+
+std::string Utils::DefaultArguments::device() const
+{
+  return option<std::string>("device");
+}
+
+std::string Utils::DefaultArguments::geometry() const
+{
+  return option<std::string>("geometry");
+}
+
+std::string Utils::DefaultArguments::config() const
+{
+  return option<std::string>("config");
+}
+
+uint64_t Utils::DefaultArguments::skipEvents() const
+{
+  return option<uint64_t>("skip_events");
+}
+
+uint64_t Utils::DefaultArguments::numEvents() const
+{
+  return option<uint64_t>("num_events");
 }

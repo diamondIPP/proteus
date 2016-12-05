@@ -26,7 +26,7 @@
 
 int main(int argc, char const* argv[])
 {
-  Utils::Arguments args("run proteus noise scan");
+  Utils::DefaultArguments args("run proteus noise scan");
   if (args.parse(argc, argv))
     return EXIT_FAILURE;
 
@@ -51,7 +51,7 @@ int main(int argc, char const* argv[])
   std::vector<toml::Value> cfg =
       Utils::Config::perSensor(cfgTool, toml::Table());
 
-  // sensor specific
+  // construct per-sensor noise analyzer
   std::vector<std::shared_ptr<Analyzers::NoiseScan>> noiseScans;
   for (auto c = cfg.begin(); c != cfg.end(); ++c) {
     typedef Analyzers::NoiseScan::Area Area;
@@ -68,8 +68,7 @@ int main(int argc, char const* argv[])
         device, id, bandwidth, sigmaMax, rateMax, roi, hists));
   }
 
-  Utils::EventLoop loop(&input, args.get<uint64_t>("skip_events"),
-                        args.get<uint64_t>("num_events"));
+  Utils::EventLoop loop(&input, args.skipEvents(), args.numEvents());
   loop.addAnalyzer(std::make_shared<Analyzers::Occupancy>(&device, hists));
   for (auto noise = noiseScans.begin(); noise != noiseScans.end(); ++noise)
     loop.addAnalyzer(*noise);

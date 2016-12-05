@@ -31,18 +31,17 @@ int main(int argc, char const* argv[])
   using namespace Analyzers;
   using namespace Processors;
 
-  Utils::Arguments args("run proteus telescope processing");
-  args.addOption('g', "geometry", "use a separate geometry file", "");
+  Utils::DefaultArguments args("run proteus telescope processing");
   if (args.parse(argc, argv))
     return EXIT_FAILURE;
 
   // setup configuration
-  uint64_t skipEvents = args.get<uint64_t>("skip_events");
-  uint64_t numEvents = args.get<uint64_t>("num_events");
+  uint64_t skipEvents = args.skipEvents();
+  uint64_t numEvents = args.numEvents();
 
   Mechanics::Device dev = Mechanics::Device::fromFile(args.device());
   // override geometry if requested
-  auto geoPath = args.get<std::string>("geometry");
+  auto geoPath = args.geometry();
   if (!geoPath.empty()) {
     auto geo = Mechanics::Geometry::fromFile(geoPath);
     dev.setGeometry(geo);

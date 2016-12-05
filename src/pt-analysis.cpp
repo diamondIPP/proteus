@@ -26,7 +26,7 @@ int main(int argc, char const* argv[])
 {
   using namespace Analyzers;
 
-  Utils::Arguments args("run proteus analysis");
+  Utils::DefaultArguments args("run proteus analysis");
   if (args.parse(argc, argv))
     return EXIT_FAILURE;
 
@@ -38,9 +38,7 @@ int main(int argc, char const* argv[])
 
   auto cfg = Utils::Config::readConfig(args.config());
 
-  Utils::EventLoop loop(&input,
-                        args.get<uint64_t>("skip_events"),
-                        args.get<uint64_t>("num_events"));
+  Utils::EventLoop loop(&input, args.skipEvents(), args.numEvents());
   loop.addAnalyzer(std::make_shared<EventPrinter>());
   loop.run();
 
