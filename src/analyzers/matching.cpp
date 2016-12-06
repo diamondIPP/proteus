@@ -52,7 +52,10 @@ Analyzers::Distances::Distances(const Mechanics::Device& device,
   m_trackDist = makeH1("TrackDist", 0, rangeTrackDist);
 }
 
-std::string Analyzers::Distances::name() const { return "Distances"; }
+std::string Analyzers::Distances::name() const
+{
+  return "Distances(" + std::to_string(m_sensorId) + ')';
+}
 
 void Analyzers::Distances::analyze(const Storage::Event& event)
 {
