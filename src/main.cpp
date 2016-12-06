@@ -22,7 +22,7 @@
 #include "processors/eventdepictor.h"
 #include "processors/clustermaker.h"
 #include "processors/trackmaker.h"
-#include "processors/trackmatcher.h"
+#include "processors/matcher.h"
 #include "processors/processors.h"
 #include "analyzers/configanalyzers.h"
 #include "loopers/analysis.h"

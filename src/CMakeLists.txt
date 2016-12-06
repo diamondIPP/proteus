@@ -15,6 +15,7 @@ set(COMMON_SRC
     analyzers/exampledualanalyzer.cpp
     analyzers/examplesingleanalyzer.cpp
     analyzers/hitinfo.cpp
+    analyzers/matchexporter.cpp
     analyzers/matching.cpp
     analyzers/noisescan.cpp
     analyzers/occupancy.cpp
@@ -49,6 +50,7 @@ set(COMMON_SRC
     processors/eventdepictor.cpp
     processors/hitmapper.cpp
     processors/largesynchronizer.cpp
+    processors/matcher.cpp
     processors/processor.cpp
     processors/processors.cpp
     processors/synchronizer.cpp
@@ -56,7 +58,6 @@ set(COMMON_SRC
     processors/trackfitter.cpp
     processors/tracking.cpp
     processors/trackmaker.cpp
-    processors/trackmatcher.cpp
     storage/cluster.cpp
     storage/event.cpp
     storage/hit.cpp
@@ -85,6 +86,9 @@ target_link_libraries(pt-align pt-common)
 
 add_executable(pt-cfg pt-cfg.cpp)
 target_link_libraries(pt-cfg pt-common)
+
+add_executable(pt-match pt-match.cpp)
+target_link_libraries(pt-match pt-common)
 
 add_executable(pt-noisescan pt-noisescan.cpp)
 target_link_libraries(pt-noisescan pt-common)

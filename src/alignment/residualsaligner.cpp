@@ -121,8 +121,8 @@ Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
   geo.setBeamSlope(slopeX, slopeY);
 
   INFO("mean track slope:");
-  INFO(" slope x: ", slopeX, " +- ", m_trackSlope->GetStdDev(1));
-  INFO(" slope y: ", slopeY, " +- ", m_trackSlope->GetStdDev(2));
+  INFO("  slope x: ", slopeX, " +- ", m_trackSlope->GetStdDev(1));
+  INFO("  slope y: ", slopeY, " +- ", m_trackSlope->GetStdDev(2));
 
   for (auto hists = m_hists.begin(); hists != m_hists.end(); ++hists) {
     const Mechanics::Sensor& sensor = *m_device.getSensor(hists->sensorId);
@@ -142,9 +142,9 @@ Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
     geo.correctLocal(sensor.id(), delta, cov);
 
     INFO(sensor.name(), " alignment corrections:");
-    INFO("  delta u:  ", delta[0], " +- ", stdU);
-    INFO("  delta v:  ", delta[1], " +- ", stdV);
-    INFO("  delta gamma:", delta[5], " +- ", stdGamma);
+    INFO("  delta u: ", delta[0], " +- ", stdU);
+    INFO("  delta v: ", delta[1], " +- ", stdV);
+    INFO("  delta gamma: ", delta[5], " +- ", stdGamma);
   }
   return geo;
 }

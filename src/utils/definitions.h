@@ -74,6 +74,14 @@ inline double mahalanobisSquared(
   return ROOT::Math::Similarity(weight, x);
 }
 
+template <typename T>
+inline double mahalanobisSquared(
+    const ROOT::Math::SMatrix<T, 2, 2, ROOT::Math::MatRepSym<T, 2>>& cov,
+    const XYVector& x)
+{
+  return mahalanobisSquared(cov, ROOT::Math::SVector<T, 2>(x.x(), x.y()));
+}
+
 /** Mahalanobis distance / norm of a vector. */
 template <typename T, unsigned int kD1>
 inline double mahalanobis(
@@ -81,6 +89,14 @@ inline double mahalanobis(
     const ROOT::Math::SVector<T, kD1>& x)
 {
   return std::sqrt(mahalanobisSquared(cov, x));
+}
+
+template <typename T>
+inline double mahalanobis(
+    const ROOT::Math::SMatrix<T, 2, 2, ROOT::Math::MatRepSym<T, 2>>& cov,
+    const XYVector& x)
+{
+  return mahalanobis(cov, ROOT::Math::SVector<T, 2>(x.x(), x.y()));
 }
 
 #endif // PT_DEFINITIONS_H

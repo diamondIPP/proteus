@@ -218,9 +218,10 @@ void EventDepictor::depictTrack(const Storage::Track* track)
   for (unsigned int ncluster = 0; ncluster < track->getNumClusters(); ncluster++)
     assert(track->getCluster(ncluster)->getTrack() == track &&
            "DepictTrack: cluster track didn't associated");
-  for (unsigned int ncluster = 0; ncluster < track->getNumMatchedClusters(); ncluster++)
-    assert(track->getMatchedCluster(ncluster)->getMatchedTrack() == track &&
-           "DepictTrack: matched cluster track didn't associated");
+  // TODO 2016-11-15 msmk: disabled due to incompatible api changes
+  // for (unsigned int ncluster = 0; ncluster < track->getNumMatchedClusters(); ncluster++)
+  //   assert(track->getMatchedCluster(ncluster)->getMatchedTrack() == track &&
+  //          "DepictTrack: matched cluster track didn't associated");
 
   const char* name = "DepictTrack";
   const char* title = "Track Depiction";
@@ -231,11 +232,11 @@ void EventDepictor::depictTrack(const Storage::Track* track)
   if (!can) can = new TCanvas(name, title, 1000, 800);
   can->Divide(1, 2);
 
-  double* px = new double[track->getNumClusters() + track->getNumMatchedClusters()];
-  double* ex = new double[track->getNumClusters() + track->getNumMatchedClusters()];
-  double* py = new double[track->getNumClusters() + track->getNumMatchedClusters()];
-  double* ey = new double[track->getNumClusters() + track->getNumMatchedClusters()];
-  double* pz = new double[track->getNumClusters() + track->getNumMatchedClusters()];
+  double* px = new double[track->getNumClusters()];
+  double* ex = new double[track->getNumClusters()];
+  double* py = new double[track->getNumClusters()];
+  double* ey = new double[track->getNumClusters()];
+  double* pz = new double[track->getNumClusters()];
 
   for (unsigned int ncluster = 0; ncluster < track->getNumClusters(); ncluster++)
   {
@@ -247,15 +248,16 @@ void EventDepictor::depictTrack(const Storage::Track* track)
     pz[ncluster] = cluster->getPosZ();
   }
 
-  for (unsigned int ncluster = 0; ncluster < track->getNumMatchedClusters(); ncluster++)
-  {
-    const Storage::Cluster* cluster = track->getMatchedCluster(ncluster);
-    px[track->getNumClusters() + ncluster] = cluster->getPosX();
-    ex[track->getNumClusters() + ncluster] = cluster->getPosErrX();
-    py[track->getNumClusters() + ncluster] = cluster->getPosY();
-    ey[track->getNumClusters() + ncluster] = cluster->getPosErrY();
-    pz[track->getNumClusters() + ncluster] = cluster->getPosZ();
-  }
+  // TODO 2016-11-15 msmk: disabled due to incompatible api changes
+  // for (unsigned int ncluster = 0; ncluster < track->getNumMatchedClusters(); ncluster++)
+  // {
+  //   const Storage::Cluster* cluster = track->getMatchedCluster(ncluster);
+  //   px[track->getNumClusters() + ncluster] = cluster->getPosX();
+  //   ex[track->getNumClusters() + ncluster] = cluster->getPosErrX();
+  //   py[track->getNumClusters() + ncluster] = cluster->getPosY();
+  //   ey[track->getNumClusters() + ncluster] = cluster->getPosErrY();
+  //   pz[track->getNumClusters() + ncluster] = cluster->getPosZ();
+  // }
 
   double minZ = _refDevice->getSensor(0)->getOffZ();
   double maxZ = _refDevice->getSensor(_refDevice->getNumSensors() - 1)->getOffZ();
@@ -271,7 +273,7 @@ void EventDepictor::depictTrack(const Storage::Track* track)
     ss << "Slope: " << (axis ? track->getSlopeX() : track->getSlopeY())
        << " Chi^{2}: " << track->getChi2();
 
-    TGraphErrors* graph = new TGraphErrors(track->getNumClusters() + track->getNumMatchedClusters(),
+    TGraphErrors* graph = new TGraphErrors(track->getNumClusters(),
                                            pz, axis ? px : py, 0, axis ? ex : ey);
     graph->SetTitle(ss.str().c_str());
     graph->GetXaxis()->SetTitle("Z position");
