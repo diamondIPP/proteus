@@ -1,29 +1,21 @@
-#ifndef EVENTINFO_H
-#define EVENTINFO_H
-
-#include <vector>
-
-#include <TH2D.h>
-#include <TH1D.h>
-#include <TDirectory.h>
+#ifndef PT_EVENTINFO_H
+#define PT_EVENTINFO_H
 
 #include "singleanalyzer.h"
 
-namespace Storage { class Event; }
-namespace Mechanics { class Device; }
+class TDirectory;
+class TH1D;
+
+namespace Storage {
+class Event;
+}
+namespace Mechanics {
+class Device;
+}
 
 namespace Analyzers {
 
-class EventInfo : public SingleAnalyzer
-{
-private:
-  TH1D* _triggerOffset;
-  TH1D* _trackInTime;
-  TH1D* _numTracks;
-  TH1D* _eventsVsTime;
-  TH1D* _tracksVsTime;
-  TH1D* _clustersVsTime;
-
+class EventInfo : public SingleAnalyzer {
 public:
   EventInfo(const Mechanics::Device* device,
             TDirectory* dir,
@@ -33,8 +25,16 @@ public:
 
   void processEvent(const Storage::Event* event);
   void postProcessing();
+
+private:
+  TH1D* _triggerOffset;
+  TH1D* _trackInTime;
+  TH1D* _numTracks;
+  TH1D* _eventsVsTime;
+  TH1D* _tracksVsTime;
+  TH1D* _clustersVsTime;
 };
 
-}
+} // namespace Analyzers
 
-#endif
+#endif // PT_EVENTINFO_H
