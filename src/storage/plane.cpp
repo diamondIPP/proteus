@@ -34,7 +34,7 @@ void Storage::Plane::print(std::ostream& os, const std::string& prefix) const
       const Hit& hit = *m_hits[ihit];
       os << prefix << "  hit " << ihit << ": " << hit;
       if (hit.cluster())
-        os << " cluster=" << hit.cluster()->getIndex();
+        os << " cluster=" << hit.cluster()->index();
       os << '\n';
     }
   }
@@ -44,7 +44,17 @@ void Storage::Plane::print(std::ostream& os, const std::string& prefix) const
       const Cluster& cluster = *m_clusters[icluster];
       os << prefix << "  cluster " << icluster << ": " << cluster;
       if (cluster.track())
-        os << " track=" << cluster.track()->getIndex();
+        os << " track=" << cluster.track()->index();
+      os << '\n';
+    }
+  }
+  if (!m_states.empty()) {
+    os << prefix << "states:\n";
+    for (size_t istate = 0; istate < m_states.size(); ++istate) {
+      const TrackState& state = *m_states[istate];
+      os << prefix << "  state " << istate << ": " << state;
+      if (state.track())
+        os << " track=" << state.track()->index();
       os << '\n';
     }
   }
