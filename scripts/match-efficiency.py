@@ -7,10 +7,6 @@ import sys
 
 import ROOT
 
-BINS_COL = (25, 40, 65)
-BINS_ROW = (360, 0, 360)
-CUT_GOOD = 'clu_size>0 && d2<10'
-
 f = ROOT.TFile(sys.argv[1])
 t = f.Get(b'h35_05/tracks')
 
@@ -47,13 +43,12 @@ def make_eff(name, tree, args, selection_passed, selection_total=''):
 
 # axis definitions
 trk_col = ('trk_col', 40, 65, 25)
-trk_row = ('trk_row', 0, 360, 360)
+trk_row = ('trk_row', 0, 301, 301)
+cut_good = 'clu_size>0 && d2<10'
 
-# ec = make_eff('eff_c', t, [trk_col], CUT_GOOD, cut(trk_row))
-# er = make_eff('eff_r', t, [trk_row], CUT_GOOD, cut(trk_col))
-ecr = make_eff('eff_cr', t, [trk_col, trk_row], CUT_GOOD)
-
-eff = ecr
+eff = make_eff('eff_cr', t, [trk_col, trk_row], cut_good)
+# eff = make_eff('eff_c', t, [trk_col], cut_good, cut(trk_row))
+# eff = make_eff('eff_r', t, [trk_row], cut_good, cut(trk_col))
 tot = eff.GetTotalHistogram()
 pas = eff.GetPassedHistogram()
 
