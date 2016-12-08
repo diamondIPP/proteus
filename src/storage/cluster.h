@@ -56,7 +56,6 @@ public:
   const Hit* getHit(Index i) const { return m_hits.at(i); }
 
   void setTrack(const Track* track);
-  // bool isInTrack() const { return (m_track != NULL); }
   const Track* track() const { return m_track; }
   /** \deprecated Use `track()` instead. */
   const Track* getTrack() const { return m_track; }
