@@ -36,7 +36,7 @@ private:
     TH1D* dist;
     TH1D* d2;
 
-    Hists();
+    Hists() = default;
     Hists(TDirectory* dir,
           std::string prefix,
           double rangeDist,

@@ -9,17 +9,11 @@
 #include "storage/event.h"
 #include "utils/root.h"
 
-Analyzers::Distances::Hists::Hists()
-    : deltaU(NULL), deltaV(NULL), dist(NULL), d2(NULL)
-{
-}
-
 Analyzers::Distances::Hists::Hists(TDirectory* dir,
                                    std::string prefix,
                                    double rangeDist,
                                    double rangeD2,
                                    int numBins)
-    : Hists()
 {
   auto h1 = [&](std::string name, double x0, double x1) -> TH1D* {
     TH1D* h = new TH1D((prefix + name).c_str(), "", numBins, x0, x1);
@@ -29,8 +23,7 @@ Analyzers::Distances::Hists::Hists(TDirectory* dir,
   deltaU = h1("DeltaU", -rangeDist, rangeDist);
   deltaV = h1("DeltaV", -rangeDist, rangeDist);
   dist = h1("Dist", 0, rangeDist);
-  if (0 < rangeD2)
-    d2 = h1("D2", 0, rangeD2);
+  d2 = (0 < rangeD2) ? h1("D2", 0, rangeD2) : NULL;
 }
 
 void Analyzers::Distances::Hists::fill(const XYVector& delta)
