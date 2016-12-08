@@ -11,6 +11,7 @@
 #include "utils/definitions.h"
 
 namespace Processors {
+class TrackFinder;
 class TrackMaker;
 }
 
@@ -20,37 +21,31 @@ class Cluster;
 
 /** A particle track.
  *
- * The track consist of a set of input clusters and a set of reconstructed
- * track states on selected sensorId planes.
+ * The track consist of a set of input clusters, global track, and
+ * goodness-of-fit information.
  */
 class Track {
 public:
   Track();
-  Track(const TrackState& globalState);
+  Track(const TrackState& global);
+
+  Index index() const { return m_index; }
 
   /** Adds the cluster to the track but does not inform the cluster about it. */
   void addCluster(Cluster* cluster);
-  /** Inform all track clusters that they belong to this track now. */
-  void fixClusterAssociation();
   Index numClusters() const { return static_cast<Index>(m_clusters.size()); }
   Cluster* getCluster(Index i) { return m_clusters.at(i); }
   const Cluster* getCluster(Index i) const { return m_clusters.at(i); }
 
-  // global track information.
-  void setGlobalState(const TrackState& state) { m_state = state; }
   void setGoodnessOfFit(double chi2, int ndf) { m_redChi2 = chi2 / ndf; }
   void setGoodnessOfFit(double reducedChi2) { m_redChi2 = reducedChi2; }
-  const TrackState& globalState() const { return m_state; }
   double reducedChi2() const { return m_redChi2; }
 
-  // local state information.
-  void setLocalState(Index sensorId, const TrackState& state);
-  bool hasLocalState(Index sensorId) const;
-  const TrackState& getLocalState(Index sensorId) const;
+  void setGlobalState(const TrackState& state) { m_state = state; }
+  const TrackState& globalState() const { return m_state; }
 
-  // matched cluster information. only used transiently, not stored.
+  /* \deprecated Use TrackState for matching information. */
   void setMatchedCluster(Index sensorId, const Cluster* cluster);
-  bool hasMatchedCluster(Index sensorId) const;
   const Cluster* getMatchedCluster(Index sensorId) const;
 
   unsigned int getNumClusters() const { return m_clusters.size(); }
@@ -70,18 +65,19 @@ public:
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
+  /** Inform all track clusters that they belong to this track now. */
+  void freezeClusterAssociation();
+
   TrackState m_state;
-  std::map<Index, TrackState> m_localStates;
   double m_redChi2;
-  int m_index;
+  Index m_index;
 
   std::vector<Cluster*> m_clusters;
   // NOTE: this isn't stored in file, its a place holder for doing DUT analysis
-  std::vector<Cluster*> m_matchedClusters;
-
-  std::map<Index, const Cluster*> m_matches;
+  std::vector<const Cluster*> m_matchedClusters;
 
   friend class Event;
+  friend class Processors::TrackFinder;
   friend class Processors::TrackMaker;
 };
 
