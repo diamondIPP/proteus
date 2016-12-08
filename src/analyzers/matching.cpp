@@ -17,39 +17,62 @@
 #include "storage/plane.h"
 #include "utils/root.h"
 
+Analyzers::Distances::Hists::Hists()
+    : deltaU(NULL), deltaV(NULL), dist(NULL), d2(NULL)
+{
+}
+
+Analyzers::Distances::Hists::Hists(TDirectory* dir,
+                                   std::string prefix,
+                                   double rangeDist,
+                                   double rangeD2,
+                                   int numBins)
+    : Hists()
+{
+  auto h1 = [&](std::string name, double x0, double x1) -> TH1D* {
+    TH1D* h = new TH1D((prefix + name).c_str(), "", numBins, x0, x1);
+    h->SetDirectory(dir);
+    return h;
+  };
+  deltaU = h1("DeltaU", -rangeDist, rangeDist);
+  deltaV = h1("DeltaV", -rangeDist, rangeDist);
+  dist = h1("Dist", 0, rangeDist);
+  if (0 < rangeD2)
+    d2 = h1("D2", 0, rangeD2);
+}
+
+void Analyzers::Distances::Hists::fill(const XYVector& delta)
+{
+  deltaU->Fill(delta.x());
+  deltaV->Fill(delta.y());
+  dist->Fill(delta.r());
+}
+void Analyzers::Distances::Hists::fill(const XYVector& delta,
+                                       const SymMatrix2& cov)
+{
+  fill(delta);
+  d2->Fill(mahalanobisSquared(cov, delta));
+}
+
 Analyzers::Distances::Distances(const Mechanics::Device& device,
                                 Index sensorId,
                                 TDirectory* dir)
     : m_sensorId(sensorId)
 {
   const Mechanics::Sensor& sensor = *device.getSensor(sensorId);
+  auto area = sensor.sensitiveAreaLocal();
+  double rangeTrack = std::hypot(area.axes[0].length(), area.axes[1].length());
+  double rangeDist = std::hypot(sensor.pitchCol(), sensor.pitchRow());
+  double rangeD2 = 10;
+  int numBins = 256;
   TDirectory* sub = Utils::makeDir(dir, "Distances");
-  int numBins = 100;
-  double rangeU = 2 * sensor.pitchCol();
-  double rangeV = 2 * sensor.pitchRow();
-  double rangeDist = std::max(rangeU, rangeV);
-  double rangeMahalanobis = 10;
-  double rangeTrackU = sensor.sensitiveAreaLocal().axes[0].length() / 2;
-  double rangeTrackV = sensor.sensitiveAreaLocal().axes[1].length() / 2;
-  double rangeTrackDist = std::hypot(rangeTrackU, rangeTrackV);
 
-  auto makeH1 = [&](const char* name, double low, double high) -> TH1D* {
-    TH1D* h =
-        new TH1D((sensor.name() + "-" + name).c_str(), "", numBins, low, high);
-    h->SetDirectory(sub);
-    return h;
-  };
-  m_allDistU = makeH1("AllDistU", -rangeU, rangeU);
-  m_allDistV = makeH1("AllDistV", -rangeV, rangeV);
-  m_allDist = makeH1("AllDist", 0, rangeDist);
-  m_allMahalanobis = makeH1("AllMahalanobis", 0, rangeMahalanobis);
-  m_matchDistU = makeH1("MatchDistU", -rangeU, rangeU);
-  m_matchDistV = makeH1("MatchDistV", -rangeV, rangeV);
-  m_matchDist = makeH1("MatchDist", 0, rangeDist);
-  m_matchMahalanobis = makeH1("MatchMahalanobis", 0, rangeMahalanobis);
-  m_trackDistU = makeH1("TrackDistU", -rangeTrackU, rangeTrackU);
-  m_trackDistV = makeH1("TrackDistV", -rangeTrackV, rangeTrackV);
-  m_trackDist = makeH1("TrackDist", 0, rangeTrackDist);
+  m_trackTrack =
+      Hists(sub, sensor.name() + "-TrackTrack-", rangeTrack, -1, numBins);
+  m_trackCluster = Hists(sub, sensor.name() + "-TrackCluster-", 4 * rangeDist,
+                         rangeD2, numBins);
+  m_match =
+      Hists(sub, sensor.name() + "-Match-", 1.5 * rangeDist, rangeD2, numBins);
 }
 
 std::string Analyzers::Distances::name() const
@@ -61,42 +84,30 @@ void Analyzers::Distances::analyze(const Storage::Event& event)
 {
   const Storage::Plane& plane = *event.getPlane(m_sensorId);
 
+  // combinatorics: all tracks to all other tracks
   for (Index istate0 = 0; istate0 < plane.numStates(); ++istate0) {
-    const Storage::TrackState& state0 = plane.getState(istate0);
-
-    // full combinatorics: all clusters to all tracks
-    for (Index icluster = 0; icluster < plane.numClusters(); ++icluster) {
-      const Storage::Cluster& cluster = *plane.getCluster(icluster);
-
-      XYVector delta = cluster.posLocal() - state0.offset();
-      SymMatrix2 cov = cluster.covLocal() + state0.covOffset();
-      m_allDistU->Fill(delta.x());
-      m_allDistV->Fill(delta.y());
-      m_allDist->Fill(delta.r());
-      m_allMahalanobis->Fill(mahalanobis(cov, delta));
-    }
-
-    // full combinatorics: all tracks to all other tracks
     for (Index istate1 = 0; istate1 < plane.numStates(); ++istate1) {
-      if (istate1 == istate0)
+      if (istate0 == istate1)
         continue;
-
-      const Storage::TrackState& state1 = plane.getState(istate1);
-
-      XYVector delta = state1.offset() - state0.offset();
-      m_trackDistU->Fill(delta.x());
-      m_trackDistV->Fill(delta.y());
-      m_trackDist->Fill(delta.r());
+      m_trackTrack.fill(plane.getState(istate1).offset() -
+                        plane.getState(istate0).offset());
     }
-
-    // matching distances
-    if (state0.matchedCluster()) {
-      XYVector delta = state0.matchedCluster()->posLocal() - state0.offset();
-      SymMatrix2 cov = state0.matchedCluster()->covLocal() + state0.covOffset();
-      m_matchDistU->Fill(delta.x());
-      m_matchDistV->Fill(delta.y());
-      m_matchDist->Fill(delta.r());
-      m_matchMahalanobis->Fill(mahalanobis(cov, delta));
+  }
+  // combinatorics: all clusters to all tracks
+  for (Index istate = 0; istate < plane.numStates(); ++istate) {
+    for (Index icluster = 0; icluster < plane.numClusters(); ++icluster) {
+      const Storage::TrackState& state = plane.getState(istate);
+      const Storage::Cluster& cluster = *plane.getCluster(icluster);
+      m_trackCluster.fill(cluster.posLocal() - state.offset(),
+                          cluster.covLocal() + state.covOffset());
+    }
+  }
+  // matched pairs
+  for (Index istate = 0; istate < plane.numStates(); ++istate) {
+    const Storage::TrackState& state = plane.getState(istate);
+    if (state.matchedCluster()) {
+      m_match.fill(state.matchedCluster()->posLocal() - state.offset(),
+                   state.matchedCluster()->covLocal() + state.covOffset());
     }
   }
 }
