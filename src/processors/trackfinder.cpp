@@ -55,7 +55,7 @@ void Processors::TrackFinder::process(Storage::Event& event) const
     for (Index icluster = 0; icluster < seedSensorEvent.numClusters();
          ++icluster) {
       Cluster* cluster = seedSensorEvent.getCluster(icluster);
-      if (cluster->isInTrack())
+      if (cluster->track())
         continue;
       candidates.push_back(TrackPtr(new Track()));
       candidates.back()->addCluster(cluster);
@@ -89,7 +89,7 @@ void Processors::TrackFinder::searchSensor(
       Storage::Cluster* curr = sensorEvent.getCluster(icluster);
 
       // clusters already in use must be ignored
-      if (curr->isInTrack())
+      if (curr->track())
         continue;
 
       XYZVector delta = curr->posGlobal() - last->posGlobal();
@@ -154,13 +154,13 @@ void Processors::TrackFinder::selectTracks(std::vector<TrackPtr>& candidates,
     // check that all constituent clusters are still unused
     Index unique = 0;
     for (Index icluster = 0; icluster < track.numClusters(); ++icluster)
-      unique += (track.getCluster(icluster)->isInTrack() ? 0 : 1);
+      unique += (track.getCluster(icluster)->track() ? 0 : 1);
     // some clusters are already used by other tracks
     if (unique != track.numClusters())
       continue;
 
     // this is a good track
-    track.fixClusterAssociation();
+    track.freezeClusterAssociation();
     event.addTrack(TrackPtr(itrack->release()));
   }
 }
