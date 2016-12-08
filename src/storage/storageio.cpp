@@ -19,6 +19,7 @@
 #include "storage/hit.h"
 #include "storage/plane.h"
 #include "storage/track.h"
+#include "storage/trackstate.h"
 #include "utils/logger.h"
 
 PT_SETUP_LOCAL_LOGGER(StorageIO)
@@ -631,9 +632,9 @@ namespace Storage {
       state.setErrV(trackOriginErrY[ntrack],
                     trackSlopeErrY[ntrack],
                     trackCovarianceY[ntrack]);
-      Track* track = event->newTrack();
-      track->setGlobalState(state);
+      std::unique_ptr<Track> track(new Track(state));
       track->setGoodnessOfFit(trackChi2[ntrack]);
+      event->addTrack(std::move(track));
     }
 
     for (unsigned int nplane = 0; nplane < _numPlanes; nplane++) {
@@ -656,8 +657,8 @@ namespace Storage {
             interceptStdU[iintercept], interceptStdSlopeU[iintercept], 0);
         local.setErrV(
             interceptStdV[iintercept], interceptStdSlopeV[iintercept], 0);
-        event->getTrack(interceptTrack[iintercept])
-            ->setLocalState(nplane, std::move(local));
+        local.setTrack(event->getTrack(interceptTrack[iintercept]));
+        plane->addState(std::move(local));
       }
 
       // Generate the cluster objects
@@ -747,22 +748,17 @@ namespace Storage {
       Plane* plane = event->getPlane(nplane);
 
       // fill local states
-      numIntercepts = 0;
-      for (Index itrack = 0; itrack < event->numTracks(); ++itrack) {
-        const Track* track = event->getTrack(itrack);
-        if (!track->hasLocalState(nplane))
-          continue;
-        const TrackState& local = track->getLocalState(nplane);
-        interceptTrack[numIntercepts] = itrack;
-        interceptU[numIntercepts] = local.offset().x();
-        interceptV[numIntercepts] = local.offset().y();
-        interceptSlopeU[numIntercepts] = local.slope().x();
-        interceptSlopeV[numIntercepts] = local.slope().y();
-        interceptStdU[numIntercepts] = local.stdOffsetU();
-        interceptStdV[numIntercepts] = local.stdOffsetV();
-        interceptStdSlopeU[numIntercepts] = local.stdSlopeU();
-        interceptStdSlopeV[numIntercepts] = local.stdSlopeV();
-        numIntercepts += 1;
+      for (Index istate = 0; istate < plane->numStates(); ++istate) {
+        const TrackState& local = plane->getState(istate);
+        interceptTrack[istate] = local.track()->index();
+        interceptU[istate] = local.offset().x();
+        interceptV[istate] = local.offset().y();
+        interceptSlopeU[istate] = local.slope().x();
+        interceptSlopeV[istate] = local.slope().y();
+        interceptStdU[istate] = local.stdOffsetU();
+        interceptStdV[istate] = local.stdOffsetV();
+        interceptStdSlopeU[istate] = local.stdSlopeU();
+        interceptStdSlopeV[istate] = local.stdSlopeV();
       }
 
       numClusters = plane->numClusters();
