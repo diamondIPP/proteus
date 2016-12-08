@@ -802,8 +802,7 @@ namespace Storage {
         hitPosZ[nhit] = hit->getPosZ();
         hitValue[nhit] = hit->value();
         hitTiming[nhit] = hit->time();
-        hitInCluster[nhit] =
-            hit->isInCluster() ? hit->cluster()->getIndex() : -1;
+        hitInCluster[nhit] = hit->cluster() ? hit->cluster()->index() : -1;
       }
 
       if (nplane >= _hits.size())
