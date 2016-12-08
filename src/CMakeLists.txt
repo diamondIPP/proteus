@@ -62,6 +62,7 @@ set(COMMON_SRC
     storage/event.cpp
     storage/hit.cpp
     storage/track.cpp
+    storage/trackstate.cpp
     storage/plane.cpp
     storage/storageio.cpp
     utils/arguments.cpp
