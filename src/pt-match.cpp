@@ -1,8 +1,8 @@
 #include <TFile.h>
 #include <TTree.h>
 
+#include "analyzers/distances.h"
 #include "analyzers/matchexporter.h"
-#include "analyzers/matching.h"
 #include "analyzers/residuals.h"
 #include "mechanics/device.h"
 #include "processors/applygeometry.h"

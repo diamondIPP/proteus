@@ -8,7 +8,6 @@
 #include <TH1D.h>
 #include <TH2D.h>
 
-#include "analyzers/analyzer.h"
 #include "dualanalyzer.h"
 #include "utils/definitions.h"
 
@@ -20,37 +19,6 @@ class Device;
 }
 
 namespace Analyzers {
-
-class Distances : public Analyzer {
-public:
-  Distances(const Mechanics::Device& device, Index sensorId, TDirectory* dir);
-
-  std::string name() const;
-  void analyze(const Storage::Event& event);
-  void finalize();
-
-private:
-  struct Hists {
-    TH1D* deltaU;
-    TH1D* deltaV;
-    TH1D* dist;
-    TH1D* d2;
-
-    Hists();
-    Hists(TDirectory* dir,
-          std::string prefix,
-          double rangeDist,
-          double rangeD2,
-          int numBins);
-    void fill(const XYVector& delta);
-    void fill(const XYVector& delta, const SymMatrix2& cov);
-  };
-
-  Index m_sensorId;
-  Hists m_trackTrack;
-  Hists m_trackCluster;
-  Hists m_match;
-};
 
 class Matching : public DualAnalyzer {
 public:

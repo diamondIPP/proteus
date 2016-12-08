@@ -7,6 +7,7 @@ set(COMMON_SRC
     analyzers/configanalyzers.cpp
     analyzers/correlation.cpp
     analyzers/depiction.cpp
+    analyzers/distances.cpp
     analyzers/dualanalyzer.cpp
     analyzers/dutcorrelation.cpp
     analyzers/dutdepiction.cpp
