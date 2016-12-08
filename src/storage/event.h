@@ -38,7 +38,6 @@ public:
   const Plane* getPlane(Index i) const { return &m_planes.at(i); }
 
   /** Add track to the event and fix the cluster to track association. */
-  void addTrackAndFreezeClusters(Track&& track);
   void addTrack(std::unique_ptr<Track> track);
   Index numTracks() const { return static_cast<Index>(m_tracks.size()); }
   Track* getTrack(Index i) { return m_tracks.at(i).get(); }

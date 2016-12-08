@@ -23,12 +23,6 @@ void Storage::Event::clear()
   m_tracks.clear();
 }
 
-void Storage::Event::addTrackAndFreezeClusters(Track&& track)
-{
-  addTrack(std::unique_ptr<Track>(new Track(std::forward<Track>(track))));
-  m_tracks.back()->freezeClusterAssociation();
-}
-
 void Storage::Event::addTrack(std::unique_ptr<Track> track)
 {
   m_tracks.emplace_back(std::move(track));
