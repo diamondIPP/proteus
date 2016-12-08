@@ -6,6 +6,7 @@
 
 void Storage::Plane::clear()
 {
+  m_states.clear();
   m_clusters.clear();
   m_hits.clear();
 }
