@@ -1,7 +1,7 @@
 #include "trackstate.h"
 
 Storage::TrackState::TrackState(double u, double v, double dU, double dV)
-    : m_offset(u, v), m_slope(dU, dV)
+    : m_offset(u, v), m_slope(dU, dV), m_track(NULL), m_matchedCluster(NULL)
 {
 }
 
@@ -44,15 +44,8 @@ void Storage::TrackState::setErrV(double stdOffset, double stdSlope, double cov)
   setCovV(stdOffset * stdOffset, stdSlope * stdSlope, cov);
 }
 
-void Storage::TrackState::print(std::ostream& os,
-                                const std::string& prefix) const
-{
-  os << prefix << "offset: " << offset() << '\n';
-  os << prefix << "slope: " << slope() << '\n';
-}
-
 std::ostream& Storage::operator<<(std::ostream& os, const TrackState& state)
 {
-  os << "uv=" << state.offset() << " d(uv)=" << state.slope();
+  os << "offset=" << state.offset() << " slope=" << state.slope();
   return os;
 }

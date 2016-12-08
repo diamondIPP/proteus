@@ -8,11 +8,13 @@
 #define PT_TRACKSTATE_H
 
 #include <iosfwd>
-#include <string>
 
 #include "utils/definitions.h"
 
 namespace Storage {
+
+class Cluster;
+class Track;
 
 /** Track state, i.e. position and direction, on a local plane.
  *
@@ -43,7 +45,11 @@ public:
   double stdSlopeU() const { return std::sqrt(m_cov(Du, Du)); }
   double stdSlopeV() const { return std::sqrt(m_cov(Dv, Dv)); }
 
-  void print(std::ostream& os, const std::string& prefix = std::string()) const;
+  void setTrack(const Track* track) { m_track = track; }
+  const Track* track() const { return m_track; }
+
+  void setMatchedCluster(const Cluster* cluster) { m_matchedCluster = cluster; }
+  const Cluster* matchedCluster() const { return m_matchedCluster; }
 
 private:
   enum { U = 0, V = 1, Du = 2, Dv = 3 };
@@ -51,6 +57,8 @@ private:
   XYPoint m_offset;
   XYVector m_slope;
   SymMatrix4 m_cov;
+  const Track* m_track;
+  const Cluster* m_matchedCluster;
 
   friend class Track;
 };
