@@ -31,28 +31,38 @@ Analyzers::detail::SensorResidualHists::SensorResidualHists(
   Interval distU = {-pixels * sensor.pitchCol(), pixels * sensor.pitchCol()};
   Interval distV = {-pixels * sensor.pitchRow(), pixels * sensor.pitchRow()};
 
-  auto makeH2 = [&](const char* suffix, size_t nx, const Interval& x, size_t ny,
-                    const Interval& y) {
-    TH2D* h = new TH2D((sensor.name() + suffix).c_str(), "", nx, x.min, x.max,
-                       ny, y.min, y.max);
+  auto h1 = [&](const char* name, size_t nx, const Interval& x) {
+    TH1D* h =
+        new TH1D((sensor.name() + '-' + name).c_str(), "", nx, x.min, x.max);
     h->SetDirectory(dir);
     return h;
   };
-  resUV = makeH2("-ResUV", nBinsDist, distU, nBinsDist, distV);
-  trackUResU = makeH2("-TrackU_ResU", nBinsX, rangeU, nBinsDist, distU);
-  trackUResV = makeH2("-TrackU_ResV", nBinsX, rangeU, nBinsDist, distV);
-  trackVResU = makeH2("-TrackV_ResU", nBinsX, rangeV, nBinsDist, distU);
-  trackVResV = makeH2("-TrackV_ResV", nBinsX, rangeV, nBinsDist, distV);
-  slopeUResU = makeH2("-SlopeU_ResU", nBinsX, rangeSlope, nBinsDist, distU);
-  slopeUResV = makeH2("-SlopeU_ResV", nBinsX, rangeSlope, nBinsDist, distV);
-  slopeVResU = makeH2("-SlopeV_ResU", nBinsX, rangeSlope, nBinsDist, distU);
-  slopeVResV = makeH2("-SlopeV_ResV", nBinsX, rangeSlope, nBinsDist, distV);
+  auto h2 = [&](const char* name, size_t nx, const Interval& x, size_t ny,
+                const Interval& y) {
+    TH2D* h = new TH2D((sensor.name() + '-' + name).c_str(), "", nx, x.min,
+                       x.max, ny, y.min, y.max);
+    h->SetDirectory(dir);
+    return h;
+  };
+  resU = h1("ResU", nBinsDist, distU);
+  resV = h1("ResV", nBinsDist, distV);
+  resUV = h2("ResUV", nBinsDist, distU, nBinsDist, distV);
+  trackUResU = h2("TrackU_ResU", nBinsX, rangeU, nBinsDist, distU);
+  trackUResV = h2("TrackU_ResV", nBinsX, rangeU, nBinsDist, distV);
+  trackVResU = h2("TrackV_ResU", nBinsX, rangeV, nBinsDist, distU);
+  trackVResV = h2("TrackV_ResV", nBinsX, rangeV, nBinsDist, distV);
+  slopeUResU = h2("SlopeU_ResU", nBinsX, rangeSlope, nBinsDist, distU);
+  slopeUResV = h2("SlopeU_ResV", nBinsX, rangeSlope, nBinsDist, distV);
+  slopeVResU = h2("SlopeV_ResU", nBinsX, rangeSlope, nBinsDist, distU);
+  slopeVResV = h2("SlopeV_ResV", nBinsX, rangeSlope, nBinsDist, distV);
 }
 
 void Analyzers::detail::SensorResidualHists::fill(
     const Storage::TrackState& state, const Storage::Cluster& cluster)
 {
   XYVector res = cluster.posLocal() - state.offset();
+  resU->Fill(res.x());
+  resV->Fill(res.y());
   resUV->Fill(res.x(), res.y());
   trackUResU->Fill(state.offset().x(), res.x());
   trackUResV->Fill(state.offset().x(), res.y());

@@ -24,6 +24,8 @@ namespace Analyzers {
 namespace detail {
 
 struct SensorResidualHists {
+  TH1D* resU;
+  TH1D* resV;
   TH2D* resUV;
   TH2D* trackUResU;
   TH2D* trackUResV;
