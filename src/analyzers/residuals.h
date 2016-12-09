@@ -49,7 +49,7 @@ struct SensorResidualHists {
 class Residuals : public SingleAnalyzer {
 public:
   Residuals(
-      const Mechanics::Device* refDevice,
+      const Mechanics::Device* device,
       TDirectory* dir = 0,
       const char* suffix = "",
       /* Histogram options */
@@ -60,20 +60,15 @@ public:
   void processEvent(const Storage::Event* refEvent);
   void postProcessing();
 
-  TH1D* getResidualX(unsigned int nsensor);
-  TH1D* getResidualY(unsigned int nsensor);
-  TH2D* getResidualXX(unsigned int nsensor);
-  TH2D* getResidualXY(unsigned int nsensor);
-  TH2D* getResidualYY(unsigned int nsensor);
-  TH2D* getResidualYX(unsigned int nsensor);
+  TH1D* getResidualX(Index sensorId);
+  TH1D* getResidualY(Index sensorId);
+  TH2D* getResidualXX(Index sensorId);
+  TH2D* getResidualXY(Index sensorId);
+  TH2D* getResidualYY(Index sensorId);
+  TH2D* getResidualYX(Index sensorId);
 
 private:
-  std::vector<TH1D*> _residualsX;
-  std::vector<TH1D*> _residualsY;
-  std::vector<TH2D*> _residualsXX;
-  std::vector<TH2D*> _residualsXY;
-  std::vector<TH2D*> _residualsYY;
-  std::vector<TH2D*> _residualsYX;
+  std::vector<detail::SensorResidualHists> m_hists;
 };
 
 class UnbiasedResiduals : public Analyzer {
