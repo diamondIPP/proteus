@@ -19,8 +19,8 @@ Analyzers::EventInfo::EventInfo(const Mechanics::Device* device,
                                 const char* suffix,
                                 unsigned int maxTracks)
     : SingleAnalyzer(device, dir, suffix, "EventInfo")
-    , m_eventsTime(NULL)
-    , m_tracksTime(NULL)
+    , m_eventsTimestamp(NULL)
+    , m_tracksTimestamps(NULL)
 {
   assert(device && "Analyzer: can't initialize with null device");
 
@@ -35,7 +35,7 @@ Analyzers::EventInfo::EventInfo(const Mechanics::Device* device,
   const int nTrigMax = device->readoutWindow();
   const int nTracksMax = 10;
   const int nHitsMax = 32;
-  const int nBinsTime = 1024;
+  const int nBinsTimestamp = 1024;
 
   m_triggerOffset = h1("TriggerOffset", nTrigMax, -0.5, nTrigMax - 0.5);
   m_triggerOffset->SetXTitle("Trigger offset");
@@ -48,23 +48,20 @@ Analyzers::EventInfo::EventInfo(const Mechanics::Device* device,
   if (device->timestampStart() < device->timestampEnd()) {
     DEBUG("timestamp range: ", device->timestampStart(), " -> ",
           device->timestampEnd());
-    DEBUG("time range: ", device->tsToTime(device->timestampStart()), " -> ",
-          device->tsToTime(device->timestampEnd()));
 
     // avoid missing events from round-off errors in binning
-    const uint64_t start = device->timestampStart();
-    const uint64_t dur = device->timestampEnd() - start + 1;
     // integer division rounds towards zero. +1 increase fits all timestamps
-    const uint64_t timestampsPerBin = (dur / nBinsTime) + 1;
-    const double x0 = device->tsToTime(start);
-    const double x1 = device->tsToTime(start + nBinsTime * timestampsPerBin);
+    const uint64_t dur = device->timestampEnd() - device->timestampStart() + 1;
+    const uint64_t timestampsPerBin = (dur / nBinsTimestamp) + 1;
+    const uint64_t ts0 = device->timestampStart();
+    const uint64_t ts1 = ts0 + nBinsTimestamp * timestampsPerBin;
 
-    m_eventsTime = h1("Events_Time", nBinsTime, x0, x1);
-    m_eventsTime->SetXTitle("Time");
-    m_eventsTime->SetYTitle("Mean event rate / time");
-    m_tracksTime = h1("Tracks_Time", nBinsTime, x0, x1);
-    m_tracksTime->SetXTitle("Time");
-    m_tracksTime->SetYTitle("Mean track rate / event");
+    m_eventsTimestamp = h1("Events_Timestamp", nBinsTimestamp, ts0, ts1);
+    m_eventsTimestamp->SetXTitle("Timestamp");
+    m_eventsTimestamp->SetYTitle("Mean event rate / timestamp");
+    m_tracksTimestamps = h1("Tracks_Timestamp", nBinsTimestamp, ts0, ts1);
+    m_tracksTimestamps->SetXTitle("Timestamp");
+    m_tracksTimestamps->SetYTitle("Mean track rate / event");
   }
 
   for (Index isensor = 0; isensor < device->numSensors(); ++isensor) {
@@ -94,10 +91,9 @@ void Analyzers::EventInfo::processEvent(const Storage::Event* event)
   m_triggerOffset->Fill(event->triggerOffset());
   m_triggerPhase->Fill(event->triggerPhase());
   m_tracks->Fill(event->numTracks());
-  if (m_eventsTime) {
-    m_eventsTime->Fill(_device->tsToTime(event->timestamp()));
-    m_tracksTime->Fill(_device->tsToTime(event->timestamp()),
-                       event->numTracks());
+  if (m_eventsTimestamp) {
+    m_eventsTimestamp->Fill(event->timestamp());
+    m_tracksTimestamps->Fill(event->timestamp(), event->numTracks());
   }
 
   for (Index iplane = 0; iplane < event->numPlanes(); ++iplane) {
@@ -113,12 +109,12 @@ void Analyzers::EventInfo::postProcessing()
 {
   if (_postProcessed)
     return;
-  if (m_eventsTime) {
-    for (Int_t bin = 1; bin <= m_eventsTime->GetNbinsX(); ++bin) {
-      const double eventsInBin = m_eventsTime->GetBinContent(bin);
-      const double tracksInBin = m_tracksTime->GetBinContent(bin);
+  if (m_eventsTimestamp) {
+    for (Int_t bin = 1; bin <= m_eventsTimestamp->GetNbinsX(); ++bin) {
+      const double eventsInBin = m_eventsTimestamp->GetBinContent(bin);
+      const double tracksInBin = m_tracksTimestamps->GetBinContent(bin);
       if (0 < eventsInBin) {
-        m_tracksTime->SetBinContent(bin, tracksInBin / eventsInBin);
+        m_tracksTimestamps->SetBinContent(bin, tracksInBin / eventsInBin);
       }
     }
   }

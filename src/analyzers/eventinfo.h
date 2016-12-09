@@ -38,8 +38,8 @@ private:
   TH1D* m_triggerOffset;
   TH1D* m_triggerPhase;
   TH1D* m_tracks;
-  TH1D* m_eventsTime;
-  TH1D* m_tracksTime;
+  TH1D* m_eventsTimestamp;
+  TH1D* m_tracksTimestamps;
   std::vector<SensorHists> m_sensorHists;
 };
 
