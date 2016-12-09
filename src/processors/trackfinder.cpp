@@ -96,12 +96,13 @@ void Processors::TrackFinder::searchSensor(
       delta -= delta.z() * m_beamDirection;
       SymMatrix2 cov = last->covGlobal().Sub<SymMatrix2>(0, 0) +
                        curr->covGlobal().Sub<SymMatrix2>(0, 0);
-      double dist2 = mahalanobisSquared(cov, Vector2(delta.x(), delta.y()));
+      double d2 = mahalanobisSquared(cov, Vector2(delta.x(), delta.y()));
 
-      if (m_distSquaredMax < dist2)
+      if (m_distSquaredMax < d2)
         continue;
 
       if (matched == NULL) {
+        // first matching cluster
         matched = curr;
       } else {
         // matching ambiguity -> bifurcate track

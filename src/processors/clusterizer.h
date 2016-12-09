@@ -7,13 +7,12 @@
 #ifndef PT_CLUSTERIZER_H
 #define PT_CLUSTERIZER_H
 
-#include <vector>
-
 #include "processors/processor.h"
 #include "utils/definitions.h"
 
 namespace Mechanics {
 class Device;
+class Sensor;
 }
 namespace Storage {
 class Cluster;
@@ -31,15 +30,14 @@ public:
   void process(Storage::Event& event) const;
 
 protected:
-  BaseClusterizer(const std::string& name,
+  BaseClusterizer(const std::string& namePrefix,
                   const Mechanics::Device& device,
-                  const std::vector<Index>& sensorIds);
+                  Index sensorId);
 
 private:
   virtual void estimateProperties(Storage::Cluster& cluster) const = 0;
 
-  std::vector<Index> m_sensorIds;
-  const Mechanics::Device& m_device;
+  const Mechanics::Sensor& m_sensor;
   double m_maxDistSquared;
   std::string m_name;
 };
@@ -50,8 +48,7 @@ private:
  */
 class BinaryClusterizer : public BaseClusterizer {
 public:
-  BinaryClusterizer(const Mechanics::Device& device,
-                    const std::vector<Index>& sensorIds);
+  BinaryClusterizer(const Mechanics::Device& device, Index sensorId);
 
 private:
   void estimateProperties(Storage::Cluster& cluster) const;
@@ -63,8 +60,7 @@ private:
  */
 class ValueWeightedClusterizer : public BaseClusterizer {
 public:
-  ValueWeightedClusterizer(const Mechanics::Device& device,
-                           const std::vector<Index>& sensorIds);
+  ValueWeightedClusterizer(const Mechanics::Device& device, Index sensorId);
 
 private:
   void estimateProperties(Storage::Cluster& cluster) const;
@@ -73,8 +69,7 @@ private:
 /** Cluster hits and take position and timing only from the fastest hit. */
 class FastestHitClusterizer : public BaseClusterizer {
 public:
-  FastestHitClusterizer(const Mechanics::Device& device,
-                        const std::vector<Index>& sensorIds);
+  FastestHitClusterizer(const Mechanics::Device& device, Index sensorId);
 
 private:
   void estimateProperties(Storage::Cluster& cluster) const;
