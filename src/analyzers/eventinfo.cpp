@@ -19,8 +19,8 @@ Analyzers::EventInfo::EventInfo(const Mechanics::Device* device,
                                 const char* suffix,
                                 unsigned int maxTracks)
     : SingleAnalyzer(device, dir, suffix, "EventInfo")
-    , m_eventTime(NULL)
-    , m_numTracksTime(NULL)
+    , m_eventsTime(NULL)
+    , m_tracksTime(NULL)
 {
   assert(device && "Analyzer: can't initialize with null device");
 
@@ -32,16 +32,17 @@ Analyzers::EventInfo::EventInfo(const Mechanics::Device* device,
     h->SetDirectory(plotDir);
     return h;
   };
-  const int nBinsTrig = _device->readoutWindow();
-  const int nBinsTrack = 10;
+  const int nTrigMax = _device->readoutWindow();
+  const int nTracksMax = 10;
+  const int nHitsMax = 32;
   const int nBinsTime = 1024;
 
-  m_triggerOffset = h1("TriggerOffset", nBinsTrig, -0.5, nBinsTrig - 0.5);
+  m_triggerOffset = h1("TriggerOffset", nTrigMax, -0.5, nTrigMax - 0.5);
   m_triggerOffset->SetXTitle("Trigger offset");
-  m_triggerPhase = h1("TriggerPhase", nBinsTrig, -0.5, nBinsTrig - 0.5);
+  m_triggerPhase = h1("TriggerPhase", nTrigMax, -0.5, nTrigMax - 0.5);
   m_triggerPhase->SetXTitle("Trigger phase");
-  m_numTracks = h1("NumTracks", nBinsTrack, -0.5, nBinsTrack - 0.5);
-  m_numTracks->SetXTitle("Tracks / event");
+  m_tracks = h1("Tracks", nTracksMax, -0.5, nTracksMax - 0.5);
+  m_tracks->SetXTitle("Tracks / event");
 
   // device must know the timestamp to real time conversion
   if (_device->timeStampStart() < _device->timeStampEnd()) {
@@ -58,12 +59,25 @@ Analyzers::EventInfo::EventInfo(const Mechanics::Device* device,
     const double x0 = _device->tsToTime(start);
     const double x1 = _device->tsToTime(start + nBinsTime * timeStampsPerBin);
 
-    m_eventTime = h1("Events_Time", nBinsTime, x0, x1);
-    m_eventTime->SetXTitle("Time");
-    m_eventTime->SetYTitle("Mean event rate / time");
-    m_numTracksTime = h1("NumTracks_Time", nBinsTime, x0, x1);
-    m_numTracksTime->SetXTitle("Time");
-    m_numTracksTime->SetYTitle("Mean track rate / event");
+    m_eventsTime = h1("Events_Time", nBinsTime, x0, x1);
+    m_eventsTime->SetXTitle("Time");
+    m_eventsTime->SetYTitle("Mean event rate / time");
+    m_tracksTime = h1("Tracks_Time", nBinsTime, x0, x1);
+    m_tracksTime->SetXTitle("Time");
+    m_tracksTime->SetYTitle("Mean track rate / event");
+  }
+
+  for (Index isensor = 0; isensor < device->numSensors(); ++isensor) {
+    const Mechanics::Sensor& sensor = *device->getSensor(isensor);
+
+    SensorHists hs;
+    hs.hits = h1(sensor.name() + "-Hits", nHitsMax, -0.5, nHitsMax - 0.5);
+    hs.hits->SetXTitle(("Hits on " + sensor.name() + " / event").c_str());
+    hs.clusters =
+        h1(sensor.name() + "-Clusters", nHitsMax, -0.5, nHitsMax - 0.5);
+    hs.clusters->SetXTitle(
+        ("Clusters on " + sensor.name() + " / event").c_str());
+    m_sensorHists.push_back(hs);
   }
 }
 
@@ -79,11 +93,19 @@ void Analyzers::EventInfo::processEvent(const Storage::Event* event)
 
   m_triggerOffset->Fill(event->triggerOffset());
   m_triggerPhase->Fill(event->triggerPhase());
-  m_numTracks->Fill(event->numTracks());
-  if (m_eventTime) {
-    m_eventTime->Fill(_device->tsToTime(event->timeStamp()));
-    m_numTracksTime->Fill(_device->tsToTime(event->timeStamp()),
-                          event->numTracks());
+  m_tracks->Fill(event->numTracks());
+  if (m_eventsTime) {
+    m_eventsTime->Fill(_device->tsToTime(event->timeStamp()));
+    m_tracksTime->Fill(_device->tsToTime(event->timeStamp()),
+                       event->numTracks());
+  }
+
+  for (Index iplane = 0; iplane < event->numPlanes(); ++iplane) {
+    const Storage::Plane& plane = *event->getPlane(iplane);
+    const SensorHists& sensorHists = m_sensorHists[iplane];
+
+    sensorHists.hits->Fill(plane.numHits());
+    sensorHists.clusters->Fill(plane.numClusters());
   }
 }
 
@@ -91,12 +113,12 @@ void Analyzers::EventInfo::postProcessing()
 {
   if (_postProcessed)
     return;
-  if (m_eventTime) {
-    for (Int_t bin = 1; bin <= m_eventTime->GetNbinsX(); ++bin) {
-      const double numEvents = m_eventTime->GetBinContent(bin);
-      const double numTracks = m_numTracksTime->GetBinContent(bin);
-      if (0 < numEvents) {
-        m_numTracksTime->SetBinContent(bin, numTracks / numEvents);
+  if (m_eventsTime) {
+    for (Int_t bin = 1; bin <= m_eventsTime->GetNbinsX(); ++bin) {
+      const double eventsInBin = m_eventsTime->GetBinContent(bin);
+      const double tracksInBin = m_tracksTime->GetBinContent(bin);
+      if (0 < eventsInBin) {
+        m_tracksTime->SetBinContent(bin, tracksInBin / eventsInBin);
       }
     }
   }
