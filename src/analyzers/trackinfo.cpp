@@ -37,28 +37,6 @@ void Analyzers::TrackInfo::processEvent(const Storage::Event* event)
     _originsY->Fill(track->getOriginY());
     _chi2->Fill(track->getChi2());
     _numClusters->Fill(track->getNumClusters());
-
-    for (unsigned int nsens = 0; nsens < _device->getNumSensors(); nsens++) {
-      const Mechanics::Sensor* sensor = _device->getSensor(nsens);
-
-      double tx = 0, ty = 0, tz = 0;
-
-      Processors::trackSensorIntercept(track, sensor, tx, ty, tz);
-      // else{tz = 451000;}
-
-      double errX = 0, errY = 0;
-      Processors::trackError(track, tz, errX, errY);
-
-      _resX.at(nsens)->Fill(errX);
-      _resY.at(nsens)->Fill(errY);
-    }
-
-    // bilbao@cern.ch: just filling histograms for X and Y at the DUT position
-    // to evaluate the resolution of the telescope.
-    double resoX = 0, resoY = 0, tz = 320000;
-    Processors::trackError(track, tz, resoX, resoY);
-    _resoX->Fill(resoX);
-    _resoY->Fill(resoY);
   }
 }
 
@@ -81,48 +59,6 @@ Analyzers::TrackInfo::TrackInfo(const Mechanics::Device* device,
   std::stringstream name;  // Build name strings for each histo
   std::stringstream title; // Build title strings for each histo
                            // std::stringstream xAxisTitle;
-
-  // Generate a histogram for each sensor in the device
-  for (unsigned int nsens = 0; nsens < _device->getNumSensors(); nsens++) {
-    const Mechanics::Sensor* sensor = _device->getSensor(nsens);
-    for (unsigned int axis = 0; axis < 2; axis++) {
-      const double width =
-          resWidth * (axis ? sensor->getPosPitchX() : sensor->getPosPitchY());
-
-      name.str("");
-      title.str("");
-      name << sensor->getName() << "Resolution" << (axis ? "X" : "Y")
-           << _nameSuffix;
-      title << sensor->getName() << " Track Resolution" << (axis ? " X" : " Y")
-            << ";Track resolution [" << _device->getSpaceUnit() << "]"
-            << ";Tracks";
-      TH1D* res =
-          new TH1D(name.str().c_str(), title.str().c_str(), 30, 0, width);
-      res->SetDirectory(plotDir);
-      if (axis)
-        _resX.push_back(res);
-      else
-        _resY.push_back(res);
-    }
-  }
-
-  name.str("");
-  title.str("");
-  name << "ResolutionAtDUTX";
-  title << "ResolutionAtDUTX"
-        << ";resolution [um]"
-        << ";Tracks";
-  _resoX = new TH1D(name.str().c_str(), title.str().c_str(), 100, 0, 100);
-  _resoX->SetDirectory(plotDir);
-
-  name.str("");
-  title.str("");
-  name << "ResolutionAtDUTY";
-  title << "ResolutionAtDUTY"
-        << ";resolution [um]"
-        << ";Tracks";
-  _resoY = new TH1D(name.str().c_str(), title.str().c_str(), 100, 0, 100);
-  _resoY->SetDirectory(plotDir);
 
   // Use DUT 0 as a reference sensor for plots axis
   assert(_device->getNumSensors() &&

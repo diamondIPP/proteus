@@ -40,11 +40,6 @@ private:
   TH1D* _slopesY;
   TH1D* _chi2;
   TH1D* _numClusters;
-  TH1D* _resoX;
-  TH1D* _resoY;
-
-  std::vector<TH1D*> _resX;
-  std::vector<TH1D*> _resY;
 };
 
 } // namespace Analyzers
