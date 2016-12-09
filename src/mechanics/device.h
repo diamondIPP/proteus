@@ -49,6 +49,7 @@ public:
   uint64_t timeStampStart() const { return m_timeStart; }
   uint64_t timeStampEnd() const { return m_timeEnd; }
   double clockRate() const { return m_clockRate; }
+  double readoutWindow() const { return m_readoutWindow; }
   double tsToTime(uint64_t timeStamp) const;
   void setTimeStampRange(uint64_t start, uint64_t end);
 
