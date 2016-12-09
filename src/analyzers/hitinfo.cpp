@@ -42,7 +42,7 @@ Analyzers::HitInfo::HitInfo(const Mechanics::Device* device,
     };
 
     Hists hists;
-    hists.map = makeMap("Map", ";Column;Row;Hit count");
+    hists.pixels = makeMap("Pixels", ";Column;Row;Hit count");
     hists.time = makeH1("Time", ";Hit time", timeBins);
     hists.value = makeH1("Value", ";Hit value", valueBins);
     hists.timeMap = makeMap("TimeMap", ";Column;Row;Average time");
@@ -73,7 +73,7 @@ void Analyzers::HitInfo::processEvent(const Storage::Event* event)
       if (!checkCuts(&hit))
         continue;
 
-      hists.map->Fill(hit.col(), hit.row());
+      hists.pixels->Fill(hit.col(), hit.row());
       hists.time->Fill(hit.time());
       hists.value->Fill(hit.value());
       hists.timeMap->Fill(hit.col(), hit.row(), hit.time());
@@ -86,12 +86,12 @@ void Analyzers::HitInfo::postProcessing()
 {
   for (auto hists = m_hists.begin(); hists != m_hists.end(); ++hists) {
     // scale time and tot map to pixel hit count
-    for (Int_t x = 1; x <= hists->map->GetNbinsX(); ++x) {
-      for (Int_t y = 1; y <= hists->map->GetNbinsY(); ++y) {
-        double count = hists->map->GetBinContent(x, y);
-        double time = hists->timeMap->GetBinContent(x, y);
+    for (Int_t x = 1; x <= hists->pixels->GetNbinsX(); ++x) {
+      for (Int_t y = 1; y <= hists->pixels->GetNbinsY(); ++y) {
+        const double count = hists->pixels->GetBinContent(x, y);
+        const double time = hists->timeMap->GetBinContent(x, y);
         hists->timeMap->SetBinContent(x, y, time / count);
-        double value = hists->valueMap->GetBinContent(x, y);
+        const double value = hists->valueMap->GetBinContent(x, y);
         hists->valueMap->SetBinContent(x, y, value / count);
       }
     }

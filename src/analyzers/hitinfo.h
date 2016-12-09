@@ -32,7 +32,7 @@ public:
 
 private:
   struct Hists {
-    TH2D* map;
+    TH2D* pixels;
     TH1D* value;
     TH1D* time;
     TH2D* timeMap;
