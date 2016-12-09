@@ -3,22 +3,46 @@
 
 #include <vector>
 
-#include <TDirectory.h>
-#include <TH1D.h>
-#include <TH2D.h>
-
 #include "analyzers/analyzer.h"
 #include "analyzers/singleanalyzer.h"
 #include "utils/definitions.h"
 
+class TDirectory;
+class TH1D;
+class TH2D;
+
 namespace Storage {
-class Event;
+class Cluster;
+class TrackState;
 }
 namespace Mechanics {
 class Device;
+class Sensor;
 }
 
 namespace Analyzers {
+namespace detail {
+
+struct SensorResidualHists {
+  TH2D* resUV;
+  TH2D* trackUResU;
+  TH2D* trackUResV;
+  TH2D* trackVResU;
+  TH2D* trackVResV;
+  TH2D* slopeUResU;
+  TH2D* slopeUResV;
+  TH2D* slopeVResU;
+  TH2D* slopeVResV;
+
+  SensorResidualHists() = default;
+  SensorResidualHists(TDirectory* dir,
+                      const Mechanics::Sensor& sensor,
+                      double slopeMax = 0.01);
+
+  void fill(const Storage::TrackState& state, const Storage::Cluster& cluster);
+};
+
+} // namespace detail
 
 class Residuals : public SingleAnalyzer {
 public:
@@ -61,20 +85,8 @@ public:
   const TH2D* getResidualUV(Index sensorId) const;
 
 private:
-  struct Hists {
-    TH2D* res;
-    TH2D* trackUResU;
-    TH2D* trackUResV;
-    TH2D* trackVResU;
-    TH2D* trackVResV;
-    TH2D* slopeUResU;
-    TH2D* slopeUResV;
-    TH2D* slopeVResU;
-    TH2D* slopeVResV;
-  };
-
   const Mechanics::Device& m_device;
-  std::vector<Hists> m_hists;
+  std::vector<detail::SensorResidualHists> m_hists;
 };
 
 } // namespace Analyzers
