@@ -36,8 +36,8 @@ private:
     TH2D* sizeColSize;
     TH2D* sizeRowSize;
     TH2D* sizeRowSizeCol;
-    TH1D* uncCol;
-    TH1D* uncRow;
+    TH1D* uncertaintyCol;
+    TH1D* uncertaintyRow;
   };
 
   std::vector<ClusterHists> m_hists;

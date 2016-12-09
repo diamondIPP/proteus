@@ -63,12 +63,12 @@ Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
     int nBinsUnc = 32;
     n = sensor->name() + "-UncertaintyCol";
     t = "Estimated position uncertainty along column direction;Column pixels";
-    hs.uncCol = new TH1D(n.c_str(), t.c_str(), nBinsUnc, 0, 1.0 / sqrt(12.0));
-    hs.uncCol->SetDirectory(plotDir);
+    hs.uncertaintyCol = new TH1D(n.c_str(), t.c_str(), nBinsUnc, 0, 1.0 / sqrt(12.0));
+    hs.uncertaintyCol->SetDirectory(plotDir);
     n = sensor->name() + "-UncertaintyRow";
     t = "Estimated position uncertainty along row direction;Row pixels";
-    hs.uncRow = new TH1D(n.c_str(), t.c_str(), nBinsUnc, 0, 1.0 / sqrt(12.0));
-    hs.uncRow->SetDirectory(plotDir);
+    hs.uncertaintyRow = new TH1D(n.c_str(), t.c_str(), nBinsUnc, 0, 1.0 / sqrt(12.0));
+    hs.uncertaintyRow->SetDirectory(plotDir);
 
     m_hists.push_back(hs);
 
@@ -197,8 +197,8 @@ void Analyzers::ClusterInfo::processEvent(const Storage::Event* event)
       hs.sizeRowSize->Fill(cluster->size(), cluster->sizeRow());
       hs.sizeRowSizeCol->Fill(cluster->sizeCol(), cluster->sizeRow());
       Vector2 stddev = sqrt(cluster->covPixel().Diagonal());
-      hs.uncCol->Fill(stddev[0]);
-      hs.uncRow->Fill(stddev[1]);
+      hs.uncertaintyCol->Fill(stddev[0]);
+      hs.uncertaintyRow->Fill(stddev[1]);
 
       // _clusterSize.at(nplane)->Fill(cluster->getNumHits());
       _tot.at(nplane)->Fill(cluster->getValue());
