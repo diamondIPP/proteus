@@ -27,12 +27,11 @@ public:
   void postProcessing();
 
 private:
-  TH1D* _triggerOffset;
-  TH1D* _trackInTime;
-  TH1D* _numTracks;
-  TH1D* _eventsVsTime;
-  TH1D* _tracksVsTime;
-  TH1D* _clustersVsTime;
+  TH1D* m_triggerOffset;
+  TH1D* m_triggerPhase;
+  TH1D* m_numTracks;
+  TH1D* m_eventTime;
+  TH1D* m_numTracksTime;
 };
 
 } // namespace Analyzers
