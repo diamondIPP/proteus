@@ -24,22 +24,21 @@ public:
             TDirectory* dir,
             const char* suffix = "",
             /* Histogram options */
-            double resWidth = 1E-2, // Widht of track resolution histos
-            double maxSploe = 1E-2, // Maximal slope for track slope histos
-            double increaseArea =
-                1.2); // Make origins plot larger than sensor by this factor
+            const double reducedChi2Max = 10,
+            const double slopeMax = 0.01);
 
   void processEvent(const Storage::Event* event);
   void postProcessing();
 
 private:
-  TH2D* _origins;
-  TH1D* _originsX;
-  TH1D* _originsY;
-  TH1D* _slopesX;
-  TH1D* _slopesY;
-  TH1D* _chi2;
-  TH1D* _numClusters;
+  TH1D* m_numClusters;
+  TH1D* m_reducedChi2;
+  TH2D* m_offsetXY;
+  TH1D* m_offsetX;
+  TH1D* m_offsetY;
+  TH2D* m_slopeXY;
+  TH1D* m_slopeX;
+  TH1D* m_slopeY;
 };
 
 } // namespace Analyzers

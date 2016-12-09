@@ -12,6 +12,59 @@
 #include "processors/processors.h"
 #include "storage/event.h"
 
+Analyzers::TrackInfo::TrackInfo(const Mechanics::Device* device,
+                                TDirectory* dir,
+                                const char* suffix,
+                                const double reducedChi2Max,
+                                const double slopeMax)
+    : // Base class is initialized here and manages directory / device
+    SingleAnalyzer(device, dir, suffix, "TrackInfo")
+{
+  assert(device && "Analyzer: can't initialize with null device");
+
+  // Makes or gets a directory called from inside _dir with this name
+  TDirectory* plotDir = makeGetDirectory("TrackInfo");
+
+  typedef Mechanics::Sensor::Area Area;
+  typedef Area::Axis Interval;
+
+  // fixed histogram parameters
+  const int numClustersMax = device->numSensors();
+  const int bins1D = 256;
+  const int bins2D = 128;
+  const Area arSlope(Interval(-slopeMax, slopeMax),
+                     Interval(-slopeMax, slopeMax));
+  // estimate bounding box of all sensor projections into the xy-plane
+  Area arOffset(Interval(0, 0), Interval(0, 0));
+  for (Index isensor = 0; isensor < device->numSensors(); ++isensor) {
+    arOffset = Utils::bounding(
+        arOffset, device->getSensor(isensor)->projectedEnvelopeXY());
+  }
+
+  auto h1 = [&](std::string name, Interval x, int nx = -1) -> TH1D* {
+    if (nx < 0)
+      nx = bins1D;
+    TH1D* h = new TH1D(name.c_str(), "", nx, x.min, x.max);
+    h->SetDirectory(plotDir);
+    return h;
+  };
+  auto h2 = [&](std::string name, Area xy) -> TH2D* {
+    TH2D* h = new TH2D(name.c_str(), "", bins2D, xy.axes[0].min, xy.axes[0].max,
+                       bins2D, xy.axes[1].min, xy.axes[1].max);
+    h->SetDirectory(plotDir);
+    return h;
+  };
+  m_numClusters =
+      h1("NumClusters", Interval(-0.5, numClustersMax - 0.5), numClustersMax);
+  m_reducedChi2 = h1("ReducedChi2", Interval(0, reducedChi2Max));
+  m_offsetXY = h2("OffsetXY", arOffset);
+  m_offsetX = h1("OffsetX", arOffset.axes[0]);
+  m_offsetY = h1("OffsetY", arOffset.axes[1]);
+  m_slopeXY = h2("SlopeXY", arSlope);
+  m_slopeX = h1("SlopeX", arSlope.axes[0]);
+  m_slopeY = h1("SlopeY", arSlope.axes[1]);
+}
+
 void Analyzers::TrackInfo::processEvent(const Storage::Event* event)
 {
   assert(event && "Analyzer: can't process null events");
@@ -23,133 +76,23 @@ void Analyzers::TrackInfo::processEvent(const Storage::Event* event)
   if (!checkCuts(event))
     return;
 
-  for (unsigned int ntrack = 0; ntrack < event->getNumTracks(); ntrack++) {
-    const Storage::Track* track = event->getTrack(ntrack);
+  for (Index itrack = 0; itrack < event->numTracks(); itrack++) {
+    const Storage::Track& track = *event->getTrack(itrack);
+    const Storage::TrackState& state = track.globalState();
 
     // Check if the track passes the cuts
-    if (!checkCuts(track))
+    if (!checkCuts(&track))
       continue;
 
-    _slopesX->Fill(track->getSlopeX());
-    _slopesY->Fill(track->getSlopeY());
-    _origins->Fill(track->getOriginX(), track->getOriginY());
-    _originsX->Fill(track->getOriginX());
-    _originsY->Fill(track->getOriginY());
-    _chi2->Fill(track->getChi2());
-    _numClusters->Fill(track->getNumClusters());
+    m_numClusters->Fill(track.numClusters());
+    m_reducedChi2->Fill(track.reducedChi2());
+    m_offsetXY->Fill(state.offset().x(), state.offset().y());
+    m_offsetX->Fill(state.offset().x());
+    m_offsetY->Fill(state.offset().y());
+    m_slopeXY->Fill(state.slope().x(), state.slope().y());
+    m_slopeX->Fill(state.slope().x());
+    m_slopeY->Fill(state.slope().y());
   }
 }
 
 void Analyzers::TrackInfo::postProcessing() {}
-
-Analyzers::TrackInfo::TrackInfo(const Mechanics::Device* device,
-                                TDirectory* dir,
-                                const char* suffix,
-                                double resWidth,
-                                double maxSlope,
-                                double increaseArea)
-    : // Base class is initialized here and manages directory / device
-    SingleAnalyzer(device, dir, suffix, "TrackInfo")
-{
-  assert(device && "Analyzer: can't initialize with null device");
-
-  // Makes or gets a directory called from inside _dir with this name
-  TDirectory* plotDir = makeGetDirectory("TrackInfo");
-
-  std::stringstream name;  // Build name strings for each histo
-  std::stringstream title; // Build title strings for each histo
-                           // std::stringstream xAxisTitle;
-
-  // Use DUT 0 as a reference sensor for plots axis
-  assert(_device->getNumSensors() &&
-         "TrackInfo: expects device to have sensors");
-  const Mechanics::Sensor* sensor = _device->getSensor(0);
-
-  const double deviceLength =
-      device->getSensor(device->getNumSensors() - 1)->getOffZ() -
-      device->getSensor(0)->getOffZ();
-  const double maxSlopeX = maxSlope * sensor->getPosPitchX() / deviceLength;
-  const double maxSlopeY = maxSlope * sensor->getPosPitchY() / deviceLength;
-
-  name.str("");
-  title.str("");
-  name << _device->getName() << "SlopesX" << _nameSuffix;
-  title << _device->getName() << " Slopes X"
-        << ";Slope [radians]"
-        << ";Tracks";
-  _slopesX = new TH1D(name.str().c_str(), title.str().c_str(), 100, -maxSlopeX,
-                      maxSlopeX);
-  _slopesX->SetDirectory(plotDir);
-
-  name.str("");
-  title.str("");
-  name << _device->getName() << "SlopesY" << _nameSuffix;
-  title << _device->getName() << " Slopes Y"
-        << ";Slope [radians]"
-        << ";Tracks";
-  _slopesY = new TH1D(name.str().c_str(), title.str().c_str(), 100, -maxSlopeY,
-                      maxSlopeY);
-  _slopesY->SetDirectory(plotDir);
-
-  const unsigned int nx = increaseArea * sensor->getPosNumX();
-  const unsigned int ny = increaseArea * sensor->getPosNumY();
-  const double lowX =
-      sensor->getOffX() - increaseArea * sensor->getPosSensitiveX() / 2.0;
-  const double uppX =
-      sensor->getOffX() + increaseArea * sensor->getPosSensitiveX() / 2.0;
-  const double lowY =
-      sensor->getOffY() - increaseArea * sensor->getPosSensitiveY() / 2.0;
-  const double uppY =
-      sensor->getOffY() + increaseArea * sensor->getPosSensitiveY() / 2.0;
-
-  name.str("");
-  title.str("");
-  name << _device->getName() << "Origins" << _nameSuffix;
-  title << _device->getName() << " Origins"
-        << ";Origin position X [" << _device->getSpaceUnit() << "]"
-        << ";Origin position Y [" << _device->getSpaceUnit() << "]"
-        << ";Tracks";
-  _origins = new TH2D(name.str().c_str(), title.str().c_str(), nx, lowX, uppX,
-                      ny, lowY, uppY);
-  _origins->SetDirectory(plotDir);
-
-  name.str("");
-  title.str("");
-  name << _device->getName() << "OriginsX" << _nameSuffix;
-  title << _device->getName() << " Origins X"
-        << ";Origin position [" << _device->getSpaceUnit() << "]"
-        << ";Tracks";
-  _originsX = new TH1D(name.str().c_str(), title.str().c_str(), nx, lowX, uppX);
-  _originsX->SetDirectory(plotDir);
-
-  name.str("");
-  title.str("");
-  name << _device->getName() << "OriginsY" << _nameSuffix;
-  title << _device->getName() << " Origins Y"
-        << ";Origin position [" << _device->getSpaceUnit() << "]"
-        << ";Tracks";
-  _originsY = new TH1D(name.str().c_str(), title.str().c_str(), ny, lowY, uppY);
-  _originsY->SetDirectory(plotDir);
-
-  name.str("");
-  title.str("");
-  name << _device->getName() << "Chi2" << _nameSuffix;
-  title << _device->getName() << " Chi^{2}"
-        << ";Chi^{2} normalized to DOFs"
-        << ";Tracks";
-  _chi2 = new TH1D(name.str().c_str(), title.str().c_str(), 100, 0, 10);
-  _chi2->SetDirectory(plotDir);
-
-  const unsigned int maxClusters = _device->getNumSensors();
-  const unsigned int clusterBins = maxClusters;
-
-  name.str("");
-  title.str("");
-  name << _device->getName() << "Clusters" << _nameSuffix;
-  title << _device->getName() << " Number of Clusters"
-        << ";Number of clusters"
-        << ";Tracks";
-  _numClusters = new TH1D(name.str().c_str(), title.str().c_str(),
-                          clusterBins + 1, 0 - 0.5, maxClusters - 0.5 + 1);
-  _numClusters->SetDirectory(plotDir);
-}
