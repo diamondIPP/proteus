@@ -19,8 +19,8 @@ Mechanics::Device::Device(const std::string& name,
     : m_name(name)
     , m_clockRate(clockRate)
     , m_readoutWindow(readoutWindow)
-    , m_timeStart(0)
-    , m_timeEnd(0)
+    , m_timestamp0(0)
+    , m_timestamp1(0)
     , m_spaceUnit(spaceUnit)
     , m_timeUnit(timeUnit)
 {
@@ -325,17 +325,17 @@ void Mechanics::Device::applyNoiseMask(const NoiseMask& noiseMask)
   // TODO 2016-08-18 msmk: check number of sensors / id consistency
 }
 
-double Mechanics::Device::tsToTime(uint64_t timeStamp) const
+double Mechanics::Device::tsToTime(uint64_t timestamp) const
 {
-  return (double)((timeStamp - timeStampStart()) / (double)clockRate());
+  return (double)((timestamp - timestampStart()) / (double)clockRate());
 }
 
-void Mechanics::Device::setTimeStampRange(uint64_t start, uint64_t end)
+void Mechanics::Device::setTimestampRange(uint64_t ts0, uint64_t ts1)
 {
-  if (end < start)
-    throw std::runtime_error("end time stamp must come after start");
-  m_timeStart = start;
-  m_timeEnd = end;
+  if (ts1 < ts0)
+    throw std::runtime_error("start timestamp must come before end");
+  m_timestamp0 = ts0;
+  m_timestamp1 = ts1;
 }
 
 unsigned int Mechanics::Device::getNumPixels() const

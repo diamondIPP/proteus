@@ -6,7 +6,7 @@
 Storage::Event::Event(Index numPlanes)
     : m_id(-1)
     , m_frameNumber(0)
-    , m_timeStamp(0)
+    , m_timestamp(0)
     , m_triggerOffset(0)
     , m_invalid(false)
 {
@@ -47,7 +47,7 @@ unsigned int Storage::Event::getNumClusters() const
 void Storage::Event::print(std::ostream& os, const std::string& prefix) const
 {
   os << prefix << "frame number: " << frameNumber() << '\n';
-  os << prefix << "time stamp: " << timeStamp() << '\n';
+  os << prefix << "timestamp: " << timestamp() << '\n';
   os << prefix << "trigger offset: " << triggerOffset() << '\n';
   os << prefix << "invalid: " << invalid() << '\n';
 

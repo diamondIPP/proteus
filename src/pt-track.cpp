@@ -67,7 +67,7 @@ int main(int argc, char const* argv[])
   // setup time range
   auto event0 = loop.readStartEvent();
   auto eventN = loop.readEndEvent();
-  dev.setTimeStampRange(event0->timeStamp(), eventN->timeStamp());
+  dev.setTimestampRange(event0->timestamp(), eventN->timestamp());
 
   setupHitMappers(dev, loop);
   setupClusterizers(dev, loop);

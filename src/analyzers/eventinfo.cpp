@@ -45,19 +45,19 @@ Analyzers::EventInfo::EventInfo(const Mechanics::Device* device,
   m_tracks->SetXTitle("Tracks / event");
 
   // device must know the timestamp to real time conversion
-  if (device->timeStampStart() < device->timeStampEnd()) {
-    DEBUG("timestamp range: ", device->timeStampStart(), " -> ",
-          device->timeStampEnd());
-    DEBUG("time range: ", device->tsToTime(device->timeStampStart()), " -> ",
-          device->tsToTime(device->timeStampEnd()));
+  if (device->timestampStart() < device->timestampEnd()) {
+    DEBUG("timestamp range: ", device->timestampStart(), " -> ",
+          device->timestampEnd());
+    DEBUG("time range: ", device->tsToTime(device->timestampStart()), " -> ",
+          device->tsToTime(device->timestampEnd()));
 
     // avoid missing events from round-off errors in binning
-    const uint64_t start = device->timeStampStart();
-    const uint64_t dur = device->timeStampEnd() - start + 1;
+    const uint64_t start = device->timestampStart();
+    const uint64_t dur = device->timestampEnd() - start + 1;
     // integer division rounds towards zero. +1 increase fits all timestamps
-    const uint64_t timeStampsPerBin = (dur / nBinsTime) + 1;
+    const uint64_t timestampsPerBin = (dur / nBinsTime) + 1;
     const double x0 = device->tsToTime(start);
-    const double x1 = device->tsToTime(start + nBinsTime * timeStampsPerBin);
+    const double x1 = device->tsToTime(start + nBinsTime * timestampsPerBin);
 
     m_eventsTime = h1("Events_Time", nBinsTime, x0, x1);
     m_eventsTime->SetXTitle("Time");
@@ -95,8 +95,8 @@ void Analyzers::EventInfo::processEvent(const Storage::Event* event)
   m_triggerPhase->Fill(event->triggerPhase());
   m_tracks->Fill(event->numTracks());
   if (m_eventsTime) {
-    m_eventsTime->Fill(_device->tsToTime(event->timeStamp()));
-    m_tracksTime->Fill(_device->tsToTime(event->timeStamp()),
+    m_eventsTime->Fill(_device->tsToTime(event->timestamp()));
+    m_tracksTime->Fill(_device->tsToTime(event->timestamp()),
                        event->numTracks());
   }
 

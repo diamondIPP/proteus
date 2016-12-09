@@ -39,7 +39,7 @@ inline void KartelConvert::setBit(Word& setWord, unsigned int pos)
 /* Clear all the frame variables so that a new one can be read */
 void KartelConvert::clearFrame()
 {
-  _frame.timeStamp = 0;
+  _frame.timestamp = 0;
   _frame.lineCount = 0;
   _frame.consecCount = 0;
   _frame.triggerFlag = 0;
@@ -165,11 +165,11 @@ int KartelConvert::readNextLine()
       if (checkBit(_word, _bitMap.trigger)) setBit(_line.triggerNumber, nbit);
 
     // The time stamp is written over the first four lines of each frame
-    if (_frame.lineCount < 4 && checkBit(_word, _bitMap.timeStamp))
+    if (_frame.lineCount < 4 && checkBit(_word, _bitMap.timestamp))
     {
       // convert the current bit to a 64 bit position
       const unsigned int pos = nbit + sizeof(Word) * _frame.lineCount;
-      _frame.timeStamp = _frame.timeStamp | (int)pow(2.0, pos);
+      _frame.timestamp = _frame.timestamp | (int)pow(2.0, pos);
     }
   }
 
@@ -393,10 +393,10 @@ int KartelConvert::readFrameInfo()
 void KartelConvert::writeFrame(bool invalid)
 {
   // Currently, there is no timestamp. Instead, use trigger number and offset
-  ULong64_t timeStamp = _frame.number[0] * _clock - _frame.triggerOffset;
+  ULong64_t timestamp = _frame.number[0] * _clock - _frame.triggerOffset;
 
   Storage::Event* event = new Storage::Event(_numPlanes);
-  event->setTimeStamp(timeStamp);
+  event->setTimestamp(timestamp);
   event->setFrameNumber(_frame.number[0]);
   event->setTriggerOffset(_frame.triggerOffset);
   event->setTriggerInfo(_frame.consecCount);
@@ -428,7 +428,7 @@ void KartelConvert::writeFrame(bool invalid)
     delete event;
     invalid = true;
     event = new Storage::Event(_numPlanes);
-    event->setTimeStamp(timeStamp);
+    event->setTimestamp(timestamp);
     event->setFrameNumber(_frame.number[0]);
     event->setTriggerOffset(_frame.triggerOffset);
     event->setInvalid(invalid);
@@ -630,7 +630,7 @@ KartelConvert::KartelConvert(const char* fileName, const char* outputName,
   _bitMap.sync = 0; _bitMap.sync = _bitMap.sync + 8 - 16 * (_bitMap.sync > 7);
   _bitMap.trigger = 15; _bitMap.trigger = _bitMap.trigger + 8 - 16 * (_bitMap.trigger > 7);
   _bitMap.triggerOffset = 12; _bitMap.triggerOffset = _bitMap.triggerOffset + 8 - 16 * (_bitMap.triggerOffset > 7);
-  _bitMap.timeStamp = 3; _bitMap.timeStamp = _bitMap.timeStamp + 8 - 16 * (_bitMap.timeStamp > 7);
+  _bitMap.timestamp = 3; _bitMap.timestamp = _bitMap.timestamp + 8 - 16 * (_bitMap.timestamp > 7);
   _bitMap.ch0[0] = 5; _bitMap.ch0[0] = _bitMap.ch0[0] + 8 - 16 * (_bitMap.ch0[0] > 7);
   _bitMap.ch1[0] = 6; _bitMap.ch1[0] = _bitMap.ch1[0] + 8 - 16 * (_bitMap.ch1[0] > 7);
   _bitMap.ch0[1] = 1; _bitMap.ch0[1] = _bitMap.ch0[1] + 8 - 16 * (_bitMap.ch0[1] > 7);
