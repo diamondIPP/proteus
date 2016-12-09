@@ -64,6 +64,11 @@ int main(int argc, char const* argv[])
   TFile hists(args.makeOutput("hists.root").c_str(), "RECREATE");
 
   Utils::EventLoop loop(&input, &output, skipEvents, numEvents);
+  // setup time range
+  auto event0 = loop.readStartEvent();
+  auto eventN = loop.readEndEvent();
+  dev.setTimeStampRange(event0->timeStamp(), eventN->timeStamp());
+
   setupHitMappers(dev, loop);
   setupClusterizers(dev, loop);
   loop.addProcessor(std::make_shared<ApplyGeometry>(dev));
