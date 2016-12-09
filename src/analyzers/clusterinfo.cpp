@@ -1,26 +1,17 @@
 #include "clusterinfo.h"
 
 #include <cassert>
-#include <math.h>
+#include <cmath>
 #include <sstream>
 
 #include <TDirectory.h>
 #include <TH1D.h>
 #include <TH2D.h>
 
-// Access to the device being analyzed and its sensors
-#include "../mechanics/device.h"
-#include "../mechanics/sensor.h"
-// Access to the data stored in the event
-#include "../storage/cluster.h"
-#include "../storage/event.h"
-#include "../storage/hit.h"
-#include "../storage/plane.h"
-#include "../storage/track.h"
-// Some generic processors to calcualte typical event related things
-#include "../processors/processors.h"
+#include "mechanics/device.h"
+#include "processors/processors.h"
+#include "storage/event.h"
 
-//=========================================================
 Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
                                     TDirectory* dir,
                                     const char* suffix,
@@ -72,11 +63,11 @@ Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
     int nBinsUnc = 32;
     n = sensor->name() + "-UncertaintyCol";
     t = "Estimated position uncertainty along column direction;Column pixels";
-    hs.uncCol = new TH1D(n.c_str(), t.c_str(), nBinsUnc, 0, 1.0/sqrt(12.0));
+    hs.uncCol = new TH1D(n.c_str(), t.c_str(), nBinsUnc, 0, 1.0 / sqrt(12.0));
     hs.uncCol->SetDirectory(plotDir);
     n = sensor->name() + "-UncertaintyRow";
     t = "Estimated position uncertainty along row direction;Row pixels";
-    hs.uncRow = new TH1D(n.c_str(), t.c_str(), nBinsUnc, 0, 1.0/sqrt(12.0));
+    hs.uncRow = new TH1D(n.c_str(), t.c_str(), nBinsUnc, 0, 1.0 / sqrt(12.0));
     hs.uncRow->SetDirectory(plotDir);
 
     m_hists.push_back(hs);
@@ -177,7 +168,6 @@ Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
   }
 }
 
-//=========================================================
 void Analyzers::ClusterInfo::processEvent(const Storage::Event* event)
 {
   assert(event && "Analyzer: can't process null events");
@@ -233,7 +223,6 @@ void Analyzers::ClusterInfo::processEvent(const Storage::Event* event)
   }
 }
 
-//=========================================================
 void Analyzers::ClusterInfo::postProcessing()
 {
   if (_postProcessed)
