@@ -32,7 +32,7 @@ Analyzers::EventInfo::EventInfo(const Mechanics::Device* device,
     h->SetDirectory(plotDir);
     return h;
   };
-  const int nTrigMax = _device->readoutWindow();
+  const int nTrigMax = device->readoutWindow();
   const int nTracksMax = 10;
   const int nHitsMax = 32;
   const int nBinsTime = 1024;
@@ -45,19 +45,19 @@ Analyzers::EventInfo::EventInfo(const Mechanics::Device* device,
   m_tracks->SetXTitle("Tracks / event");
 
   // device must know the timestamp to real time conversion
-  if (_device->timeStampStart() < _device->timeStampEnd()) {
-    DEBUG("timestamp range: ", _device->timeStampStart(), " -> ",
-          _device->timeStampEnd());
-    DEBUG("time range: ", _device->tsToTime(_device->timeStampStart()), " -> ",
-          _device->tsToTime(_device->timeStampEnd()));
+  if (device->timeStampStart() < device->timeStampEnd()) {
+    DEBUG("timestamp range: ", device->timeStampStart(), " -> ",
+          device->timeStampEnd());
+    DEBUG("time range: ", device->tsToTime(device->timeStampStart()), " -> ",
+          device->tsToTime(device->timeStampEnd()));
 
     // avoid missing events from round-off errors in binning
-    const uint64_t start = _device->timeStampStart();
-    const uint64_t dur = _device->timeStampEnd() - start + 1;
+    const uint64_t start = device->timeStampStart();
+    const uint64_t dur = device->timeStampEnd() - start + 1;
     // integer division rounds towards zero. +1 increase fits all timestamps
     const uint64_t timeStampsPerBin = (dur / nBinsTime) + 1;
-    const double x0 = _device->tsToTime(start);
-    const double x1 = _device->tsToTime(start + nBinsTime * timeStampsPerBin);
+    const double x0 = device->tsToTime(start);
+    const double x1 = device->tsToTime(start + nBinsTime * timeStampsPerBin);
 
     m_eventsTime = h1("Events_Time", nBinsTime, x0, x1);
     m_eventsTime->SetXTitle("Time");
