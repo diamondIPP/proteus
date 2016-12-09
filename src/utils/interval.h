@@ -99,6 +99,7 @@ struct Box {
   }
 };
 
+/** Calculate maximum interval that is contained in both input intervals. */
 template <typename T0, typename T1, Endpoints kEndpoints>
 Interval<T0, kEndpoints> intersection(const Interval<T0, kEndpoints>& interval0,
                                       const Interval<T1, kEndpoints>& interval1)
@@ -107,6 +108,7 @@ Interval<T0, kEndpoints> intersection(const Interval<T0, kEndpoints>& interval0,
           std::min<T0>(interval0.max, interval1.max)};
 }
 
+/** Calculate maximum box that is contained in both input boxes. */
 template <size_t N, typename T0, typename T1, Endpoints kEndpoints>
 Box<N, T0, kEndpoints> intersection(const Box<N, T0, kEndpoints>& box0,
                                     const Box<N, T1, kEndpoints>& box1)
@@ -114,6 +116,26 @@ Box<N, T0, kEndpoints> intersection(const Box<N, T0, kEndpoints>& box0,
   Box<N, T0, kEndpoints> box;
   for (size_t i = 0; i < N; ++i)
     box.axes[i] = intersection(box0.axes[i], box1.axes[i]);
+  return box;
+}
+
+/** Calculate minimum bounding interval that contains both input intervals. */
+template <typename T0, typename T1, Endpoints kEndpoints>
+Interval<T0, kEndpoints> bounding(const Interval<T0, kEndpoints>& interval0,
+                                  const Interval<T1, kEndpoints>& interval1)
+{
+  return {std::min<T0>(interval0.min, interval1.min),
+          std::max<T0>(interval0.max, interval1.max)};
+}
+
+/** Calculate minimum bounding box that contains both input boxes. */
+template <size_t N, typename T0, typename T1, Endpoints kEndpoints>
+Box<N, T0, kEndpoints> bounding(const Box<N, T0, kEndpoints>& box0,
+                                const Box<N, T1, kEndpoints>& box1)
+{
+  Box<N, T0, kEndpoints> box;
+  for (size_t i = 0; i < N; ++i)
+    box.axes[i] = bounding(box0.axes[i], box1.axes[i]);
   return box;
 }
 
