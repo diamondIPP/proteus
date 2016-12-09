@@ -1,8 +1,6 @@
 #include "clusterinfo.h"
 
 #include <cassert>
-#include <cmath>
-#include <sstream>
 
 #include <TDirectory.h>
 #include <TH1D.h>
