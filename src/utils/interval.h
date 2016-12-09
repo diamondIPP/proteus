@@ -22,6 +22,14 @@ template <typename T, Endpoints kEndpoints = Endpoints::OpenMax>
 struct Interval {
   T min, max;
 
+  /** Construct the default interval encompassing the full range of T. */
+  Interval()
+      : min(std::numeric_limits<T>::min()), max(std::numeric_limits<T>::max())
+  {
+  }
+  /** Construct an interval with the given limits. */
+  Interval(T a, T b) : min(std::min(a, b)), max(std::max(a, b)) {}
+
   T length() const { return max - min; }
   /** Check if the interval is empty.
    *
@@ -44,14 +52,6 @@ struct Interval {
     // default is OpenMax
     return (min <= x) && (x < max);
   }
-
-  /** Construct the default interval encompassing the full range of T. */
-  Interval()
-      : min(std::numeric_limits<T>::min()), max(std::numeric_limits<T>::max())
-  {
-  }
-  /** Construct an interval with the given limits. */
-  Interval(T a, T b) : min(std::min(a, b)), max(std::max(a, b)) {}
 };
 
 /** N-dimensional box defined by intervals along each axis. */
@@ -62,6 +62,18 @@ struct Box {
 
   std::array<Axis, N> axes;
 
+  Box() = default;
+  template <typename... Intervals,
+            typename = typename std::enable_if<sizeof...(Intervals) == N>::type>
+  Box(Intervals&&... axes_) : axes{std::forward<Intervals>(axes_)...}
+  {
+  }
+
+  template <unsigned int I>
+  const Axis& interval() const
+  {
+    return axes[I];
+  }
   T volume() const
   {
     double vol = axes[0].length();
@@ -89,13 +101,6 @@ struct Box {
   bool isInside(Us... x) const
   {
     return isInside(Point{static_cast<T>(x)...});
-  }
-
-  Box() = default;
-  template <typename... Intervals,
-            typename = typename std::enable_if<sizeof...(Intervals) == N>::type>
-  Box(Intervals&&... axes_) : axes{std::forward<Intervals>(axes_)...}
-  {
   }
 };
 
