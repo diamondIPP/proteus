@@ -15,156 +15,59 @@
 Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
                                     TDirectory* dir,
                                     const char* suffix,
-                                    unsigned int totBins,
-                                    unsigned int maxClusterSize)
-    : // Base class is initialized here and manages directory / device
-    SingleAnalyzer(device, dir, suffix, "ClusterInfo")
-    , _totBins(totBins)
+                                    const int sizeMax,
+                                    const int timeMax,
+                                    const int valueMax,
+                                    const int binsUncertainty)
+    : SingleAnalyzer(device, dir, suffix, "ClusterInfo")
 {
   assert(device && "Analyzer: can't initialize with null device");
 
   // Makes or gets a directory called from inside _dir with this name
   TDirectory* plotDir = makeGetDirectory("ClusterInfo");
 
-  std::stringstream name;  // Build name strings for each histo
-  std::stringstream title; // Build title strings for each histo
-  std::string n, t;
+  for (Index isensor = 0; isensor < device->numSensors(); ++isensor) {
+    const Mechanics::Sensor& sensor = *device->getSensor(isensor);
 
-  // Generate a histogram for each sensor in the device
-  for (unsigned int nsens = 0; nsens < _device->getNumSensors(); nsens++) {
-    const Mechanics::Sensor* sensor = _device->getSensor(nsens);
+    auto h1 = [&](std::string name, double x0, double x1,
+                  int nx = -1) -> TH1D* {
+      if (nx < 0)
+        nx = std::round(x1 - x0);
+      TH1D* h = new TH1D((sensor.name() + '-' + name).c_str(), "", nx, x0, x1);
+      h->SetDirectory(plotDir);
+      return h;
+    };
+    auto h2 = [&](std::string name, double x0, double x1, double y0, double y1,
+                  int nx = -1, int ny = -1) -> TH2D* {
+      if (nx < 0)
+        nx = std::round(x1 - x0);
+      if (ny < 0)
+        ny = std::round(y1 - y0);
+      TH2D* h = new TH2D((sensor.name() + '-' + name).c_str(), "", nx, x0, x1,
+                         ny, y0, y1);
+      h->SetDirectory(plotDir);
+      return h;
+    };
 
     ClusterHists hs;
-
-    n = sensor->name() + "-Size";
-    t = "Cluster size;Pixels";
-    hs.size = new TH1D(n.c_str(), t.c_str(), maxClusterSize - 1, 0.5,
-                       maxClusterSize - 0.5);
-    hs.size->SetDirectory(plotDir);
-    n = sensor->name() + "-SizeColSize";
-    t = "Cluster column size vs. size;Pixels;Column Pixels";
-    hs.sizeColSize = new TH2D(n.c_str(), t.c_str(), maxClusterSize - 1, 0.5,
-                              maxClusterSize - 0.5, maxClusterSize - 1, 0.5,
-                              maxClusterSize - 0.5);
-    hs.sizeColSize->SetDirectory(plotDir);
-    n = sensor->name() + "-SizeRowSize";
-    t = "Cluster row size vs. size;Pixels;Row Pixels";
-    hs.sizeRowSize = new TH2D(n.c_str(), t.c_str(), maxClusterSize - 1, 0.5,
-                              maxClusterSize - 0.5, maxClusterSize - 1, 0.5,
-                              maxClusterSize - 0.5);
-    hs.sizeRowSize->SetDirectory(plotDir);
-    n = sensor->name() + "-SizeRowSizeCol";
-    t = "Cluster row size vs. column size;Column pixels;Row pixels";
-    hs.sizeRowSizeCol = new TH2D(n.c_str(), t.c_str(), maxClusterSize - 1, 0.5,
-                                 maxClusterSize - 0.5, maxClusterSize - 1, 0.5,
-                                 maxClusterSize - 0.5);
-    hs.sizeRowSizeCol->SetDirectory(plotDir);
-
-    int nBinsUnc = 32;
-    n = sensor->name() + "-UncertaintyCol";
-    t = "Estimated position uncertainty along column direction;Column pixels";
-    hs.uncertaintyCol = new TH1D(n.c_str(), t.c_str(), nBinsUnc, 0, 1.0 / sqrt(12.0));
-    hs.uncertaintyCol->SetDirectory(plotDir);
-    n = sensor->name() + "-UncertaintyRow";
-    t = "Estimated position uncertainty along row direction;Row pixels";
-    hs.uncertaintyRow = new TH1D(n.c_str(), t.c_str(), nBinsUnc, 0, 1.0 / sqrt(12.0));
-    hs.uncertaintyRow->SetDirectory(plotDir);
-
+    hs.size = h1("Size", 0.5, sizeMax - 0.5);
+    hs.sizeSizeCol = h2("SizeCol_Size", 0.5, sizeMax - 0.5, 0.5, sizeMax - 0.5);
+    hs.sizeSizeRow = h2("SizeRow_Size", 0.5, sizeMax - 0.5, 0.5, sizeMax - 0.5);
+    hs.sizeColSizeRow =
+        h2("SizeCol_SizeRow", 0.5, sizeMax - 0.5, 0.5, sizeMax - 0.5);
+    hs.value = h1("Value", -0.5, valueMax - 0.5);
+    hs.sizeValue = h2("Value_Size", 0.5, sizeMax - 0.5, -0.5, valueMax - 0.5);
+    hs.uncertaintyU =
+        h1("UncertaintyU", 0, sensor.pitchCol() / 2, binsUncertainty);
+    hs.uncertaintyV =
+        h1("UncertaintyV", 0, sensor.pitchRow() / 2, binsUncertainty);
+    hs.sizeHitTime =
+        h2("HitTime_Size", 0.5, sizeMax - 0.5, -0.5, timeMax - 0.5);
+    hs.sizeHitValue =
+        h2("HitValue_Size", 0.5, sizeMax - 0.5, -0.5, valueMax - 0.5);
+    hs.hitValueHitTime =
+        h2("HitTime_HitValue", -0.5, valueMax - 0.5, -0.5, timeMax - 0.5);
     m_hists.push_back(hs);
-
-    name.str("");
-    title.str("");
-    name << _device->getName() << sensor->getName() << "ToT" << _nameSuffix;
-    title << _device->getName() << " " << sensor->getName()
-          << " Clustered ToT Distribution"
-          << ";ToT bin number"
-          << ";Clusters";
-    TH1D* tot = new TH1D(name.str().c_str(), title.str().c_str(), _totBins,
-                         0 - 0.5, _totBins - 0.5);
-    tot->SetDirectory(plotDir);
-    _tot.push_back(tot);
-
-    name.str("");
-    title.str("");
-    name << _device->getName() << sensor->getName() << "TimingVsSize"
-         << _nameSuffix;
-    title << _device->getName() << " " << sensor->getName()
-          << " Hit Timing in cluster Vs. Cluster Size"
-          << ";Pixels in cluster"
-          << ";Pixel timing [BC]"
-          << ";Hits";
-    TH2D* timing =
-        new TH2D(name.str().c_str(), title.str().c_str(), maxClusterSize - 1,
-                 1 - 0.5, maxClusterSize - 0.5, 16, 0 - 0.5, 16 - 0.5);
-    timing->SetDirectory(plotDir);
-    _timingVsClusterSize.push_back(timing);
-
-    // Bilbao@cern.ch: Not sure if this is the best place since it concerns
-    // timing for hits
-    name.str("");
-    title.str("");
-    name << _device->getName() << sensor->getName() << "TimingVsValue"
-         << _nameSuffix;
-    title << _device->getName() << " " << sensor->getName()
-          << " Hit Timing in cluster Vs. Hit Value"
-          << ";ToT"
-          << ";Pixel timing [BC]"
-          << ";Hits";
-    TH2D* timingVsValue = new TH2D(name.str().c_str(), title.str().c_str(), 14,
-                                   1 - 0.5, 15 - 0.5, 16, 0 - 0.5, 16 - 0.5);
-    timingVsValue->SetDirectory(plotDir);
-    _timingVsHitValue.push_back(timingVsValue);
-
-    name.str("");
-    title.str("");
-    name << _device->getName() << sensor->getName() << "ToTVsSize"
-         << _nameSuffix;
-    title << _device->getName() << " " << sensor->getName()
-          << " ToT Vs. Cluster Size"
-          << ";Pixels in cluster"
-          << ";ToT bin number"
-          << ";Clusters";
-    TH2D* totSize = new TH2D(name.str().c_str(), title.str().c_str(),
-                             maxClusterSize - 1, 1 - 0.5, maxClusterSize - 0.5,
-                             _totBins, 0 - 0.5, _totBins - 0.5);
-    totSize->SetDirectory(plotDir);
-    _totSize.push_back(totSize);
-
-    if (_device->getTimeEnd() >
-        _device->getTimeStart()) // If not used, they are both == 0
-    {
-      // Prevent aliasing
-      const unsigned int nTimeBins = 100;
-      const ULong64_t timeSpan =
-          _device->getTimeEnd() - _device->getTimeStart() + 1;
-      const ULong64_t startTime = _device->getTimeStart();
-      const ULong64_t endTime = timeSpan - (timeSpan % nTimeBins) + startTime;
-
-      name.str("");
-      title.str("");
-      name << _device->getName() << sensor->getName() << "ClustersVsTime"
-           << _nameSuffix;
-      title << _device->getName() << " " << sensor->getName()
-            << " Clustsers Vs. Time";
-      TH1D* clusterTime = new TH1D(name.str().c_str(), title.str().c_str(),
-                                   nTimeBins, _device->tsToTime(startTime),
-                                   _device->tsToTime(endTime + 1));
-      clusterTime->SetDirectory(0);
-      _clustersVsTime.push_back(clusterTime);
-
-      name.str("");
-      title.str("");
-      name << _device->getName() << sensor->getName() << "TotVsTime"
-           << _nameSuffix;
-      title << _device->getName() << " " << sensor->getName() << " ToT Vs. Time"
-            << ";Time [" << _device->getTimeUnit() << "]"
-            << ";Average cluster ToT";
-      TH1D* totTime = new TH1D(name.str().c_str(), title.str().c_str(),
-                               nTimeBins, _device->tsToTime(startTime),
-                               _device->tsToTime(endTime + 1));
-      totTime->SetDirectory(plotDir);
-      _totVsTime.push_back(totTime);
-    }
   }
 }
 
@@ -179,66 +82,34 @@ void Analyzers::ClusterInfo::processEvent(const Storage::Event* event)
   if (!checkCuts(event))
     return;
 
-  for (unsigned int nplane = 0; nplane < event->numPlanes(); nplane++) {
-    const Storage::Plane* plane = event->getPlane(nplane);
+  for (Index iplane = 0; iplane < event->numPlanes(); ++iplane) {
+    const Storage::Plane& plane = *event->getPlane(iplane);
+    ClusterHists& hs = m_hists.at(iplane);
 
-    ClusterHists& hs = m_hists.at(nplane);
-
-    for (unsigned int ncluster = 0; ncluster < plane->numClusters();
-         ncluster++) {
-      const Storage::Cluster* cluster = plane->getCluster(ncluster);
+    for (Index icluster = 0; icluster < plane.numClusters(); ++icluster) {
+      const Storage::Cluster& cluster = *plane.getCluster(icluster);
 
       // Check if the cluster passes the cuts
-      if (!checkCuts(cluster))
+      if (!checkCuts(&cluster))
         continue;
 
-      hs.size->Fill(cluster->size());
-      hs.sizeColSize->Fill(cluster->size(), cluster->sizeCol());
-      hs.sizeRowSize->Fill(cluster->size(), cluster->sizeRow());
-      hs.sizeRowSizeCol->Fill(cluster->sizeCol(), cluster->sizeRow());
-      Vector2 stddev = sqrt(cluster->covPixel().Diagonal());
-      hs.uncertaintyCol->Fill(stddev[0]);
-      hs.uncertaintyRow->Fill(stddev[1]);
-
-      // _clusterSize.at(nplane)->Fill(cluster->getNumHits());
-      _tot.at(nplane)->Fill(cluster->getValue());
-      _totSize.at(nplane)->Fill(cluster->getNumHits(), cluster->getValue());
-
-      for (unsigned int nhits = 0; nhits < cluster->getNumHits(); nhits++) {
-        const Storage::Hit* hit = cluster->getHit(nhits);
-        // std::cout << hit->getTiming() << std::endl;
-        _timingVsClusterSize.at(nplane)->Fill(cluster->getNumHits(),
-                                              hit->getTiming());
-        _timingVsHitValue.at(nplane)->Fill(hit->getValue(), hit->getTiming());
+      hs.size->Fill(cluster.size());
+      hs.sizeSizeCol->Fill(cluster.size(), cluster.sizeCol());
+      hs.sizeSizeRow->Fill(cluster.size(), cluster.sizeRow());
+      hs.sizeColSizeRow->Fill(cluster.sizeCol(), cluster.sizeRow());
+      hs.value->Fill(cluster.value());
+      hs.sizeValue->Fill(cluster.size(), cluster.value());
+      Vector2 stddev = sqrt(cluster.covLocal().Diagonal());
+      hs.uncertaintyU->Fill(stddev[0]);
+      hs.uncertaintyV->Fill(stddev[1]);
+      for (Index ihit = 0; ihit < cluster.numHits(); ++ihit) {
+        const Storage::Hit& hit = *cluster.getHit(ihit);
+        hs.sizeHitTime->Fill(cluster.size(), hit.time());
+        hs.sizeHitValue->Fill(cluster.size(), hit.value());
+        hs.hitValueHitTime->Fill(hit.value(), hit.time());
       }
-
-      if (_clustersVsTime.size())
-        _clustersVsTime.at(nplane)->Fill(
-            _device->tsToTime(event->getTimeStamp()));
-
-      if (_totVsTime.size())
-        _totVsTime.at(nplane)->Fill(_device->tsToTime(event->getTimeStamp()),
-                                    cluster->getValue());
     }
   }
 }
 
-void Analyzers::ClusterInfo::postProcessing()
-{
-  if (_postProcessed)
-    return;
-
-  if (_clustersVsTime.size()) {
-    for (unsigned int nsens = 0; nsens < _device->getNumSensors(); nsens++) {
-      TH1D* hist = _totVsTime.at(nsens);
-      TH1D* cnt = _clustersVsTime.at(nsens);
-      for (Int_t bin = 1; bin <= hist->GetNbinsX(); bin++) {
-        if (cnt->GetBinContent(bin) < 1)
-          continue;
-        hist->SetBinContent(bin, hist->GetBinContent(bin) /
-                                     (double)cnt->GetBinContent(bin));
-      }
-    }
-  }
-  _postProcessed = true;
-}
+void Analyzers::ClusterInfo::postProcessing() {}
