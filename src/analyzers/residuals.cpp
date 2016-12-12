@@ -28,8 +28,8 @@ Analyzers::detail::SensorResidualHists::SensorResidualHists(
 
   double resRange =
       pixelRange * std::hypot(sensor.pitchCol(), sensor.pitchRow());
-  auto rangeU = sensor.sensitiveAreaLocal().axes[0];
-  auto rangeV = sensor.sensitiveAreaLocal().axes[1];
+  auto rangeU = sensor.sensitiveAreaLocal().interval(0);
+  auto rangeV = sensor.sensitiveAreaLocal().interval(1);
   auto name = [&](const std::string& suffix) {
     return sensor.name() + '-' + suffix;
   };

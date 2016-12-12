@@ -52,48 +52,70 @@ struct Interval {
     // default is OpenMax
     return (min <= x) && (x < max);
   }
+
+  /** Limit the interval to the intersection with the second interval. */
+  template <typename U>
+  void intersect(const Interval<U, kEndpoints>& other)
+  {
+    this->min = std::max<T>(this->min, other.min);
+    this->max = std::min<T>(this->max, other.max);
+    // no overlap with empty interval
+    if (this->max < this->min)
+      this->max = this->min;
+  }
+  /** Enlarge the interval so that the second interval is fully enclosed. */
+  template <typename U>
+  void enclose(const Interval<U, kEndpoints>& other)
+  {
+    this->min = std::min<T>(this->min, other.min);
+    this->max = std::max<T>(this->max, other.max);
+  }
 };
 
 /** N-dimensional box defined by intervals along each axis. */
 template <size_t N, typename T, Endpoints kEndpoints = Endpoints::OpenMax>
-struct Box {
-  typedef Interval<T, kEndpoints> Axis;
+class Box {
+public:
+  typedef Interval<T, kEndpoints> AxisInterval;
   typedef std::array<T, N> Point;
-
-  std::array<Axis, N> axes;
 
   Box() = default;
   template <typename... Intervals,
             typename = typename std::enable_if<sizeof...(Intervals) == N>::type>
-  Box(Intervals&&... axes_) : axes{std::forward<Intervals>(axes_)...}
+  Box(Intervals&&... axes) : m_axes{std::forward<Intervals>(axes)...}
   {
   }
 
-  template <unsigned int I>
-  const Axis& interval() const
-  {
-    return axes[I];
-  }
+  /** The full interval definition of the i-th axis. */
+  const AxisInterval& interval(unsigned int i) const { return m_axes[i]; }
+  /** The interval-length along the i-th axis. */
+  T length(unsigned int i) const { return interval(i).length(); }
+  /** The minimal value along the i-th axis. */
+  T min(unsigned int i) const { return interval(i).min; }
+  /** The maximal value along the i-th axis. */
+  T max(unsigned int i) const { return interval(i).max; }
+
+  /** The N-dimensional volume of the box. */
   T volume() const
   {
-    double vol = axes[0].length();
+    double vol = m_axes[0].length();
     for (size_t i = 1; i < N; ++i)
-      vol *= axes[i].length();
+      vol *= m_axes[i].length();
     return vol;
   }
   /** The box is empty if any axis is empty. */
   bool isEmpty() const
   {
     for (size_t i = 0; i < N; ++i)
-      if (axes[i].isEmpty())
+      if (m_axes[i].isEmpty())
         return true;
     return false;
   }
   bool isInside(Point x) const
   {
-    bool status = axes[0].isInside(x[0]);
+    bool status = m_axes[0].isInside(x[0]);
     for (size_t i = 1; i < N; ++i)
-      status &= axes[i].isInside(x[i]);
+      status &= m_axes[i].isInside(x[i]);
     return status;
   }
   template <typename... Us,
@@ -102,45 +124,43 @@ struct Box {
   {
     return isInside(Point{static_cast<T>(x)...});
   }
-};
 
-/** Calculate maximum interval that is contained in both input intervals. */
-template <typename T0, typename T1, Endpoints kEndpoints>
-Interval<T0, kEndpoints> intersection(const Interval<T0, kEndpoints>& interval0,
-                                      const Interval<T1, kEndpoints>& interval1)
-{
-  return {std::max<T0>(interval0.min, interval1.min),
-          std::min<T0>(interval0.max, interval1.max)};
-}
+  /** Limit the box to the intersection with the second box. */
+  template <typename U>
+  void intersect(const Box<N, U, kEndpoints>& other)
+  {
+    for (size_t i = 0; i < N; ++i)
+      m_axes[i].intersect(other.interval(i));
+  }
+  /** Enlarge the box so that the second box is fully enclosed. */
+  template <typename U>
+  void enclose(const Box<N, U, kEndpoints>& other)
+  {
+    for (size_t i = 0; i < N; ++i)
+      m_axes[i].enclose(other.interval(i));
+  }
+
+private:
+  std::array<AxisInterval, N> m_axes;
+};
 
 /** Calculate maximum box that is contained in both input boxes. */
 template <size_t N, typename T0, typename T1, Endpoints kEndpoints>
 Box<N, T0, kEndpoints> intersection(const Box<N, T0, kEndpoints>& box0,
                                     const Box<N, T1, kEndpoints>& box1)
 {
-  Box<N, T0, kEndpoints> box;
-  for (size_t i = 0; i < N; ++i)
-    box.axes[i] = intersection(box0.axes[i], box1.axes[i]);
+  Box<N, T0, kEndpoints> box = box0;
+  box.intersect(box1);
   return box;
-}
-
-/** Calculate minimum bounding interval that contains both input intervals. */
-template <typename T0, typename T1, Endpoints kEndpoints>
-Interval<T0, kEndpoints> bounding(const Interval<T0, kEndpoints>& interval0,
-                                  const Interval<T1, kEndpoints>& interval1)
-{
-  return {std::min<T0>(interval0.min, interval1.min),
-          std::max<T0>(interval0.max, interval1.max)};
 }
 
 /** Calculate minimum bounding box that contains both input boxes. */
 template <size_t N, typename T0, typename T1, Endpoints kEndpoints>
-Box<N, T0, kEndpoints> bounding(const Box<N, T0, kEndpoints>& box0,
-                                const Box<N, T1, kEndpoints>& box1)
+Box<N, T0, kEndpoints> boundingBox(const Box<N, T0, kEndpoints>& box0,
+                                   const Box<N, T1, kEndpoints>& box1)
 {
-  Box<N, T0, kEndpoints> box;
-  for (size_t i = 0; i < N; ++i)
-    box.axes[i] = bounding(box0.axes[i], box1.axes[i]);
+  Box<N, T0, kEndpoints> box = box0;
+  box.enclose(box1);
   return box;
 }
 

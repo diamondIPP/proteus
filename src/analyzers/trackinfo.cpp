@@ -32,14 +32,14 @@ Analyzers::TrackInfo::TrackInfo(const Mechanics::Device* device,
   // estimate bounding box of all sensor projections into the xy-plane
   auto active = device->getSensor(0)->projectedEnvelopeXY();
   for (Index isensor = 1; isensor < device->numSensors(); ++isensor) {
-    active = Utils::bounding(active,
-                             device->getSensor(isensor)->projectedEnvelopeXY());
+    active = Utils::boundingBox(
+        active, device->getSensor(isensor)->projectedEnvelopeXY());
   }
 
   HistAxis axNClusters(0, device->numSensors(), "Clusters on track");
   HistAxis axChi2(0, reducedChi2Max, bins, "#chi^2 / degrees of freedom");
-  HistAxis axOffX(active.axes[0], bins, "Track offset x");
-  HistAxis axOffY(active.axes[1], bins, "Track offset y");
+  HistAxis axOffX(active.interval(0), bins, "Track offset x");
+  HistAxis axOffY(active.interval(1), bins, "Track offset y");
   HistAxis axSlopeX(-slopeMax, slopeMax, bins, "Track slope x");
   HistAxis axSlopeY(-slopeMax, slopeMax, bins, "Track slope y");
 

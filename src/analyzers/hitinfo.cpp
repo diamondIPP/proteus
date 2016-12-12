@@ -30,8 +30,8 @@ Analyzers::HitInfo::HitInfo(const Mechanics::Device* device,
       return sensor.name() + '-' + suffix;
     };
 
-    HistAxis axCol(area.axes[0], area.axes[0].length(), "Hit colum");
-    HistAxis axRow(area.axes[1], area.axes[1].length(), "Hit row");
+    HistAxis axCol(area.interval(0), area.length(0), "Hit colum");
+    HistAxis axRow(area.interval(1), area.length(1), "Hit row");
     HistAxis axTime(0, timeMax, "Hit time");
     HistAxis axValue(0, valueMax, "Hit value");
 

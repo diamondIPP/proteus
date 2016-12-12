@@ -49,8 +49,8 @@ void Analyzers::Correlation::addHist(const Mechanics::Sensor& sensor0,
         sensor1.name() + "-" + sensor0.name() + "-Correlation" + aname;
     std::string xlabel = sensor0.name() + " cluster " + aname;
     std::string ylabel = sensor1.name() + " cluster " + aname;
-    auto range0 = sensor0.projectedEnvelopeXY().axes[axis];
-    auto range1 = sensor1.projectedEnvelopeXY().axes[axis];
+    auto range0 = sensor0.projectedEnvelopeXY().interval(axis);
+    auto range1 = sensor1.projectedEnvelopeXY().interval(axis);
     auto pitch0 = sensor0.projectedPitchXY()[axis];
     auto pitch1 = sensor1.projectedPitchXY()[axis];
     TH2D* h =
@@ -66,8 +66,8 @@ void Analyzers::Correlation::addHist(const Mechanics::Sensor& sensor0,
     std::string name = sensor1.name() + "-" + sensor0.name() + "-Diff" + aname;
     std::string xlabel =
         sensor1.name() + " - " + sensor0.name() + " cluster " + aname;
-    auto range0 = sensor0.projectedEnvelopeXY().axes[axis];
-    auto range1 = sensor0.projectedEnvelopeXY().axes[axis];
+    auto range0 = sensor0.projectedEnvelopeXY().interval(axis);
+    auto range1 = sensor0.projectedEnvelopeXY().interval(axis);
     auto pitch0 = sensor0.projectedPitchXY()[axis];
     auto pitch1 = sensor1.projectedPitchXY()[axis];
     auto pitch = std::min(pitch0, pitch1);

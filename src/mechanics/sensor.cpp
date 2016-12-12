@@ -65,16 +65,16 @@ Mechanics::Sensor::Sensor(Index id,
 
 Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaPixel() const
 {
-  return Area(Area::Axis(0, static_cast<double>(m_numCols)),
-              Area::Axis(0, static_cast<double>(m_numRows)));
+  return Area(Area::AxisInterval(0, static_cast<double>(m_numCols)),
+              Area::AxisInterval(0, static_cast<double>(m_numRows)));
 }
 
 Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaLocal() const
 {
   XYPoint lowerLeft = transformPixelToLocal(XYPoint(0, 0));
   XYPoint upperRight = transformPixelToLocal(XYPoint(m_numCols, m_numRows));
-  return Area(Area::Axis(lowerLeft.x(), upperRight.x()),
-              Area::Axis(lowerLeft.y(), upperRight.y()));
+  return Area(Area::AxisInterval(lowerLeft.x(), upperRight.x()),
+              Area::AxisInterval(lowerLeft.y(), upperRight.y()));
 }
 
 Mechanics::Sensor::Area Mechanics::Sensor::projectedEnvelopeXY() const
@@ -89,10 +89,10 @@ Mechanics::Sensor::Area Mechanics::Sensor::projectedEnvelopeXY() const
   std::array<double, 4> xs = {minMin.x(), minMax.x(), maxMin.x(), maxMax.x()};
   std::array<double, 4> ys = {minMin.y(), minMax.y(), maxMin.y(), maxMax.y()};
 
-  return Area(Area::Axis(*std::min_element(xs.begin(), xs.end()),
-                         *std::max_element(xs.begin(), xs.end())),
-              Area::Axis(*std::min_element(ys.begin(), ys.end()),
-                         *std::max_element(ys.begin(), ys.end())));
+  return Area(Area::AxisInterval(*std::min_element(xs.begin(), xs.end()),
+                                 *std::max_element(xs.begin(), xs.end())),
+              Area::AxisInterval(*std::min_element(ys.begin(), ys.end()),
+                                 *std::max_element(ys.begin(), ys.end())));
 }
 
 Vector2 Mechanics::Sensor::projectedPitchXY() const

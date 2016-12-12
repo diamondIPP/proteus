@@ -61,11 +61,11 @@ Storage::Cluster::Area Storage::Cluster::area() const
 {
   if (m_hits.empty()) {
     // empty area anchored outside the sensitive sensor area
-    return Area(Area::Axis(-1, -1), Area::Axis(-1, -1));
+    return Area(Area::AxisInterval(-1, -1), Area::AxisInterval(-1, -1));
   }
 
-  Area::Axis col(m_hits.front()->col(), m_hits.front()->col() + 1);
-  Area::Axis row(m_hits.front()->row(), m_hits.front()->row() + 1);
+  Area::AxisInterval col(m_hits.front()->col(), m_hits.front()->col() + 1);
+  Area::AxisInterval row(m_hits.front()->row(), m_hits.front()->row() + 1);
   for (auto hit = ++m_hits.begin(); hit != m_hits.end(); ++hit) {
     col.min = std::min(col.min, static_cast<int>((*hit)->col()));
     col.max = std::max(col.max, static_cast<int>((*hit)->col()) + 1);
@@ -75,8 +75,8 @@ Storage::Cluster::Area Storage::Cluster::area() const
   return Area(col, row);
 }
 
-int Storage::Cluster::sizeCol() const { return area().axes[0].length(); }
-int Storage::Cluster::sizeRow() const { return area().axes[1].length(); }
+int Storage::Cluster::sizeCol() const { return area().length(0); }
+int Storage::Cluster::sizeRow() const { return area().length(1); }
 
 void Storage::Cluster::setTrack(const Storage::Track* track)
 {

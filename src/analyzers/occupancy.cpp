@@ -26,13 +26,11 @@ Analyzers::Occupancy::Hists::Hists(const Mechanics::Sensor& sensor,
     return sensor.name() + '-' + suffix;
   };
 
-  HistAxis axCol(area.axes[0], area.axes[0].length(), "Hit column");
-  HistAxis axRow(area.axes[1], area.axes[1].length(), "Hit row");
-  HistAxis axClusterCol(area.axes[0],
-                        binsPerClusterPixel * area.axes[0].length(),
+  HistAxis axCol(area.interval(0), area.length(0), "Hit column");
+  HistAxis axRow(area.interval(1), area.length(1), "Hit row");
+  HistAxis axClusterCol(area.interval(0), binsPerClusterPixel * area.length(0),
                         "Cluster column position");
-  HistAxis axClusterRow(area.axes[1],
-                        binsPerClusterPixel * area.axes[1].length(),
+  HistAxis axClusterRow(area.interval(1), binsPerClusterPixel * area.length(1),
                         "Cluster row position");
   HistAxis axPix(0, 1, binsOccupancy, "Pixel hits / event");
 
