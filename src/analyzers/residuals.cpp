@@ -82,7 +82,7 @@ Analyzers::Residuals::Residuals(const Mechanics::Device* device,
                                 unsigned int binsY)
     : SingleAnalyzer(device, dir, suffix, "Residuals")
 {
-  assert(refDevice && "Analyzer: can't initialize with null device");
+  assert(device && "Analyzer: can't initialize with null device");
 
   // Makes or gets a directory called from inside _dir with this name
   TDirectory* sub = makeGetDirectory("Residuals");
