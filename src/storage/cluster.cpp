@@ -30,7 +30,10 @@ void Storage::Cluster::setPixel(const XYPoint& cr, const SymMatrix2& cov)
   m_crCov = cov;
 }
 
-void Storage::Cluster::setPixel(double col, double row, double stdCol, double stdRow)
+void Storage::Cluster::setPixel(double col,
+                                double row,
+                                double stdCol,
+                                double stdRow)
 {
   m_cr.SetXY(col, row);
   m_crCov(0, 0) = stdCol * stdCol;
@@ -64,15 +67,15 @@ Storage::Cluster::Area Storage::Cluster::area() const
     return Area(Area::AxisInterval(-1, -1), Area::AxisInterval(-1, -1));
   }
 
-  Area::AxisInterval col(m_hits.front()->col(), m_hits.front()->col() + 1);
-  Area::AxisInterval row(m_hits.front()->row(), m_hits.front()->row() + 1);
+  Area::AxisInterval cols(m_hits.front()->col(), m_hits.front()->col() + 1);
+  Area::AxisInterval rows(m_hits.front()->row(), m_hits.front()->row() + 1);
   for (auto hit = ++m_hits.begin(); hit != m_hits.end(); ++hit) {
-    col.min = std::min(col.min, static_cast<int>((*hit)->col()));
-    col.max = std::max(col.max, static_cast<int>((*hit)->col()) + 1);
-    row.min = std::min(row.min, static_cast<int>((*hit)->row()));
-    row.max = std::max(row.max, static_cast<int>((*hit)->row()) + 1);
+    int col = static_cast<int>((*hit)->col());
+    int row = static_cast<int>((*hit)->row());
+    cols.enclose(Area::AxisInterval(col, col + 1));
+    rows.enclose(Area::AxisInterval(row, row + 1));
   }
-  return Area(col, row);
+  return Area(cols, rows);
 }
 
 int Storage::Cluster::sizeCol() const { return area().length(0); }

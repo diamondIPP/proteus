@@ -17,20 +17,22 @@ namespace Utils {
 
 enum class Endpoints { Closed, Open, OpenMin, OpenMax };
 
-/** An interval on a single ordered axes. */
+/** Interval on a single ordered axes. */
 template <typename T, Endpoints kEndpoints = Endpoints::OpenMax>
-struct Interval {
-  T min, max;
-
+class Interval {
+public:
   /** Construct the default interval encompassing the full range of T. */
   Interval()
-      : min(std::numeric_limits<T>::min()), max(std::numeric_limits<T>::max())
+      : m_min(std::numeric_limits<T>::min())
+      , m_max(std::numeric_limits<T>::max())
   {
   }
   /** Construct an interval with the given limits. */
-  Interval(T a, T b) : min(std::min(a, b)), max(std::max(a, b)) {}
+  Interval(T a, T b) : m_min(std::min(a, b)), m_max(std::max(a, b)) {}
 
-  T length() const { return max - min; }
+  T length() const { return m_max - m_min; }
+  T min() const { return m_min; }
+  T max() const { return m_max; }
   /** Check if the interval is empty.
    *
    * A closed interval can never be empty. With identical endpoints, the
@@ -38,41 +40,44 @@ struct Interval {
    */
   bool isEmpty() const
   {
-    return (kEndpoints != Endpoints::Closed) && (min == max);
+    return (kEndpoints != Endpoints::Closed) && (m_min == m_max);
   }
   bool isInside(T x) const
   {
     // compiler should remove unused checks
     if (kEndpoints == Endpoints::Closed)
-      return (min <= x) && (x <= max);
+      return (m_min <= x) && (x <= m_max);
     if (kEndpoints == Endpoints::Open)
-      return (min < x) && (x < max);
+      return (m_min < x) && (x < m_max);
     if (kEndpoints == Endpoints::OpenMin)
-      return (min < x) && (x <= max);
+      return (m_min < x) && (x <= m_max);
     // default is OpenMax
-    return (min <= x) && (x < max);
+    return (m_min <= x) && (x < m_max);
   }
 
   /** Limit the interval to the intersection with the second interval. */
   template <typename U>
   void intersect(const Interval<U, kEndpoints>& other)
   {
-    this->min = std::max<T>(this->min, other.min);
-    this->max = std::min<T>(this->max, other.max);
+    m_min = std::max<T>(m_min, other.min());
+    m_max = std::min<T>(m_max, other.max());
     // no overlap with empty interval
-    if (this->max < this->min)
-      this->max = this->min;
+    if (m_max < m_min)
+      m_max = m_min;
   }
   /** Enlarge the interval so that the second interval is fully enclosed. */
   template <typename U>
   void enclose(const Interval<U, kEndpoints>& other)
   {
-    this->min = std::min<T>(this->min, other.min);
-    this->max = std::max<T>(this->max, other.max);
+    m_min = std::min<T>(m_min, other.min());
+    m_max = std::max<T>(m_max, other.max());
   }
+
+private:
+  T m_min, m_max;
 };
 
-/** N-dimensional box defined by intervals along each axis. */
+/** N-dimensional aligned box defined by intervals along each axis. */
 template <size_t N, typename T, Endpoints kEndpoints = Endpoints::OpenMax>
 class Box {
 public:
@@ -91,9 +96,9 @@ public:
   /** The interval-length along the i-th axis. */
   T length(unsigned int i) const { return interval(i).length(); }
   /** The minimal value along the i-th axis. */
-  T min(unsigned int i) const { return interval(i).min; }
+  T min(unsigned int i) const { return interval(i).min(); }
   /** The maximal value along the i-th axis. */
-  T max(unsigned int i) const { return interval(i).max; }
+  T max(unsigned int i) const { return interval(i).max(); }
 
   /** The N-dimensional volume of the box. */
   T volume() const
@@ -169,13 +174,13 @@ std::ostream& operator<<(std::ostream& os,
                          const Interval<T, kEndpoints>& interval)
 {
   if (kEndpoints == Endpoints::Closed) {
-    os << '[' << interval.min << ", " << interval.max << ']';
+    os << '[' << interval.min() << ", " << interval.max() << ']';
   } else if (kEndpoints == Endpoints::Open) {
-    os << '(' << interval.min << ", " << interval.max << ')';
+    os << '(' << interval.min() << ", " << interval.max() << ')';
   } else if (kEndpoints == Endpoints::OpenMin) {
-    os << '(' << interval.min << ", " << interval.max << ']';
+    os << '(' << interval.min() << ", " << interval.max() << ']';
   } else /* OpenMax */ {
-    os << '[' << interval.min << ", " << interval.max << ')';
+    os << '[' << interval.min() << ", " << interval.max() << ')';
   }
   return os;
 }

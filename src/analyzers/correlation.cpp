@@ -53,9 +53,9 @@ void Analyzers::Correlation::addHist(const Mechanics::Sensor& sensor0,
     auto range1 = sensor1.projectedEnvelopeXY().interval(axis);
     auto pitch0 = sensor0.projectedPitchXY()[axis];
     auto pitch1 = sensor1.projectedPitchXY()[axis];
-    TH2D* h =
-        new TH2D(name.c_str(), "", range0.length() / pitch0, range0.min,
-                 range0.max, range1.length() / pitch1, range1.min, range1.max);
+    TH2D* h = new TH2D(name.c_str(), "", range0.length() / pitch0, range0.min(),
+                       range0.max(), range1.length() / pitch1, range1.min(),
+                       range1.max());
     h->SetXTitle(xlabel.c_str());
     h->SetYTitle(ylabel.c_str());
     h->SetDirectory(dir);
