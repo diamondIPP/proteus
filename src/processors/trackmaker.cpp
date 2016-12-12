@@ -211,10 +211,9 @@ void Processors::TrackMaker::generateTracks(Event* event, int maskedPlane) const
       assert(bestCandidate && "TrackMaker: failed to select a candidate");
 
       // Finalize the best candidate
-      event->addTrack(*bestCandidate)->fixClusterAssociation();
-      delete bestCandidate;
-      // for (unsigned int i = 0; i < bestCandidate->getNumClusters(); i++)
-      //   bestCandidate->getCluster(i)->setTrack(bestCandidate);
+      std::unique_ptr<Track> ptr(bestCandidate);
+      ptr->freezeClusterAssociation();
+      event->addTrack(std::move(ptr));
     }
   }
 }

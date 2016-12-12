@@ -16,11 +16,15 @@ namespace Storage {
 
 class Hit;
 class Track;
+class TrackState;
 class Plane;
 
 class Cluster {
 public:
   typedef Utils::Box<2, int> Area;
+
+  Index index() const { return m_index; }
+  Index sensorId() const;
 
   void setPixel(const XYPoint& cr, const SymMatrix2& cov);
   void setPixel(double col, double row, double stdCol, double stdRow);
@@ -37,8 +41,6 @@ public:
   double time() const { return m_time; }
   double value() const { return m_value; }
 
-  Index sensorId() const;
-
   /** The area enclosing the cluster.
    *
    * \return Returns an empty area for an empty cluster w/o hits.
@@ -54,10 +56,12 @@ public:
   const Hit* getHit(Index i) const { return m_hits.at(i); }
 
   void setTrack(const Track* track);
-  bool isInTrack() const { return (m_track != NULL); }
   const Track* track() const { return m_track; }
   /** \deprecated Use `track()` instead. */
   const Track* getTrack() const { return m_track; }
+
+  void setMatchedState(const TrackState* state) { m_matchedState = state; }
+  const TrackState* matchedState() const { return m_matchedState; }
 
   void setMatchedTrack(const Track* track) { m_matched = track; }
   bool hasMatchedTrack() const { return (m_matched != NULL); }
@@ -102,8 +106,9 @@ private:
   std::vector<Hit*> m_hits; // List of hits composing the cluster
 
   int m_index;
-  Plane* m_plane;         //<! The plane containing the cluster
-  const Track* m_track;   // The track containing this cluster
+  Plane* m_plane;       //<! The plane containing the cluster
+  const Track* m_track; // The track containing this cluster
+  const TrackState* m_matchedState;
   const Track* m_matched; // Track matched to this cluster in DUT analysis (not
                           // stored)
   double m_matchDistance; // Distance to matched track

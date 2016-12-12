@@ -28,11 +28,15 @@ std::string Processors::StraightTrackFitter::name() const
 void Processors::StraightTrackFitter::process(Storage::Event& event) const
 {
   for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
-    Storage::Track& track = *event.getTrack(itrack);
+    const Storage::Track& track = *event.getTrack(itrack);
 
     for (auto id = m_sensorIds.begin(); id != m_sensorIds.end(); ++id) {
       const Mechanics::Sensor& sensor = *m_device.getSensor(*id);
-      track.setLocalState(*id, fitTrackLocal(track, sensor));
+      Storage::Plane& plane = *event.getPlane(*id);
+
+      Storage::TrackState state = fitTrackLocal(track, sensor);
+      state.setTrack(&track);
+      plane.addState(std::move(state));
     }
   }
 }

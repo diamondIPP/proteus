@@ -12,13 +12,9 @@
 #include <TH2D.h>
 
 #include "mechanics/device.h"
-#include "mechanics/sensor.h"
 #include "processors/processors.h"
-#include "storage/cluster.h"
 #include "storage/event.h"
-#include "storage/hit.h"
 #include "storage/plane.h"
-#include "storage/track.h"
 #include "utils/root.h"
 
 Analyzers::Distances::Distances(const Mechanics::Device& device,
@@ -62,19 +58,15 @@ void Analyzers::Distances::analyze(const Storage::Event& event)
 {
   const Storage::Plane& plane = *event.getPlane(m_sensorId);
 
-  for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
-    const Storage::Track& track = *event.getTrack(itrack);
-    if (!track.hasLocalState(m_sensorId))
-      continue;
-
-    const Storage::TrackState& state = track.getLocalState(m_sensorId);
+  for (Index istate0 = 0; istate0 < plane.numStates(); ++istate0) {
+    const Storage::TrackState& state0 = plane.getState(istate0);
 
     // full combinatorics: all clusters to all tracks
     for (Index icluster = 0; icluster < plane.numClusters(); ++icluster) {
       const Storage::Cluster& cluster = *plane.getCluster(icluster);
 
-      XYVector delta = cluster.posLocal() - state.offset();
-      SymMatrix2 cov = cluster.covLocal() + state.covOffset();
+      XYVector delta = cluster.posLocal() - state0.offset();
+      SymMatrix2 cov = cluster.covLocal() + state0.covOffset();
       m_allDistU->Fill(delta.x());
       m_allDistV->Fill(delta.y());
       m_allDist->Fill(delta.r());
@@ -82,26 +74,22 @@ void Analyzers::Distances::analyze(const Storage::Event& event)
     }
 
     // full combinatorics: all tracks to all other tracks
-    for (Index itrack2 = 0; itrack2 < event.numTracks(); ++itrack2) {
-      if (itrack2 == itrack)
-        continue;
-      if (!event.getTrack(itrack)->hasLocalState(m_sensorId))
+    for (Index istate1 = 0; istate1 < plane.numStates(); ++istate1) {
+      if (istate1 == istate0)
         continue;
 
-      const Storage::TrackState& state2 =
-          event.getTrack(itrack2)->getLocalState(m_sensorId);
-      XYVector delta = state2.offset() - state.offset();
+      const Storage::TrackState& state1 = plane.getState(istate1);
+
+      XYVector delta = state1.offset() - state0.offset();
       m_trackDistU->Fill(delta.x());
       m_trackDistV->Fill(delta.y());
       m_trackDist->Fill(delta.r());
     }
 
     // matching distances
-    if (track.hasMatchedCluster(m_sensorId)) {
-      const Storage::Cluster& cluster = *track.getMatchedCluster(m_sensorId);
-
-      XYVector delta = cluster.posLocal() - state.offset();
-      SymMatrix2 cov = cluster.covLocal() + state.covOffset();
+    if (state0.matchedCluster()) {
+      XYVector delta = state0.matchedCluster()->posLocal() - state0.offset();
+      SymMatrix2 cov = state0.matchedCluster()->covLocal() + state0.covOffset();
       m_matchDistU->Fill(delta.x());
       m_matchDistV->Fill(delta.y());
       m_matchDist->Fill(delta.r());

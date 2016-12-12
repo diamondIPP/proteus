@@ -46,7 +46,7 @@ void Processors::ClusterMaker::addNeighbours(const Storage::Hit* hit,
 
     // Continue if this hit is already clustered or if it is the one being
     // considered
-    if (compare->isInCluster() || compare == hit)
+    if (compare->cluster() || compare == hit)
       continue;
 
     // If a maximum separation has been defined in real coordinates, check now
@@ -83,7 +83,7 @@ void Processors::ClusterMaker::generateClusters(Storage::Event* event,
     Storage::Hit* hit = plane->getHit(nhit);
 
     // If the hit isn't clustered, make a new cluster
-    if (!hit->isInCluster()) {
+    if (!hit->cluster()) {
       Storage::Cluster* cluster = plane->newCluster();
       cluster->addHit(hit);
     }

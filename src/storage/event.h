@@ -10,11 +10,6 @@
 #include "storage/plane.h"
 #include "storage/track.h"
 
-namespace Processors {
-class TrackFinder;
-class TrackMaker;
-}
-
 namespace Storage {
 
 class Event {
@@ -42,7 +37,8 @@ public:
   Plane* getPlane(Index i) { return &m_planes.at(i); }
   const Plane* getPlane(Index i) const { return &m_planes.at(i); }
 
-  Track* newTrack();
+  /** Add track to the event and fix the cluster to track association. */
+  void addTrack(std::unique_ptr<Track> track);
   Index numTracks() const { return static_cast<Index>(m_tracks.size()); }
   Track* getTrack(Index i) { return m_tracks.at(i).get(); }
   const Track* getTrack(Index i) const { return m_tracks.at(i).get(); }
@@ -62,9 +58,6 @@ public:
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
-  Track* addTrack(std::unique_ptr<Track> track);
-  Track* addTrack(const Track& track);
-
   uint64_t m_id;
   uint64_t m_frameNumber;
   uint64_t m_timeStamp;
@@ -75,9 +68,6 @@ private:
 
   std::vector<Plane> m_planes;
   std::vector<std::unique_ptr<Track>> m_tracks;
-
-  friend class Processors::TrackFinder;
-  friend class Processors::TrackMaker;
 };
 
 } // namespace Storage

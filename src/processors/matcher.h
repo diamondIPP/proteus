@@ -28,7 +28,7 @@ namespace Processors {
 class Matcher : public Processor {
 public:
   /**
-   * \param device The device setup/
+   * \param device The device setup.
    * \param sensorId The sensor for which matching should be calculated.
    * \param distanceSigmaMax Maximum matching significance, negativ disables.
    */

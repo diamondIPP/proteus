@@ -15,7 +15,7 @@ Analyzers::MatchExporter::MatchExporter(const Mechanics::Device& device,
                                         TDirectory* dir)
     : m_sensor(*device.getSensor(sensorId))
     , m_sensorId(sensorId)
-    , m_name("MatchExporter_" + device.getSensor(sensorId)->name())
+    , m_name("MatchExporter(" + device.getSensor(sensorId)->name() + ')')
 {
   TDirectory* sub = dir->mkdir(m_sensor.name().c_str());
 
@@ -51,30 +51,27 @@ std::string Analyzers::MatchExporter::name() const { return m_name; }
 
 void Analyzers::MatchExporter::analyze(const Storage::Event& event)
 {
+  const Storage::Plane& plane = *event.getPlane(m_sensorId);
   Index numMatches = 0;
 
+  // global event information
+  m_ev.nTracks = event.numTracks();
+
   // export tracks and possible matched clusters
-  for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
-    const Storage::Track& track = *event.getTrack(itrack);
-
-    if (!track.hasLocalState(m_sensorId))
-      continue;
-
-    // global event information
-    m_ev.nTracks = event.numTracks();
+  for (Index istate = 0; istate < plane.numStates(); ++istate) {
+    const Storage::TrackState& state = plane.getState(istate);
 
     // track data
-    const Storage::TrackState& state = track.getLocalState(m_sensorId);
     XYPoint cr = m_sensor.transformLocalToPixel(state.offset());
-    m_trk.redChi2 = track.reducedChi2();
+    m_trk.redChi2 = state.track()->reducedChi2();
     m_trk.u = state.offset().x();
     m_trk.v = state.offset().y();
     m_trk.col = cr.x();
     m_trk.row = cr.y();
 
     // matching cluster data
-    if (track.hasMatchedCluster(m_sensorId)) {
-      const Storage::Cluster& cluster = *track.getMatchedCluster(m_sensorId);
+    if (state.matchedCluster()) {
+      const Storage::Cluster& cluster = *state.matchedCluster();
       XYVector delta = cluster.posLocal() - state.offset();
       SymMatrix2 cov = cluster.covLocal() + state.covOffset();
       m_mat.d2 = mahalanobisSquared(cov, delta);
@@ -100,11 +97,10 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
   }
 
   // export unmatched clusters
-  const Storage::Plane& plane = *event.getPlane(m_sensorId);
   for (Index icluster = 0; icluster < plane.numClusters(); ++icluster) {
     const Storage::Cluster& cluster = *plane.getCluster(icluster);
     // already exported during track iteration
-    if (cluster.hasMatchedTrack())
+    if (cluster.matchedTrack())
       continue;
 
     XYPoint uv = m_sensor.transformPixelToLocal(cluster.posPixel());
