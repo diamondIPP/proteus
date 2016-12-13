@@ -61,23 +61,6 @@ private:
   std::vector<std::string> m_args;
 };
 
-/** Default command line arguments for (most) Proteus commands. */
-class DefaultArguments : public Arguments {
-public:
-  DefaultArguments(std::string description);
-
-  std::string input() const { return argument<std::string>(0); }
-  std::string outputPrefix() const { return argument<std::string>(1); }
-  /** Construct full output path from known output prefix and name. */
-  std::string makeOutput(const std::string& name) const;
-
-  std::string device() const;
-  std::string geometry() const;
-  std::string config() const;
-  uint64_t skipEvents() const;
-  uint64_t numEvents() const;
-};
-
 } // namespace Utils
 
 template <typename T>
