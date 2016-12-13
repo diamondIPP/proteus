@@ -9,6 +9,7 @@
 #include "analyzers/correlation.h"
 #include "analyzers/residuals.h"
 #include "analyzers/trackinfo.h"
+#include "application.h"
 #include "mechanics/device.h"
 #include "processors/applygeometry.h"
 #include "processors/clusterizer.h"
@@ -17,8 +18,6 @@
 #include "processors/trackfitter.h"
 #include "storage/event.h"
 #include "storage/storageio.h"
-#include "utils/arguments.h"
-#include "utils/config.h"
 #include "utils/eventloop.h"
 #include "utils/logger.h"
 
@@ -131,39 +130,28 @@ int main(int argc, char const* argv[])
   using namespace Mechanics;
   using namespace Processors;
 
-  Utils::DefaultArguments args("align selected sensors");
-  if (args.parse(argc, argv))
-    return EXIT_FAILURE;
+  toml::Table defaults = {{"num_steps", 1},
+                          {"distance_sigma_max", 5.},
+                          {"reduced_chi2_max", -1.},
+                          {"damping", 0.9}};
+  Application app("align", "align selected sensors", defaults);
+  app.initialize(argc, argv);
 
-  uint64_t skipEvents = args.skipEvents();
-  uint64_t numEvents = args.numEvents();
-  Device device = Device::fromFile(args.device());
-  // override geometry if requested
-  auto geoPath = args.geometry();
-  if (!geoPath.empty()) {
-    auto geo = Mechanics::Geometry::fromFile(geoPath);
-    device.setGeometry(geo);
-  }
+  // configuration
+  auto sensorIds = app.config().get<std::vector<Index>>("sensor_ids");
+  auto alignIds = app.config().get<std::vector<Index>>("align_ids");
+  auto method = stringToMethod(app.config().get<std::string>("method"));
+  auto numSteps = app.config().get<int>("num_steps");
+  auto distSigmaMax = app.config().get<double>("distance_sigma_max");
+  auto redChi2Max = app.config().get<double>("reduced_chi2_max");
+  auto damping = app.config().get<double>("damping");
 
-  toml::Value cfgAll = Utils::Config::readConfig(args.config());
-  toml::Value defaults = toml::Table{{"num_steps", 1},
-                                     {"distance_sigma_max", 5.},
-                                     {"reduced_chi2_max", -1.},
-                                     {"damping", 0.9}};
-  toml::Value cfg = Utils::Config::withDefaults(cfgAll["align"], defaults);
-  // select alignment scope, i.e. the sensors that are considered as input and
-  // the sensors that should be aligned
-  auto sensorIds = cfg.get<std::vector<Index>>("sensor_ids");
-  auto alignIds = cfg.get<std::vector<Index>>("align_ids");
-  auto method = stringToMethod(cfg.get<std::string>("method"));
-  auto numSteps = cfg.get<int>("num_steps");
-  double distSigmaMax = cfg.get<double>("distance_sigma_max");
-  double redChi2Max = cfg.get<double>("reduced_chi2_max");
-  double damping = cfg.get<double>("damping");
-
-  Storage::StorageIO input(args.input(), Storage::INPUT, device.numSensors());
-  TFile hists(args.makeOutput("hists.root").c_str(), "RECREATE");
+  // output
+  TFile hists(app.outputPath("hists.root").c_str(), "RECREATE");
   StepsGraphs steps;
+
+  // copy device to allow modifications after each alignment step
+  auto dev = app.device();
 
   for (int step = 0; step < numSteps; ++step) {
     TDirectory* stepDir = hists.mkdir(("Step" + std::to_string(step)).c_str());
@@ -171,17 +159,17 @@ int main(int argc, char const* argv[])
     INFO("alignment step ", step + 1, "/", numSteps);
 
     // common event loop elements for all alignment methods
-    Utils::EventLoop loop(&input, skipEvents, numEvents);
-    setupHitMappers(device, loop);
-    setupClusterizers(device, loop);
-    loop.addProcessor(std::make_shared<ApplyGeometry>(device));
+    auto loop = app.makeEventLoop();
+    setupHitMappers(dev, loop);
+    setupClusterizers(dev, loop);
+    loop.addProcessor(std::make_shared<ApplyGeometry>(dev));
     // setup aligment method specific loop logic
     std::shared_ptr<Aligner> aligner;
     if (method == Method::Correlation) {
       // coarse method w/o tracks using only cluster correlations
 
-      auto corr = std::make_shared<Correlation>(device, sensorIds, stepDir);
-      aligner = std::make_shared<CorrelationAligner>(device, alignIds, corr);
+      auto corr = std::make_shared<Correlation>(dev, sensorIds, stepDir);
+      aligner = std::make_shared<CorrelationAligner>(dev, alignIds, corr);
       loop.addAnalyzer(corr);
       loop.addAnalyzer(aligner);
 
@@ -189,24 +177,23 @@ int main(int argc, char const* argv[])
       // use (unbiased) track residuals to align
 
       loop.addProcessor(std::make_shared<TrackFinder>(
-          device, sensorIds, distSigmaMax, sensorIds.size(), redChi2Max));
-      loop.addAnalyzer(std::make_shared<TrackInfo>(&device, stepDir));
-      loop.addAnalyzer(std::make_shared<Residuals>(&device, stepDir));
-      loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(device, stepDir));
-      aligner = std::make_shared<ResidualsAligner>(device, alignIds, stepDir,
-                                                   damping);
+          dev, sensorIds, distSigmaMax, sensorIds.size(), redChi2Max));
+      loop.addAnalyzer(std::make_shared<TrackInfo>(&dev, stepDir));
+      loop.addAnalyzer(std::make_shared<Residuals>(&dev, stepDir));
+      loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(dev, stepDir));
+      aligner =
+          std::make_shared<ResidualsAligner>(dev, alignIds, stepDir, damping);
       loop.addAnalyzer(aligner);
     }
-
     loop.run();
 
     Mechanics::Geometry newGeo = aligner->updatedGeometry();
-    steps.addStep(alignIds, device.geometry(), newGeo);
-    device.setGeometry(newGeo);
+    steps.addStep(alignIds, dev.geometry(), newGeo);
+    dev.setGeometry(newGeo);
   }
 
-  device.geometry().writeFile(args.makeOutput("geo.toml"));
-  steps.writeGraphs(device, &hists);
+  dev.geometry().writeFile(app.outputPath("geo.toml"));
+  steps.writeGraphs(dev, &hists);
   hists.Write();
   hists.Close();
 

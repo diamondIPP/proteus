@@ -4,6 +4,7 @@
 #include "analyzers/distances.h"
 #include "analyzers/matchexporter.h"
 #include "analyzers/residuals.h"
+#include "application.h"
 #include "mechanics/device.h"
 #include "processors/applygeometry.h"
 #include "processors/hitmapper.h"
@@ -11,8 +12,6 @@
 #include "processors/trackfitter.h"
 #include "storage/event.h"
 #include "storage/storageio.h"
-#include "utils/arguments.h"
-#include "utils/config.h"
 #include "utils/eventloop.h"
 
 int main(int argc, char const* argv[])
@@ -21,34 +20,29 @@ int main(int argc, char const* argv[])
   using namespace Mechanics;
   using namespace Processors;
 
-  Utils::DefaultArguments args("match tracks and clusters");
-  if (args.parse(argc, argv))
-    return EXIT_FAILURE;
+  Application app("match", "match tracks and clusters", {});
+  app.initialize(argc, argv);
 
-  Device device = Device::fromFile(args.device());
-  // override geometry if requested
-  auto geoPath = args.option<std::string>("geometry");
-  if (!geoPath.empty())
-    device.setGeometry(Mechanics::Geometry::fromFile(geoPath));
+  // configuration
+  auto sensorIds = app.config().get<std::vector<Index>>("sensor_ids");
 
-  toml::Value cfgAll = Utils::Config::readConfig(args.config());
-  toml::Value cfg = cfgAll["match"];
-  std::vector<Index> sensorIds = cfg.get<std::vector<Index>>("sensor_ids");
+  // output
+  TFile hists(app.outputPath("hists.root").c_str(), "RECREATE");
+  TFile trees(app.outputPath("trees.root").c_str(), "RECREATE");
 
-  Storage::StorageIO input(args.input(), Storage::INPUT, device.numSensors());
-  TFile hists(args.makeOutput("hists.root").c_str(), "RECREATE");
-  TFile trees(args.makeOutput("trees.root").c_str(), "RECREATE");
-
-  Utils::EventLoop loop(&input, args.skipEvents(), args.numEvents());
-  setupHitMappers(device, loop);
-  loop.addProcessor(std::make_shared<ApplyGeometry>(device));
-  loop.addProcessor(std::make_shared<StraightTrackFitter>(device, sensorIds));
+  auto loop = app.makeEventLoop();
+  setupHitMappers(app.device(), loop);
+  loop.addProcessor(std::make_shared<ApplyGeometry>(app.device()));
+  loop.addProcessor(
+      std::make_shared<StraightTrackFitter>(app.device(), sensorIds));
   for (auto sensorId : sensorIds)
-    loop.addProcessor(std::make_shared<Matcher>(device, sensorId));
-  loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(device, &hists));
+    loop.addProcessor(std::make_shared<Matcher>(app.device(), sensorId));
+  loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(app.device(), &hists));
   for (auto sensorId : sensorIds) {
-    loop.addAnalyzer(std::make_shared<Distances>(device, sensorId, &hists));
-    loop.addAnalyzer(std::make_shared<MatchExporter>(device, sensorId, &trees));
+    loop.addAnalyzer(
+        std::make_shared<Distances>(app.device(), sensorId, &hists));
+    loop.addAnalyzer(
+        std::make_shared<MatchExporter>(app.device(), sensorId, &trees));
   }
   loop.run();
 
