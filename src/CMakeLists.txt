@@ -71,7 +71,8 @@ set(COMMON_SRC
     utils/configparser.cpp
     utils/eventloop.cpp
     utils/logger.cpp
-    utils/statistics.cpp)
+    utils/statistics.cpp
+    application.cpp)
 
 add_library(pt-common STATIC ${COMMON_SRC})
 target_include_directories(pt-common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})
