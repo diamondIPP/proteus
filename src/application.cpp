@@ -36,7 +36,7 @@ void Application::initialize(int argc, char const* argv[])
     return std::exit(EXIT_FAILURE);
 
   // TODO 2016-12-13 msmk: add command line flag
-  Utils::Logger::setGlobalLevel(Utils::Logger::Level::Debug);
+  Utils::Logger::setGlobalLevel(Utils::Logger::Level::Info);
 
   // read configuration w/ automatic handling of defaults
   auto cfgPath = args.option<std::string>("config");
