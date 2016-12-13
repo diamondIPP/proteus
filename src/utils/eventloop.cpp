@@ -49,6 +49,13 @@ Utils::EventLoop::EventLoop(Storage::StorageIO* input,
 
 Utils::EventLoop::~EventLoop() {}
 
+void Utils::EventLoop::setOutput(Storage::StorageIO* output)
+{
+  assert(output && "ouput storage is NULL");
+
+  m_output = output;
+};
+
 void Utils::EventLoop::addProcessor(
     std::shared_ptr<Processors::Processor> processor)
 {

@@ -43,6 +43,8 @@ public:
             uint64_t numEvents = -1);
   ~EventLoop();
 
+  void setOutput(Storage::StorageIO* output);
+
   void addProcessor(std::shared_ptr<Processors::Processor> processor);
   void addAnalyzer(std::shared_ptr<Analyzers::Analyzer> analyzer);
   /** For backward compatibility: add old-style analyzer. */
