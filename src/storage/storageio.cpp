@@ -324,7 +324,6 @@ namespace Storage {
     INFO("file mode: ", (_fileMode ? "OUTPUT" : "INPUT"));
     INFO("planes: ", _numPlanes);
     INFO("tree mask: ", treeMask);
-    INFO(printSummaryTree());
 
     if (_numPlanes < 1)
       throw std::runtime_error("StorageIO: didn't initialize any planes");
@@ -396,7 +395,6 @@ namespace Storage {
       INFO("file path: ", _file->GetPath());
       INFO("file mode: ", (_fileMode ? "OUTPUT" : "INPUT"));
       INFO("planes: ", _numPlanes);
-      INFO(printSummaryTree());
       _file->Write();
       delete _file;
     }
@@ -488,7 +486,7 @@ namespace Storage {
     std::ostringstream out;
 
     if(!_summaryTree) {
-      ERROR("no summaryTree found");
+      INFO("no summaryTree found");
       return out.str();
     }
 
