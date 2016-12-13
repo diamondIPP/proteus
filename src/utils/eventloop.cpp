@@ -21,18 +21,9 @@ PT_SETUP_LOCAL_LOGGER(EventLoop)
 Utils::EventLoop::EventLoop(Storage::StorageIO* input,
                             uint64_t startEvent,
                             uint64_t numEvents)
-    : EventLoop(input, NULL, startEvent, numEvents)
-{
-}
-
-Utils::EventLoop::EventLoop(Storage::StorageIO* input,
-                            Storage::StorageIO* output,
-                            uint64_t startEvent,
-                            uint64_t numEvents)
-    : m_input(input), m_output(output), m_startEvent(startEvent)
+    : m_input(input), m_output(NULL), m_startEvent(startEvent)
 {
   assert(input && "input storage is NULL");
-  // output can be NULL
 
   uint64_t eventsOnFile = m_input->getNumEvents();
   if (numEvents == static_cast<uint64_t>(-1)) {
