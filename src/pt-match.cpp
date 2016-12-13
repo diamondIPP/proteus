@@ -21,16 +21,13 @@ int main(int argc, char const* argv[])
   using namespace Mechanics;
   using namespace Processors;
 
-  Utils::Arguments args("match tracks and clusters");
-  args.addOption('g', "geometry", "use a separate geometry file", "");
+  Utils::DefaultArguments args("match tracks and clusters");
   if (args.parse(argc, argv))
     return EXIT_FAILURE;
 
-  uint64_t skipEvents = args.get<uint64_t>("skip_events");
-  uint64_t numEvents = args.get<uint64_t>("num_events");
   Device device = Device::fromFile(args.device());
   // override geometry if requested
-  auto geoPath = args.get<std::string>("geometry");
+  auto geoPath = args.option<std::string>("geometry");
   if (!geoPath.empty())
     device.setGeometry(Mechanics::Geometry::fromFile(geoPath));
 
@@ -42,7 +39,7 @@ int main(int argc, char const* argv[])
   TFile hists(args.makeOutput("hists.root").c_str(), "RECREATE");
   TFile trees(args.makeOutput("trees.root").c_str(), "RECREATE");
 
-  Utils::EventLoop loop(&input, skipEvents, numEvents);
+  Utils::EventLoop loop(&input, args.skipEvents(), args.numEvents());
   setupHitMappers(device, loop);
   loop.addProcessor(std::make_shared<ApplyGeometry>(device));
   loop.addProcessor(std::make_shared<StraightTrackFitter>(device, sensorIds));
