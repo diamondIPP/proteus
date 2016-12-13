@@ -21,7 +21,7 @@ int main(int argc, char const* argv[])
     std::string name(arg0.substr(arg0.find_last_of('/') + 1));
     std::cerr << "usage: " << name << " CONFIG\n";
     std::cerr << '\n';
-    std::cerr << "show device/geometry/noise configuration\n";
+    std::cerr << "show device/geometry/mask configuration\n";
     std::cerr.flush();
     return EXIT_FAILURE;
   }
