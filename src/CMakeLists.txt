@@ -81,9 +81,6 @@ target_link_libraries(pt-common PUBLIC ${ROOT_LIBRARIES})
 add_executable(proteus main.cpp inputargs.cpp)
 target_link_libraries(proteus pt-common)
 
-add_executable(pt-analysis pt-analysis.cpp)
-target_link_libraries(pt-analysis pt-common)
-
 add_executable(pt-align pt-align.cpp)
 target_link_libraries(pt-align pt-common)
 
