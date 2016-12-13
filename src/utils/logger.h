@@ -134,7 +134,7 @@ private:
   } while (false)
 #define DEBUG(...)                                                             \
   do {                                                                         \
-    logger().debug('(', __FILE__, ':', __LINE__, ") ", __VA_ARGS__, '\n');     \
+    logger().debug(__VA_ARGS__, " (", __FUNCTION__, ':', __LINE__, ")\n");     \
   } while (false)
 
 #endif // PT_LOGGER_H

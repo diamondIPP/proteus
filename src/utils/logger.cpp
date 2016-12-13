@@ -11,15 +11,17 @@
 #define ANSI_ITALIC "\x1B[3m"
 #define ANSI_RED "\x1B[31m"
 
+const static size_t kPrefixMax = 16;
+
 // per-level prefix
 // clang-format off
 const char* const Utils::Logger::kLevelPrefix[3] = {
-    ANSI_BOLD ANSI_RED "ERROR|",
-                       "INFO |",
-    ANSI_ITALIC        "DEBUG|",
+    ANSI_BOLD ANSI_RED "E|",
+                       "I|",
+    ANSI_ITALIC        "D|",
 };
-const char* const Utils::Logger::kReset = ANSI_RESET;
 // clang-format on
+const char* const Utils::Logger::kReset = ANSI_RESET;
 
 // global logger w/o specific name
 Utils::Logger Utils::Logger::s_global("");
@@ -28,11 +30,8 @@ Utils::Logger::Level Utils::Logger::s_level = Utils::Logger::Level::Info;
 
 Utils::Logger::Logger(std::string name) : m_prefix(std::move(name))
 {
-  if (!m_prefix.empty()) {
-    m_prefix += "| ";
-  } else {
-    m_prefix = ' ';
-  }
+  m_prefix.resize(kPrefixMax, ' ');
+  m_prefix += "| ";
 }
 
 Utils::Logger& Utils::Logger::globalLogger() { return s_global; }
