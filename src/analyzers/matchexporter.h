@@ -61,7 +61,8 @@ private:
   ClusterData m_cluUnm;
   TTree* m_treeTrk;
   TTree* m_treeClu;
-  Utils::StatAccumulator<double> m_statMat;
+  Utils::StatAccumulator<double> m_statMatTrkFraction;
+  Utils::StatAccumulator<double> m_statMatCluFraction;
   Utils::StatAccumulator<double> m_statUnmTrk;
   Utils::StatAccumulator<double> m_statUnmClu;
   std::string m_name;

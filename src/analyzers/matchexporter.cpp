@@ -82,6 +82,8 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
       m_cluMat.size = cluster.size();
       m_cluMat.sizeCol = cluster.sizeCol();
       m_cluMat.sizeRow = cluster.sizeRow();
+      m_statMatTrkFraction.fill(1);
+      m_statMatCluFraction.fill(1);
       numMatches += 1;
     } else {
       m_mat.d2 = -1;
@@ -92,6 +94,7 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
       m_cluMat.size = -1;
       m_cluMat.sizeCol = -1;
       m_cluMat.sizeRow = -1;
+      m_statMatTrkFraction.fill(0);
     }
     m_treeTrk->Fill();
   }
@@ -112,9 +115,8 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
     m_cluUnm.sizeCol = cluster.sizeCol();
     m_cluUnm.sizeRow = cluster.sizeRow();
     m_treeClu->Fill();
+    m_statMatCluFraction.fill(0);
   }
-
-  m_statMat.fill(numMatches);
   m_statUnmTrk.fill(event.numTracks() - numMatches);
   m_statUnmClu.fill(plane.numClusters() - numMatches);
 }
@@ -122,7 +124,8 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
 void Analyzers::MatchExporter::finalize()
 {
   INFO("matching for ", m_sensor.name(), ':');
-  INFO("  matched/event: ", m_statMat);
+  INFO("  matched track fraction: ", m_statMatTrkFraction);
+  INFO("  matched cluster fraction: ", m_statMatCluFraction);
   INFO("  unmatched tracks/event: ", m_statUnmTrk);
   INFO("  unmatched clusters/event: ", m_statUnmClu);
 }
