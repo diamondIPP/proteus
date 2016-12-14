@@ -17,7 +17,7 @@ PT_SETUP_LOCAL_LOGGER(Application)
 
 Application::Application(const std::string& name,
                          const std::string& description,
-                         const toml::Value& defaults)
+                         const toml::Table& defaults)
     : m_name(name), m_desc(description), m_cfg(defaults)
 {
 }
