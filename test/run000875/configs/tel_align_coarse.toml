@@ -1,8 +1,0 @@
-# coarse alignment using cluster correlation
-[align]
-# which method should be used to compute the alignment
-method = "correlation" # correlation, residuals, chi2_local
-# sensors that are used to compute the alignment, e.g. to build tracks
-sensor_ids = [0, 1, 2, 3, 4, 5]
-# sensors which should be aligned (must be a subset of sensor_ids)
-align_ids = [1, 2, 3, 4, 5]

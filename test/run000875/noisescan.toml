@@ -1,0 +1,30 @@
+[noisescan]
+max_sigma_above_avg =  5.0
+max_rate = 0.1
+density_bandwidth = 3.0
+
+[[noisescan.tel.sensors]]
+id = 0
+
+[[noisescan.tel.sensors]]
+id = 1
+
+[[noisescan.tel.sensors]]
+id = 2
+
+[[noisescan.tel.sensors]]
+id = 3
+
+[[noisescan.tel.sensors]]
+id = 4
+
+[[noisescan.tel.sensors]]
+id = 5
+
+[noisescan.dut0]
+max_sigma_above_avg =  5.0
+max_rate = 0.1
+density_bandwidth = 3.0
+
+[[noisescan.dut0.sensors]]
+id = 6
