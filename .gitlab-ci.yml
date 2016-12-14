@@ -15,7 +15,9 @@ build:
   script:
     - mkdir build
     - cd build
-    - cmake -DCMAKE_BUILD_TYPE=Release ..
+    # Build type=Debug: activates compilation of asserts and
+    # includes debug symbols (See issue #43)
+    - cmake -DCMAKE_BUILD_TYPE=Debug ..
     - cmake --build .
   artifacts:
     paths:
