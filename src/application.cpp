@@ -44,20 +44,17 @@ void Application::initialize(int argc, char const* argv[])
   // read configuration w/ automatic handling of defaults
   auto pathCfg = args.option<std::string>("config");
   auto subsection = args.option<std::string>("subsection");
+  std::string section =
+      (subsection.empty() ? m_name : (m_name + '.' + subsection));
   auto cfgFull = Utils::Config::readConfig(pathCfg);
-  const toml::Value* cfgTool = cfgFull.findChild(m_name);
+  // select configuration subsection
+  const toml::Value* cfgTool = cfgFull.find(section);
   if (!cfgTool) {
     ERROR("configuration section '", m_name, "' is missing");
     std::exit(EXIT_FAILURE);
   }
-  if (!subsection.empty()) {
-    cfgTool = cfgTool->findChild(subsection);
-    if (!cfgTool) {
-      ERROR("configuration section '", m_name, '.', subsection, "' is missing");
-      std::exit(EXIT_FAILURE);
-    }
-  }
   m_cfg = Utils::Config::withDefaults(*cfgTool, m_cfg);
+  INFO("read configuration '", section, "' from '", pathCfg, "'");
 
   // read device w/ optional geometry override
   auto pathDev = args.option<std::string>("device");
