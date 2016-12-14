@@ -25,12 +25,12 @@ Application::Application(const std::string& name,
 void Application::initialize(int argc, char const* argv[])
 {
   Utils::Arguments args(m_desc);
-  args.addOption('s', "skip_events", "skip the first n events", 0);
-  args.addOption('n', "num_events", "number of events to process", -1);
   args.addOption('d', "device", "device configuration file", "device.toml");
   args.addOption('g', "geometry", "load a separate geometry file");
   args.addOption('c', "config", "analysis configuration file", "analysis.toml");
   args.addOption('u', "subsection", "use the given configuration sub-section");
+  args.addOption('s', "skip_events", "skip the first n events", 0);
+  args.addOption('n', "num_events", "number of events to process", -1);
   args.addRequiredArgument("input", "path to the input file");
   args.addRequiredArgument("output_prefix", "output path prefix");
 
