@@ -40,14 +40,14 @@ Mechanics::Geometry Mechanics::Geometry::fromFile(const std::string& path)
     // fall-back to old format
     alignment = fromConfig(ConfigParser(path.c_str()));
   }
-  INFO("read alignment from '", path, "'");
+  INFO("read geometry from '", path, "'");
   return alignment;
 }
 
 void Mechanics::Geometry::writeFile(const std::string& path) const
 {
   Utils::Config::writeConfig(toConfig(), path);
-  INFO("wrote alignment to '", path, "'");
+  INFO("wrote geometry to '", path, "'");
 }
 
 Mechanics::Geometry Mechanics::Geometry::fromConfig(const ConfigParser& config)

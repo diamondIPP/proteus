@@ -73,6 +73,8 @@ public:
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
+  Device() = default;
+
   std::string m_name;
   std::vector<Sensor> m_sensors;
   Geometry m_geometry;

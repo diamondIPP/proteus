@@ -211,12 +211,13 @@ Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
 {
   using namespace Utils::Config;
 
+  Device device;
   std::string dir = pathDirname(path);
   DEBUG("config base dir '", dir, "'");
 
   if (pathExtension(path) == "toml") {
     auto cfg = readConfig(path);
-    auto device = fromConfig(readConfig(path));
+    device = fromConfig(cfg);
 
     auto cfgAlign = cfg.find("alignment");
     if (cfgAlign && cfgAlign->is<std::string>()) {
@@ -254,11 +255,12 @@ Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
     } else if (cfgMask) {
       device.applyNoiseMask(NoiseMask::fromConfig(*cfgMask));
     }
-
-    return device;
+  } else {
+    // fall-back to old format
+    device = parseDevice(path);
   }
-  // fall-back to old format
-  return parseDevice(path);
+  INFO("read device from '", path, "'");
+  return device;
 }
 
 Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
