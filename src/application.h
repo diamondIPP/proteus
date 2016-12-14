@@ -21,7 +21,7 @@ namespace Storage {
 class StorageIO;
 }
 
-/** Common application utility class.
+/** Common application class.
  *
  * Handles the command line parameters, configures loggins, reads the analysis
  * and device configuration including modifications from the command line,

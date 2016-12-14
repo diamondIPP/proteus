@@ -13,6 +13,8 @@
 #include "utils/arguments.h"
 #include "utils/logger.h"
 
+PT_SETUP_LOCAL_LOGGER(Application)
+
 Application::Application(const std::string& name,
                          const std::string& description,
                          const toml::Value& defaults)
@@ -23,33 +25,46 @@ Application::Application(const std::string& name,
 void Application::initialize(int argc, char const* argv[])
 {
   Utils::Arguments args(m_desc);
-  args.addOption('c', "config", "analysis configuration file", "analysis.toml");
-  args.addOption('d', "device", "device configuration file", "device.toml");
-  args.addOption('g', "geometry", "load a separate geometry file");
   args.addOption('s', "skip_events", "skip the first n events", 0);
   args.addOption('n', "num_events", "number of events to process", -1);
+  args.addOption('d', "device", "device configuration file", "device.toml");
+  args.addOption('g', "geometry", "load a separate geometry file");
+  args.addOption('c', "config", "analysis configuration file", "analysis.toml");
+  args.addOption('u', "subsection", "use the given configuration sub-section");
   args.addRequiredArgument("input", "path to the input file");
   args.addRequiredArgument("output_prefix", "output path prefix");
 
   // should print help automatically
   if (args.parse(argc, argv))
-    return std::exit(EXIT_FAILURE);
+    std::exit(EXIT_FAILURE);
 
   // TODO 2016-12-13 msmk: add command line flag
   Utils::Logger::setGlobalLevel(Utils::Logger::Level::Info);
 
   // read configuration w/ automatic handling of defaults
-  auto cfgPath = args.option<std::string>("config");
-  auto cfgFull = Utils::Config::readConfig(cfgPath);
-  m_cfg = Utils::Config::withDefaults(cfgFull[m_name], m_cfg);
-  // TODO 2016-12-13 msmk: allow config subsection
+  auto pathCfg = args.option<std::string>("config");
+  auto subsection = args.option<std::string>("subsection");
+  auto cfgFull = Utils::Config::readConfig(pathCfg);
+  const toml::Value* cfgTool = cfgFull.findChild(m_name);
+  if (!cfgTool) {
+    ERROR("configuration section '", m_name, "' is missing");
+    std::exit(EXIT_FAILURE);
+  }
+  if (!subsection.empty()) {
+    cfgTool = cfgTool->findChild(subsection);
+    if (!cfgTool) {
+      ERROR("configuration section '", m_name, '.', subsection, "' is missing");
+      std::exit(EXIT_FAILURE);
+    }
+  }
+  m_cfg = Utils::Config::withDefaults(*cfgTool, m_cfg);
 
   // read device w/ optional geometry override
-  auto devPath = args.option<std::string>("device");
-  auto geoPath = args.option<std::string>("geometry");
-  m_dev.reset(new Mechanics::Device(Mechanics::Device::fromFile(devPath)));
-  if (!geoPath.empty())
-    m_dev->setGeometry(Mechanics::Geometry::fromFile(geoPath));
+  auto pathDev = args.option<std::string>("device");
+  auto pathGeo = args.option<std::string>("geometry");
+  m_dev.reset(new Mechanics::Device(Mechanics::Device::fromFile(pathDev)));
+  if (!pathGeo.empty())
+    m_dev->setGeometry(Mechanics::Geometry::fromFile(pathGeo));
 
   // setup input and i/o settings
   m_input.reset(new Storage::StorageIO(args.argument<std::string>(0),
