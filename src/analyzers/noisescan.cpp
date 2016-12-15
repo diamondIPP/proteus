@@ -173,9 +173,9 @@ void Analyzers::NoiseScan::finalize()
   INFO("noise scan sensor ", m_sensorId, ":");
   INFO("  roi col: ", m_roi.interval(0));
   INFO("  roi row: ", m_roi.interval(1));
-  INFO("  max occupancy: ", m_occ->GetMaximum(), " hits/event");
   INFO("  cut relative: local mean + ", m_sigmaAboveMeanMax, " * local sigma");
   INFO("  cut absolute: ", m_rateMax, " hits/event");
+  INFO("  max occupancy: ", m_occ->GetMaximum(), " hits/event");
   INFO("  noisy pixels: ", numNoisyPixels);
 }
 
