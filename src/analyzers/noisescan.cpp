@@ -36,14 +36,14 @@ Analyzers::NoiseScan::NoiseScan(const Mechanics::Device& device,
   // region of interest is bounded by the active sensor size
   m_roi = Utils::intersection(regionOfInterest, sensor.sensitiveAreaPixel());
 
-  auto makeDist = [&](const std::string& suffix) -> TH1D* {
-    TH1D* h1 = new TH1D((sensor.name() + suffix).c_str(), "", 100, 0, 1);
+  auto makeDist = [&](const std::string& name) -> TH1D* {
+    TH1D* h1 = new TH1D((sensor.name() + '-' + name).c_str(), "", 100, 0, 1);
     h1->SetDirectory(dir);
     return h1;
   };
-  auto makeMap = [&](const std::string& suffix) -> TH2D* {
+  auto makeMap = [&](const std::string& name) -> TH2D* {
     TH2D* h2 =
-        new TH2D((sensor.name() + suffix).c_str(), "",
+        new TH2D((sensor.name() + '-' + name).c_str(), "",
                  m_roi.axes[0].max - m_roi.axes[0].min, m_roi.axes[0].min,
                  m_roi.axes[0].max, m_roi.axes[1].max - m_roi.axes[1].min,
                  m_roi.axes[1].min, m_roi.axes[1].max);
