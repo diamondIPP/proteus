@@ -1,6 +1,6 @@
 [noisescan]
-max_sigma_above_avg =  5.0
-max_rate = 0.1
+sigma_max =  5.0
+rate_max = 0.1
 density_bandwidth = 3.0
 
 [[noisescan.tel.sensors]]
@@ -22,8 +22,8 @@ id = 4
 id = 5
 
 [noisescan.dut0]
-max_sigma_above_avg =  5.0
-max_rate = 0.1
+sigma_max =  5.0
+rate_max = 0.1
 density_bandwidth = 3.0
 
 [[noisescan.dut0.sensors]]

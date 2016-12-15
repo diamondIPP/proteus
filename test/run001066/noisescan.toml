@@ -1,7 +1,7 @@
 # noise scan of the telescope sensors
 [noisescan.tel]
-max_sigma_above_avg = 5.0
-max_rate = 0.1
+sigma_max = 5.0
+rate_max = 0.1
 density_bandwidth = 2.0
 
 [[noisescan.tel.sensors]]
@@ -47,8 +47,8 @@ row_min = 155
 row_max = 198
 
 [noisescan.dut0]
-max_sigma_above_avg =  5.0
-max_rate = 0.1
+sigma_max =  5.0
+rate_max = 0.1
 density_bandwidth = 3.0
 
 [[noisescan.dut0.sensors]]
