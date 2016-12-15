@@ -136,7 +136,7 @@ void EventDepictor::depictEventSensor(const Storage::Plane* plane,
 
   // Some error checking
   for (unsigned int nhit = 0; nhit < plane->numHits(); nhit++)
-    assert(plane->getHit(nhit)->isInCluster() &&
+    assert(plane->getHit(nhit)->cluster() &&
            "Processors: unclustered hit detected during depiction");
 
   depiction->Draw(); // Draw axis and sets coordinates for drawing boxes...

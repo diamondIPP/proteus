@@ -17,23 +17,19 @@ Analyzers::BaseAnalyzer::BaseAnalyzer(TDirectory* dir,
   _dir(dir),
   _nameSuffix(nameSuffix),
   _postProcessed(false),
-  _analyzerName(analyzerName),
-  _numEventCuts(0),
-  _numTrackCuts(0),
-  _numClusterCuts(0),
-  _numHitCuts(0)
+  _analyzerName(analyzerName)
 {}
 
 
 Analyzers::BaseAnalyzer::~BaseAnalyzer() {
-  for(unsigned int i=0; i<_eventCuts.size(); i++)
-    delete _eventCuts.at(i);
-  for (unsigned int i=0; i<_trackCuts.size(); i++)
-    delete _trackCuts.at(i);
-  for (unsigned int i=0; i<_clusterCuts.size(); i++)
-    delete _clusterCuts.at(i);
-  for (unsigned int i=0; i<_hitCuts.size(); i++)
-    delete _hitCuts.at(i);
+   for (auto ecut = _eventCuts.begin(); ecut != _eventCuts.end(); ++ecut)
+      delete *ecut;
+   for (auto tcut = _trackCuts.begin(); tcut != _trackCuts.end(); ++tcut)
+      delete *tcut;
+   for (auto ccut = _clusterCuts.begin(); ccut != _clusterCuts.end(); ++ccut)
+      delete *ccut;
+   for (auto hcut = _hitCuts.begin(); hcut != _hitCuts.end(); ++hcut)
+      delete *hcut;
 }
 
 TDirectory* Analyzers::BaseAnalyzer::makeGetDirectory(const char* dirName){
@@ -51,22 +47,18 @@ void Analyzers::BaseAnalyzer::setAnalyzerName(const std::string name) {
 
 void Analyzers::BaseAnalyzer::addCut(const EventCut* cut) {
   _eventCuts.push_back(cut);
-  _numEventCuts++;
 }
 
 void Analyzers::BaseAnalyzer::addCut(const TrackCut* cut) {
   _trackCuts.push_back(cut);
-  _numTrackCuts++;
 }
 
 void Analyzers::BaseAnalyzer::addCut(const ClusterCut* cut) {
   _clusterCuts.push_back(cut);
-  _numClusterCuts++;
 }
 
 void Analyzers::BaseAnalyzer::addCut(const HitCut* cut) {
   _hitCuts.push_back(cut);
-  _numHitCuts++;
 }
 
 void Analyzers::BaseAnalyzer::print() const {
@@ -77,46 +69,37 @@ const std::string Analyzers::BaseAnalyzer::printStr() const {
   std::ostringstream out;
   out << "analyzer '" <<  _analyzerName  << "' ; ";
   out << "number of cuts (Evt,Trk,Clus,Hit) = ("
-      <<  _numEventCuts << ","
-      <<  _numTrackCuts << ","
-      <<  _numClusterCuts << ","
-      <<  _numHitCuts << ")";
+      <<  _eventCuts.size() << ","
+      <<  _trackCuts.size() << ","
+      <<  _clusterCuts.size() << ","
+      <<  _hitCuts.size() << ")";
  return out.str();
 }
 
-bool Analyzers::BaseAnalyzer::checkCuts(const Storage::Event* event) const {
-  for (auto cut = _eventCuts.begin(); cut != _eventCuts.end(); ++cut) {
-    if (!(*cut)->check(event)) {
+template<class TO, class TC>
+bool checkCuts(const TO *obj, const TC& cuts) {
+  for (auto cut = cuts.begin(); cut != cuts.end(); ++cut) {
+    if (!(*cut)->check(obj)) {
       return false;
     }
   }
   return true;
+}
+
+bool Analyzers::BaseAnalyzer::checkCuts(const Storage::Event* event) const {
+  return ::checkCuts(event, _eventCuts);
 }
 
 bool Analyzers::BaseAnalyzer::checkCuts(const Storage::Track* track) const {
-  for (auto cut = _trackCuts.begin(); cut != _trackCuts.end(); ++cut) {
-    if (!(*cut)->check(track)) {
-      return false;
-    }
-  }
-  return true;
+  return ::checkCuts(track, _trackCuts);
 }
 
 bool Analyzers::BaseAnalyzer::checkCuts(const Storage::Cluster* cluster) const {
-  for (auto cut = _clusterCuts.begin(); cut != _clusterCuts.end(); ++cut) {
-    if (!(*cut)->check(cluster)) {
-      return false;
-    }
-  }
-  return true;
+  return ::checkCuts(cluster, _clusterCuts);
 }
 
 bool Analyzers::BaseAnalyzer::checkCuts(const Storage::Hit* hit) const {
-  for (auto cut = _hitCuts.begin(); cut != _hitCuts.end(); ++cut) {
-    if (!(*cut)->check(hit)) {
-      return false;
-    }
-  }
-  return true;
+  return ::checkCuts(hit, _hitCuts);
 }
+
 
