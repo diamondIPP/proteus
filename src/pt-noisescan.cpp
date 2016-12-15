@@ -6,6 +6,7 @@
  * run noise scan to find noisy pixels and create pixel masks
  */
 
+#include <climits>
 #include <cstdlib>
 #include <iostream>
 #include <memory>
@@ -34,18 +35,52 @@ int main(int argc, char const* argv[])
   TFile* hists = TFile::Open(args.makeOutput("hists.root").c_str(), "RECREATE");
   std::string maskPath = args.makeOutput("mask.toml");
 
-  auto cfg = Utils::Config::readConfig(args.config());
-  auto noise =
-      std::make_shared<Analyzers::NoiseScan>(device, cfg["noisescan"], hists);
+  // construct per-sensor configuration
+  // clang-format off
+  toml::Value defaults = toml::Table{
+    {"density_bandwidth", 2.},
+    {"max_sigma_above_avg", 5.},
+    {"max_rate", 1.},
+    {"col_min", INT_MIN},
+    {"col_max", INT_MAX},
+    {"row_min", INT_MIN},
+    {"row_max", INT_MAX}};
+  // clang-format on
+  auto cfgAll = Utils::Config::readConfig(args.config());
+  auto cfgTool = Utils::Config::withDefaults(cfgAll["noisescan"], defaults);
+  std::vector<toml::Value> cfg =
+      Utils::Config::perSensor(cfgTool, toml::Table());
 
-  Utils::EventLoop loop(&input,
-                        args.get<uint64_t>("skip_events"),
+  // sensor specific
+  std::vector<std::shared_ptr<Analyzers::NoiseScan>> noiseScans;
+  for (auto c = cfg.begin(); c != cfg.end(); ++c) {
+    typedef Analyzers::NoiseScan::Area Area;
+    typedef Analyzers::NoiseScan::Area::Axis Interval;
+
+    auto id = c->get<Index>("id");
+    auto bandwidth = c->get<double>("density_bandwidth");
+    auto sigmaMax = c->get<double>("max_sigma_above_avg");
+    auto rateMax = c->get<double>("max_rate");
+    // min/max are inclusive but Area uses right-open intervals
+    Area roi(Interval(c->get<int>("col_min"), c->get<int>("col_max") + 1),
+             Interval(c->get<int>("row_min"), c->get<int>("row_max") + 1));
+    noiseScans.push_back(std::make_shared<Analyzers::NoiseScan>(
+        device, id, bandwidth, sigmaMax, rateMax, roi, hists));
+  }
+
+  Utils::EventLoop loop(&input, args.get<uint64_t>("skip_events"),
                         args.get<uint64_t>("num_events"));
   loop.addAnalyzer(std::make_shared<Analyzers::Occupancy>(&device, hists));
-  loop.addAnalyzer(noise);
+  for (auto noise = noiseScans.begin(); noise != noiseScans.end(); ++noise)
+    loop.addAnalyzer(*noise);
   loop.run();
 
-  noise->constructMask().writeFile(maskPath);
+  // store combined noise mask
+  Mechanics::NoiseMask newMask;
+  for (auto noise = noiseScans.begin(); noise != noiseScans.end(); ++noise)
+    newMask.merge((*noise)->constructMask());
+  newMask.writeFile(maskPath);
+
   hists->Write();
   hists->Close();
 
