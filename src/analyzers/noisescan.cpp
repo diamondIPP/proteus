@@ -8,7 +8,6 @@
 #include <climits>
 
 #include "mechanics/device.h"
-#include "mechanics/noisemask.h"
 #include "storage/event.h"
 #include "storage/hit.h"
 #include "storage/plane.h"
@@ -40,8 +39,8 @@ Analyzers::NoiseScan::NoiseScan(const Mechanics::Device& device,
   TDirectory* dir = parent->mkdir("NoiseScan");
 
   m_densityBandwidth = c.find("density_bandwidth")->asNumber();
-  m_maxSigmaAboveAvg = c.find("max_sigma_above_avg")->asNumber();
-  m_maxRate = c.find("max_rate")->asNumber();
+  m_sigmaAboveMeanMax = c.find("max_sigma_above_avg")->asNumber();
+  m_rateMax = c.find("max_rate")->asNumber();
 
   // sensor specific
   for (auto cfgSensor = s.begin(); cfgSensor != s.end(); ++cfgSensor) {
@@ -201,9 +200,9 @@ void Analyzers::NoiseScan::finalize()
         double sig = sigma->GetBinContent(icol, irow);
         double rate = occ->GetBinContent(icol, irow);
         // pixel occupancy is a number of stddevs above local average
-        bool isAboveRelative = (m_maxSigmaAboveAvg < sig);
+        bool isAboveRelative = (m_sigmaAboveMeanMax < sig);
         // pixel occupancy is above absolute limit
-        bool isAboveAbsolute = (m_maxRate < rate);
+        bool isAboveAbsolute = (m_rateMax < rate);
 
         if (isAboveRelative || isAboveAbsolute) {
           pixelMask->AddBinContent(pixelMask->GetBin(icol, irow));
@@ -217,14 +216,14 @@ void Analyzers::NoiseScan::finalize()
     INFO("  roi col: ", roi.axes[0]);
     INFO("  roi row: ", roi.axes[1]);
     INFO("  max occupancy: ", occ->GetMaximum(), " hits/event");
-    INFO("  cut relative: local mean + ", m_maxSigmaAboveAvg,
+    INFO("  cut relative: local mean + ", m_sigmaAboveMeanMax,
          " * local sigma");
-    INFO("  cut absolute: ", m_maxRate, " hits/event");
+    INFO("  cut absolute: ", m_rateMax, " hits/event");
     INFO("  noisy pixels: ", numNoisyPixels);
   }
 }
 
-void Analyzers::NoiseScan::writeMask(const std::string& path)
+Mechanics::NoiseMask Analyzers::NoiseScan::constructMask() const
 {
   Mechanics::NoiseMask newMask;
 
@@ -241,5 +240,6 @@ void Analyzers::NoiseScan::writeMask(const std::string& path)
       }
     }
   }
-  newMask.writeFile(path);
+
+  return newMask;
 }

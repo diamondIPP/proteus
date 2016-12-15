@@ -16,6 +16,7 @@
 #include <TH2.h>
 
 #include "analyzer.h"
+#include "mechanics/noisemask.h"
 #include "utils/config.h"
 #include "utils/definitions.h"
 #include "utils/interval.h"
@@ -42,7 +43,7 @@ public:
   void analyze(const Storage::Event& event);
   void finalize();
 
-  void writeMask(const std::string& path);
+  Mechanics::NoiseMask constructMask() const;
 
 private:
   using Area = Utils::Box<2, int>;
@@ -61,8 +62,7 @@ private:
   std::vector<TH1D*> m_localSigmasPixels;
   std::vector<TH2D*> m_pixelMasks;
   uint64_t m_numEvents;
-  double m_densityBandwidth;
-  double m_maxSigmaAboveAvg, m_maxRate;
+  double m_densityBandwidth, m_sigmaAboveMeanMax, m_rateMax;
 };
 
 } // namespace Analyzers

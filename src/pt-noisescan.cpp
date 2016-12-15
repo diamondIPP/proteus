@@ -45,7 +45,7 @@ int main(int argc, char const* argv[])
   loop.addAnalyzer(noise);
   loop.run();
 
-  noise->writeMask(maskPath);
+  noise->constructMask().writeFile(maskPath);
   hists->Write();
   hists->Close();
 
