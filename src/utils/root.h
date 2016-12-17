@@ -11,11 +11,64 @@
 #include <string>
 
 #include <TDirectory.h>
+#include <TH1.h>
+#include <TH2.h>
 
 namespace Utils {
 
 /** Create a directory relative to the parent or return an existing one. */
-inline TDirectory* makeDir(TDirectory* parent, const std::string& path)
+TDirectory* makeDir(TDirectory* parent, const std::string& path);
+
+/** Binning and label for a single histogram axis. */
+struct HistAxis {
+  const double limit0;
+  const double limit1;
+  const int bins;
+  const std::string label;
+
+  /** Construct w/ equal-sized bins in the given boundaries. */
+  HistAxis(double a, double b, int n, std::string l = std::string())
+      : limit0(a), limit1(b), bins(n), label(std::move(l))
+  {
+  }
+  /** Construct w/ equal-size bins from an interval object.
+   *
+   * \param i Interval object that provides `.min` and `.max` members
+   * \param n Number of bins
+   * \param l Axis label
+   */
+  template <typename Interval>
+  HistAxis(const Interval& i, int n, std::string l = std::string())
+      : HistAxis(i.min, i.max, n, std::move(l))
+  {
+  }
+  /** Construct w/ integer bins.
+   *
+   * Assumes that the histogram will be filled by integers in the range [a, b).
+   * The number of bins is already defined by the boundaries and the bin
+   * boundaries are placed such that the bin center corresponds to the integer
+   * value.
+   */
+  explicit HistAxis(int a, int b, std::string l = std::string())
+      : HistAxis(a - 0.5, b - 0.5, std::abs(b - a), std::move(l))
+  {
+  }
+};
+
+/** Create a named 1d histogram in the directory. */
+TH1D* makeH1(TDirectory* dir, const std::string& name, HistAxis axis);
+
+/** Create a named 2d histogram in the directory. */
+TH2D* makeH2(TDirectory* dir,
+             const std::string& name,
+             HistAxis axis0,
+             HistAxis axis1);
+
+} // namespace Utils
+
+// implementation
+
+inline TDirectory* Utils::makeDir(TDirectory* parent, const std::string& path)
 {
   assert(parent && "Parent directory must be non-NULL");
 
@@ -27,6 +80,30 @@ inline TDirectory* makeDir(TDirectory* parent, const std::string& path)
   return dir;
 }
 
-} // namespace Utils
+inline TH1D*
+Utils::makeH1(TDirectory* dir, const std::string& name, HistAxis axis)
+{
+  assert(dir && "Directory must be non-NULL");
+
+  TH1D* h = new TH1D(name.c_str(), "", axis.bins, axis.limit0, axis.limit1);
+  h->SetXTitle(axis.label.c_str());
+  h->SetDirectory(dir);
+  return h;
+}
+
+inline TH2D* Utils::makeH2(TDirectory* dir,
+                           const std::string& name,
+                           HistAxis axis0,
+                           HistAxis axis1)
+{
+  assert(dir && "Directory must be non-NULL");
+
+  TH2D* h = new TH2D(name.c_str(), "", axis0.bins, axis0.limit0, axis0.limit1,
+                     axis1.bins, axis1.limit0, axis1.limit1);
+  h->SetXTitle(axis0.label.c_str());
+  h->SetYTitle(axis1.label.c_str());
+  h->SetDirectory(dir);
+  return h;
+}
 
 #endif // PT_ROOT_H
