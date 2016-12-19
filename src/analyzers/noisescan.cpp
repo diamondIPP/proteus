@@ -22,40 +22,41 @@ Analyzers::NoiseScan::NoiseScan(const Mechanics::Device& device,
                                 const double m_sigmaMax,
                                 const double rateMax,
                                 const Area& regionOfInterest,
-                                TDirectory* parent)
+                                TDirectory* parent,
+                                const int binsOccupancy)
     : m_sensorId(sensorId)
     , m_densityBandwidth(bandwidth)
     , m_sigmaAboveMeanMax(m_sigmaMax)
     , m_rateMax(rateMax)
     , m_numEvents(0)
-    , m_name("NoiseScan(sensorId=" + std::to_string(sensorId) + ')')
 {
-  const Mechanics::Sensor& sensor = *device.getSensor(sensorId);
+  using namespace Utils;
+
   TDirectory* dir = Utils::makeDir(parent, "NoiseScan");
+  const Mechanics::Sensor& sensor = *device.getSensor(sensorId);
+  auto name = [&](const std::string& suffix) {
+    return sensor.name() + '-' + suffix;
+  };
 
   // region of interest is bounded by the active sensor size
   m_roi = Utils::intersection(regionOfInterest, sensor.sensitiveAreaPixel());
 
-  auto makeDist = [&](const std::string& name) -> TH1D* {
-    TH1D* h1 = new TH1D((sensor.name() + '-' + name).c_str(), "", 100, 0, 1);
-    h1->SetDirectory(dir);
-    return h1;
-  };
-  auto makeMap = [&](const std::string& name) -> TH2D* {
-    TH2D* h2 =
-        new TH2D((sensor.name() + '-' + name).c_str(), "",
-                 m_roi.axes[0].max - m_roi.axes[0].min, m_roi.axes[0].min,
-                 m_roi.axes[0].max, m_roi.axes[1].max - m_roi.axes[1].min,
-                 m_roi.axes[1].min, m_roi.axes[1].max);
-    h2->SetDirectory(dir);
-    return h2;
-  };
-  m_occ = makeMap("Occupancy");
-  m_occPixels = makeDist("OccupancyPixels");
-  m_density = makeMap("DensityEstimate");
-  m_sigma = makeMap("LocalSignificance");
-  m_sigmaPixels = makeDist("LocalSignificancePixels");
-  m_maskedPixels = makeMap("MaskedPixels");
+  HistAxis axCol(m_roi.axes[0], m_roi.axes[0].length(), "Hit column");
+  HistAxis axRow(m_roi.axes[1], m_roi.axes[1].length(), "Hit row");
+  HistAxis axOcc(0, 1, binsOccupancy, "Pixel occupancy");
+  HistAxis axSig(0, 1, binsOccupancy, "Local pixel rate significance");
+
+  m_occ = makeH2(dir, name("Occupancy"), axCol, axRow);
+  m_occPixels = makeH1(dir, name("OccupancyPixels"), axOcc);
+  m_density = makeH2(dir, name("DensityEstimate"), axCol, axRow);
+  m_sigma = makeH2(dir, name("LocalSignificance"), axCol, axRow);
+  m_sigmaPixels = makeH1(dir, name("LocalSignificancePixels"), axSig);
+  m_maskedPixels = makeH2(dir, name("MaskedPixels"), axCol, axRow);
+}
+
+std::string Analyzers::NoiseScan::name() const
+{
+  return "NoiseScan(sensorId=" + std::to_string(m_sensorId) + ')';
 }
 
 void Analyzers::NoiseScan::analyze(const Storage::Event& event)

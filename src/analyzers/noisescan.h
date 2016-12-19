@@ -9,7 +9,6 @@
 #ifndef PT_NOISESCAN_H
 #define PT_NOISESCAN_H
 
-#include <string>
 #include <vector>
 
 #include "analyzer.h"
@@ -43,9 +42,10 @@ public:
             const double sigmaMax,
             const double rateMax,
             const Area& regionOfInterest,
-            TDirectory* dir);
+            TDirectory* dir,
+            const int binsOccupancy = 128);
 
-  std::string name() const { return m_name; }
+  std::string name() const;
   void analyze(const Storage::Event& event);
   void finalize();
 
@@ -62,7 +62,6 @@ private:
   TH2D* m_sigma;
   TH1D* m_sigmaPixels;
   TH2D* m_maskedPixels;
-  std::string m_name;
 };
 
 } // namespace Analyzers
