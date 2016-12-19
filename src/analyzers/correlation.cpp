@@ -7,6 +7,7 @@
 
 #include "mechanics/device.h"
 #include "storage/event.h"
+#include "utils/root.h"
 
 Analyzers::Correlation::Correlation(const Mechanics::Device& device,
                                     const std::vector<Index>& sensorIds,
@@ -30,7 +31,7 @@ Analyzers::Correlation::Correlation(const Mechanics::Device* device,
 {
   assert(device && "Analyzer: can't initialize with null device");
 
-  TDirectory* corrDir = makeGetDirectory("Correlations");
+  TDirectory* corrDir = Utils::makeDir(dir, "Correlations");
   for (Index sensorId = 0; (sensorId + 1) < device->numSensors(); ++sensorId)
     addHist(*device->getSensor(sensorId), *device->getSensor(sensorId + 1),
             corrDir);
@@ -40,9 +41,12 @@ void Analyzers::Correlation::addHist(const Mechanics::Sensor& sensor0,
                                      const Mechanics::Sensor& sensor1,
                                      TDirectory* dir)
 {
+  using namespace Utils;
+
   auto makeCorr = [&](int axis) -> TH2D* {
     std::string aname = (axis == 0) ? "X" : "Y";
-    std::string name = sensor0.name() + "-" + sensor1.name() + "-Corr" + aname;
+    std::string name =
+        sensor1.name() + "-" + sensor0.name() + "-Correlation" + aname;
     std::string xlabel = sensor0.name() + " cluster " + aname;
     std::string ylabel = sensor1.name() + " cluster " + aname;
     auto range0 = sensor0.projectedEnvelopeXY().axes[axis];
@@ -52,14 +56,14 @@ void Analyzers::Correlation::addHist(const Mechanics::Sensor& sensor0,
     TH2D* h =
         new TH2D(name.c_str(), "", range0.length() / pitch0, range0.min,
                  range0.max, range1.length() / pitch1, range1.min, range1.max);
-    h->GetXaxis()->SetTitle(xlabel.c_str());
-    h->GetYaxis()->SetTitle(ylabel.c_str());
+    h->SetXTitle(xlabel.c_str());
+    h->SetYTitle(ylabel.c_str());
     h->SetDirectory(dir);
     return h;
   };
   auto makeDiff = [&](int axis) -> TH1D* {
     std::string aname = (axis == 0) ? "X" : "Y";
-    std::string name = sensor0.name() + "-" + sensor1.name() + "-Diff" + aname;
+    std::string name = sensor1.name() + "-" + sensor0.name() + "-Diff" + aname;
     std::string xlabel =
         sensor1.name() + " - " + sensor0.name() + " cluster " + aname;
     auto range0 = sensor0.projectedEnvelopeXY().axes[axis];
@@ -70,7 +74,7 @@ void Analyzers::Correlation::addHist(const Mechanics::Sensor& sensor0,
     auto length = range0.length() + range1.length();
     TH1D* h =
         new TH1D(name.c_str(), "", length / pitch, -length / 2, length / 2);
-    h->GetXaxis()->SetTitle(xlabel.c_str());
+    h->SetXTitle(xlabel.c_str());
     h->SetDirectory(dir);
     return h;
   };
