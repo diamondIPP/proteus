@@ -24,7 +24,9 @@ public:
             TDirectory* dir,
             const char* suffix = "",
             /* Histogram options */
-            unsigned int maxTracks = 10);
+            const int hitsMax = 32,
+            const int tracksMax = 8,
+            const int binsTimestamps = 1024);
 
   void processEvent(const Storage::Event* event);
   void postProcessing();
@@ -38,8 +40,8 @@ private:
   TH1D* m_triggerOffset;
   TH1D* m_triggerPhase;
   TH1D* m_tracks;
-  TH1D* m_eventsTimestamp;
-  TH1D* m_tracksTimestamps;
+  TH1D* m_timestampEvents;
+  TH1D* m_timestampTracks;
   std::vector<SensorHists> m_sensorHists;
 };
 
