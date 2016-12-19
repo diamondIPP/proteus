@@ -39,7 +39,9 @@ struct SensorResidualHists {
   SensorResidualHists() = default;
   SensorResidualHists(TDirectory* dir,
                       const Mechanics::Sensor& sensor,
-                      double slopeMax = 0.01);
+                      const double pixelRange,
+                      const double slopeRange,
+                      const int bins);
 
   void fill(const Storage::TrackState& state, const Storage::Cluster& cluster);
 };
@@ -48,14 +50,19 @@ struct SensorResidualHists {
 
 class Residuals : public SingleAnalyzer {
 public:
+  /**
+   * \param pixelRange Residual histogram range in number of pixels
+   * \param slopeRange Track slope histogram range in radian
+   * \param bins Number of histogram bins
+   */
   Residuals(
       const Mechanics::Device* device,
       TDirectory* dir = 0,
       const char* suffix = "",
       /* Histogram options */
-      unsigned int nPixX = 20,  // Number of pixels in the residual plots
-      double binsPerPix = 10,   // Hist bins per pixel
-      unsigned int binsY = 20); // Number of bins for the vertical in AB plots
+      const double pixelRange = 2.0,
+      const double slopeRange = 0.001,
+      const int bins = 128); // Number of bins for the vertical in AB plots
 
   void processEvent(const Storage::Event* refEvent);
   void postProcessing();
@@ -73,7 +80,16 @@ private:
 
 class UnbiasedResiduals : public Analyzer {
 public:
-  UnbiasedResiduals(const Mechanics::Device& device, TDirectory* dir);
+  /**
+   * \param pixelRange Residual histogram range in number of pixels
+   * \param slopeRange Track slope histogram range in radian
+   * \param bins Number of histogram bins
+   */
+  UnbiasedResiduals(const Mechanics::Device& device,
+                    TDirectory* dir,
+                    const double pixelRange = 2.0,
+                    const double slopeRange = 0.001,
+                    const int bins = 128);
 
   std::string name() const;
   void analyze(const Storage::Event& event);

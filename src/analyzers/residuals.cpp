@@ -13,48 +13,45 @@
 #include "processors/tracking.h"
 #include "storage/event.h"
 #include "utils/logger.h"
+#include "utils/root.h"
 
 PT_SETUP_GLOBAL_LOGGER
 
 Analyzers::detail::SensorResidualHists::SensorResidualHists(
-    TDirectory* dir, const Mechanics::Sensor& sensor, double slopeMax)
+    TDirectory* dir,
+    const Mechanics::Sensor& sensor,
+    const double pixelRange,
+    const double slopeRange,
+    const int bins)
 {
-  typedef Mechanics::Sensor::Area::Axis Interval;
+  using namespace Utils;
 
-  const int pixels = 3;
-  const int nBinsPixel = 20;
-  const int nBinsDist = 2 * pixels * nBinsPixel;
-  const int nBinsX = 100;
-  Interval rangeU = sensor.sensitiveAreaLocal().axes[0];
-  Interval rangeV = sensor.sensitiveAreaLocal().axes[1];
-  Interval rangeSlope = {-slopeMax, slopeMax};
-  Interval distU = {-pixels * sensor.pitchCol(), pixels * sensor.pitchCol()};
-  Interval distV = {-pixels * sensor.pitchRow(), pixels * sensor.pitchRow()};
+  double resRange =
+      pixelRange * std::hypot(sensor.pitchCol(), sensor.pitchRow());
+  auto rangeU = sensor.sensitiveAreaLocal().axes[0];
+  auto rangeV = sensor.sensitiveAreaLocal().axes[1];
+  auto name = [&](const std::string& suffix) {
+    return sensor.name() + '-' + suffix;
+  };
 
-  auto h1 = [&](const char* name, size_t nx, const Interval& x) {
-    TH1D* h =
-        new TH1D((sensor.name() + '-' + name).c_str(), "", nx, x.min, x.max);
-    h->SetDirectory(dir);
-    return h;
-  };
-  auto h2 = [&](const char* name, size_t nx, const Interval& x, size_t ny,
-                const Interval& y) {
-    TH2D* h = new TH2D((sensor.name() + '-' + name).c_str(), "", nx, x.min,
-                       x.max, ny, y.min, y.max);
-    h->SetDirectory(dir);
-    return h;
-  };
-  resU = h1("ResU", nBinsDist, distU);
-  trackUResU = h2("ResU_TrackU", nBinsX, rangeU, nBinsDist, distU);
-  trackVResU = h2("ResU_TrackV", nBinsX, rangeV, nBinsDist, distU);
-  slopeUResU = h2("ResU_SlopeU", nBinsX, rangeSlope, nBinsDist, distU);
-  slopeVResU = h2("ResU_SlopeV", nBinsX, rangeSlope, nBinsDist, distU);
-  resV = h1("ResV", nBinsDist, distV);
-  trackUResV = h2("ResV_TrackU", nBinsX, rangeU, nBinsDist, distV);
-  trackVResV = h2("ResV_TrackV", nBinsX, rangeV, nBinsDist, distV);
-  slopeUResV = h2("ResV_SlopeU", nBinsX, rangeSlope, nBinsDist, distV);
-  slopeVResV = h2("ResV_SlopeV", nBinsX, rangeSlope, nBinsDist, distV);
-  resUV = h2("ResUV", nBinsDist, distU, nBinsDist, distV);
+  HistAxis axResU(-resRange, resRange, bins, "Cluster - track residual u");
+  HistAxis axResV(-resRange, resRange, bins, "Cluster - track residual v");
+  HistAxis axTrackU(rangeU, bins, "Local track position u");
+  HistAxis axTrackV(rangeV, bins, "Local track position v");
+  HistAxis axSlopeU(-slopeRange, slopeRange, bins, "Local track slope u");
+  HistAxis axSlopeV(-slopeRange, slopeRange, bins, "Local track slope v");
+
+  resU = makeH1(dir, name("ResU"), axResU);
+  trackUResU = makeH2(dir, name("ResU_TrackU"), axTrackU, axResU);
+  trackVResU = makeH2(dir, name("ResU_TrackV"), axTrackV, axResV);
+  slopeUResU = makeH2(dir, name("ResU_SlopeU"), axSlopeU, axResU);
+  slopeVResU = makeH2(dir, name("ResU_SlopeV"), axSlopeV, axResV);
+  resV = makeH1(dir, name("ResV"), axResV);
+  trackUResV = makeH2(dir, name("ResV_TrackU"), axTrackV, axResU);
+  trackVResV = makeH2(dir, name("ResV_TrackV"), axTrackV, axResV);
+  slopeUResV = makeH2(dir, name("ResV_SlopeU"), axSlopeU, axResU);
+  slopeVResV = makeH2(dir, name("ResV_SlopeV"), axSlopeV, axResV);
+  resUV = makeH2(dir, name("ResUV"), axResU, axResV);
 }
 
 void Analyzers::detail::SensorResidualHists::fill(
@@ -77,9 +74,9 @@ void Analyzers::detail::SensorResidualHists::fill(
 Analyzers::Residuals::Residuals(const Mechanics::Device* device,
                                 TDirectory* dir,
                                 const char* suffix,
-                                unsigned int nPixX,
-                                double binsPerPix,
-                                unsigned int binsY)
+                                const double pixelRange,
+                                const double slopeRange,
+                                const int bins)
     : SingleAnalyzer(device, dir, suffix, "Residuals")
 {
   assert(device && "Analyzer: can't initialize with null device");
@@ -88,7 +85,8 @@ Analyzers::Residuals::Residuals(const Mechanics::Device* device,
   TDirectory* sub = makeGetDirectory("Residuals");
 
   for (Index isensor = 0; isensor < device->numSensors(); ++isensor) {
-    m_hists.emplace_back(sub, *device->getSensor(isensor));
+    m_hists.emplace_back(sub, *device->getSensor(isensor), pixelRange,
+                         slopeRange, bins);
   }
 }
 
@@ -160,7 +158,10 @@ TH2D* Analyzers::Residuals::getResidualYX(Index sensorId)
 }
 
 Analyzers::UnbiasedResiduals::UnbiasedResiduals(const Mechanics::Device& device,
-                                                TDirectory* parent)
+                                                TDirectory* parent,
+                                                const double pixelRange,
+                                                const double slopeRange,
+                                                const int bins)
     : m_device(device)
 {
   using Mechanics::Sensor;
@@ -168,7 +169,8 @@ Analyzers::UnbiasedResiduals::UnbiasedResiduals(const Mechanics::Device& device,
   TDirectory* dir = parent->mkdir("UnbiasedResiduals");
 
   for (Index isensor = 0; isensor < device.numSensors(); ++isensor) {
-    m_hists.emplace_back(dir, *device.getSensor(isensor));
+    m_hists.emplace_back(dir, *device.getSensor(isensor), pixelRange,
+                         slopeRange, bins);
   }
 }
 
