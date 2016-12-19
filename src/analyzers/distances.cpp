@@ -10,20 +10,26 @@
 #include "utils/root.h"
 
 Analyzers::Distances::Hists::Hists(TDirectory* dir,
-                                   std::string prefix,
-                                   double rangeDist,
-                                   double rangeD2,
-                                   int numBins)
+                                   const std::string& prefix,
+                                   const double distMax,
+                                   const double d2Max,
+                                   const int bins)
 {
-  auto h1 = [&](std::string name, double x0, double x1) -> TH1D* {
-    TH1D* h = new TH1D((prefix + name).c_str(), "", numBins, x0, x1);
-    h->SetDirectory(dir);
-    return h;
-  };
-  deltaU = h1("DeltaU", -rangeDist, rangeDist);
-  deltaV = h1("DeltaV", -rangeDist, rangeDist);
-  dist = h1("Dist", 0, rangeDist);
-  d2 = (0 < rangeD2) ? h1("D2", 0, rangeD2) : NULL;
+  using namespace Utils;
+
+  HistAxis axU(-distMax, distMax, bins, "Cluster - track position u");
+  HistAxis axV(-distMax, distMax, bins, "Cluster - track position v");
+  HistAxis axDist(0, distMax, bins, "Cluster to track absolute distance");
+
+  deltaU = makeH1(dir, prefix + "DeltaU", axU);
+  deltaV = makeH1(dir, prefix + "DeltaV", axV);
+  dist = makeH1(dir, prefix + "Dist", axDist);
+  if (0 < d2Max) {
+    HistAxis axD2(0, d2Max, bins, "Cluster to track weighted squared distance");
+    d2 = makeH1(dir, prefix + "D2", axD2);
+  } else {
+    d2 = NULL;
+  }
 }
 
 void Analyzers::Distances::Hists::fill(const XYVector& delta)
@@ -32,6 +38,7 @@ void Analyzers::Distances::Hists::fill(const XYVector& delta)
   deltaV->Fill(delta.y());
   dist->Fill(delta.r());
 }
+
 void Analyzers::Distances::Hists::fill(const XYVector& delta,
                                        const SymMatrix2& cov)
 {
@@ -41,23 +48,24 @@ void Analyzers::Distances::Hists::fill(const XYVector& delta,
 
 Analyzers::Distances::Distances(const Mechanics::Device& device,
                                 Index sensorId,
-                                TDirectory* dir)
+                                TDirectory* dir,
+                                const double pixelRange,
+                                const double d2Max,
+                                const int bins)
     : m_sensorId(sensorId)
 {
   const Mechanics::Sensor& sensor = *device.getSensor(sensorId);
   auto area = sensor.sensitiveAreaLocal();
-  double rangeTrack = std::hypot(area.axes[0].length(), area.axes[1].length());
-  double rangeDist = std::hypot(sensor.pitchCol(), sensor.pitchRow());
-  double rangeD2 = 10;
-  int numBins = 256;
+  double pitch = std::hypot(sensor.pitchCol(), sensor.pitchRow());
+  double trackMax = std::hypot(area.axes[0].length(), area.axes[1].length());
+  double matchMax = pixelRange * pitch;
+
   TDirectory* sub = Utils::makeDir(dir, "Distances");
 
-  m_trackTrack =
-      Hists(sub, sensor.name() + "-TrackTrack-", rangeTrack, -1, numBins);
-  m_trackCluster = Hists(sub, sensor.name() + "-TrackCluster-", 4 * rangeDist,
-                         rangeD2, numBins);
-  m_match =
-      Hists(sub, sensor.name() + "-Match-", 1.5 * rangeDist, rangeD2, numBins);
+  m_trackTrack = Hists(sub, sensor.name() + "-TrackTrack-", trackMax, -1, bins);
+  m_trackCluster =
+      Hists(sub, sensor.name() + "-TrackCluster-", trackMax, d2Max, bins);
+  m_match = Hists(sub, sensor.name() + "-Match-", matchMax, d2Max, bins);
 }
 
 std::string Analyzers::Distances::name() const

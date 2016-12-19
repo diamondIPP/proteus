@@ -23,7 +23,17 @@ namespace Analyzers {
 
 class Distances : public Analyzer {
 public:
-  Distances(const Mechanics::Device& device, Index sensorId, TDirectory* dir);
+  /**
+   * \param pixelRange Distance histogram range in number of pixels
+   * \param d2Max Maximum weighted squared distance in histogram
+   * \param bins Number of histogram bins
+   */
+  Distances(const Mechanics::Device& device,
+            Index sensorId,
+            TDirectory* dir,
+            const double pixelRange = 3.0,
+            const double d2Max = 10.0,
+            const int bins = 256);
 
   std::string name() const;
   void analyze(const Storage::Event& event);
@@ -38,10 +48,10 @@ private:
 
     Hists() = default;
     Hists(TDirectory* dir,
-          std::string prefix,
-          double rangeDist,
-          double rangeD2,
-          int numBins);
+          const std::string& prefix,
+          const double distMax,
+          const double d2Max,
+          const int bins);
     void fill(const XYVector& delta);
     void fill(const XYVector& delta, const SymMatrix2& cov);
   };
