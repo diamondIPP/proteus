@@ -1,6 +1,7 @@
 #include "residualsaligner.h"
 
 #include <TDirectory.h>
+#include <TH1.h>
 #include <TH2.h>
 
 #include "mechanics/device.h"
@@ -15,43 +16,48 @@ Alignment::ResidualsAligner::ResidualsAligner(
     const Mechanics::Device& device,
     const std::vector<Index>& alignIds,
     TDirectory* dir,
-    double damping)
+    const double damping,
+    const double pixelRange,
+    const double gammaRange,
+    const double slopeRange,
+    const int bins)
     : m_device(device), m_damping(damping)
 {
-  TDirectory* sub = Utils::makeDir(dir, "ResidualsAligner");
+  using namespace Utils;
 
-  double gammaScale = 0.1;
-  double slopeScale = 0.01;
-  size_t numBins = 100;
-
-  // per-sensor histograms
-  for (auto id = alignIds.begin(); id != alignIds.end(); ++id) {
-    const Mechanics::Sensor& sensor = *device.getSensor(*id);
-    double pixelScale = 2 * std::max(sensor.pitchCol(), sensor.pitchRow());
-
-    auto makeH1 = [&](const char* name, double range) -> TH1D* {
-      TH1D* h = new TH1D((sensor.name() + "-" + name).c_str(), "", numBins,
-                         -range, range);
-      h->SetDirectory(sub);
-      return h;
-    };
-
-    Histograms hists;
-    hists.sensorId = *id;
-    hists.deltaU = makeH1("DeltaU", pixelScale);
-    hists.deltaV = makeH1("DeltaV", pixelScale);
-    hists.deltaGamma = makeH1("DeltaGamma", gammaScale);
-    m_hists.push_back(hists);
-  }
+  TDirectory* sub = makeDir(dir, "ResidualsAligner");
 
   // global track direction histograms
   XYZVector beamDir = device.geometry().beamDirection();
   double slopeX = beamDir.x() / beamDir.z();
   double slopeY = beamDir.y() / beamDir.z();
-  m_trackSlope = new TH2D("TrackSlope", "", numBins, slopeX - slopeScale,
-                          slopeX + slopeScale, numBins, slopeY - slopeScale,
-                          slopeY + slopeScale);
-  m_trackSlope->SetDirectory(sub);
+  HistAxis axSlopeX(slopeX - slopeRange, slopeX + slopeRange, bins,
+                    "Track slope x");
+  HistAxis axSlopeY(slopeY - slopeRange, slopeY + slopeRange, bins,
+                    "Track slope y");
+  m_trackSlope = makeH2(sub, "TrackSlope", axSlopeX, axSlopeY);
+
+  // per-sensor histograms
+  for (auto id = alignIds.begin(); id != alignIds.end(); ++id) {
+    const Mechanics::Sensor& sensor = *device.getSensor(*id);
+    auto name = [&](const std::string& suffix) {
+      return sensor.name() + '-' + suffix;
+    };
+    double offsetRange =
+        pixelRange * std::hypot(sensor.pitchCol(), sensor.pitchRow());
+
+    HistAxis axU(-offsetRange, offsetRange, bins, "Local offset u correction");
+    HistAxis axV(-offsetRange, offsetRange, bins, "Local offset v correction");
+    HistAxis axGamma(-gammaRange, gammaRange, bins,
+                     "Local rotation #gamma correction");
+
+    Histograms hists;
+    hists.sensorId = *id;
+    hists.corrU = makeH1(sub, name("CorrectionU"), axU);
+    hists.corrV = makeH1(sub, name("CorrectionV"), axV);
+    hists.corrGamma = makeH1(sub, name("CorrectionGamma"), axGamma);
+    m_hists.push_back(hists);
+  }
 }
 
 std::string Alignment::ResidualsAligner::name() const
@@ -61,6 +67,13 @@ std::string Alignment::ResidualsAligner::name() const
 
 void Alignment::ResidualsAligner::analyze(const Storage::Event& event)
 {
+  for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
+    const Storage::Track& track = *event.getTrack(itrack);
+    const Storage::TrackState& global = track.globalState();
+
+    m_trackSlope->Fill(global.slope().x(), global.slope().y());
+  }
+
   for (auto hists = m_hists.begin(); hists != m_hists.end(); ++hists) {
     Index sensorId = hists->sensorId;
     const Mechanics::Sensor& sensor = *m_device.getSensor(sensorId);
@@ -97,16 +110,10 @@ void Alignment::ResidualsAligner::analyze(const Storage::Event& event)
       double dv = (rv + rv * v * v + ru * u * v) / f;
       double dgamma = (rv * u - ru * v) / f;
 
-      hists->deltaU->Fill(du);
-      hists->deltaV->Fill(dv);
-      hists->deltaGamma->Fill(dgamma);
+      hists->corrU->Fill(du);
+      hists->corrV->Fill(dv);
+      hists->corrGamma->Fill(dgamma);
     }
-  }
-  for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
-    const Storage::Track& track = *event.getTrack(itrack);
-    const Storage::TrackState& global = track.globalState();
-
-    m_trackSlope->Fill(global.slope().x(), global.slope().y());
   }
 }
 
@@ -128,12 +135,12 @@ Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
     const Mechanics::Sensor& sensor = *m_device.getSensor(hists->sensorId);
 
     Vector6 delta;
-    delta[0] = m_damping * hists->deltaU->GetMean();
-    delta[1] = m_damping * hists->deltaV->GetMean();
-    delta[5] = m_damping * hists->deltaGamma->GetMean();
-    double stdU = hists->deltaU->GetMeanError();
-    double stdV = hists->deltaU->GetMeanError();
-    double stdGamma = hists->deltaGamma->GetMeanError();
+    delta[0] = m_damping * hists->corrU->GetMean();
+    delta[1] = m_damping * hists->corrV->GetMean();
+    delta[5] = m_damping * hists->corrGamma->GetMean();
+    double stdU = hists->corrU->GetMeanError();
+    double stdV = hists->corrU->GetMeanError();
+    double stdGamma = hists->corrGamma->GetMeanError();
     SymMatrix6 cov;
     cov(0, 0) = stdU * stdU;
     cov(1, 1) = stdV * stdV;
@@ -142,9 +149,9 @@ Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
     geo.correctLocal(sensor.id(), delta, cov);
 
     INFO(sensor.name(), " alignment corrections:");
-    INFO("  delta u: ", delta[0], " +- ", stdU);
-    INFO("  delta v: ", delta[1], " +- ", stdV);
-    INFO("  delta gamma: ", delta[5], " +- ", stdGamma);
+    INFO("  u: ", delta[0], " +- ", stdU);
+    INFO("  v: ", delta[1], " +- ", stdV);
+    INFO("  gamma: ", delta[5], " +- ", stdGamma);
   }
   return geo;
 }
