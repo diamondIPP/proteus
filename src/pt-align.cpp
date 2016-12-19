@@ -67,20 +67,20 @@ struct SensorStepsGraphs {
     errRot1.push_back(std::sqrt(cov(4, 4)));
     errRot2.push_back(std::sqrt(cov(5, 5)));
   }
-  void writeGraphs(const std::string& prefix, TDirectory* dir) const
+  void writeGraphs(const std::string& sensorName, TDirectory* dir) const
   {
     auto makeGraph = [&](const std::string& name,
                          const std::vector<double>& yval,
                          const std::vector<double>& yerr) {
       std::vector<double> x(yval.size());
       std::iota(x.begin(), x.end(), 0);
-
       TGraphErrors* g =
           new TGraphErrors(x.size(), x.data(), yval.data(), NULL, yerr.data());
-      g->SetName((prefix + "-Correction" + name).c_str());
+      g->SetName((sensorName + "-Correction" + name).c_str());
       g->SetTitle("");
-      g->GetXaxis()->SetTitle("Step");
-      g->GetYaxis()->SetTitle(("Alignment Correction " + name).c_str());
+      g->GetXaxis()->SetTitle("Alignment step");
+      g->GetYaxis()->SetTitle(
+          (sensorName + " alignment correction " + name).c_str());
       dir->WriteTObject(g);
     };
     makeGraph("Offset0", off0, errOff0);
