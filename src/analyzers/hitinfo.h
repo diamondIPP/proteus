@@ -24,8 +24,8 @@ public:
           TDirectory* dir,
           const char* suffix = "",
           /* Histogram options */
-          unsigned int timeBins = 16,
-          unsigned int valueBins = 16);
+          const int timeMax = 16,
+          const int valueMax = 16);
 
   void processEvent(const Storage::Event* event);
   void postProcessing();

@@ -12,41 +12,35 @@
 Analyzers::HitInfo::HitInfo(const Mechanics::Device* device,
                             TDirectory* dir,
                             const char* suffix,
-                            unsigned int timeBins,
-                            unsigned int valueBins)
+                            const int timeMax,
+                            const int valueMax)
     : // Base class is initialized here and manages directory / device
     SingleAnalyzer(device, dir, suffix, "HitInfo")
 {
+  using namespace Utils;
+
   assert(device && "Analyzer: can't initialize with null device");
 
   TDirectory* sub = Utils::makeDir(dir, "HitInfo");
 
   for (Index sensorId = 0; sensorId < device->numSensors(); ++sensorId) {
     const Mechanics::Sensor& sensor = *device->getSensor(sensorId);
+    const auto& area = sensor.sensitiveAreaPixel();
+    auto name = [&](const std::string suffix) {
+      return sensor.name() + '-' + suffix;
+    };
 
-    auto makeH1 = [&](std::string name, std::string title, int nbins) -> TH1D* {
-      TH1D* h = new TH1D((sensor.name() + "-" + name).c_str(), title.c_str(),
-                         nbins, -0.5, nbins - 0.5);
-      h->SetDirectory(sub);
-      return h;
-    };
-    auto makeMap = [&](std::string name, std::string title) -> TH2D* {
-      auto area = sensor.sensitiveAreaPixel();
-      auto cols = area.axes[0];
-      auto rows = area.axes[1];
-      TH2D* h = new TH2D((sensor.name() + "-" + name).c_str(), title.c_str(),
-                         cols.length(), cols.min, cols.max, rows.length(),
-                         rows.min, rows.max);
-      h->SetDirectory(sub);
-      return h;
-    };
+    HistAxis axCol(area.axes[0], area.axes[0].length(), "Hit colum");
+    HistAxis axRow(area.axes[1], area.axes[1].length(), "Hit row");
+    HistAxis axTime(0, timeMax, "Hit time");
+    HistAxis axValue(0, valueMax, "Hit value");
 
     Hists hists;
-    hists.pixels = makeMap("Pixels", ";Column;Row;Hit count");
-    hists.time = makeH1("Time", ";Hit time", timeBins);
-    hists.value = makeH1("Value", ";Hit value", valueBins);
-    hists.timeMap = makeMap("TimeMap", ";Column;Row;Average time");
-    hists.valueMap = makeMap("ValueMap", ";Column;Row;Average value");
+    hists.pixels = makeH2(sub, name("Pixels"), axCol, axRow);
+    hists.time = makeH1(sub, name("Time"), axTime);
+    hists.value = makeH1(sub, name("Value"), axValue);
+    hists.timeMap = makeH2(sub, name("TimeMap"), axCol, axRow);
+    hists.valueMap = makeH2(sub, name("ValueMap"), axCol, axRow);
     m_hists.push_back(hists);
   }
 }
