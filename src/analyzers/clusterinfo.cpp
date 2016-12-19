@@ -9,6 +9,7 @@
 #include "mechanics/device.h"
 #include "processors/processors.h"
 #include "storage/event.h"
+#include "utils/root.h"
 
 Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
                                     TDirectory* dir,
@@ -19,52 +20,44 @@ Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
                                     const int binsUncertainty)
     : SingleAnalyzer(device, dir, suffix, "ClusterInfo")
 {
+  using namespace Utils;
+
   assert(device && "Analyzer: can't initialize with null device");
 
   // Makes or gets a directory called from inside _dir with this name
-  TDirectory* plotDir = makeGetDirectory("ClusterInfo");
+  TDirectory* sub = makeDir(dir, "ClusterInfo");
 
   for (Index isensor = 0; isensor < device->numSensors(); ++isensor) {
     const Mechanics::Sensor& sensor = *device->getSensor(isensor);
+    auto name = [&](std::string suffix) {
+      return sensor.name() + '-' + suffix;
+    };
 
-    auto h1 = [&](std::string name, double x0, double x1,
-                  int nx = -1) -> TH1D* {
-      if (nx < 0)
-        nx = std::round(x1 - x0);
-      TH1D* h = new TH1D((sensor.name() + '-' + name).c_str(), "", nx, x0, x1);
-      h->SetDirectory(plotDir);
-      return h;
-    };
-    auto h2 = [&](std::string name, double x0, double x1, double y0, double y1,
-                  int nx = -1, int ny = -1) -> TH2D* {
-      if (nx < 0)
-        nx = std::round(x1 - x0);
-      if (ny < 0)
-        ny = std::round(y1 - y0);
-      TH2D* h = new TH2D((sensor.name() + '-' + name).c_str(), "", nx, x0, x1,
-                         ny, y0, y1);
-      h->SetDirectory(plotDir);
-      return h;
-    };
+    HistAxis axSize(1, sizeMax, "Cluster size");
+    HistAxis axSizeCol(1, sizeMax, "Cluster column size");
+    HistAxis axSizeRow(1, sizeMax, "Cluster row size");
+    HistAxis axValue(0, valueMax, "Cluster value");
+    HistAxis axHitTime(0, timeMax, "Hit time");
+    HistAxis axHitValue(0, valueMax, "Hit value");
+    HistAxis axUnU(0, sensor.pitchCol() / 2, binsUncertainty,
+                   "Cluster uncertainty u");
+    HistAxis axUnV(0, sensor.pitchRow() / 2, binsUncertainty,
+                   "Cluster uncertainty v");
 
     ClusterHists hs;
-    hs.size = h1("Size", 0.5, sizeMax - 0.5);
-    hs.sizeSizeCol = h2("SizeCol_Size", 0.5, sizeMax - 0.5, 0.5, sizeMax - 0.5);
-    hs.sizeSizeRow = h2("SizeRow_Size", 0.5, sizeMax - 0.5, 0.5, sizeMax - 0.5);
+    hs.size = makeH1(sub, name("Size"), axSize);
+    hs.sizeSizeCol = makeH2(sub, name("SizeCol_Size"), axSize, axSizeCol);
+    hs.sizeSizeRow = makeH2(sub, name("SizeRow_Size"), axSize, axSizeRow);
     hs.sizeColSizeRow =
-        h2("SizeCol_SizeRow", 0.5, sizeMax - 0.5, 0.5, sizeMax - 0.5);
-    hs.value = h1("Value", -0.5, valueMax - 0.5);
-    hs.sizeValue = h2("Value_Size", 0.5, sizeMax - 0.5, -0.5, valueMax - 0.5);
-    hs.uncertaintyU =
-        h1("UncertaintyU", 0, sensor.pitchCol() / 2, binsUncertainty);
-    hs.uncertaintyV =
-        h1("UncertaintyV", 0, sensor.pitchRow() / 2, binsUncertainty);
-    hs.sizeHitTime =
-        h2("HitTime_Size", 0.5, sizeMax - 0.5, -0.5, timeMax - 0.5);
-    hs.sizeHitValue =
-        h2("HitValue_Size", 0.5, sizeMax - 0.5, -0.5, valueMax - 0.5);
+        makeH2(sub, name("SizeRow_SizeCol"), axSizeCol, axSizeRow);
+    hs.value = makeH1(sub, name("Value"), axValue);
+    hs.sizeValue = makeH2(sub, name("Value_Size"), axSize, axValue);
+    hs.uncertaintyU = makeH1(sub, name("UncertaintyU"), axUnU);
+    hs.uncertaintyV = makeH1(sub, name("UncertaintyV"), axUnV);
+    hs.sizeHitTime = makeH2(sub, name("HitTime_Size"), axSize, axHitTime);
+    hs.sizeHitValue = makeH2(sub, name("HitValue_Size"), axSize, axHitValue);
     hs.hitValueHitTime =
-        h2("HitTime_HitValue", -0.5, valueMax - 0.5, -0.5, timeMax - 0.5);
+        makeH2(sub, name("HitTime_HitValue"), axValue, axHitTime);
     m_hists.push_back(hs);
   }
 }
