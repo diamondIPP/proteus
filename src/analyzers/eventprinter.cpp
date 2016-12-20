@@ -4,11 +4,6 @@
 
 #include "storage/event.h"
 
-std::shared_ptr<Analyzers::EventPrinter> Analyzers::EventPrinter::make()
-{
-  return std::make_shared<EventPrinter>();
-}
-
 std::string Analyzers::EventPrinter::name() const { return "EventPrinter"; }
 
 void Analyzers::EventPrinter::analyze(const Storage::Event& event)

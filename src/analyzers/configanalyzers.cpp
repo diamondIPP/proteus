@@ -295,8 +295,8 @@ void Analyzers::configDUTDepictor(const ConfigParser& config,
           new DUTDepictor(refDevice, dutDevice, 0, suffix.c_str(),
                           depictEvent, depictClusters, depictTracks, zoom);
       analyzer->setAnalyzerName("DUTDepictor");
-      looper->addAnalyzer(analyzer); 
-      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); 
+      looper->addAnalyzer(analyzer);
+      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts);
 
       active = false;
       suffix = "";
@@ -578,8 +578,8 @@ void Analyzers::configOccupancy(const ConfigParser& config,
       if (!active) return;
       Occupancy* analyzer = new Occupancy(refDevice, results->GetDirectory(""), suffix.c_str());
       analyzer->setAnalyzerName("Occupancy");
-      looper->addAnalyzer(analyzer); 
-      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); 
+      looper->addAnalyzer(analyzer);
+      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts);
       
       active = false;
       suffix = "";
@@ -614,6 +614,7 @@ void Analyzers::configTrackInfo(const ConfigParser& config,
 
   bool active = false;
   std::string suffix = "";
+	double maxReducedChi2 = 10;
   double maxResolution = 1E-2;
   double maxSlope = 1E-2;
   double increaseArea = 1.2;
@@ -631,10 +632,10 @@ void Analyzers::configTrackInfo(const ConfigParser& config,
       if (!active) return;
       TrackInfo* analyzer =
           new TrackInfo(refDevice, results->GetDirectory(""), suffix.c_str(),
-                        maxResolution, maxSlope, increaseArea);
+                        maxReducedChi2, maxSlope);
       analyzer->setAnalyzerName("TrackInfo");
-      looper->addAnalyzer(analyzer); 
-      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); 
+      looper->addAnalyzer(analyzer);
+      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts);
 
       active = false;
       suffix = "";
@@ -980,8 +981,8 @@ void Analyzers::configEfficiency(const ConfigParser& config,
 					    pixBinsX,
 					    pixBinsY);
       analyzer->setAnalyzerName("Efficiency");
-      looper->addAnalyzer(analyzer); 
-      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts); 
+      looper->addAnalyzer(analyzer);
+      applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts);
       
       active = false;
       suffix = "";

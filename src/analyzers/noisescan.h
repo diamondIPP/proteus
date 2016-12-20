@@ -11,14 +11,14 @@
 
 #include <vector>
 
-#include <TDirectory.h>
-#include <TH1.h>
-#include <TH2.h>
-
 #include "analyzer.h"
-#include "utils/config.h"
+#include "mechanics/noisemask.h"
 #include "utils/definitions.h"
 #include "utils/interval.h"
+
+class TDirectory;
+class TH1D;
+class TH2D;
 
 namespace Mechanics {
 class Device;
@@ -34,35 +34,34 @@ namespace Analyzers {
  */
 class NoiseScan : public Analyzer {
 public:
+  typedef Utils::Box<2, int> Area;
+
   NoiseScan(const Mechanics::Device& device,
-            const toml::Value& cfg,
-            TDirectory* dir);
+            const Index sensorId,
+            const double bandwidth,
+            const double sigmaMax,
+            const double rateMax,
+            const Area& regionOfInterest,
+            TDirectory* dir,
+            const int binsOccupancy = 128);
 
   std::string name() const;
   void analyze(const Storage::Event& event);
   void finalize();
 
-  void writeMask(const std::string& path);
+  Mechanics::NoiseMask constructMask() const;
 
 private:
-  using Area = Utils::Box<2, int>;
-
-  void addSensorHists(TDirectory* dir,
-                      int id,
-                      const std::string& name,
-                      const Area& roi);
-
-  std::vector<int> m_sensorIds;
-  std::vector<Area> m_sensorRois;
-  std::vector<TH2D*> m_occMaps;
-  std::vector<TH1D*> m_occPixels;
-  std::vector<TH2D*> m_densities;
-  std::vector<TH2D*> m_localSigmas;
-  std::vector<TH1D*> m_localSigmasPixels;
-  std::vector<TH2D*> m_pixelMasks;
+  Index m_sensorId;
+  double m_densityBandwidth, m_sigmaAboveMeanMax, m_rateMax;
+  Area m_roi;
   uint64_t m_numEvents;
-  double m_densityBandwidth;
-  double m_maxSigmaAboveAvg, m_maxRate;
+  TH2D* m_occ;
+  TH1D* m_occPixels;
+  TH2D* m_density;
+  TH2D* m_sigma;
+  TH1D* m_sigmaPixels;
+  TH2D* m_maskedPixels;
 };
 
 } // namespace Analyzers

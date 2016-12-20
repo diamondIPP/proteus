@@ -1,40 +1,50 @@
-#ifndef EVENTINFO_H
-#define EVENTINFO_H
+#ifndef PT_EVENTINFO_H
+#define PT_EVENTINFO_H
 
 #include <vector>
 
-#include <TH2D.h>
-#include <TH1D.h>
-#include <TDirectory.h>
-
 #include "singleanalyzer.h"
 
-namespace Storage { class Event; }
-namespace Mechanics { class Device; }
+class TDirectory;
+class TH1D;
+
+namespace Storage {
+class Event;
+}
+namespace Mechanics {
+class Device;
+}
 
 namespace Analyzers {
 
-class EventInfo : public SingleAnalyzer
-{
-private:
-  TH1D* _triggerOffset;
-  TH1D* _trackInTime;
-  TH1D* _numTracks;
-  TH1D* _eventsVsTime;
-  TH1D* _tracksVsTime;
-  TH1D* _clustersVsTime;
-
+/** Overall event information, e.g. timing and hit and cluster rates. */
+class EventInfo : public SingleAnalyzer {
 public:
   EventInfo(const Mechanics::Device* device,
             TDirectory* dir,
             const char* suffix = "",
             /* Histogram options */
-            unsigned int maxTracks = 10);
+            const int hitsMax = 32,
+            const int tracksMax = 8,
+            const int binsTimestamps = 1024);
 
   void processEvent(const Storage::Event* event);
   void postProcessing();
+
+private:
+  struct SensorHists {
+    TH1D* hits;
+    TH1D* clusters;
+  };
+
+  TH1D* m_triggerOffset;
+  TH1D* m_triggerPhase;
+  TH1D* m_tracks;
+  TH1D* m_timestampEvents;
+  TH1D* m_timestampTracks;
+  std::vector<SensorHists> m_sensorHists;
 };
 
-}
+} // namespace Analyzers
 
-#endif
+#endif // PT_EVENTINFO_H

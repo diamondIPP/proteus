@@ -107,7 +107,7 @@ void Storage::StorageIO::openRead(const std::string& path, const std::vector<boo
 
   _file->GetObject("Event", _eventInfo);
   if (_eventInfo) {
-    _eventInfo->SetBranchAddress("TimeStamp", &timeStamp, &bTimeStamp);
+    _eventInfo->SetBranchAddress("TimeStamp", &timestamp, &bTimeStamp);
     _eventInfo->SetBranchAddress("FrameNumber", &frameNumber, &bFrameNumber);
     _eventInfo->SetBranchAddress(
         "TriggerOffset", &triggerOffset, &bTriggerOffset);
@@ -237,7 +237,7 @@ void Storage::StorageIO::openTruncate(const std::string& path)
 
   // EventInfo tree
   _eventInfo = new TTree("Event", "Event information");
-  _eventInfo->Branch("TimeStamp", &timeStamp, "TimeStamp/l");
+  _eventInfo->Branch("TimeStamp", &timestamp, "TimeStamp/l");
   _eventInfo->Branch("FrameNumber", &frameNumber, "FrameNumber/l");
   _eventInfo->Branch("TriggerOffset", &triggerOffset, "TriggerOffset/I");
   _eventInfo->Branch("TriggerInfo", &triggerInfo, "TriggerInfo/I");
@@ -404,7 +404,7 @@ namespace Storage {
 
   //=========================================================
   void StorageIO::clearVariables(){
-    timeStamp = 0;
+    timestamp = 0;
     frameNumber = 0;
     triggerOffset = 0;
     invalid = false;
@@ -613,7 +613,7 @@ namespace Storage {
 
     event->clear();
     event->setId(n);
-    event->setTimeStamp(timeStamp);
+    event->setTimestamp(timestamp);
     event->setFrameNumber(frameNumber);
     event->setTriggerOffset(triggerOffset);
     event->setTriggerInfo(triggerInfo);
@@ -716,7 +716,7 @@ namespace Storage {
     if (_fileMode == INPUT)
       throw std::runtime_error("StorageIO: can't write event in input mode");
 
-    timeStamp = event->getTimeStamp();
+    timestamp = event->getTimeStamp();
     frameNumber = event->getFrameNumber();
     triggerOffset = event->getTriggerOffset();
     triggerInfo = event->getTriggerInfo();

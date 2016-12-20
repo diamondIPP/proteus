@@ -19,7 +19,7 @@ public:
   void clear();
   void setId(uint64_t id) { m_id = id; }
   void setFrameNumber(uint64_t frameNumber) { m_frameNumber = frameNumber; }
-  void setTimeStamp(uint64_t timeStamp) { m_timeStamp = timeStamp; }
+  void setTimestamp(uint64_t timestamp) { m_timestamp = timestamp; }
   void setTriggerOffset(unsigned int offset) { m_triggerOffset = offset; }
   void setTriggerInfo(unsigned int info) { m_triggerInfo = info; }
   void setTriggerPhase(unsigned int phase) { m_triggerPhase = phase; }
@@ -27,7 +27,7 @@ public:
 
   uint64_t id() const { return m_id; }
   uint64_t frameNumber() const { return m_frameNumber; }
-  uint64_t timeStamp() const { return m_timeStamp; }
+  uint64_t timestamp() const { return m_timestamp; }
   unsigned int triggerOffset() const { return m_triggerOffset; }
   unsigned int triggerInfo() const { return m_triggerInfo; }
   unsigned int triggerPhase() const { return m_triggerPhase; }
@@ -49,7 +49,7 @@ public:
   unsigned int getNumPlanes() const { return m_planes.size(); }
   unsigned int getNumTracks() const { return m_tracks.size(); }
   bool getInvalid() const { return m_invalid; }
-  uint64_t getTimeStamp() const { return m_timeStamp; }
+  uint64_t getTimeStamp() const { return m_timestamp; }
   uint64_t getFrameNumber() const { return m_frameNumber; }
   unsigned int getTriggerOffset() const { return m_triggerOffset; }
   unsigned int getTriggerInfo() const { return m_triggerInfo; }
@@ -60,7 +60,7 @@ public:
 private:
   uint64_t m_id;
   uint64_t m_frameNumber;
-  uint64_t m_timeStamp;
+  uint64_t m_timestamp;
   unsigned int m_triggerOffset;
   unsigned int m_triggerInfo; // Dammit Andrej!
   unsigned int m_triggerPhase;

@@ -137,7 +137,7 @@ namespace Storage {
     Double_t interceptStdSlopeV[MAX_TRACKS];
 
     // EVENT INFO
-    ULong64_t timeStamp;
+    ULong64_t timestamp;
     Int_t     triggerOffset;
     ULong64_t frameNumber;
     Int_t     triggerInfo;

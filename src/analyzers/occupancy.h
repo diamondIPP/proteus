@@ -16,6 +16,7 @@ class Event;
 }
 namespace Mechanics {
 class Device;
+class Sensor;
 }
 
 namespace Analyzers {
@@ -38,14 +39,20 @@ public:
   uint64_t getTotalHitOccupancy(Index isensor);
 
 private:
-  void bookHistos(const Mechanics::Device& device, TDirectory* dir);
+  struct Hists {
+    TH2D* hits;
+    TH2D* clusteredHits;
+    TH2D* clusters;
+    TH1D* pixelOccupancy;
+
+    Hists(const Mechanics::Sensor& sensor,
+          TDirectory* dir,
+          const int binsPerClusterPixel = 3,
+          const int binsOccupancy = 128);
+  };
 
   uint64_t m_numEvents;
-  std::vector<TH2D*> m_occHits;         //!< pixel hitmaps
-  std::vector<TH2D*> m_occClustersHits; //!< clustered hit positions
-  std::vector<TH2D*> m_occClusters;     //!< cluster positions (XY) 2D-histos.
-  std::vector<TH1D*>
-      m_occPixels; //!< Occupancy 1D-distributions (number of hits/trigger).
+  std::vector<Hists> m_hists;
 };
 
 } // namespace Analyzers

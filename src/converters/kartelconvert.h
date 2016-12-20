@@ -47,7 +47,7 @@ private:
   };
 
   struct FrameBuffer {
-    ULong64_t timeStamp;
+    ULong64_t timestamp;
     unsigned int consecCount;
     unsigned int lineCount;
     unsigned int wordCount[_numPlanes];
@@ -73,7 +73,7 @@ private:
     unsigned int sync;
     unsigned int trigger;
     unsigned int triggerOffset;
-    unsigned int timeStamp;
+    unsigned int timestamp;
     unsigned int ch0[_numPlanes];
     unsigned int ch1[_numPlanes];
   };

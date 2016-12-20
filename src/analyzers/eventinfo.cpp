@@ -1,161 +1,115 @@
 #include "eventinfo.h"
 
 #include <cassert>
-#include <sstream>
-#include <math.h>
+#include <cmath>
+#include <cstdint>
 
 #include <TDirectory.h>
-#include <TH2D.h>
 #include <TH1D.h>
 
-// Access to the device being analyzed and its sensors
-#include "../mechanics/device.h"
-#include "../mechanics/sensor.h"
-// Access to the data stored in the event
-#include "../storage/hit.h"
-#include "../storage/cluster.h"
-#include "../storage/plane.h"
-#include "../storage/track.h"
-#include "../storage/event.h"
-// Some generic processors to calcualte typical event related things
-#include "../processors/processors.h"
+#include "mechanics/device.h"
+#include "processors/processors.h"
+#include "storage/event.h"
+#include "utils/logger.h"
+#include "utils/root.h"
 
-#include <iostream>
+PT_SETUP_LOCAL_LOGGER(EventInfo)
 
-namespace Analyzers {
+Analyzers::EventInfo::EventInfo(const Mechanics::Device* device,
+                                TDirectory* dir,
+                                const char* suffix,
+                                const int hitsMax,
+                                const int tracksMax,
+                                const int binsTimestamps)
+    : SingleAnalyzer(device, dir, suffix, "EventInfo")
+    , m_timestampEvents(NULL)
+    , m_timestampTracks(NULL)
+{
+  using namespace Utils;
 
-void EventInfo::processEvent(const Storage::Event* event)
+  assert(device && "Analyzer: can't initialize with null device");
+
+  const int triggerMax = device->readoutWindow();
+  // Makes or gets a directory called from inside _dir with this name
+  TDirectory* sub = makeDir(dir, "EventInfo");
+
+  HistAxis axTrigOff(0, triggerMax, "Trigger offset");
+  HistAxis axTrigPhase(0, triggerMax, "Trigger phase");
+  HistAxis axHits(0, hitsMax, "Hits / event");
+  HistAxis axClusters(0, hitsMax, "Clusters / event");
+  HistAxis axTracks(0, tracksMax, "Tracks / event");
+
+  m_triggerOffset = makeH1(sub, "TriggerOffset", axTrigOff);
+  m_triggerPhase = makeH1(sub, "TriggerPhase", axTrigPhase);
+  m_tracks = makeH1(sub, "Tracks", axTracks);
+
+  // can only plot timestamp distribution if range is known
+  if (device->timestampStart() < device->timestampEnd()) {
+    DEBUG("timestamp range: ", device->timestampStart(), " -> ",
+          device->timestampEnd());
+
+    // avoid missing events from round-off errors in binning
+    // integer division rounds towards zero. +1 increase fits all timestamps
+    const uint64_t dur = device->timestampEnd() - device->timestampStart() + 1;
+    const uint64_t timestampsPerBin = (dur / binsTimestamps) + 1;
+    const uint64_t ts0 = device->timestampStart();
+    const uint64_t ts1 = ts0 + binsTimestamps * timestampsPerBin;
+
+    HistAxis axTimestamp(ts0, ts1, binsTimestamps, "Timestamp");
+
+    m_timestampEvents = makeH1(sub, "Events_Timestamp", axTimestamp);
+    m_timestampTracks = makeH1(sub, "Tracks_Timestamp", axTimestamp);
+  }
+
+  for (Index isensor = 0; isensor < device->numSensors(); ++isensor) {
+    const Mechanics::Sensor& sensor = *device->getSensor(isensor);
+
+    SensorHists hs;
+    hs.hits = makeH1(sub, sensor.name() + "-Hits", axHits);
+    hs.clusters = makeH1(sub, sensor.name() + "-Clusters",axClusters);
+    m_sensorHists.push_back(hs);
+  }
+}
+
+void Analyzers::EventInfo::processEvent(const Storage::Event* event)
 {
   assert(event && "Analyzer: can't process null events");
 
   // Throw an error for sensor / plane mismatch
   eventDeviceAgree(event);
-
   // Check if the event passes the cuts
   if (!checkCuts(event))
-      return;
+    return;
 
-  _triggerOffset->Fill(event->getTriggerOffset());
-  _trackInTime->Fill(event->getTriggerOffset());
-  _numTracks->Fill(event->getNumTracks());
+  m_triggerOffset->Fill(event->triggerOffset());
+  m_triggerPhase->Fill(event->triggerPhase());
+  m_tracks->Fill(event->numTracks());
+  if (m_timestampEvents) {
+    m_timestampEvents->Fill(event->timestamp());
+    m_timestampTracks->Fill(event->timestamp(), event->numTracks());
+  }
 
-  if (_eventsVsTime)
-  {
-    _eventsVsTime->Fill(_device->tsToTime(event->getTimeStamp()));
-    _tracksVsTime->Fill(_device->tsToTime(event->getTimeStamp()), event->getNumTracks());
-    _clustersVsTime->Fill(_device->tsToTime(event->getTimeStamp()), event->getNumClusters());
+  for (Index iplane = 0; iplane < event->numPlanes(); ++iplane) {
+    const Storage::Plane& plane = *event->getPlane(iplane);
+    const SensorHists& sensorHists = m_sensorHists[iplane];
+
+    sensorHists.hits->Fill(plane.numHits());
+    sensorHists.clusters->Fill(plane.numClusters());
   }
 }
 
-void EventInfo::postProcessing()
+void Analyzers::EventInfo::postProcessing()
 {
-  if (_postProcessed) return;
-
-  if (_eventsVsTime)
-  {
-    for (Int_t bin = 1; bin <= _eventsVsTime->GetNbinsX(); bin++)
-    {
-      const double norm = _eventsVsTime->GetBinContent(bin);
-      if (norm < 1) continue;
-      _tracksVsTime->SetBinContent(bin, _tracksVsTime->GetBinContent(bin) / norm);
-      _clustersVsTime->SetBinContent(bin, _clustersVsTime->GetBinContent(bin) / norm);
+  if (_postProcessed)
+    return;
+  if (m_timestampEvents) {
+    for (Int_t bin = 1; bin <= m_timestampEvents->GetNbinsX(); ++bin) {
+      const double eventsInBin = m_timestampEvents->GetBinContent(bin);
+      const double tracksInBin = m_timestampTracks->GetBinContent(bin);
+      if (0 < eventsInBin) {
+        m_timestampTracks->SetBinContent(bin, tracksInBin / eventsInBin);
+      }
     }
   }
-
   _postProcessed = true;
-}
-
-EventInfo::EventInfo(const Mechanics::Device* device,
-                     TDirectory* dir,
-                     const char* suffix,
-                     unsigned int maxTracks) :
-  // Base class is initialized here and manages directory / device
-  SingleAnalyzer(device, dir, suffix, "EventInfo"),
-  _eventsVsTime(0),
-  _tracksVsTime(0),
-  _clustersVsTime(0)
-{
-  assert(device && "Analyzer: can't initialize with null device");
-
-  // Makes or gets a directory called from inside _dir with this name
-  TDirectory* plotDir = makeGetDirectory("EventInfo");
-
-  std::stringstream name; // Build name strings for each histo
-  std::stringstream title; // Build title strings for each histo
-
-  const unsigned int nTrigBins = 100;
-  const unsigned int lastTrigBin = _device->getReadOutWindow() -
-      (_device->getReadOutWindow() % nTrigBins);
-
-  name.str(""); title.str("");
-  name << _device->getName() << "TriggerOffset" << _nameSuffix;
-  title << _device->getName() << " Trigger Offset"
-        << ";Trigger offset [clock cycles]"
-        << ";Events / " << lastTrigBin / nTrigBins << " clock cycles";
-  _triggerOffset = new TH1D(name.str().c_str(), title.str().c_str(),
-                            nTrigBins, 0 - 0.5, lastTrigBin - 0.5);
-  _triggerOffset->SetDirectory(plotDir);
-
-  name.str(""); title.str("");
-  name << _device->getName() << "TracksInTime" << _nameSuffix;
-  title << _device->getName() << " Tracks In Time"
-        << ";Trigger offset [clock cycles]"
-        << ";Tracks / " << lastTrigBin / nTrigBins << " clock cycles";
-  _trackInTime = new TH1D(name.str().c_str(), title.str().c_str(),
-                          nTrigBins, 0 - 0.5, lastTrigBin - 0.5);
-  _trackInTime->SetDirectory(plotDir);
-
-  name.str(""); title.str("");
-  name << _device->getName() << "Tracks" << _nameSuffix;
-  title << _device->getName() << " Tracks Multiplicity"
-        << ";Track multiplicity"
-        << ";Tracks";
-  _numTracks = new TH1D(name.str().c_str(), title.str().c_str(),
-                        maxTracks + 1, 0  - 0.5, maxTracks + 1 - 0.5);
-  _numTracks->SetDirectory(plotDir);
-
-  if (_device->getTimeEnd() > _device->getTimeStart()) // If not used, they are both == 0
-  {
-    // Prevent aliasing
-    const unsigned int nTimeBins = 100;
-    const ULong64_t timeSpan = _device->getTimeEnd() - _device->getTimeStart() + 1;
-    const ULong64_t startTime = _device->getTimeStart();
-    const ULong64_t endTime = timeSpan - (timeSpan % nTimeBins) + startTime;
-
-    name.str(""); title.str("");
-    name << _device->getName() << "EventsVsTime" << _nameSuffix;
-    title << _device->getName() << " Events Vs. Time"
-          << ";Time [" << _device->getTimeUnit() << "]"
-          << ";Events / " << timeSpan / (double)_device->getClockRate() / 100
-          << " " << _device->getTimeUnit();
-    _eventsVsTime = new TH1D(name.str().c_str(), title.str().c_str(),
-                             nTimeBins,
-                             _device->tsToTime(startTime),
-                             _device->tsToTime(endTime + 1));
-    _eventsVsTime->SetDirectory(plotDir);
-
-    name.str(""); title.str("");
-    name << _device->getName() << "TracksVsTime" << _nameSuffix;
-    title << _device->getName() << " Tracks Vs. Time"
-          << ";Time [" << _device->getTimeUnit() << "]"
-          << ";Average tracks per event";
-    _tracksVsTime = new TH1D(name.str().c_str(), title.str().c_str(),
-                             nTimeBins,
-                             _device->tsToTime(startTime),
-                             _device->tsToTime(endTime + 1));
-    _tracksVsTime->SetDirectory(plotDir);
-
-    name.str(""); title.str("");
-    name << _device->getName() << "ClustersVsTime" << _nameSuffix;
-    title << _device->getName() << " Clusters Vs. Time"
-          << ";Time [" << _device->getTimeUnit() << "]"
-          << ";Average clusters per event";
-    _clustersVsTime = new TH1D(name.str().c_str(), title.str().c_str(),
-                               nTimeBins,
-                               _device->tsToTime(startTime),
-                               _device->tsToTime(endTime + 1));
-    _clustersVsTime->SetDirectory(plotDir);
-  }
-}
-
 }

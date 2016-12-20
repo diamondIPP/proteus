@@ -46,11 +46,12 @@ public:
   void applyNoiseMask(const NoiseMask& noiseMask);
   const NoiseMask& noiseMask() const { return m_noiseMask; }
 
-  uint64_t timeStampStart() const { return m_timeStart; }
-  uint64_t timeStampEnd() const { return m_timeEnd; }
+  void setTimestampRange(uint64_t ts0, uint64_t ts1);
+  uint64_t timestampStart() const { return m_timestamp0; }
+  uint64_t timestampEnd() const { return m_timestamp1; }
   double clockRate() const { return m_clockRate; }
-  double tsToTime(uint64_t timeStamp) const;
-  void setTimeStampRange(uint64_t start, uint64_t end);
+  double readoutWindow() const { return m_readoutWindow; }
+  double tsToTime(uint64_t timestamp) const;
 
   unsigned int getNumPixels() const;
   const char* getName() const { return m_name.c_str(); }
@@ -60,8 +61,8 @@ public:
   const char* getTimeUnit() const { return m_timeUnit.c_str(); }
   double getBeamSlopeX() const;
   double getBeamSlopeY() const;
-  uint64_t getTimeStart() const { return m_timeStart; }
-  uint64_t getTimeEnd() const { return m_timeEnd; }
+  uint64_t getTimeStart() const { return m_timestamp0; }
+  uint64_t getTimeEnd() const { return m_timestamp1; }
   double getSyncRatio() const { return m_geometry.syncRatio(); }
   /** \deprecated Use alignment directly */
   void setSyncRatio(double ratio) { m_geometry.setSyncRatio(ratio); }
@@ -78,7 +79,7 @@ private:
   NoiseMask m_noiseMask;
   double m_clockRate;
   unsigned int m_readoutWindow;
-  uint64_t m_timeStart, m_timeEnd;
+  uint64_t m_timestamp0, m_timestamp1;
   std::string m_pathGeometry, m_pathNoiseMask;
   std::string m_spaceUnit;
   std::string m_timeUnit;

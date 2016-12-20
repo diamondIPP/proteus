@@ -3,56 +3,93 @@
 
 #include <vector>
 
-#include <TDirectory.h>
-#include <TH1D.h>
-#include <TH2D.h>
-
 #include "analyzers/analyzer.h"
 #include "analyzers/singleanalyzer.h"
 #include "utils/definitions.h"
 
+class TDirectory;
+class TH1D;
+class TH2D;
+
 namespace Storage {
-class Event;
+class Cluster;
+class TrackState;
 }
 namespace Mechanics {
 class Device;
+class Sensor;
 }
 
 namespace Analyzers {
+namespace detail {
+
+struct SensorResidualHists {
+  TH1D* resU;
+  TH1D* resV;
+  TH2D* resUV;
+  TH2D* trackUResU;
+  TH2D* trackUResV;
+  TH2D* trackVResU;
+  TH2D* trackVResV;
+  TH2D* slopeUResU;
+  TH2D* slopeUResV;
+  TH2D* slopeVResU;
+  TH2D* slopeVResV;
+
+  SensorResidualHists() = default;
+  SensorResidualHists(TDirectory* dir,
+                      const Mechanics::Sensor& sensor,
+                      const double pixelRange,
+                      const double slopeRange,
+                      const int bins);
+
+  void fill(const Storage::TrackState& state, const Storage::Cluster& cluster);
+};
+
+} // namespace detail
 
 class Residuals : public SingleAnalyzer {
 public:
+  /**
+   * \param pixelRange Residual histogram range in number of pixels
+   * \param slopeRange Track slope histogram range in radian
+   * \param bins Number of histogram bins
+   */
   Residuals(
-      const Mechanics::Device* refDevice,
+      const Mechanics::Device* device,
       TDirectory* dir = 0,
       const char* suffix = "",
       /* Histogram options */
-      unsigned int nPixX = 20,  // Number of pixels in the residual plots
-      double binsPerPix = 10,   // Hist bins per pixel
-      unsigned int binsY = 20); // Number of bins for the vertical in AB plots
+      const double pixelRange = 2.0,
+      const double slopeRange = 0.001,
+      const int bins = 128); // Number of bins for the vertical in AB plots
 
   void processEvent(const Storage::Event* refEvent);
   void postProcessing();
 
-  TH1D* getResidualX(unsigned int nsensor);
-  TH1D* getResidualY(unsigned int nsensor);
-  TH2D* getResidualXX(unsigned int nsensor);
-  TH2D* getResidualXY(unsigned int nsensor);
-  TH2D* getResidualYY(unsigned int nsensor);
-  TH2D* getResidualYX(unsigned int nsensor);
+  TH1D* getResidualX(Index sensorId);
+  TH1D* getResidualY(Index sensorId);
+  TH2D* getResidualXX(Index sensorId);
+  TH2D* getResidualXY(Index sensorId);
+  TH2D* getResidualYY(Index sensorId);
+  TH2D* getResidualYX(Index sensorId);
 
 private:
-  std::vector<TH1D*> _residualsX;
-  std::vector<TH1D*> _residualsY;
-  std::vector<TH2D*> _residualsXX;
-  std::vector<TH2D*> _residualsXY;
-  std::vector<TH2D*> _residualsYY;
-  std::vector<TH2D*> _residualsYX;
+  std::vector<detail::SensorResidualHists> m_hists;
 };
 
 class UnbiasedResiduals : public Analyzer {
 public:
-  UnbiasedResiduals(const Mechanics::Device& device, TDirectory* dir);
+  /**
+   * \param pixelRange Residual histogram range in number of pixels
+   * \param slopeRange Track slope histogram range in radian
+   * \param bins Number of histogram bins
+   */
+  UnbiasedResiduals(const Mechanics::Device& device,
+                    TDirectory* dir,
+                    const double pixelRange = 2.0,
+                    const double slopeRange = 0.001,
+                    const int bins = 128);
 
   std::string name() const;
   void analyze(const Storage::Event& event);
@@ -61,20 +98,8 @@ public:
   const TH2D* getResidualUV(Index sensorId) const;
 
 private:
-  struct Hists {
-    TH2D* res;
-    TH2D* trackUResU;
-    TH2D* trackUResV;
-    TH2D* trackVResU;
-    TH2D* trackVResV;
-    TH2D* slopeUResU;
-    TH2D* slopeUResV;
-    TH2D* slopeVResU;
-    TH2D* slopeVResV;
-  };
-
   const Mechanics::Device& m_device;
-  std::vector<Hists> m_hists;
+  std::vector<detail::SensorResidualHists> m_hists;
 };
 
 } // namespace Analyzers

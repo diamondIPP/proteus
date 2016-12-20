@@ -1,48 +1,47 @@
-#ifndef TRACKINFO_H
-#define TRACKINFO_H
+#ifndef PT_TRACKINFO_H
+#define PT_TRACKINFO_H
 
 #include <vector>
 
-#include <TH2D.h>
-#include <TH1D.h>
-#include <TDirectory.h>
-
 #include "singleanalyzer.h"
 
-namespace Storage { class Event; }
-namespace Mechanics { class Device; }
+class TDirectory;
+class TH1D;
+class TH2D;
+
+namespace Storage {
+class Event;
+}
+namespace Mechanics {
+class Device;
+}
 
 namespace Analyzers {
 
-class TrackInfo : public SingleAnalyzer
-{
-private:
-  TH2D* _origins;
-  TH1D* _originsX;
-  TH1D* _originsY;
-  TH1D* _slopesX;
-  TH1D* _slopesY;
-  TH1D* _chi2;
-  TH1D* _numClusters;
-  TH1D* _resoX;
-  TH1D* _resoY;
-
-  std::vector<TH1D*> _resX;
-  std::vector<TH1D*> _resY;
-
+class TrackInfo : public SingleAnalyzer {
 public:
   TrackInfo(const Mechanics::Device* device,
             TDirectory* dir,
             const char* suffix = "",
             /* Histogram options */
-            double resWidth = 1E-2, // Widht of track resolution histos
-            double maxSploe = 1E-2, // Maximal slope for track slope histos
-            double increaseArea = 1.2); // Make origins plot larger than sensor by this factor
+            const double reducedChi2Max = 10,
+            const double slopeMax = 0.01,
+            const int bins = 128);
 
   void processEvent(const Storage::Event* event);
   void postProcessing();
+
+private:
+  TH1D* m_numClusters;
+  TH1D* m_reducedChi2;
+  TH2D* m_offsetXY;
+  TH1D* m_offsetX;
+  TH1D* m_offsetY;
+  TH2D* m_slopeXY;
+  TH1D* m_slopeX;
+  TH1D* m_slopeY;
 };
 
-}
+} // namespace Analyzers
 
-#endif
+#endif // PT_TRACKINFO_H

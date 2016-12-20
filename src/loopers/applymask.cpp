@@ -64,7 +64,7 @@ namespace Loopers {
         }
       }
 
-      maskedEvent->setTimeStamp(refEvent->getTimeStamp());
+      maskedEvent->setTimestamp(refEvent->getTimeStamp());
       maskedEvent->setFrameNumber(refEvent->getFrameNumber());
       maskedEvent->setTriggerOffset(refEvent->getTriggerOffset());
       maskedEvent->setTriggerInfo(refEvent->getTriggerInfo());
