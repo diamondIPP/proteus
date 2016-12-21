@@ -219,13 +219,13 @@ Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
     auto cfg = readConfig(path);
     device = fromConfig(cfg);
 
-    auto cfgAlign = cfg.find("alignment");
-    if (cfgAlign && cfgAlign->is<std::string>()) {
-      auto p = pathRebaseIfRelative(cfgAlign->as<std::string>(), dir);
+    auto cfgGeo = cfg.find("geometry");
+    if (cfgGeo && cfgGeo->is<std::string>()) {
+      auto p = pathRebaseIfRelative(cfgGeo->as<std::string>(), dir);
       device.setGeometry(Geometry::fromFile(p));
       device.m_pathGeometry = p;
-    } else if (cfgAlign) {
-      device.setGeometry(Geometry::fromConfig(*cfgAlign));
+    } else if (cfgGeo) {
+      device.setGeometry(Geometry::fromConfig(*cfgGeo));
     }
 
     auto cfgMask = cfg.find("noise_mask");

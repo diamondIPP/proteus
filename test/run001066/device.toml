@@ -1,6 +1,6 @@
 # global settings **must** appear before any [section] command
 
-alignment = "geometry/aligned.toml"
+geometry = "geometry/aligned.toml"
 # only to demonstrate the setting.
 # leaving out the `noise_mask` setting altogether has the same effect
 # as adding empty masks.
