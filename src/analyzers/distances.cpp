@@ -57,7 +57,7 @@ Analyzers::Distances::Distances(const Mechanics::Device& device,
   const Mechanics::Sensor& sensor = *device.getSensor(sensorId);
   auto area = sensor.sensitiveAreaLocal();
   double pitch = std::hypot(sensor.pitchCol(), sensor.pitchRow());
-  double trackMax = std::hypot(area.axes[0].length(), area.axes[1].length());
+  double trackMax = std::hypot(area.length(0), area.length(1));
   double matchMax = pixelRange * pitch;
 
   TDirectory* sub = Utils::makeDir(dir, "Distances");

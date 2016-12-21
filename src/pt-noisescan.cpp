@@ -55,7 +55,7 @@ int main(int argc, char const* argv[])
   std::vector<std::shared_ptr<Analyzers::NoiseScan>> noiseScans;
   for (auto c = cfg.begin(); c != cfg.end(); ++c) {
     typedef Analyzers::NoiseScan::Area Area;
-    typedef Analyzers::NoiseScan::Area::Axis Interval;
+    typedef Analyzers::NoiseScan::Area::AxisInterval Interval;
 
     auto id = c->get<Index>("id");
     auto bandwidth = c->get<double>("density_bandwidth");

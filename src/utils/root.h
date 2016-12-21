@@ -33,13 +33,13 @@ struct HistAxis {
   }
   /** Construct w/ equal-size bins from an interval object.
    *
-   * \param i Interval object that provides `.min` and `.max` members
+   * \param i Interval object that provides `.min()` and `.max()` accessors
    * \param n Number of bins
    * \param l Axis label
    */
   template <typename Interval>
   HistAxis(const Interval& i, int n, std::string l = std::string())
-      : HistAxis(i.min, i.max, n, std::move(l))
+      : HistAxis(i.min(), i.max(), n, std::move(l))
   {
   }
   /** Construct w/ integer bins.
