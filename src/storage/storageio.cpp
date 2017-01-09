@@ -62,8 +62,8 @@ void Storage::StorageIO::openRead(const std::string& path,
       hits->SetBranchAddress("NHits", &numHits, &bNumHits);
       hits->SetBranchAddress("PixX", hitPixX, &bHitPixX);
       hits->SetBranchAddress("PixY", hitPixY, &bHitPixY);
-      hits->SetBranchAddress("Value", hitValue, &bHitValue);
       hits->SetBranchAddress("Timing", hitTiming, &bHitTiming);
+      hits->SetBranchAddress("Value", hitValue, &bHitValue);
       hits->SetBranchAddress("HitInCluster", hitInCluster, &bHitInCluster);
     }
 
@@ -150,8 +150,8 @@ void Storage::StorageIO::openTruncate(const std::string& path)
     hits->Branch("NHits", &numHits, "NHits/I");
     hits->Branch("PixX", hitPixX, "HitPixX[NHits]/I");
     hits->Branch("PixY", hitPixY, "HitPixY[NHits]/I");
-    hits->Branch("Value", hitValue, "HitValue[NHits]/I");
     hits->Branch("Timing", hitTiming, "HitTiming[NHits]/I");
+    hits->Branch("Value", hitValue, "HitValue[NHits]/I");
     hits->Branch("HitInCluster", hitInCluster, "HitInCluster[NHits]/I");
 
     // Clusters tree

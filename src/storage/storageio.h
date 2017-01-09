@@ -88,8 +88,8 @@ private:
   Int_t numHits;
   Int_t hitPixX[MAX_HITS];
   Int_t hitPixY[MAX_HITS];
-  Int_t hitValue[MAX_HITS];
   Int_t hitTiming[MAX_HITS];
+  Int_t hitValue[MAX_HITS];
   Int_t hitInCluster[MAX_HITS];
 
   // CLUSTERS
@@ -138,11 +138,8 @@ private:
   TBranch* bNumHits;
   TBranch* bHitPixX;
   TBranch* bHitPixY;
-  TBranch* bHitPosX;
-  TBranch* bHitPosY;
-  TBranch* bHitPosZ;
-  TBranch* bHitValue;
   TBranch* bHitTiming;
+  TBranch* bHitValue;
   TBranch* bHitInCluster;
 
   TBranch* bNumClusters;
@@ -150,12 +147,6 @@ private:
   TBranch* bClusterPixY;
   TBranch* bClusterPixErrX;
   TBranch* bClusterPixErrY;
-  TBranch* bClusterPosX;
-  TBranch* bClusterPosY;
-  TBranch* bClusterPosZ;
-  TBranch* bClusterPosErrX;
-  TBranch* bClusterPosErrY;
-  TBranch* bClusterPosErrZ;
   TBranch* bClusterInTrack;
 
   TBranch* bNumIntercepts;
