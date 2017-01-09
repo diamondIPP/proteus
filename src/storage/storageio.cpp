@@ -73,11 +73,11 @@ void Storage::StorageIO::openRead(const std::string& path,
     _clusters.push_back(clusters);
     if (clusters) {
       clusters->SetBranchAddress("NClusters", &numClusters, &bNumClusters);
-      clusters->SetBranchAddress("PixX", clusterPixX, &bClusterPixX);
-      clusters->SetBranchAddress("PixY", clusterPixY, &bClusterPixY);
-      clusters->SetBranchAddress("PixErrX", clusterPixErrX, &bClusterPixErrX);
-      clusters->SetBranchAddress("PixErrY", clusterPixErrY, &bClusterPixErrY);
-      clusters->SetBranchAddress("InTrack", clusterInTrack, &bClusterInTrack);
+      clusters->SetBranchAddress("Col", clusterPixX, &bClusterPixX);
+      clusters->SetBranchAddress("Row", clusterPixY, &bClusterPixY);
+      clusters->SetBranchAddress("StdCol", clusterPixErrX, &bClusterPixErrX);
+      clusters->SetBranchAddress("StdRow", clusterPixErrY, &bClusterPixErrY);
+      clusters->SetBranchAddress("Track", clusterInTrack, &bClusterInTrack);
     }
 
     TTree* intercepts;
@@ -86,7 +86,6 @@ void Storage::StorageIO::openRead(const std::string& path,
     if (intercepts) {
       intercepts->SetBranchAddress("NIntercepts", &numIntercepts,
                                    &bNumIntercepts);
-      intercepts->SetBranchAddress("Track", interceptTrack, &bInterceptTrack);
       intercepts->SetBranchAddress("U", interceptU, &bInterceptU);
       intercepts->SetBranchAddress("V", interceptV, &bInterceptV);
       intercepts->SetBranchAddress("SlopeU", interceptSlopeU,
@@ -99,6 +98,7 @@ void Storage::StorageIO::openRead(const std::string& path,
                                    &bInterceptStdSlopeU);
       intercepts->SetBranchAddress("StdSlopeV", interceptStdSlopeV,
                                    &bInterceptStdSlopeV);
+      intercepts->SetBranchAddress("Track", interceptTrack, &bInterceptTrack);
     }
   }
 
@@ -199,17 +199,16 @@ void Storage::StorageIO::openTruncate(const std::string& path)
     TTree* clusters = new TTree("Clusters", "Clusters");
     _clusters.push_back(clusters);
     clusters->Branch("NClusters", &numClusters, "NClusters/I");
-    clusters->Branch("PixX", clusterPixX, "ClusterPixX[NClusters]/D");
-    clusters->Branch("PixY", clusterPixY, "ClusterPixY[NClusters]/D");
-    clusters->Branch("PixErrX", clusterPixErrX, "ClusterPixErrX[NClusters]/D");
-    clusters->Branch("PixErrY", clusterPixErrY, "ClusterPixErrY[NClusters]/D");
-    clusters->Branch("InTrack", clusterInTrack, "ClusterInTrack[NClusters]/I");
+    clusters->Branch("Col", clusterPixX, "Col[NClusters]/D");
+    clusters->Branch("Row", clusterPixY, "Row[NClusters]/D");
+    clusters->Branch("StdCol", clusterPixErrX, "StdCol[NClusters]/D");
+    clusters->Branch("StdRow", clusterPixErrY, "StdRow[NClusters]/D");
+    clusters->Branch("Track", clusterInTrack, "Track[NClusters]/I");
 
     // Local track state tree
     TTree* intercepts = new TTree("Intercepts", "Intercepts");
     _intercepts.push_back(intercepts);
     intercepts->Branch("NIntercepts", &numIntercepts, "NIntercepts/I");
-    intercepts->Branch("Track", interceptTrack, "Track[NIntercepts]/I");
     intercepts->Branch("U", interceptU, "U[NIntercepts]/D");
     intercepts->Branch("V", interceptU, "V[NIntercepts]/D");
     intercepts->Branch("SlopeU", interceptSlopeU, "SlopeU[NIntercepts]/D");
@@ -220,6 +219,7 @@ void Storage::StorageIO::openTruncate(const std::string& path)
                        "StdSlopeU[NIntercepts]/D");
     intercepts->Branch("StdSlopeV", interceptStdSlopeV,
                        "StdSlopeV[NIntercepts]/D");
+    intercepts->Branch("Track", interceptTrack, "Track[NIntercepts]/I");
   }
 
   _file->cd();

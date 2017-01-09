@@ -116,7 +116,6 @@ private:
 
   // Local track states
   Int_t numIntercepts;
-  Int_t interceptTrack[MAX_TRACKS];
   Double_t interceptU[MAX_TRACKS];
   Double_t interceptV[MAX_TRACKS];
   Double_t interceptSlopeU[MAX_TRACKS];
@@ -125,6 +124,7 @@ private:
   Double_t interceptStdV[MAX_TRACKS];
   Double_t interceptStdSlopeU[MAX_TRACKS];
   Double_t interceptStdSlopeV[MAX_TRACKS];
+  Int_t interceptTrack[MAX_TRACKS];
 
   // EVENT INFO
   ULong64_t timestamp;
