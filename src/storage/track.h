@@ -51,12 +51,12 @@ public:
   unsigned int getNumClusters() const { return m_clusters.size(); }
   double getOriginX() const { return m_state.offset().x(); }
   double getOriginY() const { return m_state.offset().y(); }
-  double getOriginErrX() const { return m_state.stdOffsetU(); }
-  double getOriginErrY() const { return m_state.stdOffsetV(); }
+  double getOriginErrX() const { return std::sqrt(m_state.m_cov(0, 0)); }
+  double getOriginErrY() const { return std::sqrt(m_state.m_cov(1, 1)); }
   double getSlopeX() const { return m_state.slope().x(); }
   double getSlopeY() const { return m_state.slope().y(); }
-  double getSlopeErrX() const { return m_state.stdSlopeU(); }
-  double getSlopeErrY() const { return m_state.stdSlopeV(); }
+  double getSlopeErrX() const { return std::sqrt(m_state.m_cov(2, 2)); }
+  double getSlopeErrY() const { return std::sqrt(m_state.m_cov(3, 3)); }
   double getCovarianceX() const { return m_state.m_cov(0, 2); }
   double getCovarianceY() const { return m_state.m_cov(1, 3); }
   double getChi2() const { return m_redChi2; }

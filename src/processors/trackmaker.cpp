@@ -162,7 +162,8 @@ void Processors::TrackMaker::generateTracks(Event* event, int maskedPlane) const
 
       std::vector<Track*> candidates;
       TrackState state(cluster->getPosX(), cluster->getPosY());
-      state.setCovOffset(cluster->covGlobal().Sub<SymMatrix2>(0, 0));
+      state.setCovU(cluster->covGlobal()(0, 0), 0);
+      state.setCovV(cluster->covGlobal()(1, 1), 1);
       Track* seedTrack = new Track(state);
       seedTrack->addCluster(cluster);
 

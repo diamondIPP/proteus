@@ -34,16 +34,6 @@ void Storage::TrackState::setCovV(double varOffset, double varSlope, double cov)
   m_cov(Dv, Dv) = varSlope;
 }
 
-void Storage::TrackState::setErrU(double stdOffset, double stdSlope, double cov)
-{
-  setCovU(stdOffset * stdOffset, stdSlope * stdSlope, cov);
-}
-
-void Storage::TrackState::setErrV(double stdOffset, double stdSlope, double cov)
-{
-  setCovV(stdOffset * stdOffset, stdSlope * stdSlope, cov);
-}
-
 std::ostream& Storage::operator<<(std::ostream& os, const TrackState& state)
 {
   os << "offset=" << state.offset() << " slope=" << state.slope();
