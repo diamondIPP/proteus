@@ -102,9 +102,6 @@ private:
   Int_t numHits;
   Int_t hitPixX[MAX_HITS];
   Int_t hitPixY[MAX_HITS];
-  Double_t hitPosX[MAX_HITS];
-  Double_t hitPosY[MAX_HITS];
-  Double_t hitPosZ[MAX_HITS];
   Int_t hitValue[MAX_HITS];
   Int_t hitTiming[MAX_HITS];
   Int_t hitInCluster[MAX_HITS];

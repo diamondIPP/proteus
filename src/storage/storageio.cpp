@@ -66,9 +66,6 @@ void Storage::StorageIO::openRead(const std::string& path,
       hits->SetBranchAddress("Value", hitValue, &bHitValue);
       hits->SetBranchAddress("Timing", hitTiming, &bHitTiming);
       hits->SetBranchAddress("HitInCluster", hitInCluster, &bHitInCluster);
-      hits->SetBranchAddress("PosX", hitPosX, &bHitPosX);
-      hits->SetBranchAddress("PosY", hitPosY, &bHitPosY);
-      hits->SetBranchAddress("PosZ", hitPosZ, &bHitPosZ);
     }
 
     TTree* clusters;
@@ -203,9 +200,6 @@ void Storage::StorageIO::openTruncate(const std::string& path)
     hits->Branch("Value", hitValue, "HitValue[NHits]/I");
     hits->Branch("Timing", hitTiming, "HitTiming[NHits]/I");
     hits->Branch("HitInCluster", hitInCluster, "HitInCluster[NHits]/I");
-    hits->Branch("PosX", hitPosX, "HitPosX[NHits]/D");
-    hits->Branch("PosY", hitPosY, "HitPosY[NHits]/D");
-    hits->Branch("PosZ", hitPosZ, "HitPosZ[NHits]/D");
 
     // Clusters tree
     TTree* clusters = new TTree("Clusters", "Clusters");
@@ -427,11 +421,8 @@ void StorageIO::clearVariables()
   for (int i = 0; i < MAX_HITS; i++) {
     hitPixX[i] = 0;
     hitPixY[i] = 0;
-    hitPosX[i] = 0;
-    hitPosY[i] = 0;
-    hitPosZ[i] = 0;
-    hitValue[i] = 0;
     hitTiming[i] = 0;
+    hitValue[i] = 0;
     hitInCluster[i] = 0;
   }
 
@@ -706,7 +697,6 @@ void StorageIO::readEvent(uint64_t n, Event* event)
 
       Hit* hit = plane->newHit();
       hit->setAddress(hitPixX[nhit], hitPixY[nhit]);
-      // hit->setPosGlobal({hitPosX[nhit], hitPosY[nhit], hitPosZ[nhit]});
       hit->setTime(hitTiming[nhit]);
       hit->setValue(hitValue[nhit]);
 
@@ -811,9 +801,6 @@ void StorageIO::writeEvent(Event* event)
       Hit* hit = plane->getHit(nhit);
       hitPixX[nhit] = hit->digitalCol();
       hitPixY[nhit] = hit->digitalRow();
-      hitPosX[nhit] = hit->getPosX();
-      hitPosY[nhit] = hit->getPosY();
-      hitPosZ[nhit] = hit->getPosZ();
       hitValue[nhit] = hit->value();
       hitTiming[nhit] = hit->time();
       hitInCluster[nhit] = hit->cluster() ? hit->cluster()->index() : -1;
