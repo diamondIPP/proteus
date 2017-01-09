@@ -85,19 +85,14 @@ void Storage::StorageIO::openRead(const std::string& path,
     if (intercepts) {
       intercepts->SetBranchAddress("NIntercepts", &numIntercepts,
                                    &bNumIntercepts);
+      intercepts->SetBranchAddress("Track", interceptTrack, &bInterceptTrack);
       intercepts->SetBranchAddress("U", interceptU, &bInterceptU);
       intercepts->SetBranchAddress("V", interceptV, &bInterceptV);
       intercepts->SetBranchAddress("SlopeU", interceptSlopeU,
                                    &bInterceptSlopeU);
       intercepts->SetBranchAddress("SlopeV", interceptSlopeV,
                                    &bInterceptSlopeV);
-      intercepts->SetBranchAddress("StdU", interceptStdU, &bInterceptStdU);
-      intercepts->SetBranchAddress("StdV", interceptStdV, &bInterceptStdV);
-      intercepts->SetBranchAddress("StdSlopeU", interceptStdSlopeU,
-                                   &bInterceptStdSlopeU);
-      intercepts->SetBranchAddress("StdSlopeV", interceptStdSlopeV,
-                                   &bInterceptStdSlopeV);
-      intercepts->SetBranchAddress("Track", interceptTrack, &bInterceptTrack);
+      intercepts->SetBranchAddress("Cov", interceptCov, &bInterceptCov);
     }
   }
 
@@ -115,19 +110,12 @@ void Storage::StorageIO::openRead(const std::string& path,
   _file->GetObject("Tracks", _tracks);
   if (_tracks) {
     _tracks->SetBranchAddress("NTracks", &numTracks, &bNumTracks);
+    _tracks->SetBranchAddress("Chi2", trackChi2, &bTrackChi2);
+    _tracks->SetBranchAddress("X", trackOriginX, &bTrackOriginX);
+    _tracks->SetBranchAddress("Y", trackOriginY, &bTrackOriginY);
     _tracks->SetBranchAddress("SlopeX", trackSlopeX, &bTrackSlopeX);
     _tracks->SetBranchAddress("SlopeY", trackSlopeY, &bTrackSlopeY);
-    _tracks->SetBranchAddress("SlopeErrX", trackSlopeErrX, &bTrackSlopeErrX);
-    _tracks->SetBranchAddress("SlopeErrY", trackSlopeErrY, &bTrackSlopeErrY);
-    _tracks->SetBranchAddress("OriginX", trackOriginX, &bTrackOriginX);
-    _tracks->SetBranchAddress("OriginY", trackOriginY, &bTrackOriginY);
-    _tracks->SetBranchAddress("OriginErrX", trackOriginErrX, &bTrackOriginErrX);
-    _tracks->SetBranchAddress("OriginErrY", trackOriginErrY, &bTrackOriginErrY);
-    _tracks->SetBranchAddress("CovarianceX", trackCovarianceX,
-                              &bTrackCovarianceX);
-    _tracks->SetBranchAddress("CovarianceY", trackCovarianceY,
-                              &bTrackCovarianceY);
-    _tracks->SetBranchAddress("Chi2", trackChi2, &bTrackChi2);
+    _tracks->SetBranchAddress("Cov", trackCov, &bTrackCov);
   }
 }
 
@@ -168,17 +156,12 @@ void Storage::StorageIO::openTruncate(const std::string& path)
     TTree* intercepts = new TTree("Intercepts", "Intercepts");
     _intercepts.push_back(intercepts);
     intercepts->Branch("NIntercepts", &numIntercepts, "NIntercepts/I");
+    intercepts->Branch("Track", interceptTrack, "Track[NIntercepts]/I");
     intercepts->Branch("U", interceptU, "U[NIntercepts]/D");
     intercepts->Branch("V", interceptU, "V[NIntercepts]/D");
     intercepts->Branch("SlopeU", interceptSlopeU, "SlopeU[NIntercepts]/D");
     intercepts->Branch("SlopeV", interceptSlopeV, "SlopeV[NIntercepts]/D");
-    intercepts->Branch("StdU", interceptStdU, "StdU[NIntercepts]/D");
-    intercepts->Branch("StdV", interceptStdV, "StdV[NIntercepts]/D");
-    intercepts->Branch("StdSlopeU", interceptStdSlopeU,
-                       "StdSlopeU[NIntercepts]/D");
-    intercepts->Branch("StdSlopeV", interceptStdSlopeV,
-                       "StdSlopeV[NIntercepts]/D");
-    intercepts->Branch("Track", interceptTrack, "Track[NIntercepts]/I");
+    intercepts->Branch("Cov", interceptCov, "Cov[NIntercepts][10]/D");
   }
 
   _file->cd();
@@ -195,19 +178,12 @@ void Storage::StorageIO::openTruncate(const std::string& path)
   // Tracks tree
   _tracks = new TTree("Tracks", "Track parameters");
   _tracks->Branch("NTracks", &numTracks, "NTracks/I");
-  _tracks->Branch("SlopeX", trackSlopeX, "TrackSlopeX[NTracks]/D");
-  _tracks->Branch("SlopeY", trackSlopeY, "TrackSlopeY[NTracks]/D");
-  _tracks->Branch("SlopeErrX", trackSlopeErrX, "TrackSlopeErrX[NTracks]/D");
-  _tracks->Branch("SlopeErrY", trackSlopeErrY, "TrackSlopeErrY[NTracks]/D");
-  _tracks->Branch("OriginX", trackOriginX, "TrackOriginX[NTracks]/D");
-  _tracks->Branch("OriginY", trackOriginY, "TrackOriginY[NTracks]/D");
-  _tracks->Branch("OriginErrX", trackOriginErrX, "TrackOriginErrX[NTracks]/D");
-  _tracks->Branch("OriginErrY", trackOriginErrY, "TrackOriginErrY[NTracks]/D");
-  _tracks->Branch("CovarianceX", trackCovarianceX,
-                  "TrackCovarianceX[NTracks]/D");
-  _tracks->Branch("CovarianceY", trackCovarianceY,
-                  "TrackCovarianceY[NTracks]/D");
   _tracks->Branch("Chi2", trackChi2, "TrackChi2[NTracks]/D");
+  _tracks->Branch("X", trackOriginX, "X[NTracks]/D");
+  _tracks->Branch("Y", trackOriginY, "Y[NTracks]/D");
+  _tracks->Branch("SlopeX", trackSlopeX, "SlopeX[NTracks]/D");
+  _tracks->Branch("SlopeY", trackSlopeY, "SlopeY[NTracks]/D");
+  _tracks->Branch("Cov", trackCov, "Cov[NTracks][10]/D");
 }
 
 namespace Storage {
@@ -337,7 +313,7 @@ void StorageIO::clearVariables()
     hitPixY[i] = 0;
     hitTiming[i] = 0;
     hitValue[i] = 0;
-    hitInCluster[i] = 0;
+    hitInCluster[i] = -1;
   }
 
   numClusters = 0;
@@ -351,30 +327,20 @@ void StorageIO::clearVariables()
 
   numIntercepts = 0;
   for (int i = 0; i < MAX_HITS; ++i) {
-    interceptTrack[i] = 0;
     interceptU[i] = 0;
     interceptV[i] = 0;
     interceptSlopeU[i] = 0;
     interceptSlopeV[i] = 0;
-    interceptStdU[i] = 0;
-    interceptStdV[i] = 0;
-    interceptStdSlopeU[i] = 0;
-    interceptStdSlopeV[i] = 0;
+    interceptTrack[i] = -1;
   }
 
   numTracks = 0;
   for (int i = 0; i < MAX_HITS; i++) {
-    trackSlopeX[i] = 0;
-    trackSlopeY[i] = 0;
-    trackSlopeErrX[i] = 0;
-    trackSlopeErrY[i] = 0;
+    trackChi2[i] = -1;
     trackOriginX[i] = 0;
     trackOriginY[i] = 0;
-    trackOriginErrX[i] = 0;
-    trackOriginErrY[i] = 0;
-    trackCovarianceX[i] = 0;
-    trackCovarianceY[i] = 0;
-    trackChi2[i] = 0;
+    trackSlopeX[i] = 0;
+    trackSlopeY[i] = 0;
   }
 }
 
@@ -406,10 +372,7 @@ void StorageIO::readEvent(uint64_t n, Event* event)
   for (int ntrack = 0; ntrack < numTracks; ntrack++) {
     TrackState state(trackOriginX[ntrack], trackOriginY[ntrack],
                      trackSlopeX[ntrack], trackSlopeY[ntrack]);
-    state.setErrU(trackOriginErrX[ntrack], trackSlopeErrX[ntrack],
-                  trackCovarianceX[ntrack]);
-    state.setErrV(trackOriginErrY[ntrack], trackSlopeErrY[ntrack],
-                  trackCovarianceY[ntrack]);
+    state.setCov(trackCov[ntrack]);
     std::unique_ptr<Track> track(new Track(state));
     track->setGoodnessOfFit(trackChi2[ntrack]);
     event->addTrack(std::move(track));
@@ -430,10 +393,7 @@ void StorageIO::readEvent(uint64_t n, Event* event)
       Storage::TrackState local(interceptU[iintercept], interceptV[iintercept],
                                 interceptSlopeU[iintercept],
                                 interceptSlopeV[iintercept]);
-      local.setErrU(interceptStdU[iintercept], interceptStdSlopeU[iintercept],
-                    0);
-      local.setErrV(interceptStdV[iintercept], interceptStdSlopeV[iintercept],
-                    0);
+      local.setCov(interceptCov[iintercept]);
       local.setTrack(event->getTrack(interceptTrack[iintercept]));
       plane->addState(std::move(local));
     }
@@ -498,18 +458,14 @@ void StorageIO::writeEvent(Event* event)
 
   // Set the object track values into the arrays for writing to the root file
   for (int ntrack = 0; ntrack < numTracks; ntrack++) {
-    Track* track = event->getTrack(ntrack);
-    trackOriginX[ntrack] = track->getOriginX();
-    trackOriginY[ntrack] = track->getOriginY();
-    trackOriginErrX[ntrack] = track->getOriginErrX();
-    trackOriginErrY[ntrack] = track->getOriginErrY();
-    trackSlopeX[ntrack] = track->getSlopeX();
-    trackSlopeY[ntrack] = track->getSlopeY();
-    trackSlopeErrX[ntrack] = track->getSlopeErrX();
-    trackSlopeErrY[ntrack] = track->getSlopeErrY();
-    trackCovarianceX[ntrack] = track->getCovarianceX();
-    trackCovarianceY[ntrack] = track->getCovarianceY();
-    trackChi2[ntrack] = track->getChi2();
+    const Track& track = *event->getTrack(ntrack);
+    trackChi2[ntrack] = track.reducedChi2();
+    const TrackState& state = track.globalState();
+    trackOriginX[ntrack] = state.offset().x();
+    trackOriginY[ntrack] = state.offset().y();
+    trackSlopeX[ntrack] = state.slope().x();
+    trackSlopeY[ntrack] = state.slope().y();
+    std::copy(state.cov().begin(), state.cov().end(), trackCov[ntrack]);
   }
 
   for (unsigned int nplane = 0; nplane < _numPlanes; nplane++) {
@@ -523,10 +479,7 @@ void StorageIO::writeEvent(Event* event)
       interceptV[istate] = local.offset().y();
       interceptSlopeU[istate] = local.slope().x();
       interceptSlopeV[istate] = local.slope().y();
-      interceptStdU[istate] = local.stdOffsetU();
-      interceptStdV[istate] = local.stdOffsetV();
-      interceptStdSlopeU[istate] = local.stdSlopeU();
-      interceptStdSlopeV[istate] = local.stdSlopeV();
+      std::copy(local.cov().begin(), local.cov().end(), interceptCov[istate]);
     }
 
     numClusters = plane->numClusters();

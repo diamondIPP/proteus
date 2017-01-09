@@ -102,15 +102,12 @@ private:
 
   // Local track states
   Int_t numIntercepts;
+  Int_t interceptTrack[MAX_TRACKS];
   Double_t interceptU[MAX_TRACKS];
   Double_t interceptV[MAX_TRACKS];
   Double_t interceptSlopeU[MAX_TRACKS];
   Double_t interceptSlopeV[MAX_TRACKS];
-  Double_t interceptStdU[MAX_TRACKS];
-  Double_t interceptStdV[MAX_TRACKS];
-  Double_t interceptStdSlopeU[MAX_TRACKS];
-  Double_t interceptStdSlopeV[MAX_TRACKS];
-  Int_t interceptTrack[MAX_TRACKS];
+  Double_t interceptCov[MAX_TRACKS][10];
 
   // EVENT INFO
   ULong64_t timestamp;
@@ -122,17 +119,12 @@ private:
 
   // TRACKS
   Int_t numTracks;
-  Double_t trackSlopeX[MAX_TRACKS];
-  Double_t trackSlopeY[MAX_TRACKS];
-  Double_t trackSlopeErrX[MAX_TRACKS];
-  Double_t trackSlopeErrY[MAX_TRACKS];
+  Double_t trackChi2[MAX_TRACKS];
   Double_t trackOriginX[MAX_TRACKS];
   Double_t trackOriginY[MAX_TRACKS];
-  Double_t trackOriginErrX[MAX_TRACKS];
-  Double_t trackOriginErrY[MAX_TRACKS];
-  Double_t trackCovarianceX[MAX_TRACKS];
-  Double_t trackCovarianceY[MAX_TRACKS];
-  Double_t trackChi2[MAX_TRACKS];
+  Double_t trackSlopeX[MAX_TRACKS];
+  Double_t trackSlopeY[MAX_TRACKS];
+  Double_t trackCov[MAX_TRACKS][10];
 
   // Branches corresponding to the above variables
   TBranch* bNumHits;
@@ -155,10 +147,7 @@ private:
   TBranch* bInterceptV;
   TBranch* bInterceptSlopeU;
   TBranch* bInterceptSlopeV;
-  TBranch* bInterceptStdU;
-  TBranch* bInterceptStdV;
-  TBranch* bInterceptStdSlopeU;
-  TBranch* bInterceptStdSlopeV;
+  TBranch* bInterceptCov;
 
   TBranch* bTimeStamp;
   TBranch* bFrameNumber;
@@ -168,17 +157,12 @@ private:
   TBranch* bInvalid;
 
   TBranch* bNumTracks;
-  TBranch* bTrackSlopeX;
-  TBranch* bTrackSlopeY;
-  TBranch* bTrackSlopeErrX;
-  TBranch* bTrackSlopeErrY;
+  TBranch* bTrackChi2;
   TBranch* bTrackOriginX;
   TBranch* bTrackOriginY;
-  TBranch* bTrackOriginErrX;
-  TBranch* bTrackOriginErrY;
-  TBranch* bTrackCovarianceX;
-  TBranch* bTrackCovarianceY;
-  TBranch* bTrackChi2;
+  TBranch* bTrackSlopeX;
+  TBranch* bTrackSlopeY;
+  TBranch* bTrackCov;
 };
 
 } // end of namespace
