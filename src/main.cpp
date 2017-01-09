@@ -121,8 +121,9 @@ void applyMask(const char* inputName,
     Storage::StorageIO input(inputName, Storage::INPUT, 0, inMask, device.getSensorMask());
 
     Storage::StorageIO output(outputName, Storage::OUTPUT, device.getNumSensors(), inMask, 0);
-    output.setNoiseMaskData(device.noiseMask());
-    output.setRuns(runs);
+    // 2017-01-09 msmk: not supported in Proteus
+    // output.setNoiseMaskData(device.noiseMask());
+    // output.setRuns(runs);
 
     Loopers::ApplyMask looper(&device, &output, &input, startEvent, numEvents);
     const Storage::Event* start = input.readEvent(looper.getStartEvent());

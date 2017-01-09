@@ -46,7 +46,8 @@ Loopers::ProcessEvents::ProcessEvents(Mechanics::Device* refDevice,
   assert(refInput->getNumPlanes() == refDevice->getNumSensors() &&
          "Loopers: number of planes / sensors mis-match");
 
-  _refOutput->setRuns(refInput->getRuns());
+  // 2017-01-09 msmk: not supported anymore in Proteus
+  // _refOutput->setRuns(refInput->getRuns());
 }
 
 //=========================================================

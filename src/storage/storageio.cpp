@@ -12,7 +12,6 @@
 
 #include "loopers/noisescan.h"
 #include "mechanics/device.h"
-#include "mechanics/noisemask.h"
 #include "mechanics/sensor.h"
 #include "storage/cluster.h"
 #include "storage/event.h"
@@ -130,46 +129,6 @@ void Storage::StorageIO::openRead(const std::string& path,
                               &bTrackCovarianceY);
     _tracks->SetBranchAddress("Chi2", trackChi2, &bTrackChi2);
   }
-
-  _file->GetObject("SummaryTree", _summaryTree);
-  if (_summaryTree) {
-    _summaryTree->SetBranchAddress("NRuns", &st_numRuns, &b_NumRuns);
-    _summaryTree->SetBranchAddress("Run", st_run, &b_Run);
-    _summaryTree->SetBranchAddress("nscan_NRuns", &st_nscan_numRuns,
-                                   &b_NoiseScan_NumRuns);
-    _summaryTree->SetBranchAddress("nscan_Run", st_nscan_run, &b_NoiseScan_Run);
-    _summaryTree->SetBranchAddress("nscan_maxFactor", &st_nscan_maxFactor,
-                                   &b_NoiseScan_MaxFactor);
-    _summaryTree->SetBranchAddress("nscan_maxOccupancy", &st_nscan_maxOccupancy,
-                                   &b_NoiseScan_MaxOccupancy);
-    _summaryTree->SetBranchAddress("nscan_bottomX", &st_nscan_bottom_x,
-                                   &b_NoiseScan_BottomX);
-    _summaryTree->SetBranchAddress("nscan_upperX", &st_nscan_upper_x,
-                                   &b_NoiseScan_UpperX);
-    _summaryTree->SetBranchAddress("nscan_bottomY", &st_nscan_bottom_y,
-                                   &b_NoiseScan_BottomY);
-    _summaryTree->SetBranchAddress("nscan_upperY", &st_nscan_upper_y,
-                                   &b_NoiseScan_UpperY);
-    _summaryTree->SetBranchAddress("nscan_NNoisyPixels",
-                                   &st_nscan_numNoisyPixels,
-                                   &b_NoiseScan_NumNoisyPixels);
-    // ensure enough space is available for the maximum number of possible
-    // noise pixels, i.e. #planes * #pixels_per_plane
-    // use Mimosa26 (1152 cols x 576 rows) as upper limit
-    size_t max_size = _numPlanes * 1152 * 576;
-    st_nscan_noisyPixel_plane.resize(max_size);
-    st_nscan_noisyPixel_x.resize(max_size);
-    st_nscan_noisyPixel_y.resize(max_size);
-    _summaryTree->SetBranchAddress("nscan_noisyPixel_plane",
-                                   st_nscan_noisyPixel_plane.data(),
-                                   &b_NoiseScan_NoisyPixelPlane);
-    _summaryTree->SetBranchAddress("nscan_noisyPixel_x",
-                                   st_nscan_noisyPixel_x.data(),
-                                   &b_NoiseScan_NoisyPixelX);
-    _summaryTree->SetBranchAddress("nscan_noisyPixel_y",
-                                   st_nscan_noisyPixel_y.data(),
-                                   &b_NoiseScan_NoisyPixelY);
-  }
 }
 
 void Storage::StorageIO::openTruncate(const std::string& path)
@@ -249,31 +208,6 @@ void Storage::StorageIO::openTruncate(const std::string& path)
   _tracks->Branch("CovarianceY", trackCovarianceY,
                   "TrackCovarianceY[NTracks]/D");
   _tracks->Branch("Chi2", trackChi2, "TrackChi2[NTracks]/D");
-
-  // SummaryTree tree
-  _summaryTree = new TTree("SummaryTree", "Summary of configuration");
-  _summaryTree->Branch("NRuns", &st_numRuns, "NRuns/I");
-  _summaryTree->Branch("Run", st_run, "Run[NRuns]/I");
-
-  _summaryTree->Branch("nscan_NRuns", &st_nscan_numRuns, "nscan_NRuns/I");
-  _summaryTree->Branch("nscan_Run", st_nscan_run, "nscan_Run[nscan_NRuns]/I");
-  _summaryTree->Branch("nscan_maxFactor", &st_nscan_maxFactor,
-                       "nscan_maxFactor/D");
-  _summaryTree->Branch("nscan_maxOccupancy", &st_nscan_maxOccupancy,
-                       "nscan_maxOccupancy/D");
-  _summaryTree->Branch("nscan_bottomX", &st_nscan_bottom_x, "nscan_bottomX/I");
-  _summaryTree->Branch("nscan_upperX", &st_nscan_upper_x, "nscan_upperX/I");
-  _summaryTree->Branch("nscan_bottomY", &st_nscan_bottom_y, "nscan_bottomY/I");
-  _summaryTree->Branch("nscan_upperY", &st_nscan_upper_y, "nscan_upperY/I");
-  _summaryTree->Branch("nscan_NNoisyPixels", &st_nscan_numNoisyPixels,
-                       "nscan_NNoisyPixels/I");
-  _summaryTree->Branch("nscan_noisyPixel_plane",
-                       st_nscan_noisyPixel_plane.data(),
-                       "nscan_noisyPixel_Plane[nscan_NNoisyPixels]/I");
-  _summaryTree->Branch("nscan_noisyPixel_x", st_nscan_noisyPixel_x.data(),
-                       "nscan_noisyPixel_X[nscan_NNoisyPixels]/I");
-  _summaryTree->Branch("nscan_noisyPixel_y", st_nscan_noisyPixel_y.data(),
-                       "nscan_noisyPixel_Y[nscan_NNoisyPixels]/I");
 }
 
 namespace Storage {
@@ -288,10 +222,8 @@ StorageIO::StorageIO(const std::string& filePath,
     , _fileMode(fileMode)
     , _numPlanes(numPlanes)
     , _numEvents(0)
-    , _noiseMasks(0)
     , _tracks(0)
     , _eventInfo(0)
-    , _summaryTree(0)
 {
 
   // Plane mask holds a true for masked planes
@@ -377,18 +309,12 @@ StorageIO::StorageIO(const std::string& filePath,
           "StorageIO: all trees don't have the same number of events");
 
   } // end if (_fileMode == INPUT)
-
 } // end of StorageIO constructor
 
 //=========================================================
 StorageIO::~StorageIO()
 {
   if (_file && _fileMode == OUTPUT) {
-
-    /* fill summaryTree here to ensure it
-       is done just once (not a per-event tree) */
-    _summaryTree->Fill();
-
     INFO("file path: ", _file->GetPath());
     INFO("file mode: ", (_fileMode ? "OUTPUT" : "INPUT"));
     INFO("planes: ", _numPlanes);
@@ -450,146 +376,6 @@ void StorageIO::clearVariables()
     trackCovarianceY[i] = 0;
     trackChi2[i] = 0;
   }
-
-  st_numRuns = 0;
-  st_nscan_numRuns = 0;
-  for (int i = 0; i < MAX_RUNS; i++) {
-    st_run[i] = -1;
-    st_nscan_run[i] = -1;
-  }
-  st_nscan_maxFactor = 0;
-  st_nscan_maxOccupancy = 0;
-  st_nscan_bottom_x = -1;
-  st_nscan_upper_x = -1;
-  st_nscan_bottom_y = -1;
-  st_nscan_upper_y = -1;
-  st_nscan_numNoisyPixels = 0;
-  st_nscan_noisyPixel_plane.clear();
-  st_nscan_noisyPixel_x.clear();
-  st_nscan_noisyPixel_y.clear();
-}
-
-//=========================================================
-const std::string StorageIO::printSummaryTree()
-{
-  using std::endl;
-  std::ostringstream out;
-
-  if (!_summaryTree) {
-    INFO("no summaryTree found");
-    return out.str();
-  }
-
-  // just to need to get single entry
-  _summaryTree->GetEntry(0);
-
-  //_summaryTree->Print();
-
-  out << "  - summaryInfo " << endl;
-  out << "      * nruns = " << st_numRuns << endl;
-  for (int i = 0; i < st_numRuns; i++)
-    out << "        o run[" << i << "] = " << st_run[i] << endl;
-
-  out << "      * NoiseScan info" << endl;
-  out << "        o runs = ";
-  for (int i = 0; i < st_nscan_numRuns; i++)
-    out << st_nscan_run[i] << " ";
-  out << endl;
-  out << "        o maxFactor = " << st_nscan_maxFactor << endl;
-  out << "        o maxOccupancy = " << st_nscan_maxOccupancy << endl;
-  out << "        o bottomX = " << st_nscan_bottom_x << endl;
-  out << "        o upperX = " << st_nscan_upper_x << endl;
-  out << "        o bottomY = " << st_nscan_bottom_y << endl;
-  out << "        o upperY = " << st_nscan_upper_y << endl;
-  out << "        o nNoisyPixels = " << st_nscan_numNoisyPixels << endl;
-  for (int i = 0; i < st_nscan_numNoisyPixels; i++) {
-    out << "          -> pixel[" << st_nscan_noisyPixel_plane[i] << ","
-        << st_nscan_noisyPixel_x[i] << "," << st_nscan_noisyPixel_y[i] << "]"
-        << endl;
-  }
-  out << endl;
-  return out.str();
-}
-
-//=========================================================
-void StorageIO::setRuns(const std::vector<int>& vruns)
-{
-  assert(_fileMode != INPUT && "StorageIO: can't set runs in input mode");
-
-  if (vruns.empty()) {
-    ERROR("no --runs option detected; summaryTree saved without run info");
-    return;
-  }
-
-  st_numRuns = 0;
-  std::vector<int>::const_iterator cit;
-  for (cit = vruns.begin(); cit != vruns.end(); ++cit) {
-    st_run[st_numRuns] = (*cit);
-    st_numRuns++;
-  }
-}
-
-//=========================================================
-void StorageIO::setNoiseMaskData(const Mechanics::NoiseMask& noisemask)
-{
-  const Loopers::NoiseScanConfig* config = NULL;
-  if (!config) {
-    ERROR(
-        "[StorageIO::setNoiseMaskData] WARNING: no NoiseScanConfig info found");
-    return;
-  }
-
-  st_nscan_numRuns = 0;
-  const std::vector<int> runs = config->getRuns();
-  for (std::vector<int>::const_iterator cit = runs.begin(); cit != runs.end();
-       ++cit, st_nscan_numRuns++)
-    st_nscan_run[st_nscan_numRuns] = *cit;
-
-  st_nscan_maxFactor = config->getMaxFactor();
-  st_nscan_maxOccupancy = config->getMaxOccupancy();
-  st_nscan_bottom_x = config->getBottomLimitX();
-  st_nscan_upper_x = config->getUpperLimitX();
-  st_nscan_bottom_y = config->getBottomLimitY();
-  st_nscan_upper_y = config->getUpperLimitY();
-
-  st_nscan_numNoisyPixels = 0;
-  st_nscan_noisyPixel_plane.clear();
-  st_nscan_noisyPixel_x.clear();
-  st_nscan_noisyPixel_y.clear();
-  for (unsigned int isensor = 0; isensor < _numPlanes; ++isensor) {
-    const auto& maskedIndices = noisemask.getMaskedPixels(isensor);
-    for (const auto& index : maskedIndices) {
-      st_nscan_noisyPixel_plane.push_back(isensor);
-      st_nscan_noisyPixel_x.push_back(std::get<0>(index));
-      st_nscan_noisyPixel_y.push_back(std::get<1>(index));
-      st_nscan_numNoisyPixels += 1;
-    }
-  }
-  // changing the sizes of the vectors can lead to reallocated memory
-  // ensure the correct values are stored
-  _summaryTree->SetBranchAddress("nscan_noisyPixel_plane",
-                                 st_nscan_noisyPixel_plane.data(),
-                                 &b_NoiseScan_NoisyPixelPlane);
-  _summaryTree->SetBranchAddress("nscan_noisyPixel_x",
-                                 st_nscan_noisyPixel_x.data(),
-                                 &b_NoiseScan_NoisyPixelX);
-  _summaryTree->SetBranchAddress("nscan_noisyPixel_y",
-                                 st_nscan_noisyPixel_y.data(),
-                                 &b_NoiseScan_NoisyPixelY);
-}
-
-//=========================================================
-std::vector<int> StorageIO::getRuns() const
-{
-  std::vector<int> vec;
-  if (!_summaryTree) {
-    ERROR("no summaryTree, can't get run info");
-  } else {
-    _summaryTree->GetEntry(0);
-    for (int i = 0; i < st_numRuns; i++)
-      vec.push_back(st_run[i]);
-  }
-  return vec;
 }
 
 //=========================================================
@@ -669,14 +455,6 @@ void StorageIO::readEvent(uint64_t n, Event* event)
 
     // Generate a list of all hit objects
     for (int nhit = 0; nhit < numHits; nhit++) {
-      if (_noiseMasks &&
-          _noiseMasks->at(nplane)[hitPixX[nhit]][hitPixY[nhit]]) {
-        if (hitInCluster[nhit] >= 0)
-          throw std::runtime_error(
-              "StorageIO: tried to mask a hit which is already in a cluster");
-        continue;
-      }
-
       Hit* hit = plane->newHit();
       hit->setAddress(hitPixX[nhit], hitPixY[nhit]);
       hit->setTime(hitTiming[nhit]);

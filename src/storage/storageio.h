@@ -20,10 +20,6 @@
 #define MAX_RUNS 1000
 #define MAX_NOISY 20000
 
-namespace Mechanics {
-class NoiseMask;
-}
-
 namespace Storage {
 
 class Event;
@@ -48,17 +44,12 @@ public:
             unsigned int numPlanes = 0,
             const unsigned int treeMask = 0,
             const std::vector<bool>* planeMask = 0);
-
   /** Destructor */
   ~StorageIO();
-
-  void setRuns(const std::vector<int>& vruns);
-  void setNoiseMaskData(const Mechanics::NoiseMask& noisemask);
 
   uint64_t getNumEvents() const { return _numEvents; }
   unsigned int getNumPlanes() const { return _numPlanes; }
   Storage::Mode getMode() const { return _fileMode; }
-  std::vector<int> getRuns() const;
 
   /** Read the event in-place. Replaces all existing event content. */
   void readEvent(uint64_t n, Event* event);
@@ -71,15 +62,12 @@ private:
   void openRead(const std::string& path, const std::vector<bool>* planeMask);
   void openTruncate(const std::string& path);
   void clearVariables();
-  const std::string printSummaryTree();
 
 private:
   TFile* _file;            // Storage file
   const Mode _fileMode;    // How to open and process the file
   unsigned int _numPlanes; // This can be read from the file structure
   uint64_t _numEvents;     // Number of events in the input file
-
-  const std::vector<bool**>* _noiseMasks;
 
   /* NOTE: trees can easily be added and removed from a file. So each type
    * of information that might or might not be included in a file should be
@@ -92,8 +80,6 @@ private:
   // Trees global to the entire event
   TTree* _tracks;
   TTree* _eventInfo;
-  // Tree with configuration info
-  TTree* _summaryTree;
 
   //
   // Variables in which the storage is output on an event-by-event basis
@@ -147,23 +133,6 @@ private:
   Double_t trackCovarianceX[MAX_TRACKS];
   Double_t trackCovarianceY[MAX_TRACKS];
   Double_t trackChi2[MAX_TRACKS];
-
-  // Variables for summaryTree (output just once)
-  Int_t st_numRuns;
-  Int_t st_run[MAX_RUNS];
-
-  Int_t st_nscan_numRuns;
-  Int_t st_nscan_run[MAX_RUNS];
-  Double_t st_nscan_maxFactor;
-  Double_t st_nscan_maxOccupancy;
-  Int_t st_nscan_bottom_x;
-  Int_t st_nscan_upper_x;
-  Int_t st_nscan_bottom_y;
-  Int_t st_nscan_upper_y;
-  Int_t st_nscan_numNoisyPixels;                // total number of noisy pixels
-  std::vector<Int_t> st_nscan_noisyPixel_plane; // noisy pixel plane number
-  std::vector<Int_t> st_nscan_noisyPixel_x;     // noisy pixel x (col number)
-  std::vector<Int_t> st_nscan_noisyPixel_y;     // noisy pixel y (row number)
 
   // Branches corresponding to the above variables
   TBranch* bNumHits;
@@ -219,21 +188,6 @@ private:
   TBranch* bTrackCovarianceX;
   TBranch* bTrackCovarianceY;
   TBranch* bTrackChi2;
-
-  TBranch* b_NumRuns;
-  TBranch* b_Run;
-  TBranch* b_NoiseScan_NumRuns;
-  TBranch* b_NoiseScan_Run;
-  TBranch* b_NoiseScan_MaxFactor;
-  TBranch* b_NoiseScan_MaxOccupancy;
-  TBranch* b_NoiseScan_BottomX;
-  TBranch* b_NoiseScan_UpperX;
-  TBranch* b_NoiseScan_BottomY;
-  TBranch* b_NoiseScan_UpperY;
-  TBranch* b_NoiseScan_NumNoisyPixels;
-  TBranch* b_NoiseScan_NoisyPixelPlane;
-  TBranch* b_NoiseScan_NoisyPixelX;
-  TBranch* b_NoiseScan_NoisyPixelY;
 };
 
 } // end of namespace
