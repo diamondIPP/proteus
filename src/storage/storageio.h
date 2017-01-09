@@ -112,12 +112,6 @@ private:
   Double_t clusterPixY[MAX_CLUSTERS];
   Double_t clusterPixErrX[MAX_CLUSTERS];
   Double_t clusterPixErrY[MAX_CLUSTERS];
-  Double_t clusterPosX[MAX_CLUSTERS];
-  Double_t clusterPosY[MAX_CLUSTERS];
-  Double_t clusterPosZ[MAX_CLUSTERS];
-  Double_t clusterPosErrX[MAX_CLUSTERS];
-  Double_t clusterPosErrY[MAX_CLUSTERS];
-  Double_t clusterPosErrZ[MAX_CLUSTERS];
   Int_t clusterInTrack[MAX_CLUSTERS];
 
   // Local track states

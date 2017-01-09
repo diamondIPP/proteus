@@ -78,12 +78,6 @@ void Storage::StorageIO::openRead(const std::string& path,
       clusters->SetBranchAddress("PixErrX", clusterPixErrX, &bClusterPixErrX);
       clusters->SetBranchAddress("PixErrY", clusterPixErrY, &bClusterPixErrY);
       clusters->SetBranchAddress("InTrack", clusterInTrack, &bClusterInTrack);
-      clusters->SetBranchAddress("PosX", clusterPosX, &bClusterPosX);
-      clusters->SetBranchAddress("PosY", clusterPosY, &bClusterPosY);
-      clusters->SetBranchAddress("PosZ", clusterPosZ, &bClusterPosZ);
-      clusters->SetBranchAddress("PosErrX", clusterPosErrX, &bClusterPosErrX);
-      clusters->SetBranchAddress("PosErrY", clusterPosErrY, &bClusterPosErrY);
-      clusters->SetBranchAddress("PosErrZ", clusterPosErrZ, &bClusterPosErrZ);
     }
 
     TTree* intercepts;
@@ -210,12 +204,6 @@ void Storage::StorageIO::openTruncate(const std::string& path)
     clusters->Branch("PixErrX", clusterPixErrX, "ClusterPixErrX[NClusters]/D");
     clusters->Branch("PixErrY", clusterPixErrY, "ClusterPixErrY[NClusters]/D");
     clusters->Branch("InTrack", clusterInTrack, "ClusterInTrack[NClusters]/I");
-    clusters->Branch("PosX", clusterPosX, "ClusterPosX[NClusters]/D");
-    clusters->Branch("PosY", clusterPosY, "ClusterPosY[NClusters]/D");
-    clusters->Branch("PosZ", clusterPosZ, "ClusterPosZ[NClusters]/D");
-    clusters->Branch("PosErrX", clusterPosErrX, "ClusterPosErrX[NClusters]/D");
-    clusters->Branch("PosErrY", clusterPosErrY, "ClusterPosErrY[NClusters]/D");
-    clusters->Branch("PosErrZ", clusterPosErrZ, "ClusterPosErrZ[NClusters]/D");
 
     // Local track state tree
     TTree* intercepts = new TTree("Intercepts", "Intercepts");
@@ -432,12 +420,6 @@ void StorageIO::clearVariables()
     clusterPixY[i] = 0;
     clusterPixErrX[i] = 0;
     clusterPixErrY[i] = 0;
-    clusterPosX[i] = 0;
-    clusterPosY[i] = 0;
-    clusterPosZ[i] = 0;
-    clusterPosErrX[i] = 0;
-    clusterPosErrY[i] = 0;
-    clusterPosErrZ[i] = 0;
     clusterInTrack[i] = 0;
   }
 
@@ -781,12 +763,6 @@ void StorageIO::writeEvent(Event* event)
       clusterPixY[ncluster] = cluster->getPixY();
       clusterPixErrX[ncluster] = cluster->getPixErrX();
       clusterPixErrY[ncluster] = cluster->getPixErrY();
-      clusterPosX[ncluster] = cluster->getPosX();
-      clusterPosY[ncluster] = cluster->getPosY();
-      clusterPosZ[ncluster] = cluster->getPosZ();
-      clusterPosErrX[ncluster] = cluster->getPosErrX();
-      clusterPosErrY[ncluster] = cluster->getPosErrY();
-      clusterPosErrZ[ncluster] = cluster->getPosErrZ();
       clusterInTrack[ncluster] =
           cluster->getTrack() ? cluster->getTrack()->getIndex() : -1;
     }
