@@ -6,9 +6,9 @@ measurements. It started as a fork of the [Judith][judith] software but
 has since then evolved into an independent package. It requires a
 C++11 compatible compiler and [ROOT 5.34/36][root] or higher.
 
-An introduction guide and additional information including the coding and
-contribution guide can be found in the `doc` directory. Example configurations
-are contained in the `test` directory.
+An introduction guide and additional information including the contribution
+guide can be found in the `doc` directory. Example configurations can be found
+in the `test` directory.
 
 Building
 --------
