@@ -77,7 +77,7 @@ A few other anecdotal tips are listed here.
 *   Comment your code. Do *not* describe what the code does, but discuss
     your intentions and assumptions. What the code does can be figured
     out by reading the code itself; your intentions probably not.
-*   Non-trivial should describe their parameters using `doxygen-style
+*   Non-trivial functions should describe their parameters using `doxygen-style
     <http://doxygen.org>`_ comments. They should be placed in the
     headers and look like this:
 
