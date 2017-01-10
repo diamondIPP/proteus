@@ -7,13 +7,13 @@ has since then evolved into an independent package. It requires a
 C++11 compatible compiler and [ROOT 5.34/36][root] or higher.
 
 An introduction guide and additional information including the coding and
-contribution guide can be found in the `doc/` directory. The `test` directory
-contains example configurations.
-
-[![build status](https://gitlab.cern.ch/unige-fei4tel/proteus/badges/master/build.svg)](https://gitlab.cern.ch/unige-fei4tel/proteus/commits/master)
+contribution guide can be found in the `doc` directory. Example configurations
+are contained in the `test` directory.
 
 Building
 --------
+
+[![build status](https://gitlab.cern.ch/unige-fei4tel/proteus/badges/master/build.svg)](https://gitlab.cern.ch/unige-fei4tel/proteus/commits/master)
 
 Use the following commands to build the software using [CMake][cmake] in a
 separate build directory:
@@ -65,14 +65,15 @@ License
 -------
 
 The software is distributed under the terms of the MIT license. The
-documentation is distributed under the terms of the Creative Commons Attribution
-4.0 International Public License. Contributions are expected to be submitted
-under the same license terms.
+documentation is distributed under the terms of the [CC-BY-4.0][ccby4] license.
+The licenses can be found in the `LICENSE` file. Contributions are expected to
+be submitted under the same license terms.
 
 Proteus includes a copy of the [tinytoml][tinytoml]. [Tinytoml][tinytoml] is
 distributed under the simplified BSD License.
 
 
+[ccby4]: https://creativecommons.org/licenses/by/4.0/
 [cmake]: http://www.cmake.org
 [judith]: https://github.com/gmcgoldr/judith
 [paper2014]: http://dx.doi.org/10.1016/j.nima.2014.05.033
