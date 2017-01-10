@@ -10,11 +10,11 @@ devices-under-test for further analysis.
 Setup
 -----
 
-Proteus requires `ROOT <https://root.cern.ch>`_ and a recent C++ compiler. On
-Fedora 24 and higher the system compiler and ROOT available via the package
-manager are sufficient. The system compiler GCC 4.4 on LXPLUS/Scientific Linux 6
-does not work. A recent C++ compiler and matching ROOT version can be activated
-via:
+Proteus requires `ROOT <https://root.cern.ch>`_ and a compiler that supports
+C++11. On Fedora 24 and higher the system compiler and ROOT available via the
+package manager are sufficient. The system compiler GCC 4.4 on LXPLUS/Scientific
+Linux 6 does not work. A recent C++ compiler and matching ROOT version can be
+activated via:
 
 .. code-block:: console
 
