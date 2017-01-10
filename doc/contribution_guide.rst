@@ -66,15 +66,10 @@ described style.
 Coding Guideline
 ----------------
 
-ROOT macros must be compatible with ROOT 5.34. The compiled code must be
-compatible with Scientific Linux 6.x. The default compiler on Scientific Linux
-6.x is GCC 4.4 which has partial support for C++11. The available features
-listed in the `GCC 4.4 C++0x support status
-<https://gcc.gnu.org/gcc-4.4/cxx0x_status.html>`_ can be used where appropriate.
-
-A good general guideline for modern C++ usage can be found in the
-`CppCoreGuidelines <https://github.com/isocpp/CppCoreGuidelines>`_. A few other
-anecdotal tips are listed here.
+ROOT macros must be compatible with ROOT 5.34/36. The compiled code must be
+compatible with C++11. A good general guideline for modern C++ usage can be
+found in the `CppCoreGuidelines <https://github.com/isocpp/CppCoreGuidelines>`_.
+A few other anecdotal tips are listed here.
 
 *   Write code that is easy to understand for humans instead of code that
     you hope is easier for the compiler to optimize. It's usually not
