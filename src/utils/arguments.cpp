@@ -78,7 +78,7 @@ bool Utils::Arguments::parse(int argc, char const* argv[])
       DEBUG("long option: ", arg, ' ', argv[i + 1]);
       Option* opt = find(arg.substr(2), 0);
       if (!opt) {
-        std::cerr << "unknown long option '" << arg << "'\n\n";
+        std::cerr << "unknown long option: '" << arg << "'\n";
         return true;
       }
       if ((i + 1) < argc)
@@ -88,7 +88,7 @@ bool Utils::Arguments::parse(int argc, char const* argv[])
       // short optional argument
       Option* opt = find("", arg[1]);
       if (!opt) {
-        std::cerr << "unknown short option '" << arg << "'\n\n";
+        std::cerr << "unknown short option: '" << arg << "'\n";
         return true;
       }
       if ((i + 1) < argc)
@@ -101,7 +101,8 @@ bool Utils::Arguments::parse(int argc, char const* argv[])
   }
 
   if (m_args.size() < m_required.size()) {
-    std::cerr << "not enought of arguments\n\n";
+    std::cerr << "not enough arguments: " << m_args.size() << " < "
+              << m_required.size() << "\n";
     return true;
   }
   return false;
