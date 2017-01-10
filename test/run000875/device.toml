@@ -1,6 +1,6 @@
 # global settings **must** appear before any [section]
 
-alignment = "geometry/tel_aligned.toml"
+geometry = "geometry/tel_aligned.toml"
 # no noise masks
 
 [device]

@@ -13,6 +13,7 @@
 #include "analyzers/occupancy.h"
 #include "analyzers/residuals.h"
 #include "analyzers/trackinfo.h"
+#include "application.h"
 #include "mechanics/device.h"
 #include "processors/applygeometry.h"
 #include "processors/clusterizer.h"
@@ -22,8 +23,6 @@
 #include "processors/trackfitter.h"
 #include "storage/event.h"
 #include "storage/storageio.h"
-#include "utils/arguments.h"
-#include "utils/config.h"
 #include "utils/eventloop.h"
 
 int main(int argc, char const* argv[])
@@ -31,57 +30,38 @@ int main(int argc, char const* argv[])
   using namespace Analyzers;
   using namespace Processors;
 
-  Utils::Arguments args("run proteus telescope processing");
-  args.addOption('g', "geometry", "use a separate geometry file", "");
-  if (args.parse(argc, argv))
-    return EXIT_FAILURE;
+  toml::Table defaults = {{"distance_sigma_max", 5.},
+                          {"num_points_min", 3},
+                          {"reduced_chi2_max", -1.}};
+  Application app("track", "preprocess, cluster, and track", defaults);
+  app.initialize(argc, argv);
 
-  // setup configuration
-  uint64_t skipEvents = args.get<uint64_t>("skip_events");
-  uint64_t numEvents = args.get<uint64_t>("num_events");
+  // configuration
+  auto sensorIds = app.config().get<std::vector<Index>>("sensor_ids");
+  auto distSigmaMax = app.config().get<double>("distance_sigma_max");
+  auto numPointsMin = app.config().get<int>("num_points_min");
+  auto redChi2Max = app.config().get<double>("reduced_chi2_max");
 
-  Mechanics::Device dev = Mechanics::Device::fromFile(args.device());
-  // override geometry if requested
-  auto geoPath = args.get<std::string>("geometry");
-  if (!geoPath.empty()) {
-    auto geo = Mechanics::Geometry::fromFile(geoPath);
-    dev.setGeometry(geo);
-  }
+  // output
+  Storage::StorageIO output(app.outputPath("data.root"), Storage::OUTPUT,
+                            app.device().numSensors());
+  TFile hists(app.outputPath("hists.root").c_str(), "RECREATE");
 
-  toml::Value cfgAll = Utils::Config::readConfig(args.config());
-  toml::Value defaults = toml::Table{{"distance_sigma_max", 5.},
-                                     {"num_points_min", 3},
-                                     {"reduced_chi2_max", -1.}};
-  toml::Value cfg = Utils::Config::withDefaults(cfgAll["track"], defaults);
-  auto sensorIds = cfg.get<std::vector<Index>>("sensor_ids");
-  auto distSigmaMax = cfg.get<double>("distance_sigma_max");
-  auto numPointsMin = cfg.get<int>("num_points_min");
-  auto redChi2Max = cfg.get<double>("reduced_chi2_max");
-
-  Storage::StorageIO input(args.input(), Storage::INPUT, dev.numSensors());
-  Storage::StorageIO output(args.makeOutput("data.root"), Storage::OUTPUT,
-                            dev.numSensors());
-  TFile hists(args.makeOutput("hists.root").c_str(), "RECREATE");
-
-  Utils::EventLoop loop(&input, &output, skipEvents, numEvents);
-  // setup time range
-  auto event0 = loop.readStartEvent();
-  auto eventN = loop.readEndEvent();
-  dev.setTimestampRange(event0->timestamp(), eventN->timestamp());
-
-  setupHitMappers(dev, loop);
-  setupClusterizers(dev, loop);
-  loop.addProcessor(std::make_shared<ApplyGeometry>(dev));
-  loop.addProcessor(std::make_shared<TrackFinder>(dev, sensorIds, distSigmaMax,
-                                                  numPointsMin, redChi2Max));
-  loop.addAnalyzer(std::make_shared<EventInfo>(&dev, &hists));
-  loop.addAnalyzer(std::make_shared<HitInfo>(&dev, &hists));
-  loop.addAnalyzer(std::make_shared<ClusterInfo>(&dev, &hists));
-  loop.addAnalyzer(std::make_shared<TrackInfo>(&dev, &hists));
-  loop.addAnalyzer(std::make_shared<Occupancy>(&dev, &hists));
-  loop.addAnalyzer(std::make_shared<Correlation>(&dev, &hists));
-  loop.addAnalyzer(std::make_shared<Residuals>(&dev, &hists));
-  loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(dev, &hists));
+  auto loop = app.makeEventLoop();
+  loop.setOutput(&output);
+  setupHitMappers(app.device(), loop);
+  setupClusterizers(app.device(), loop);
+  loop.addProcessor(std::make_shared<ApplyGeometry>(app.device()));
+  loop.addProcessor(std::make_shared<TrackFinder>(
+      app.device(), sensorIds, distSigmaMax, numPointsMin, redChi2Max));
+  loop.addAnalyzer(std::make_shared<EventInfo>(&app.device(), &hists));
+  loop.addAnalyzer(std::make_shared<HitInfo>(&app.device(), &hists));
+  loop.addAnalyzer(std::make_shared<ClusterInfo>(&app.device(), &hists));
+  loop.addAnalyzer(std::make_shared<TrackInfo>(&app.device(), &hists));
+  loop.addAnalyzer(std::make_shared<Occupancy>(&app.device(), &hists));
+  loop.addAnalyzer(std::make_shared<Correlation>(&app.device(), &hists));
+  loop.addAnalyzer(std::make_shared<Residuals>(&app.device(), &hists));
+  loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(app.device(), &hists));
   loop.run();
 
   hists.Write();

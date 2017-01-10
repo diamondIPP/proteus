@@ -37,11 +37,9 @@ public:
   EventLoop(Storage::StorageIO* storage,
             uint64_t startEvent = 0,
             uint64_t numEvents = -1);
-  EventLoop(Storage::StorageIO* input,
-            Storage::StorageIO* output,
-            uint64_t startEvent = 0,
-            uint64_t numEvents = -1);
   ~EventLoop();
+
+  void setOutput(Storage::StorageIO* output);
 
   void addProcessor(std::shared_ptr<Processors::Processor> processor);
   void addAnalyzer(std::shared_ptr<Analyzers::Analyzer> analyzer);

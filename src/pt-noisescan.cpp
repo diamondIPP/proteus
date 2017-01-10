@@ -17,27 +17,16 @@
 
 #include "analyzers/noisescan.h"
 #include "analyzers/occupancy.h"
+#include "application.h"
 #include "mechanics/device.h"
 #include "storage/storageio.h"
-#include "utils/arguments.h"
-#include "utils/config.h"
 #include "utils/eventloop.h"
 #include "utils/logger.h"
 
 int main(int argc, char const* argv[])
 {
-  Utils::Arguments args("run proteus noise scan");
-  if (args.parse(argc, argv))
-    return EXIT_FAILURE;
-
-  Mechanics::Device device = Mechanics::Device::fromFile(args.device());
-  Storage::StorageIO input(args.input().c_str(), Storage::INPUT);
-  TFile* hists = TFile::Open(args.makeOutput("hists.root").c_str(), "RECREATE");
-  std::string maskPath = args.makeOutput("mask.toml");
-
-  // construct per-sensor configuration
   // clang-format off
-  toml::Value defaults = toml::Table{
+  toml::Table defaults = {
     {"density_bandwidth", 2.},
     {"max_sigma_above_avg", 5.},
     {"max_rate", 1.},
@@ -46,12 +35,16 @@ int main(int argc, char const* argv[])
     {"row_min", INT_MIN},
     {"row_max", INT_MAX}};
   // clang-format on
-  auto cfgAll = Utils::Config::readConfig(args.config());
-  auto cfgTool = Utils::Config::withDefaults(cfgAll["noisescan"], defaults);
-  std::vector<toml::Value> cfg =
-      Utils::Config::perSensor(cfgTool, toml::Table());
+  Application app("noisescan", "run noise scan", defaults);
+  app.initialize(argc, argv);
 
-  // sensor specific
+  // output
+  TFile* hists = TFile::Open(app.outputPath("hists.root").c_str(), "RECREATE");
+
+  // construct per-sensor configuration
+  // construct per-sensor noise analyzer
+  std::vector<toml::Value> cfg =
+      Utils::Config::perSensor(app.config(), toml::Table());
   std::vector<std::shared_ptr<Analyzers::NoiseScan>> noiseScans;
   for (auto c = cfg.begin(); c != cfg.end(); ++c) {
     typedef Analyzers::NoiseScan::Area Area;
@@ -65,12 +58,12 @@ int main(int argc, char const* argv[])
     Area roi(Interval(c->get<int>("col_min"), c->get<int>("col_max") + 1),
              Interval(c->get<int>("row_min"), c->get<int>("row_max") + 1));
     noiseScans.push_back(std::make_shared<Analyzers::NoiseScan>(
-        device, id, bandwidth, sigmaMax, rateMax, roi, hists));
+        app.device(), id, bandwidth, sigmaMax, rateMax, roi, hists));
   }
 
-  Utils::EventLoop loop(&input, args.get<uint64_t>("skip_events"),
-                        args.get<uint64_t>("num_events"));
-  loop.addAnalyzer(std::make_shared<Analyzers::Occupancy>(&device, hists));
+  Utils::EventLoop loop = app.makeEventLoop();
+  loop.addAnalyzer(
+      std::make_shared<Analyzers::Occupancy>(&app.device(), hists));
   for (auto noise = noiseScans.begin(); noise != noiseScans.end(); ++noise)
     loop.addAnalyzer(*noise);
   loop.run();
@@ -79,7 +72,7 @@ int main(int argc, char const* argv[])
   Mechanics::NoiseMask newMask;
   for (auto noise = noiseScans.begin(); noise != noiseScans.end(); ++noise)
     newMask.merge((*noise)->constructMask());
-  newMask.writeFile(maskPath);
+  newMask.writeFile(app.outputPath("mask.toml"));
 
   hists->Write();
   hists->Close();

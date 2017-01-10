@@ -21,18 +21,9 @@ PT_SETUP_LOCAL_LOGGER(EventLoop)
 Utils::EventLoop::EventLoop(Storage::StorageIO* input,
                             uint64_t startEvent,
                             uint64_t numEvents)
-    : EventLoop(input, NULL, startEvent, numEvents)
-{
-}
-
-Utils::EventLoop::EventLoop(Storage::StorageIO* input,
-                            Storage::StorageIO* output,
-                            uint64_t startEvent,
-                            uint64_t numEvents)
-    : m_input(input), m_output(output), m_startEvent(startEvent)
+    : m_input(input), m_output(NULL), m_startEvent(startEvent)
 {
   assert(input && "input storage is NULL");
-  // output can be NULL
 
   uint64_t eventsOnFile = m_input->getNumEvents();
   if (numEvents == static_cast<uint64_t>(-1)) {
@@ -48,6 +39,13 @@ Utils::EventLoop::EventLoop(Storage::StorageIO* input,
 }
 
 Utils::EventLoop::~EventLoop() {}
+
+void Utils::EventLoop::setOutput(Storage::StorageIO* output)
+{
+  assert(output && "ouput storage is NULL");
+
+  m_output = output;
+};
 
 void Utils::EventLoop::addProcessor(
     std::shared_ptr<Processors::Processor> processor)
@@ -91,8 +89,6 @@ void Utils::EventLoop::run()
 
   Storage::Event event(m_input->getNumPlanes());
   Utils::EventStatistics stats;
-  Duration durationWall = Duration::zero();
-  Duration durationTotal = Duration::zero();
   Duration durationInput = Duration::zero();
   Duration durationOutput = Duration::zero();
   std::vector<Duration> durationProcs(m_processors.size(), Duration::zero());
@@ -141,15 +137,13 @@ void Utils::EventLoop::run()
   for (auto a = m_analyzers.begin(); a != m_analyzers.end(); ++a) {
     (*a)->finalize();
   }
-  durationWall = Clock::now() - startWall;
-  durationTotal = durationInput + durationOutput;
-  durationTotal += std::accumulate(durationProcs.begin(), durationProcs.end(),
-                                   Duration::zero());
-  durationTotal += std::accumulate(durationAnas.begin(), durationAnas.end(),
-                                   Duration::zero());
-
-  // print common event statistics
-  INFO("\nEvent Statistics:\n", stats.str("  "));
+  Duration durationWall = Clock::now() - startWall;
+  Duration durationProc = std::accumulate(
+      durationProcs.begin(), durationProcs.end(), Duration::zero());
+  Duration durationAna = std::accumulate(durationAnas.begin(),
+                                         durationAnas.end(), Duration::zero());
+  Duration durationTotal =
+      durationInput + durationProc + durationAna + durationOutput;
 
   // print timing
   // allow fractional tics when calculating time per event
@@ -158,31 +152,33 @@ void Utils::EventLoop::run()
     float n = m_endEvent - m_startEvent + 1;
     return (std::chrono::duration<float, std::micro>(dt) / n).count();
   };
-  INFO("Timing:");
+  INFO("time: ", time_per_event(durationTotal), unit);
   INFO("  input: ", time_per_event(durationInput), unit);
   if (m_output)
     INFO("  output: ", time_per_event(durationOutput), unit);
-  INFO("  processors:");
+  INFO("  processors: ", time_per_event(durationProc), unit);
   for (size_t i = 0; i < m_processors.size(); ++i) {
-    INFO("    ", m_processors[i]->name(), ": ",
-         time_per_event(durationProcs[i]), unit);
+    DEBUG("    ", m_processors[i]->name(), ": ",
+          time_per_event(durationProcs[i]), unit);
   }
-  INFO("  analyzers:");
+  INFO("  analyzers: ", time_per_event(durationAna), unit);
   for (size_t i = 0; i < m_analyzers.size(); ++i) {
-    INFO("    ", m_analyzers[i]->name(), ": ", time_per_event(durationAnas[i]),
-         unit);
+    DEBUG("    ", m_analyzers[i]->name(), ": ", time_per_event(durationAnas[i]),
+          unit);
   }
-  INFO("  combined: ", time_per_event(durationTotal), unit);
-  INFO("  total (clocked): ",
+  INFO("time (clocked): ",
        std::chrono::duration_cast<std::chrono::minutes>(durationTotal).count(),
        " min ",
        std::chrono::duration_cast<std::chrono::seconds>(durationTotal).count(),
        " s");
-  INFO("  total (wall): ",
+  INFO("time (wall): ",
        std::chrono::duration_cast<std::chrono::minutes>(durationWall).count(),
        " min ",
        std::chrono::duration_cast<std::chrono::seconds>(durationWall).count(),
        " s");
+
+  // print common event statistics
+  INFO("statistics:\n", stats.str("  "));
 }
 
 std::unique_ptr<Storage::Event> Utils::EventLoop::readStartEvent()

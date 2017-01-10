@@ -71,7 +71,8 @@ set(COMMON_SRC
     utils/configparser.cpp
     utils/eventloop.cpp
     utils/logger.cpp
-    utils/statistics.cpp)
+    utils/statistics.cpp
+    application.cpp)
 
 add_library(pt-common STATIC ${COMMON_SRC})
 target_include_directories(pt-common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})
@@ -79,9 +80,6 @@ target_link_libraries(pt-common PUBLIC ${ROOT_LIBRARIES})
 
 add_executable(proteus main.cpp inputargs.cpp)
 target_link_libraries(proteus pt-common)
-
-add_executable(pt-analysis pt-analysis.cpp)
-target_link_libraries(pt-analysis pt-common)
 
 add_executable(pt-align pt-align.cpp)
 target_link_libraries(pt-align pt-common)

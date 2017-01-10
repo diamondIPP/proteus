@@ -1,17 +1,3 @@
-[align]
-# which method should be used to compute the alignment
-method = "residuals" # correlation, residuals, chi2_local
-# sensors that are used to compute the alignment, e.g. to build tracks
-sensor_ids = [0, 1, 2, 3, 4, 5]
-# sensors which should be aligned (must be a subset of sensor_ids)
-align_ids = [1, 2, 3, 4]
-# number of iterative alignment steps
-num_steps = 10
-# distance cut to assign clusters to the track (only for track-based alignment)
-distance_sigma_max = 4.0
-# only consider tracks with a chi2 value (only for track-based alignment)
-reduced_chi2_max = 10.0
-
 [track]
 # sensors that are used to build the tracks
 sensor_ids = [0, 1, 2, 3, 4, 5]
@@ -19,8 +5,39 @@ sensor_ids = [0, 1, 2, 3, 4, 5]
 distance_sigma_max = 4.0
 # minimum number of points of the track
 num_points_min = 5
-# no chi2 cut
-# reduced_chi2_max = -1
+reduced_chi2_max = -1. # disable chi2 cut; same as removing the line altogether
 
 [match]
 sensor_ids = [6, 7]
+
+# coarse alignment of only the telescope planes using cluster correlations
+[align.tel_coarse]
+method = "correlation" # use method based on cluster correlations
+sensor_ids = [0, 1, 2, 3, 4, 5]
+align_ids = [1, 2, 3, 4, 5]
+
+# fine alignment of only the telescope planes using track residuals
+[align.tel_fine]
+method = "residuals" # use method based on track residuals
+sensor_ids = [0, 1, 2, 3, 4, 5] # sensor to use for tracking
+align_ids = [1, 2, 3, 4, 5] # sensor for which alignment is calculated
+num_steps = 20 # number of iterative steps
+distance_sigma_max = 5.0 # distance cut for track finding
+reduced_chi2_max = 10.0 # chi2 cut for track finding
+damping = 0.8 # scale correction steps to avoid oscillations in iteration
+
+# coarse alignment of the duts keeping the telescope planes fixed
+[align.dut_coarse]
+method = "correlation"
+sensor_ids = [0, 1, 2, 3, 4, 5, 6, 7]
+align_ids = [6, 7]
+
+# fine alignment of the duts keeping the telescope planes fixed
+[align.dut_fine]
+method = "residuals"
+sensor_ids = [0, 1, 2, 3, 4, 5, 6, 7]
+align_ids = [6, 7]
+num_steps = 20
+distance_sigma_max = 10.0
+reduced_chi2_max = 10.0
+damping = 0.9

@@ -10,7 +10,10 @@
 #include <fstream>
 #include <stdexcept>
 
-#include "configparser.h"
+#include "utils/configparser.h"
+#include "utils/logger.h"
+
+PT_SETUP_LOCAL_LOGGER(Config)
 
 bool Utils::Config::pathIsAbsolute(const std::string& path)
 {
@@ -84,7 +87,7 @@ static toml::Value cfgConvertValue(const std::string& value)
 toml::Value Utils::Config::readConfigParser(const std::string& path)
 {
   toml::Value cfg = toml::Table();
-  toml::Value* section;
+  toml::Value* section = NULL;
 
   ConfigParser parser(path.c_str());
   for (unsigned int i = 0; i < parser.getNumRows(); ++i) {
@@ -145,8 +148,12 @@ toml::Value Utils::Config::withDefaults(const toml::Value& cfg,
                                         const toml::Value& defaults)
 {
   toml::Value combined(defaults);
-  if (!combined.merge(cfg))
+  if (!combined.merge(cfg)) {
+    ERROR("could not merge config w/ defaults");
+    ERROR("config:\n", cfg);
+    ERROR("defaults:\n", defaults);
     throw std::runtime_error("Config: could not merge defaults");
+  }
   return combined;
 }
 

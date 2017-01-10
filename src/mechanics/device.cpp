@@ -211,20 +211,21 @@ Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
 {
   using namespace Utils::Config;
 
+  Device device;
   std::string dir = pathDirname(path);
   DEBUG("config base dir '", dir, "'");
 
   if (pathExtension(path) == "toml") {
     auto cfg = readConfig(path);
-    auto device = fromConfig(readConfig(path));
+    device = fromConfig(cfg);
 
-    auto cfgAlign = cfg.find("alignment");
-    if (cfgAlign && cfgAlign->is<std::string>()) {
-      auto p = pathRebaseIfRelative(cfgAlign->as<std::string>(), dir);
+    auto cfgGeo = cfg.find("geometry");
+    if (cfgGeo && cfgGeo->is<std::string>()) {
+      auto p = pathRebaseIfRelative(cfgGeo->as<std::string>(), dir);
       device.setGeometry(Geometry::fromFile(p));
       device.m_pathGeometry = p;
-    } else if (cfgAlign) {
-      device.setGeometry(Geometry::fromConfig(*cfgAlign));
+    } else if (cfgGeo) {
+      device.setGeometry(Geometry::fromConfig(*cfgGeo));
     }
 
     auto cfgMask = cfg.find("noise_mask");
@@ -254,11 +255,12 @@ Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
     } else if (cfgMask) {
       device.applyNoiseMask(NoiseMask::fromConfig(*cfgMask));
     }
-
-    return device;
+  } else {
+    // fall-back to old format
+    device = parseDevice(path);
   }
-  // fall-back to old format
-  return parseDevice(path);
+  INFO("read device from '", path, "'");
+  return device;
 }
 
 Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
