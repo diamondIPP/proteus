@@ -4,6 +4,7 @@
 #include "analyzers/distances.h"
 #include "analyzers/matchexporter.h"
 #include "analyzers/residuals.h"
+#include "analyzers/trackinfo.h"
 #include "application.h"
 #include "mechanics/device.h"
 #include "processors/applygeometry.h"
@@ -37,6 +38,7 @@ int main(int argc, char const* argv[])
       std::make_shared<StraightTrackFitter>(app.device(), sensorIds));
   for (auto sensorId : sensorIds)
     loop.addProcessor(std::make_shared<Matcher>(app.device(), sensorId));
+  loop.addAnalyzer(std::make_shared<TrackInfo>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(app.device(), &hists));
   for (auto sensorId : sensorIds) {
     loop.addAnalyzer(
