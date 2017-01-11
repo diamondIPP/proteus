@@ -21,8 +21,8 @@ namespace Processors {
 
 /** Estimate local track parameters using a straight line track model.
  *
- * This will fit the local track parameters on the selected sensor planes
- * and add them to the track as local parameters.
+ * This calculates new global track parameters and goodness-of-fit and
+ * calculates the local track parameters on the selected sensor planes.
  */
 class StraightTrackFitter : public Processor {
 public:
