@@ -94,10 +94,11 @@ private:
 
   // CLUSTERS
   Int_t numClusters;
-  Double_t clusterPixX[MAX_CLUSTERS];
-  Double_t clusterPixY[MAX_CLUSTERS];
-  Double_t clusterPixErrX[MAX_CLUSTERS];
-  Double_t clusterPixErrY[MAX_CLUSTERS];
+  Double_t clusterCol[MAX_CLUSTERS];
+  Double_t clusterRow[MAX_CLUSTERS];
+  Double_t clusterVarCol[MAX_CLUSTERS];
+  Double_t clusterVarRow[MAX_CLUSTERS];
+  Double_t clusterCovColRow[MAX_CLUSTERS];
   Int_t clusterTrack[MAX_CLUSTERS];
 
   // Local track states
@@ -136,10 +137,11 @@ private:
   TBranch* bHitInCluster;
 
   TBranch* bNumClusters;
-  TBranch* bClusterPixX;
-  TBranch* bClusterPixY;
-  TBranch* bClusterPixErrX;
-  TBranch* bClusterPixErrY;
+  TBranch* bClusterCol;
+  TBranch* bClusterRow;
+  TBranch* bClusterVarCol;
+  TBranch* bClusterVarRow;
+  TBranch* bClusterCovColRow;
   TBranch* bClusterTrack;
 
   TBranch* bNumIntercepts;

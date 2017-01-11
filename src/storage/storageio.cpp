@@ -72,10 +72,12 @@ void Storage::StorageIO::openRead(const std::string& path,
     _clusters.push_back(clusters);
     if (clusters) {
       clusters->SetBranchAddress("NClusters", &numClusters, &bNumClusters);
-      clusters->SetBranchAddress("Col", clusterPixX, &bClusterPixX);
-      clusters->SetBranchAddress("Row", clusterPixY, &bClusterPixY);
-      clusters->SetBranchAddress("StdCol", clusterPixErrX, &bClusterPixErrX);
-      clusters->SetBranchAddress("StdRow", clusterPixErrY, &bClusterPixErrY);
+      clusters->SetBranchAddress("Col", clusterCol, &bClusterCol);
+      clusters->SetBranchAddress("Row", clusterRow, &bClusterRow);
+      clusters->SetBranchAddress("VarCol", clusterVarCol, &bClusterVarCol);
+      clusters->SetBranchAddress("VarRow", clusterVarRow, &bClusterVarRow);
+      clusters->SetBranchAddress("CovColRow", clusterCovColRow,
+                                 &bClusterCovColRow);
       clusters->SetBranchAddress("Track", clusterTrack, &bClusterTrack);
     }
 
@@ -147,10 +149,11 @@ void Storage::StorageIO::openTruncate(const std::string& path)
     TTree* clusters = new TTree("Clusters", "Clusters");
     _clusters.push_back(clusters);
     clusters->Branch("NClusters", &numClusters, "NClusters/I");
-    clusters->Branch("Col", clusterPixX, "Col[NClusters]/D");
-    clusters->Branch("Row", clusterPixY, "Row[NClusters]/D");
-    clusters->Branch("StdCol", clusterPixErrX, "StdCol[NClusters]/D");
-    clusters->Branch("StdRow", clusterPixErrY, "StdRow[NClusters]/D");
+    clusters->Branch("Col", clusterCol, "Col[NClusters]/D");
+    clusters->Branch("Row", clusterRow, "Row[NClusters]/D");
+    clusters->Branch("VarCol", clusterVarCol, "VarCol[NClusters]/D");
+    clusters->Branch("VarRow", clusterVarRow, "VarRow[NClusters]/D");
+    clusters->Branch("CovColRow", clusterCovColRow, "CovColRow[NClusters]/D");
     clusters->Branch("Track", clusterTrack, "Track[NClusters]/I");
 
     // Local track state tree
@@ -320,10 +323,11 @@ void StorageIO::clearVariables()
 
   numClusters = 0;
   for (int i = 0; i < MAX_HITS; i++) {
-    clusterPixX[i] = 0;
-    clusterPixY[i] = 0;
-    clusterPixErrX[i] = 0;
-    clusterPixErrY[i] = 0;
+    clusterCol[i] = 0;
+    clusterRow[i] = 0;
+    clusterVarCol[i] = 0;
+    clusterVarRow[i] = 0;
+    clusterCovColRow[i] = 0;
     clusterTrack[i] = 0;
   }
 
@@ -403,9 +407,13 @@ void StorageIO::readEvent(uint64_t n, Event* event)
 
     // Generate the cluster objects
     for (int ncluster = 0; ncluster < numClusters; ncluster++) {
+      SymMatrix2 cov;
+      cov(0, 0) = clusterVarCol[ncluster];
+      cov(1, 1) = clusterVarRow[ncluster];
+      cov(0, 1) = clusterCovColRow[ncluster];
       Cluster* cluster = plane->newCluster();
-      cluster->setPixel(clusterPixX[ncluster], clusterPixY[ncluster],
-                        clusterPixErrX[ncluster], clusterPixErrY[ncluster]);
+      cluster->setPixel(XYPoint(clusterCol[ncluster], clusterRow[ncluster]),
+                        cov);
 
       // If this cluster is in a track, mark this (and the tracks tree is
       // active)
@@ -493,13 +501,14 @@ void StorageIO::writeEvent(Event* event)
     // Set the object cluster values into the arrays for writig into the root
     // file
     for (int ncluster = 0; ncluster < numClusters; ncluster++) {
-      Cluster* cluster = plane->getCluster(ncluster);
-      clusterPixX[ncluster] = cluster->getPixX();
-      clusterPixY[ncluster] = cluster->getPixY();
-      clusterPixErrX[ncluster] = cluster->getPixErrX();
-      clusterPixErrY[ncluster] = cluster->getPixErrY();
+      const Cluster& cluster = *plane->getCluster(ncluster);
+      clusterCol[ncluster] = cluster.posPixel().x();
+      clusterRow[ncluster] = cluster.posPixel().y();
+      clusterVarCol[ncluster] = cluster.covPixel()(0, 0);
+      clusterVarRow[ncluster] = cluster.covPixel()(1, 1);
+      clusterCovColRow[ncluster] = cluster.covPixel()(0, 1);
       clusterTrack[ncluster] =
-          cluster->getTrack() ? cluster->getTrack()->getIndex() : -1;
+          cluster.track() ? cluster.track()->index() : -1;
     }
 
     numHits = plane->numHits();
