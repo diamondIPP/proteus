@@ -37,9 +37,10 @@ public:
   Cluster* getCluster(Index i) { return m_clusters.at(i); }
   const Cluster* getCluster(Index i) const { return m_clusters.at(i); }
 
-  void setGoodnessOfFit(double chi2, int ndf) { m_redChi2 = chi2 / ndf; }
-  void setGoodnessOfFit(double reducedChi2) { m_redChi2 = reducedChi2; }
-  double reducedChi2() const { return m_redChi2; }
+  void setGoodnessOfFit(double chi2, int dof) { m_chi2 = chi2, m_dof = dof; }
+  double chi2() const { return m_chi2; };
+  double reducedChi2() const { return m_chi2 / m_dof; }
+  double degreesOfFreedom() const { return m_dof; }
 
   void setGlobalState(const TrackState& state) { m_state = state; }
   const TrackState& globalState() const { return m_state; }
@@ -59,7 +60,7 @@ public:
   double getSlopeErrY() const { return std::sqrt(m_state.m_cov(3, 3)); }
   double getCovarianceX() const { return m_state.m_cov(0, 2); }
   double getCovarianceY() const { return m_state.m_cov(1, 3); }
-  double getChi2() const { return m_redChi2; }
+  double getChi2() const { return reducedChi2(); }
   int getIndex() const { return m_index; }
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
@@ -69,7 +70,8 @@ private:
   void freezeClusterAssociation();
 
   TrackState m_state;
-  double m_redChi2;
+  double m_chi2;
+  int m_dof;
   Index m_index;
 
   std::vector<Cluster*> m_clusters;

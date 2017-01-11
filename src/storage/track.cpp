@@ -4,10 +4,13 @@
 
 #include "cluster.h"
 
-Storage::Track::Track() : m_state(0, 0, 0, 0), m_redChi2(-1), m_index(-1) {}
+Storage::Track::Track()
+    : m_state(0, 0, 0, 0), m_chi2(-1), m_dof(-1), m_index(-1)
+{
+}
 
 Storage::Track::Track(const TrackState& global)
-    : m_state(global), m_redChi2(-1), m_index(-1)
+    : m_state(global), m_chi2(-1), m_dof(-1), m_index(-1)
 {
 }
 
@@ -42,7 +45,7 @@ const Storage::Cluster* Storage::Track::getMatchedCluster(Index sensorId) const
 
 void Storage::Track::print(std::ostream& os, const std::string& prefix) const
 {
-  os << prefix << "chi2/ndf: " << m_redChi2 << '\n';
+  os << prefix << "chi2/dof: " << m_chi2 << " / " << m_dof << '\n';
   os << prefix << "points: " << m_clusters.size() << '\n';
   os << prefix << "global: " << m_state << '\n';
 }
