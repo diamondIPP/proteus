@@ -76,7 +76,7 @@ void Storage::StorageIO::openRead(const std::string& path,
       clusters->SetBranchAddress("Row", clusterPixY, &bClusterPixY);
       clusters->SetBranchAddress("StdCol", clusterPixErrX, &bClusterPixErrX);
       clusters->SetBranchAddress("StdRow", clusterPixErrY, &bClusterPixErrY);
-      clusters->SetBranchAddress("Track", clusterInTrack, &bClusterInTrack);
+      clusters->SetBranchAddress("Track", clusterTrack, &bClusterTrack);
     }
 
     TTree* intercepts;
@@ -85,7 +85,6 @@ void Storage::StorageIO::openRead(const std::string& path,
     if (intercepts) {
       intercepts->SetBranchAddress("NIntercepts", &numIntercepts,
                                    &bNumIntercepts);
-      intercepts->SetBranchAddress("Track", interceptTrack, &bInterceptTrack);
       intercepts->SetBranchAddress("U", interceptU, &bInterceptU);
       intercepts->SetBranchAddress("V", interceptV, &bInterceptV);
       intercepts->SetBranchAddress("SlopeU", interceptSlopeU,
@@ -93,6 +92,7 @@ void Storage::StorageIO::openRead(const std::string& path,
       intercepts->SetBranchAddress("SlopeV", interceptSlopeV,
                                    &bInterceptSlopeV);
       intercepts->SetBranchAddress("Cov", interceptCov, &bInterceptCov);
+      intercepts->SetBranchAddress("Track", interceptTrack, &bInterceptTrack);
     }
   }
 
@@ -112,8 +112,8 @@ void Storage::StorageIO::openRead(const std::string& path,
     _tracks->SetBranchAddress("NTracks", &numTracks, &bNumTracks);
     _tracks->SetBranchAddress("Chi2", trackChi2, &bTrackChi2);
     _tracks->SetBranchAddress("Dof", trackDof, &bTrackDof);
-    _tracks->SetBranchAddress("X", trackOriginX, &bTrackOriginX);
-    _tracks->SetBranchAddress("Y", trackOriginY, &bTrackOriginY);
+    _tracks->SetBranchAddress("X", trackX, &bTrackX);
+    _tracks->SetBranchAddress("Y", trackY, &bTrackY);
     _tracks->SetBranchAddress("SlopeX", trackSlopeX, &bTrackSlopeX);
     _tracks->SetBranchAddress("SlopeY", trackSlopeY, &bTrackSlopeY);
     _tracks->SetBranchAddress("Cov", trackCov, &bTrackCov);
@@ -151,18 +151,18 @@ void Storage::StorageIO::openTruncate(const std::string& path)
     clusters->Branch("Row", clusterPixY, "Row[NClusters]/D");
     clusters->Branch("StdCol", clusterPixErrX, "StdCol[NClusters]/D");
     clusters->Branch("StdRow", clusterPixErrY, "StdRow[NClusters]/D");
-    clusters->Branch("Track", clusterInTrack, "Track[NClusters]/I");
+    clusters->Branch("Track", clusterTrack, "Track[NClusters]/I");
 
     // Local track state tree
     TTree* intercepts = new TTree("Intercepts", "Intercepts");
     _intercepts.push_back(intercepts);
     intercepts->Branch("NIntercepts", &numIntercepts, "NIntercepts/I");
-    intercepts->Branch("Track", interceptTrack, "Track[NIntercepts]/I");
     intercepts->Branch("U", interceptU, "U[NIntercepts]/D");
     intercepts->Branch("V", interceptU, "V[NIntercepts]/D");
     intercepts->Branch("SlopeU", interceptSlopeU, "SlopeU[NIntercepts]/D");
     intercepts->Branch("SlopeV", interceptSlopeV, "SlopeV[NIntercepts]/D");
     intercepts->Branch("Cov", interceptCov, "Cov[NIntercepts][10]/D");
+    intercepts->Branch("Track", interceptTrack, "Track[NIntercepts]/I");
   }
 
   _file->cd();
@@ -181,8 +181,8 @@ void Storage::StorageIO::openTruncate(const std::string& path)
   _tracks->Branch("NTracks", &numTracks, "NTracks/I");
   _tracks->Branch("Chi2", trackChi2, "Chi2[NTracks]/D");
   _tracks->Branch("Dof", trackDof, "Dof[NTracks]/I");
-  _tracks->Branch("X", trackOriginX, "X[NTracks]/D");
-  _tracks->Branch("Y", trackOriginY, "Y[NTracks]/D");
+  _tracks->Branch("X", trackX, "X[NTracks]/D");
+  _tracks->Branch("Y", trackY, "Y[NTracks]/D");
   _tracks->Branch("SlopeX", trackSlopeX, "SlopeX[NTracks]/D");
   _tracks->Branch("SlopeY", trackSlopeY, "SlopeY[NTracks]/D");
   _tracks->Branch("Cov", trackCov, "Cov[NTracks][10]/D");
@@ -324,7 +324,7 @@ void StorageIO::clearVariables()
     clusterPixY[i] = 0;
     clusterPixErrX[i] = 0;
     clusterPixErrY[i] = 0;
-    clusterInTrack[i] = 0;
+    clusterTrack[i] = 0;
   }
 
   numIntercepts = 0;
@@ -340,8 +340,8 @@ void StorageIO::clearVariables()
   for (int i = 0; i < MAX_HITS; i++) {
     trackChi2[i] = -1;
     trackDof[i] = -1;
-    trackOriginX[i] = 0;
-    trackOriginY[i] = 0;
+    trackX[i] = 0;
+    trackY[i] = 0;
     trackSlopeX[i] = 0;
     trackSlopeY[i] = 0;
   }
@@ -373,8 +373,8 @@ void StorageIO::readEvent(uint64_t n, Event* event)
 
   // Generate a list of track objects
   for (int ntrack = 0; ntrack < numTracks; ntrack++) {
-    TrackState state(trackOriginX[ntrack], trackOriginY[ntrack],
-                     trackSlopeX[ntrack], trackSlopeY[ntrack]);
+    TrackState state(trackX[ntrack], trackY[ntrack], trackSlopeX[ntrack],
+                     trackSlopeY[ntrack]);
     state.setCov(trackCov[ntrack]);
     std::unique_ptr<Track> track(new Track(state));
     track->setGoodnessOfFit(trackChi2[ntrack], trackDof[ntrack]);
@@ -409,8 +409,8 @@ void StorageIO::readEvent(uint64_t n, Event* event)
 
       // If this cluster is in a track, mark this (and the tracks tree is
       // active)
-      if (_tracks && (0 <= clusterInTrack[ncluster])) {
-        Track* track = event->getTrack(clusterInTrack[ncluster]);
+      if (_tracks && (0 <= clusterTrack[ncluster])) {
+        Track* track = event->getTrack(clusterTrack[ncluster]);
         track->addCluster(cluster);
         cluster->setTrack(track);
       }
@@ -465,8 +465,8 @@ void StorageIO::writeEvent(Event* event)
     trackChi2[ntrack] = track.chi2();
     trackDof[ntrack] = track.degreesOfFreedom();
     const TrackState& state = track.globalState();
-    trackOriginX[ntrack] = state.offset().x();
-    trackOriginY[ntrack] = state.offset().y();
+    trackX[ntrack] = state.offset().x();
+    trackY[ntrack] = state.offset().y();
     trackSlopeX[ntrack] = state.slope().x();
     trackSlopeY[ntrack] = state.slope().y();
     std::copy(state.cov().begin(), state.cov().end(), trackCov[ntrack]);
@@ -478,12 +478,12 @@ void StorageIO::writeEvent(Event* event)
     // fill local states
     for (Index istate = 0; istate < plane->numStates(); ++istate) {
       const TrackState& local = plane->getState(istate);
-      interceptTrack[istate] = local.track()->index();
       interceptU[istate] = local.offset().x();
       interceptV[istate] = local.offset().y();
       interceptSlopeU[istate] = local.slope().x();
       interceptSlopeV[istate] = local.slope().y();
       std::copy(local.cov().begin(), local.cov().end(), interceptCov[istate]);
+      interceptTrack[istate] = local.track()->index();
     }
 
     numClusters = plane->numClusters();
@@ -498,7 +498,7 @@ void StorageIO::writeEvent(Event* event)
       clusterPixY[ncluster] = cluster->getPixY();
       clusterPixErrX[ncluster] = cluster->getPixErrX();
       clusterPixErrY[ncluster] = cluster->getPixErrY();
-      clusterInTrack[ncluster] =
+      clusterTrack[ncluster] =
           cluster->getTrack() ? cluster->getTrack()->getIndex() : -1;
     }
 

@@ -98,16 +98,16 @@ private:
   Double_t clusterPixY[MAX_CLUSTERS];
   Double_t clusterPixErrX[MAX_CLUSTERS];
   Double_t clusterPixErrY[MAX_CLUSTERS];
-  Int_t clusterInTrack[MAX_CLUSTERS];
+  Int_t clusterTrack[MAX_CLUSTERS];
 
   // Local track states
   Int_t numIntercepts;
-  Int_t interceptTrack[MAX_TRACKS];
   Double_t interceptU[MAX_TRACKS];
   Double_t interceptV[MAX_TRACKS];
   Double_t interceptSlopeU[MAX_TRACKS];
   Double_t interceptSlopeV[MAX_TRACKS];
   Double_t interceptCov[MAX_TRACKS][10];
+  Int_t interceptTrack[MAX_TRACKS];
 
   // EVENT INFO
   ULong64_t timestamp;
@@ -121,8 +121,8 @@ private:
   Int_t numTracks;
   Double_t trackChi2[MAX_TRACKS];
   Int_t trackDof[MAX_TRACKS];
-  Double_t trackOriginX[MAX_TRACKS];
-  Double_t trackOriginY[MAX_TRACKS];
+  Double_t trackX[MAX_TRACKS];
+  Double_t trackY[MAX_TRACKS];
   Double_t trackSlopeX[MAX_TRACKS];
   Double_t trackSlopeY[MAX_TRACKS];
   Double_t trackCov[MAX_TRACKS][10];
@@ -140,15 +140,15 @@ private:
   TBranch* bClusterPixY;
   TBranch* bClusterPixErrX;
   TBranch* bClusterPixErrY;
-  TBranch* bClusterInTrack;
+  TBranch* bClusterTrack;
 
   TBranch* bNumIntercepts;
-  TBranch* bInterceptTrack;
   TBranch* bInterceptU;
   TBranch* bInterceptV;
   TBranch* bInterceptSlopeU;
   TBranch* bInterceptSlopeV;
   TBranch* bInterceptCov;
+  TBranch* bInterceptTrack;
 
   TBranch* bTimeStamp;
   TBranch* bFrameNumber;
@@ -160,8 +160,8 @@ private:
   TBranch* bNumTracks;
   TBranch* bTrackChi2;
   TBranch* bTrackDof;
-  TBranch* bTrackOriginX;
-  TBranch* bTrackOriginY;
+  TBranch* bTrackX;
+  TBranch* bTrackY;
   TBranch* bTrackSlopeX;
   TBranch* bTrackSlopeY;
   TBranch* bTrackCov;
