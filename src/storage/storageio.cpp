@@ -111,6 +111,7 @@ void Storage::StorageIO::openRead(const std::string& path,
   if (_tracks) {
     _tracks->SetBranchAddress("NTracks", &numTracks, &bNumTracks);
     _tracks->SetBranchAddress("Chi2", trackChi2, &bTrackChi2);
+    _tracks->SetBranchAddress("Dof", trackDof, &bTrackDof);
     _tracks->SetBranchAddress("X", trackOriginX, &bTrackOriginX);
     _tracks->SetBranchAddress("Y", trackOriginY, &bTrackOriginY);
     _tracks->SetBranchAddress("SlopeX", trackSlopeX, &bTrackSlopeX);
@@ -178,7 +179,8 @@ void Storage::StorageIO::openTruncate(const std::string& path)
   // Tracks tree
   _tracks = new TTree("Tracks", "Track parameters");
   _tracks->Branch("NTracks", &numTracks, "NTracks/I");
-  _tracks->Branch("Chi2", trackChi2, "TrackChi2[NTracks]/D");
+  _tracks->Branch("Chi2", trackChi2, "Chi2[NTracks]/D");
+  _tracks->Branch("Dof", trackDof, "Dof[NTracks]/I");
   _tracks->Branch("X", trackOriginX, "X[NTracks]/D");
   _tracks->Branch("Y", trackOriginY, "Y[NTracks]/D");
   _tracks->Branch("SlopeX", trackSlopeX, "SlopeX[NTracks]/D");
@@ -337,6 +339,7 @@ void StorageIO::clearVariables()
   numTracks = 0;
   for (int i = 0; i < MAX_HITS; i++) {
     trackChi2[i] = -1;
+    trackDof[i] = -1;
     trackOriginX[i] = 0;
     trackOriginY[i] = 0;
     trackSlopeX[i] = 0;
@@ -374,7 +377,7 @@ void StorageIO::readEvent(uint64_t n, Event* event)
                      trackSlopeX[ntrack], trackSlopeY[ntrack]);
     state.setCov(trackCov[ntrack]);
     std::unique_ptr<Track> track(new Track(state));
-    track->setGoodnessOfFit(trackChi2[ntrack]);
+    track->setGoodnessOfFit(trackChi2[ntrack], trackDof[ntrack]);
     event->addTrack(std::move(track));
   }
 
@@ -459,7 +462,8 @@ void StorageIO::writeEvent(Event* event)
   // Set the object track values into the arrays for writing to the root file
   for (int ntrack = 0; ntrack < numTracks; ntrack++) {
     const Track& track = *event->getTrack(ntrack);
-    trackChi2[ntrack] = track.reducedChi2();
+    trackChi2[ntrack] = track.chi2();
+    trackDof[ntrack] = track.degreesOfFreedom();
     const TrackState& state = track.globalState();
     trackOriginX[ntrack] = state.offset().x();
     trackOriginY[ntrack] = state.offset().y();

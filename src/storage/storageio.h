@@ -120,6 +120,7 @@ private:
   // TRACKS
   Int_t numTracks;
   Double_t trackChi2[MAX_TRACKS];
+  Int_t trackDof[MAX_TRACKS];
   Double_t trackOriginX[MAX_TRACKS];
   Double_t trackOriginY[MAX_TRACKS];
   Double_t trackSlopeX[MAX_TRACKS];
@@ -158,6 +159,7 @@ private:
 
   TBranch* bNumTracks;
   TBranch* bTrackChi2;
+  TBranch* bTrackDof;
   TBranch* bTrackOriginX;
   TBranch* bTrackOriginY;
   TBranch* bTrackSlopeX;
