@@ -1,5 +1,5 @@
 set(COMMON_SRC
-    alignment/correlationaligner.cpp
+    alignment/correlationsaligner.cpp
     alignment/residualsaligner.cpp
     analyzers/analyzer.cpp
     analyzers/baseanalyzer.cpp

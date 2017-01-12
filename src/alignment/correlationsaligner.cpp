@@ -1,12 +1,12 @@
-#include "correlationaligner.h"
+#include "correlationsaligner.h"
 
 #include "analyzers/correlation.h"
 #include "mechanics/device.h"
 #include "utils/logger.h"
 
-PT_SETUP_LOCAL_LOGGER(CorrelationAligner)
+PT_SETUP_LOCAL_LOGGER(CorrelationsAligner)
 
-Alignment::CorrelationAligner::CorrelationAligner(
+Alignment::CorrelationsAligner::CorrelationsAligner(
     const Mechanics::Device& device,
     const std::vector<Index>& alignIds,
     std::shared_ptr<const Analyzers::Correlation> corr)
@@ -14,22 +14,22 @@ Alignment::CorrelationAligner::CorrelationAligner(
 {
 }
 
-std::string Alignment::CorrelationAligner::name() const
+std::string Alignment::CorrelationsAligner::name() const
 {
-  return "CorrelationAligner";
+  return "CorrelationsAligner";
 }
 
-void Alignment::CorrelationAligner::analyze(const Storage::Event& event)
-{
-  // nothing to do
-}
-
-void Alignment::CorrelationAligner::finalize()
+void Alignment::CorrelationsAligner::analyze(const Storage::Event& event)
 {
   // nothing to do
 }
 
-Mechanics::Geometry Alignment::CorrelationAligner::updatedGeometry() const
+void Alignment::CorrelationsAligner::finalize()
+{
+  // nothing to do
+}
+
+Mechanics::Geometry Alignment::CorrelationsAligner::updatedGeometry() const
 {
   Mechanics::Geometry geo = m_device.geometry();
   double deltaX = 0, deltaXVar = 0;

@@ -4,7 +4,7 @@
 #include <TGraphErrors.h>
 #include <TTree.h>
 
-#include "alignment/correlationaligner.h"
+#include "alignment/correlationsaligner.h"
 #include "alignment/residualsaligner.h"
 #include "analyzers/correlation.h"
 #include "analyzers/residuals.h"
@@ -169,7 +169,7 @@ int main(int argc, char const* argv[])
       // coarse method w/o tracks using only cluster correlations
 
       auto corr = std::make_shared<Correlation>(dev, sensorIds, stepDir);
-      aligner = std::make_shared<CorrelationAligner>(dev, alignIds, corr);
+      aligner = std::make_shared<CorrelationsAligner>(dev, alignIds, corr);
       loop.addAnalyzer(corr);
       loop.addAnalyzer(aligner);
 
