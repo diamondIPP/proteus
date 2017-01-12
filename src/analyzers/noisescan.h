@@ -53,7 +53,7 @@ public:
 
 private:
   Index m_sensorId;
-  double m_densityBandwidth, m_sigmaAboveMeanMax, m_rateMax;
+  double m_densityBandwidth, m_sigmaMax, m_rateMax;
   Area m_roi;
   uint64_t m_numEvents;
   TH2D* m_occ;

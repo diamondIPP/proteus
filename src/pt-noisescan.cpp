@@ -28,12 +28,15 @@ int main(int argc, char const* argv[])
   // clang-format off
   toml::Table defaults = {
     {"density_bandwidth", 2.},
-    {"max_sigma_above_avg", 5.},
-    {"max_rate", 1.},
+    {"sigma_above_avg_max", 5.},
+    {"rate_max", 1.},
     {"col_min", INT_MIN},
-    {"col_max", INT_MAX},
+    // upper limit in the configuration is inclusive, but in the code the
+    // interval is half-open w/ the upper limit being exclusive. Ensure +1 is
+    // still within the numerical limits.
+    {"col_max", INT_MAX - 1},
     {"row_min", INT_MIN},
-    {"row_max", INT_MAX}};
+    {"row_max", INT_MAX - 1}};
   // clang-format on
   Application app("noisescan", "run noise scan", defaults);
   app.initialize(argc, argv);
@@ -52,8 +55,8 @@ int main(int argc, char const* argv[])
 
     auto id = c->get<Index>("id");
     auto bandwidth = c->get<double>("density_bandwidth");
-    auto sigmaMax = c->get<double>("max_sigma_above_avg");
-    auto rateMax = c->get<double>("max_rate");
+    auto sigmaMax = c->get<double>("sigma_above_avg_max");
+    auto rateMax = c->get<double>("rate_max");
     // min/max are inclusive but Area uses right-open intervals
     Area roi(Interval(c->get<int>("col_min"), c->get<int>("col_max") + 1),
              Interval(c->get<int>("row_min"), c->get<int>("row_max") + 1));
