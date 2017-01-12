@@ -25,10 +25,7 @@ Mechanics::Geometry::PlaneParams::PlaneParams()
   // covariance should be zero by default constructor
 }
 
-Mechanics::Geometry::Geometry()
-    : m_beamSlopeX(0), m_beamSlopeY(0), m_syncRatio(1)
-{
-}
+Mechanics::Geometry::Geometry() : m_beamSlopeX(0), m_beamSlopeY(0) {}
 
 Mechanics::Geometry Mechanics::Geometry::fromFile(const std::string& path)
 {
@@ -67,8 +64,9 @@ Mechanics::Geometry Mechanics::Geometry::fromConfig(const ConfigParser& config)
         alignment.m_beamSlopeX = value;
       else if (!row->key.compare("slope y"))
         alignment.m_beamSlopeY = value;
-      else if (!row->key.compare("sync ratio"))
-        alignment.m_syncRatio = value;
+      // 2017-01-12 msmk: not supported anymore in Proteus
+      // else if (!row->key.compare("sync ratio"))
+      //   alignment.m_syncRatio = value;
       else
         throw std::runtime_error("Geometry: failed to parse row");
       continue;
@@ -109,8 +107,6 @@ Mechanics::Geometry Mechanics::Geometry::fromConfig(const toml::Value& cfg)
 
   alignment.setBeamSlope(cfg.get<double>("beam.slope_x"),
                          cfg.get<double>("beam.slope_y"));
-  if (cfg.has("timing.sync_ratio"))
-    alignment.setSyncRatio(cfg.get<double>("timing.sync_ratio"));
 
   auto sensors = cfg.get<toml::Array>("sensors");
   for (auto is = sensors.begin(); is != sensors.end(); ++is) {
@@ -130,7 +126,6 @@ toml::Value Mechanics::Geometry::toConfig() const
 
   cfg["beam"]["slope_x"] = m_beamSlopeX;
   cfg["beam"]["slope_y"] = m_beamSlopeY;
-  cfg["timing"]["sync_ratio"] = m_syncRatio;
 
   cfg["sensors"] = toml::Array();
   for (auto ig = m_params.begin(); ig != m_params.end(); ++ig) {

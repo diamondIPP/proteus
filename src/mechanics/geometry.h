@@ -34,16 +34,16 @@ class Geometry {
 public:
   Geometry();
 
-  /** Construct alignment from a configuration file. */
+  /** Construct geometry from a configuration file. */
   static Geometry fromFile(const std::string& path);
   /** Write alignment to a configuration file. */
   void writeFile(const std::string& path) const;
 
-  /** Construct alignment from old configuration parser. */
+  /** Construct geometry from old configuration parser. */
   static Geometry fromConfig(const ConfigParser& cfg);
-  /** Construct alignment from a configuration object. */
+  /** Construct geometry from a configuration object. */
   static Geometry fromConfig(const toml::Value& cfg);
-  /** Convert alignment into a configuration object. */
+  /** Convert geometry into a configuration object. */
   toml::Value toConfig() const;
 
   void setOffset(Index sensorId, const XYZPoint& offset);
@@ -70,9 +70,6 @@ public:
   /** Beam direction in the global coordinate system. */
   XYZVector beamDirection() const;
 
-  void setSyncRatio(double ratio) { m_syncRatio = ratio; }
-  double syncRatio() const { return m_syncRatio; }
-
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
@@ -85,7 +82,7 @@ private:
   };
 
   std::map<Index, PlaneParams> m_params;
-  double m_beamSlopeX, m_beamSlopeY, m_syncRatio;
+  double m_beamSlopeX, m_beamSlopeY;
 };
 
 } // namespace Mechanics

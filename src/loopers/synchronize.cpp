@@ -99,8 +99,9 @@ unsigned int Synchronize::syncRatioLoop(ULong64_t start, ULong64_t num,
   const double refToDut = (refEnd->getTimeStamp() - refStart->getTimeStamp()) /
       (double)(dutEnd->getTimeStamp() - dutStart->getTimeStamp());
 
-  _dutDevice->setSyncRatio(refToDut);
-  _refDevice->setSyncRatio(1.0);
+  // 2017-01-12 msmk: not supported in Proteus anymore
+  // _dutDevice->setSyncRatio(refToDut);
+  // _refDevice->setSyncRatio(1.0);
 
   delete refStart;
   delete refEnd;
@@ -235,9 +236,10 @@ void Synchronize::loop()
   if (_bufferSize - _preDiscards <= 2)
     throw "Synchronize: buffer size and pre-discards make it impossible to sync";
 
+  // 2017-01-12 msmk: not supported anymore by Proteus
   // If the devices don't have a ratio, caucluate it
-  if (_dutDevice->getSyncRatio() <= 0 || _refDevice->getSyncRatio() <= 0)
-    calculateSyncRatio();
+  // if (_dutDevice->getSyncRatio() <= 0 || _refDevice->getSyncRatio() <= 0)
+  //   calculateSyncRatio();
 
   Processors::Synchronizer sync(_refDevice, _dutDevice, _threshold, _bufferSize);
   unsigned int refShift = 0;

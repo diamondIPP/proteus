@@ -74,6 +74,3 @@ offset_z = 400000.
 rotation_x = 0.
 rotation_y = 0.
 rotation_z = 3.1415926535897
-
-[timing]
-sync_ratio = 1.0000000000000000

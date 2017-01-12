@@ -63,9 +63,6 @@ public:
   double getBeamSlopeY() const;
   uint64_t getTimeStart() const { return m_timestamp0; }
   uint64_t getTimeEnd() const { return m_timestamp1; }
-  double getSyncRatio() const { return m_geometry.syncRatio(); }
-  /** \deprecated Use alignment directly */
-  void setSyncRatio(double ratio) { m_geometry.setSyncRatio(ratio); }
   unsigned int getNumSensors() const { return m_sensors.size(); }
 
   const std::vector<bool>* getSensorMask() const { return &m_sensorMask; }
