@@ -53,7 +53,6 @@ public:
   double readoutWindow() const { return m_readoutWindow; }
   double tsToTime(uint64_t timestamp) const;
 
-  unsigned int getNumPixels() const;
   const char* getName() const { return m_name.c_str(); }
   double getClockRate() const { return m_clockRate; }
   unsigned int getReadOutWindow() const { return m_readoutWindow; }

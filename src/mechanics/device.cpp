@@ -340,14 +340,6 @@ void Mechanics::Device::setTimestampRange(uint64_t ts0, uint64_t ts1)
   m_timestamp1 = ts1;
 }
 
-unsigned int Mechanics::Device::getNumPixels() const
-{
-  unsigned int numPixels = 0;
-  for (unsigned int nsens = 0; nsens < numSensors(); nsens++)
-    numPixels += getSensor(nsens)->numPixels();
-  return numPixels;
-}
-
 double Mechanics::Device::getBeamSlopeX() const
 {
   auto dir = m_geometry.beamDirection();
