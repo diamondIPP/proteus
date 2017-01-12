@@ -110,12 +110,12 @@ struct StepsGraphs {
   }
 };
 
-enum class Method { Correlation, Residuals };
+enum class Method { Correlations, Residuals };
 
 Method stringToMethod(const std::string& name)
 {
-  if (name == "correlation") {
-    return Method::Correlation;
+  if (name == "correlations") {
+    return Method::Correlations;
   } else if (name == "residuals") {
     return Method::Residuals;
   } else {
@@ -165,7 +165,7 @@ int main(int argc, char const* argv[])
     loop.addProcessor(std::make_shared<ApplyGeometry>(dev));
     // setup aligment method specific loop logic
     std::shared_ptr<Aligner> aligner;
-    if (method == Method::Correlation) {
+    if (method == Method::Correlations) {
       // coarse method w/o tracks using only cluster correlations
 
       auto corr = std::make_shared<Correlation>(dev, sensorIds, stepDir);
