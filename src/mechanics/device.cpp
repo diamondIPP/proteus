@@ -49,7 +49,6 @@ static void parseSensors(const ConfigParser& config,
   std::string name = "";
   bool masked = false;
   bool digi = false;
-  bool alignable = true;
 
   unsigned int sensorCounter = 0;
 
@@ -92,7 +91,6 @@ static void parseSensors(const ConfigParser& config,
       name = "";
       masked = false;
       digi = false;
-      alignable = true;
 
       continue;
     }
@@ -133,8 +131,6 @@ static void parseSensors(const ConfigParser& config,
       masked = ConfigParser::valueToLogical(row->value);
     else if (!row->key.compare("digital"))
       digi = ConfigParser::valueToLogical(row->value);
-    else if (!row->key.compare("alignable"))
-      alignable = ConfigParser::valueToLogical(row->value);
     else
       throw std::runtime_error("Device: failed to parse row, key='" + row->key +
                                '\'');
