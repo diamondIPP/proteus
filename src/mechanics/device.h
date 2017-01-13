@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "mechanics/geometry.h"
-#include "mechanics/noisemask.h"
+#include "mechanics/pixelmasks.h"
 #include "mechanics/sensor.h"
 #include "utils/config.h"
 #include "utils/definitions.h"
@@ -42,9 +42,9 @@ public:
   void setGeometry(const Geometry& geometry);
   const Geometry& geometry() const { return m_geometry; }
 
-  /** Store the noise mask and apply to all configured sensors. */
-  void applyNoiseMask(const NoiseMask& noiseMask);
-  const NoiseMask& noiseMask() const { return m_noiseMask; }
+  /** Store the pixel masks and apply to all configured sensors. */
+  void applyPixelMasks(const PixelMasks& masks);
+  const PixelMasks& pixelMasks() const { return m_pixelMasks; }
 
   void setTimestampRange(uint64_t ts0, uint64_t ts1);
   uint64_t timestampStart() const { return m_timestamp0; }
@@ -74,7 +74,7 @@ private:
   std::string m_name;
   std::vector<Sensor> m_sensors;
   Geometry m_geometry;
-  NoiseMask m_noiseMask;
+  PixelMasks m_pixelMasks;
   double m_clockRate;
   unsigned int m_readoutWindow;
   uint64_t m_timestamp0, m_timestamp1;

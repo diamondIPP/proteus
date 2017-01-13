@@ -59,7 +59,7 @@ Mechanics::Sensor::Sensor(Index id,
     , m_measurement(measurement)
     , m_id(id)
     , m_name(name)
-    , m_noiseMask(numCols * numRows, false)
+    , m_pixelMask(numCols * numRows, false)
 {
 }
 
@@ -201,10 +201,10 @@ void Mechanics::Sensor::spaceToPixel(
 //
 //=========================================================
 
-void Mechanics::Sensor::setNoisyPixels(const std::set<ColumnRow>& pixels)
+void Mechanics::Sensor::setMaskedPixels(const std::set<ColumnRow>& pixels)
 {
   // reset possible existing mask
-  std::fill(m_noiseMask.begin(), m_noiseMask.end(), false);
+  std::fill(m_pixelMask.begin(), m_pixelMask.end(), false);
 
   for (auto it = pixels.begin(); it != pixels.end(); ++it) {
     auto col = std::get<0>(*it);
@@ -215,7 +215,7 @@ void Mechanics::Sensor::setNoisyPixels(const std::set<ColumnRow>& pixels)
     if (m_numRows <= row)
       throw std::runtime_error("row index is out of range");
 
-    m_noiseMask[linearPixelIndex(col, row)] = true;
+    m_pixelMask[linearPixelIndex(col, row)] = true;
   }
 }
 

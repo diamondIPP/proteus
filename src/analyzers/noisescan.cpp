@@ -183,9 +183,9 @@ void Analyzers::NoiseScan::finalize()
   INFO("  noisy pixels: ", numNoisyPixels);
 }
 
-Mechanics::NoiseMask Analyzers::NoiseScan::constructMask() const
+Mechanics::PixelMasks Analyzers::NoiseScan::constructMasks() const
 {
-  Mechanics::NoiseMask newMask;
+  Mechanics::PixelMasks newMask;
 
   for (auto icol = m_maskedPixels->GetNbinsX(); 0 < icol; --icol) {
     for (auto irow = m_maskedPixels->GetNbinsY(); 0 < irow; --irow) {

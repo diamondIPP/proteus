@@ -12,22 +12,22 @@
 namespace Mechanics {
 
 /** Store and process masked pixels. */
-class NoiseMask {
+class PixelMasks {
 public:
-  NoiseMask() = default;
+  PixelMasks() = default;
 
   /** Construct a noise mask from a configuration file. */
-  static NoiseMask fromFile(const std::string& path);
+  static PixelMasks fromFile(const std::string& path);
   /** Write the noise mask to a configuration file. */
   void writeFile(const std::string& path) const;
 
   /** Construct noise mask from a configuration object. */
-  static NoiseMask fromConfig(const toml::Value& cfg);
+  static PixelMasks fromConfig(const toml::Value& cfg);
   /** Convert noise mask into a configuration object. */
   toml::Value toConfig() const;
 
-  /** Merge masked pixels from another NoiseMask into this NoiseMask. */
-  void merge(const NoiseMask& other);
+  /** Merge masked pixels from another PixelMasks into this PixelMasks. */
+  void merge(const PixelMasks& other);
 
   void maskPixel(Index sensorId, Index col, Index row);
   const std::set<ColumnRow>& getMaskedPixels(Index sensorId) const;

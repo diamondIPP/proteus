@@ -42,7 +42,7 @@ set(COMMON_SRC
     loopers/processevents.cpp
     mechanics/device.cpp
     mechanics/geometry.cpp
-    mechanics/noisemask.cpp
+    mechanics/pixelmasks.cpp
     mechanics/sensor.cpp
     processors/applygeometry.cpp
     processors/clustermaker.cpp

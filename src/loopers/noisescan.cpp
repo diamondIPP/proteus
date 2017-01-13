@@ -16,7 +16,7 @@
 #include "../storage/event.h"
 #include "../mechanics/device.h"
 #include "../mechanics/sensor.h"
-#include "../mechanics/noisemask.h"
+#include "../mechanics/pixelmasks.h"
 #include "../processors/processors.h"
 #include "../processors/clustermaker.h"
 #include "../processors/trackmaker.h"
@@ -28,6 +28,11 @@ using std::cout;
 using std::endl;
 using std::cin;
 using std::string;
+
+// 2017-01-13 msmk: temporary fix
+namespace Mechanics {
+  typedef PixelMasks NoiseMask;
+}
 
 //=========================================================
 Loopers::NoiseScanConfig::NoiseScanConfig() :
@@ -152,7 +157,7 @@ void Loopers::NoiseScan::loop(){
   }
   
   // new noisymask calculated from this Scan
-  Mechanics::NoiseMask newMask;
+  Mechanics::PixelMasks newMask;
 
   // loop in planes and determine noisy pixels
   for (unsigned int nsens = 0; nsens < _refDevice->getNumSensors(); nsens++) {

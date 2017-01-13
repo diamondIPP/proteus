@@ -72,9 +72,9 @@ int main(int argc, char const* argv[])
   loop.run();
 
   // store combined noise mask
-  Mechanics::NoiseMask newMask;
+  Mechanics::PixelMasks newMask;
   for (auto noise = noiseScans.begin(); noise != noiseScans.end(); ++noise)
-    newMask.merge((*noise)->constructMask());
+    newMask.merge((*noise)->constructMasks());
   newMask.writeFile(app.outputPath("mask.toml"));
 
   hists->Write();

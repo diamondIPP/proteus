@@ -206,7 +206,7 @@ int KartelConvert::checkHit(const Hit& hit, unsigned int nsensor)
   if (!_device) return 0;
   const Mechanics::Sensor* sensor = _device->getSensor(nsensor);
   if (hit.x > sensor->getNumX() || hit.y > sensor->getNumY()) return -1;
-  if (sensor->isPixelNoisy(hit.x, hit.y)) return 1;
+  if (sensor->isPixelMasked(hit.x, hit.y)) return 1;
   return 0;
 }
 

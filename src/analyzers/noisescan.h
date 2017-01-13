@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "analyzer.h"
-#include "mechanics/noisemask.h"
+#include "mechanics/pixelmasks.h"
 #include "utils/definitions.h"
 #include "utils/interval.h"
 
@@ -49,7 +49,7 @@ public:
   void analyze(const Storage::Event& event);
   void finalize();
 
-  Mechanics::NoiseMask constructMask() const;
+  Mechanics::PixelMasks constructMasks() const;
 
 private:
   Index m_sensorId;

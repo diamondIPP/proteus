@@ -9,7 +9,7 @@
 
 #include "mechanics/device.h"
 #include "mechanics/geometry.h"
-#include "mechanics/noisemask.h"
+#include "mechanics/pixelmasks.h"
 #include "utils/logger.h"
 
 PT_SETUP_GLOBAL_LOGGER
@@ -42,10 +42,10 @@ int main(int argc, char const* argv[])
     INFO("not a geometry config: ", e.what());
   }
   try {
-    Mechanics::NoiseMask::fromFile(path).print(std::cout);
+    Mechanics::PixelMasks::fromFile(path).print(std::cout);
     return EXIT_SUCCESS;
   } catch (const std::exception& e) {
-    INFO("not a mask file: ", e.what());
+    INFO("not a masks file: ", e.what());
   }
   // reached only if nothing works
   std::cerr << '\'' << path << "' is not a valid configuration file\n";

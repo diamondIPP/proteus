@@ -1,4 +1,4 @@
-#include "noisemask.h"
+#include "pixelmasks.h"
 
 #include <algorithm>
 #include <cassert>
@@ -34,15 +34,15 @@ static void parseLine(std::stringstream& line, Index& nsens, Index& x, Index& y)
     counter++;
   }
   if (counter != 3)
-    throw std::runtime_error("NoiseMask: failed to parse line");
+    throw std::runtime_error("PixelMasks: failed to parse line");
 }
 
-static void parseFile(const std::string& path, Mechanics::NoiseMask& mask)
+static void parseFile(const std::string& path, Mechanics::PixelMasks& mask)
 {
   std::fstream input(path, std::ios_base::in);
 
   if (!input)
-    throw std::runtime_error("NoiseMask: failed to open file '" + path + "'");
+    throw std::runtime_error("PixelMasks: failed to open file '" + path + "'");
 
   std::stringstream comments;
   std::size_t numLines = 0;
@@ -65,12 +65,12 @@ static void parseFile(const std::string& path, Mechanics::NoiseMask& mask)
   }
 
   if (numLines == 0)
-    throw std::runtime_error("NoiseMask: empty file '" + path + "'");
+    throw std::runtime_error("PixelMasks: empty file '" + path + "'");
 }
 
-Mechanics::NoiseMask Mechanics::NoiseMask::fromFile(const std::string& path)
+Mechanics::PixelMasks Mechanics::PixelMasks::fromFile(const std::string& path)
 {
-  NoiseMask mask;
+  PixelMasks mask;
 
   if (Utils::Config::pathExtension(path) == "toml") {
     mask = fromConfig(Utils::Config::readConfig(path));
@@ -81,15 +81,15 @@ Mechanics::NoiseMask Mechanics::NoiseMask::fromFile(const std::string& path)
   return mask;
 }
 
-void Mechanics::NoiseMask::writeFile(const std::string& path) const
+void Mechanics::PixelMasks::writeFile(const std::string& path) const
 {
   Utils::Config::writeConfig(toConfig(), path);
   INFO("wrote noise mask to '", path, "'");
 }
 
-Mechanics::NoiseMask Mechanics::NoiseMask::fromConfig(const toml::Value& cfg)
+Mechanics::PixelMasks Mechanics::PixelMasks::fromConfig(const toml::Value& cfg)
 {
-  NoiseMask mask;
+  PixelMasks mask;
 
   auto sensors = cfg.get<toml::Array>("sensors");
   for (auto is = sensors.begin(); is != sensors.end(); ++is) {
@@ -98,7 +98,7 @@ Mechanics::NoiseMask Mechanics::NoiseMask::fromConfig(const toml::Value& cfg)
     for (auto ip = pixels.begin(); ip != pixels.end(); ++ip) {
       // column / row array *must* have exactly two elements
       if (ip->size() != 2)
-        throw std::runtime_error("NoiseMask: column/row array size " +
+        throw std::runtime_error("PixelMasks: column/row array size " +
                                  std::to_string(ip->size()) + " != 2");
       mask.maskPixel(id, ip->get<int>(0), ip->get<int>(1));
     }
@@ -106,7 +106,7 @@ Mechanics::NoiseMask Mechanics::NoiseMask::fromConfig(const toml::Value& cfg)
   return mask;
 }
 
-toml::Value Mechanics::NoiseMask::toConfig() const
+toml::Value Mechanics::PixelMasks::toConfig() const
 {
   toml::Value cfg;
   cfg["sensors"] = toml::Array();
@@ -129,7 +129,7 @@ toml::Value Mechanics::NoiseMask::toConfig() const
   return cfg;
 }
 
-void Mechanics::NoiseMask::merge(const NoiseMask& other)
+void Mechanics::PixelMasks::merge(const PixelMasks& other)
 {
   for (auto mask = other.m_maskedPixels.begin();
        mask != other.m_maskedPixels.end(); ++mask) {
@@ -139,13 +139,13 @@ void Mechanics::NoiseMask::merge(const NoiseMask& other)
   }
 }
 
-void Mechanics::NoiseMask::maskPixel(Index sensorId, Index col, Index row)
+void Mechanics::PixelMasks::maskPixel(Index sensorId, Index col, Index row)
 {
   m_maskedPixels[sensorId].emplace(col, row);
 }
 
 const std::set<ColumnRow>&
-Mechanics::NoiseMask::getMaskedPixels(Index sensorId) const
+Mechanics::PixelMasks::getMaskedPixels(Index sensorId) const
 {
   static const std::set<ColumnRow> EMPTY;
 
@@ -155,7 +155,7 @@ Mechanics::NoiseMask::getMaskedPixels(Index sensorId) const
   return EMPTY;
 }
 
-size_t Mechanics::NoiseMask::getNumMaskedPixels() const
+size_t Mechanics::PixelMasks::getNumMaskedPixels() const
 {
   size_t n = 0;
   for (auto it = m_maskedPixels.begin(); it != m_maskedPixels.end(); ++it)
@@ -163,8 +163,8 @@ size_t Mechanics::NoiseMask::getNumMaskedPixels() const
   return n;
 }
 
-void Mechanics::NoiseMask::print(std::ostream& os,
-                                 const std::string& prefix) const
+void Mechanics::PixelMasks::print(std::ostream& os,
+                                  const std::string& prefix) const
 {
   if (m_maskedPixels.empty()) {
     os << prefix << "no masked pixels\n";
