@@ -20,12 +20,13 @@ PT_SETUP_GLOBAL_LOGGER
 
 Processors::TrackFinder::TrackFinder(const Mechanics::Device& device,
                                      const std::vector<Index> sensors,
-                                     double distanceSigmaMax,
+                                     double searchSigmaMax,
                                      Index numClustersMin,
                                      double redChi2Max)
     : m_sensors(sensors)
     , m_numSeedSensors(1 + sensors.size() - numClustersMin)
-    , m_distSquaredMax(distanceSigmaMax * distanceSigmaMax)
+    // 2-d Mahalanobis distance peaks at 2 and not at 1
+    , m_d2Max(2 * searchSigmaMax * searchSigmaMax)
     , m_redChi2Max(redChi2Max)
     , m_numClustersMin(numClustersMin)
     , m_beamDirection(device.geometry().beamDirection())
@@ -98,7 +99,7 @@ void Processors::TrackFinder::searchSensor(
                        curr->covGlobal().Sub<SymMatrix2>(0, 0);
       double d2 = mahalanobisSquared(cov, Vector2(delta.x(), delta.y()));
 
-      if (m_distSquaredMax < d2)
+      if (m_d2Max < d2)
         continue;
 
       if (matched == NULL) {
