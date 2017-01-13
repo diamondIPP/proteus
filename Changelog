@@ -1,150 +1,189 @@
+Changelog
+=========
+
 2016-03-06 B. Ristic <bristic@cern.ch>
-	* bugfix: ProcessEvent now respects calcIntercepts setting
-	* bugfix: intercepts tree readback
-	* TrackMaker::calculateIntercepts is now static
+
+* bugfix: ProcessEvent now respects calcIntercepts setting
+* bugfix: intercepts tree readback
+* TrackMaker::calculateIntercepts is now static
 
 2016-01-26 L. Meng <lmeng@cern.ch>
-	*Added Intercepts tree to each plane with local track positions, switch "calculate intercepts : true/false" in global.cfg
-	*Fixed small Mac feature in alignment (_filename.c_str())
+
+* Added Intercepts tree to each plane with local track positions,
+  switch "calculate intercepts : true/false" in global.cfg
+* Fixed small Mac feature in alignment (_filename.c_str())
 
 2015-11-27 F. Di Bello <fdibello@cern.ch>
-	*added macro for mapping
-	*fixed a bug in the Inpixel
-	
+
+* added macro for mapping
+* fixed a bug in the Inpixel
+
 2015-11-27 F. Di Bello <fdibello@cern.ch>
-	*Fixed bug in efficiency.cpp
-	*Add plot: correlation planes and DUT
-	*Add plot for different cluster size
-	*Add plot to study the lvl1 distribution of the DUT 
-	*Change the clustermaker to select the fastest hit
-	
+
+* Fixed bug in efficiency.cpp
+* Add plot: correlation planes and DUT
+* Add plot for different cluster size
+* Add plot to study the lvl1 distribution of the DUT
+* Change the clustermaker to select the fastest hit
+
 2015-11-xx M. Rimoldi <marco.rimoldi@cern.ch>
-	*Add Information about the trigger phase that is propagated in the analysis
-	
+
+* Add Information about the trigger phase that is propagated in the analysis
+
 2015-07-xx M. Rimoldi <marco.rimoldi@cern.ch>
-	*Bug Fixed in loopers/analysisdut.cpp
-	*In Analyzers/dutresidual add residual calculation in function of the cluster size. Plot name = "X_numcluster" or "Y_numcluster"
-	*Add new folder called Timing_Efficiency.
-	*Reorganized the folder in effresult.root
-	*Add plot timing vs tot for each clustersize ( _TimingTOT_cluster)
-	*Add cluster distribution (_matchCluster)
-	*Add Pixel Efficiency in function of the cluster size (InPixelEfficiencyCluster)
+
+* Bug Fixed in loopers/analysisdut.cpp
+* In Analyzers/dutresidual add residual calculation in function of the cluster
+  size. Plot name = "X_numcluster" or "Y_numcluster"
+* Add new folder called Timing_Efficiency.
+* Reorganized the folder in effresult.root
+* Add plot timing vs tot for each clustersize ( _TimingTOT_cluster)
+* Add cluster distribution (_matchCluster)
+* Add Pixel Efficiency in function of the cluster size
+  (InPixelEfficiencyCluster)
 
 2015-02-xx S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
-	* fix branch name "HitInCluster" in macros/mergeHVCMOSPixels; added copy of SummaryTree
-	* add printLevel argument to ConfigParser constructor
-	* add Excepion class (exception.h/cpp)
-	* new class baseanalyzer, parent of singleanalyzer and dualanalyzer classes
-	* just one applyCuts function in configanalyzers (using now BaseAnalyzer* as function argument)
-	* tag  JudithFEI4-00-00-12
+
+* fix branch name "HitInCluster" in macros/mergeHVCMOSPixels;
+  added copy of SummaryTree
+* add printLevel argument to ConfigParser constructor
+* add Excepion class (exception.h/cpp)
+* new class baseanalyzer, parent of singleanalyzer and dualanalyzer classes
+* just one applyCuts function in configanalyzers (using now BaseAnalyzer*
+  as function argument)
+* tag  JudithFEI4-00-00-12
 
 2015-02-11 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
-	* fix normalization in noiseScan
-	* new configuration fields for Efficiency analyzer: "min entries lvl1" and "min entries lvl1 matchedTracks"
-	- added in configs/standard.cfg
-	* minor fixes / sanity-checks in efficiency.cpp
-	* tag  JudithFEI4-00-00-11
+
+* fix normalization in noiseScan
+* new configuration fields for Efficiency analyzer: "min entries lvl1" and
+  "min entries lvl1 matchedTracks" added in configs/standard.cfg
+* minor fixes / sanity-checks in efficiency.cpp
+* tag  JudithFEI4-00-00-11
 
 2015-02-10 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
-	* occupancy distributions per plane instead of just one for whole device
-	* timing plots vs LVL1 from Javier and Francesco
-	* tag  JudithFEI4-00-00-10
 
-	2015-01-27 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
-	* add alignable boolean private member to sensor class
-	* more informative message in exception thrown in generateSensors
-	* NoiseScanConfig class in noisescan.h
-	* parseComments function in noisemak class
-	* template ConfigParser::valueToVec; implementation in header file.
-	* add StorageIO::setNoiseMaskData
-	* tag  JudithFEI4-00-00-09
+* occupancy distributions per plane instead of just one for whole device
+* timing plots vs LVL1 from Javier and Francesco
+* tag  JudithFEI4-00-00-10
+
+2015-01-27 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
+
+* add alignable boolean private member to sensor class
+* more informative message in exception thrown in generateSensors
+* NoiseScanConfig class in noisescan.h
+* parseComments function in noisemak class
+* template ConfigParser::valueToVec; implementation in header file.
+* add StorageIO::setNoiseMaskData
+* tag  JudithFEI4-00-00-09
 
 2015-01-22 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
-	* add warning message if --runs not given together with applyMask command
-	* add few cfg files into configs directory
-	* timer in main.cpp
-	* tag  JudithFEI4-00-00-08
+
+* add warning message if --runs not given together with applyMask command
+* add few cfg files into configs directory
+* timer in main.cpp
+* tag  JudithFEI4-00-00-08
 
 2015-01-21 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
-	* additional parameters to configuration of Efficiency analizer (standard.cfg)
-	"pix x min", "pix x max", "pix y min", "pix y max" to define region for which in-pixel
-	results are to be considered
-	* modified configanalizers.cpp and efficiency.h/.cpp acoordingly
-	* tag  JudithFEI4-00-00-07
+
+* additional parameters to configuration of Efficiency analizer (standard.cfg)
+  "pix x min", "pix x max", "pix y min", "pix y max" to define region for which
+  in-pixel results are to be considered
+* modified configanalizers.cpp and efficiency.h/.cpp acoordingly
+* tag  JudithFEI4-00-00-07
 
 2015-01-21 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
-	* propagate summaryTree into output files
-	* tag  JudithFEI4-00-00-06
+
+* propagate summaryTree into output files
+* tag  JudithFEI4-00-00-06
 
 2015-01-20 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
-	* correcting for missing branchName update (HitInCluster) in StorageIO constructor...
-        * change _name from const char* to std::string in mechanics/alignment class
-	* add --runs option to InputArgs class; add corresponding related functions
-	* change return type of InputArgs::parseArgs from void to int
-	* change order of arguments in noiseScan to match that of other functions in main.cpp
-	* update clearVariables() and TTree _summaryTree in storageio
-	* tag  JudithFEI4-00-00-05
+
+* correcting for missing branchName update (HitInCluster) in StorageIO
+  constructor
+* change _name from const char* to std::string in mechanics/alignment class
+* add --runs option to InputArgs class; add corresponding related functions
+* change return type of InputArgs::parseArgs from void to int
+* change order of arguments in noiseScan to match that of other functions in
+  main.cpp
+* update clearVariables() and TTree _summaryTree in storageio
+* tag  JudithFEI4-00-00-05
 
 2014-11-15 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
-	* add NoiseScan::print()
-	* change _filename from const char* to std::string in NoiseMask class
-	* change _nameSuffix (is it used??) from const char* to std::string in singleanalyzer class
-	* change type of _relaxation member from bool to double in finealigndut
-	* change "max factor" from 10 to 3 in configuration of "Noise Scan" looper (global.cfg)
-	* tag JudithFEI4-00-00-04
+
+* add NoiseScan::print()
+* change _filename from const char* to std::string in NoiseMask class
+* change _nameSuffix (is it used??) from const char* to std::string in
+  singleanalyzer class
+* change type of _relaxation member from bool to double in finealigndut
+* change "max factor" from 10 to 3 in configuration of "Noise Scan" looper
+  (global.cfg)
+* tag JudithFEI4-00-00-04
 
 2014-11-15 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
-	* fix some compilation warnings:
-  	  - unused private member '_dummyParameter' in analyzers/examplesingleanalyzer and analyzers/exampledulanalyzer
-	  - unused private member '_refOutput' and '_dutOutput' in loopers/examplelooper
-	  - initialization order in mechanics/sensor constructor
-	* change _name from const char* to std::string in mechanics/device class
-	* update in StorageIO constructor "HitInCluster" branch name
-	* add ConfigParser::print() function
-	* add printLevel option to inputargs
-	* tag JudithFEI4-00-00-03
+
+* fix some compilation warnings:
+
+  * unused private member '_dummyParameter' in analyzers/examplesingleanalyzer
+    and analyzers/exampledulanalyzer
+  * unused private member '_refOutput' and '_dutOutput' in loopers/examplelooper
+  * initialization order in mechanics/sensor constructor
+
+* change _name from const char* to std::string in mechanics/device class
+* update in StorageIO constructor "HitInCluster" branch name
+* add ConfigParser::print() function
+* add printLevel option to inputargs
+* tag JudithFEI4-00-00-03
 
 2014-11-15 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
-	* tag JudithFEI4-00-00-02
+
+* tag JudithFEI4-00-00-02
 
 2014-11-09 F.A. Di Bello <fdibello@cern.ch>
-        * Only the closest cluster w.r.t. the track is taken into account in
-	the residuals.
+
+* Only the closest cluster w.r.t. the track is taken into account in the
+  residuals.
 
 2014-11-09 F.A. Di Bello <fdibello@cern.ch>
-        * Do not align the first plane (reference plane).
+
+* Do not align the first plane (reference plane).
 
 2014-11-09 F.A. Di Bello <fdibello@cern.ch>
-        * New occupancy plot XZ, YZ in order to understand the rotations of
-	the sensor.
+
+* New occupancy plot XZ, YZ in order to understand the rotations of the sensor.
 
 2014-11-09 F.A. Di Bello <fdibello@cern.ch>
-        * New alignment plot added in a root file in finealign.cpp .
 
+* New alignment plot added in a root file in finealign.cpp .
 
 2014-10-09 J. Bilbao de Mendizabal <bilbao@cern.ch>
-	* New Inpixel timing resolution. Added iiiiin effeciency.cpp
+
+* New Inpixel timing resolution. Added iiiiin effeciency.cpp
 
 2014-10-02 J. Bilbao de Mendizabal <bilbao@cern.ch>
-	* Including the average Lv1 timing for each pixel in dutResults.root
-	* Subpixel efficiency modification in order to only take into acount
-the active area on the DUT to be properly include in the code.
+
+* Including the average Lv1 timing for each pixel in dutResults.root
+* Subpixel efficiency modification in order to only take into acount the active
+  area on the DUT to be properly include in the code.
 
 2014-10-02 J. Bilbao de Mendizabal <bilbao@cern.ch>
-	* New plot of reconstructed matched tracks position on DUT projection
-on X and Y.
+
+* New plot of reconstructed matched tracks position on DUT projection on X and
+  Y.
 
 2014-10-02 J. Bilbao de Mendizabal <bilbao@cern.ch>
-	* New extra step on DUT alignment using the 1D residuals distributions
-fitting; if after first itteration the finealigment using the 2D plot gives 0
-correction and only one DUT is present the loop is stoped.
+
+* New extra step on DUT alignment using the 1D residuals distributions fitting;
+  if after first itteration the finealigment using the 2D plot gives 0
+  correction and only one DUT is present the loop is stoped.
 
 2014-09-26 J. Bilbao de Mendizabal <bilbao@cern.ch>
-        * implementation of the pixel timing vs cluster size and hit-ToT
-included now in Cluster Info
 
+* implementation of the pixel timing vs cluster size and hit-ToT included now in
+  Cluster Info
 
 2014-09-23 S. Gonzalez-Sevilla <Sergio.Gonzalez.Sevilla@cern.ch>
-	* import of this package from UniGe/BoostedJets/TelescopeHVCMOS
-	* create this ChangeLog
-	* JudithFEI4-00-00-01
+
+* import of this package from UniGe/BoostedJets/TelescopeHVCMOS
+* create this ChangeLog
+* JudithFEI4-00-00-01
