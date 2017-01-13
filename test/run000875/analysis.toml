@@ -1,7 +1,7 @@
 [track]
 sensor_ids = [0, 1, 2, 3, 4, 5]
 num_points_min = 4
-distance_sigma_max = 10.
+search_sigma_max = 10.
 
 [match]
 sensor_ids = [6, 7]
@@ -25,9 +25,9 @@ sensor_ids = [0, 1, 2, 3, 4, 5]
 align_ids = [1, 2, 3, 4, 5]
 # number of iterative alignment steps
 num_steps = 20
-# distance cut to assign clusters to the track (only for track-based alignment)
-distance_sigma_max = 5.0
-# only consider tracks with a chi2 value (only for track-based alignment)
+# search window to find additional track clusters (track-based alignment only)
+search_sigma_max = 5.0
+# only consider tracks with a chi2 value (track-based alignment only)
 reduced_chi2_max = 10.0
 
 # dut coarse alignment using cluster correlations
@@ -49,7 +49,7 @@ sensor_ids = [0, 1, 2, 3, 4, 5, 6, 7]
 align_ids = [6, 7]
 # number of iterative alignment steps
 num_steps = 10
-# distance cut to assign clusters to the track (only for track-based alignment)
-distance_sigma_max = 10.0
-# only consider tracks with a chi2 value (only for track-based alignment)
+# search window to find additional track clusters (track-based alignment only)
+search_sigma_max = 10.0
+# only consider tracks with a chi2 value (track-based alignment only)
 reduced_chi2_max = 10.0
