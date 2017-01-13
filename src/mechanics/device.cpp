@@ -228,29 +228,17 @@ Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
       device.setGeometry(Geometry::fromConfig(*cfgGeo));
     }
 
-    auto cfgMask = cfg.find("noise_mask");
+    auto cfgMask = cfg.find("pixel_masks");
     // missing noise masks should not be treated as fatal errors
     // allow overlay of multiple noise masks
-    if (cfgMask && cfgMask->is<std::vector<std::string>>()) {
-      PixelMasks combined;
-      auto paths = cfgMask->as<std::vector<std::string>>();
-      for (auto it = paths.begin(); it != paths.end(); ++it) {
+    if (cfgMask->is<std::vector<std::string>>()) {
+      for (const auto& path : cfgMask->as<std::vector<std::string>>()) {
         try {
-          auto path = pathRebaseIfRelative(*it, dir);
-          auto mask = PixelMasks::fromFile(path);
-          combined.merge(mask);
+          auto fullPath = pathRebaseIfRelative(path, dir);
+          device.applyPixelMasks(PixelMasks::fromFile(fullPath));
         } catch (const std::exception& e) {
           ERROR(e.what());
         }
-      }
-      device.applyPixelMasks(combined);
-    } else if (cfgMask && cfgMask->is<std::string>()) {
-      auto path = pathRebaseIfRelative(cfgMask->as<std::string>(), dir);
-      try {
-        device.applyPixelMasks(PixelMasks::fromFile(path));
-        device.m_pathNoiseMask = path;
-      } catch (const std::exception& e) {
-        ERROR(e.what());
       }
     } else if (cfgMask) {
       device.applyPixelMasks(PixelMasks::fromConfig(*cfgMask));

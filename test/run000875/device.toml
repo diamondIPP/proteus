@@ -1,7 +1,7 @@
 # global settings **must** appear before any [section]
 
 geometry = "geometry/tel_aligned.toml"
-# no noise masks
+pixel_masks = [] # no masked pixels
 
 [device]
 name = "FEI4Tel"
