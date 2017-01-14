@@ -116,8 +116,10 @@ Loopers::NoiseScan::NoiseScan(Mechanics::Device* refDevice,
   
   assert(refInput->getNumPlanes() == refDevice->getNumSensors() &&
          "Loopers: number of planes / sensors mis-match");
-  
-  _config = new NoiseScanConfig(refInput->getRuns());
+
+  // 2017-01-09 msmk: not supported in Proteus
+  // _config = new NoiseScanConfig(refInput->getRuns());
+  _config = new NoiseScanConfig;
 }
 
 //=========================================================
