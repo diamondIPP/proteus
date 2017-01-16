@@ -1,10 +1,7 @@
 #include "applygeometry.h"
 
 #include "mechanics/device.h"
-#include "processors/tracking.h"
-#include "storage/cluster.h"
 #include "storage/event.h"
-#include "storage/hit.h"
 
 Processors::ApplyGeometry::ApplyGeometry(const Mechanics::Device& device)
     : m_device(device)
@@ -25,10 +22,6 @@ void Processors::ApplyGeometry::process(Storage::Event& event) const
     for (unsigned int icluster = 0; icluster < plane.numClusters(); icluster++)
       plane.getCluster(icluster)->transform(sensor);
   }
-
-  // refit tracks to accomodate possible alignment changes
-  for (unsigned int itrack = 0; itrack < event.numTracks(); itrack++)
-    Processors::fitTrack(*event.getTrack(itrack));
 }
 
 void Processors::applyAlignment(Storage::Event* event,

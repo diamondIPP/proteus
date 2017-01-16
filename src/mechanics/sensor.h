@@ -115,11 +115,11 @@ public:
   //
   // noise-pixels functions
   //
-  bool isPixelNoisy(Index col, Index row) const
+  bool isPixelMasked(Index col, Index row) const
   {
-    return m_noiseMask[linearPixelIndex(col, row)];
+    return m_pixelMask[linearPixelIndex(col, row)];
   }
-  void setNoisyPixels(const std::set<ColumnRow>& pixels);
+  void setMaskedPixels(const std::set<ColumnRow>& pixels);
 
   //
   // Misc functions
@@ -166,7 +166,7 @@ private:
   Measurement m_measurement;
   Index m_id;
   std::string m_name;
-  std::vector<bool> m_noiseMask;
+  std::vector<bool> m_pixelMask;
 };
 
 } // namespace Mechanics

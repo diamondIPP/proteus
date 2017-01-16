@@ -41,8 +41,10 @@ void LargeSynchronizer::addEvents(const Storage::Event* shiftEvent,
   const unsigned int index = offsetToIndex(0);
 
   const ULong64_t shiftClockDiff = (shiftEvent->getTimeStamp() - _lastShiftTime);
-  const double shiftDiff = shiftClockDiff * _shiftDevice->getSyncRatio() /
-      (double)_readOutWindow;
+  // 2017-01-12 msmk: sync ratio not supported anymore
+  // const double shiftDiff = shiftClockDiff * _shiftDevice->getSyncRatio() /
+  //     (double)_readOutWindow;
+  const double shiftDiff = shiftClockDiff / (double)_readOutWindow;
   _lastShiftTime = shiftEvent->getTimeStamp();
 
   _shiftBuffer[index] = shiftDiff;
@@ -50,7 +52,10 @@ void LargeSynchronizer::addEvents(const Storage::Event* shiftEvent,
   if (_numEvents < _bufferSize)
   {
     const ULong64_t staticClockDiff = (staticEvent->getTimeStamp() - _lastStaticTime);
-    const double staticDiff = staticClockDiff * _staticDevice->getSyncRatio() /
+    // 2017-01-12 msmk: sync ratio not supported anymore
+    // const double staticDiff = staticClockDiff * _staticDevice->getSyncRatio() /
+    //     (double)_readOutWindow;
+    const double staticDiff = staticClockDiff /
         (double)_readOutWindow;
     _lastStaticTime = staticEvent->getTimeStamp();
 

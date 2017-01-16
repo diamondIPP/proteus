@@ -58,7 +58,10 @@ void Synchronizer::processEvent(Storage::Event* refEvent,
       (double)_refDevice->getReadOutWindow();
 
   const ULong64_t dutClockDiff = (dutEvent->getTimeStamp() - lastDut);
-  const double dutFrameDiff = dutClockDiff * _dutDevice->getSyncRatio() /
+  // 2017-01-12 msmk: sync ratio not supported anymore
+  // const double dutFrameDiff = dutClockDiff * _dutDevice->getSyncRatio() /
+  //     (double)_refDevice->getReadOutWindow();
+  const double dutFrameDiff = dutClockDiff /
       (double)_refDevice->getReadOutWindow();
 
   // Overwrite the current position

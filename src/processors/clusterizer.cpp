@@ -80,7 +80,7 @@ void Processors::BaseClusterizer::process(Storage::Event& event) const
   hits.reserve(plane.numHits());
   for (Index ihit = 0; ihit < plane.numHits(); ++ihit) {
     Storage::Hit* hit = plane.getHit(ihit);
-    if (m_sensor.isPixelNoisy(hit->col(), hit->row()))
+    if (m_sensor.isPixelMasked(hit->col(), hit->row()))
       continue;
     hits.push_back(hit);
   }

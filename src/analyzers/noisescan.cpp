@@ -19,14 +19,14 @@ PT_SETUP_LOCAL_LOGGER(NoiseScan)
 Analyzers::NoiseScan::NoiseScan(const Mechanics::Device& device,
                                 const Index sensorId,
                                 const double bandwidth,
-                                const double m_sigmaMax,
+                                const double sigmaMax,
                                 const double rateMax,
                                 const Area& regionOfInterest,
                                 TDirectory* parent,
                                 const int binsOccupancy)
     : m_sensorId(sensorId)
     , m_densityBandwidth(bandwidth)
-    , m_sigmaAboveMeanMax(m_sigmaMax)
+    , m_sigmaMax(sigmaMax)
     , m_rateMax(rateMax)
     , m_numEvents(0)
 {
@@ -37,6 +37,10 @@ Analyzers::NoiseScan::NoiseScan(const Mechanics::Device& device,
   auto name = [&](const std::string& suffix) {
     return sensor.name() + '-' + suffix;
   };
+
+  DEBUG("input roi sensor ", m_sensorId, ':');
+  DEBUG("  col: ", regionOfInterest.interval(0));
+  DEBUG("  row: ", regionOfInterest.interval(1));
 
   // region of interest is bounded by the active sensor size
   m_roi = Utils::intersection(regionOfInterest, sensor.sensitiveAreaPixel());
@@ -158,7 +162,7 @@ void Analyzers::NoiseScan::finalize()
       double sig = m_sigma->GetBinContent(icol, irow);
       double rate = m_occ->GetBinContent(icol, irow);
       // pixel occupancy is a number of stddevs above local average
-      bool isAboveRelative = (m_sigmaAboveMeanMax < sig);
+      bool isAboveRelative = (m_sigmaMax < sig);
       // pixel occupancy is above absolute limit
       bool isAboveAbsolute = (m_rateMax < rate);
 
@@ -173,15 +177,15 @@ void Analyzers::NoiseScan::finalize()
   INFO("noise scan sensor ", m_sensorId, ":");
   INFO("  roi col: ", m_roi.interval(0));
   INFO("  roi row: ", m_roi.interval(1));
-  INFO("  cut relative: local mean + ", m_sigmaAboveMeanMax, " * local sigma");
+  INFO("  cut relative: local mean + ", m_sigmaMax, " * local sigma");
   INFO("  cut absolute: ", m_rateMax, " hits/event");
   INFO("  max occupancy: ", m_occ->GetMaximum(), " hits/event");
   INFO("  noisy pixels: ", numNoisyPixels);
 }
 
-Mechanics::NoiseMask Analyzers::NoiseScan::constructMask() const
+Mechanics::PixelMasks Analyzers::NoiseScan::constructMasks() const
 {
-  Mechanics::NoiseMask newMask;
+  Mechanics::PixelMasks newMask;
 
   for (auto icol = m_maskedPixels->GetNbinsX(); 0 < icol; --icol) {
     for (auto irow = m_maskedPixels->GetNbinsY(); 0 < irow; --irow) {

@@ -49,7 +49,6 @@ static void parseSensors(const ConfigParser& config,
   std::string name = "";
   bool masked = false;
   bool digi = false;
-  bool alignable = true;
 
   unsigned int sensorCounter = 0;
 
@@ -92,7 +91,6 @@ static void parseSensors(const ConfigParser& config,
       name = "";
       masked = false;
       digi = false;
-      alignable = true;
 
       continue;
     }
@@ -133,8 +131,6 @@ static void parseSensors(const ConfigParser& config,
       masked = ConfigParser::valueToLogical(row->value);
     else if (!row->key.compare("digital"))
       digi = ConfigParser::valueToLogical(row->value);
-    else if (!row->key.compare("alignable"))
-      alignable = ConfigParser::valueToLogical(row->value);
     else
       throw std::runtime_error("Device: failed to parse row, key='" + row->key +
                                '\'');
@@ -173,7 +169,7 @@ static Mechanics::Device parseDevice(const std::string& path)
         device.setGeometry(alignment);
       }
       if (!pathNoiseMask.empty()) {
-        device.applyNoiseMask(Mechanics::NoiseMask::fromFile(pathNoiseMask));
+        device.applyPixelMasks(Mechanics::PixelMasks::fromFile(pathNoiseMask));
       }
       return device;
     }
@@ -228,32 +224,20 @@ Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
       device.setGeometry(Geometry::fromConfig(*cfgGeo));
     }
 
-    auto cfgMask = cfg.find("noise_mask");
+    auto cfgMask = cfg.find("pixel_masks");
     // missing noise masks should not be treated as fatal errors
     // allow overlay of multiple noise masks
-    if (cfgMask && cfgMask->is<std::vector<std::string>>()) {
-      NoiseMask combined;
-      auto paths = cfgMask->as<std::vector<std::string>>();
-      for (auto it = paths.begin(); it != paths.end(); ++it) {
+    if (cfgMask->is<std::vector<std::string>>()) {
+      for (const auto& path : cfgMask->as<std::vector<std::string>>()) {
         try {
-          auto path = pathRebaseIfRelative(*it, dir);
-          auto mask = NoiseMask::fromFile(path);
-          combined.merge(mask);
+          auto fullPath = pathRebaseIfRelative(path, dir);
+          device.applyPixelMasks(PixelMasks::fromFile(fullPath));
         } catch (const std::exception& e) {
           ERROR(e.what());
         }
       }
-      device.applyNoiseMask(combined);
-    } else if (cfgMask && cfgMask->is<std::string>()) {
-      auto path = pathRebaseIfRelative(cfgMask->as<std::string>(), dir);
-      try {
-        device.applyNoiseMask(NoiseMask::fromFile(path));
-        device.m_pathNoiseMask = path;
-      } catch (const std::exception& e) {
-        ERROR(e.what());
-      }
     } else if (cfgMask) {
-      device.applyNoiseMask(NoiseMask::fromConfig(*cfgMask));
+      device.applyPixelMasks(PixelMasks::fromConfig(*cfgMask));
     }
   } else {
     // fall-back to old format
@@ -316,13 +300,13 @@ void Mechanics::Device::setGeometry(const Geometry& geometry)
   // TODO 2016-08-18 msmk: check number of sensors / id consistency
 }
 
-void Mechanics::Device::applyNoiseMask(const NoiseMask& noiseMask)
+void Mechanics::Device::applyPixelMasks(const PixelMasks& pixelMasks)
 {
-  m_noiseMask = noiseMask;
+  m_pixelMasks = pixelMasks;
 
   for (Index sensorId = 0; sensorId < numSensors(); ++sensorId) {
     Sensor* sensor = getSensor(sensorId);
-    sensor->setNoisyPixels(m_noiseMask.getMaskedPixels(sensorId));
+    sensor->setMaskedPixels(m_pixelMasks.getMaskedPixels(sensorId));
   }
   // TODO 2016-08-18 msmk: check number of sensors / id consistency
 }
@@ -338,14 +322,6 @@ void Mechanics::Device::setTimestampRange(uint64_t ts0, uint64_t ts1)
     throw std::runtime_error("start timestamp must come before end");
   m_timestamp0 = ts0;
   m_timestamp1 = ts1;
-}
-
-unsigned int Mechanics::Device::getNumPixels() const
-{
-  unsigned int numPixels = 0;
-  for (unsigned int nsens = 0; nsens < numSensors(); nsens++)
-    numPixels += getSensor(nsens)->numPixels();
-  return numPixels;
 }
 
 double Mechanics::Device::getBeamSlopeX() const
@@ -376,7 +352,7 @@ void Mechanics::Device::print(std::ostream& os, const std::string& prefix) const
   os << prefix << "noise mask:\n";
   if (!m_pathNoiseMask.empty())
     os << prefix << "  path: " << m_pathNoiseMask << '\n';
-  m_noiseMask.print(os, prefix + "  ");
+  m_pixelMasks.print(os, prefix + "  ");
 
   os.flush();
 }

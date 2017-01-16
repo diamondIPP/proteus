@@ -55,7 +55,7 @@ namespace Loopers {
           const Storage::Hit* hit = plane->getHit(ihit);
           const Index col = hit->col();
           const Index row = hit->row();
-          if (!_refDevice->getSensor(iplane)->isPixelNoisy(col, row)) {
+          if (!_refDevice->getSensor(iplane)->isPixelMasked(col, row)) {
             Storage::Hit* copy = maskedPlane->newHit();
             copy->setAddress(col, row);
             copy->setTime(hit->time());

@@ -47,7 +47,10 @@ void SyncFluctuation::processEvent(const Storage::Event* refEvent,
         (double)_refDevice->getReadOutWindow();
 
     const ULong64_t dutClockDiff = (dutEvent->getTimeStamp() - _lastDut);
-    const double dutFrameDiff = dutClockDiff * _dutDevice->getSyncRatio() /
+    // 2017-01-12 msmk: sync ratio not supported anymore by Proteus
+    // const double dutFrameDiff = dutClockDiff * _dutDevice->getSyncRatio() /
+    //     (double)_refDevice->getReadOutWindow();
+    const double dutFrameDiff = dutClockDiff /
         (double)_refDevice->getReadOutWindow();
 
     if (_counter > 1)

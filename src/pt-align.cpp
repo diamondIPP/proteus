@@ -4,7 +4,7 @@
 #include <TGraphErrors.h>
 #include <TTree.h>
 
-#include "alignment/correlationaligner.h"
+#include "alignment/correlationsaligner.h"
 #include "alignment/residualsaligner.h"
 #include "analyzers/correlation.h"
 #include "analyzers/residuals.h"
@@ -110,12 +110,12 @@ struct StepsGraphs {
   }
 };
 
-enum class Method { Correlation, Residuals };
+enum class Method { Correlations, Residuals };
 
 Method stringToMethod(const std::string& name)
 {
-  if (name == "correlation") {
-    return Method::Correlation;
+  if (name == "correlations") {
+    return Method::Correlations;
   } else if (name == "residuals") {
     return Method::Residuals;
   } else {
@@ -131,7 +131,7 @@ int main(int argc, char const* argv[])
   using namespace Processors;
 
   toml::Table defaults = {{"num_steps", 1},
-                          {"distance_sigma_max", 5.},
+                          {"search_sigma_max", 5.},
                           {"reduced_chi2_max", -1.},
                           {"damping", 0.9}};
   Application app("align", "align selected sensors", defaults);
@@ -142,7 +142,7 @@ int main(int argc, char const* argv[])
   auto alignIds = app.config().get<std::vector<Index>>("align_ids");
   auto method = stringToMethod(app.config().get<std::string>("method"));
   auto numSteps = app.config().get<int>("num_steps");
-  auto distSigmaMax = app.config().get<double>("distance_sigma_max");
+  auto searchSigmaMax = app.config().get<double>("search_sigma_max");
   auto redChi2Max = app.config().get<double>("reduced_chi2_max");
   auto damping = app.config().get<double>("damping");
 
@@ -165,11 +165,11 @@ int main(int argc, char const* argv[])
     loop.addProcessor(std::make_shared<ApplyGeometry>(dev));
     // setup aligment method specific loop logic
     std::shared_ptr<Aligner> aligner;
-    if (method == Method::Correlation) {
+    if (method == Method::Correlations) {
       // coarse method w/o tracks using only cluster correlations
 
       auto corr = std::make_shared<Correlation>(dev, sensorIds, stepDir);
-      aligner = std::make_shared<CorrelationAligner>(dev, alignIds, corr);
+      aligner = std::make_shared<CorrelationsAligner>(dev, alignIds, corr);
       loop.addAnalyzer(corr);
       loop.addAnalyzer(aligner);
 
@@ -177,7 +177,7 @@ int main(int argc, char const* argv[])
       // use (unbiased) track residuals to align
 
       loop.addProcessor(std::make_shared<TrackFinder>(
-          dev, sensorIds, distSigmaMax, sensorIds.size(), redChi2Max));
+          dev, sensorIds, searchSigmaMax, sensorIds.size(), redChi2Max));
       loop.addAnalyzer(std::make_shared<TrackInfo>(&dev, stepDir));
       loop.addAnalyzer(std::make_shared<Residuals>(&dev, stepDir));
       loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(dev, stepDir));

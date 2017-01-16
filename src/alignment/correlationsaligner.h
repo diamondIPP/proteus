@@ -15,13 +15,13 @@ class Device;
 
 namespace Alignment {
 
-/** Align sensors in the xy-plane using the cluster correlations as input.
+/** Align sensors in the xy-plane using cluster correlations.
  *
  * This assumes a straight track propagation without a slope along the z-axis.
  */
-class CorrelationAligner : public Aligner {
+class CorrelationsAligner : public Aligner {
 public:
-  CorrelationAligner(const Mechanics::Device& device,
+  CorrelationsAligner(const Mechanics::Device& device,
                       const std::vector<Index>& alignIds,
                       std::shared_ptr<const Analyzers::Correlation> corr);
 

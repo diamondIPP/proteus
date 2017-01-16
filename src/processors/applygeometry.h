@@ -9,7 +9,11 @@ class Device;
 
 namespace Processors {
 
-/** Use device geometry to set global positions for clusters and tracks. */
+/** Use device geometry to set global positions for clusters.
+ *
+ * \warning This does **not** update existing track parameters. This must be
+ *          updated by refitting the track.
+ */
 class ApplyGeometry : public Processor {
 public:
   ApplyGeometry(const Mechanics::Device& device);
