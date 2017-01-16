@@ -38,7 +38,7 @@ file.
     pixel_masks = [ "/or/an/absolute/path.toml",
                     "another.toml" ]
 
-The pixel maks must be a list files, e.g. separate files for the
+*pixel_masks* must be a list of files, e.g. separate files for the
 telescope and the device-under-test.
 
 Sensor types are defined by name and configure the pixel sensor
@@ -54,10 +54,10 @@ properties required for the analysis.
     thickness = 250.
     x_x0 = 0.005443
 
-For each sensor only the sensor type is required. The sensor type
-**must** correspond to a sensor type defined in the same device
-configuration file. An optional name can be provided otherwise one is
-automatically generated.
+For each sensor only the sensor type is required. It **must**
+correspond to a sensor type defined in the same device configuration
+file. An optional name can be provided otherwise one is automatically
+generated.
 
 .. code-block:: toml
 
@@ -69,7 +69,7 @@ Geometry
 --------
 
 Each sensor is defined by its local coordinate system and its relative
-orientation in the global coordinate system. Its is defined by the
+orientation in the global coordinate system. It is defined by the
 rotation from local into global coordinates and an additional offset,
 i.e. the position of the local sensor origin in the global system.
 
@@ -84,18 +84,18 @@ i.e. the position of the local sensor origin in the global system.
     rotation_y = 0.
     rotation_z = 1.5696899267190794
 
-The offset is directly given by its coordinate, using the same length
+The offset is directly given by its coordinates, using the same length
 units consistent with the rest of the configuration. Here, micrometer
 is used. The rotation is using the 3-2-1 Euler angle convention
 implemented in ``ROOT::Math::RotationZYX`` to define the rotation from
-the local sensor coordinates to the globall cordinate system.
+the local sensor coordinates to the global cordinate system.
 
 Pixel masks
 -----------
 
 Pixels can be masked with a separate configuration file. Masked pixels
 are not considered for the analysis, e.g. in the clusterization. A
-mask files contains a list of sensors, defined by its sensor id, and a
+mask file contains a list of sensors, defined by its sensor id, and a
 list of pixels, defined by their column and row address.
 
 .. code-block:: toml
@@ -107,7 +107,7 @@ list of pixels, defined by their column and row address.
 Analysis
 --------
 
-The analysis file configured parameters for the various analysis
+The analysis file configures parameters for the various analysis
 steps. Each tool uses a separate parameter block, e.g. the *pt-track*
 tool is configured in the *track* section.
 

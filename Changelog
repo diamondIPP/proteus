@@ -38,14 +38,14 @@ User-visible changes
     configuration.
 *   The alignment algorithm is simplified to be more robust for strong
     misalignment.
-*   Pixel preprocessing, e.g. FEI-4 to CCPDv4 pixel mapping, and
+*   Pixel preprocessing, e.g. FE-I4 to CCPDv4 pixel mapping, and
     clusterization are fully integrated into the default analysis
     chain and do not require separate, manual steps.
 *   Fitted track positions and device-under-test clusters are available
     also in a simple ``TTree``-based output format to allow specific
     analyses not covered by the existing tools.
 *   The intermediate output ROOT file format, specifically the content
-    of the ``TTree``'s, only contains the necessary local
+    of the ``TTree``s, only contains the necessary local
     information. The positions and uncertainties in the global
     coordinate system are calculated automatically by the software.
     The input format is unchanged but any global position information
