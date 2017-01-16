@@ -1,3 +1,5 @@
+.. -*-rst-*-
+
 Changelog
 =========
 
@@ -14,43 +16,47 @@ required.
 User-visible changes
 ^^^^^^^^^^^^^^^^^^^^
 
-* All configuration files use the `TOML file format
-  <https://github.com/toml-lang/toml>`_.
-* The software uses a single, combined data stream as input that includes
-  all telescope sensors and all devices-under-tests. There is no explicit
-  distinction anymore between telescope sensors and device-under-test sensors.
-* The single Judith/proteus binary has been split into multiple tools, i.e.
-  *pt-noisescan*, *pt-align*, *pt-track*, *pt-match*, that each perform one
-  task.
-* An updated noise scan was added that takes into account inhomogeneous
-  occupancy distributions, e.g. due to the beam profile, and allows per-sensor
-  configuration.
-* Reconstruction and analysis is always performed in the local coordinate
-  system of the sensor.
+*   All configuration files use the `TOML file format
+    <https://github.com/toml-lang/toml>`_.
+*   The software uses a single, combined data stream as input that
+    includes all telescope sensors and all devices-under-tests. There
+    is no explicit distinction anymore between telescope sensors and
+    device-under-test sensors.
+*   The single Judith/proteus binary has been split into multiple tools,
+    i.e. *pt-noisescan*, *pt-align*, *pt-track*, *pt-match*, that each
+    perform one task.
+*   An updated noise scan was added that takes into account
+    inhomogeneous occupancy distributions, e.g. due to the beam
+    profile, and allows per-sensor configuration.
+*   Reconstruction and analysis is always performed in the local
+    coordinate system of the sensor.
 
 Internal changes
 ^^^^^^^^^^^^^^^^
 
-* All tools are now based on a generic event loop with configurable algorithms.
-* All geometry calculations are now based on ``ROOT::GenVector`` and correctly
-  take into account the full rotation matrix and translation. Reconstruction
-  and analysis is always performed in the local system of the sensor to be
-  able to correctly handle missalignments and rotated sensors. The different
-  transformations are fully included in the uncertainty calculations without
-  additional constraints on the sensor orientation.
-* Uncertainty calculations and propagations use the full covariance
-  matrix for both cluster and track uncertainties.
-* Search and matching cuts take into account the full covariance matrices. The
-  resulting `weighted distance measure
-  <https://en.wikipedia.org/wiki/Mahalanobis_distance>`_ is used consistently
-  throughout the code base.
-* Use a new non-recursive hit clusterizer with geometrical error calculation.
-  Different cluster property estimators, e.g. for binary measurements or for
-  measurements with time-over-threshold measurement, are available that can be
-  selected per sensor.
-* Updated track finder with fully configurable input sensors and global
-  selection of the best candidates, i.e. tracks are selected from all found
-  candidates with an exclusive association of clusters to tracks.
+*   All tools are now based on a generic event loop with configurable
+    algorithms.
+*   All geometry calculations are now based on ``ROOT::GenVector`` and
+    correctly take into account the full rotation matrix and
+    translation. Reconstruction and analysis is always performed in
+    the local system of the sensor to be able to correctly handle
+    missalignments and rotated sensors. The different transformations
+    are fully included in the uncertainty calculations without
+    additional constraints on the sensor orientation.
+*   Uncertainty calculations and propagations use the full covariance
+    matrix for both cluster and track uncertainties.
+*   Search and matching cuts take into account the full covariance
+    matrices.  The resulting `weighted distance measure
+    <https://en.wikipedia.org/wiki/Mahalanobis_distance>`_ is used
+    consistently throughout the code base.
+*   Use a new non-recursive hit clusterizer with geometrical error
+    calculation.  Different cluster property estimators, e.g. for
+    binary measurements or for measurements with time-over-threshold
+    measurement, are available that can be selected per sensor.
+*   Updated track finder with fully configurable input sensors and
+    global selection of the best candidates, i.e. tracks are selected
+    from all found candidates with an exclusive association of
+    clusters to tracks.
 
 Changes before v1.0.0
 ---------------------
