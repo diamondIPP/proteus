@@ -21,7 +21,7 @@ int main(int argc, char const* argv[])
   using namespace Mechanics;
   using namespace Processors;
 
-  Application app("match", "match tracks and clusters", {});
+  Application app("match", "match tracks and clusters");
   app.initialize(argc, argv);
 
   // configuration
