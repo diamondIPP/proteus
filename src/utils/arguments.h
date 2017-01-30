@@ -81,8 +81,12 @@ inline void Utils::Arguments::addOptional(char key,
   // value is always stored as string
   std::ostringstream sval;
   sval << value;
-  m_options.push_back(
-      Option{std::move(name), std::move(help), sval.str(), key});
+  Option opt;
+  opt.abbreviation = key;
+  opt.name = std::move(name);
+  opt.help = std::move(help);
+  opt.defaultValue = sval.str();
+  m_options.push_back(std::move(opt));
 }
 
 inline bool Utils::Arguments::has(const std::string& name) const

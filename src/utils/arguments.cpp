@@ -19,19 +19,30 @@ Utils::Arguments::Arguments(std::string description)
 
 void Utils::Arguments::addFlag(char key, std::string name, std::string help)
 {
-  m_options.emplace_back(Option{std::move(name), std::move(help), std::string(),
-                                key, OptionType::kFlag});
+  Option opt;
+  opt.abbreviation = key;
+  opt.name = std::move(name);
+  opt.help = std::move(help);
+  opt.type = OptionType::kFlag;
+  m_options.emplace_back(std::move(opt));
 }
 
 void Utils::Arguments::addOptional(char key, std::string name, std::string help)
 {
-  m_options.emplace_back(Option{std::move(name), std::move(help), std::string(),
-                                key, OptionType::kSingle});
+  Option opt;
+  opt.abbreviation = key;
+  opt.name = std::move(name);
+  opt.help = std::move(help);
+  opt.type = OptionType::kSingle;
+  m_options.emplace_back(std::move(opt));
 }
 
 void Utils::Arguments::addRequired(std::string name, std::string help)
 {
-  m_requireds.emplace_back(Required{std::move(name), std::move(help)});
+  Required req;
+  req.name = std::move(name);
+  req.help = std::move(help);
+  m_requireds.emplace_back(std::move(req));
 }
 
 std::string Utils::Arguments::Option::description() const
