@@ -14,6 +14,7 @@ PT_SETUP_GLOBAL_LOGGER
 Utils::Arguments::Arguments(std::string description)
     : m_description(std::move(description))
 {
+  addFlag('h', "help", "print this help text");
 }
 
 void Utils::Arguments::addFlag(char key, std::string name, std::string help)
@@ -64,7 +65,7 @@ void Utils::Arguments::printHelp(const std::string& arg0) const
     cerr << "  " << std::left << std::setw(17) << req.name;
     cerr << " " << req.help << "\n";
   }
-  cerr << "optional:\n";
+  cerr << "options:\n";
   for (const auto& opt : m_options) {
     cerr << "  " << std::left << std::setw(17) << opt.description();
     cerr << " " << opt.help;
@@ -75,6 +76,13 @@ void Utils::Arguments::printHelp(const std::string& arg0) const
   }
   cerr.flush();
 }
+
+#define FAIL(msg)                                                              \
+  do {                                                                         \
+    std::cerr << msg;                                                          \
+    std::cerr << "\ntry --help for more information" << std::endl;             \
+    return true;                                                               \
+  } while (false)
 
 bool Utils::Arguments::parse(int argc, char const* argv[])
 {
@@ -96,45 +104,39 @@ bool Utils::Arguments::parse(int argc, char const* argv[])
       } else {
         opt = find(arg[1]);
       }
-      if (!opt) {
-        cerr << "unknown option '" << arg << '\'' << endl;
-        return true;
-      }
+      if (!opt)
+        FAIL("unknown option '" << arg << "'");
+
       // options must only be set once
-      if (m_values.count(opt->name) == 1) {
-        cerr << "option '" << opt->description() << "' is already set" << endl;
-        return true;
-      }
+      if (m_values.count(opt->name) == 1)
+        FAIL("duplicate option '" << arg << "'");
 
       // process depending on option type
       if (opt->type == OptionType::kSingle) {
-        if (argc <= (i + 1)) {
-          cerr << "option '" << arg << "' requires a parameter" << endl;
-          return true;
-        }
-        m_values[opt->name] = argv[++i];
+          if (argc <= (i + 1))
+            FAIL("option '" << arg << "' requires a parameter");
+          m_values[opt->name] = argv[++i];
       } else /* OptionType::kFlag */ {
-        m_values[opt->name] = "true";
+          m_values[opt->name] = "true";
       }
 
     } else {
       DEBUG("arg ", i, " required ", arg);
 
-      if (m_requireds.size() < (numArgs + 1)) {
-        cerr << "too many arguments" << endl;
-        return true;
-      }
+      if (m_requireds.size() < (numArgs + 1))
+        FAIL("too many arguments");
       m_values[m_requireds[numArgs].name] = arg;
       numArgs += 1;
     }
   }
 
-  if (numArgs < m_requireds.size()) {
-    cerr << "not enough arguments"
-         << " (" << numArgs << " < " << m_requireds.size() << ")\n\n";
+  if (has("help")) {
     printHelp(argv[0]);
     return true;
   }
+
+  if (numArgs < m_requireds.size())
+    FAIL("not enough arguments");
 
   // add missing default values for optional argument
   for (const auto& opt : m_options) {
@@ -147,6 +149,8 @@ bool Utils::Arguments::parse(int argc, char const* argv[])
     DEBUG(val.first, ": ", val.second);
   return false;
 }
+
+#undef FAIL
 
 const Utils::Arguments::Option*
 Utils::Arguments::find(const std::string& name) const
