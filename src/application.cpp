@@ -27,10 +27,14 @@ void Application::initialize(int argc, char const* argv[])
   Utils::Arguments args(m_desc);
   args.addOptional('d', "device", "device configuration file", "device.toml");
   args.addOptional('g', "geometry", "load a separate geometry file");
-  args.addOptional('c', "config", "analysis configuration file", "analysis.toml");
-  args.addOptional('u', "subsection", "use the given configuration sub-section");
+  args.addOptional('c', "config", "analysis configuration file",
+                   "analysis.toml");
+  args.addOptional('u', "subsection",
+                   "use the given configuration sub-section");
   args.addOptional('s', "skip_events", "skip the first n events", 0);
   args.addOptional('n', "num_events", "number of events to process", -1);
+  args.addFlag('v', "verbose", "print more information");
+  args.addFlag('\0', "debug", "print even more information");
   args.addRequired("input", "path to the input file");
   args.addRequired("output_prefix", "output path prefix");
 
@@ -38,10 +42,16 @@ void Application::initialize(int argc, char const* argv[])
   if (args.parse(argc, argv))
     std::exit(EXIT_FAILURE);
 
-  // TODO 2016-12-13 msmk: add command line flag
-  Utils::Logger::setGlobalLevel(Utils::Logger::Level::Debug);
+  // logging level
+  if (args.has("debug")) {
+    Utils::Logger::setGlobalLevel(Utils::Logger::Level::Debug);
+  } else if (args.has("verbose")) {
+    Utils::Logger::setGlobalLevel(Utils::Logger::Level::Info);
+  } else {
+    Utils::Logger::setGlobalLevel(Utils::Logger::Level::Error);
+  }
 
-  // select configuration section
+  // define configuration section
   std::string section = m_name;
   if (args.has("subsection")) {
     section += '.';
