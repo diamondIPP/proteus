@@ -26,7 +26,7 @@ const char* const Utils::Logger::kReset = ANSI_RESET;
 // global logger w/o specific name
 Utils::Logger Utils::Logger::s_global("");
 // default global log-level
-Utils::Logger::Level Utils::Logger::s_level = Utils::Logger::Level::Info;
+Utils::Logger::Level Utils::Logger::s_level = Utils::Logger::Level::Error;
 
 Utils::Logger::Logger(std::string name) : m_prefix(std::move(name))
 {
