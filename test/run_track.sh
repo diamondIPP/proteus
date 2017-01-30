@@ -3,7 +3,7 @@
 # run telescope tracking
 
 RUN=$1; shift
-FLAGS=$@ # e.g. -n 10000, to process only the first 10k events
+FLAGS="-v $@" # e.g. -n 10000, to process only the first 10k events
 
 rundir=$(printf "run%06d" $RUN)
 rawfile=$(printf "raw/run%06d.root" $RUN)
