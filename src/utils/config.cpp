@@ -55,7 +55,7 @@ static std::string cfgConvertKey(std::string key)
 {
   std::replace(key.begin(), key.end(), ' ', '_');
   std::transform(key.begin(), key.end(), key.begin(), ::tolower);
-  return std::move(key);
+  return key;
 }
 
 // convert the ConfigParser value string into a toml::Value

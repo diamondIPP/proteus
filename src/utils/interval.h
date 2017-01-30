@@ -87,7 +87,7 @@ public:
   Box() = default;
   template <typename... Intervals,
             typename = typename std::enable_if<sizeof...(Intervals) == N>::type>
-  Box(Intervals&&... axes) : m_axes{std::forward<Intervals>(axes)...}
+  Box(Intervals&&... axes) : m_axes{{std::forward<Intervals>(axes)...}}
   {
   }
 
@@ -127,7 +127,7 @@ public:
             typename = typename std::enable_if<sizeof...(Us) == N>::type>
   bool isInside(Us... x) const
   {
-    return isInside(Point{static_cast<T>(x)...});
+    return isInside(Point{{static_cast<T>(x)...}});
   }
 
   /** Limit the box to the intersection with the second box. */

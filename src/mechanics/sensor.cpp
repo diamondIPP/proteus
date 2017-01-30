@@ -86,8 +86,8 @@ Mechanics::Sensor::Area Mechanics::Sensor::projectedEnvelopeXY() const
   XYZPoint maxMin = transformPixelToGlobal(XYPoint(m_numCols, 0));
   XYZPoint maxMax = transformPixelToGlobal(XYPoint(m_numCols, m_numRows));
 
-  std::array<double, 4> xs = {minMin.x(), minMax.x(), maxMin.x(), maxMax.x()};
-  std::array<double, 4> ys = {minMin.y(), minMax.y(), maxMin.y(), maxMax.y()};
+  std::array<double, 4> xs = {{minMin.x(), minMax.x(), maxMin.x(), maxMax.x()}};
+  std::array<double, 4> ys = {{minMin.y(), minMax.y(), maxMin.y(), maxMax.y()}};
 
   return Area(Area::AxisInterval(*std::min_element(xs.begin(), xs.end()),
                                  *std::max_element(xs.begin(), xs.end())),
