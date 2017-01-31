@@ -84,6 +84,8 @@ private:
   std::vector<bool> m_sensorMask;
 };
 
+void sortByZ(const Device& dev, std::vector<Index>& sensorIds);
+
 } // namespace Mechanics
 
 #endif // PT_DEVICE_H
