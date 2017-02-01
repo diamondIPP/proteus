@@ -7,6 +7,7 @@
 #ifndef PT_LOGGER_H
 #define PT_LOGGER_H
 
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -146,6 +147,13 @@ private:
 #define DEBUG(...)                                                             \
   do {                                                                         \
     logger().debug(__VA_ARGS__, " (", __FUNCTION__, ':', __LINE__, ")\n");     \
+  } while (false)
+
+/** Write the error message w/ the logger and quit the application. */
+#define FAIL(...)                                                              \
+  do {                                                                         \
+    logger().error(__VA_ARGS__, '\n');                                         \
+    std::exit(EXIT_FAILURE);                                                   \
   } while (false)
 
 #endif // PT_LOGGER_H
