@@ -9,7 +9,7 @@
 #include "utils/configparser.h"
 #include "utils/logger.h"
 
-PT_SETUP_GLOBAL_LOGGER
+PT_SETUP_LOCAL_LOGGER(Device)
 
 Mechanics::Device::Device(const std::string& name,
                           double clockRate,
@@ -220,14 +220,18 @@ Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
       auto p = pathRebaseIfRelative(cfgGeo->as<std::string>(), dir);
       device.setGeometry(Geometry::fromFile(p));
       device.m_pathGeometry = p;
-    } else if (cfgGeo) {
+    } else if (cfgGeo && cfgGeo->is<toml::Table>()) {
       device.setGeometry(Geometry::fromConfig(*cfgGeo));
+    } else if (cfgGeo) {
+      FAIL("invalid 'geometry' setting. must be string or object.");
+    } else {
+      FAIL("missing 'geometry' setting");
     }
 
     auto cfgMask = cfg.find("pixel_masks");
     // missing noise masks should not be treated as fatal errors
     // allow overlay of multiple noise masks
-    if (cfgMask->is<std::vector<std::string>>()) {
+    if (cfgMask && cfgMask->is<std::vector<std::string>>()) {
       for (const auto& path : cfgMask->as<std::vector<std::string>>()) {
         try {
           auto fullPath = pathRebaseIfRelative(path, dir);
@@ -236,8 +240,12 @@ Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
           ERROR(e.what());
         }
       }
-    } else if (cfgMask) {
+    } else if (cfgMask && cfgMask->is<toml::Table>()) {
       device.applyPixelMasks(PixelMasks::fromConfig(*cfgMask));
+    } else if (cfgMask) {
+      // the pixel_masks settings exists but does not have the right type. just
+      // a missing pixel_masks settings is ok, but this must be fatal mistake.
+      FAIL("invalid 'pixel_masks' setting. must be list of paths or object.");
     }
   } else {
     // fall-back to old format
