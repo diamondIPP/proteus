@@ -49,10 +49,8 @@ void Application::initialize(int argc, char const* argv[])
   auto cfgFull = Utils::Config::readConfig(pathCfg);
   // select configuration subsection
   const toml::Value* cfgTool = cfgFull.find(section);
-  if (!cfgTool) {
-    ERROR("configuration section '", m_name, "' is missing");
-    std::exit(EXIT_FAILURE);
-  }
+  if (!cfgTool)
+    FAIL("configuration section '", m_name, "' is missing");
   m_cfg = Utils::Config::withDefaults(*cfgTool, m_cfg);
   INFO("read configuration '", section, "' from '", pathCfg, "'");
 

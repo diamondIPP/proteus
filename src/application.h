@@ -32,7 +32,7 @@ class Application {
 public:
   Application(const std::string& name,
               const std::string& description,
-              const toml::Table& defaults = {});
+              const toml::Table& defaults = toml::Table());
 
   /** Parse command line arguments and setup configuration and input data.
    *

@@ -7,6 +7,7 @@
 #ifndef PT_LOGGER_H
 #define PT_LOGGER_H
 
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -103,16 +104,27 @@ private:
 } // namespace Utils
 
 /* Define a `logger()` function that returns either the global logger
- * or a static local logger.
+ * or a static local logger so the convenience logger macros can be used.
+ *
+ * Depending on the compile definitions, i.e. when using a debug build with
+ * only debug log statements, the functions might be unused and are marked
+ * as such to avoid false-positive compiler warnings.
  */
 #define PT_SETUP_GLOBAL_LOGGER                                                 \
-  static inline Utils::Logger& logger()                                        \
+  namespace {                                                                  \
+  inline __attribute__((unused)) Utils::Logger& logger()                       \
   {                                                                            \
     return Utils::Logger::globalLogger();                                      \
+  }                                                                            \
   }
 #define PT_SETUP_LOCAL_LOGGER(name)                                            \
-  static Utils::Logger name##LocalLogger(#name);                               \
-  static inline Utils::Logger& logger() { return name##LocalLogger; }
+  namespace {                                                                  \
+  Utils::Logger name##LocalLogger(#name);                                      \
+  inline __attribute__((unused)) Utils::Logger& logger()                       \
+  {                                                                            \
+    return name##LocalLogger;                                                  \
+  }                                                                            \
+  }
 
 /* Convenience macros to log a message use the logger.
  *
@@ -135,6 +147,13 @@ private:
 #define DEBUG(...)                                                             \
   do {                                                                         \
     logger().debug(__VA_ARGS__, " (", __FUNCTION__, ':', __LINE__, ")\n");     \
+  } while (false)
+
+/** Write the error message w/ the logger and quit the application. */
+#define FAIL(...)                                                              \
+  do {                                                                         \
+    logger().error(__VA_ARGS__, '\n');                                         \
+    std::exit(EXIT_FAILURE);                                                   \
   } while (false)
 
 #endif // PT_LOGGER_H

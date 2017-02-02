@@ -9,11 +9,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 
-include(RequireCXX11OrHigher)
-
 find_package(ROOT REQUIRED COMPONENT GenVector)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXX_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+# after setting CMAKE_CXX_FLAGS to be able to pick up existing -std=... flags
+include(RequireCXX11)
 
 include_directories(external/tinytoml/include)
 
