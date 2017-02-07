@@ -292,6 +292,8 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
 
 void Mechanics::Device::addSensor(const Sensor& sensor)
 {
+  // TODO 2017-02-07 msmk: assumes ids are indices from 0 to n_sensors w/o gaps
+  m_sensorIds.emplace_back(sensor.id());
   m_sensors.emplace_back(sensor);
   m_sensorMask.push_back(false);
 }

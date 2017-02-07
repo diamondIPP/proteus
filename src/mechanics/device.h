@@ -33,7 +33,8 @@ public:
   const std::string& pathNoiseMask() const { return m_pathNoiseMask; }
 
   void addSensor(const Sensor& sensor);
-  void addMaskedSensor(); 
+  void addMaskedSensor();
+  const std::vector<Index>& sensorIds() const { return m_sensorIds; }
   Index numSensors() const { return static_cast<Index>(m_sensors.size()); }
   Sensor* getSensor(Index i) { return &m_sensors.at(i); }
   const Sensor* getSensor(Index i) const { return &m_sensors.at(i); }
@@ -72,6 +73,7 @@ private:
   Device() = default;
 
   std::string m_name;
+  std::vector<Index> m_sensorIds;
   std::vector<Sensor> m_sensors;
   Geometry m_geometry;
   PixelMasks m_pixelMasks;
