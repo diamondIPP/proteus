@@ -3,8 +3,8 @@
 Changelog
 =========
 
-v1.0.0 (to be released)
------------------------
+v1.0.0 (2017-02-07)
+-------------------
 
 This is the first version after a major refactoring. The basic design has not
 changed much, but the internal structure and the user interface has undergone
