@@ -88,18 +88,16 @@ void Utils::Arguments::printHelp(const std::string& arg0) const
   cerr.flush();
 }
 
-#define FAIL(msg)                                                              \
-  do {                                                                         \
-    std::cerr << msg;                                                          \
-    std::cerr << "\ntry --help for more information" << std::endl;             \
-    return true;                                                               \
-  } while (false)
+// always return true to indicate error
+static inline bool args_fail(const std::string& msg)
+{
+  std::cerr << msg;
+  std::cerr << "\ntry --help for more information" << std::endl;
+  return true;
+}
 
 bool Utils::Arguments::parse(int argc, char const* argv[])
 {
-  using std::cerr;
-  using std::endl;
-
   size_t numArgs = 0;
 
   for (int i = 1; i < argc; ++i) {
@@ -116,16 +114,16 @@ bool Utils::Arguments::parse(int argc, char const* argv[])
         opt = find(arg[1]);
       }
       if (!opt)
-        FAIL("unknown option '" << arg << "'");
+        return args_fail("unknown option '" + arg + "'");
 
       // options must only be set once
       if (m_values.count(opt->name) == 1)
-        FAIL("duplicate option '" << arg << "'");
+        return args_fail("duplicate option '" + arg + "'");
 
       // process depending on option type
       if (opt->type == OptionType::kSingle) {
           if (argc <= (i + 1))
-            FAIL("option '" << arg << "' requires a parameter");
+            return args_fail("option '" + arg + "' requires a parameter");
           m_values[opt->name] = argv[++i];
       } else /* OptionType::kFlag */ {
           m_values[opt->name] = "true";
@@ -135,7 +133,7 @@ bool Utils::Arguments::parse(int argc, char const* argv[])
       DEBUG("arg ", i, " required ", arg);
 
       if (m_requireds.size() < (numArgs + 1))
-        FAIL("too many arguments");
+        return args_fail("too many arguments");
       m_values[m_requireds[numArgs].name] = arg;
       numArgs += 1;
     }
@@ -147,7 +145,7 @@ bool Utils::Arguments::parse(int argc, char const* argv[])
   }
 
   if (numArgs < m_requireds.size())
-    FAIL("not enough arguments");
+    return args_fail("not enough arguments");
 
   // add missing default values for optional argument
   for (const auto& opt : m_options) {
@@ -160,8 +158,6 @@ bool Utils::Arguments::parse(int argc, char const* argv[])
     DEBUG(val.first, ": ", val.second);
   return false;
 }
-
-#undef FAIL
 
 const Utils::Arguments::Option*
 Utils::Arguments::find(const std::string& name) const
