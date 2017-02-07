@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <iterator>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -370,4 +371,12 @@ void Mechanics::sortByZ(const Device& dev, std::vector<Index>& sensorIds)
   std::sort(sensorIds.begin(), sensorIds.end(), [&](Index a, Index b) {
     return (dev.getSensor(a)->origin().z() < dev.getSensor(b)->origin().z());
   });
+}
+
+std::vector<Index> Mechanics::sortedByZ(const Device& dev,
+                                        const std::vector<Index>& sensorIds)
+{
+  std::vector<Index> sorted(std::begin(sensorIds), std::end(sensorIds));
+  sortByZ(dev, sorted);
+  return sorted;
 }

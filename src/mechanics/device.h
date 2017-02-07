@@ -33,7 +33,7 @@ public:
   const std::string& pathNoiseMask() const { return m_pathNoiseMask; }
 
   void addSensor(const Sensor& sensor);
-  void addMaskedSensor();
+  void addMaskedSensor(); 
   Index numSensors() const { return static_cast<Index>(m_sensors.size()); }
   Sensor* getSensor(Index i) { return &m_sensors.at(i); }
   const Sensor* getSensor(Index i) const { return &m_sensors.at(i); }
@@ -85,6 +85,7 @@ private:
 };
 
 void sortByZ(const Device& dev, std::vector<Index>& sensorIds);
+std::vector<Index> sortedByZ(const Device& dev, const std::vector<Index>& sensorIds);
 
 } // namespace Mechanics
 
