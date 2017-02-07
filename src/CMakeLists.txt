@@ -1,4 +1,4 @@
-set(COMMON_SRC
+set(common_SRCS
     alignment/correlationsaligner.cpp
     alignment/residualsaligner.cpp
     analyzers/analyzer.cpp
@@ -73,8 +73,9 @@ set(COMMON_SRC
     utils/logger.cpp
     utils/statistics.cpp
     application.cpp)
+file(GLOB_RECURSE common_HDRS LIST_DIRECTORIES false *.h)
 
-add_library(pt-common STATIC ${COMMON_SRC})
+add_library(pt-common STATIC ${common_SRCS} ${common_HDRS})
 target_include_directories(pt-common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})
 target_link_libraries(pt-common PUBLIC ${ROOT_LIBRARIES})
 
