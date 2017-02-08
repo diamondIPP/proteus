@@ -26,6 +26,10 @@ public:
   Correlation(const Mechanics::Device& device,
               const std::vector<Index>& sensorIds,
               TDirectory* dir);
+  /** Pair-wise correlations between all sensor sorted in z.
+   *
+   * \deprecated Use constructor w/ explicit sensors.
+   */
   Correlation(const Mechanics::Device* device,
               TDirectory* dir,
               const char* suffix = "");
