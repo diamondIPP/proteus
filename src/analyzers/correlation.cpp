@@ -11,20 +11,24 @@
 
 Analyzers::Correlation::Correlation(const Mechanics::Device& dev,
                                     const std::vector<Index>& sensorIds,
-                                    TDirectory* dir)
-    : SingleAnalyzer(&dev, dir, "", "Correlation")
+                                    TDirectory* dir,
+                                    int neighbors)
+    : SingleAnalyzer(&dev, dir, "", "Correlations")
 {
   TDirectory* sub = Utils::makeDir(dir, "Correlations");
 
-  if (sensorIds.size() < 2) {
-    throw std::runtime_error("Correlation: need at least two sensors");
-  } else if (sensorIds.size() == 2) {
-    addHist(*dev.getSensor(sensorIds[0]), *dev.getSensor(sensorIds[1]), sub);
-  } else {
-    // correlation between two nearest planes
-    for (auto id = sensorIds.begin(); (id + 2) != sensorIds.end(); ++id) {
-      addHist(*dev.getSensor(*id), *dev.getSensor(*(id + 1)), sub);
-      addHist(*dev.getSensor(*id), *dev.getSensor(*(id + 2)), sub);
+  if (sensorIds.size() < 2)
+    throw std::runtime_error("Correlations: need at least two sensors");
+  if (neighbors < 1)
+    throw std::runtime_error("Correlations: need at least one neighbor");
+
+  // correlation between selected number of neighboring sensors
+  const size_t n = sensorIds.size();
+  for (size_t i = 0; i < n; ++i) {
+    for (size_t j = 1 + i; j < std::min(n, 1 + i + neighbors); ++j) {
+      const Mechanics::Sensor& sensor0 = *dev.getSensor(sensorIds[i]);
+      const Mechanics::Sensor& sensor1 = *dev.getSensor(sensorIds[j]);
+      addHist(sensor0, sensor1, sub);
     }
   }
 }
@@ -46,7 +50,7 @@ void Analyzers::Correlation::addHist(const Mechanics::Sensor& sensor0,
   auto makeCorr = [&](int axis) {
     std::string axisName = (axis == 0) ? "X" : "Y";
     std::string histName =
-        sensor1.name() + "-" + sensor0.name() + "-Correlation" + axisName;
+        sensor0.name() + "-" + sensor1.name() + "-Correlation" + axisName;
     std::string xlabel = sensor0.name() + " cluster " + axisName;
     std::string ylabel = sensor1.name() + " cluster " + axisName;
     auto range0 = sensor0.projectedEnvelopeXY().interval(axis);
@@ -59,9 +63,9 @@ void Analyzers::Correlation::addHist(const Mechanics::Sensor& sensor0,
   auto makeDiff = [&](int axis) {
     std::string axisName = (axis == 0) ? "X" : "Y";
     std::string histName =
-        sensor1.name() + "-" + sensor0.name() + "-Diff" + axisName;
+        sensor0.name() + "-" + sensor1.name() + "-Diff" + axisName;
     std::string xlabel =
-        sensor1.name() + " - " + sensor0.name() + " cluster " + axisName;
+        sensor0.name() + " - " + sensor1.name() + " cluster " + axisName;
     double length0 = sensor0.projectedEnvelopeXY().length(axis);
     double length1 = sensor1.projectedEnvelopeXY().length(axis);
     double maxDist = (length0 + length1) / 4;

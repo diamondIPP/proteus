@@ -22,10 +22,17 @@ namespace Analyzers {
 
 class Correlation : public SingleAnalyzer {
 public:
-  /** Consider pair-wise correlations between neighboring sensors. */
+  /** Consider pair-wise correlations between neighboring sensors.
+   *
+   * \param device     The telescope device.
+   * \param sensorIds  Correlations are calculate for these sensors in order.
+   * \param dir        Where to put the output histograms.
+   * \param neighbors  How many neighboring planes to consider; must be > 1.
+   */
   Correlation(const Mechanics::Device& device,
               const std::vector<Index>& sensorIds,
-              TDirectory* dir);
+              TDirectory* dir,
+              int neighbors = 2);
   /** Pair-wise correlations between all sensor sorted in z.
    *
    * \deprecated Use constructor w/ explicit sensors.
