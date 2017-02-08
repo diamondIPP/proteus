@@ -50,16 +50,11 @@ void Analyzers::Correlation::addHist(const Mechanics::Sensor& sensor0,
     std::string xlabel = sensor0.name() + " cluster " + axisName;
     std::string ylabel = sensor1.name() + " cluster " + axisName;
     auto range0 = sensor0.projectedEnvelopeXY().interval(axis);
-    auto pitch0 = sensor0.projectedPitchXY()[axis];
     auto range1 = sensor1.projectedEnvelopeXY().interval(axis);
-    auto pitch1 = sensor1.projectedPitchXY()[axis];
-    TH2D* h = new TH2D(histName.c_str(), "", range0.length() / pitch0,
-                       range0.min(), range0.max(), range1.length() / pitch1,
-                       range1.min(), range1.max());
-    h->SetXTitle(xlabel.c_str());
-    h->SetYTitle(ylabel.c_str());
-    h->SetDirectory(dir);
-    return h;
+    int bins0 = range0.length() / sensor0.projectedPitchXY()[axis];
+    int bins1 = range1.length() / sensor1.projectedPitchXY()[axis];
+    return makeH2(dir, histName, {range0, bins0, xlabel},
+                  {range1, bins1, ylabel});
   };
   auto makeDiff = [&](int axis) {
     std::string axisName = (axis == 0) ? "X" : "Y";
@@ -67,17 +62,13 @@ void Analyzers::Correlation::addHist(const Mechanics::Sensor& sensor0,
         sensor1.name() + "-" + sensor0.name() + "-Diff" + axisName;
     std::string xlabel =
         sensor1.name() + " - " + sensor0.name() + " cluster " + axisName;
-    auto range0 = sensor0.projectedEnvelopeXY().interval(axis);
-    auto pitch0 = sensor0.projectedPitchXY()[axis];
-    auto range1 = sensor1.projectedEnvelopeXY().interval(axis);
-    auto pitch1 = sensor1.projectedPitchXY()[axis];
-    auto pitch = std::min(pitch0, pitch1);
-    auto length = range0.length() + range1.length();
-    TH1D* h =
-        new TH1D(histName.c_str(), "", length / pitch, -length / 2, length / 2);
-    h->SetXTitle(xlabel.c_str());
-    h->SetDirectory(dir);
-    return h;
+    double length0 = sensor0.projectedEnvelopeXY().length(axis);
+    double length1 = sensor1.projectedEnvelopeXY().length(axis);
+    double maxDist = (length0 + length1) / 4;
+    double pitch0 = sensor0.projectedPitchXY()[axis];
+    double pitch1 = sensor1.projectedPitchXY()[axis];
+    int bins = 2 * maxDist / std::min(pitch0, pitch1);
+    return makeH1(dir, histName, {-maxDist, maxDist, bins, xlabel});
   };
 
   Hists hist;
