@@ -12,6 +12,7 @@ User-visible changes
 
 *   Print only errors by default and add ``--verbose`` and ``--debug``
     command line flags to most tools to increase verbosity.
+*   Add ``--no-progress`` command line flag to disable the progress bar.
 
 Internal changes
 ----------------
