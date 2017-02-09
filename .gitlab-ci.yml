@@ -43,8 +43,8 @@ run000875_noisescan:
     - source build/activate.sh
     - cd test
     - ./download_data.py
-    - ./run_tel_noisescan.sh 875 -n 100000
-    - ./run_dut0_noisescan.sh 875 -n 100000
+    - ./run_tel_noisescan.sh 875 -n 100000 --no-progress
+    - ./run_dut0_noisescan.sh 875 -n 100000 --no-progress
 
 run000875_align:
   stage: test
@@ -52,7 +52,7 @@ run000875_align:
     - source build/activate.sh
     - cd test
     - ./download_data.py
-    - ./run_tel_align.sh 875 -n 100000
+    - ./run_tel_align.sh 875 -n 100000 --no-progress
 
 run000875_analysis:
   stage: test
@@ -60,8 +60,8 @@ run000875_analysis:
     - source build/activate.sh
     - cd test
     - ./download_data.py
-    - ./run_track.sh 875 -n 100000
-    - ./run_match.sh 875
+    - ./run_track.sh 875 -n 100000 --no-progress
+    - ./run_match.sh 875 --no-progress
 
 run001066_noisescan:
   stage: test
@@ -69,8 +69,8 @@ run001066_noisescan:
     - source build/activate.sh
     - cd test
     - ./download_data.py
-    - ./run_tel_noisescan.sh 1066
-    - ./run_dut0_noisescan.sh 1066
+    - ./run_tel_noisescan.sh 1066 --no-progress
+    - ./run_dut0_noisescan.sh 1066 --no-progress
 
 run001066_align:
   stage: test
@@ -78,8 +78,8 @@ run001066_align:
     - source build/activate.sh
     - cd test
     - ./download_data.py
-    - ./run_tel_align.sh 1066
-    - ./run_dut_align.sh 1066
+    - ./run_tel_align.sh 1066 --no-progress
+    - ./run_dut_align.sh 1066 --no-progress
 
 run001066_analysis:
   stage: test
@@ -87,5 +87,5 @@ run001066_analysis:
     - source build/activate.sh
     - cd test
     - ./download_data.py
-    - ./run_track.sh 1066
-    - ./run_match.sh 1066
+    - ./run_track.sh 1066 --no-progress
+    - ./run_match.sh 1066 --no-progress
