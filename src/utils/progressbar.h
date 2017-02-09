@@ -15,16 +15,14 @@ namespace Utils {
 /** Display an updatable progress bar on a single output line */
 class ProgressBar {
 public:
-  /** Initialize progress bar and display empty progress.
-   *
+  /**
    * \param lineLength  Total length of the output line
    */
   ProgressBar(int lineLength = 79)
       : m_os(std::cout)
-      , m_curr(0)
+      , m_curr(-1)
       , m_max((lineLength < 9) ? 0 : (lineLength - 9))
   {
-    display();
   }
   /** Update the progress bar if necessary. Fraction must be in [0,1]. */
   void update(float fraction)

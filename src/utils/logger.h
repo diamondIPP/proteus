@@ -126,10 +126,10 @@ private:
   }                                                                            \
   }
 
-/* Convenience macros to log a message use the logger.
+/* Convenience macros to log a message via the logger.
  *
  * The macros should be used to log a single message. The message **must not**
- * end in a newline.
+ * end in a newline. The `DEBUG(...)` macros is a noop in non-debug builds.
  *
  * These macros expect a `logger()` function to be available that
  * returns a reference to a `Logger` object. This can be either defined
@@ -144,10 +144,14 @@ private:
   do {                                                                         \
     logger().info(__VA_ARGS__, '\n');                                          \
   } while (false)
+#ifdef NDEBUG
+#define DEBUG(...) ((void)0)
+#else
 #define DEBUG(...)                                                             \
   do {                                                                         \
     logger().debug(__VA_ARGS__, " (", __FUNCTION__, ':', __LINE__, ")\n");     \
   } while (false)
+#endif
 
 /** Write the error message w/ the logger and quit the application. */
 #define FAIL(...)                                                              \

@@ -14,17 +14,48 @@ PT_SETUP_GLOBAL_LOGGER
 Utils::Arguments::Arguments(std::string description)
     : m_description(std::move(description))
 {
+  addFlag('h', "help", "print this help text");
 }
 
-void Utils::Arguments::addOption(char key, std::string name, std::string help)
+void Utils::Arguments::addFlag(char key, std::string name, std::string help)
 {
-  m_options.emplace_back(
-      Option{std::move(name), std::move(help), std::string(), key});
+  Option opt;
+  opt.abbreviation = key;
+  opt.name = std::move(name);
+  opt.help = std::move(help);
+  opt.type = OptionType::kFlag;
+  m_options.emplace_back(std::move(opt));
 }
 
-void Utils::Arguments::addRequiredArgument(std::string name, std::string help)
+void Utils::Arguments::addOptional(char key, std::string name, std::string help)
 {
-  m_required.emplace_back(Position{std::move(name), std::move(help)});
+  Option opt;
+  opt.abbreviation = key;
+  opt.name = std::move(name);
+  opt.help = std::move(help);
+  opt.type = OptionType::kSingle;
+  m_options.emplace_back(std::move(opt));
+}
+
+void Utils::Arguments::addRequired(std::string name, std::string help)
+{
+  Required req;
+  req.name = std::move(name);
+  req.help = std::move(help);
+  m_requireds.emplace_back(std::move(req));
+}
+
+std::string Utils::Arguments::Option::description() const
+{
+  std::string desc;
+  if (this->abbreviation != kNoAbbr) {
+    desc += '-';
+    desc += this->abbreviation;
+    desc += ',';
+  }
+  desc += "--";
+  desc += this->name;
+  return desc;
 }
 
 void Utils::Arguments::printHelp(const std::string& arg0) const
@@ -33,97 +64,116 @@ void Utils::Arguments::printHelp(const std::string& arg0) const
 
   std::string name(arg0.substr(arg0.find_last_of('/') + 1));
 
-  cerr << "usage: " << name << " [OPTIONS]";
-  for (auto pos = m_required.begin(); pos != m_required.end(); ++pos)
-    cerr << ' ' << pos->name;
-  cerr << "\n\n" << m_description << "\n\n";
-  cerr << "arguments:\n";
-  for (auto pos = m_required.begin(); pos != m_required.end(); ++pos) {
-    cerr << "  " << std::left << std::setw(20) << pos->name << pos->help
-         << '\n';
+  cerr << "usage: " << name << " [options]";
+  for (const auto& req : m_requireds) {
+    cerr << " " << req.name;
+  }
+  cerr << "\n\n";
+  cerr << m_description << "\n";
+  cerr << "\n";
+  cerr << "required:\n";
+  for (const auto& req : m_requireds) {
+    cerr << "  " << std::left << std::setw(17) << req.name;
+    cerr << " " << req.help << "\n";
   }
   cerr << "options:\n";
-  for (auto opt = m_options.begin(); opt != m_options.end(); ++opt) {
-    std::string desc;
-    if (opt->abbreviation != 0) {
-      desc += '-';
-      desc += opt->abbreviation;
-      desc += ',';
+  for (const auto& opt : m_options) {
+    cerr << "  " << std::left << std::setw(17) << opt.description();
+    cerr << " " << opt.help;
+    if (!opt.defaultValue.empty()) {
+      cerr << " (default=" << opt.defaultValue << ")";
     }
-    desc += "--";
-    desc += opt->name;
-    cerr << "  " << std::left << std::setw(20) << desc << opt->help;
-    if (!opt->value.empty()) {
-      cerr << " (default=" << opt->value << ')';
-    }
-    cerr << '\n';
+    cerr << "\n";
   }
   cerr.flush();
 }
 
+// always return true to indicate error
+static inline bool args_fail(const std::string& msg)
+{
+  std::cerr << msg;
+  std::cerr << "\ntry --help for more information" << std::endl;
+  return true;
+}
+
 bool Utils::Arguments::parse(int argc, char const* argv[])
 {
-  if (static_cast<std::size_t>(argc) < (m_required.size() + 1)) {
+  size_t numArgs = 0;
+
+  for (int i = 1; i < argc; ++i) {
+    std::string arg(argv[i]);
+
+    if (arg.find("-") == 0) {
+      DEBUG("arg ", i, " optional ", arg);
+
+      // search for compatible long or short option
+      const Option* opt = nullptr;
+      if (arg.find("--") == 0) {
+        opt = find(arg.substr(2));
+      } else {
+        opt = find(arg[1]);
+      }
+      if (!opt)
+        return args_fail("unknown option '" + arg + "'");
+
+      // options must only be set once
+      if (m_values.count(opt->name) == 1)
+        return args_fail("duplicate option '" + arg + "'");
+
+      // process depending on option type
+      if (opt->type == OptionType::kSingle) {
+          if (argc <= (i + 1))
+            return args_fail("option '" + arg + "' requires a parameter");
+          m_values[opt->name] = argv[++i];
+      } else /* OptionType::kFlag */ {
+          m_values[opt->name] = "true";
+      }
+
+    } else {
+      DEBUG("arg ", i, " required ", arg);
+
+      if (m_requireds.size() < (numArgs + 1))
+        return args_fail("too many arguments");
+      m_values[m_requireds[numArgs].name] = arg;
+      numArgs += 1;
+    }
+  }
+
+  if (has("help")) {
     printHelp(argv[0]);
     return true;
   }
 
-  // separated optional flags and positional arguments
-  m_args.clear();
-  for (int i = 1; i < argc; ++i) {
-    std::string arg(argv[i]);
+  if (numArgs < m_requireds.size())
+    return args_fail("not enough arguments");
 
-    if ((arg.find("--") == 0) && (2 < arg.size())) {
-      // long optional argument
-      DEBUG("long option: ", arg, ' ', argv[i + 1]);
-      Option* opt = find(arg.substr(2), 0);
-      if (!opt) {
-        std::cerr << "unknown long option: '" << arg << "'\n";
-        return true;
-      }
-      if ((i + 1) < argc)
-        opt->value = argv[++i];
-    } else if ((arg.find("-") == 0) && (1 < arg.size())) {
-      DEBUG("short option: ", arg, ' ', argv[i + 1]);
-      // short optional argument
-      Option* opt = find("", arg[1]);
-      if (!opt) {
-        std::cerr << "unknown short option: '" << arg << "'\n";
-        return true;
-      }
-      if ((i + 1) < argc)
-        opt->value = argv[++i];
-    } else {
-      DEBUG("positional argument: ", arg);
-      // positional argument
-      m_args.emplace_back(std::move(arg));
+  // add missing default values for optional argument
+  for (const auto& opt : m_options) {
+    if (!opt.defaultValue.empty() && (m_values.count(opt.name) == 0)) {
+      m_values[opt.name] = opt.defaultValue;
     }
   }
-
-  if (m_args.size() < m_required.size()) {
-    std::cerr << "not enough arguments: " << m_args.size() << " < "
-              << m_required.size() << "\n";
-    return true;
-  }
+  // debug list of available values
+  for (const auto& val : m_values)
+    DEBUG(val.first, ": ", val.second);
   return false;
 }
 
-Utils::Arguments::Option* Utils::Arguments::find(const std::string& name,
-                                                 char abbreviation)
+const Utils::Arguments::Option*
+Utils::Arguments::find(const std::string& name) const
 {
-  for (auto opt = m_options.begin(); opt != m_options.end(); ++opt) {
-    if ((opt->name == name) || (opt->abbreviation == abbreviation))
-      return &(*opt);
+  for (const auto& opt : m_options) {
+    if (opt.name == name)
+      return &opt;
   }
   return NULL;
 }
 
-const Utils::Arguments::Option* Utils::Arguments::find(const std::string& name,
-                                                       char abbreviation) const
+const Utils::Arguments::Option* Utils::Arguments::find(char abbreviation) const
 {
-  for (auto opt = m_options.begin(); opt != m_options.end(); ++opt) {
-    if ((opt->name == name) || (opt->abbreviation == abbreviation))
-      return &(*opt);
+  for (const auto& opt : m_options) {
+    if ((opt.abbreviation != kNoAbbr) && (opt.abbreviation == abbreviation))
+      return &opt;
   }
   return NULL;
 }

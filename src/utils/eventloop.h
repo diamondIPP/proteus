@@ -39,6 +39,7 @@ public:
             uint64_t numEvents = -1);
   ~EventLoop();
 
+  void enableProgressBar();
   void setOutput(Storage::StorageIO* output);
 
   void addProcessor(std::shared_ptr<Processors::Processor> processor);
@@ -56,6 +57,7 @@ private:
   Storage::StorageIO* m_input;
   Storage::StorageIO* m_output;
   uint64_t m_startEvent, m_endEvent;
+  bool m_showProgress;
   std::vector<std::shared_ptr<Processors::Processor>> m_processors;
   std::vector<std::shared_ptr<Analyzers::Analyzer>> m_analyzers;
 };

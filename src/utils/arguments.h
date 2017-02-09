@@ -8,7 +8,7 @@
 #define PT_ARGUMENTS_H
 
 #include <cstdint>
-#include <ostream>
+#include <map>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -21,83 +21,91 @@ class Arguments {
 public:
   Arguments(std::string description);
 
-  /** Add an optional command line argument. */
-  void addOption(char key, std::string name, std::string help);
-  /** Add an optional command line argument with a default value. */
+  /** Add an optional boolean flag. */
+  void addFlag(char key, std::string name, std::string help);
+  /** Add an optional command line flag. */
+  void addOptional(char key, std::string name, std::string help);
+  /** Add an optional command line flag with a default value. */
   template <typename T>
-  void addOption(char key, std::string name, std::string help, T value);
-  /** Add a required positional command line argument. */
-  void addRequiredArgument(std::string name, std::string help = std::string());
+  void addOptional(char key, std::string name, std::string help, T value);
+  /** Add a required command line argument. */
+  void addRequired(std::string name, std::string help = std::string());
 
   /** Parse command lines and return true on error. */
   bool parse(int argc, char const* argv[]);
 
-  /** Access an optional argument and convert it to the requested type. */
+  /** Check if a given argument exists. */
+  bool has(const std::string& name) const;
+  /** Return argument value. */
+  const std::string& get(const std::string& name) const;
+  /** Return argument value with automatic conversion to selected type. */
   template <typename T>
-  T option(const std::string& name) const;
-  /** Access the i-th argument and convert it to the request type. */
-  template <typename T>
-  T argument(std::size_t idx) const;
+  T get(const std::string& name) const;
 
 private:
+  static constexpr char kNoAbbr = '\0';
+
+  enum class OptionType { kFlag, kSingle };
   struct Option {
-    const std::string name;
-    const std::string help;
-    std::string value;
-    const char abbreviation;
+    std::string name;
+    std::string help;
+    std::string defaultValue = std::string();
+    char abbreviation = kNoAbbr;
+    OptionType type = OptionType::kSingle;
+
+    std::string description() const;
   };
-  struct Position {
-    const std::string name;
-    const std::string help;
+  struct Required {
+    std::string name;
+    std::string help;
   };
 
   void printHelp(const std::string& arg0) const;
-  Option* find(const std::string& name, char abbreviation);
-  const Option* find(const std::string& name, char abbreviation) const;
+  const Option* find(const std::string& name) const;
+  const Option* find(char abbreviation) const;
 
   const std::string m_description;
   std::vector<Option> m_options;
-  std::vector<Position> m_required;
-  std::vector<std::string> m_args;
+  std::vector<Required> m_requireds;
+  std::map<std::string, std::string> m_values;
 };
 
 } // namespace Utils
 
 template <typename T>
-inline void Utils::Arguments::addOption(char key,
-                                        std::string name,
-                                        std::string help,
-                                        T value)
+inline void Utils::Arguments::addOptional(char key,
+                                          std::string name,
+                                          std::string help,
+                                          T value)
 {
   // value is always stored as string
   std::ostringstream sval;
   sval << value;
-  Option opt = {std::move(name), std::move(help), sval.str(), key};
+  Option opt;
+  opt.abbreviation = key;
+  opt.name = std::move(name);
+  opt.help = std::move(help);
+  opt.defaultValue = sval.str();
   m_options.push_back(std::move(opt));
 }
 
-template <typename T>
-inline T Utils::Arguments::option(const std::string& name) const
+inline bool Utils::Arguments::has(const std::string& name) const
 {
-  const Option* opt = find(name, 0);
-  if (!opt) {
-    throw std::runtime_error("Arguments: option '" + name +
-                             "' does not exists");
-  }
-  T ret;
-  std::istringstream(opt->value) >> ret;
-  return ret;
+  return (m_values.count(name) == 1);
+}
+
+inline const std::string& Utils::Arguments::get(const std::string& name) const
+{
+  return m_values.at(name);
 }
 
 template <typename T>
-inline T Utils::Arguments::argument(std::size_t idx) const
+inline T Utils::Arguments::get(const std::string& name) const
 {
-  if (m_args.size() <= idx) {
-    throw std::runtime_error("Arguments: argument " + std::to_string(idx) +
-                             "does not exists");
-  }
+  if (!has(name))
+    throw std::runtime_error("Arguments: unknown argument '" + name + "'");
   T ret;
-  std::istringstream(m_args[idx]) >> ret;
+  std::istringstream(m_values.at(name)) >> ret;
   return ret;
 }
 

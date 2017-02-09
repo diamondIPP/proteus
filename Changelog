@@ -1,10 +1,31 @@
 .. -*-rst-*-
 
+=========
 Changelog
 =========
 
+v1.1.0 (to be released)
+=======================
+
+User-visible changes
+--------------------
+
+*   Print only errors by default and add ``--verbose`` and ``--debug``
+    command line flags to most tools to increase verbosity.
+*   Add ``--no-progress`` command line flag to disable the progress bar.
+
+Internal changes
+----------------
+
+*   Clean up arguments parser and print ``DEBUG(...)`` messages only in
+    debug builds.
+
+Bug fixes
+---------
+
+
 v1.0.0 (2017-02-07)
--------------------
+===================
 
 This is the first version after a major refactoring. The basic design has not
 changed much, but the internal structure and the user interface has undergone
@@ -18,7 +39,7 @@ the MIT License and the documentation is released under the terms of
 the Creative Commons Attribution 4.0 International Public License.
 
 User-visible changes
-^^^^^^^^^^^^^^^^^^^^
+--------------------
 
 *   The software requires a C++11 compatible compiler and uses the
     `CMake <https://cmake.org>`_ build system.
@@ -52,7 +73,7 @@ User-visible changes
     is ignored.
 
 Internal changes
-^^^^^^^^^^^^^^^^
+----------------
 
 *   All tools are now based on a generic event loop with configurable
     algorithms.
@@ -81,7 +102,7 @@ Internal changes
     runs example analyses on a regular basis.
 
 Changes before v1.0.0
----------------------
+=====================
 
 2016-03-06 B. Ristic <bristic@cern.ch>
 
