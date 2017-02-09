@@ -18,13 +18,16 @@ namespace Utils {
 template <typename T>
 std::ostream& operator<<(std::ostream& os, const std::vector<T>& things)
 {
-  auto it = things.begin();
-  auto end = things.end();
+  bool first = true;
   os << '[';
-  if (it != end)
-    os << *it;
-  for (++it; it != end; ++it)
-    os << ", " << *it;
+  for (const auto& t : things) {
+    if (first) {
+      first = false;
+    } else {
+      os << ", ";
+    }
+    os << t;
+  }
   os << ']';
   return os;
 }
