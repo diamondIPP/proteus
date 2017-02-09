@@ -189,7 +189,6 @@ int main(int argc, char const* argv[])
           dev, sensorIds, searchSigmaMax, sensorIds.size(), redChi2Max));
       loop.addAnalyzer(std::make_shared<TrackInfo>(&dev, stepDir));
       loop.addAnalyzer(std::make_shared<Residuals>(&dev, stepDir));
-      loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(dev, stepDir));
       aligner =
           std::make_shared<ResidualsAligner>(dev, alignIds, stepDir, damping);
     }
