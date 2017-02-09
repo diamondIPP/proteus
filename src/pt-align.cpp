@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <iterator>
 #include <numeric>
 
 #include <TFile.h>
@@ -146,6 +148,28 @@ int main(int argc, char const* argv[])
   auto redChi2Max = app.config().get<double>("reduced_chi2_max");
   auto damping = app.config().get<double>("damping");
 
+  // check sensor selection
+  std::vector<Index> sortedSensorIds = sortedByZ(app.device(), sensorIds);
+  std::vector<Index> sortedAlignIds = sortedByZ(app.device(), alignIds);
+  std::vector<Index> fixedSensorIds;
+  // all sensors not in the align set are kept fixed
+  std::set_difference(sortedSensorIds.begin(), sortedSensorIds.end(),
+                      sortedAlignIds.begin(), sortedAlignIds.end(),
+                      std::back_inserter(fixedSensorIds),
+                      Mechanics::CompareSensorIdZ{app.device()});
+  INFO("fixed sensors: ", fixedSensorIds);
+  INFO("align sensors: ", sortedAlignIds);
+  if (!std::includes(sortedSensorIds.begin(), sortedSensorIds.end(),
+                     sortedAlignIds.begin(), sortedAlignIds.end(),
+                     Mechanics::CompareSensorIdZ{app.device()})) {
+    ERROR("set of align sensor is not a subset of the input sensor set");
+    return EXIT_FAILURE;
+  }
+  if (fixedSensorIds.empty()) {
+    ERROR("no fixed sensors are given");
+    return EXIT_FAILURE;
+  }
+
   // output
   TFile hists(app.outputPath("hists.root").c_str(), "RECREATE");
   StepsGraphs steps;
@@ -163,19 +187,17 @@ int main(int argc, char const* argv[])
     setupHitMappers(dev, loop);
     setupClusterizers(dev, loop);
     loop.addProcessor(std::make_shared<ApplyGeometry>(dev));
+
     // setup aligment method specific loop logic
     std::shared_ptr<Aligner> aligner;
     if (method == Method::Correlations) {
       // coarse method w/o tracks using only cluster correlations
-
-      auto corr = std::make_shared<Correlation>(dev, sensorIds, stepDir);
-      aligner = std::make_shared<CorrelationsAligner>(dev, alignIds, corr);
-      loop.addAnalyzer(corr);
-      loop.addAnalyzer(aligner);
+      // use the first sensor that is not in the align set as reference
+      aligner = std::make_shared<CorrelationsAligner>(
+          dev, fixedSensorIds.front(), alignIds, stepDir);
 
     } else if (method == Method::Residuals) {
       // use (unbiased) track residuals to align
-
       loop.addProcessor(std::make_shared<TrackFinder>(
           dev, sensorIds, searchSigmaMax, sensorIds.size(), redChi2Max));
       loop.addAnalyzer(std::make_shared<TrackInfo>(&dev, stepDir));
@@ -183,8 +205,8 @@ int main(int argc, char const* argv[])
       loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(dev, stepDir));
       aligner =
           std::make_shared<ResidualsAligner>(dev, alignIds, stepDir, damping);
-      loop.addAnalyzer(aligner);
     }
+    loop.addAnalyzer(aligner);
     loop.run();
 
     Mechanics::Geometry newGeo = aligner->updatedGeometry();
