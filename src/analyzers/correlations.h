@@ -20,7 +20,7 @@ class Sensor;
 
 namespace Analyzers {
 
-class Correlation : public SingleAnalyzer {
+class Correlations : public SingleAnalyzer {
 public:
   /** Consider pair-wise correlations between neighboring sensors.
    *
@@ -29,7 +29,7 @@ public:
    * \param dir        Where to put the output histograms.
    * \param neighbors  How many neighboring planes to consider; must be > 1.
    */
-  Correlation(const Mechanics::Device& device,
+  Correlations(const Mechanics::Device& device,
               const std::vector<Index>& sensorIds,
               TDirectory* dir,
               int neighbors = 2);
@@ -37,7 +37,7 @@ public:
    *
    * \deprecated Use constructor w/ explicit sensors.
    */
-  Correlation(const Mechanics::Device* device,
+  Correlations(const Mechanics::Device* device,
               TDirectory* dir,
               const char* suffix = "");
 

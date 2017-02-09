@@ -1,4 +1,4 @@
-#include "correlation.h"
+#include "correlations.h"
 
 #include <cassert>
 #include <cmath>
@@ -9,7 +9,7 @@
 #include "storage/event.h"
 #include "utils/root.h"
 
-Analyzers::Correlation::Correlation(const Mechanics::Device& dev,
+Analyzers::Correlations::Correlations(const Mechanics::Device& dev,
                                     const std::vector<Index>& sensorIds,
                                     TDirectory* dir,
                                     int neighbors)
@@ -33,15 +33,15 @@ Analyzers::Correlation::Correlation(const Mechanics::Device& dev,
   }
 }
 
-Analyzers::Correlation::Correlation(const Mechanics::Device* device,
+Analyzers::Correlations::Correlations(const Mechanics::Device* device,
                                     TDirectory* dir,
                                     const char* /* unused */)
-    : Correlation(*device, sortedByZ(*device, device->sensorIds()), dir)
+    : Correlations(*device, sortedByZ(*device, device->sensorIds()), dir)
 {
   assert(device && "Analyzer: can't initialize with null device");
 }
 
-void Analyzers::Correlation::addHist(const Mechanics::Sensor& sensor0,
+void Analyzers::Correlations::addHist(const Mechanics::Sensor& sensor0,
                                      const Mechanics::Sensor& sensor1,
                                      TDirectory* dir)
 {
@@ -83,7 +83,7 @@ void Analyzers::Correlation::addHist(const Mechanics::Sensor& sensor0,
   m_hists[std::make_pair(sensor0.id(), sensor1.id())] = hist;
 }
 
-void Analyzers::Correlation::processEvent(const Storage::Event* event)
+void Analyzers::Correlations::processEvent(const Storage::Event* event)
 {
   assert(event && "Analyzer: can't process null events");
 
@@ -121,26 +121,26 @@ void Analyzers::Correlation::processEvent(const Storage::Event* event)
   }
 }
 
-void Analyzers::Correlation::postProcessing() {}
+void Analyzers::Correlations::postProcessing() {}
 
-TH1D* Analyzers::Correlation::getHistDiffX(Index sensorId0,
+TH1D* Analyzers::Correlations::getHistDiffX(Index sensorId0,
                                            Index sensorId1) const
 {
   return m_hists.at(std::make_pair(sensorId0, sensorId1)).diffX;
 }
 
-TH1D* Analyzers::Correlation::getHistDiffY(Index sensorId0,
+TH1D* Analyzers::Correlations::getHistDiffY(Index sensorId0,
                                            Index sensorId1) const
 {
   return m_hists.at(std::make_pair(sensorId0, sensorId1)).diffY;
 }
 
-TH1D* Analyzers::Correlation::getAlignmentPlotX(Index sensorId) const
+TH1D* Analyzers::Correlations::getAlignmentPlotX(Index sensorId) const
 {
   return getHistDiffX(sensorId - 1, sensorId);
 }
 
-TH1D* Analyzers::Correlation::getAlignmentPlotY(Index sensorId) const
+TH1D* Analyzers::Correlations::getAlignmentPlotY(Index sensorId) const
 {
   return getHistDiffY(sensorId - 1, sensorId);
 }

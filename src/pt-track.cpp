@@ -7,7 +7,7 @@
 #include <TTree.h>
 
 #include "analyzers/clusterinfo.h"
-#include "analyzers/correlation.h"
+#include "analyzers/correlations.h"
 #include "analyzers/eventinfo.h"
 #include "analyzers/hitinfo.h"
 #include "analyzers/occupancy.h"
@@ -59,7 +59,7 @@ int main(int argc, char const* argv[])
   loop.addAnalyzer(std::make_shared<ClusterInfo>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<TrackInfo>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<Occupancy>(&app.device(), &hists));
-  loop.addAnalyzer(std::make_shared<Correlation>(&app.device(), &hists));
+  loop.addAnalyzer(std::make_shared<Correlations>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<Residuals>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(app.device(), &hists));
   loop.run();

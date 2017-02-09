@@ -17,7 +17,7 @@ namespace Analyzers {
   class BaseAnalyzer;
   class SingleAnalyzer;
   class DualAnalyzer;
-  class Correlation;
+  class Correlations;
   class DutCorrelation;
   class Efficiency;
   class HitInfo;

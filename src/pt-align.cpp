@@ -8,7 +8,7 @@
 
 #include "alignment/correlationsaligner.h"
 #include "alignment/residualsaligner.h"
-#include "analyzers/correlation.h"
+#include "analyzers/correlations.h"
 #include "analyzers/residuals.h"
 #include "analyzers/trackinfo.h"
 #include "application.h"

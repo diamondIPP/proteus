@@ -9,7 +9,7 @@
 class TDirectory;
 
 namespace Analyzers {
-class Correlation;
+class Correlations;
 }
 namespace Mechanics {
 class Device;
@@ -46,7 +46,7 @@ public:
 private:
   const Mechanics::Device& m_device;
   std::vector<Index> m_sensorIds;
-  std::unique_ptr<Analyzers::Correlation> m_corr;
+  std::unique_ptr<Analyzers::Correlations> m_corr;
 };
 
 } // namespace Alignment

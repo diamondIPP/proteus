@@ -13,7 +13,7 @@
 #include "dualanalyzer.h"
 #include "dutdepiction.h"
 #include "depiction.h"
-#include "correlation.h"
+#include "correlations.h"
 #include "dutcorrelation.h"
 #include "efficiency.h"
 #include "hitinfo.h"
@@ -355,7 +355,7 @@ void Analyzers::configCorrelation(const ConfigParser& config,
     if (row->isHeader && !row->header.compare("End Correlation"))
     {
       if (!active) return;
-      Correlation* analyzer =  new Correlation(refDevice, results->GetDirectory(""), suffix.c_str());
+      Correlations* analyzer =  new Correlations(refDevice, results->GetDirectory(""), suffix.c_str());
       analyzer->setAnalyzerName("Correlation");
       looper->addAnalyzer(analyzer);
       applyCuts(analyzer, eventCuts, trackCuts, clusterCuts, hitCuts);

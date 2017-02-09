@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "analyzers/correlation.h"
+#include "analyzers/correlations.h"
 #include "mechanics/device.h"
 #include "utils/logger.h"
 
@@ -26,7 +26,7 @@ Alignment::CorrelationsAligner::CorrelationsAligner(
   std::sort(m_sensorIds.begin() + 1, m_sensorIds.end(),
             Mechanics::CompareSensorIdZ{device});
   // we only need correlations between direct neighbors
-  m_corr.reset(new Analyzers::Correlation(device, m_sensorIds, dir, 1));
+  m_corr.reset(new Analyzers::Correlations(device, m_sensorIds, dir, 1));
 }
 
 std::string Alignment::CorrelationsAligner::name() const
