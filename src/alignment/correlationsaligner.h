@@ -6,6 +6,8 @@
 
 #include "aligner.h"
 
+class TDirectory;
+
 namespace Analyzers {
 class Correlation;
 }
@@ -15,15 +17,25 @@ class Device;
 
 namespace Alignment {
 
-/** Align sensors in the xy-plane using cluster correlations.
+/** Align sensors in the xy-plane using only cluster correlations.
  *
- * This assumes a straight track propagation without a slope along the z-axis.
+ * This implictely assumes a straight track propagation with zero slope along
+ * the z-axis.
  */
 class CorrelationsAligner : public Aligner {
 public:
+  /**
+   * \param device    The telescope device.
+   * \param fixedId   Reference sensor that will be kept fixed.
+   * \param alignIds  Sensors that should be aligned; must not contain fixedId.
+   * \param dir       Histogram output directory.
+   *
+   * \warning This will add a `Correlations`-analyzer internally.
+   */
   CorrelationsAligner(const Mechanics::Device& device,
+                      const Index fixedId,
                       const std::vector<Index>& alignIds,
-                      std::shared_ptr<const Analyzers::Correlation> corr);
+                      TDirectory* dir);
 
   std::string name() const;
   void analyze(const Storage::Event& event);
@@ -33,8 +45,8 @@ public:
 
 private:
   const Mechanics::Device& m_device;
-  std::vector<Index> m_alignIds;
-  std::shared_ptr<const Analyzers::Correlation> m_corr;
+  std::vector<Index> m_sensorIds;
+  std::unique_ptr<Analyzers::Correlation> m_corr;
 };
 
 } // namespace Alignment
