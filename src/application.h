@@ -64,6 +64,7 @@ private:
   std::string m_outputPrefix;
   uint64_t m_skipEvents;
   uint64_t m_numEvents;
+  bool m_showProgress;
 };
 
 #endif // PT_APPLICATION_H

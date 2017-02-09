@@ -18,7 +18,10 @@ PT_SETUP_LOCAL_LOGGER(Application)
 Application::Application(const std::string& name,
                          const std::string& description,
                          const toml::Table& defaults)
-    : m_name(name), m_desc(description), m_cfg(defaults)
+    : m_name(name)
+    , m_desc(description)
+    , m_cfg(defaults)
+    , m_showProgress(false)
 {
 }
 
@@ -35,6 +38,7 @@ void Application::initialize(int argc, char const* argv[])
   args.addOptional('n', "num_events", "number of events to process", -1);
   args.addFlag('v', "verbose", "print more information");
   args.addFlag('\0', "debug", "print even more information");
+  args.addFlag('\0', "no-progress", "do not show a progress bar");
   args.addRequired("input", "path to the input file");
   args.addRequired("output_prefix", "output path prefix");
 
@@ -50,6 +54,9 @@ void Application::initialize(int argc, char const* argv[])
   } else {
     Utils::Logger::setGlobalLevel(Utils::Logger::Level::Error);
   }
+
+  if (!args.has("no-progress"))
+    m_showProgress = true;
 
   // define configuration section
   std::string section = m_name;
@@ -86,5 +93,8 @@ std::string Application::outputPath(const std::string& name) const
 
 Utils::EventLoop Application::makeEventLoop() const
 {
-  return Utils::EventLoop(m_input.get(), m_skipEvents, m_numEvents);
+  Utils::EventLoop loop(m_input.get(), m_skipEvents, m_numEvents);
+  if (m_showProgress)
+    loop.enableProgressBar();
+  return loop;
 }
