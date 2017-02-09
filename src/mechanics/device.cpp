@@ -368,17 +368,10 @@ void Mechanics::Device::print(std::ostream& os, const std::string& prefix) const
   os.flush();
 }
 
-void Mechanics::sortByZ(const Device& dev, std::vector<Index>& sensorIds)
-{
-  std::sort(sensorIds.begin(), sensorIds.end(), [&](Index a, Index b) {
-    return (dev.getSensor(a)->origin().z() < dev.getSensor(b)->origin().z());
-  });
-}
-
-std::vector<Index> Mechanics::sortedByZ(const Device& dev,
+std::vector<Index> Mechanics::sortedByZ(const Device& device,
                                         const std::vector<Index>& sensorIds)
 {
   std::vector<Index> sorted(std::begin(sensorIds), std::end(sensorIds));
-  sortByZ(dev, sorted);
+  std::sort(sorted.begin(), sorted.end(), CompareSensorIdZ{device});
   return sorted;
 }
