@@ -10,6 +10,10 @@ v1.1.0 (to be released)
 User-visible changes
 --------------------
 
+*   Correlations are calculated according to the ordering of the
+    sensors along the z-axis.
+*   ``pt-align`` uses the absolute geometry parameters instead of the
+    corrections in the alignment convergence plots.
 *   Print only errors by default and add ``--verbose`` and ``--debug``
     command line flags to most tools to increase verbosity.
 *   Add ``--no-progress`` command line flag to disable the progress bar.
