@@ -21,7 +21,10 @@ PT_SETUP_LOCAL_LOGGER(EventLoop)
 Utils::EventLoop::EventLoop(Storage::StorageIO* input,
                             uint64_t startEvent,
                             uint64_t numEvents)
-    : m_input(input), m_output(NULL), m_startEvent(startEvent)
+    : m_input(input)
+    , m_output(NULL)
+    , m_startEvent(startEvent)
+    , m_showProgress(false)
 {
   assert(input && "input storage is NULL");
 
@@ -39,6 +42,8 @@ Utils::EventLoop::EventLoop(Storage::StorageIO* input,
 }
 
 Utils::EventLoop::~EventLoop() {}
+
+void Utils::EventLoop::enableProgressBar() { m_showProgress = true; }
 
 void Utils::EventLoop::setOutput(Storage::StorageIO* output)
 {
@@ -106,6 +111,8 @@ void Utils::EventLoop::run()
   }
 
   Utils::ProgressBar progress;
+  if (m_showProgress)
+    progress.update(0);
   Time startWall = Clock::now();
   for (uint64_t ievent = m_startEvent; ievent <= m_endEvent; ievent++) {
     {
@@ -130,9 +137,11 @@ void Utils::EventLoop::run()
     }
 
     stats.fill(event.getNumHits(), event.getNumClusters(), event.numTracks());
-    progress.update((float)(ievent - m_startEvent + 1) / numEvents());
+    if (m_showProgress)
+      progress.update((float)(ievent - m_startEvent + 1) / numEvents());
   }
-  progress.clear();
+  if (m_showProgress)
+    progress.clear();
 
   for (auto a = m_analyzers.begin(); a != m_analyzers.end(); ++a) {
     (*a)->finalize();
