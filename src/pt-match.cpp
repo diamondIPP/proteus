@@ -1,6 +1,7 @@
 #include <TFile.h>
 #include <TTree.h>
 
+#include "analyzers/basicefficiency.h"
 #include "analyzers/distances.h"
 #include "analyzers/matchexporter.h"
 #include "analyzers/residuals.h"
@@ -43,6 +44,8 @@ int main(int argc, char const* argv[])
   for (auto sensorId : sensorIds) {
     loop.addAnalyzer(
         std::make_shared<Distances>(app.device(), sensorId, &hists));
+    loop.addAnalyzer(std::make_shared<BasicEfficiency>(
+        *app.device().getSensor(sensorId), &hists));
     loop.addAnalyzer(
         std::make_shared<MatchExporter>(app.device(), sensorId, &trees));
   }
