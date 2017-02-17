@@ -70,6 +70,7 @@ set(common_SRCS
     utils/arguments.cpp
     utils/config.cpp
     utils/configparser.cpp
+    utils/densemask.cpp
     utils/eventloop.cpp
     utils/logger.cpp
     utils/statistics.cpp
