@@ -20,19 +20,23 @@ class Sensor;
 
 namespace Analyzers {
 
-/** Basic efficiency calculation using tracks and matched hits. */
+/** Basic efficiency calculation using tracks and matched clusters. */
 class BasicEfficiency : public Analyzer {
 public:
   /**
-   * \param sensor Sensor for which efficiencies should be calculated.
+   * \param sensor Sensor for which efficiencies should be calculated
    * \param dir Histogram output directory
-   * \param increaseArea Extend histograms beyond the nominal sensor edge.
-   * \param maskedPixelRange Track mask around masked pixels, 0 to disable.
+   * \param increaseArea Extend histograms beyond the nominal sensor edge
+   * \param maskedPixelRange Track mask around masked pixels, 0 to disable
+   * \param inPixelPeriod Folding period in number of pixels
+   * \param inPixelMinBins Minimum number of bins along the smaller direction
    */
   BasicEfficiency(const Mechanics::Sensor& sensor,
                   TDirectory* dir,
                   int increaseArea = 2,
-                  int maskedPixelRange = 1);
+                  int maskedPixelRange = 1,
+                  int inPixelPeriod = 2,
+                  int inPixelMinBins = 32);
 
   std::string name() const;
   void analyze(const Storage::Event& event);
@@ -54,6 +58,13 @@ private:
   TH1D* m_effCol;
   TH1D* m_effRow;
   TH1D* m_effDist;
+  XYPoint m_inPixAnchor;
+  double m_inPixPeriodU;
+  double m_inPixPeriodV;
+  TH2D* m_inPixTotal;
+  TH2D* m_inPixPass;
+  TH2D* m_inPixFail;
+  TH2D* m_inPixEff;
 };
 
 } // namespace Analyzers
