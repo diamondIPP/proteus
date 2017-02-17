@@ -59,7 +59,6 @@ Mechanics::Sensor::Sensor(Index id,
     , m_measurement(measurement)
     , m_id(id)
     , m_name(name)
-    , m_pixelMask(numCols * numRows, false)
 {
 }
 
@@ -195,6 +194,7 @@ void Mechanics::Sensor::spaceToPixel(
   transformGlobalToPixel(XYZPoint(x, y, z)).GetCoordinates(c, r);
 }
 
+
 //=========================================================
 //
 // noisy-pixels functions
@@ -203,20 +203,7 @@ void Mechanics::Sensor::spaceToPixel(
 
 void Mechanics::Sensor::setMaskedPixels(const std::set<ColumnRow>& pixels)
 {
-  // reset possible existing mask
-  std::fill(m_pixelMask.begin(), m_pixelMask.end(), false);
-
-  for (auto it = pixels.begin(); it != pixels.end(); ++it) {
-    auto col = std::get<0>(*it);
-    auto row = std::get<1>(*it);
-
-    if (m_numCols <= col)
-      throw std::runtime_error("column index is out of range");
-    if (m_numRows <= row)
-      throw std::runtime_error("row index is out of range");
-
-    m_pixelMask[linearPixelIndex(col, row)] = true;
-  }
+  m_pixelMask = Utils::DenseMask(pixels);
 }
 
 bool Mechanics::Sensor::sort(const Sensor* s1, const Sensor* s2)
