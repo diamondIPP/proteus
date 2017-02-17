@@ -26,12 +26,12 @@ public:
   /**
    * \param sensor Sensor for which efficiencies should be calculated.
    * \param dir Histogram output directory
-   * \param edgeExtension Extend histograms beyond the nominal sensor edge.
+   * \param increaseArea Extend histograms beyond the nominal sensor edge.
    * \param maskedPixelRange Track mask around masked pixels, 0 to disable.
    */
   BasicEfficiency(const Mechanics::Sensor& sensor,
                   TDirectory* dir,
-                  int edgeExtension = 2,
+                  int increaseArea = 2,
                   int maskedPixelRange = 1);
 
   std::string name() const;

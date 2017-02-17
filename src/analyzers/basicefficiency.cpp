@@ -19,12 +19,12 @@ PT_SETUP_LOCAL_LOGGER(BasicEfficiency)
 
 Analyzers::BasicEfficiency::BasicEfficiency(const Mechanics::Sensor& sensor,
                                             TDirectory* dir,
-                                            int edgeExtension,
+                                            int increaseArea,
                                             int maskedPixelRange)
     : m_sensor(sensor)
 {
-  if (edgeExtension < 0)
-    FAIL("edgeExtension must be 0 or larger");
+  if (increaseArea < 0)
+    FAIL("increaseArea must be 0 or larger");
   if (maskedPixelRange < 0)
     FAIL("maskedPixelRange must be 0 or larger");
 
@@ -34,11 +34,11 @@ Analyzers::BasicEfficiency::BasicEfficiency(const Mechanics::Sensor& sensor,
 
   // Increase range to be able to see edge effects
   auto area = sensor.sensitiveAreaPixel();
-  Utils::HistAxis axCol(static_cast<int>(area.min(0)) - edgeExtension,
-                        static_cast<int>(area.max(0)) + edgeExtension,
+  Utils::HistAxis axCol(static_cast<int>(area.min(0)) - increaseArea,
+                        static_cast<int>(area.max(0)) + increaseArea,
                         "Hit column");
-  Utils::HistAxis axRow(static_cast<int>(area.min(1)) - edgeExtension,
-                        static_cast<int>(area.max(1)) + edgeExtension,
+  Utils::HistAxis axRow(static_cast<int>(area.min(1)) - increaseArea,
+                        static_cast<int>(area.max(1)) + increaseArea,
                         "Hit row");
 
   TDirectory* sub = Utils::makeDir(dir, "Efficiency");
