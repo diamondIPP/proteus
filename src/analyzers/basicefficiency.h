@@ -8,6 +8,7 @@
 
 #include "analyzers/analyzer.h"
 #include "utils/definitions.h"
+#include "utils/densemask.h"
 
 class TDirectory;
 class TH1D;
@@ -26,10 +27,12 @@ public:
    * \param sensor Sensor for which efficiencies should be calculated.
    * \param dir Histogram output directory
    * \param edgeExtension Extend histograms beyond the nominal sensor edge.
+   * \param maskedPixelRange Track mask around masked pixels, 0 to disable.
    */
   BasicEfficiency(const Mechanics::Sensor& sensor,
                   TDirectory* dir,
-                  int edgeExtension = 2);
+                  int edgeExtension = 2,
+                  int maskedPixelRange = 1);
 
   std::string name() const;
   void analyze(const Storage::Event& event);
@@ -37,6 +40,7 @@ public:
 
 private:
   const Mechanics::Sensor& m_sensor;
+  Utils::DenseMask m_mask;
   TH2D* m_total;
   TH1D* m_totalCol;
   TH1D* m_totalRow;

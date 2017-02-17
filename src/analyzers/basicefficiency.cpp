@@ -19,11 +19,18 @@ PT_SETUP_LOCAL_LOGGER(BasicEfficiency)
 
 Analyzers::BasicEfficiency::BasicEfficiency(const Mechanics::Sensor& sensor,
                                             TDirectory* dir,
-                                            int edgeExtension)
+                                            int edgeExtension,
+                                            int maskedPixelRange)
     : m_sensor(sensor)
 {
   if (edgeExtension < 0)
     FAIL("edgeExtension must be 0 or larger");
+  if (maskedPixelRange < 0)
+    FAIL("maskedPixelRange must be 0 or larger");
+
+  if (0 < maskedPixelRange) {
+    m_mask = sensor.pixelMask().protruded(maskedPixelRange - 1);
+  }
 
   // Increase range to be able to see edge effects
   auto area = sensor.sensitiveAreaPixel();
@@ -72,6 +79,10 @@ void Analyzers::BasicEfficiency::analyze(const Storage::Event& event)
   for (Index i = 0; i < sensorEvent.numStates(); ++i) {
     const Storage::TrackState& state = sensorEvent.getState(i);
     auto pos = m_sensor.transformLocalToPixel(state.offset());
+
+    // ignore tracks that fall within a masked area
+    if (m_mask.isMasked(pos))
+      continue;
 
     m_total->Fill(pos.x(), pos.y());
     m_totalCol->Fill(pos.x());
