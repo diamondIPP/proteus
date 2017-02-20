@@ -21,11 +21,16 @@ enum class Endpoints { Closed, Open, OpenMin, OpenMax };
 template <typename T, Endpoints kEndpoints = Endpoints::OpenMax>
 class Interval {
 public:
-  /** Construct the default interval encompassing the full range of T. */
-  Interval()
-      : m_min(std::numeric_limits<T>::min())
-      , m_max(std::numeric_limits<T>::max())
+  /** Construct an empty interval. */
+  static Interval Empty()
   {
+    return Interval(static_cast<T>(0), static_cast<T>(0));
+  }
+  /** Construct an interval spanning the full accessible range of the type T. */
+  static Interval Unbounded()
+  {
+    return Interval(std::numeric_limits<T>::min(),
+                    std::numeric_limits<T>::max());
   }
   /** Construct an interval with the given limits. */
   Interval(T a, T b) : m_min(std::min(a, b)), m_max(std::max(a, b)) {}
@@ -74,7 +79,12 @@ public:
   }
 
 private:
+  Interval() : m_min(0), m_max(0) {}
+
   T m_min, m_max;
+
+  template <size_t, typename, Endpoints>
+  friend class Box;
 };
 
 /** N-dimensional aligned box defined by intervals along each axis. */
@@ -84,7 +94,21 @@ public:
   typedef Interval<T, kEndpoints> AxisInterval;
   typedef std::array<T, N> Point;
 
-  Box() = default;
+  /** Construct an empty box. */
+  static Box Empty()
+  {
+    Box box;
+    std::fill(box.m_axes.begin(), box.m_axes.end(), AxisInterval::Empty());
+    return box;
+  }
+  /** Construct a box spanning the available range of type T. */
+  static Box Unbounded()
+  {
+    Box box;
+    std::fill(box.m_axes.begin(), box.m_axes.end(), AxisInterval::Unbounded());
+    return box;
+  }
+  /** Construct a box from interval on each axis. */
   template <typename... Intervals,
             typename = typename std::enable_if<sizeof...(Intervals) == N>::type>
   Box(Intervals&&... axes) : m_axes{{std::forward<Intervals>(axes)...}}
@@ -146,6 +170,8 @@ public:
   }
 
 private:
+  Box() : m_axes{} {}
+
   std::array<AxisInterval, N> m_axes;
 };
 
