@@ -64,18 +64,30 @@ public:
   template <typename U>
   void intersect(const Interval<U, kEndpoints>& other)
   {
-    m_min = std::max<T>(m_min, other.min());
-    m_max = std::min<T>(m_max, other.max());
-    // no overlap with empty interval
-    if (m_max < m_min)
-      m_max = m_min;
+    if (other.isEmpty()) {
+      // there is no intersection w/ an empty interval
+      *this = Empty();
+    } else {
+      m_min = std::max<T>(m_min, other.min());
+      m_max = std::min<T>(m_max, other.max());
+      // there is no overlap between the intervals
+      if (m_max < m_min) {
+        *this = Empty();
+      }
+    }
   }
   /** Enlarge the interval so that the second interval is fully enclosed. */
   template <typename U>
   void enclose(const Interval<U, kEndpoints>& other)
   {
-    m_min = std::min<T>(m_min, other.min());
-    m_max = std::max<T>(m_max, other.max());
+    if (this->isEmpty()) {
+      *this = other;
+    } else if (other.isEmpty()) {
+      // nothing to do
+    } else {
+      m_min = std::min<T>(m_min, other.min());
+      m_max = std::max<T>(m_max, other.max());
+    }
   }
 
 private:
@@ -108,6 +120,11 @@ public:
     std::fill(box.m_axes.begin(), box.m_axes.end(), AxisInterval::Unbounded());
     return box;
   }
+  /** Default box is empty.
+   *
+   * \warning This is only public to make the compiler happy. Use `Empty()`.
+   */
+  Box() : m_axes{} {}
   /** Construct a box from interval on each axis. */
   template <typename... Intervals,
             typename = typename std::enable_if<sizeof...(Intervals) == N>::type>
@@ -170,8 +187,6 @@ public:
   }
 
 private:
-  Box() : m_axes{} {}
-
   std::array<AxisInterval, N> m_axes;
 };
 
