@@ -20,7 +20,10 @@ class Hit {
 public:
   /** Set only the physical address leaving the digital address untouched. */
   void setPhysicalAddress(Index col, Index row);
+  /** Set the region id. */
+  void setRegion(Index region) { m_region = region; }
 
+  Index region() const { return m_region; }
   Index digitalCol() const { return m_digitalCol; }
   Index digitalRow() const { return m_digitalRow; }
   Index col() const { return m_col; }
@@ -48,6 +51,7 @@ private:
 
   Index m_digitalCol, m_digitalRow;
   Index m_col, m_row;
+  Index m_region;
   double m_time;            // Level 1 accept, typically
   double m_value;           // Time over threshold, typically
   const Cluster* m_cluster; // The cluster containing this hit
@@ -66,6 +70,7 @@ inline Storage::Hit::Hit(Index col, Index row, double time, double value)
     , m_digitalRow(row)
     , m_col(col)
     , m_row(row)
+    , m_region(kInvalidIndex)
     , m_time(time)
     , m_value(value)
     , m_cluster(nullptr)
