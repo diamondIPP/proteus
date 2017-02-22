@@ -18,12 +18,8 @@ class Cluster;
  */
 class Hit {
 public:
-  /** Set address assuming identical digital and physical addresses. */
-  void setAddress(Index col, Index row);
   /** Set only the physical address leaving the digital address untouched. */
   void setPhysicalAddress(Index col, Index row);
-  void setTime(double time_) { m_time = time_; }
-  void setValue(double value) { m_value = value; }
 
   Index digitalCol() const { return m_digitalCol; }
   Index digitalRow() const { return m_digitalRow; }
@@ -48,6 +44,7 @@ public:
 
 private:
   Hit(); // Hits memory is managed by the event class
+  Hit(Index col, Index row, double time, double value);
 
   Index m_digitalCol, m_digitalRow;
   Index m_col, m_row;
@@ -64,10 +61,15 @@ std::ostream& operator<<(std::ostream& os, const Hit& hit);
 
 } // namespace Storage
 
-inline void Storage::Hit::setAddress(Index col, Index row)
+inline Storage::Hit::Hit(Index col, Index row, double time, double value)
+    : m_digitalCol(col)
+    , m_digitalRow(row)
+    , m_col(col)
+    , m_row(row)
+    , m_time(time)
+    , m_value(value)
+    , m_cluster(nullptr)
 {
-  m_digitalCol = m_col = col;
-  m_digitalRow = m_row = row;
 }
 
 inline void Storage::Hit::setPhysicalAddress(Index col, Index row)

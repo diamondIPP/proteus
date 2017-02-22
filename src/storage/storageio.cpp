@@ -426,10 +426,8 @@ void StorageIO::readEvent(uint64_t n, Event* event)
 
     // Generate a list of all hit objects
     for (int nhit = 0; nhit < numHits; nhit++) {
-      Hit* hit = plane->newHit();
-      hit->setAddress(hitPixX[nhit], hitPixY[nhit]);
-      hit->setTime(hitTiming[nhit]);
-      hit->setValue(hitValue[nhit]);
+      Hit* hit = plane->addHit(hitPixX[nhit], hitPixY[nhit], hitTiming[nhit],
+                               hitValue[nhit]);
 
       // If this hit is in a cluster, mark this (and the clusters tree is
       // active)
@@ -507,8 +505,7 @@ void StorageIO::writeEvent(Event* event)
       clusterVarCol[ncluster] = cluster.covPixel()(0, 0);
       clusterVarRow[ncluster] = cluster.covPixel()(1, 1);
       clusterCovColRow[ncluster] = cluster.covPixel()(0, 1);
-      clusterTrack[ncluster] =
-          cluster.track() ? cluster.track()->index() : -1;
+      clusterTrack[ncluster] = cluster.track() ? cluster.track()->index() : -1;
     }
 
     numHits = plane->numHits();

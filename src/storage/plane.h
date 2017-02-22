@@ -21,7 +21,8 @@ class Plane {
 public:
   Index sensorId() const { return m_sensorId; }
 
-  Hit* newHit();
+  template <typename... HitParams>
+  Hit* addHit(HitParams&&... params);
   Index numHits() const { return static_cast<Index>(m_hits.size()); }
   Hit* getHit(Index i) { return m_hits.at(i).get(); }
   const Hit* getHit(Index i) const { return m_hits.at(i).get(); }
@@ -52,6 +53,13 @@ private:
 };
 
 } // namespace Storage
+
+template <typename... HitParams>
+inline Storage::Hit* Storage::Plane::addHit(HitParams&&... params)
+{
+  m_hits.emplace_back(new Hit(std::forward<HitParams>(params)...));
+  return m_hits.back().get();
+}
 
 inline void Storage::Plane::addState(TrackState&& state)
 {
