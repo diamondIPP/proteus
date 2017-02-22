@@ -46,6 +46,7 @@ set(common_SRCS
     mechanics/pixelmasks.cpp
     mechanics/sensor.cpp
     processors/applygeometry.cpp
+    processors/applyregions.cpp
     processors/clustermaker.cpp
     processors/clusterizer.cpp
     processors/configprocessors.cpp
