@@ -4,9 +4,14 @@
 #include <array>
 #include <cassert>
 #include <cmath>
+#include <numeric>
 #include <ostream>
 #include <stdexcept>
 #include <string>
+
+#include "utils/logger.h"
+
+PT_SETUP_LOCAL_LOGGER(Sensor)
 
 // mapping between measurement enum and names
 struct MeasurementName {
@@ -49,7 +54,8 @@ Mechanics::Sensor::Sensor(Index id,
                           double pitchCol,
                           double pitchRow,
                           double thickness,
-                          double xX0)
+                          double xX0,
+                          const std::vector<Region>& regions)
     : m_numCols(numCols)
     , m_numRows(numRows)
     , m_pitchCol(pitchCol)
@@ -59,31 +65,70 @@ Mechanics::Sensor::Sensor(Index id,
     , m_measurement(measurement)
     , m_id(id)
     , m_name(name)
+    , m_regions(regions)
 {
-}
-
-Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaPixel() const
-{
-  return Area(Area::AxisInterval(0, static_cast<double>(m_numCols)),
-              Area::AxisInterval(0, static_cast<double>(m_numRows)));
+  // ensure that all regions are bounded by the sensor size
+  for (auto& region : m_regions) {
+    region.areaPixel =
+        intersection(region.areaPixel, Area(Area::AxisInterval(0, numCols),
+                                            Area::AxisInterval(0, numRows)));
+  }
+  // ensure that all regions are uniquely named and have exclusive areas
+  for (size_t i = 0; i < m_regions.size(); ++i) {
+    for (size_t j = 0; j < m_regions.size(); ++j) {
+      if (i == j)
+        continue;
+      const auto& r0 = m_regions[i];
+      const auto& r1 = m_regions[j];
+      if (r0.name == r1.name) {
+        FAIL("region ", i, " and region ", j, " share the same name");
+      }
+      if (!intersection(r0.areaPixel, r1.areaPixel).isEmpty()) {
+        FAIL("region '", r0.name, "' intersects with region '", r1.name, "'");
+      }
+    }
+  }
+  // define the sensitive pixel area:
+  // 1. the full sensor area if no regions are defined
+  // 2. the bounding box of all defined regions
+  if (m_regions.empty()) {
+    m_sensitiveAreaPixel =
+        Area(Area::AxisInterval(0, static_cast<double>(numCols)),
+             Area::AxisInterval(0, static_cast<double>(numRows)));
+  } else {
+    m_sensitiveAreaPixel =
+        std::accumulate(m_regions.begin(), m_regions.end(), Area::Empty(),
+                        [](Area init, const Region& region) {
+                          return Utils::boundingBox(init, region.areaPixel);
+                        });
+  }
+  // sensor center depends on sensitive area definition and must always be on
+  // a pixel edge.
+  m_sensitiveCenterPixel.SetCoordinates(
+      m_sensitiveAreaPixel.min(0) +
+          std::round(m_sensitiveAreaPixel.length(0) / 2),
+      m_sensitiveAreaPixel.min(1) +
+          std::round(m_sensitiveAreaPixel.length(1) / 2));
 }
 
 Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaLocal() const
 {
-  XYPoint lowerLeft = transformPixelToLocal(XYPoint(0, 0));
-  XYPoint upperRight = transformPixelToLocal(XYPoint(m_numCols, m_numRows));
+  Area pix = sensitiveAreaPixel();
+  XYPoint lowerLeft = transformPixelToLocal(XYPoint(pix.min(0), pix.min(1)));
+  XYPoint upperRight = transformPixelToLocal(XYPoint(pix.max(0), pix.max(1)));
   return Area(Area::AxisInterval(lowerLeft.x(), upperRight.x()),
               Area::AxisInterval(lowerLeft.y(), upperRight.y()));
 }
 
 Mechanics::Sensor::Area Mechanics::Sensor::projectedEnvelopeXY() const
 {
+  Area pix = sensitiveAreaPixel();
   // TODO 2016-08 msmk: find a smarter way to this, but its Friday
   // transform each corner of the sensitive rectangle
-  XYZPoint minMin = transformPixelToGlobal(XYPoint(0, 0));
-  XYZPoint minMax = transformPixelToGlobal(XYPoint(0, m_numRows));
-  XYZPoint maxMin = transformPixelToGlobal(XYPoint(m_numCols, 0));
-  XYZPoint maxMax = transformPixelToGlobal(XYPoint(m_numCols, m_numRows));
+  XYZPoint minMin = transformPixelToGlobal(XYPoint(pix.min(0), pix.min(1)));
+  XYZPoint minMax = transformPixelToGlobal(XYPoint(pix.min(0), pix.max(1)));
+  XYZPoint maxMin = transformPixelToGlobal(XYPoint(pix.max(0), pix.min(1)));
+  XYZPoint maxMax = transformPixelToGlobal(XYPoint(pix.max(0), pix.max(1)));
 
   std::array<double, 4> xs = {{minMin.x(), minMax.x(), maxMin.x(), maxMax.x()}};
   std::array<double, 4> ys = {{minMin.y(), minMax.y(), maxMin.y(), maxMax.y()}};
@@ -117,8 +162,8 @@ XYZVector Mechanics::Sensor::normal() const
 Transform3D Mechanics::Sensor::constructPixelToGlobal() const
 {
   // clang-format off
-  Translation3D shiftToCenter(-std::round(m_numCols / 2),
-                              -std::round(m_numRows / 2),
+  Translation3D shiftToCenter(-m_sensitiveCenterPixel.x(),
+                              -m_sensitiveCenterPixel.y(),
                               0);
   Rotation3D scalePitch(m_pitchCol, 0, 0,
                         0, m_pitchRow, 0,
@@ -152,14 +197,14 @@ static inline XYPoint spaceToPlane(const Transform3D& transform,
 
 XYPoint Mechanics::Sensor::transformPixelToLocal(const XYPoint& cr) const
 {
-  return XYPoint(m_pitchCol * (cr.x() - std::round(m_numCols / 2)),
-                 m_pitchRow * (cr.y() - std::round(m_numRows / 2)));
+  return XYPoint(m_pitchCol * (cr.x() - m_sensitiveCenterPixel.x()),
+                 m_pitchRow * (cr.y() - m_sensitiveCenterPixel.y()));
 }
 
 XYPoint Mechanics::Sensor::transformLocalToPixel(const XYPoint& uv) const
 {
-  return XYPoint((uv.x() / m_pitchCol) + std::round(m_numCols / 2),
-                 (uv.y() / m_pitchRow) + std::round(m_numRows / 2));
+  return XYPoint((uv.x() / m_pitchCol), (uv.y() / m_pitchRow)) +
+         m_sensitiveCenterPixel;
 }
 
 XYZPoint Mechanics::Sensor::transformLocalToGlobal(const XYPoint& uv) const
@@ -193,7 +238,6 @@ void Mechanics::Sensor::spaceToPixel(
 {
   transformGlobalToPixel(XYZPoint(x, y, z)).GetCoordinates(c, r);
 }
-
 
 //=========================================================
 //
@@ -280,14 +324,28 @@ double Mechanics::Sensor::getPosSensitiveY() const
 
 void Mechanics::Sensor::print(std::ostream& os, const std::string& prefix) const
 {
-  os << prefix << "id: " << m_id << '\n';
   os << prefix << "name: " << m_name << '\n';
   os << prefix << "measurement: " << measurementName(m_measurement) << '\n';
-  os << prefix << "columns: " << m_numCols << '\n';
+  os << prefix << "cols: " << m_numCols << '\n';
   os << prefix << "rows: " << m_numRows << '\n';
-  os << prefix << "pitch column: " << m_pitchCol << '\n';
-  os << prefix << "pitch row: " << m_pitchRow << '\n';
+  os << prefix << "pitch_col: " << m_pitchCol << '\n';
+  os << prefix << "pitch_row: " << m_pitchRow << '\n';
   os << prefix << "thickness: " << m_thickness << '\n';
   os << prefix << "x/X0: " << m_xX0 << '\n';
+  if (!m_regions.empty()) {
+    os << prefix << "regions:\n";
+    for (size_t iregion = 0; iregion < m_regions.size(); ++iregion) {
+      const auto& region = m_regions[iregion];
+      os << prefix << "  region " << iregion << ":\n";
+      os << prefix << "    name: " << region.name << '\n';
+      os << prefix << "    col: " << region.areaPixel.interval(0) << '\n';
+      os << prefix << "    row: " << region.areaPixel.interval(1) << '\n';
+    }
+  }
+  os << prefix << "sensitive area:\n";
+  os << prefix << "  col: " << sensitiveAreaPixel().interval(0) << '\n';
+  os << prefix << "  row: " << sensitiveAreaPixel().interval(1) << '\n';
+  os << prefix << "  u: " << sensitiveAreaLocal().interval(0) << '\n';
+  os << prefix << "  b: " << sensitiveAreaLocal().interval(1) << '\n';
   os.flush();
 }
