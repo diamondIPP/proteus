@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include <cassert>
-#include <iterator>
+#include <climits>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -263,29 +263,62 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
                 cfg.get<std::string>("device.space_unit"),
                 cfg.get<std::string>("device.time_unit"));
 
-  auto types = cfg.get<toml::Table>("sensor_types");
-  auto sensors = cfg.get<toml::Array>("sensors");
-  for (size_t i = 0; i < sensors.size(); ++i) {
-    toml::Value defaults = toml::Table{{"name", "plane" + std::to_string(i)},
-                                       {"is_masked", false}};
-    toml::Value sensor = Utils::Config::withDefaults(sensors[i], defaults);
-    if (sensor.get<bool>("is_masked")) {
+  auto cfgTypes = cfg.get<toml::Table>("sensor_types");
+  auto cfgSensors = cfg.get<toml::Array>("sensors");
+  for (size_t isensor = 0; isensor < cfgSensors.size(); ++isensor) {
+    toml::Value defaults = toml::Table{
+        {"name", "plane" + std::to_string(isensor)}, {"is_masked", false}};
+    toml::Value cfgSensor =
+        Utils::Config::withDefaults(cfgSensors[isensor], defaults);
+    if (cfgSensor.get<bool>("is_masked")) {
       device.addMaskedSensor();
       continue;
     }
-    auto name = sensor.get<std::string>("name");
-    auto typeName = sensor.get<std::string>("type");
-    if (types.count(typeName) == 0) {
+
+    auto name = cfgSensor.get<std::string>("name");
+    auto typeName = cfgSensor.get<std::string>("type");
+    if (cfgTypes.count(typeName) == 0) {
       throw std::runtime_error("Device: sensor type '" + typeName +
                                "' does not exist");
     }
-    auto type = types[typeName];
+    auto cfgType = cfgTypes[typeName];
+    auto cfgRegions = cfgType.find("regions");
     auto measurement =
-        Sensor::measurementFromName(type.get<std::string>("measurement"));
+        Sensor::measurementFromName(cfgType.get<std::string>("measurement"));
+
+    // construct sensor regions if they are defined
+    std::vector<Sensor::Region> regions;
+    if (cfgRegions && cfgRegions->is<toml::Array>()) {
+      for (size_t iregion = 0; iregion < cfgRegions->size(); ++iregion) {
+        toml::Value defaults =
+            toml::Table{{"name", "region" + std::to_string(iregion)},
+                        {"col_min", INT_MIN},
+                        // upper limit in the configuration is inclusive, but in
+                        // the code the interval is half-open w/ the upper limit
+                        // being exclusive. Ensure +1 is still within the
+                        // numerical limits.
+                        {"col_max", INT_MAX - 1},
+                        {"row_min", INT_MIN},
+                        {"row_max", INT_MAX - 1}};
+        toml::Value cfgRegion =
+            Utils::Config::withDefaults(*cfgRegions->find(iregion), defaults);
+
+        Sensor::Region region;
+        region.name = cfgRegion.get<std::string>("name");
+        region.areaPixel = Sensor::Area(
+            Sensor::Area::AxisInterval(cfgRegion.get<int>("col_min"),
+                                       cfgRegion.get<int>("col_max") + 1),
+            Sensor::Area::AxisInterval(cfgRegion.get<int>("row_min"),
+                                       cfgRegion.get<int>("row_max") + 1));
+        regions.emplace_back(std::move(region));
+      }
+    }
+
     device.addSensor(Sensor(
-        i, name, measurement, type.get<int>("cols"), type.get<int>("rows"),
-        type.get<double>("pitch_col"), type.get<double>("pitch_row"),
-        type.get<double>("thickness"), type.get<double>("x_x0")));
+        isensor, name, measurement, cfgType.get<int>("cols"),
+        cfgType.get<int>("rows"), cfgType.get<double>("pitch_col"),
+        cfgType.get<double>("pitch_row"), cfgType.get<double>("thickness"),
+        cfgType.get<double>("x_x0"), regions));
   }
   return device;
 }
