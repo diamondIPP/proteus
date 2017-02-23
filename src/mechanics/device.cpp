@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <iterator>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -291,6 +292,8 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
 
 void Mechanics::Device::addSensor(const Sensor& sensor)
 {
+  // TODO 2017-02-07 msmk: assumes ids are indices from 0 to n_sensors w/o gaps
+  m_sensorIds.emplace_back(sensor.id());
   m_sensors.emplace_back(sensor);
   m_sensorMask.push_back(false);
 }
@@ -363,4 +366,12 @@ void Mechanics::Device::print(std::ostream& os, const std::string& prefix) const
   m_pixelMasks.print(os, prefix + "  ");
 
   os.flush();
+}
+
+std::vector<Index> Mechanics::sortedByZ(const Device& device,
+                                        const std::vector<Index>& sensorIds)
+{
+  std::vector<Index> sorted(std::begin(sensorIds), std::end(sensorIds));
+  std::sort(sorted.begin(), sorted.end(), CompareSensorIdZ{device});
+  return sorted;
 }

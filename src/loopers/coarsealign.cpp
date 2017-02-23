@@ -16,7 +16,7 @@
 #include "../processors/processors.h"
 #include "../analyzers/singleanalyzer.h"
 #include "../analyzers/dualanalyzer.h"
-#include "../analyzers/correlation.h"
+#include "../analyzers/correlations.h"
 
 using std::cout;
 using std::endl;
@@ -51,7 +51,7 @@ void Loopers::CoarseAlign::setDisplayFits(bool value) {
 //=========================================================
 void Loopers::CoarseAlign::loop(){
   // Coarse align specific analyzers
-  Analyzers::Correlation correlation(_refDevice, 0); // 0  for no output
+  Analyzers::Correlations correlation(_refDevice, 0); // 0  for no output
   
   for (ULong64_t nevent=_startEvent; nevent<=_endEvent; nevent++)      {
     Storage::Event* refEvent = _refStorage->readEvent(nevent);

@@ -5,7 +5,7 @@ set(common_SRCS
     analyzers/baseanalyzer.cpp
     analyzers/clusterinfo.cpp
     analyzers/configanalyzers.cpp
-    analyzers/correlation.cpp
+    analyzers/correlations.cpp
     analyzers/depiction.cpp
     analyzers/distances.cpp
     analyzers/dualanalyzer.cpp

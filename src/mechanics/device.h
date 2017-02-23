@@ -34,6 +34,7 @@ public:
 
   void addSensor(const Sensor& sensor);
   void addMaskedSensor();
+  const std::vector<Index>& sensorIds() const { return m_sensorIds; }
   Index numSensors() const { return static_cast<Index>(m_sensors.size()); }
   Sensor* getSensor(Index i) { return &m_sensors.at(i); }
   const Sensor* getSensor(Index i) const { return &m_sensors.at(i); }
@@ -72,6 +73,7 @@ private:
   Device() = default;
 
   std::string m_name;
+  std::vector<Index> m_sensorIds;
   std::vector<Sensor> m_sensors;
   Geometry m_geometry;
   PixelMasks m_pixelMasks;
@@ -83,6 +85,21 @@ private:
   std::string m_timeUnit;
   std::vector<bool> m_sensorMask;
 };
+
+/** Compare sensor ids by the z-position of the corresponding sensors. */
+struct CompareSensorIdZ {
+  const Device& device;
+
+  bool operator()(Index id0, Index id1) const
+  {
+    return device.getSensor(id0)->origin().z() <
+           device.getSensor(id1)->origin().z();
+  }
+};
+
+/** Sort the sensor indices by the position of the sensors along the z-axis. */
+std::vector<Index> sortedByZ(const Device& device,
+                             const std::vector<Index>& sensorIds);
 
 } // namespace Mechanics
 
