@@ -22,7 +22,10 @@
 #include <Math/Vector2D.h>
 #include <Math/Vector3D.h>
 
+// Use to number and identify things, e.g. hits, sensors
 typedef unsigned int Index;
+constexpr Index kInvalidIndex = static_cast<Index>(-1);
+
 // Digital matrix position defined by column and row index
 typedef std::pair<Index, Index> ColumnRow;
 
