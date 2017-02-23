@@ -10,6 +10,7 @@ class TH1D;
 class TH2D;
 
 namespace Storage {
+class Cluster;
 class Event;
 }
 namespace Mechanics {
@@ -45,9 +46,17 @@ private:
     TH2D* sizeHitValue;
     TH2D* sizeHitTime;
     TH2D* hitValueHitTime;
+
+    void fill(const Storage::Cluster& cluster);
+  };
+  struct SensorHists {
+    ClusterHists whole;
+    std::vector<ClusterHists> regions;
+
+    void fill(const Storage::Cluster& cluster);
   };
 
-  std::vector<ClusterHists> m_hists;
+  std::vector<SensorHists> m_hists;
 };
 
 } // namespace Analyzers
