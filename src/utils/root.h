@@ -64,6 +64,12 @@ TH2D* makeH2(TDirectory* dir,
              HistAxis axis0,
              HistAxis axis1);
 
+/** Create an unnamed 2d histogram that is not stored. */
+TH1D* makeTransientH1(HistAxis axis);
+
+/** Create an unnamed 2d histogram that is not stored. */
+TH2D* makeTransientH2(HistAxis axis0, HistAxis axis1);
+
 } // namespace Utils
 
 // implementation
@@ -103,6 +109,42 @@ inline TH2D* Utils::makeH2(TDirectory* dir,
   h->SetXTitle(axis0.label.c_str());
   h->SetYTitle(axis1.label.c_str());
   h->SetDirectory(dir);
+  return h;
+}
+
+inline TH1D* Utils::makeTransientH1(HistAxis axis)
+{
+  // try to generate a (unique) name. not sure if needed
+  std::string name;
+  name += axis.label;
+  name += std::to_string(axis.limit0);
+  name += std::to_string(axis.limit1);
+  name += std::to_string(axis.bins);
+
+  TH1D* h = new TH1D(name.c_str(), "", axis.bins, axis.limit0, axis.limit1);
+  h->SetXTitle(axis.label.c_str());
+  h->SetDirectory(nullptr);
+  return h;
+}
+
+inline TH2D* Utils::makeTransientH2(HistAxis axis0, HistAxis axis1)
+{
+  // try to generate a (unique) name. not sure if needed
+  std::string name;
+  name += axis0.label;
+  name += std::to_string(axis0.limit0);
+  name += std::to_string(axis0.limit1);
+  name += std::to_string(axis0.bins);
+  name += axis1.label;
+  name += std::to_string(axis1.limit0);
+  name += std::to_string(axis1.limit1);
+  name += std::to_string(axis1.bins);
+
+  TH2D* h = new TH2D("", "", axis0.bins, axis0.limit0, axis0.limit1,
+                     axis1.bins, axis1.limit0, axis1.limit1);
+  h->SetXTitle(axis0.label.c_str());
+  h->SetYTitle(axis1.label.c_str());
+  h->SetDirectory(nullptr);
   return h;
 }
 
