@@ -25,6 +25,7 @@ public:
 
   Index index() const { return m_index; }
   Index sensorId() const;
+  Index region() const;
 
   void setPixel(const XYPoint& cr, const SymMatrix2& cov);
   void setPixel(double col, double row, double stdCol, double stdRow);

@@ -60,6 +60,11 @@ void Storage::Cluster::transform(const Mechanics::Sensor& sensor)
 
 Index Storage::Cluster::sensorId() const { return m_plane->sensorId(); }
 
+Index Storage::Cluster::region() const
+{
+  return m_hits.empty() ? kInvalidIndex : m_hits.front()->region();
+}
+
 Storage::Cluster::Area Storage::Cluster::area() const
 {
   if (m_hits.empty()) {
