@@ -31,15 +31,19 @@ public:
   void postProcessing();
 
 private:
-  struct Hists {
-    TH2D* pixels;
-    TH1D* value;
+  struct RegionHists {
     TH1D* time;
-    TH2D* timeMap;
-    TH2D* valueMap;
+    TH1D* value;
+  };
+  struct SensorHists {
+    TH2D* hitMap;
+    TH2D* meanTimeMap;
+    TH2D* meanValueMap;
+    RegionHists whole;
+    std::vector<RegionHists> regions;
   };
 
-  std::vector<Hists> m_hists;
+  std::vector<SensorHists> m_hists;
 };
 
 } // namespace Analyzers
