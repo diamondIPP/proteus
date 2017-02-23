@@ -14,8 +14,7 @@
 #include "application.h"
 #include "mechanics/device.h"
 #include "processors/applygeometry.h"
-#include "processors/clusterizer.h"
-#include "processors/hitmapper.h"
+#include "processors/setupsensors.h"
 #include "processors/trackfinder.h"
 #include "processors/trackfitter.h"
 #include "storage/event.h"
@@ -171,7 +170,7 @@ int main(int argc, char const* argv[])
 
     // common event loop elements for all alignment methods
     auto loop = app.makeEventLoop();
-    setupHitMappers(dev, loop);
+    setupHitPreprocessing(dev, loop);
     setupClusterizers(dev, loop);
     loop.addProcessor(std::make_shared<ApplyGeometry>(dev));
 

@@ -10,13 +10,6 @@
 #include "processors/processor.h"
 #include "utils/definitions.h"
 
-namespace Mechanics {
-class Device;
-}
-namespace Utils {
-class EventLoop;
-}
-
 namespace Processors {
 
 /** Map FE-I4 digital address to correct CCPDv4 sensor pixel address. */
@@ -30,8 +23,6 @@ public:
 private:
   Index m_sensorId;
 };
-
-void setupHitMappers(const Mechanics::Device& device, Utils::EventLoop& loop);
 
 } // namespace Processors
 
