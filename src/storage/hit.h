@@ -4,6 +4,7 @@
 #include <iosfwd>
 
 #include "utils/definitions.h"
+#include "utils/interval.h"
 
 namespace Storage {
 
@@ -18,6 +19,8 @@ class Cluster;
  */
 class Hit {
 public:
+  using Area = Utils::Box<2, int>;
+
   /** Set only the physical address leaving the digital address untouched. */
   void setPhysicalAddress(Index col, Index row);
   /** Set the region id. */
@@ -32,6 +35,9 @@ public:
   XYPoint posPixel() const { return XYPoint(col() + 0.5, row() + 0.5); }
   double time() const { return m_time; }
   double value() const { return m_value; }
+
+  /** The area of the hit in pixel coordinates. */
+  Area areaPixel() const;
 
   void setCluster(const Cluster* cluster);
   const Cluster* cluster() const { return m_cluster; }
@@ -81,6 +87,12 @@ inline void Storage::Hit::setPhysicalAddress(Index col, Index row)
 {
   m_col = col;
   m_row = row;
+}
+
+inline Storage::Hit::Area Storage::Hit::areaPixel() const
+{
+  return Area(Area::AxisInterval(m_col, m_col + 1),
+              Area::AxisInterval(m_row, m_row + 1));
 }
 
 #endif // PT_HIT_H
