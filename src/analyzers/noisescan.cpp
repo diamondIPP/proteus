@@ -16,15 +16,14 @@
 
 PT_SETUP_LOCAL_LOGGER(NoiseScan)
 
-Analyzers::NoiseScan::NoiseScan(const Mechanics::Device& device,
-                                const Index sensorId,
+Analyzers::NoiseScan::NoiseScan(const Mechanics::Sensor& sensor,
                                 const double bandwidth,
                                 const double sigmaMax,
                                 const double rateMax,
                                 const Area& regionOfInterest,
                                 TDirectory* parent,
                                 const int binsOccupancy)
-    : m_sensorId(sensorId)
+    : m_sensorId(sensor.id())
     , m_densityBandwidth(bandwidth)
     , m_sigmaMax(sigmaMax)
     , m_rateMax(rateMax)
@@ -32,24 +31,25 @@ Analyzers::NoiseScan::NoiseScan(const Mechanics::Device& device,
 {
   using namespace Utils;
 
-  TDirectory* dir = Utils::makeDir(parent, "NoiseScan");
-  const Mechanics::Sensor& sensor = *device.getSensor(sensorId);
-  auto name = [&](const std::string& suffix) {
-    return sensor.name() + '-' + suffix;
-  };
+  // region-of-interest must be bounded by the actual sensor size
+  Area roi = intersection(regionOfInterest, sensor.sensitiveAreaPixel());
 
-  DEBUG("input roi sensor ", m_sensorId, ':');
+  DEBUG("input roi ", sensor.name(), ':');
   DEBUG("  col: ", regionOfInterest.interval(0));
   DEBUG("  row: ", regionOfInterest.interval(1));
+  DEBUG("effective roi ", sensor.name(), ':');
+  DEBUG("  col: ", roi.interval(0));
+  DEBUG("  row: ", roi.interval(1));
 
-  // region of interest is bounded by the active sensor size
-  m_roi = Utils::intersection(regionOfInterest, sensor.sensitiveAreaPixel());
-
-  HistAxis axCol(m_roi.interval(0), m_roi.length(0), "Hit column");
-  HistAxis axRow(m_roi.interval(1), m_roi.length(1), "Hit row");
+  HistAxis axCol(roi.min(0), roi.max(0), "Hit column");
+  HistAxis axRow(roi.min(1), roi.max(1), "Hit row");
   HistAxis axOcc(0, 1, binsOccupancy, "Pixel occupancy");
   HistAxis axSig(0, 1, binsOccupancy, "Local pixel rate significance");
 
+  auto name = [&](const std::string& suffix) {
+    return sensor.name() + '-' + suffix;
+  };
+  TDirectory* dir = makeDir(parent, "NoiseScan");
   m_occ = makeH2(dir, name("Occupancy"), axCol, axRow);
   m_occPixels = makeH1(dir, name("OccupancyPixels"), axOcc);
   m_density = makeH2(dir, name("DensityEstimate"), axCol, axRow);
@@ -67,10 +67,9 @@ void Analyzers::NoiseScan::analyze(const Storage::Event& event)
 {
   const Storage::Plane& plane = *event.getPlane(m_sensorId);
 
-  for (size_t j = 0; j < plane.numHits(); ++j) {
-    const Storage::Hit& hit = *plane.getHit(j);
-    if (m_roi.isInside(hit.col(), hit.row()))
-      m_occ->Fill(hit.col(), hit.row());
+  for (Index i = 0; i < plane.numHits(); ++i) {
+    const Storage::Hit& hit = *plane.getHit(i);
+    m_occ->Fill(hit.col(), hit.row());
   }
   m_numEvents += 1;
 }
@@ -175,8 +174,6 @@ void Analyzers::NoiseScan::finalize()
   m_maskedPixels->SetEntries(numNoisyPixels);
 
   INFO("noise scan sensor ", m_sensorId, ":");
-  INFO("  roi col: ", m_roi.interval(0));
-  INFO("  roi row: ", m_roi.interval(1));
   INFO("  cut relative: local mean + ", m_sigmaMax, " * local sigma");
   INFO("  cut absolute: ", m_rateMax, " hits/event");
   INFO("  max occupancy: ", m_occ->GetMaximum(), " hits/event");

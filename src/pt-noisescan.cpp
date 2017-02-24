@@ -61,7 +61,7 @@ int main(int argc, char const* argv[])
     Area roi(Interval(c->get<int>("col_min"), c->get<int>("col_max") + 1),
              Interval(c->get<int>("row_min"), c->get<int>("row_max") + 1));
     noiseScans.push_back(std::make_shared<Analyzers::NoiseScan>(
-        app.device(), id, bandwidth, sigmaMax, rateMax, roi, hists));
+        *app.device().getSensor(id), bandwidth, sigmaMax, rateMax, roi, hists));
   }
 
   Utils::EventLoop loop = app.makeEventLoop();
