@@ -9,6 +9,7 @@
 #include "analyzers/analyzer.h"
 #include "utils/definitions.h"
 #include "utils/densemask.h"
+#include "utils/interval.h"
 
 class TDirectory;
 class TH1D;
@@ -16,6 +17,9 @@ class TH2D;
 
 namespace Mechanics {
 class Sensor;
+}
+namespace Storage {
+class TrackState;
 }
 
 namespace Analyzers {
@@ -29,42 +33,55 @@ public:
    * \param increaseArea Extend histograms beyond the nominal sensor edge
    * \param maskedPixelRange Track mask around masked pixels, 0 to disable
    * \param inPixelPeriod Folding period in number of pixels
-   * \param inPixelMinBins Minimum number of bins along the smaller direction
+   * \param inPixelBinsMin Minimum number of bins along the smaller direction
    */
   BasicEfficiency(const Mechanics::Sensor& sensor,
                   TDirectory* dir,
                   int increaseArea = 2,
                   int maskedPixelRange = 1,
                   int inPixelPeriod = 2,
-                  int inPixelMinBins = 32);
+                  int inPixelBinsMin = 32);
 
   std::string name() const;
   void analyze(const Storage::Event& event);
   void finalize();
 
 private:
+  using Area = Utils::Box<2, double>;
+  struct RegionHists {
+    Area areaFull; // in pixel coordinates
+    Area areaFold; // in local coordinates
+    TH2D* total;
+    TH2D* pass;
+    TH2D* fail;
+    TH2D* eff;
+    TH1D* effDist;
+    TH1D* colTotal;
+    TH1D* colPass;
+    TH1D* colFail;
+    TH1D* colEff;
+    TH1D* rowTotal;
+    TH1D* rowPass;
+    TH1D* rowFail;
+    TH1D* rowEff;
+    TH2D* inPixTotal;
+    TH2D* inPixPass;
+    TH2D* inPixFail;
+    TH2D* inPixEff;
+
+    RegionHists() = default;
+    RegionHists(const std::string& prefix,
+                Area fullPixel,
+                Area foldLocal,
+                int foldBinSize,
+                TDirectory* dir);
+    void fill(const Storage::TrackState& state, const XYPoint& posPixel);
+    void finalize();
+  };
+
   const Mechanics::Sensor& m_sensor;
   Utils::DenseMask m_mask;
-  TH2D* m_total;
-  TH1D* m_totalCol;
-  TH1D* m_totalRow;
-  TH2D* m_pass;
-  TH1D* m_passCol;
-  TH1D* m_passRow;
-  TH2D* m_fail;
-  TH1D* m_failCol;
-  TH1D* m_failRow;
-  TH2D* m_eff;
-  TH1D* m_effCol;
-  TH1D* m_effRow;
-  TH1D* m_effDist;
-  XYPoint m_inPixAnchor;
-  double m_inPixPeriodU;
-  double m_inPixPeriodV;
-  TH2D* m_inPixTotal;
-  TH2D* m_inPixPass;
-  TH2D* m_inPixFail;
-  TH2D* m_inPixEff;
+  RegionHists m_whole;
 };
 
 } // namespace Analyzers
