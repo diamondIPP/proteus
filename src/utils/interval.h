@@ -89,6 +89,12 @@ public:
       m_max = std::max<T>(m_max, other.max());
     }
   }
+  /** Enlarge the interval on each side by the given amount. */
+  void enlarge(T extra)
+  {
+    m_min -= extra;
+    m_max += extra;
+  }
 
 private:
   Interval() : m_min(0), m_max(0) {}
@@ -185,6 +191,12 @@ public:
     for (size_t i = 0; i < N; ++i)
       m_axes[i].enclose(other.interval(i));
   }
+  /** Enlarge the box along both directions on each axis by the given amount. */
+  void enlarge(T extra)
+  {
+    for (size_t i = 0; i < N; ++i)
+      m_axes[i].enlarge(extra);
+  }
 
 private:
   std::array<AxisInterval, N> m_axes;
@@ -208,6 +220,14 @@ Box<N, T0, kEndpoints> boundingBox(const Box<N, T0, kEndpoints>& box0,
   Box<N, T0, kEndpoints> box = box0;
   box.enclose(box1);
   return box;
+}
+
+template <size_t N, typename T, typename U, Endpoints kEndpoints>
+Box<N, T, kEndpoints> enlarged(const Box<N, T, kEndpoints>& box, U extra)
+{
+  Box<N, T, kEndpoints> larger = box;
+  larger.enlarge(extra);
+  return larger;
 }
 
 template <typename T, Endpoints kEndpoints>
