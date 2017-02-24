@@ -17,12 +17,16 @@ User-visible changes
 *   Print only errors by default and add ``--verbose`` and ``--debug``
     command line flags to most tools to increase verbosity.
 *   Add ``--no-progress`` command line flag to disable the progress bar.
+*   ``pt-mach`` now computes some basic sensor and in-pixel efficiency
+    histograms.
 
 Internal changes
 ----------------
 
 *   Clean up arguments parser and print ``DEBUG(...)`` messages only in
     debug builds.
+*   Add the ``Analyzers::BasicEfficiency`` class that implements basic
+    efficiency estimations.
 
 Bug fixes
 ---------

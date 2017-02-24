@@ -4,7 +4,6 @@
 #include <vector>
 
 #include "aligner.h"
-#include "analyzers/residuals.h"
 
 class TDirectory;
 class TH1D;

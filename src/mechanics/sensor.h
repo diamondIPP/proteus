@@ -1,14 +1,13 @@
 #ifndef PT_SENSOR_H
 #define PT_SENSOR_H
 
-#include <array>
-#include <cstdint>
 #include <iosfwd>
 #include <set>
 #include <string>
 #include <vector>
 
 #include "utils/definitions.h"
+#include "utils/densemask.h"
 #include "utils/interval.h"
 
 namespace Mechanics {
@@ -115,11 +114,8 @@ public:
   //
   // noise-pixels functions
   //
-  bool isPixelMasked(Index col, Index row) const
-  {
-    return m_pixelMask[linearPixelIndex(col, row)];
-  }
   void setMaskedPixels(const std::set<ColumnRow>& pixels);
+  const Utils::DenseMask& pixelMask() const { return m_pixelMask; }
 
   //
   // Misc functions
@@ -151,13 +147,6 @@ public:
   const std::string& getName() const { return m_name; }
 
 private:
-  // row major indices for the pixel masks
-  size_t linearPixelIndex(Index col, Index row) const
-  {
-    return m_numCols * col + row;
-  }
-
-private:
   Transform3D m_l2g, m_g2l;
   Index m_numCols, m_numRows;    // number of columns and rows
   double m_pitchCol, m_pitchRow; // pitch along column and row direction
@@ -166,7 +155,7 @@ private:
   Measurement m_measurement;
   Index m_id;
   std::string m_name;
-  std::vector<bool> m_pixelMask;
+  Utils::DenseMask m_pixelMask;
 };
 
 } // namespace Mechanics

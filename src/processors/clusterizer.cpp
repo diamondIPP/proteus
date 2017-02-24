@@ -75,12 +75,12 @@ void Processors::BaseClusterizer::process(Storage::Event& event) const
   std::vector<Storage::Hit*> hits;
   Storage::Plane& plane = *event.getPlane(m_sensor.id());
 
-  // don't try to cluster noise hits
+  // don't try to cluster masked pixels
   hits.clear();
   hits.reserve(plane.numHits());
   for (Index ihit = 0; ihit < plane.numHits(); ++ihit) {
     Storage::Hit* hit = plane.getHit(ihit);
-    if (m_sensor.isPixelMasked(hit->col(), hit->row()))
+    if (m_sensor.pixelMask().isMasked(hit->col(), hit->row()))
       continue;
     hits.push_back(hit);
   }
