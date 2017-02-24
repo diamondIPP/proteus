@@ -88,15 +88,15 @@ estimateDensityAtPosition(const TH2D* values, int i, int j, double bandwidth)
   double sumWeights = 0;
   double sumValues = 0;
   // with a bounded kernel only a subset of the points need to be considered.
-  // define 2*bandwidth+1 sized window around selected point to speed up
+  // define 2*bandwidth sized window around selected point to speed up
   // calculation.
   int bw = std::ceil(std::abs(bandwidth));
   int imin = std::max(1, i - bw);
   int imax = std::min(i + bw, values->GetNbinsX());
   int jmin = std::max(1, j - bw);
   int jmax = std::min(j + bw, values->GetNbinsY());
-  for (int l = imin; l < imax; ++l) {
-    for (int m = jmin; m < jmax; ++m) {
+  for (int l = imin; l <= imax; ++l) {
+    for (int m = jmin; m <= jmax; ++m) {
       if ((l == i) && (m == j))
         continue;
 
