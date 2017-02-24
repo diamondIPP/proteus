@@ -7,6 +7,7 @@
 #define PT_ROOT_H
 
 #include <cassert>
+#include <cmath>
 #include <stdexcept>
 #include <string>
 
@@ -69,6 +70,13 @@ TH1D* makeTransientH1(HistAxis axis);
 
 /** Create an unnamed 2d histogram that is not stored. */
 TH2D* makeTransientH2(HistAxis axis0, HistAxis axis1);
+
+/** Fill a histogram with the values in each bin of the 2d histogram.
+ *
+ * The binning range of the output histograms are adjusted to the actual limits
+ * while the number of bins are kept fixed.
+ */
+void fillDist(const TH2D* values, TH1D* dist);
 
 } // namespace Utils
 
@@ -146,6 +154,20 @@ inline TH2D* Utils::makeTransientH2(HistAxis axis0, HistAxis axis1)
   h->SetYTitle(axis1.label.c_str());
   h->SetDirectory(nullptr);
   return h;
+}
+
+inline void Utils::fillDist(const TH2D* values, TH1D* dist)
+{
+  // ensure all values are binned
+  dist->SetBins(dist->GetNbinsX(), values->GetMinimum(),
+                std::nextafter(values->GetMaximum(), values->GetMaximum() + 1));
+  for (int icol = 1; icol <= values->GetNbinsX(); ++icol) {
+    for (int irow = 1; irow <= values->GetNbinsY(); ++irow) {
+      auto value = values->GetBinContent(icol, irow);
+      if (std::isfinite(value))
+        dist->Fill(value);
+    }
+  }
 }
 
 #endif // PT_ROOT_H
