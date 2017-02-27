@@ -34,6 +34,12 @@ Run 1066
 
 *   **Prefer this dataset for tests**
 *   Unpublished data from the July 2016 campaign at SPS
-*   Six layer FEI4 telescope
+*   Six layer FE-I4 telescope
 *   Two irradiated CCPDv4 device-under-tests
 *   Around 100k events with mostly one track per event
+
+Run 9817
+--------
+
+*   Six layer FE-I4 telescope
+*   One H35demo device-under-test
