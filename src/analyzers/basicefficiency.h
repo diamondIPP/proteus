@@ -6,6 +6,8 @@
 #ifndef PT_BASICEFFICIENCY_H
 #define PT_BASICEFFICIENCY_H
 
+#include <vector>
+
 #include "analyzers/analyzer.h"
 #include "utils/definitions.h"
 #include "utils/densemask.h"
@@ -31,7 +33,7 @@ public:
    * \param sensor Sensor for which efficiencies should be calculated
    * \param dir Histogram output directory
    * \param increaseArea Extend histograms beyond the nominal sensor edge
-   * \param maskedPixelRange Track mask around masked pixels, 0 to disable
+   * \param maskedPixelRange Remove tracks around masked pixels, 0 to disable
    * \param inPixelPeriod Folding period in number of pixels
    * \param inPixelBinsMin Minimum number of bins along the smaller direction
    */
@@ -48,9 +50,9 @@ public:
 
 private:
   using Area = Utils::Box<2, double>;
-  struct RegionHists {
-    Area areaFull; // in pixel coordinates
-    Area areaFold; // in local coordinates
+  struct Hists {
+    Area areaFullPixel; // in pixel coordinates
+    Area areaFoldLocal; // in local coordinates
     TH2D* total;
     TH2D* pass;
     TH2D* fail;
@@ -69,19 +71,21 @@ private:
     TH2D* inPixFail;
     TH2D* inPixEff;
 
-    RegionHists() = default;
-    RegionHists(const std::string& prefix,
-                Area fullPixel,
-                Area foldLocal,
-                int foldBinSize,
-                TDirectory* dir);
+    Hists() = default;
+    Hists(const std::string& prefix,
+          Area fullPixel,
+          Area foldLocal,
+          int foldBinsU,
+          int foldBinsV,
+          TDirectory* dir);
     void fill(const Storage::TrackState& state, const XYPoint& posPixel);
     void finalize();
   };
 
   const Mechanics::Sensor& m_sensor;
   Utils::DenseMask m_mask;
-  RegionHists m_whole;
+  Hists m_whole;
+  std::vector<Hists> m_regions;
 };
 
 } // namespace Analyzers
