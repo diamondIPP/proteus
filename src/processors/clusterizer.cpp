@@ -23,6 +23,9 @@ struct Unconnected {
 
   bool operator()(const Storage::Hit* hit)
   {
+    // don't cluster hits from different sensor regions
+    if (cluster->region() != hit->region())
+      return true;
     for (Index icompare = 0; icompare < cluster->numHits(); ++icompare) {
       XYVector delta = hit->posPixel() - cluster->getHit(icompare)->posPixel();
       if (delta.Mag2() <= maxDistSquared)
