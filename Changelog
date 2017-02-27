@@ -10,6 +10,23 @@ v1.1.0 (to be released)
 User-visible changes
 --------------------
 
+*   Add support for sensor regions.
+
+    A sensor can be separated into different, exclusive sensor regions
+    that are treated as independent sensors in the analysis. When any
+    sensor regions are configured, areas of the pixel matrix that do
+    not belong to a configured region are ignored. This can also be
+    used to restrict a sensor to a specific region-of-interest.
+
+    The clusterizer will create clusters only from hits that belong to
+    the same regions. Many analyzers will automatically produce
+    separate histograms for each region.
+*   Add support for basic sensor-level and in-pixel efficiency.
+
+    Efficiency histograms are calculated when running ``pt-match``
+    based on the fitted track positions and the matched cluster
+    information. If regions are configured, efficiencies are
+    calculated separately for each region.
 *   Correlations are calculated according to the ordering of the
     sensors along the z-axis.
 *   ``pt-align`` uses the absolute geometry parameters instead of the
@@ -17,8 +34,6 @@ User-visible changes
 *   Print only errors by default and add ``--verbose`` and ``--debug``
     command line flags to most tools to increase verbosity.
 *   Add ``--no-progress`` command line flag to disable the progress bar.
-*   ``pt-mach`` now computes some basic sensor and in-pixel efficiency
-    histograms.
 *   Add a ``install`` build target that installs the binaries.
 
 Internal changes
