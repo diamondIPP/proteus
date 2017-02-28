@@ -4,6 +4,9 @@
 #include <set>
 #include <string>
 
+#include <TDirectory.h>
+#include <TTree.h>
+
 #include "mechanics/device.h"
 #include "storage/event.h"
 #include "utils/logger.h"
@@ -19,32 +22,39 @@ Analyzers::MatchExporter::MatchExporter(const Mechanics::Device& device,
 {
   TDirectory* sub = dir->mkdir(m_sensor.name().c_str());
 
+  auto setupCluster = [](TTree* tree, const std::string& prefix,
+                         ClusterData& data) {
+    tree->Branch((prefix + "u").c_str(), &data.u);
+    tree->Branch((prefix + "v").c_str(), &data.v);
+    tree->Branch((prefix + "std_u").c_str(), &data.stdU);
+    tree->Branch((prefix + "std_v").c_str(), &data.stdV);
+    tree->Branch((prefix + "corr_uv").c_str(), &data.corrUV);
+    tree->Branch((prefix + "col").c_str(), &data.col);
+    tree->Branch((prefix + "row").c_str(), &data.row);
+    tree->Branch((prefix + "size").c_str(), &data.size);
+    tree->Branch((prefix + "size_col").c_str(), &data.sizeCol);
+    tree->Branch((prefix + "size_row").c_str(), &data.sizeRow);
+  };
+
   m_treeTrk = new TTree("tracks", "");
   m_treeTrk->SetDirectory(sub);
-  m_treeTrk->Branch("ev_ntracks", &m_ev.nTracks, "ev_ntracks/I");
-  m_treeTrk->Branch("trk_redchi2", &m_trk.redChi2, "trk_redchi2/F");
-  m_treeTrk->Branch("trk_u", &m_trk.u, "trk_u/F");
-  m_treeTrk->Branch("trk_v", &m_trk.v, "trk_v/F");
-  m_treeTrk->Branch("trk_col", &m_trk.col, "trk_col/F");
-  m_treeTrk->Branch("trk_row", &m_trk.row, "trk_row/F");
-  m_treeTrk->Branch("d2", &m_mat.d2, "d2/F");
-  m_treeTrk->Branch("clu_u", &m_cluMat.u, "clu_u/F");
-  m_treeTrk->Branch("clu_v", &m_cluMat.v, "clu_v/F");
-  m_treeTrk->Branch("clu_col", &m_cluMat.col, "clu_col/F");
-  m_treeTrk->Branch("clu_row", &m_cluMat.row, "clu_row/F");
-  m_treeTrk->Branch("clu_size", &m_cluMat.size, "clu_size/I");
-  m_treeTrk->Branch("clu_size_col", &m_cluMat.sizeCol, "clu_size_col/I");
-  m_treeTrk->Branch("clu_size_row", &m_cluMat.sizeRow, "clu_size_row/I");
+  m_treeTrk->Branch("evt_ntracks", &m_event.nTracks);
+  m_treeTrk->Branch("trk_u", &m_track.u);
+  m_treeTrk->Branch("trk_v", &m_track.v);
+  m_treeTrk->Branch("trk_std_u", &m_track.stdU);
+  m_treeTrk->Branch("trk_std_v", &m_track.stdV);
+  m_treeTrk->Branch("trk_corr_uv", &m_track.corrUV);
+  m_treeTrk->Branch("trk_col", &m_track.col);
+  m_treeTrk->Branch("trk_row", &m_track.row);
+  m_treeTrk->Branch("trk_chi2", &m_track.chi2);
+  m_treeTrk->Branch("trk_dof", &m_track.dof);
+  m_treeTrk->Branch("trk_nclusters", &m_track.nClusters);
+  m_treeTrk->Branch("mat_d2", &m_match.d2);
+  setupCluster(m_treeTrk, "clu_", m_clusterMatched);
 
   m_treeClu = new TTree("clusters_unmatched", "");
   m_treeClu->SetDirectory(sub);
-  m_treeClu->Branch("u", &m_cluUnm.u, "u/F");
-  m_treeClu->Branch("v", &m_cluUnm.v, "v/F");
-  m_treeClu->Branch("col", &m_cluUnm.col, "col/F");
-  m_treeClu->Branch("row", &m_cluUnm.row, "row/F");
-  m_treeClu->Branch("size", &m_cluUnm.size, "size/I");
-  m_treeClu->Branch("sizeCol", &m_cluUnm.sizeCol, "sizeCol/I");
-  m_treeClu->Branch("sizeRow", &m_cluUnm.sizeRow, "sizeRow/I");
+  setupCluster(m_treeClu, std::string(), m_clusterUnmatched);
 }
 
 std::string Analyzers::MatchExporter::name() const { return m_name; }
@@ -54,46 +64,68 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
   const Storage::Plane& plane = *event.getPlane(m_sensorId);
   Index numMatches = 0;
 
-  // global event information
-  m_ev.nTracks = event.numTracks();
+  auto fillCluster = [](const Storage::Cluster& cluster, ClusterData& data) {
+    data.u = cluster.posLocal().x();
+    data.v = cluster.posLocal().y();
+    data.stdU = std::sqrt(cluster.covLocal()(0, 0));
+    data.stdV = std::sqrt(cluster.covLocal()(1, 1));
+    data.corrUV = cluster.covLocal()(0, 1) / (data.stdU * data.stdV);
+    data.col = cluster.posPixel().x();
+    data.row = cluster.posPixel().y();
+    data.size = cluster.size();
+    data.sizeCol = cluster.sizeCol();
+    data.sizeRow = cluster.sizeRow();
+  };
+  auto invalidateCluster = [](ClusterData& data) {
+    data.u = std::numeric_limits<float>::quiet_NaN();
+    data.v = std::numeric_limits<float>::quiet_NaN();
+    data.stdU = std::numeric_limits<float>::quiet_NaN();
+    data.stdV = std::numeric_limits<float>::quiet_NaN();
+    data.corrUV = std::numeric_limits<float>::quiet_NaN();
+    data.col = -1;
+    data.row = -1;
+    data.size = -1;
+    data.sizeCol = -1;
+    data.sizeRow = -1;
+  };
 
+  // global event information
+  m_event.nTracks = event.numTracks();
   // export tracks and possible matched clusters
   for (Index istate = 0; istate < plane.numStates(); ++istate) {
     const Storage::TrackState& state = plane.getState(istate);
+    const Storage::Track& track = *state.track();
 
     // track data
     XYPoint cr = m_sensor.transformLocalToPixel(state.offset());
-    m_trk.redChi2 = state.track()->reducedChi2();
-    m_trk.u = state.offset().x();
-    m_trk.v = state.offset().y();
-    m_trk.col = cr.x();
-    m_trk.row = cr.y();
-
+    m_track.u = state.offset().x();
+    m_track.v = state.offset().y();
+    m_track.stdU = std::sqrt(state.covOffset()(0, 0));
+    m_track.stdV = std::sqrt(state.covOffset()(1, 1));
+    m_track.corrUV = state.covOffset()(0, 1) / (m_track.stdU * m_track.stdV);
+    m_track.col = cr.x();
+    m_track.row = cr.y();
+    m_track.chi2 = track.chi2();
+    m_track.dof = track.degreesOfFreedom();
+    m_track.nClusters = track.numClusters();
     // matching cluster data
     if (state.matchedCluster()) {
       const Storage::Cluster& cluster = *state.matchedCluster();
-      XYVector delta = cluster.posLocal() - state.offset();
+      // fill matching information
       SymMatrix2 cov = cluster.covLocal() + state.covOffset();
-      m_mat.d2 = mahalanobisSquared(cov, delta);
-      m_cluMat.u = cluster.posLocal().x();
-      m_cluMat.v = cluster.posLocal().y();
-      m_cluMat.col = cluster.posPixel().x();
-      m_cluMat.row = cluster.posPixel().y();
-      m_cluMat.size = cluster.size();
-      m_cluMat.sizeCol = cluster.sizeCol();
-      m_cluMat.sizeRow = cluster.sizeRow();
+      XYVector delta = cluster.posLocal() - state.offset();
+      m_match.d2 = mahalanobisSquared(cov, delta);
+      // fill cluster information
+      fillCluster(cluster, m_clusterMatched);
+      // summary statistics
       m_statMatTrkFraction.fill(1);
       m_statMatCluFraction.fill(1);
       numMatches += 1;
     } else {
-      m_mat.d2 = -1;
-      m_cluMat.u = std::numeric_limits<Float_t>::quiet_NaN();
-      m_cluMat.v = std::numeric_limits<Float_t>::quiet_NaN();
-      m_cluMat.col = -1;
-      m_cluMat.row = -1;
-      m_cluMat.size = -1;
-      m_cluMat.sizeCol = -1;
-      m_cluMat.sizeRow = -1;
+      // fill invalid data if no matching cluster exists
+      m_match.d2 = std::numeric_limits<float>::quiet_NaN();
+      invalidateCluster(m_clusterMatched);
+      // summary statistics
       m_statMatTrkFraction.fill(0);
     }
     m_treeTrk->Fill();
@@ -105,15 +137,7 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
     // already exported during track iteration
     if (cluster.matchedTrack())
       continue;
-
-    XYPoint uv = m_sensor.transformPixelToLocal(cluster.posPixel());
-    m_cluUnm.u = uv.x();
-    m_cluUnm.v = uv.y();
-    m_cluUnm.col = cluster.posPixel().x();
-    m_cluUnm.row = cluster.posPixel().y();
-    m_cluUnm.size = cluster.size();
-    m_cluUnm.sizeCol = cluster.sizeCol();
-    m_cluUnm.sizeRow = cluster.sizeRow();
+    fillCluster(cluster, m_clusterUnmatched);
     m_treeClu->Fill();
     m_statMatCluFraction.fill(0);
   }
