@@ -50,6 +50,7 @@ private:
     float u, v;
     float stdU, stdV, corrUV;
     float col, row;
+    int region;
     int size, sizeCol, sizeRow;
   };
   struct MatchData {
