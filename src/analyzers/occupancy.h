@@ -40,15 +40,16 @@ public:
 
 private:
   struct Hists {
-    TH2D* hits;
-    TH2D* clusteredHits;
-    TH2D* clusters;
-    TH1D* pixelOccupancy;
+    TH2D* hitMap;
+    TH1D* hitOccupancyDist;
+    TH2D* clusteredHitMap;
+    TH1D* clusteredHitOccupancyDist;
+    TH2D* clusterMap;
+    TH1D* clusterOccupancyDist;
 
     Hists(const Mechanics::Sensor& sensor,
           TDirectory* dir,
-          const int binsPerClusterPixel = 3,
-          const int binsOccupancy = 128);
+          const int occupancyBins = 128);
   };
 
   uint64_t m_numEvents;
