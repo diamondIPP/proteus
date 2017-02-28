@@ -41,13 +41,18 @@ User-visible changes
     uncertainties in the local system for both tracks and clusters are
     stored in ``..._std_u``, ``..._std_v``, and ``..._corr_uv``.
 
-*   Use consistent histogram names and units.
+*   Use consistent histogram names, ranges, and units.
 
-    Rename ``TimeMap``, ``ValueMap`` to ``MeanTimeMap``,
-    ``MeanValueMap`` and remove the duplicate ``HitMap`` in hit
-    analyzer. Per-pixel distribution histograms in the noise scan have
-    a ``...Dist`` suffix instead of ``...Pixels``. The occupancy is
-    consistently measured in hits per pixel per event.
+    In the hit analyzer: rename ``TimeMap``, ``ValueMap`` to
+    ``MeanTimeMap``, ``MeanValueMap`` and remove the duplicate
+    ``HitMap`` histogram.
+    In the occupancy analyzer: remove sub-pixel binning in cluster map,
+    use consistent histogram ranges, rename occupancy distributions to
+    ``...OccupancyDist``.
+    In the noise scan: use ``...Dist`` suffix for per-pixel
+    distribution histograms instead of ``...Pixels``.
+    The occupancy is consistently measured in hits per pixel per event
+    or clusters per pixel per event.
 
 *   ``pt-align`` uses the absolute geometry parameters instead of the
     corrections in the alignment convergence plots.
