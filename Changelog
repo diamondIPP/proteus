@@ -41,6 +41,14 @@ User-visible changes
     uncertainties in the local system for both tracks and clusters are
     stored in ``..._std_u``, ``..._std_v``, and ``..._corr_uv``.
 
+*   Use consistent histogram names and units.
+
+    Rename ``TimeMap``, ``ValueMap`` to ``MeanTimeMap``,
+    ``MeanValueMap`` and remove the duplicate ``HitMap`` in hit
+    analyzer. Per-pixel distribution histograms in the noise scan have
+    a ``...Dist`` suffix instead of ``...Pixels``. The occupancy is
+    consistently measured in hits per pixel per event.
+
 *   ``pt-align`` uses the absolute geometry parameters instead of the
     corrections in the alignment convergence plots.
 *   Print only errors by default and add ``--verbose`` and ``--debug``
@@ -57,10 +65,18 @@ Internal changes
     efficiency estimations.
 *   The continous integration builds the software with different compilers
     and ROOT versions.
+*   Add ``Utils::DenseMask`` class to handle pixel masks in the
+    clusterizer and in the efficiency analyzer. This replaces the
+    manual mask handling in the sensor classes.
+*   Add support for enlarging ``Utils::Interval`` and ``Utils::Box``.
 
 Bug fixes
 ---------
 
+*   Fix intersection and enclosure calculations with empty intervals in
+    ``Utils::Interval`` and ``Utils::Box``.
+*   Fix kernel boundaries in the density estimation in
+    ``Analyzers::NoiseScan``.
 
 v1.0.0 (2017-02-07)
 ===================
