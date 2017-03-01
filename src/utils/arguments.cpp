@@ -1,5 +1,6 @@
 #include "arguments.h"
 
+#include <cassert>
 #include <cstdint>
 #include <cstring>
 #include <iomanip>
@@ -34,6 +35,16 @@ void Utils::Arguments::addOptional(char key, std::string name, std::string help)
   opt.name = std::move(name);
   opt.help = std::move(help);
   opt.type = OptionType::kSingle;
+  m_options.emplace_back(std::move(opt));
+}
+
+void Utils::Arguments::addMulti(char key, std::string name, std::string help)
+{
+  Option opt;
+  opt.abbreviation = key;
+  opt.name = std::move(name);
+  opt.help = std::move(help);
+  opt.type = OptionType::kMulti;
   m_options.emplace_back(std::move(opt));
 }
 
@@ -116,17 +127,31 @@ bool Utils::Arguments::parse(int argc, char const* argv[])
       if (!opt)
         return args_fail("unknown option '" + arg + "'");
 
-      // options must only be set once
-      if (m_values.count(opt->name) == 1)
+      // options, except the multi option, must only be set once
+      if ((opt->type != OptionType::kMulti) && (m_values.count(opt->name) == 1))
         return args_fail("duplicate option '" + arg + "'");
 
       // process depending on option type
-      if (opt->type == OptionType::kSingle) {
-          if (argc <= (i + 1))
-            return args_fail("option '" + arg + "' requires a parameter");
-          m_values[opt->name] = argv[++i];
-      } else /* OptionType::kFlag */ {
-          m_values[opt->name] = "true";
+      switch (opt->type) {
+      case OptionType::kFlag:
+        m_values[opt->name] = "true";
+        break;
+      case OptionType::kSingle:
+        if (argc <= (i + 1))
+          return args_fail("option '" + arg + "' requires a parameter");
+        m_values[opt->name] = argv[++i];
+        break;
+      case OptionType::kMulti:
+        if (argc <= (i + 1))
+          return args_fail("option '" + arg + "' requires a parameter");
+        // multi options are stored internally as komma separated string
+        if (!m_values[opt->name].empty()) {
+          m_values[opt->name] += ',';
+        }
+        m_values[opt->name] += argv[++i];
+        break;
+      default:
+        assert(false && "The option type uses an undefined value.");
       }
 
     } else {

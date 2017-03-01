@@ -28,6 +28,8 @@ public:
   /** Add an optional command line flag with a default value. */
   template <typename T>
   void addOptional(char key, std::string name, std::string help, T value);
+  /** Add an optional command line flag that can be given multiple times. */
+  void addMulti(char key, std::string name, std::string help);
   /** Add a required command line argument. */
   void addRequired(std::string name, std::string help = std::string());
 
@@ -45,7 +47,7 @@ public:
 private:
   static constexpr char kNoAbbr = '\0';
 
-  enum class OptionType { kFlag, kSingle };
+  enum class OptionType { kFlag, kSingle, kMulti };
   struct Option {
     std::string name;
     std::string help;
@@ -59,6 +61,11 @@ private:
     std::string name;
     std::string help;
   };
+
+  template <typename T>
+  static void fromString(const std::string& in, std::vector<T>& out);
+  template <typename T>
+  static void fromString(const std::string& in, T& out);
 
   void printHelp(const std::string& arg0) const;
   const Option* find(const std::string& name) const;
@@ -100,12 +107,41 @@ inline const std::string& Utils::Arguments::get(const std::string& name) const
 }
 
 template <typename T>
+inline void Utils::Arguments::fromString(const std::string& in, T& out)
+{
+  std::istringstream(in) >> out;
+}
+
+template <typename T>
+void Utils::Arguments::fromString(const std::string& in, std::vector<T>& out)
+{
+  // multiple values are stored in a single string separated by kommas,
+  size_t start = 0;
+  size_t end = std::string::npos;
+  while (start != std::string::npos) {
+    end = in.find_first_of(',', start);
+
+    T element;
+    if (end != std::string::npos) {
+      // parse substring until the separator
+      fromString(in.substr(start, end - start), element);
+      start = end + 1;
+    } else {
+      // no separator was found; use the remaining string
+      fromString(in.substr(start), element);
+      start = std::string::npos;
+    }
+    out.emplace_back(std::move(element));
+  }
+}
+
+template <typename T>
 inline T Utils::Arguments::get(const std::string& name) const
 {
   if (!has(name))
     throw std::runtime_error("Arguments: unknown argument '" + name + "'");
   T ret;
-  std::istringstream(m_values.at(name)) >> ret;
+  fromString(m_values.at(name), ret);
   return ret;
 }
 
