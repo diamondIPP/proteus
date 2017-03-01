@@ -52,6 +52,11 @@ User-visible changes
 
 *   ``pt-align`` uses the absolute geometry parameters instead of the
     corrections in the alignment convergence plots.
+*   Add ``-m/--mask`` command line flag to most tools.
+
+    The flag can be used to load extra pixel mask files in addition to
+    the ones already specified in the device configuration. This flag
+    can occur multiple times.
 *   Print only errors by default and add ``--verbose`` and ``--debug``
     command line flags to most tools to increase verbosity.
 *   Add ``--no-progress`` command line flag to disable the progress bar.
@@ -72,6 +77,8 @@ Internal changes
 *   Add support for enlarging ``Utils::Interval`` and ``Utils::Box``.
 *   ``pt-align`` writes out the new geometry after each step and not
     only at the end.
+*   The progress bar determines its default size from the width of the
+    terminal window instead of using a fixed size.
 
 Bug fixes
 ---------
