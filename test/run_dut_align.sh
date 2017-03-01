@@ -9,6 +9,8 @@ rundir=$(printf "run%06d" $RUN)
 rawfile=$(printf "raw/run%06d.root" $RUN)
 prefix=$(printf "output/run%06d-" $RUN)
 
+echo "using $(which pt-align)"
+
 pt-align $FLAGS \
   -d ${rundir}/device.toml -g ${rundir}/geometry/tel_aligned.toml \
   -c ${rundir}/analysis.toml -u dut_coarse \
