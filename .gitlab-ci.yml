@@ -17,20 +17,31 @@ cache:
     - test/raw/
 
 variables:
-  INSTALL_DIR: install
+  INSTALL_DIR: install-debug
 
-build:
+build-debug:
   stage: build
   script:
-    - mkdir build
-    - cd build
+    - mkdir build-debug
+    - cd build-debug
     # Build type=Debug: activates compilation of asserts and
     # includes debug symbols (See issue #43)
-    - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=../install ..
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=../install-debug ..
     - cmake --build . -- install
   artifacts:
     paths:
-      - install
+      - install-debug
+
+build-release:
+  stage: build
+  script:
+    - mkdir build-release
+    - cd build-release
+    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../install-release ..
+    - cmake --build . -- install
+  artifacts:
+    paths:
+      - install-release
 
 check_configs:
   stage: test
