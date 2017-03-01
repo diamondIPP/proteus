@@ -10,15 +10,16 @@ cache:
   paths:
     - test/raw/
 
-# default build environment w/ minimal version requirements
+# setup default build environment w/ minimal version requirements
+# run debug build by default
 before_script:
   - source .gitlab-ci.d/cvmfs-slc6-gcc48-root534.sh
-
-variables:
-  INSTALL_DIR: install-dbg
+  - export "PATH=${PWD}/install-dbg/bin:${PATH}"
 
 build-dbg:
   stage: build
+  tags:
+    - cvmfs
   script:
     - mkdir build-dbg
     - cd build-dbg
@@ -32,6 +33,8 @@ build-dbg:
 
 build-rel:
   stage: build
+  tags:
+    - cvmfs
   script:
     - mkdir build-rel
     - cd build-rel
@@ -43,6 +46,8 @@ build-rel:
 
 build-gcc49-root606-rel:
   stage: build
+  tags:
+    - cvmfs
   before_script:
     - source .gitlab-ci.d/cvmfs-slc6-gcc49-root606.sh
   script:
@@ -70,15 +75,17 @@ build-gcc49-root606-rel:
 
 check_configs:
   stage: test
+  tags:
+    - cvmfs
   script:
-    - export PATH="${PWD}/${INSTALL_DIR}/bin:${PATH}"
     - cd test
     - ./check_configs.sh
 
 run000875_noisescan:
   stage: test
+  tags:
+    - cvmfs
   script:
-    - export PATH="${PWD}/${INSTALL_DIR}/bin:${PATH}"
     - cd test
     - ./download_data.py
     - ./run_tel_noisescan.sh 875 -n 100000 --no-progress
@@ -86,16 +93,18 @@ run000875_noisescan:
 
 run000875_align:
   stage: test
+  tags:
+    - cvmfs
   script:
-    - export PATH="${PWD}/${INSTALL_DIR}/bin:${PATH}"
     - cd test
     - ./download_data.py
     - ./run_tel_align.sh 875 -n 100000 --no-progress
 
 run000875_analysis:
   stage: test
+  tags:
+    - cvmfs
   script:
-    - export PATH="${PWD}/${INSTALL_DIR}/bin:${PATH}"
     - cd test
     - ./download_data.py
     - ./run_track.sh 875 -n 100000 --no-progress
@@ -103,8 +112,9 @@ run000875_analysis:
 
 run001066_noisescan:
   stage: test
+  tags:
+    - cvmfs
   script:
-    - export PATH="${PWD}/${INSTALL_DIR}/bin:${PATH}"
     - cd test
     - ./download_data.py
     - ./run_tel_noisescan.sh 1066 --no-progress
@@ -112,8 +122,9 @@ run001066_noisescan:
 
 run001066_align:
   stage: test
+  tags:
+    - cvmfs
   script:
-    - export PATH="${PWD}/${INSTALL_DIR}/bin:${PATH}"
     - cd test
     - ./download_data.py
     - ./run_tel_align.sh 1066 --no-progress
@@ -121,8 +132,9 @@ run001066_align:
 
 run001066_analysis:
   stage: test
+  tags:
+    - cvmfs
   script:
-    - export PATH="${PWD}/${INSTALL_DIR}/bin:${PATH}"
     - cd test
     - ./download_data.py
     - ./run_track.sh 1066 --no-progress
