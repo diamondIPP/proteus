@@ -28,17 +28,17 @@ def check(path, checksum):
         return False
     if not sha256(path) == checksum:
         return False
-    print('\'{}\' checksum ok'.format(path))
+    print('\'%s\' checksum ok' % path)
     return True
 
 def download(name, output, checksum):
     source = BASE_SOURCE + name
     target = BASE_TARGET + output
     if not check(target, checksum):
-        print('downloading \'{}\' to \'{}\''.format(source, target))
+        print('downloading \'%s\' to \'%s\'' % (source, target))
         urllib.urlretrieve(source, target)
         if not check(target, checksum):
-            sys.exit('\'{}\' checksum failed'.format(target))
+            sys.exit('\'%s\' checksum failed' % target)
 
 if __name__ == '__main__':
     download(
