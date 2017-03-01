@@ -3,8 +3,10 @@ Proteus --- Pixel telescope reconstruction
 
 Proteus is a software to reconstruct and analyze beam telescope
 measurements. It started as a fork of the [Judith][judith] software but
-has since then evolved into an independent package. It requires a
-C++11 compatible compiler and [ROOT 5.34/36][root] or higher.
+has since then evolved into an independent package. It requires a C++11
+compatible compiler and [ROOT 5.34/36][root] or higher. The software is
+tested with gcc 4.8.4, ROOT 5.34/36 on Scientific Linux CERN 6 and gcc
+4.8.5, ROOT 6.08/04 and clang 3.4.2, ROOT 6.08/04 on CERN CentOS 7.
 
 An introduction guide and additional information including the contribution
 guide can be found in the `doc` directory. Example configurations can be found
