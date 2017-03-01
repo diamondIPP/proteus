@@ -9,21 +9,27 @@
 
 #include <iomanip>
 #include <iostream>
+#include <sys/ioctl.h>
+#include <unistd.h>
 
 namespace Utils {
 
 /** Display an updatable progress bar on a single output line */
 class ProgressBar {
 public:
-  /**
+  /** Construct with a fixed output line length.
+   *
    * \param lineLength  Total length of the output line
    */
-  ProgressBar(int lineLength = 79)
+  ProgressBar(int lineLength)
       : m_os(std::cout)
       , m_curr(-1)
-      , m_max((lineLength < 9) ? 0 : (lineLength - 9))
+      , m_max((9 < lineLength) ? (lineLength - 9) : 0)
   {
   }
+  /** Construct with using the line length of the terminal. */
+  ProgressBar() : ProgressBar(queryLineLength()) {}
+
   /** Update the progress bar if necessary. Fraction must be in [0,1]. */
   void update(float fraction)
   {
@@ -55,6 +61,22 @@ private:
     // next update (or unrelated messages) overwrite the current status
     int percent = static_cast<int>(100.0f * m_curr / m_max);
     m_os << "] " << std::setw(3) << percent << "%\r" << std::flush;
+  }
+
+  /** Query the connected terminal for its line length. */
+  static int queryLineLength() {
+    // from https://www.linuxquestions.org/questions/programming-9/get-width-height-of-a-terminal-window-in-c-810739/
+#ifdef TIOCGSIZE
+    struct ttysize ts;
+    ioctl(STDIN_FILENO, TIOCGSIZE, &ts);
+    return ts.ts_cols;
+#elif defined(TIOCGWINSZ)
+    struct winsize ts;
+    ioctl(STDIN_FILENO, TIOCGWINSZ, &ts);
+    return ts.ws_col;
+# else
+    return 60; // fallback
+#endif /* TIOCGSIZE */
   }
 
   std::ostream& m_os;
