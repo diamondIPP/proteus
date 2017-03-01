@@ -10,6 +10,15 @@ before_script:
     - export DISPLAY=""
     - source .gitlab-ci.d/init_x86_64.sh
 
+# global cache that should be shared among all jobs
+cache:
+  key: data
+  paths:
+    - test/raw/
+
+variables:
+  INSTALL_DIR: install
+
 build:
   stage: build
   script:
@@ -17,30 +26,23 @@ build:
     - cd build
     # Build type=Debug: activates compilation of asserts and
     # includes debug symbols (See issue #43)
-    - cmake -DCMAKE_BUILD_TYPE=Debug ..
-    - cmake --build .
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=../install ..
+    - cmake --build . -- install
   artifacts:
     paths:
-      - build/activate.sh
-      - build/bin/
-
-# global cache that should be shared among all jobs
-cache:
-  key: data
-  paths:
-    - test/raw/
+      - install
 
 check_configs:
   stage: test
   script:
-    - source build/activate.sh
+    - export PATH="${PWD}/${INSTALL_DIR}/bin:${PATH}"
     - cd test
     - ./check_configs.sh
 
 run000875_noisescan:
   stage: test
   script:
-    - source build/activate.sh
+    - export PATH="${PWD}/${INSTALL_DIR}/bin:${PATH}"
     - cd test
     - ./download_data.py
     - ./run_tel_noisescan.sh 875 -n 100000 --no-progress
@@ -49,7 +51,7 @@ run000875_noisescan:
 run000875_align:
   stage: test
   script:
-    - source build/activate.sh
+    - export PATH="${PWD}/${INSTALL_DIR}/bin:${PATH}"
     - cd test
     - ./download_data.py
     - ./run_tel_align.sh 875 -n 100000 --no-progress
@@ -57,7 +59,7 @@ run000875_align:
 run000875_analysis:
   stage: test
   script:
-    - source build/activate.sh
+    - export PATH="${PWD}/${INSTALL_DIR}/bin:${PATH}"
     - cd test
     - ./download_data.py
     - ./run_track.sh 875 -n 100000 --no-progress
@@ -66,7 +68,7 @@ run000875_analysis:
 run001066_noisescan:
   stage: test
   script:
-    - source build/activate.sh
+    - export PATH="${PWD}/${INSTALL_DIR}/bin:${PATH}"
     - cd test
     - ./download_data.py
     - ./run_tel_noisescan.sh 1066 --no-progress
@@ -75,7 +77,7 @@ run001066_noisescan:
 run001066_align:
   stage: test
   script:
-    - source build/activate.sh
+    - export PATH="${PWD}/${INSTALL_DIR}/bin:${PATH}"
     - cd test
     - ./download_data.py
     - ./run_tel_align.sh 1066 --no-progress
@@ -84,7 +86,7 @@ run001066_align:
 run001066_analysis:
   stage: test
   script:
-    - source build/activate.sh
+    - export PATH="${PWD}/${INSTALL_DIR}/bin:${PATH}"
     - cd test
     - ./download_data.py
     - ./run_track.sh 1066 --no-progress
