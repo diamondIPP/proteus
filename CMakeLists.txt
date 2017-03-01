@@ -20,5 +20,5 @@ include_directories(external/tinytoml/include)
 add_subdirectory(doc)
 add_subdirectory(src)
 
-# activation script to use the build products
-configure_file(activate.sh.in activate.sh @ONLY)
+# activation script to use the build directory directly
+configure_file(cmake/activate.sh.in activate.sh @ONLY)

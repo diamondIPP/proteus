@@ -1,4 +1,0 @@
-_bindir=@PROJECT_BINARY_DIR@/bin
-_libdir=@PROJECT_BINARY_DIR@/lib
-export PATH="${_bindir}${PATH:+:}${PATH}"
-export LD_LIBRARY_PATH="${_libdir}${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
