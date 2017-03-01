@@ -81,20 +81,15 @@ add_library(pt-common STATIC ${common_SRCS} ${common_HDRS})
 target_include_directories(pt-common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})
 target_link_libraries(pt-common PUBLIC ${ROOT_LIBRARIES})
 
-add_executable(proteus main.cpp inputargs.cpp)
-target_link_libraries(proteus pt-common)
+function(pt_add_tool name)
+  add_executable(${name} ${ARGN})
+  target_link_libraries(${name} pt-common)
+  install(TARGETS ${name} RUNTIME DESTINATION bin)
+endfunction()
 
-add_executable(pt-align pt-align.cpp)
-target_link_libraries(pt-align pt-common)
-
-add_executable(pt-cfg pt-cfg.cpp)
-target_link_libraries(pt-cfg pt-common)
-
-add_executable(pt-match pt-match.cpp)
-target_link_libraries(pt-match pt-common)
-
-add_executable(pt-noisescan pt-noisescan.cpp)
-target_link_libraries(pt-noisescan pt-common)
-
-add_executable(pt-track pt-track.cpp)
-target_link_libraries(pt-track pt-common)
+pt_add_tool(proteus main.cpp inputargs.cpp)
+pt_add_tool(pt-align pt-align.cpp)
+pt_add_tool(pt-cfg pt-cfg.cpp)
+pt_add_tool(pt-match pt-match.cpp)
+pt_add_tool(pt-noisescan pt-noisescan.cpp)
+pt_add_tool(pt-track pt-track.cpp)
