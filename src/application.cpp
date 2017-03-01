@@ -18,10 +18,7 @@ PT_SETUP_LOCAL_LOGGER(Application)
 Application::Application(const std::string& name,
                          const std::string& description,
                          const toml::Table& defaults)
-    : m_name(name)
-    , m_desc(description)
-    , m_cfg(defaults)
-    , m_showProgress(false)
+    : m_name(name), m_desc(description), m_cfg(defaults), m_showProgress(false)
 {
 }
 
@@ -29,7 +26,8 @@ void Application::initialize(int argc, char const* argv[])
 {
   Utils::Arguments args(m_desc);
   args.addOptional('d', "device", "device configuration file", "device.toml");
-  args.addOptional('g', "geometry", "load a separate geometry file");
+  args.addOptional('g', "geometry", "use a different geometry file");
+  args.addMulti('m', "mask", "load additional pixel mask file");
   args.addOptional('c', "config", "analysis configuration file",
                    "analysis.toml");
   args.addOptional('u', "subsection",
@@ -72,11 +70,17 @@ void Application::initialize(int argc, char const* argv[])
   m_cfg = Utils::Config::withDefaults(*cfg, m_cfg);
   INFO("read configuration '", section, "' from '", args.get("config"), "'");
 
-  // read device w/ optional geometry override
+  // read device w/ optional geometry override and additional pixel masks
   m_dev.reset(
       new Mechanics::Device(Mechanics::Device::fromFile(args.get("device"))));
   if (args.has("geometry"))
     m_dev->setGeometry(Mechanics::Geometry::fromFile(args.get("geometry")));
+  if (args.has("mask")) {
+    auto maskPaths = args.get<std::vector<std::string>>("mask");
+    for (const auto& path : maskPaths) {
+      m_dev->applyPixelMasks(Mechanics::PixelMasks::fromFile(path));
+    }
+  }
 
   // setup input and i/o settings
   m_input.reset(new Storage::StorageIO(args.get("input"), Storage::INPUT,
