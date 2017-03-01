@@ -4,44 +4,69 @@ stages:
   - build
   - test
 
-before_script:
-    - export GCC_VERSION=4.8.1
-    - export ROOT_VERSION=5.34.36
-    - export DISPLAY=""
-    - source .gitlab-ci.d/init_x86_64.sh
-
 # global cache that should be shared among all jobs
 cache:
   key: data
   paths:
     - test/raw/
 
-variables:
-  INSTALL_DIR: install-debug
+# default build environment w/ minimal version requirements
+before_script:
+  - source .gitlab-ci.d/cvmfs-slc6-gcc48-root534.sh
 
-build-debug:
+variables:
+  INSTALL_DIR: install-dbg
+
+build-dbg:
   stage: build
   script:
-    - mkdir build-debug
-    - cd build-debug
+    - mkdir build-dbg
+    - cd build-dbg
     # Build type=Debug: activates compilation of asserts and
     # includes debug symbols (See issue #43)
-    - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=../install-debug ..
+    - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=../install-dbg ..
     - cmake --build . -- install
   artifacts:
     paths:
-      - install-debug
+      - install-dbg
 
-build-release:
+build-rel:
   stage: build
   script:
-    - mkdir build-release
-    - cd build-release
-    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../install-release ..
+    - mkdir build-rel
+    - cd build-rel
+    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../install-rel ..
     - cmake --build . -- install
   artifacts:
     paths:
-      - install-release
+      - install-rel
+
+build-gcc49-root606-rel:
+  stage: build
+  before_script:
+    - source .gitlab-ci.d/cvmfs-slc6-gcc49-root606.sh
+  script:
+    - mkdir build-gcc49-root606-rel
+    - cd build-gcc49-root606-rel
+    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../install-gcc49-root606-rel ..
+    - cmake --build . -- install
+  artifacts:
+    paths:
+      - install-gcc49-root606-rel
+
+# TODO 2017-03-01 msmk: results in linker error w/ missing -lstdc++ library
+#build-llvm39-root606-rel:
+#  stage: build
+#  before_script:
+#    - source .gitlab-ci.d/cvmfs-slc6-llvm39-root606.sh
+#  script:
+#    - mkdir build-llvm39-root606-rel
+#    - cd build-llvm39-root606-rel
+#    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../install-llvm39-root606-rel ..
+#    - cmake --build . -- install
+#  artifacts:
+#    paths:
+#      - install-llvm39-root606-rel
 
 check_configs:
   stage: test
