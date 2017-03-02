@@ -1,4 +1,4 @@
-image: xbane/repo:slc6-base
+image: gitlab-registry.cern.ch/unige-fei4tel/proteus:slc6
 
 stages:
   - build
