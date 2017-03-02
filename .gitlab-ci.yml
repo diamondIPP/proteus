@@ -13,65 +13,75 @@ cache:
 # setup default build environment w/ minimal version requirements
 # run debug build by default
 before_script:
-  - source .gitlab-ci.d/cvmfs-slc6-gcc48-root534.sh
-  - export "PATH=${PWD}/install-dbg/bin:${PATH}"
+  - source ci/cvmfs-slc6-gcc48-root534.sh
+  - export "PATH=${PWD}/slc6-debug/bin:${PATH}"
 
-build-dbg:
+build-slc6-release:
   stage: build
   tags:
     - cvmfs
   script:
-    - mkdir build-dbg
-    - cd build-dbg
+    - mkdir slc6-release
+    - cd slc6-release
+    - cmake -DCMAKE_BUILD_TYPE=Release ..
+    - cmake --build .
+  artifacts:
+    paths:
+      - slc6-release/bin
+
+build-slc6-debug:
+  stage: build
+  tags:
+    - cvmfs
+  script:
+    - mkdir slc6-debug
+    - cd slc6-debug
     # Build type=Debug: activates compilation of asserts and
     # includes debug symbols (See issue #43)
-    - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=../install-dbg ..
-    - cmake --build . -- install
+    - cmake -DCMAKE_BUILD_TYPE=Debug ..
+    - cmake --build .
   artifacts:
     paths:
-      - install-dbg
+      - slc6-debug/bin
 
-build-rel:
+build-cc7-gcc:
+  image: gitlab-registry.cern.ch/unige-fei4tel/proteus:cc7
   stage: build
-  tags:
-    - cvmfs
+  before_script: []
   script:
-    - mkdir build-rel
-    - cd build-rel
-    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../install-rel ..
-    - cmake --build . -- install
+    - mkdir cc7-gcc
+    - cd cc7-gcc
+    - cmake -GNinja -DCMAKE_CXX_COMPILER=g++ ..
+    - cmake --build .
   artifacts:
     paths:
-      - install-rel
+      - cc7-gcc/bin
 
-build-gcc49-root606-rel:
+build-cc7-clang:
+  image: gitlab-registry.cern.ch/unige-fei4tel/proteus:cc7
   stage: build
-  tags:
-    - cvmfs
-  before_script:
-    - source .gitlab-ci.d/cvmfs-slc6-gcc49-root606.sh
+  before_script: []
   script:
-    - mkdir build-gcc49-root606-rel
-    - cd build-gcc49-root606-rel
-    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../install-gcc49-root606-rel ..
-    - cmake --build . -- install
+    - mkdir cc7-clang
+    - cd cc7-clang
+    - cmake -GNinja -DCMAKE_CXX_COMPILER=clang++  ..
+    - cmake --build .
   artifacts:
     paths:
-      - install-gcc49-root606-rel
+      - cc7-clang/bin
 
-# TODO 2017-03-01 msmk: results in linker error w/ missing -lstdc++ library
-#build-llvm39-root606-rel:
-#  stage: build
-#  before_script:
-#    - source .gitlab-ci.d/cvmfs-slc6-llvm39-root606.sh
-#  script:
-#    - mkdir build-llvm39-root606-rel
-#    - cd build-llvm39-root606-rel
-#    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../install-llvm39-root606-rel ..
-#    - cmake --build . -- install
-#  artifacts:
-#    paths:
-#      - install-llvm39-root606-rel
+doc:
+  image: gitlab-registry.cern.ch/unige-fei4tel/proteus:cc7
+  stage: build
+  before_script: []
+  script:
+    - mkdir build
+    - cd build
+    - cmake -GNinja ..
+    - cmake --build . -- doc
+  artifacts:
+    paths:
+      - build/doc/html
 
 check_configs:
   stage: test
