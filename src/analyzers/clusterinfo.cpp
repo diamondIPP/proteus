@@ -84,7 +84,7 @@ Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
     hs.sizeHitTime = makeH2(sub, prefix + "HitTime_Size", axSize, axHitTime);
     hs.sizeHitValue = makeH2(sub, prefix + "HitValue_Size", axSize, axHitValue);
     hs.hitValueHitTime =
-        makeH2(sub, prefix + "HitTime_HitValue", axValue, axHitTime);
+        makeH2(sub, prefix + "HitTime_HitValue", axHitValue, axHitTime);
     return hs;
   };
 
