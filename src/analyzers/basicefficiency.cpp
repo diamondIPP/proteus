@@ -117,30 +117,6 @@ std::string Analyzers::BasicEfficiency::name() const
   return "BasicEfficiency(" + std::to_string(m_sensor.id()) + ')';
 }
 
-void Analyzers::BasicEfficiency::Hists::fill(const Storage::TrackState& state,
-                                             const XYPoint& posPixel)
-{
-  // calculate folded position
-  // TODO 2017-02-17 msmk: can this be done w/ std::remainder or std::fmod?
-  double foldedU = state.offset().x() - inPixelAreaLocal.min(0);
-  double foldedV = state.offset().y() - inPixelAreaLocal.min(1);
-  foldedU -= inPixelAreaLocal.length(0) *
-             std::floor(foldedU / inPixelAreaLocal.length(0));
-  foldedV -= inPixelAreaLocal.length(1) *
-             std::floor(foldedV / inPixelAreaLocal.length(1));
-
-  total->Fill(posPixel.x(), posPixel.y());
-  colTotal->Fill(posPixel.x());
-  rowTotal->Fill(posPixel.y());
-  inPixTotal->Fill(foldedU, foldedV);
-  if (state.matchedCluster()) {
-    pass->Fill(posPixel.x(), posPixel.y());
-    colPass->Fill(posPixel.x());
-    rowPass->Fill(posPixel.y());
-    inPixPass->Fill(foldedU, foldedV);
-  }
-}
-
 void Analyzers::BasicEfficiency::analyze(const Storage::Event& event)
 {
   const Storage::Plane& sensorEvent = *event.getPlane(m_sensor.id());
@@ -166,6 +142,55 @@ void Analyzers::BasicEfficiency::analyze(const Storage::Event& event)
         continue;
       regionHists.fill(state, posPixel);
     }
+  }
+}
+
+void Analyzers::BasicEfficiency::Hists::fill(const Storage::TrackState& state,
+                                             const XYPoint& posPixel)
+{
+  bool isMatched = state.matchedCluster();
+
+  total->Fill(posPixel.x(), posPixel.y());
+  if (isMatched)
+    pass->Fill(posPixel.x(), posPixel.y());
+
+  if (roiPixel.interval(1).isInside(posPixel.y())) {
+    colTotal->Fill(posPixel.x());
+    if (isMatched)
+      colPass->Fill(posPixel.x());
+  }
+  if (roiPixel.interval(0).isInside(posPixel.x())) {
+    rowTotal->Fill(posPixel.y());
+    if (isMatched)
+      rowPass->Fill(posPixel.y());
+  }
+  if (roiPixel.isInside(posPixel.x(), posPixel.y())) {
+    // calculate folded position
+    // TODO 2017-02-17 msmk: can this be done w/ std::remainder or std::fmod?
+    double foldedU = state.offset().x() - inPixelAreaLocal.min(0);
+    double foldedV = state.offset().y() - inPixelAreaLocal.min(1);
+    foldedU -= inPixelAreaLocal.length(0) *
+               std::floor(foldedU / inPixelAreaLocal.length(0));
+    foldedV -= inPixelAreaLocal.length(1) *
+               std::floor(foldedV / inPixelAreaLocal.length(1));
+
+    inPixTotal->Fill(foldedU, foldedV);
+    if (isMatched)
+      inPixPass->Fill(foldedU, foldedV);
+  }
+}
+
+void Analyzers::BasicEfficiency::finalize()
+{
+  INFO("efficiency for ", m_sensor.name());
+  m_sensorHists.finalize();
+
+  Index iregion = 0;
+  for (auto& hists : m_regionsHists) {
+    const auto& region = m_sensor.regions().at(iregion);
+    INFO("efficiency for ", m_sensor.name(), "/", region.name);
+    hists.finalize();
+    iregion += 1;
   }
 }
 
@@ -214,18 +239,4 @@ void Analyzers::BasicEfficiency::Hists::finalize()
   INFO("  median: ", effDist->GetBinCenter(effDist->GetMaximumBin()));
   INFO("  mean ", effDist->GetMean(), " +-", effDist->GetMeanError());
   INFO("  range: ", effMin, " - ", effMax);
-}
-
-void Analyzers::BasicEfficiency::finalize()
-{
-  INFO("efficiency for ", m_sensor.name());
-  m_sensorHists.finalize();
-
-  Index iregion = 0;
-  for (auto& hists : m_regionsHists) {
-    const auto& region = m_sensor.regions().at(iregion);
-    INFO("efficiency for ", m_sensor.name(), "/", region.name);
-    hists.finalize();
-    iregion += 1;
-  }
 }

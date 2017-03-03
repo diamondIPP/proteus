@@ -29,10 +29,18 @@ namespace Analyzers {
 /** Basic efficiency calculation using tracks and matched clusters.
  *
  * Computer sensor and in-pixel efficiency maps and projections. Two-dimensional
- * efficiency maps are calculated with additional eges to include also tracks
- * that are matched to a cluster but are located outside the region of interest.
+ * efficiency maps are calculated with additional edges to also include tracks
+ * that are matched to a cluster but are located outside the region-of-interest.
  * The per-pixel efficiency distribution is calculated without these edges
  * pixels.
+ *
+ * For the column and row projections, tracks are considered only if they fall
+ * within the region-of-interest in the other axis. E.g. the column projections
+ * are calculated only for tracks whose row position falls within the
+ * region-of-interest excluding the additional edges.
+ *
+ * The in-pixel efficiencies are only calculated for tracks fully within the
+ * region-of-interest excluding the additional edges.
  */
 class BasicEfficiency : public Analyzer {
 public:
