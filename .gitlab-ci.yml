@@ -1,28 +1,8 @@
-image: xbane/repo:slc6-base
+image: gitlab-registry.cern.ch/unige-fei4tel/proteus:slc6
 
 stages:
   - build
   - test
-
-before_script:
-    - export GCC_VERSION=4.8.1
-    - export ROOT_VERSION=5.34.36
-    - export DISPLAY=""
-    - source .gitlab-ci.d/init_x86_64.sh
-
-build:
-  stage: build
-  script:
-    - mkdir build
-    - cd build
-    # Build type=Debug: activates compilation of asserts and
-    # includes debug symbols (See issue #43)
-    - cmake -DCMAKE_BUILD_TYPE=Debug ..
-    - cmake --build .
-  artifacts:
-    paths:
-      - build/activate.sh
-      - build/bin/
 
 # global cache that should be shared among all jobs
 cache:
@@ -30,17 +10,92 @@ cache:
   paths:
     - test/raw/
 
+# setup default build environment w/ minimal version requirements
+# run debug build by default
+before_script:
+  - source ci/cvmfs-slc6-gcc48-root534.sh
+  - export "PATH=${PWD}/slc6-debug/bin:${PATH}"
+
+build-slc6-release:
+  stage: build
+  tags:
+    - cvmfs
+  script:
+    - mkdir slc6-release
+    - cd slc6-release
+    - cmake -DCMAKE_BUILD_TYPE=Release ..
+    - cmake --build .
+  artifacts:
+    paths:
+      - slc6-release/bin
+
+build-slc6-debug:
+  stage: build
+  tags:
+    - cvmfs
+  script:
+    - mkdir slc6-debug
+    - cd slc6-debug
+    # Build type=Debug: activates compilation of asserts and
+    # includes debug symbols (See issue #43)
+    - cmake -DCMAKE_BUILD_TYPE=Debug ..
+    - cmake --build .
+  artifacts:
+    paths:
+      - slc6-debug/bin
+
+build-cc7-gcc:
+  image: gitlab-registry.cern.ch/unige-fei4tel/proteus:cc7
+  stage: build
+  before_script: []
+  script:
+    - mkdir cc7-gcc
+    - cd cc7-gcc
+    - cmake -GNinja -DCMAKE_CXX_COMPILER=g++ ..
+    - cmake --build .
+  artifacts:
+    paths:
+      - cc7-gcc/bin
+
+build-cc7-clang:
+  image: gitlab-registry.cern.ch/unige-fei4tel/proteus:cc7
+  stage: build
+  before_script: []
+  script:
+    - mkdir cc7-clang
+    - cd cc7-clang
+    - cmake -GNinja -DCMAKE_CXX_COMPILER=clang++  ..
+    - cmake --build .
+  artifacts:
+    paths:
+      - cc7-clang/bin
+
+doc:
+  image: gitlab-registry.cern.ch/unige-fei4tel/proteus:cc7
+  stage: build
+  before_script: []
+  script:
+    - mkdir build
+    - cd build
+    - cmake -GNinja ..
+    - cmake --build . -- doc
+  artifacts:
+    paths:
+      - build/doc/html
+
 check_configs:
   stage: test
+  tags:
+    - cvmfs
   script:
-    - source build/activate.sh
     - cd test
     - ./check_configs.sh
 
 run000875_noisescan:
   stage: test
+  tags:
+    - cvmfs
   script:
-    - source build/activate.sh
     - cd test
     - ./download_data.py
     - ./run_tel_noisescan.sh 875 -n 100000 --no-progress
@@ -48,16 +103,18 @@ run000875_noisescan:
 
 run000875_align:
   stage: test
+  tags:
+    - cvmfs
   script:
-    - source build/activate.sh
     - cd test
     - ./download_data.py
     - ./run_tel_align.sh 875 -n 100000 --no-progress
 
 run000875_analysis:
   stage: test
+  tags:
+    - cvmfs
   script:
-    - source build/activate.sh
     - cd test
     - ./download_data.py
     - ./run_track.sh 875 -n 100000 --no-progress
@@ -65,8 +122,9 @@ run000875_analysis:
 
 run001066_noisescan:
   stage: test
+  tags:
+    - cvmfs
   script:
-    - source build/activate.sh
     - cd test
     - ./download_data.py
     - ./run_tel_noisescan.sh 1066 --no-progress
@@ -74,8 +132,9 @@ run001066_noisescan:
 
 run001066_align:
   stage: test
+  tags:
+    - cvmfs
   script:
-    - source build/activate.sh
     - cd test
     - ./download_data.py
     - ./run_tel_align.sh 1066 --no-progress
@@ -83,8 +142,9 @@ run001066_align:
 
 run001066_analysis:
   stage: test
+  tags:
+    - cvmfs
   script:
-    - source build/activate.sh
     - cd test
     - ./download_data.py
     - ./run_track.sh 1066 --no-progress

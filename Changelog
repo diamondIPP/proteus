@@ -19,6 +19,7 @@ User-visible changes
 *   Add ``--no-progress`` command line flag to disable the progress bar.
 *   ``pt-mach`` now computes some basic sensor and in-pixel efficiency
     histograms.
+*   Add a ``install`` build target that installs the binaries.
 
 Internal changes
 ----------------
@@ -27,6 +28,8 @@ Internal changes
     debug builds.
 *   Add the ``Analyzers::BasicEfficiency`` class that implements basic
     efficiency estimations.
+*   The continous integration builds the software with different compilers
+    and ROOT versions.
 
 Bug fixes
 ---------

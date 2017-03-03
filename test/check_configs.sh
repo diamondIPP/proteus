@@ -2,6 +2,8 @@
 #
 # check validity of config files
 
+echo "using $(which pt-cfg)"
+
 # pt-cfg should succeed
 pt-cfg run000875/device.toml
 pt-cfg run000875/geometry/tel_aligned.toml
