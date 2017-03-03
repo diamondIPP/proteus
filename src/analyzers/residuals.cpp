@@ -43,13 +43,13 @@ Analyzers::detail::SensorResidualHists::SensorResidualHists(
 
   resU = makeH1(dir, name("ResU"), axResU);
   trackUResU = makeH2(dir, name("ResU_TrackU"), axTrackU, axResU);
-  trackVResU = makeH2(dir, name("ResU_TrackV"), axTrackV, axResV);
+  trackVResU = makeH2(dir, name("ResU_TrackV"), axTrackV, axResU);
   slopeUResU = makeH2(dir, name("ResU_SlopeU"), axSlopeU, axResU);
-  slopeVResU = makeH2(dir, name("ResU_SlopeV"), axSlopeV, axResV);
+  slopeVResU = makeH2(dir, name("ResU_SlopeV"), axSlopeV, axResU);
   resV = makeH1(dir, name("ResV"), axResV);
-  trackUResV = makeH2(dir, name("ResV_TrackU"), axTrackV, axResU);
+  trackUResV = makeH2(dir, name("ResV_TrackU"), axTrackU, axResV);
   trackVResV = makeH2(dir, name("ResV_TrackV"), axTrackV, axResV);
-  slopeUResV = makeH2(dir, name("ResV_SlopeU"), axSlopeU, axResU);
+  slopeUResV = makeH2(dir, name("ResV_SlopeU"), axSlopeU, axResV);
   slopeVResV = makeH2(dir, name("ResV_SlopeV"), axSlopeV, axResV);
   resUV = makeH2(dir, name("ResUV"), axResU, axResV);
 }
