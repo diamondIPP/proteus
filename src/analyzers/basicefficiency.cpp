@@ -17,23 +17,80 @@
 
 PT_SETUP_LOCAL_LOGGER(BasicEfficiency)
 
+Analyzers::BasicEfficiency::BasicEfficiency(const Mechanics::Sensor& sensor,
+                                            TDirectory* dir,
+                                            int maskedPixelRange,
+                                            int increaseArea,
+                                            int inPixelPeriod,
+                                            int inPixelBinsMin,
+                                            int efficiencyDistBins)
+    : m_sensor(sensor)
+{
+  if (maskedPixelRange < 0)
+    FAIL("maskedPixelRange must be positive");
+  if (increaseArea < 0)
+    FAIL("increaseArea must be positive");
+  if (inPixelPeriod < 1)
+    FAIL("inPixelPeriod must be 1 or larger");
+  if (inPixelBinsMin < 1)
+    FAIL("inPixelMinBins must be 1 or larger");
+  if (efficiencyDistBins < 1)
+    FAIL("efficiencyDistBins must be 1 or larger");
+
+  if (0 < maskedPixelRange) {
+    m_mask = sensor.pixelMask().protruded(maskedPixelRange - 1);
+  }
+
+  TDirectory* sub = Utils::makeDir(dir, "Efficiency");
+
+  // one set of histograms for the whole sensor
+  m_sensorHists =
+      Hists(sensor.name(), sensor, sensor.sensitiveAreaPixel(), increaseArea,
+            inPixelPeriod, inPixelBinsMin, efficiencyDistBins, sub);
+  // one additional set for each region
+  for (const auto& region : sensor.regions()) {
+    m_regionsHists.emplace_back(sensor.name() + '-' + region.name, sensor,
+                                region.areaPixel, increaseArea, inPixelPeriod,
+                                inPixelBinsMin, efficiencyDistBins, sub);
+  }
+}
+
 Analyzers::BasicEfficiency::Hists::Hists(const std::string& prefix,
-                                         Area fullPixel,
-                                         Area foldLocal,
-                                         int foldBinsU,
-                                         int foldBinsV,
+                                         const Mechanics::Sensor& sensor,
+                                         Area roi,
+                                         int increaseArea,
+                                         int inPixelPeriod,
+                                         int inPixelBinsMin,
+                                         int efficiencyDistBins,
                                          TDirectory* dir)
-    : areaFullPixel(fullPixel), areaFoldLocal(foldLocal)
+    : areaPixel(enlarged(roi, increaseArea))
+    , roiPixel(roi)
+    , edgeBins(increaseArea)
 {
   using namespace Utils;
 
-  HistAxis axCol(fullPixel.interval(0), fullPixel.length(0), "Hit column");
-  HistAxis axRow(fullPixel.interval(1), fullPixel.length(1), "Hit row");
-  HistAxis axInPixU(0, foldLocal.length(0), foldBinsU,
+  // define in-pixel submatrix where positions will be folded back to
+  XYPoint anchorPix(roi.min(0), roi.min(1));
+  XYPoint anchorLoc = sensor.transformPixelToLocal(anchorPix);
+  double uMin = anchorLoc.x();
+  double uMax = anchorLoc.x() + inPixelPeriod * sensor.pitchCol();
+  double vMin = anchorLoc.y();
+  double vMax = anchorLoc.y() + inPixelPeriod * sensor.pitchRow();
+  inPixelAreaLocal =
+      Area(Area::AxisInterval(uMin, uMax), Area::AxisInterval(vMin, vMax));
+  // use approximately quadratic bins in local coords for in-pixel histograms
+  double inPixelBinSize =
+      std::min(sensor.pitchCol(), sensor.pitchRow()) / inPixelBinsMin;
+  int inPixelBinsU = std::round(inPixelAreaLocal.length(0) / inPixelBinSize);
+  int inPixelBinsV = std::round(inPixelAreaLocal.length(1) / inPixelBinSize);
+
+  HistAxis axCol(areaPixel.interval(0), areaPixel.length(0), "Hit column");
+  HistAxis axRow(areaPixel.interval(1), areaPixel.length(1), "Hit row");
+  HistAxis axInPixU(0, inPixelAreaLocal.length(0), inPixelBinsU,
                     "Folded track position u");
-  HistAxis axInPixV(0, foldLocal.length(1), foldBinsV,
+  HistAxis axInPixV(0, inPixelAreaLocal.length(1), inPixelBinsV,
                     "Folded track position v");
-  HistAxis axEff(0, 1, 100, "Pixel efficiency");
+  HistAxis axEff(0, 1, efficiencyDistBins, "Pixel efficiency");
 
   auto name = [&](const std::string& suffix) { return prefix + '-' + suffix; };
   total = makeH2(dir, name("TracksTotal"), axCol, axRow);
@@ -55,58 +112,6 @@ Analyzers::BasicEfficiency::Hists::Hists(const std::string& prefix,
   inPixEff = makeH2(dir, name("InPixTracksEfficiency"), axInPixU, axInPixV);
 }
 
-Analyzers::BasicEfficiency::BasicEfficiency(const Mechanics::Sensor& sensor,
-                                            TDirectory* dir,
-                                            int increaseArea,
-                                            int maskedPixelRange,
-                                            int inPixelPeriod,
-                                            int inPixelBinsMin)
-    : m_sensor(sensor)
-{
-  if (increaseArea < 0)
-    FAIL("increaseArea must be positive");
-  if (maskedPixelRange < 0)
-    FAIL("maskedPixelRange must be positive");
-  if (inPixelPeriod < 1)
-    FAIL("inPixelPeriod must be 1 or larger");
-  if (inPixelBinsMin < 0)
-    FAIL("inPixelMinBins must be positive");
-
-  if (0 < maskedPixelRange) {
-    m_mask = sensor.pixelMask().protruded(maskedPixelRange - 1);
-  }
-
-  TDirectory* sub = Utils::makeDir(dir, "Efficiency");
-
-  auto makeHists = [&](const std::string& prefix, const Area& areaPixel) {
-    // add edges for full area histograms. in pixel coordinates
-    auto areaFullPixel = enlarged(areaPixel, increaseArea);
-    // folding area for in-pixel efficiency in local coordinates.
-    XYPoint anchorFoldPixel(areaPixel.min(0), areaPixel.min(1));
-    XYPoint anchorFoldLocal = sensor.transformPixelToLocal(anchorFoldPixel);
-    double uMin = anchorFoldLocal.x();
-    double uMax = uMin + inPixelPeriod * sensor.pitchCol();
-    double vMin = anchorFoldLocal.y();
-    double vMax = vMin + inPixelPeriod * sensor.pitchRow();
-    Area areaFold(Area::AxisInterval(uMin, uMax),
-                  Area::AxisInterval(vMin, vMax));
-    // use approximately quadratic bins in local coords for in-pixel histograms
-    double smallPitch = std::min(sensor.pitchCol(), sensor.pitchRow());
-    double foldBinSize = smallPitch / inPixelBinsMin;
-    int foldBinsU = std::round(areaFold.length(0) / foldBinSize);
-    int foldBinsV = std::round(areaFold.length(1) / foldBinSize);
-    return Hists(prefix, areaFullPixel, areaFold, foldBinsU, foldBinsV, sub);
-  };
-
-  // one set of histograms for the whole sensor
-  m_whole = makeHists(sensor.name(), sensor.sensitiveAreaPixel());
-  // one additional set for each region
-  for (const auto& region : sensor.regions()) {
-    m_regions.emplace_back(
-        makeHists(sensor.name() + '-' + region.name, region.areaPixel));
-  }
-}
-
 std::string Analyzers::BasicEfficiency::name() const
 {
   return "BasicEfficiency(" + std::to_string(m_sensor.id()) + ')';
@@ -117,12 +122,12 @@ void Analyzers::BasicEfficiency::Hists::fill(const Storage::TrackState& state,
 {
   // calculate folded position
   // TODO 2017-02-17 msmk: can this be done w/ std::remainder or std::fmod?
-  double foldedU = state.offset().x() - areaFoldLocal.min(0);
-  double foldedV = state.offset().y() - areaFoldLocal.min(1);
-  foldedU -=
-      areaFoldLocal.length(0) * std::floor(foldedU / areaFoldLocal.length(0));
-  foldedV -=
-      areaFoldLocal.length(1) * std::floor(foldedV / areaFoldLocal.length(1));
+  double foldedU = state.offset().x() - inPixelAreaLocal.min(0);
+  double foldedV = state.offset().y() - inPixelAreaLocal.min(1);
+  foldedU -= inPixelAreaLocal.length(0) *
+             std::floor(foldedU / inPixelAreaLocal.length(0));
+  foldedV -= inPixelAreaLocal.length(1) *
+             std::floor(foldedV / inPixelAreaLocal.length(1));
 
   total->Fill(posPixel.x(), posPixel.y());
   colTotal->Fill(posPixel.x());
@@ -147,19 +152,19 @@ void Analyzers::BasicEfficiency::analyze(const Storage::Event& event)
     if (m_mask.isMasked(posPixel))
       continue;
 
-    m_whole.fill(state, posPixel);
-    for (Index iregion = 0; iregion < m_regions.size(); ++iregion) {
-      auto& hists = m_regions[iregion];
-
-      // ignore if track not in the region-of-interest
-      if (!hists.areaFullPixel.isInside(posPixel.x(), posPixel.y()))
+    // fill efficiency for the whole matrix
+    m_sensorHists.fill(state, posPixel);
+    // fill efficiency for each region
+    for (Index iregion = 0; iregion < m_regionsHists.size(); ++iregion) {
+      Hists& regionHists = m_regionsHists[iregion];
+      // insides region-of-interest + extra edges
+      if (!regionHists.areaPixel.isInside(posPixel.x(), posPixel.y()))
         continue;
-      // ignore matched tracks that are located in the region but are matched
-      // to a cluster in a different region
-      if (state.matchedCluster() && state.matchedCluster()->region() != iregion)
+      // ignore tracks that are matched to a cluster in a different region
+      if (state.matchedCluster() &&
+          (state.matchedCluster()->region() != iregion))
         continue;
-
-      hists.fill(state, posPixel);
+      regionHists.fill(state, posPixel);
     }
   }
 }
@@ -181,10 +186,25 @@ void Analyzers::BasicEfficiency::Hists::finalize()
   rowEff->Divide(rowPass, rowTotal);
   inPixEff->Divide(inPixPass, inPixTotal);
   // construct the pixel efficiencies distribution
-  effDist->SetBins(effDist->GetNbinsX(), eff->GetMinimum(),
-                   std::nextafter(eff->GetMaximum(), eff->GetMaximum() + 1));
-  for (int i = 1; i <= total->GetNbinsX(); ++i) {
-    for (int j = 1; j <= total->GetNbinsY(); ++j) {
+  // we only want min/max inside the region-of-interest w/o edges
+  double effMin = std::numeric_limits<double>::max();
+  double effMax = std::numeric_limits<double>::lowest();
+  for (int i = (1 + edgeBins); (i + edgeBins) <= total->GetNbinsX(); ++i) {
+    for (int j = (1 + edgeBins); (j + edgeBins) <= total->GetNbinsY(); ++j) {
+      // w/o input tracks we get no efficiency estimate
+      if (0 < total->GetBinContent(i, j)) {
+        double effVal = eff->GetBinContent(i, j);
+        effMin = std::min(effMin, effVal);
+        effMax = std::max(effMax, effVal);
+      }
+    }
+  }
+  // ensure maximum value is within the histogram
+  effMax = std::nextafter(effMax, effMax + 1);
+  effDist->SetBins(effDist->GetNbinsX(), effMin, effMax);
+  // The efficiency distribution should *not* contain the edges
+  for (int i = (1 + edgeBins); (i + edgeBins) <= total->GetNbinsX(); ++i) {
+    for (int j = (1 + edgeBins); (j + edgeBins) <= total->GetNbinsY(); ++j) {
       if (0 < total->GetBinContent(i, j)) {
         effDist->Fill(eff->GetBinContent(i, j));
       }
@@ -193,16 +213,16 @@ void Analyzers::BasicEfficiency::Hists::finalize()
 
   INFO("  median: ", effDist->GetBinCenter(effDist->GetMaximumBin()));
   INFO("  mean ", effDist->GetMean(), " +-", effDist->GetMeanError());
-  INFO("  range: ", eff->GetMinimum(), " - ", eff->GetMaximum());
+  INFO("  range: ", effMin, " - ", effMax);
 }
 
 void Analyzers::BasicEfficiency::finalize()
 {
   INFO("efficiency for ", m_sensor.name());
-  m_whole.finalize();
+  m_sensorHists.finalize();
 
   Index iregion = 0;
-  for (auto& hists : m_regions) {
+  for (auto& hists : m_regionsHists) {
     const auto& region = m_sensor.regions().at(iregion);
     INFO("efficiency for ", m_sensor.name(), "/", region.name);
     hists.finalize();
