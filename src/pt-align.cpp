@@ -197,9 +197,10 @@ int main(int argc, char const* argv[])
     Mechanics::Geometry newGeo = aligner->updatedGeometry();
     steps.addStep(alignIds, newGeo);
     dev.setGeometry(newGeo);
+    // write current geometry after each step to not loose information
+    dev.geometry().writeFile(app.outputPath("geo.toml"));
   }
 
-  dev.geometry().writeFile(app.outputPath("geo.toml"));
   steps.writeGraphs(dev, &hists);
   hists.Write();
   hists.Close();

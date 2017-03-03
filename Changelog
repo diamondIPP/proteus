@@ -74,6 +74,8 @@ Internal changes
     clusterizer and in the efficiency analyzer. This replaces the
     manual mask handling in the sensor classes.
 *   Add support for enlarging ``Utils::Interval`` and ``Utils::Box``.
+*   ``pt-align`` writes out the new geometry after each step and not
+    only at the end.
 
 Bug fixes
 ---------
