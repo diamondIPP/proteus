@@ -68,7 +68,7 @@ struct SensorStepsGraphs {
       g->SetTitle("");
       g->GetXaxis()->SetTitle("Alignment step");
       g->GetYaxis()->SetTitle(
-          (sensorName + " alignment correction " + paramName).c_str());
+          (sensorName + ' ' + paramName).c_str());
       dir->WriteTObject(g);
     };
     makeGraph("Offset0", off0, errOff0);
