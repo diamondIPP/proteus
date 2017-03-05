@@ -368,18 +368,6 @@ void Mechanics::Device::setTimestampRange(uint64_t ts0, uint64_t ts1)
   m_timestamp1 = ts1;
 }
 
-double Mechanics::Device::getBeamSlopeX() const
-{
-  auto dir = m_geometry.beamDirection();
-  return dir.x() / dir.z();
-}
-
-double Mechanics::Device::getBeamSlopeY() const
-{
-  auto dir = m_geometry.beamDirection();
-  return dir.y() / dir.z();
-}
-
 void Mechanics::Device::print(std::ostream& os, const std::string& prefix) const
 {
   os << prefix << "name: " << m_name << '\n';

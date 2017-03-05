@@ -54,17 +54,6 @@ public:
   double readoutWindow() const { return m_readoutWindow; }
   double tsToTime(uint64_t timestamp) const;
 
-  const char* getName() const { return m_name.c_str(); }
-  double getClockRate() const { return m_clockRate; }
-  unsigned int getReadOutWindow() const { return m_readoutWindow; }
-  const char* getSpaceUnit() const { return m_spaceUnit.c_str(); }
-  const char* getTimeUnit() const { return m_timeUnit.c_str(); }
-  double getBeamSlopeX() const;
-  double getBeamSlopeY() const;
-  uint64_t getTimeStart() const { return m_timestamp0; }
-  uint64_t getTimeEnd() const { return m_timestamp1; }
-  unsigned int getNumSensors() const { return m_sensors.size(); }
-
   const std::vector<bool>* getSensorMask() const { return &m_sensorMask; }
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
