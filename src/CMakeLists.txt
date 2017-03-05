@@ -27,18 +27,6 @@ set(common_SRCS
     analyzers/efficiency.cpp
     analyzers/residuals.cpp
     converters/kartelconvert.cpp
-    loopers/analysis.cpp
-    loopers/applymask.cpp
-    loopers/coarsealign.cpp
-    loopers/coarsealigndut.cpp
-    loopers/examplelooper.cpp
-    loopers/looper.cpp
-    loopers/synchronize.cpp
-    loopers/analysisdut.cpp
-    loopers/finealign.cpp
-    loopers/finealigndut.cpp
-    loopers/noisescan.cpp
-    loopers/processevents.cpp
     mechanics/device.cpp
     mechanics/geometry.cpp
     mechanics/pixelmasks.cpp
