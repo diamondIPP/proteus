@@ -8,23 +8,17 @@ set(common_SRCS
     analyzers/correlations.cpp
     analyzers/depiction.cpp
     analyzers/distances.cpp
-    analyzers/dualanalyzer.cpp
-    analyzers/dutcorrelation.cpp
-    analyzers/dutdepiction.cpp
+# not used anymore but kept until new analyzers reach feature parity
+#    analyzers/efficiency.cpp
     analyzers/eventinfo.cpp
     analyzers/eventprinter.cpp
-    analyzers/exampledualanalyzer.cpp
     analyzers/examplesingleanalyzer.cpp
     analyzers/hitinfo.cpp
     analyzers/matchexporter.cpp
-    analyzers/matching.cpp
     analyzers/noisescan.cpp
     analyzers/occupancy.cpp
     analyzers/singleanalyzer.cpp
-    analyzers/syncfluctuation.cpp
     analyzers/trackinfo.cpp
-    analyzers/dutresiduals.cpp
-    analyzers/efficiency.cpp
     analyzers/residuals.cpp
     converters/kartelconvert.cpp
     mechanics/device.cpp
