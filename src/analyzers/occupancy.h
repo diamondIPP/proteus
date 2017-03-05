@@ -20,20 +20,11 @@ namespace Analyzers {
 
 class Occupancy : public Analyzer {
 public:
-  Occupancy(const Mechanics::Device* device,
-            TDirectory* dir);
+  Occupancy(const Mechanics::Device* device, TDirectory* dir);
 
   std::string name() const;
   void analyze(const Storage::Event& event);
   void finalize();
-
-  /** Returns Hit occupancy 2D-map for given sensor. */
-  TH2D* getHitOcc(Index isensor);
-  /** Returns Hit occupancy 1D-dist for given sensor.
-      postProcessing() must have been called beforehand. */
-  TH1D* getHitOccDist(Index isensor);
-  /** Returns total number of hits for given sensor. */
-  uint64_t getTotalHitOccupancy(Index isensor);
 
 private:
   struct Hists {

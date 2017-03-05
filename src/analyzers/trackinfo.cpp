@@ -9,7 +9,6 @@
 #include <TH2D.h>
 
 #include "mechanics/device.h"
-#include "processors/processors.h"
 #include "storage/event.h"
 #include "utils/root.h"
 
@@ -50,10 +49,7 @@ Analyzers::TrackInfo::TrackInfo(const Mechanics::Device* device,
   m_slopeY = makeH1(sub, "SlopeY", axSlopeY);
 }
 
-std::string Analyzers::TrackInfo::name() const
-{
-  return "TrackInfo";
-}
+std::string Analyzers::TrackInfo::name() const { return "TrackInfo"; }
 
 void Analyzers::TrackInfo::analyze(const Storage::Event& event)
 {

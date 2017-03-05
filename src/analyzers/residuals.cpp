@@ -9,7 +9,6 @@
 #include <TH2D.h>
 
 #include "mechanics/device.h"
-#include "processors/processors.h"
 #include "processors/tracking.h"
 #include "storage/event.h"
 #include "utils/logger.h"
@@ -76,7 +75,7 @@ Analyzers::Residuals::Residuals(const Mechanics::Device* device,
                                 const double pixelRange,
                                 const double slopeRange,
                                 const int bins)
-  : m_device(*device)
+    : m_device(*device)
 {
   assert(device && "Analyzer: can't initialize with null device");
 
@@ -89,10 +88,7 @@ Analyzers::Residuals::Residuals(const Mechanics::Device* device,
   }
 }
 
-std::string Analyzers::Residuals::name() const
-{
-  return "Residuals";
-}
+std::string Analyzers::Residuals::name() const { return "Residuals"; }
 
 void Analyzers::Residuals::analyze(const Storage::Event& event)
 {
@@ -110,36 +106,6 @@ void Analyzers::Residuals::analyze(const Storage::Event& event)
 }
 
 void Analyzers::Residuals::finalize() {}
-
-TH1D* Analyzers::Residuals::getResidualX(Index sensorId)
-{
-  return m_hists.at(sensorId).resU;
-}
-
-TH1D* Analyzers::Residuals::getResidualY(Index sensorId)
-{
-  return m_hists.at(sensorId).resV;
-}
-
-TH2D* Analyzers::Residuals::getResidualXX(Index sensorId)
-{
-  return m_hists.at(sensorId).trackUResU;
-}
-
-TH2D* Analyzers::Residuals::getResidualXY(Index sensorId)
-{
-  return m_hists.at(sensorId).trackUResV;
-}
-
-TH2D* Analyzers::Residuals::getResidualYY(Index sensorId)
-{
-  return m_hists.at(sensorId).trackVResV;
-}
-
-TH2D* Analyzers::Residuals::getResidualYX(Index sensorId)
-{
-  return m_hists.at(sensorId).trackVResU;
-}
 
 Analyzers::UnbiasedResiduals::UnbiasedResiduals(const Mechanics::Device& device,
                                                 TDirectory* parent,

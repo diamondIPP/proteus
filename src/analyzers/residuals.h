@@ -66,13 +66,6 @@ public:
   void analyze(const Storage::Event& refEvent);
   void finalize();
 
-  TH1D* getResidualX(Index sensorId);
-  TH1D* getResidualY(Index sensorId);
-  TH2D* getResidualXX(Index sensorId);
-  TH2D* getResidualXY(Index sensorId);
-  TH2D* getResidualYY(Index sensorId);
-  TH2D* getResidualYX(Index sensorId);
-
 private:
   const Mechanics::Device& m_device;
   std::vector<detail::SensorResidualHists> m_hists;

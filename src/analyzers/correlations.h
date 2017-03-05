@@ -42,10 +42,6 @@ public:
 
   TH1D* getHistDiffX(Index sensorId0, Index sensorId1) const;
   TH1D* getHistDiffY(Index sensorId0, Index sensorId1) const;
-  /** \deprecated Use getHistDiffX instead. */
-  TH1D* getAlignmentPlotX(Index sensorId) const;
-  /** \deprecated Use getHistDiffY instead. */
-  TH1D* getAlignmentPlotY(Index sensorId) const;
 
 private:
   // Shared function to initialize the correlation hist between two sensors

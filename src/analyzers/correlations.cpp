@@ -125,13 +125,3 @@ TH1D* Analyzers::Correlations::getHistDiffY(Index sensorId0,
 {
   return m_hists.at(std::make_pair(sensorId0, sensorId1)).diffY;
 }
-
-TH1D* Analyzers::Correlations::getAlignmentPlotX(Index sensorId) const
-{
-  return getHistDiffX(sensorId - 1, sensorId);
-}
-
-TH1D* Analyzers::Correlations::getAlignmentPlotY(Index sensorId) const
-{
-  return getHistDiffY(sensorId - 1, sensorId);
-}

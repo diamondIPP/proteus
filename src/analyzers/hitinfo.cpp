@@ -9,7 +9,6 @@
 #include <TH2D.h>
 
 #include "mechanics/device.h"
-#include "processors/processors.h"
 #include "storage/event.h"
 #include "utils/root.h"
 

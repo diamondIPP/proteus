@@ -10,7 +10,6 @@
 #include <TH2D.h>
 
 #include "mechanics/device.h"
-#include "processors/processors.h"
 #include "storage/event.h"
 #include "utils/root.h"
 
@@ -54,21 +53,6 @@ Analyzers::Occupancy::Occupancy(const Mechanics::Device* device,
 }
 
 std::string Analyzers::Occupancy::name() const { return "Occupancy"; }
-
-TH2D* Analyzers::Occupancy::getHitOcc(Index isensor)
-{
-  return m_hists.at(isensor).hitMap;
-}
-
-TH1D* Analyzers::Occupancy::getHitOccDist(Index isensor)
-{
-  return m_hists.at(isensor).hitOccupancyDist;
-}
-
-uint64_t Analyzers::Occupancy::getTotalHitOccupancy(Index isensor)
-{
-  return static_cast<uint64_t>(getHitOcc(isensor)->GetEntries());
-}
 
 void Analyzers::Occupancy::analyze(const Storage::Event& event)
 {
