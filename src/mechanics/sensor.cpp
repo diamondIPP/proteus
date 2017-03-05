@@ -211,18 +211,6 @@ XYPoint Mechanics::Sensor::transformGlobalToPixel(const XYZPoint& xyz) const
   return transformLocalToPixel(spaceToPlane(m_g2l, xyz));
 }
 
-void Mechanics::Sensor::pixelToSpace(
-    double c, double r, double& x, double& y, double& z) const
-{
-  transformPixelToGlobal(XYPoint(c, r)).GetCoordinates(x, y, z);
-}
-
-void Mechanics::Sensor::spaceToPixel(
-    double x, double y, double z, double& c, double& r) const
-{
-  transformGlobalToPixel(XYZPoint(x, y, z)).GetCoordinates(c, r);
-}
-
 //=========================================================
 //
 // noisy-pixels functions
@@ -232,78 +220,6 @@ void Mechanics::Sensor::spaceToPixel(
 void Mechanics::Sensor::setMaskedPixels(const std::set<ColumnRow>& pixels)
 {
   m_pixelMask = Utils::DenseMask(pixels);
-}
-
-bool Mechanics::Sensor::sort(const Sensor* s1, const Sensor* s2)
-{
-  return (s1->getOffZ() < s2->getOffZ());
-}
-
-//=========================================================
-//
-// get functions
-//
-//=========================================================
-
-double Mechanics::Sensor::getOffX() const
-{
-  return m_l2g.Translation().Vect().x();
-}
-
-double Mechanics::Sensor::getOffY() const
-{
-  return m_l2g.Translation().Vect().y();
-}
-
-double Mechanics::Sensor::getOffZ() const
-{
-  return m_l2g.Translation().Vect().z();
-}
-
-void Mechanics::Sensor::getGlobalOrigin(double& x, double& y, double& z) const
-{
-  origin().GetCoordinates(x, y, z);
-}
-
-void Mechanics::Sensor::getNormalVector(double& x, double& y, double& z) const
-{
-  normal().GetCoordinates(x, y, z);
-}
-
-unsigned int Mechanics::Sensor::getPosNumX() const
-{
-  return (unsigned int)((getPosSensitiveX() / getPosPitchX()) + 0.5);
-}
-
-unsigned int Mechanics::Sensor::getPosNumY() const
-{
-  return (unsigned int)((getPosSensitiveY() / getPosPitchY()) + 0.5);
-}
-
-double Mechanics::Sensor::getPosPitchX() const
-{
-  XYZVector pitch = localToGlobal() * XYZVector(m_pitchCol, m_pitchRow, 0);
-  return std::abs(pitch.x());
-}
-
-double Mechanics::Sensor::getPosPitchY() const
-{
-  XYZVector pitch = localToGlobal() * XYZVector(m_pitchCol, m_pitchRow, 0);
-  return std::abs(pitch.y());
-}
-
-double Mechanics::Sensor::getPosSensitiveX() const
-{
-  XYZVector size =
-      localToGlobal() * XYZVector(getSensitiveX(), getSensitiveY(), 0);
-  return std::abs(size.x());
-}
-
-double Mechanics::Sensor::getPosSensitiveY() const
-{
-  XYZVector size =
-      localToGlobal() * XYZVector(getSensitiveX(), getSensitiveY(), 0);
-  return std::abs(size.y());
 }
 
 void Mechanics::Sensor::print(std::ostream& os, const std::string& prefix) const
