@@ -46,14 +46,6 @@ public:
   // deprecated accessors
   unsigned int getNumHits() const;
   unsigned int getNumClusters() const;
-  unsigned int getNumPlanes() const { return m_planes.size(); }
-  unsigned int getNumTracks() const { return m_tracks.size(); }
-  bool getInvalid() const { return m_invalid; }
-  uint64_t getTimeStamp() const { return m_timestamp; }
-  uint64_t getFrameNumber() const { return m_frameNumber; }
-  unsigned int getTriggerOffset() const { return m_triggerOffset; }
-  unsigned int getTriggerInfo() const { return m_triggerInfo; }
-  unsigned int getTriggerPhase() const { return m_triggerPhase; }
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
