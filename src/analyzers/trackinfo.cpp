@@ -15,12 +15,9 @@
 
 Analyzers::TrackInfo::TrackInfo(const Mechanics::Device* device,
                                 TDirectory* dir,
-                                const char* suffix,
                                 const double reducedChi2Max,
                                 const double slopeMax,
                                 const int bins)
-    : // Base class is initialized here and manages directory / device
-    SingleAnalyzer(device, dir, suffix, "TrackInfo")
 {
   using namespace Utils;
 
@@ -53,24 +50,16 @@ Analyzers::TrackInfo::TrackInfo(const Mechanics::Device* device,
   m_slopeY = makeH1(sub, "SlopeY", axSlopeY);
 }
 
-void Analyzers::TrackInfo::processEvent(const Storage::Event* event)
+std::string Analyzers::TrackInfo::name() const
 {
-  assert(event && "Analyzer: can't process null events");
+  return "TrackInfo";
+}
 
-  // Throw an error for sensor / plane mismatch
-  eventDeviceAgree(event);
-
-  // Check if the event passes the cuts
-  if (!checkCuts(event))
-    return;
-
-  for (Index itrack = 0; itrack < event->numTracks(); itrack++) {
-    const Storage::Track& track = *event->getTrack(itrack);
+void Analyzers::TrackInfo::analyze(const Storage::Event& event)
+{
+  for (Index itrack = 0; itrack < event.numTracks(); itrack++) {
+    const Storage::Track& track = *event.getTrack(itrack);
     const Storage::TrackState& state = track.globalState();
-
-    // Check if the track passes the cuts
-    if (!checkCuts(&track))
-      continue;
 
     m_numClusters->Fill(track.numClusters());
     m_reducedChi2->Fill(track.reducedChi2());
@@ -83,4 +72,4 @@ void Analyzers::TrackInfo::processEvent(const Storage::Event* event)
   }
 }
 
-void Analyzers::TrackInfo::postProcessing() {}
+void Analyzers::TrackInfo::finalize() {}

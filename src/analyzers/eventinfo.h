@@ -3,14 +3,11 @@
 
 #include <vector>
 
-#include "singleanalyzer.h"
+#include "analyzer.h"
 
 class TDirectory;
 class TH1D;
 
-namespace Storage {
-class Event;
-}
 namespace Mechanics {
 class Device;
 }
@@ -18,18 +15,18 @@ class Device;
 namespace Analyzers {
 
 /** Overall event information, e.g. timing and hit and cluster rates. */
-class EventInfo : public SingleAnalyzer {
+class EventInfo : public Analyzer {
 public:
   EventInfo(const Mechanics::Device* device,
             TDirectory* dir,
-            const char* suffix = "",
             /* Histogram options */
             const int hitsMax = 32,
             const int tracksMax = 8,
             const int binsTimestamps = 1024);
 
-  void processEvent(const Storage::Event* event);
-  void postProcessing();
+  std::string name() const;
+  void analyze(const Storage::Event& event);
+  void finalize();
 
 private:
   struct SensorHists {

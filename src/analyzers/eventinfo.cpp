@@ -17,13 +17,10 @@ PT_SETUP_LOCAL_LOGGER(EventInfo)
 
 Analyzers::EventInfo::EventInfo(const Mechanics::Device* device,
                                 TDirectory* dir,
-                                const char* suffix,
                                 const int hitsMax,
                                 const int tracksMax,
                                 const int binsTimestamps)
-    : SingleAnalyzer(device, dir, suffix, "EventInfo")
-    , m_timestampEvents(NULL)
-    , m_timestampTracks(NULL)
+    : m_timestampEvents(nullptr), m_timestampTracks(nullptr)
 {
   using namespace Utils;
 
@@ -66,31 +63,25 @@ Analyzers::EventInfo::EventInfo(const Mechanics::Device* device,
 
     SensorHists hs;
     hs.hits = makeH1(sub, sensor.name() + "-Hits", axHits);
-    hs.clusters = makeH1(sub, sensor.name() + "-Clusters",axClusters);
+    hs.clusters = makeH1(sub, sensor.name() + "-Clusters", axClusters);
     m_sensorHists.push_back(hs);
   }
 }
 
-void Analyzers::EventInfo::processEvent(const Storage::Event* event)
+std::string Analyzers::EventInfo::name() const { return "EventInfo"; }
+
+void Analyzers::EventInfo::analyze(const Storage::Event& event)
 {
-  assert(event && "Analyzer: can't process null events");
-
-  // Throw an error for sensor / plane mismatch
-  eventDeviceAgree(event);
-  // Check if the event passes the cuts
-  if (!checkCuts(event))
-    return;
-
-  m_triggerOffset->Fill(event->triggerOffset());
-  m_triggerPhase->Fill(event->triggerPhase());
-  m_tracks->Fill(event->numTracks());
+  m_triggerOffset->Fill(event.triggerOffset());
+  m_triggerPhase->Fill(event.triggerPhase());
+  m_tracks->Fill(event.numTracks());
   if (m_timestampEvents) {
-    m_timestampEvents->Fill(event->timestamp());
-    m_timestampTracks->Fill(event->timestamp(), event->numTracks());
+    m_timestampEvents->Fill(event.timestamp());
+    m_timestampTracks->Fill(event.timestamp(), event.numTracks());
   }
 
-  for (Index iplane = 0; iplane < event->numPlanes(); ++iplane) {
-    const Storage::Plane& plane = *event->getPlane(iplane);
+  for (Index iplane = 0; iplane < event.numPlanes(); ++iplane) {
+    const Storage::Plane& plane = *event.getPlane(iplane);
     const SensorHists& sensorHists = m_sensorHists[iplane];
 
     sensorHists.hits->Fill(plane.numHits());
@@ -98,10 +89,8 @@ void Analyzers::EventInfo::processEvent(const Storage::Event* event)
   }
 }
 
-void Analyzers::EventInfo::postProcessing()
+void Analyzers::EventInfo::finalize()
 {
-  if (_postProcessed)
-    return;
   if (m_timestampEvents) {
     for (Int_t bin = 1; bin <= m_timestampEvents->GetNbinsX(); ++bin) {
       const double eventsInBin = m_timestampEvents->GetBinContent(bin);
@@ -111,5 +100,4 @@ void Analyzers::EventInfo::postProcessing()
       }
     }
   }
-  _postProcessed = true;
 }

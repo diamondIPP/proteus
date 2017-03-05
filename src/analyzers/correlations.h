@@ -3,16 +3,14 @@
 
 #include <map>
 
-#include <TDirectory.h>
 #include <TH1D.h>
-#include <TH2D.h>
 
-#include "analyzers/singleanalyzer.h"
+#include "analyzers/analyzer.h"
 #include "utils/definitions.h"
 
-namespace Storage {
-class Event;
-}
+class TDirectory;
+class TH2D;
+
 namespace Mechanics {
 class Device;
 class Sensor;
@@ -20,7 +18,7 @@ class Sensor;
 
 namespace Analyzers {
 
-class Correlations : public SingleAnalyzer {
+class Correlations : public Analyzer {
 public:
   /** Consider pair-wise correlations between neighboring sensors.
    *
@@ -30,19 +28,17 @@ public:
    * \param neighbors  How many neighboring planes to consider; must be > 1.
    */
   Correlations(const Mechanics::Device& device,
-              const std::vector<Index>& sensorIds,
-              TDirectory* dir,
-              int neighbors = 2);
-  /** Pair-wise correlations between all sensor sorted in z.
-   *
-   * \deprecated Use constructor w/ explicit sensors.
-   */
+               const std::vector<Index>& sensorIds,
+               TDirectory* dir,
+               int neighbors = 2);
+  /** Consider pair-wise correlations between all configured sensors. */
   Correlations(const Mechanics::Device* device,
-              TDirectory* dir,
-              const char* suffix = "");
+               TDirectory* dir,
+               int neighbors = 2);
 
-  void processEvent(const Storage::Event* event);
-  void postProcessing();
+  std::string name() const;
+  void analyze(const Storage::Event& event);
+  void finalize();
 
   TH1D* getHistDiffX(Index sensorId0, Index sensorId1) const;
   TH1D* getHistDiffY(Index sensorId0, Index sensorId1) const;

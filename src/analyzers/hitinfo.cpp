@@ -4,6 +4,10 @@
 #include <cmath>
 #include <sstream>
 
+#include <TDirectory.h>
+#include <TH1D.h>
+#include <TH2D.h>
+
 #include "mechanics/device.h"
 #include "processors/processors.h"
 #include "storage/event.h"
@@ -11,11 +15,8 @@
 
 Analyzers::HitInfo::HitInfo(const Mechanics::Device* device,
                             TDirectory* dir,
-                            const char* suffix,
                             const int timeMax,
                             const int valueMax)
-    : // Base class is initialized here and manages directory / device
-    SingleAnalyzer(device, dir, suffix, "HitInfo")
 {
   using namespace Utils;
 
@@ -57,27 +58,16 @@ Analyzers::HitInfo::HitInfo(const Mechanics::Device* device,
   }
 }
 
-void Analyzers::HitInfo::processEvent(const Storage::Event* event)
+std::string Analyzers::HitInfo::name() const { return "HitInfo"; }
+
+void Analyzers::HitInfo::analyze(const Storage::Event& event)
 {
-  assert(event && "Analyzer: can't process null events");
+  for (Index isensor = 0; isensor < m_hists.size(); ++isensor) {
+    SensorHists& hists = m_hists[isensor];
 
-  // Throw an error for sensor / plane mismatch
-  eventDeviceAgree(event);
-
-  // Check if the event passes the cuts
-  if (!checkCuts(event))
-    return;
-
-  for (Index isensor = 0; isensor < event->numPlanes(); isensor++) {
-    const Storage::Plane& plane = *event->getPlane(isensor);
-    const SensorHists& hists = m_hists.at(isensor);
-
-    for (Index ihit = 0; ihit < plane.numHits(); ihit++) {
+    const Storage::Plane& plane = *event.getPlane(isensor);
+    for (Index ihit = 0; ihit < plane.numHits(); ++ihit) {
       const Storage::Hit& hit = *plane.getHit(ihit);
-
-      // Check if the hit passes the cuts
-      if (!checkCuts(&hit))
-        continue;
 
       hists.hitMap->Fill(hit.col(), hit.row());
       hists.meanTimeMap->Fill(hit.col(), hit.row(), hit.time());
@@ -92,7 +82,7 @@ void Analyzers::HitInfo::processEvent(const Storage::Event* event)
   }
 }
 
-void Analyzers::HitInfo::postProcessing()
+void Analyzers::HitInfo::finalize()
 {
   // scale from integrated time/value to mean
   for (auto& hists : m_hists) {

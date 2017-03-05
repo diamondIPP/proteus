@@ -3,32 +3,29 @@
 
 #include <vector>
 
-#include <TDirectory.h>
-#include <TH1D.h>
-#include <TH2D.h>
+#include "analyzer.h"
 
-#include "singleanalyzer.h"
+class TDirectory;
+class TH1D;
+class TH2D;
 
-namespace Storage {
-class Event;
-}
 namespace Mechanics {
 class Device;
 }
 
 namespace Analyzers {
 
-class HitInfo : public SingleAnalyzer {
+class HitInfo : public Analyzer {
 public:
   HitInfo(const Mechanics::Device* device,
           TDirectory* dir,
-          const char* suffix = "",
           /* Histogram options */
           const int timeMax = 16,
           const int valueMax = 16);
 
-  void processEvent(const Storage::Event* event);
-  void postProcessing();
+  std::string name() const;
+  void analyze(const Storage::Event& event);
+  void finalize();
 
 private:
   struct RegionHists {

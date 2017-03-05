@@ -36,10 +36,10 @@ std::string Alignment::CorrelationsAligner::name() const
 
 void Alignment::CorrelationsAligner::analyze(const Storage::Event& event)
 {
-  m_corr->processEvent(&event);
+  m_corr->analyze(event);
 }
 
-void Alignment::CorrelationsAligner::finalize() { m_corr->postProcessing(); }
+void Alignment::CorrelationsAligner::finalize() { m_corr->finalize(); }
 
 Mechanics::Geometry Alignment::CorrelationsAligner::updatedGeometry() const
 {

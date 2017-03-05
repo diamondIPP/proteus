@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "singleanalyzer.h"
+#include "analyzer.h"
 
 class TDirectory;
 class TH1D;
@@ -11,7 +11,6 @@ class TH2D;
 
 namespace Storage {
 class Cluster;
-class Event;
 }
 namespace Mechanics {
 class Device;
@@ -19,19 +18,19 @@ class Device;
 
 namespace Analyzers {
 
-class ClusterInfo : public SingleAnalyzer {
+class ClusterInfo : public Analyzer {
 public:
   ClusterInfo(const Mechanics::Device* device,
               TDirectory* dir,
-              const char* suffix = "",
               /* Histogram options */
               const int sizeMax = 8,
               const int timeMax = 32,
               const int valueMax = 32,
               const int binsUncertainty = 32);
 
-  void processEvent(const Storage::Event* event);
-  void postProcessing();
+  std::string name() const;
+  void analyze(const Storage::Event& event);
+  void finalize();
 
 private:
   struct ClusterHists {

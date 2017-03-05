@@ -38,12 +38,10 @@ void Analyzers::ClusterInfo::SensorHists::fill(const Storage::Cluster& cluster)
 
 Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
                                     TDirectory* dir,
-                                    const char* suffix,
                                     const int sizeMax,
                                     const int timeMax,
                                     const int valueMax,
                                     const int binsUncertainty)
-    : SingleAnalyzer(device, dir, suffix, "ClusterInfo")
 {
   using namespace Utils;
 
@@ -100,31 +98,20 @@ Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
   }
 }
 
-void Analyzers::ClusterInfo::processEvent(const Storage::Event* event)
+std::string Analyzers::ClusterInfo::name() const { return "ClusterInfo"; }
+
+void Analyzers::ClusterInfo::analyze(const Storage::Event& event)
 {
-  assert(event && "Analyzer: can't process null events");
+  for (Index isensor = 0; isensor < m_hists.size(); ++isensor) {
+    SensorHists& hists = m_hists[isensor];
 
-  // Throw an error for sensor / plane mismatch
-  eventDeviceAgree(event);
-
-  // Check if the event passes the cuts
-  if (!checkCuts(event))
-    return;
-
-  for (Index iplane = 0; iplane < event->numPlanes(); ++iplane) {
-    const Storage::Plane& plane = *event->getPlane(iplane);
-    SensorHists& hists = m_hists.at(iplane);
-
+    const Storage::Plane& plane = *event.getPlane(isensor);
     for (Index icluster = 0; icluster < plane.numClusters(); ++icluster) {
       const Storage::Cluster& cluster = *plane.getCluster(icluster);
-
-      // Check if the cluster passes the cuts
-      if (!checkCuts(&cluster))
-        continue;
 
       hists.fill(cluster);
     }
   }
 }
 
-void Analyzers::ClusterInfo::postProcessing() {}
+void Analyzers::ClusterInfo::finalize() {}
