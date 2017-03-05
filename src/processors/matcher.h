@@ -45,24 +45,6 @@ private:
   std::string m_name;
 };
 
-/** \deprecated Judith-style track/cluster matcher. */
-class TrackMatcher {
-public:
-  TrackMatcher(const Mechanics::Device* device);
-
-  void matchEvent(Storage::Event* refEvent, Storage::Event* dutEvent);
-
-private:
-  void matchTracksToClusters(Storage::Event* trackEvent,
-                             Storage::Plane* clustersPlane,
-                             const Mechanics::Sensor* clustersSensor);
-  void matchClustersToTracks(Storage::Event* trackEvent,
-                             Storage::Plane* clustersPlane,
-                             const Mechanics::Sensor* clustersSensor);
-
-  const Mechanics::Device* _device;
-};
-
 } // namespace Processors
 
 #endif // PT_MATCHER_H

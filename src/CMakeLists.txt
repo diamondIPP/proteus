@@ -23,21 +23,17 @@ set(common_SRCS
     mechanics/sensor.cpp
     processors/applygeometry.cpp
     processors/applyregions.cpp
-    processors/clustermaker.cpp
     processors/clusterizer.cpp
-    processors/configprocessors.cpp
     processors/eventdepictor.cpp
     processors/hitmapper.cpp
     processors/largesynchronizer.cpp
     processors/matcher.cpp
     processors/processor.cpp
-    processors/processors.cpp
     processors/setupsensors.cpp
     processors/synchronizer.cpp
     processors/trackfinder.cpp
     processors/trackfitter.cpp
     processors/tracking.cpp
-    processors/trackmaker.cpp
     storage/cluster.cpp
     storage/event.cpp
     storage/hit.cpp
