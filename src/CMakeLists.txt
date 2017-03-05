@@ -16,7 +16,7 @@ set(common_SRCS
     analyzers/occupancy.cpp
     analyzers/trackinfo.cpp
     analyzers/residuals.cpp
-    converters/kartelconvert.cpp
+#   converters/kartelconvert.cpp
     mechanics/device.cpp
     mechanics/geometry.cpp
     mechanics/pixelmasks.cpp
