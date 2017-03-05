@@ -12,7 +12,7 @@ std::string Processors::ApplyGeometry::name() const { return "ApplyGeometry"; }
 
 void Processors::ApplyGeometry::process(Storage::Event& event) const
 {
-  assert(event.numPlanes() == m_device.getNumSensors() &&
+  assert(event.numPlanes() == m_device.numSensors() &&
          "Processors: plane / sensor mismatch");
 
   for (Index iplane = 0; iplane < event.numPlanes(); iplane++) {
