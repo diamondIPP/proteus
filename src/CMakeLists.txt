@@ -5,7 +5,6 @@ set(common_SRCS
     analyzers/baseanalyzer.cpp
     analyzers/basicefficiency.cpp
     analyzers/clusterinfo.cpp
-    analyzers/configanalyzers.cpp
     analyzers/correlations.cpp
     analyzers/depiction.cpp
     analyzers/distances.cpp
@@ -32,7 +31,6 @@ set(common_SRCS
     loopers/applymask.cpp
     loopers/coarsealign.cpp
     loopers/coarsealigndut.cpp
-    loopers/configloopers.cpp
     loopers/examplelooper.cpp
     loopers/looper.cpp
     loopers/synchronize.cpp
