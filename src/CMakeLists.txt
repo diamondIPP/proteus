@@ -89,7 +89,6 @@ function(pt_add_tool name)
   install(TARGETS ${name} RUNTIME DESTINATION bin)
 endfunction()
 
-pt_add_tool(proteus main.cpp inputargs.cpp)
 pt_add_tool(pt-align pt-align.cpp)
 pt_add_tool(pt-cfg pt-cfg.cpp)
 pt_add_tool(pt-match pt-match.cpp)
