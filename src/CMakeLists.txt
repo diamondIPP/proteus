@@ -5,9 +5,9 @@ set(common_SRCS
     analyzers/basicefficiency.cpp
     analyzers/clusterinfo.cpp
     analyzers/correlations.cpp
-#    analyzers/depiction.cpp
+#   analyzers/depiction.cpp
     analyzers/distances.cpp
-#    analyzers/efficiency.cpp
+#   analyzers/efficiency.cpp
     analyzers/eventinfo.cpp
     analyzers/eventprinter.cpp
     analyzers/hitinfo.cpp
@@ -24,13 +24,13 @@ set(common_SRCS
     processors/applygeometry.cpp
     processors/applyregions.cpp
     processors/clusterizer.cpp
-    processors/eventdepictor.cpp
+#   processors/eventdepictor.cpp
     processors/hitmapper.cpp
-    processors/largesynchronizer.cpp
+#   processors/largesynchronizer.cpp
     processors/matcher.cpp
     processors/processor.cpp
     processors/setupsensors.cpp
-    processors/synchronizer.cpp
+#   processors/synchronizer.cpp
     processors/trackfinder.cpp
     processors/trackfitter.cpp
     processors/tracking.cpp
