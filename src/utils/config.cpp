@@ -10,7 +10,6 @@
 #include <fstream>
 #include <stdexcept>
 
-#include "utils/configparser.h"
 #include "utils/logger.h"
 
 PT_SETUP_LOCAL_LOGGER(Config)
@@ -48,74 +47,6 @@ std::string Utils::Config::pathRebaseIfRelative(const std::string& path,
   }
   full += path;
   return full;
-}
-
-// create a valid toml identifier, i.e. lower case and no spaces
-static std::string cfgConvertKey(std::string key)
-{
-  std::replace(key.begin(), key.end(), ' ', '_');
-  std::transform(key.begin(), key.end(), key.begin(), ::tolower);
-  return key;
-}
-
-// convert the ConfigParser value string into a toml::Value
-static toml::Value cfgConvertValue(const std::string& value)
-{
-  static const char* truths[] = {"true", "on", "yes"};
-  static const char* falses[] = {"false", "off", "no"};
-
-  bool isBoolTrue = false;
-  bool isBoolFalse = false;
-  for (int i = 0; i < 3; ++i) {
-    isBoolTrue ^= (value.compare(truths[i]) == 0);
-    isBoolFalse ^= (value.compare(falses[i]) == 0);
-  }
-
-  if (isBoolTrue)
-    return toml::Value(true);
-  if (isBoolFalse)
-    return toml::Value(false);
-  // make your life easier by reusing toml internals
-  if (toml::internal::isInteger(value))
-    return toml::Value(stoi(value));
-  if (toml::internal::isDouble(value))
-    return toml::Value(stod(value));
-  // must be just a string then
-  return toml::Value(value);
-}
-
-toml::Value Utils::Config::readConfigParser(const std::string& path)
-{
-  toml::Value cfg = toml::Table();
-  toml::Value* section = NULL;
-
-  ConfigParser parser(path.c_str());
-  for (unsigned int i = 0; i < parser.getNumRows(); ++i) {
-    const ConfigParser::Row* row = parser.getRow(i);
-
-    if (row->isHeader) {
-      if (row->header.compare(0, 3, "End") == 0) {
-        section = &cfg;
-      } else {
-        auto key = cfgConvertKey(row->header);
-        auto curr = cfg.findChild(key);
-        // recurring sections with the same name are automatically
-        // converted to an array of the same name.
-        if (curr && curr->is<toml::Array>()) {
-          section = curr->push(toml::Table());
-        } else if (curr) {
-          section = cfg.setChild(key, toml::Array{*curr})->push(toml::Table());
-        } else {
-          section = cfg.setChild(key, toml::Table());
-        }
-      }
-      continue;
-    }
-
-    section->set(cfgConvertKey(row->key), cfgConvertValue(row->value));
-  }
-
-  return cfg;
 }
 
 toml::Value Utils::Config::readConfig(const std::string& path)

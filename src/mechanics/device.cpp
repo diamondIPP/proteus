@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 
-#include "utils/configparser.h"
 #include "utils/logger.h"
 
 PT_SETUP_LOCAL_LOGGER(Device)
@@ -29,228 +28,47 @@ Mechanics::Device::Device(const std::string& name,
   std::replace(m_spaceUnit.begin(), m_spaceUnit.end(), '\\', '#');
 }
 
-static void parseSensors(const ConfigParser& config,
-                         Mechanics::Device& device,
-                         Mechanics::Geometry& alignment)
-{
-  using Mechanics::Sensor;
-
-  double offX = 0;
-  double offY = 0;
-  double offZ = 0;
-  double rotX = 0;
-  double rotY = 0;
-  double rotZ = 0;
-  unsigned int cols = 0;
-  unsigned int rows = 0;
-  double depth = 0;
-  double pitchX = 0;
-  double pitchY = 0;
-  double xox0 = 0;
-  std::string name = "";
-  bool masked = false;
-  bool digi = false;
-
-  unsigned int sensorCounter = 0;
-
-  for (unsigned int i = 0; i < config.getNumRows(); i++) {
-    const ConfigParser::Row* row = config.getRow(i);
-
-    if (row->isHeader && !row->header.compare("End Sensor")) {
-      if (!masked) {
-        if (cols <= 0 || rows <= 0 || pitchX <= 0 || pitchY <= 0)
-          throw std::runtime_error(
-              "Device: need cols, rows, pitchX and pitchY to make a sensor");
-
-        if (name.empty())
-          name = "Plane" + std::to_string(sensorCounter);
-
-        Sensor::Measurement m = (digi ? Sensor::Measurement::PixelBinary
-                                      : Sensor::Measurement::PixelTot);
-        Sensor sensor(sensorCounter, name, m, cols, rows, pitchX, pitchY, depth,
-                      xox0);
-        device.addSensor(sensor);
-        alignment.setOffset(sensorCounter, offX, offY, offZ);
-        alignment.setRotationAngles(sensorCounter, rotX, rotY, rotZ);
-        sensorCounter++;
-      } else {
-        device.addMaskedSensor();
-      }
-
-      offX = 0;
-      offY = 0;
-      offZ = 0;
-      rotX = 0;
-      rotY = 0;
-      rotZ = 0;
-      cols = 0;
-      rows = 0;
-      depth = 0;
-      pitchX = 0;
-      pitchY = 0;
-      xox0 = 0;
-      name = "";
-      masked = false;
-      digi = false;
-
-      continue;
-    }
-
-    if (row->isHeader)
-      continue;
-
-    if (row->header.compare("Sensor"))
-      continue;
-
-    if (!row->key.compare("offset x"))
-      offX = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.compare("offset y"))
-      offY = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.compare("offset z"))
-      offZ = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.compare("rotation x"))
-      rotX = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.compare("rotation y"))
-      rotY = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.compare("rotation z"))
-      rotZ = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.compare("cols"))
-      cols = (int)ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.compare("rows"))
-      rows = (int)ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.compare("depth"))
-      depth = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.compare("pitch x"))
-      pitchX = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.compare("pitch y"))
-      pitchY = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.compare("xox0"))
-      xox0 = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.compare("name"))
-      name = row->value;
-    else if (!row->key.compare("masked"))
-      masked = ConfigParser::valueToLogical(row->value);
-    else if (!row->key.compare("digital"))
-      digi = ConfigParser::valueToLogical(row->value);
-    else
-      throw std::runtime_error("Device: failed to parse row, key='" + row->key +
-                               '\'');
-  }
-}
-
-static Mechanics::Device parseDevice(const std::string& path)
-{
-  ConfigParser config(path.c_str());
-  std::string name;
-  std::string pathAlignment;
-  std::string pathNoiseMask;
-  std::string spaceUnit;
-  std::string timeUnit;
-  double clockRate = 1;
-  double readOutWindow = 0;
-
-  for (unsigned int i = 0; i < config.getNumRows(); i++) {
-    const ConfigParser::Row* row = config.getRow(i);
-
-    if (row->isHeader && !row->header.compare("End Device")) {
-
-      INFO("device config: '", path, "'");
-      INFO("alignment config: '", pathAlignment, "'");
-      INFO("noise mask config: '", pathNoiseMask, "'");
-
-      Mechanics::Device device(name, clockRate, readOutWindow, spaceUnit,
-                               timeUnit);
-      Mechanics::Geometry alignment;
-
-      parseSensors(config, device, alignment);
-
-      if (!pathAlignment.empty()) {
-        device.setGeometry(Mechanics::Geometry::fromFile(pathAlignment));
-      } else {
-        device.setGeometry(alignment);
-      }
-      if (!pathNoiseMask.empty()) {
-        device.applyPixelMasks(Mechanics::PixelMasks::fromFile(pathNoiseMask));
-      }
-      return device;
-    }
-
-    if (row->isHeader)
-      continue;
-
-    if (row->header.compare("Device"))
-      continue; // Skip non-device rows
-
-    if (!row->key.compare("name"))
-      name = row->value;
-    else if (!row->key.compare("alignment"))
-      pathAlignment = row->value;
-    else if (!row->key.compare("noise mask"))
-      pathNoiseMask = row->value;
-    else if (!row->key.compare("clock"))
-      clockRate = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.compare("window"))
-      readOutWindow = ConfigParser::valueToNumerical(row->value);
-    else if (!row->key.compare("space unit"))
-      spaceUnit = row->value;
-    else if (!row->key.compare("time unit"))
-      timeUnit = row->value;
-    else
-      throw std::runtime_error("Device: Failed to parse row, key='" + row->key +
-                               '\'');
-  }
-
-  // Control shouldn't arrive at this point
-  throw std::runtime_error("No device was parsed.");
-}
-
 Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
 {
   using namespace Utils::Config;
 
-  Device device;
   std::string dir = pathDirname(path);
   DEBUG("config base dir '", dir, "'");
 
-  if (pathExtension(path) == "toml") {
-    auto cfg = readConfig(path);
-    device = fromConfig(cfg);
+  auto cfg = readConfig(path);
+  Device device = fromConfig(cfg);
 
-    auto cfgGeo = cfg.find("geometry");
-    if (cfgGeo && cfgGeo->is<std::string>()) {
-      auto p = pathRebaseIfRelative(cfgGeo->as<std::string>(), dir);
-      device.setGeometry(Geometry::fromFile(p));
-      device.m_pathGeometry = p;
-    } else if (cfgGeo && cfgGeo->is<toml::Table>()) {
-      device.setGeometry(Geometry::fromConfig(*cfgGeo));
-    } else if (cfgGeo) {
-      FAIL("invalid 'geometry' setting. must be string or object.");
-    } else {
-      FAIL("missing 'geometry' setting");
-    }
-
-    auto cfgMask = cfg.find("pixel_masks");
-    // missing noise masks should not be treated as fatal errors
-    // allow overlay of multiple noise masks
-    if (cfgMask && cfgMask->is<std::vector<std::string>>()) {
-      for (const auto& path : cfgMask->as<std::vector<std::string>>()) {
-        try {
-          auto fullPath = pathRebaseIfRelative(path, dir);
-          device.applyPixelMasks(PixelMasks::fromFile(fullPath));
-        } catch (const std::exception& e) {
-          ERROR(e.what());
-        }
-      }
-    } else if (cfgMask && cfgMask->is<toml::Table>()) {
-      device.applyPixelMasks(PixelMasks::fromConfig(*cfgMask));
-    } else if (cfgMask) {
-      // the pixel_masks settings exists but does not have the right type. just
-      // a missing pixel_masks settings is ok, but this must be fatal mistake.
-      FAIL("invalid 'pixel_masks' setting. must be list of paths or object.");
-    }
+  auto cfgGeo = cfg.find("geometry");
+  if (cfgGeo && cfgGeo->is<std::string>()) {
+    auto p = pathRebaseIfRelative(cfgGeo->as<std::string>(), dir);
+    device.setGeometry(Geometry::fromFile(p));
+    device.m_pathGeometry = p;
+  } else if (cfgGeo && cfgGeo->is<toml::Table>()) {
+    device.setGeometry(Geometry::fromConfig(*cfgGeo));
+  } else if (cfgGeo) {
+    FAIL("invalid 'geometry' setting. must be string or object.");
   } else {
-    // fall-back to old format
-    device = parseDevice(path);
+    FAIL("missing 'geometry' setting");
+  }
+
+  auto cfgMask = cfg.find("pixel_masks");
+  // missing noise masks should not be treated as fatal errors
+  // allow overlay of multiple noise masks
+  if (cfgMask && cfgMask->is<std::vector<std::string>>()) {
+    for (const auto& path : cfgMask->as<std::vector<std::string>>()) {
+      try {
+        auto fullPath = pathRebaseIfRelative(path, dir);
+        device.applyPixelMasks(PixelMasks::fromFile(fullPath));
+      } catch (const std::exception& e) {
+        ERROR(e.what());
+      }
+    }
+  } else if (cfgMask && cfgMask->is<toml::Table>()) {
+    device.applyPixelMasks(PixelMasks::fromConfig(*cfgMask));
+  } else if (cfgMask) {
+    // the pixel_masks settings exists but does not have the right type. just
+    // a missing pixel_masks settings is ok, but this must be fatal mistake.
+    FAIL("invalid 'pixel_masks' setting. must be list of paths or object.");
   }
   INFO("read device from '", path, "'");
   return device;

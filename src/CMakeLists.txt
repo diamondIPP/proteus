@@ -43,7 +43,6 @@ set(common_SRCS
     storage/storageio.cpp
     utils/arguments.cpp
     utils/config.cpp
-    utils/configparser.cpp
     utils/densemask.cpp
     utils/eventloop.cpp
     utils/logger.cpp

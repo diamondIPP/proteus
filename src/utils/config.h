@@ -24,8 +24,6 @@ std::string pathExtension(const std::string& path);
 std::string pathRebaseIfRelative(const std::string& path,
                                  const std::string& dir);
 
-/** Read a ConfigParser config file and convert it to toml. */
-toml::Value readConfigParser(const std::string& path);
 /** Read a toml config file with automatic error handling. */
 toml::Value readConfig(const std::string& path);
 
