@@ -10,7 +10,6 @@
 #include <TFile.h>
 #include <TTree.h>
 
-#include "loopers/noisescan.h"
 #include "mechanics/device.h"
 #include "mechanics/sensor.h"
 #include "storage/cluster.h"
