@@ -2,22 +2,18 @@ set(common_SRCS
     alignment/correlationsaligner.cpp
     alignment/residualsaligner.cpp
     analyzers/analyzer.cpp
-    analyzers/baseanalyzer.cpp
     analyzers/basicefficiency.cpp
     analyzers/clusterinfo.cpp
     analyzers/correlations.cpp
-    analyzers/depiction.cpp
+#    analyzers/depiction.cpp
     analyzers/distances.cpp
-# not used anymore but kept until new analyzers reach feature parity
 #    analyzers/efficiency.cpp
     analyzers/eventinfo.cpp
     analyzers/eventprinter.cpp
-    analyzers/examplesingleanalyzer.cpp
     analyzers/hitinfo.cpp
     analyzers/matchexporter.cpp
     analyzers/noisescan.cpp
     analyzers/occupancy.cpp
-    analyzers/singleanalyzer.cpp
     analyzers/trackinfo.cpp
     analyzers/residuals.cpp
     converters/kartelconvert.cpp
