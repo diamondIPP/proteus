@@ -34,8 +34,8 @@ void Application::initialize(int argc, char const* argv[])
                    "use the given configuration sub-section");
   args.addOptional('s', "skip_events", "skip the first n events", 0);
   args.addOptional('n', "num_events", "number of events to process", -1);
-  args.addFlag('v', "verbose", "print more information");
-  args.addFlag('\0', "debug", "print even more information");
+  args.addFlag('q', "quiet", "print only errors");
+  args.addFlag('\0', "debug", "print more information");
   args.addFlag('\0', "no-progress", "do not show a progress bar");
   args.addRequired("input", "path to the input file");
   args.addRequired("output_prefix", "output path prefix");
@@ -45,12 +45,12 @@ void Application::initialize(int argc, char const* argv[])
     std::exit(EXIT_FAILURE);
 
   // logging level
-  if (args.has("debug")) {
-    Utils::Logger::setGlobalLevel(Utils::Logger::Level::Debug);
-  } else if (args.has("verbose")) {
-    Utils::Logger::setGlobalLevel(Utils::Logger::Level::Info);
-  } else {
+  if (args.has("quiet")) {
     Utils::Logger::setGlobalLevel(Utils::Logger::Level::Error);
+  } else if (args.has("debug")) {
+    Utils::Logger::setGlobalLevel(Utils::Logger::Level::Debug);
+  } else {
+    Utils::Logger::setGlobalLevel(Utils::Logger::Level::Info);
   }
 
   if (!args.has("no-progress"))
