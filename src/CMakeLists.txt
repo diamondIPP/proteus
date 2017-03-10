@@ -46,6 +46,7 @@ set(common_SRCS
     mechanics/pixelmasks.cpp
     mechanics/sensor.cpp
     processors/applygeometry.cpp
+    processors/applyregions.cpp
     processors/clustermaker.cpp
     processors/clusterizer.cpp
     processors/configprocessors.cpp
@@ -55,6 +56,7 @@ set(common_SRCS
     processors/matcher.cpp
     processors/processor.cpp
     processors/processors.cpp
+    processors/setupsensors.cpp
     processors/synchronizer.cpp
     processors/trackfinder.cpp
     processors/trackfitter.cpp

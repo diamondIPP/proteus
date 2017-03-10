@@ -9,12 +9,12 @@
 
 #include <string>
 
-#include <TDirectory.h>
-#include <TTree.h>
-
 #include "analyzers/analyzer.h"
 #include "utils/definitions.h"
 #include "utils/statistics.h"
+
+class TDirectory;
+class TTree;
 
 namespace Mechanics {
 class Device;
@@ -36,29 +36,34 @@ public:
 
 private:
   struct EventData {
-    Int_t nTracks;
+    int nTracks;
   };
   struct TrackData {
-    Float_t u, v;
-    Float_t col, row;
-    Float_t redChi2;
+    float u, v;
+    float stdU, stdV, corrUV;
+    float col, row;
+    float chi2;
+    int dof;
+    int nClusters;
   };
   struct ClusterData {
-    Float_t u, v;
-    Float_t col, row;
-    Int_t size, sizeCol, sizeRow;
+    float u, v;
+    float stdU, stdV, corrUV;
+    float col, row;
+    int region;
+    int size, sizeCol, sizeRow;
   };
   struct MatchData {
-    Float_t d2;
+    float d2;
   };
 
   const Mechanics::Sensor& m_sensor;
   Index m_sensorId;
-  EventData m_ev;
-  TrackData m_trk;
-  MatchData m_mat;
-  ClusterData m_cluMat;
-  ClusterData m_cluUnm;
+  EventData m_event;
+  TrackData m_track;
+  MatchData m_match;
+  ClusterData m_clusterMatched;
+  ClusterData m_clusterUnmatched;
   TTree* m_treeTrk;
   TTree* m_treeClu;
   Utils::StatAccumulator<double> m_statMatTrkFraction;

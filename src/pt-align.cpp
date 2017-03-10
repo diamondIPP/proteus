@@ -14,8 +14,7 @@
 #include "application.h"
 #include "mechanics/device.h"
 #include "processors/applygeometry.h"
-#include "processors/clusterizer.h"
-#include "processors/hitmapper.h"
+#include "processors/setupsensors.h"
 #include "processors/trackfinder.h"
 #include "processors/trackfitter.h"
 #include "storage/event.h"
@@ -69,7 +68,7 @@ struct SensorStepsGraphs {
       g->SetTitle("");
       g->GetXaxis()->SetTitle("Alignment step");
       g->GetYaxis()->SetTitle(
-          (sensorName + " alignment correction " + paramName).c_str());
+          (sensorName + ' ' + paramName).c_str());
       dir->WriteTObject(g);
     };
     makeGraph("Offset0", off0, errOff0);
@@ -171,7 +170,7 @@ int main(int argc, char const* argv[])
 
     // common event loop elements for all alignment methods
     auto loop = app.makeEventLoop();
-    setupHitMappers(dev, loop);
+    setupHitPreprocessing(dev, loop);
     setupClusterizers(dev, loop);
     loop.addProcessor(std::make_shared<ApplyGeometry>(dev));
 
@@ -198,9 +197,10 @@ int main(int argc, char const* argv[])
     Mechanics::Geometry newGeo = aligner->updatedGeometry();
     steps.addStep(alignIds, newGeo);
     dev.setGeometry(newGeo);
+    // write current geometry after each step to not loose information
+    dev.geometry().writeFile(app.outputPath("geo.toml"));
   }
 
-  dev.geometry().writeFile(app.outputPath("geo.toml"));
   steps.writeGraphs(dev, &hists);
   hists.Write();
   hists.Close();

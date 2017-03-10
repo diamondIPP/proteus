@@ -47,9 +47,15 @@ public:
   static Measurement measurementFromName(const std::string& name);
   static std::string measurementName(Measurement measurement);
 
-  typedef Utils::Box<2, double> Area;
+  /** Two-dimensional area type, e.g. for size and region-of-interest. */
+  using Area = Utils::Box<2, double>;
+  /** A named region on the sensor. */
+  struct Region {
+    std::string name;
+    Area areaPixel = Area::Empty();
+  };
 
-  /** Construct with an empty transformation (local = global) and no noise.
+  /** Construct with an empty transformation (local = global) and empty mask.
    *
    * This is the minimal configuration required to have a usable Sensor.
    */
@@ -61,7 +67,8 @@ public:
          double pitchCol,
          double pitchRow,
          double thickness,
-         double xX0);
+         double xX0,
+         const std::vector<Region>& regions = std::vector<Region>());
 
   // identification
   Index id() const { return m_id; }
@@ -76,12 +83,14 @@ public:
   double pitchRow() const { return m_pitchRow; }
   double thickness() const { return m_thickness; }
   double xX0() const { return m_xX0; }
+
+  bool hasRegions() const { return !m_regions.empty(); }
+  const std::vector<Region>& regions() const { return m_regions; }
+
   /** Sensitive area in pixel coordinates. */
-  Area sensitiveAreaPixel() const;
+  const Area& sensitiveAreaPixel() const { return m_sensitiveAreaPixel; }
   /** Sensitive area in local coordinates. */
   Area sensitiveAreaLocal() const;
-
-  // global properties
   /** Projected envelope in the xy-plane of the sensitive area. */
   Area projectedEnvelopeXY() const;
   /** Projected pitch along the global x and y axes. */
@@ -147,6 +156,8 @@ public:
   const std::string& getName() const { return m_name; }
 
 private:
+  Area m_sensitiveAreaPixel; // sensitive (useful) area inside the matrix
+  XYVector m_sensitiveCenterPixel; // center position of the sensitive area
   Transform3D m_l2g, m_g2l;
   Index m_numCols, m_numRows;    // number of columns and rows
   double m_pitchCol, m_pitchRow; // pitch along column and row direction
@@ -155,6 +166,7 @@ private:
   Measurement m_measurement;
   Index m_id;
   std::string m_name;
+  std::vector<Region> m_regions;
   Utils::DenseMask m_pixelMask;
 };
 

@@ -7,6 +7,7 @@
 #define PT_ROOT_H
 
 #include <cassert>
+#include <cmath>
 #include <stdexcept>
 #include <string>
 
@@ -64,6 +65,19 @@ TH2D* makeH2(TDirectory* dir,
              HistAxis axis0,
              HistAxis axis1);
 
+/** Create an unnamed 2d histogram that is not stored. */
+TH1D* makeTransientH1(HistAxis axis);
+
+/** Create an unnamed 2d histogram that is not stored. */
+TH2D* makeTransientH2(HistAxis axis0, HistAxis axis1);
+
+/** Fill a histogram with the values in each bin of the 2d histogram.
+ *
+ * The binning range of the output histograms are adjusted to the actual limits
+ * while the number of bins are kept fixed.
+ */
+void fillDist(const TH2D* values, TH1D* dist);
+
 } // namespace Utils
 
 // implementation
@@ -104,6 +118,56 @@ inline TH2D* Utils::makeH2(TDirectory* dir,
   h->SetYTitle(axis1.label.c_str());
   h->SetDirectory(dir);
   return h;
+}
+
+inline TH1D* Utils::makeTransientH1(HistAxis axis)
+{
+  // try to generate a (unique) name. not sure if needed
+  std::string name;
+  name += axis.label;
+  name += std::to_string(axis.limit0);
+  name += std::to_string(axis.limit1);
+  name += std::to_string(axis.bins);
+
+  TH1D* h = new TH1D(name.c_str(), "", axis.bins, axis.limit0, axis.limit1);
+  h->SetXTitle(axis.label.c_str());
+  h->SetDirectory(nullptr);
+  return h;
+}
+
+inline TH2D* Utils::makeTransientH2(HistAxis axis0, HistAxis axis1)
+{
+  // try to generate a (unique) name. not sure if needed
+  std::string name;
+  name += axis0.label;
+  name += std::to_string(axis0.limit0);
+  name += std::to_string(axis0.limit1);
+  name += std::to_string(axis0.bins);
+  name += axis1.label;
+  name += std::to_string(axis1.limit0);
+  name += std::to_string(axis1.limit1);
+  name += std::to_string(axis1.bins);
+
+  TH2D* h = new TH2D("", "", axis0.bins, axis0.limit0, axis0.limit1,
+                     axis1.bins, axis1.limit0, axis1.limit1);
+  h->SetXTitle(axis0.label.c_str());
+  h->SetYTitle(axis1.label.c_str());
+  h->SetDirectory(nullptr);
+  return h;
+}
+
+inline void Utils::fillDist(const TH2D* values, TH1D* dist)
+{
+  // ensure all values are binned
+  dist->SetBins(dist->GetNbinsX(), values->GetMinimum(),
+                std::nextafter(values->GetMaximum(), values->GetMaximum() + 1));
+  for (int icol = 1; icol <= values->GetNbinsX(); ++icol) {
+    for (int irow = 1; irow <= values->GetNbinsY(); ++irow) {
+      auto value = values->GetBinContent(icol, irow);
+      if (std::isfinite(value))
+        dist->Fill(value);
+    }
+  }
 }
 
 #endif // PT_ROOT_H

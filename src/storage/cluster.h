@@ -21,10 +21,11 @@ class Plane;
 
 class Cluster {
 public:
-  typedef Utils::Box<2, int> Area;
+  using Area = Utils::Box<2, int>;
 
   Index index() const { return m_index; }
   Index sensorId() const;
+  Index region() const;
 
   void setPixel(const XYPoint& cr, const SymMatrix2& cov);
   void setPixel(double col, double row, double stdCol, double stdRow);
@@ -41,11 +42,11 @@ public:
   double time() const { return m_time; }
   double value() const { return m_value; }
 
-  /** The area enclosing the cluster.
+  /** The area enclosing the cluster in pixel coordinates.
    *
-   * \return Returns an empty area for an empty cluster w/o hits.
+   * \return Returns an empty area for an empty cluster.
    */
-  Area area() const;
+  Area areaPixel() const;
   int size() const { return static_cast<int>(m_hits.size()); }
   int sizeCol() const;
   int sizeRow() const;

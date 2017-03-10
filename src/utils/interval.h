@@ -21,11 +21,16 @@ enum class Endpoints { Closed, Open, OpenMin, OpenMax };
 template <typename T, Endpoints kEndpoints = Endpoints::OpenMax>
 class Interval {
 public:
-  /** Construct the default interval encompassing the full range of T. */
-  Interval()
-      : m_min(std::numeric_limits<T>::min())
-      , m_max(std::numeric_limits<T>::max())
+  /** Construct an empty interval. */
+  static Interval Empty()
   {
+    return Interval(static_cast<T>(0), static_cast<T>(0));
+  }
+  /** Construct an interval spanning the full accessible range of the type T. */
+  static Interval Unbounded()
+  {
+    return Interval(std::numeric_limits<T>::min(),
+                    std::numeric_limits<T>::max());
   }
   /** Construct an interval with the given limits. */
   Interval(T a, T b) : m_min(std::min(a, b)), m_max(std::max(a, b)) {}
@@ -59,22 +64,45 @@ public:
   template <typename U>
   void intersect(const Interval<U, kEndpoints>& other)
   {
-    m_min = std::max<T>(m_min, other.min());
-    m_max = std::min<T>(m_max, other.max());
-    // no overlap with empty interval
-    if (m_max < m_min)
-      m_max = m_min;
+    if (other.isEmpty()) {
+      // there is no intersection w/ an empty interval
+      *this = Empty();
+    } else {
+      m_min = std::max<T>(m_min, other.min());
+      m_max = std::min<T>(m_max, other.max());
+      // there is no overlap between the intervals
+      if (m_max < m_min) {
+        *this = Empty();
+      }
+    }
   }
   /** Enlarge the interval so that the second interval is fully enclosed. */
   template <typename U>
   void enclose(const Interval<U, kEndpoints>& other)
   {
-    m_min = std::min<T>(m_min, other.min());
-    m_max = std::max<T>(m_max, other.max());
+    if (this->isEmpty()) {
+      *this = other;
+    } else if (other.isEmpty()) {
+      // nothing to do
+    } else {
+      m_min = std::min<T>(m_min, other.min());
+      m_max = std::max<T>(m_max, other.max());
+    }
+  }
+  /** Enlarge the interval on each side by the given amount. */
+  void enlarge(T extra)
+  {
+    m_min -= extra;
+    m_max += extra;
   }
 
 private:
+  Interval() : m_min(0), m_max(0) {}
+
   T m_min, m_max;
+
+  template <size_t, typename, Endpoints>
+  friend class Box;
 };
 
 /** N-dimensional aligned box defined by intervals along each axis. */
@@ -84,7 +112,26 @@ public:
   typedef Interval<T, kEndpoints> AxisInterval;
   typedef std::array<T, N> Point;
 
-  Box() = default;
+  /** Construct an empty box. */
+  static Box Empty()
+  {
+    Box box;
+    std::fill(box.m_axes.begin(), box.m_axes.end(), AxisInterval::Empty());
+    return box;
+  }
+  /** Construct a box spanning the available range of type T. */
+  static Box Unbounded()
+  {
+    Box box;
+    std::fill(box.m_axes.begin(), box.m_axes.end(), AxisInterval::Unbounded());
+    return box;
+  }
+  /** Default box is empty.
+   *
+   * \warning This is only public to make the compiler happy. Use `Empty()`.
+   */
+  Box() : m_axes{} {}
+  /** Construct a box from interval on each axis. */
   template <typename... Intervals,
             typename = typename std::enable_if<sizeof...(Intervals) == N>::type>
   Box(Intervals&&... axes) : m_axes{{std::forward<Intervals>(axes)...}}
@@ -144,6 +191,12 @@ public:
     for (size_t i = 0; i < N; ++i)
       m_axes[i].enclose(other.interval(i));
   }
+  /** Enlarge the box along both directions on each axis by the given amount. */
+  void enlarge(T extra)
+  {
+    for (size_t i = 0; i < N; ++i)
+      m_axes[i].enlarge(extra);
+  }
 
 private:
   std::array<AxisInterval, N> m_axes;
@@ -167,6 +220,14 @@ Box<N, T0, kEndpoints> boundingBox(const Box<N, T0, kEndpoints>& box0,
   Box<N, T0, kEndpoints> box = box0;
   box.enclose(box1);
   return box;
+}
+
+template <size_t N, typename T, typename U, Endpoints kEndpoints>
+Box<N, T, kEndpoints> enlarged(const Box<N, T, kEndpoints>& box, U extra)
+{
+  Box<N, T, kEndpoints> larger = box;
+  larger.enlarge(extra);
+  return larger;
 }
 
 template <typename T, Endpoints kEndpoints>

@@ -21,7 +21,7 @@ class TH1D;
 class TH2D;
 
 namespace Mechanics {
-class Device;
+class Sensor;
 }
 
 namespace Analyzers {
@@ -36,8 +36,7 @@ class NoiseScan : public Analyzer {
 public:
   typedef Utils::Box<2, int> Area;
 
-  NoiseScan(const Mechanics::Device& device,
-            const Index sensorId,
+  NoiseScan(const Mechanics::Sensor& sensor,
             const double bandwidth,
             const double sigmaMax,
             const double rateMax,
@@ -54,14 +53,13 @@ public:
 private:
   Index m_sensorId;
   double m_densityBandwidth, m_sigmaMax, m_rateMax;
-  Area m_roi;
   uint64_t m_numEvents;
-  TH2D* m_occ;
-  TH1D* m_occPixels;
+  TH2D* m_occupancy;
+  TH1D* m_occupancyDist;
   TH2D* m_density;
-  TH2D* m_sigma;
-  TH1D* m_sigmaPixels;
-  TH2D* m_maskedPixels;
+  TH2D* m_significance;
+  TH1D* m_significanceDist;
+  TH2D* m_mask;
 };
 
 } // namespace Analyzers

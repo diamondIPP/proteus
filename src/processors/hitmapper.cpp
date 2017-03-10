@@ -6,9 +6,7 @@
 
 #include "hitmapper.h"
 
-#include "mechanics/device.h"
 #include "storage/event.h"
-#include "utils/eventloop.h"
 #include "utils/logger.h"
 
 PT_SETUP_GLOBAL_LOGGER
@@ -51,16 +49,5 @@ void Processors::CCPDv4HitMapper::process(Storage::Event& event) const
     }
     row = fei4Row / 2;
     hit.setPhysicalAddress(col, row);
-  }
-}
-
-void Processors::setupHitMappers(const Mechanics::Device& device,
-                                 Utils::EventLoop& loop)
-{
-  for (Index sensorId = 0; sensorId < device.numSensors(); ++sensorId) {
-    const Mechanics::Sensor* sensor = device.getSensor(sensorId);
-    if (sensor->measurement() == Mechanics::Sensor::Measurement::Ccpdv4Binary) {
-      loop.addProcessor(std::make_shared<CCPDv4HitMapper>(sensorId));
-    }
   }
 }

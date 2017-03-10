@@ -16,9 +16,7 @@
 #include "application.h"
 #include "mechanics/device.h"
 #include "processors/applygeometry.h"
-#include "processors/clusterizer.h"
-#include "processors/clustermaker.h"
-#include "processors/hitmapper.h"
+#include "processors/setupsensors.h"
 #include "processors/trackfinder.h"
 #include "processors/trackfitter.h"
 #include "storage/event.h"
@@ -49,7 +47,7 @@ int main(int argc, char const* argv[])
 
   auto loop = app.makeEventLoop();
   loop.setOutput(&output);
-  setupHitMappers(app.device(), loop);
+  setupHitPreprocessing(app.device(), loop);
   setupClusterizers(app.device(), loop);
   loop.addProcessor(std::make_shared<ApplyGeometry>(app.device()));
   loop.addProcessor(std::make_shared<TrackFinder>(

@@ -13,12 +13,6 @@ void Storage::Plane::clear()
 
 Storage::Plane::Plane(Index sensorId) : m_sensorId(sensorId) {}
 
-Storage::Hit* Storage::Plane::newHit()
-{
-  m_hits.emplace_back(new Hit());
-  return m_hits.back().get();
-}
-
 Storage::Cluster* Storage::Plane::newCluster()
 {
   m_clusters.emplace_back(new Cluster());

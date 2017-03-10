@@ -11,14 +11,10 @@
 #include "utils/definitions.h"
 
 namespace Mechanics {
-class Device;
 class Sensor;
 }
 namespace Storage {
 class Cluster;
-}
-namespace Utils {
-class EventLoop;
 }
 
 namespace Processors {
@@ -31,8 +27,7 @@ public:
 
 protected:
   BaseClusterizer(const std::string& namePrefix,
-                  const Mechanics::Device& device,
-                  Index sensorId);
+                  const Mechanics::Sensor& sensor);
 
 private:
   virtual void estimateProperties(Storage::Cluster& cluster) const = 0;
@@ -48,7 +43,7 @@ private:
  */
 class BinaryClusterizer : public BaseClusterizer {
 public:
-  BinaryClusterizer(const Mechanics::Device& device, Index sensorId);
+  BinaryClusterizer(const Mechanics::Sensor& sensor);
 
 private:
   void estimateProperties(Storage::Cluster& cluster) const;
@@ -60,7 +55,7 @@ private:
  */
 class ValueWeightedClusterizer : public BaseClusterizer {
 public:
-  ValueWeightedClusterizer(const Mechanics::Device& device, Index sensorId);
+  ValueWeightedClusterizer(const Mechanics::Sensor& sensor);
 
 private:
   void estimateProperties(Storage::Cluster& cluster) const;
@@ -69,13 +64,11 @@ private:
 /** Cluster hits and take position and timing only from the fastest hit. */
 class FastestHitClusterizer : public BaseClusterizer {
 public:
-  FastestHitClusterizer(const Mechanics::Device& device, Index sensorId);
+  FastestHitClusterizer(const Mechanics::Sensor& sensor);
 
 private:
   void estimateProperties(Storage::Cluster& cluster) const;
 };
-
-void setupClusterizers(const Mechanics::Device& device, Utils::EventLoop& loop);
 
 } // namespace Processors
 

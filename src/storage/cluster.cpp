@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <climits>
+#include <numeric>
 #include <ostream>
 
 #include "mechanics/sensor.h"
@@ -60,26 +61,22 @@ void Storage::Cluster::transform(const Mechanics::Sensor& sensor)
 
 Index Storage::Cluster::sensorId() const { return m_plane->sensorId(); }
 
-Storage::Cluster::Area Storage::Cluster::area() const
+Index Storage::Cluster::region() const
 {
-  if (m_hits.empty()) {
-    // empty area anchored outside the sensitive sensor area
-    return Area(Area::AxisInterval(-1, -1), Area::AxisInterval(-1, -1));
-  }
-
-  Area::AxisInterval cols(m_hits.front()->col(), m_hits.front()->col() + 1);
-  Area::AxisInterval rows(m_hits.front()->row(), m_hits.front()->row() + 1);
-  for (auto hit = ++m_hits.begin(); hit != m_hits.end(); ++hit) {
-    int col = static_cast<int>((*hit)->col());
-    int row = static_cast<int>((*hit)->row());
-    cols.enclose(Area::AxisInterval(col, col + 1));
-    rows.enclose(Area::AxisInterval(row, row + 1));
-  }
-  return Area(cols, rows);
+  return m_hits.empty() ? kInvalidIndex : m_hits.front()->region();
 }
 
-int Storage::Cluster::sizeCol() const { return area().length(0); }
-int Storage::Cluster::sizeRow() const { return area().length(1); }
+Storage::Cluster::Area Storage::Cluster::areaPixel() const
+{
+  auto grow = [](Area a, const Hit* hit) {
+    a.enclose(hit->areaPixel());
+    return a;
+  };
+  return std::accumulate(m_hits.begin(), m_hits.end(), Area::Empty(), grow);
+}
+
+int Storage::Cluster::sizeCol() const { return areaPixel().length(0); }
+int Storage::Cluster::sizeRow() const { return areaPixel().length(1); }
 
 void Storage::Cluster::setTrack(const Storage::Track* track)
 {

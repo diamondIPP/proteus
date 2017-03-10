@@ -23,25 +23,37 @@ Analyzers::HitInfo::HitInfo(const Mechanics::Device* device,
 
   TDirectory* sub = Utils::makeDir(dir, "HitInfo");
 
-  for (Index sensorId = 0; sensorId < device->numSensors(); ++sensorId) {
-    const Mechanics::Sensor& sensor = *device->getSensor(sensorId);
+  for (Index isensor = 0; isensor < device->numSensors(); ++isensor) {
+    const Mechanics::Sensor& sensor = *device->getSensor(isensor);
     const auto& area = sensor.sensitiveAreaPixel();
     auto name = [&](const std::string suffix) {
       return sensor.name() + '-' + suffix;
     };
+    auto makeRegionHists = [&](std::string name) {
+      std::string prefix = sensor.name() + '-';
+      if (!name.empty()) {
+        prefix += name;
+        prefix += '-';
+      }
+      RegionHists h;
+      h.time = makeH1(sub, prefix + "Time", HistAxis(0, timeMax, "Hit time"));
+      h.value =
+          makeH1(sub, prefix + "Value", HistAxis(0, valueMax, "Hit value"));
+      return h;
+    };
 
-    HistAxis axCol(area.interval(0), area.length(0), "Hit colum");
+    HistAxis axCol(area.interval(0), area.length(0), "Hit column");
     HistAxis axRow(area.interval(1), area.length(1), "Hit row");
-    HistAxis axTime(0, timeMax, "Hit time");
-    HistAxis axValue(0, valueMax, "Hit value");
-
-    Hists hists;
-    hists.pixels = makeH2(sub, name("Pixels"), axCol, axRow);
-    hists.time = makeH1(sub, name("Time"), axTime);
-    hists.value = makeH1(sub, name("Value"), axValue);
-    hists.timeMap = makeH2(sub, name("TimeMap"), axCol, axRow);
-    hists.valueMap = makeH2(sub, name("ValueMap"), axCol, axRow);
-    m_hists.push_back(hists);
+    SensorHists hists;
+    // hitmap is only for internal normalization
+    hists.hitMap = makeTransientH2(axCol, axRow);
+    hists.meanTimeMap = makeH2(sub, name("MeanTimeMap"), axCol, axRow);
+    hists.meanValueMap = makeH2(sub, name("MeanValueMap"), axCol, axRow);
+    hists.whole = makeRegionHists(std::string());
+    for (const auto& region : sensor.regions()) {
+      hists.regions.push_back(makeRegionHists(region.name));
+    }
+    m_hists.push_back(std::move(hists));
   }
 }
 
@@ -56,9 +68,9 @@ void Analyzers::HitInfo::processEvent(const Storage::Event* event)
   if (!checkCuts(event))
     return;
 
-  for (Index sensorId = 0; sensorId < event->numPlanes(); sensorId++) {
-    const Storage::Plane& plane = *event->getPlane(sensorId);
-    const Hists& hists = m_hists.at(sensorId);
+  for (Index isensor = 0; isensor < event->numPlanes(); isensor++) {
+    const Storage::Plane& plane = *event->getPlane(isensor);
+    const SensorHists& hists = m_hists.at(isensor);
 
     for (Index ihit = 0; ihit < plane.numHits(); ihit++) {
       const Storage::Hit& hit = *plane.getHit(ihit);
@@ -67,27 +79,24 @@ void Analyzers::HitInfo::processEvent(const Storage::Event* event)
       if (!checkCuts(&hit))
         continue;
 
-      hists.pixels->Fill(hit.col(), hit.row());
-      hists.time->Fill(hit.time());
-      hists.value->Fill(hit.value());
-      hists.timeMap->Fill(hit.col(), hit.row(), hit.time());
-      hists.valueMap->Fill(hit.col(), hit.row(), hit.value());
+      hists.hitMap->Fill(hit.col(), hit.row());
+      hists.meanTimeMap->Fill(hit.col(), hit.row(), hit.time());
+      hists.meanValueMap->Fill(hit.col(), hit.row(), hit.value());
+      hists.whole.time->Fill(hit.time());
+      hists.whole.value->Fill(hit.value());
+      if (hit.region() != kInvalidIndex) {
+        hists.regions[hit.region()].time->Fill(hit.time());
+        hists.regions[hit.region()].value->Fill(hit.value());
+      }
     }
   }
 }
 
 void Analyzers::HitInfo::postProcessing()
 {
-  for (auto hists = m_hists.begin(); hists != m_hists.end(); ++hists) {
-    // scale time and tot map to pixel hit count
-    for (Int_t x = 1; x <= hists->pixels->GetNbinsX(); ++x) {
-      for (Int_t y = 1; y <= hists->pixels->GetNbinsY(); ++y) {
-        const double count = hists->pixels->GetBinContent(x, y);
-        const double time = hists->timeMap->GetBinContent(x, y);
-        hists->timeMap->SetBinContent(x, y, time / count);
-        const double value = hists->valueMap->GetBinContent(x, y);
-        hists->valueMap->SetBinContent(x, y, value / count);
-      }
-    }
+  // scale from integrated time/value to mean
+  for (auto& hists : m_hists) {
+    hists.meanTimeMap->Divide(hists.hitMap);
+    hists.meanValueMap->Divide(hists.hitMap);
   }
 }

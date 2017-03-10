@@ -10,15 +10,51 @@ v1.1.0 (to be released)
 User-visible changes
 --------------------
 
+*   Add support for sensor regions.
+
+    Multiple, exclusive regions can be defined on a sensor that are
+    treated independently in the analysis. The clusterizer will create
+    clusters only from hits that belong to the same regions. Many
+    analyzers will automatically produce separate histograms for each
+    region.
+
+*   Add support for basic sensor-level and in-pixel efficiency.
+
+    Efficiency histograms are calculated when running ``pt-match``
+    based on the fitted track positions and the matched cluster
+    information. If regions are configured, efficiencies are
+    calculated separately for each region.
+
 *   Correlations are calculated according to the ordering of the
     sensors along the z-axis.
+*   Extend and update the TTree output from ``pt-match``.
+
+    Event variables are prefixed with ``evt_...`` instead of
+    ``ev_...``. Matching variables are prefixed with ``mat_...``
+    instead of not being prefixed at all. The track quality
+    parameters, e.g. :math:`\chi^2`, are stored separately as
+    ``trk_chi2``, ``trk_dof``, ``trk_nclusters``. Position
+    uncertainties in the local system for both tracks and clusters are
+    stored in ``..._std_u``, ``..._std_v``, and ``..._corr_uv``.
+
+*   Use consistent histogram names, ranges, and units.
+
+    In the hit analyzer: rename ``TimeMap``, ``ValueMap`` to
+    ``MeanTimeMap``, ``MeanValueMap`` and remove the duplicate
+    ``HitMap`` histogram.
+    In the occupancy analyzer: remove sub-pixel binning in cluster map,
+    use consistent histogram ranges, rename occupancy distributions to
+    ``...OccupancyDist``.
+    In the noise scan: use ``...Dist`` suffix for per-pixel
+    distribution histograms instead of ``...Pixels``.
+    The occupancy is consistently measured in hits per pixel per event
+    or clusters per pixel per event.
+
 *   ``pt-align`` uses the absolute geometry parameters instead of the
     corrections in the alignment convergence plots.
 *   Print only errors by default and add ``--verbose`` and ``--debug``
     command line flags to most tools to increase verbosity.
 *   Add ``--no-progress`` command line flag to disable the progress bar.
-*   ``pt-mach`` now computes some basic sensor and in-pixel efficiency
-    histograms.
 *   Add a ``install`` build target that installs the binaries.
 
 Internal changes
@@ -30,10 +66,20 @@ Internal changes
     efficiency estimations.
 *   The continous integration builds the software with different compilers
     and ROOT versions.
+*   Add ``Utils::DenseMask`` class to handle pixel masks in the
+    clusterizer and in the efficiency analyzer. This replaces the
+    manual mask handling in the sensor classes.
+*   Add support for enlarging ``Utils::Interval`` and ``Utils::Box``.
+*   ``pt-align`` writes out the new geometry after each step and not
+    only at the end.
 
 Bug fixes
 ---------
 
+*   Fix intersection and enclosure calculations with empty intervals in
+    ``Utils::Interval`` and ``Utils::Box``.
+*   Fix kernel boundaries in the density estimation in
+    ``Analyzers::NoiseScan``.
 
 v1.0.0 (2017-02-07)
 ===================

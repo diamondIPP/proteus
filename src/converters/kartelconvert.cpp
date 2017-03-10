@@ -408,8 +408,8 @@ void KartelConvert::writeFrame(bool invalid)
     {
       Storage::Plane* plane = event->getPlane(nplane);
       for (unsigned int nhit = 0; nhit < _frame.hits[nplane].size(); nhit++) {
-        plane->newHit()->setAddress(_frame.hits[nplane].at(nhit).x,
-                                    _frame.hits[nplane].at(nhit).y);
+        plane->addHit(_frame.hits[nplane].at(nhit).x,
+                      _frame.hits[nplane].at(nhit).y, 0, 0);
       }
     }
   }

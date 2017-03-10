@@ -23,6 +23,9 @@ struct Unconnected {
 
   bool operator()(const Storage::Hit* hit)
   {
+    // don't cluster hits from different sensor regions
+    if (cluster->region() != hit->region())
+      return true;
     for (Index icompare = 0; icompare < cluster->numHits(); ++icompare) {
       XYVector delta = hit->posPixel() - cluster->getHit(icompare)->posPixel();
       if (delta.Mag2() <= maxDistSquared)
@@ -60,11 +63,10 @@ static void cluster(double maxDistSquared,
 }
 
 Processors::BaseClusterizer::BaseClusterizer(const std::string& namePrefix,
-                                             const Mechanics::Device& device,
-                                             Index sensorId)
-    : m_sensor(*device.getSensor(sensorId))
+                                             const Mechanics::Sensor& sensor)
+    : m_sensor(sensor)
     , m_maxDistSquared(1)
-    , m_name(namePrefix + "(sensorId=" + std::to_string(sensorId) + ')')
+    , m_name(namePrefix + '(' + sensor.name() + ')')
 {
 }
 
@@ -92,10 +94,10 @@ void Processors::BaseClusterizer::process(Storage::Event& event) const
 }
 
 Processors::BinaryClusterizer::BinaryClusterizer(
-    const Mechanics::Device& device, Index sensorId)
-    : BaseClusterizer("BinaryClusterizer", device, sensorId)
+    const Mechanics::Sensor& sensor)
+    : BaseClusterizer("BinaryClusterizer", sensor)
 {
-  DEBUG("binary clustering for sensor ", sensorId);
+  DEBUG("binary clustering for ", sensor.name());
 }
 
 // 1/12 factor from pixel size to stddev of equivalent gaussian
@@ -125,10 +127,10 @@ void Processors::BinaryClusterizer::estimateProperties(
 }
 
 Processors::ValueWeightedClusterizer::ValueWeightedClusterizer(
-    const Mechanics::Device& device, Index sensorId)
-    : BaseClusterizer("ValueWeightedClusterizer", device, sensorId)
+    const Mechanics::Sensor& sensor)
+    : BaseClusterizer("ValueWeightedClusterizer", sensor)
 {
-  DEBUG("value weighted clustering for sensor ", sensorId);
+  DEBUG("value weighted clustering for ", sensor.name());
 }
 
 void Processors::ValueWeightedClusterizer::estimateProperties(
@@ -156,10 +158,10 @@ void Processors::ValueWeightedClusterizer::estimateProperties(
 }
 
 Processors::FastestHitClusterizer::FastestHitClusterizer(
-    const Mechanics::Device& device, Index sensorId)
-    : BaseClusterizer("FastestHitClusterizer", device, sensorId)
+    const Mechanics::Sensor& sensor)
+    : BaseClusterizer("FastestHitClusterizer", sensor)
 {
-  DEBUG("fastest hit (non-)clustering for sensor ", sensorId);
+  DEBUG("fastest hit (non-)clustering for ", sensor.name());
 }
 
 void Processors::FastestHitClusterizer::estimateProperties(
@@ -178,22 +180,4 @@ void Processors::FastestHitClusterizer::estimateProperties(
 
   cluster.setPixel(pos, HIT_COV);
   cluster.setTime(time);
-}
-
-void Processors::setupClusterizers(const Mechanics::Device& device,
-                                   Utils::EventLoop& loop)
-{
-  for (Index sensorId = 0; sensorId < device.numSensors(); ++sensorId) {
-    const Mechanics::Sensor* sensor = device.getSensor(sensorId);
-    switch (sensor->measurement()) {
-    case Mechanics::Sensor::Measurement::PixelBinary:
-    case Mechanics::Sensor::Measurement::Ccpdv4Binary:
-      loop.addProcessor(std::make_shared<BinaryClusterizer>(device, sensorId));
-      break;
-    case Mechanics::Sensor::Measurement::PixelTot:
-      loop.addProcessor(
-          std::make_shared<ValueWeightedClusterizer>(device, sensorId));
-      break;
-    }
-  }
 }

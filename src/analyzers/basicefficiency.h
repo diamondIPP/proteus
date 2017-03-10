@@ -6,9 +6,12 @@
 #ifndef PT_BASICEFFICIENCY_H
 #define PT_BASICEFFICIENCY_H
 
+#include <vector>
+
 #include "analyzers/analyzer.h"
 #include "utils/definitions.h"
 #include "utils/densemask.h"
+#include "utils/interval.h"
 
 class TDirectory;
 class TH1D;
@@ -17,54 +20,93 @@ class TH2D;
 namespace Mechanics {
 class Sensor;
 }
+namespace Storage {
+class TrackState;
+}
 
 namespace Analyzers {
 
-/** Basic efficiency calculation using tracks and matched clusters. */
+/** Basic efficiency calculation using tracks and matched clusters.
+ *
+ * Computer sensor and in-pixel efficiency maps and projections. Two-dimensional
+ * efficiency maps are calculated with additional edges to also include tracks
+ * that are matched to a cluster but are located outside the region-of-interest.
+ * The per-pixel efficiency distribution is calculated without these edges
+ * pixels.
+ *
+ * For the column and row projections, tracks are considered only if they fall
+ * within the region-of-interest in the other axis. E.g. the column projections
+ * are calculated only for tracks whose row position falls within the
+ * region-of-interest excluding the additional edges.
+ *
+ * The in-pixel efficiencies are only calculated for tracks fully within the
+ * region-of-interest excluding the additional edges.
+ */
 class BasicEfficiency : public Analyzer {
 public:
   /**
    * \param sensor Sensor for which efficiencies should be calculated
    * \param dir Histogram output directory
+   * \param maskedPixelRange Remove tracks around masked pixels, 0 to disable
    * \param increaseArea Extend histograms beyond the nominal sensor edge
-   * \param maskedPixelRange Track mask around masked pixels, 0 to disable
    * \param inPixelPeriod Folding period in number of pixels
-   * \param inPixelMinBins Minimum number of bins along the smaller direction
+   * \param inPixelBinsMin Minimum number of bins along the smaller direction
+   * \param efficiencyDistBins Number of bins in the efficiency distribution
    */
   BasicEfficiency(const Mechanics::Sensor& sensor,
                   TDirectory* dir,
-                  int increaseArea = 2,
                   int maskedPixelRange = 1,
+                  int increaseArea = 2,
                   int inPixelPeriod = 2,
-                  int inPixelMinBins = 32);
+                  int inPixelBinsMin = 32,
+                  int efficiencyDistBins = 128);
 
   std::string name() const;
   void analyze(const Storage::Event& event);
   void finalize();
 
 private:
+  using Area = Utils::Box<2, double>;
+  struct Hists {
+    Area areaPixel; // region-of-interest area + edge bins
+    Area roiPixel;  // only the region-of-interest
+    int edgeBins;   // how many bins are edges outside the region-of-interest
+    TH2D* total;
+    TH2D* pass;
+    TH2D* fail;
+    TH2D* eff;
+    TH1D* effDist;
+    TH1D* colTotal;
+    TH1D* colPass;
+    TH1D* colFail;
+    TH1D* colEff;
+    TH1D* rowTotal;
+    TH1D* rowPass;
+    TH1D* rowFail;
+    TH1D* rowEff;
+    Area inPixelAreaLocal; // in local coordinates
+    TH2D* inPixTotal;
+    TH2D* inPixPass;
+    TH2D* inPixFail;
+    TH2D* inPixEff;
+
+    Hists() = default;
+    Hists(const std::string& prefix,
+          const Mechanics::Sensor& sensor,
+          Area roi,
+          int increaseArea,
+          int inPixelPeriod,
+          int inPixelBinsMin,
+          int efficiencyDistBins,
+          TDirectory* dir);
+    void fill(const Storage::TrackState& state, const XYPoint& posPixel);
+    void finalize();
+  };
+
   const Mechanics::Sensor& m_sensor;
   Utils::DenseMask m_mask;
-  TH2D* m_total;
-  TH1D* m_totalCol;
-  TH1D* m_totalRow;
-  TH2D* m_pass;
-  TH1D* m_passCol;
-  TH1D* m_passRow;
-  TH2D* m_fail;
-  TH1D* m_failCol;
-  TH1D* m_failRow;
-  TH2D* m_eff;
-  TH1D* m_effCol;
-  TH1D* m_effRow;
-  TH1D* m_effDist;
-  XYPoint m_inPixAnchor;
-  double m_inPixPeriodU;
-  double m_inPixPeriodV;
-  TH2D* m_inPixTotal;
-  TH2D* m_inPixPass;
-  TH2D* m_inPixFail;
-  TH2D* m_inPixEff;
+  Hists m_sensorHists;
+  std::vector<Hists> m_regionsHists;
 };
 
 } // namespace Analyzers
