@@ -3,7 +3,7 @@
 # run alignment for the telescope
 
 RUN=$1; shift
-FLAGS="-v $@" # e.g. -n 10000, to process only the first 10k events
+FLAGS=$@ # e.g. -n 10000, to process only the first 10k events
 
 rundir=$(printf "run%06d" $RUN)
 rawfile=$(printf "raw/run%06d.root" $RUN)
