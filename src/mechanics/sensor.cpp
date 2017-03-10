@@ -56,7 +56,12 @@ Mechanics::Sensor::Sensor(Index id,
                           double thickness,
                           double xX0,
                           const std::vector<Region>& regions)
-    : m_numCols(numCols)
+    : m_sensitiveAreaPixel(
+          Area(Area::AxisInterval(0, static_cast<double>(numCols)),
+               Area::AxisInterval(0, static_cast<double>(numRows))))
+    // place sensor center on a pixel edge in the middle of the sensitive area
+    , m_sensitiveCenterPixel(std::round(numCols / 2), std::round(numRows / 2))
+    , m_numCols(numCols)
     , m_numRows(numRows)
     , m_pitchCol(pitchCol)
     , m_pitchRow(pitchRow)
@@ -88,27 +93,6 @@ Mechanics::Sensor::Sensor(Index id,
       }
     }
   }
-  // define the sensitive pixel area:
-  // 1. the full sensor area if no regions are defined
-  // 2. the bounding box of all defined regions
-  if (m_regions.empty()) {
-    m_sensitiveAreaPixel =
-        Area(Area::AxisInterval(0, static_cast<double>(numCols)),
-             Area::AxisInterval(0, static_cast<double>(numRows)));
-  } else {
-    m_sensitiveAreaPixel =
-        std::accumulate(m_regions.begin(), m_regions.end(), Area::Empty(),
-                        [](Area init, const Region& region) {
-                          return Utils::boundingBox(init, region.areaPixel);
-                        });
-  }
-  // sensor center depends on sensitive area definition and must always be on
-  // a pixel edge.
-  m_sensitiveCenterPixel.SetCoordinates(
-      m_sensitiveAreaPixel.min(0) +
-          std::round(m_sensitiveAreaPixel.length(0) / 2),
-      m_sensitiveAreaPixel.min(1) +
-          std::round(m_sensitiveAreaPixel.length(1) / 2));
 }
 
 Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaLocal() const

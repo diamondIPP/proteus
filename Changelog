@@ -12,15 +12,11 @@ User-visible changes
 
 *   Add support for sensor regions.
 
-    A sensor can be separated into different, exclusive sensor regions
-    that are treated as independent sensors in the analysis. When any
-    sensor regions are configured, areas of the pixel matrix that do
-    not belong to a configured region are ignored. This can also be
-    used to restrict a sensor to a specific region-of-interest.
-
-    The clusterizer will create clusters only from hits that belong to
-    the same regions. Many analyzers will automatically produce
-    separate histograms for each region.
+    Multiple, exclusive regions can be defined on a sensor that are
+    treated independently in the analysis. The clusterizer will create
+    clusters only from hits that belong to the same regions. Many
+    analyzers will automatically produce separate histograms for each
+    region.
 
 *   Add support for basic sensor-level and in-pixel efficiency.
 
