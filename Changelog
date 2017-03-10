@@ -36,6 +36,7 @@ User-visible changes
     ``trk_chi2``, ``trk_dof``, ``trk_nclusters``. Position
     uncertainties in the local system for both tracks and clusters are
     stored in ``..._std_u``, ``..._std_v``, and ``..._corr_uv``.
+    Cluster time and value are stored as ```..._time`` and ``..._value``.
 
 *   Use consistent histogram names, ranges, and units.
 
@@ -57,8 +58,8 @@ User-visible changes
     The flag can be used to load extra pixel mask files in addition to
     the ones already specified in the device configuration. This flag
     can occur multiple times.
-*   Print only errors by default and add ``--verbose`` and ``--debug``
-    command line flags to most tools to increase verbosity.
+*   Add a ``--quiet`` command line flag to only output errors and a
+    ``--debug`` command line flags to increase verbosity.
 *   Add ``--no-progress`` command line flag to disable the progress bar.
 *   Add a ``install`` build target that installs the binaries.
 
