@@ -31,6 +31,8 @@ Analyzers::MatchExporter::MatchExporter(const Mechanics::Device& device,
     tree->Branch((prefix + "corr_uv").c_str(), &data.corrUV);
     tree->Branch((prefix + "col").c_str(), &data.col);
     tree->Branch((prefix + "row").c_str(), &data.row);
+    tree->Branch((prefix + "time").c_str(), &data.time);
+    tree->Branch((prefix + "value").c_str(), &data.value);
     tree->Branch((prefix + "region").c_str(), &data.region);
     tree->Branch((prefix + "size").c_str(), &data.size);
     tree->Branch((prefix + "size_col").c_str(), &data.sizeCol);
@@ -73,6 +75,8 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
     data.corrUV = cluster.covLocal()(0, 1) / (data.stdU * data.stdV);
     data.col = cluster.posPixel().x();
     data.row = cluster.posPixel().y();
+    data.time = cluster.time();
+    data.value = cluster.value();
     data.region = ((cluster.region() == kInvalidIndex) ? -1 : cluster.region());
     data.size = cluster.size();
     data.sizeCol = cluster.sizeCol();
@@ -86,6 +90,8 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
     data.corrUV = std::numeric_limits<float>::quiet_NaN();
     data.col = -1;
     data.row = -1;
+    data.time = -1;
+    data.value = -1;
     data.region = -1;
     data.size = -1;
     data.sizeCol = -1;

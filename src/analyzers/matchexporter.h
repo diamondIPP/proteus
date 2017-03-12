@@ -50,6 +50,7 @@ private:
     float u, v;
     float stdU, stdV, corrUV;
     float col, row;
+    float time, value;
     int region;
     int size, sizeCol, sizeRow;
   };
