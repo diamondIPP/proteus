@@ -326,10 +326,5 @@ void Mechanics::Sensor::print(std::ostream& os, const std::string& prefix) const
       os << prefix << "    row: " << region.areaPixel.interval(1) << '\n';
     }
   }
-  os << prefix << "sensitive area:\n";
-  os << prefix << "  col: " << sensitiveAreaPixel().interval(0) << '\n';
-  os << prefix << "  row: " << sensitiveAreaPixel().interval(1) << '\n';
-  os << prefix << "  u: " << sensitiveAreaLocal().interval(0) << '\n';
-  os << prefix << "  b: " << sensitiveAreaLocal().interval(1) << '\n';
   os.flush();
 }
