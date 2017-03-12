@@ -62,6 +62,8 @@ User-visible changes
     ``--debug`` command line flags to increase verbosity.
 *   Add ``--no-progress`` command line flag to disable the progress bar.
 *   Add a ``install`` build target that installs the binaries.
+*   Sensors without a specified name are named ``sensor<ID>`` where
+    ``<ID>`` is the internal sensor number.
 
 Internal changes
 ----------------

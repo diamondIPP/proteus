@@ -267,7 +267,7 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
   auto cfgSensors = cfg.get<toml::Array>("sensors");
   for (size_t isensor = 0; isensor < cfgSensors.size(); ++isensor) {
     toml::Value defaults = toml::Table{
-        {"name", "plane" + std::to_string(isensor)}, {"is_masked", false}};
+        {"name", "sensor" + std::to_string(isensor)}, {"is_masked", false}};
     toml::Value cfgSensor =
         Utils::Config::withDefaults(cfgSensors[isensor], defaults);
     if (cfgSensor.get<bool>("is_masked")) {
