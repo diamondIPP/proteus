@@ -4,6 +4,12 @@
 Changelog
 =========
 
+v1.1.1 (2017-03-13)
+===================
+
+*   Fix expected hit density calculation in noise scan. The density is
+    now correctly calculated for the edge pixels.
+
 v1.1.0 (2017-03-12)
 ===================
 

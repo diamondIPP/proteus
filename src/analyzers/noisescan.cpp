@@ -82,8 +82,8 @@ void Analyzers::NoiseScan::analyze(const Storage::Event& event)
 static double
 estimateDensityAtPosition(const TH2D* values, int i, int j, double bandwidth)
 {
-  assert((0 < i) && (i <= values->GetNbinsX()));
-  assert((0 < j) && (j <= values->GetNbinsY()));
+  assert((1 <= i) && (i <= values->GetNbinsX()));
+  assert((1 <= j) && (j <= values->GetNbinsY()));
 
   double sumWeights = 0;
   double sumValues = 0;
@@ -124,8 +124,8 @@ static void estimateDensity(const TH2D* values, double bandwidth, TH2D* density)
   assert(values->GetNbinsX() == density->GetNbinsX());
   assert(values->GetNbinsY() == density->GetNbinsY());
 
-  for (int icol = 1; icol < values->GetNbinsX(); ++icol) {
-    for (int irow = 1; irow < values->GetNbinsY(); ++irow) {
+  for (int icol = 1; icol <= values->GetNbinsX(); ++icol) {
+    for (int irow = 1; irow <= values->GetNbinsY(); ++irow) {
       auto den = estimateDensityAtPosition(values, icol, irow, bandwidth);
       density->SetBinContent(icol, irow, den);
     }
