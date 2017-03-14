@@ -4,6 +4,24 @@
 Changelog
 =========
 
+v1.2.0 (to be released)
+=======================
+
+User-visible changes
+--------------------
+
+*   Remove Judith-style ``proteus`` tool.
+*   Remove support for custom ini-like config format and custom mask
+    file format.
+
+Internal changes
+----------------
+
+*   Remove code that has been replaced or that has become
+    obsolete. Disable code that is currently unused but should be
+    ported to the new APIs in the future.
+*   Fully replace ``SingleAnalyzer`` with ``Analyzer`` interface.
+
 v1.1.3 (2017-03-21)
 ===================
 
