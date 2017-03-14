@@ -43,10 +43,8 @@ private:
 
   size_t index(int col, int row) const;
 
-  int m_col0;
-  int m_row0;
-  int m_sizeCol;
-  int m_sizeRow;
+  int m_col0, m_col1;
+  int m_row0, m_row1;
   std::vector<bool> m_mask;
 
   friend std::ostream& operator<<(std::ostream& os, const DenseMask& pm);
@@ -59,15 +57,15 @@ std::ostream& operator<<(std::ostream& os, const DenseMask& pm);
 // linear index into the boolean mask
 inline size_t Utils::DenseMask::index(int col, int row) const
 {
-  assert((m_col0 <= col) && (col < (m_col0 + m_sizeCol)));
-  assert((m_row0 <= row) && (row < (m_row0 + m_sizeRow)));
-  return m_sizeRow * (col - m_col0) + (row - m_row0);
+  assert((m_col0 <= col) && (col < m_col1));
+  assert((m_row0 <= row) && (row < m_row1));
+  return (m_row1 - m_row0) * (col - m_col0) + (row - m_row0);
 }
 
 inline bool Utils::DenseMask::isMasked(int col, int row) const
 {
-  bool isInsideMask = (m_col0 <= col) && (col < (m_col0 + m_sizeCol)) &&
-                      (m_row0 <= row) && (row < (m_row0 + m_sizeRow));
+  bool isInsideMask =
+      (m_col0 <= col) && (col < m_col1) && (m_row0 <= row) && (row < m_row1);
   return isInsideMask && m_mask[index(col, row)];
 }
 
