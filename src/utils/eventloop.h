@@ -35,8 +35,8 @@ namespace Utils {
 class EventLoop {
 public:
   EventLoop(Storage::StorageIO* storage,
-            uint64_t startEvent = 0,
-            uint64_t numEvents = -1);
+            uint64_t start = 0,
+            uint64_t events = UINT64_MAX);
   ~EventLoop();
 
   void enableProgressBar();
@@ -52,11 +52,12 @@ public:
   std::unique_ptr<Storage::Event> readEndEvent();
 
 private:
-  uint64_t numEvents() { return m_endEvent - m_startEvent + 1; }
+  uint64_t numEvents() { return m_numEvents; }
 
   Storage::StorageIO* m_input;
   Storage::StorageIO* m_output;
-  uint64_t m_startEvent, m_endEvent;
+  uint64_t m_startEvent;
+  uint64_t m_numEvents;
   bool m_showProgress;
   std::vector<std::shared_ptr<Processors::Processor>> m_processors;
   std::vector<std::shared_ptr<Analyzers::Analyzer>> m_analyzers;
