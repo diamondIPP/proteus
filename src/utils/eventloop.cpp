@@ -38,9 +38,8 @@ Utils::EventLoop::EventLoop(Storage::StorageIO* input,
     m_numEvents = eventsOnFile - m_startEvent;
   } else {
     if (eventsOnFile < (start + events)) {
-      INFO("requested events exceeds available events: requested=",
-           start + events, ", available=", eventsOnFile);
       m_numEvents = eventsOnFile - m_startEvent;
+      INFO("restrict to available number of events ", m_numEvents);
     } else {
       m_numEvents = events;
     }
