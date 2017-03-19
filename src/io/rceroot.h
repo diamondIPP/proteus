@@ -9,6 +9,8 @@
 #include <TFile.h>
 #include <TTree.h>
 
+#include "io.h"
+
 /* NOTE: these sizes are used to initialize arrays of track, cluster and
  * hit information. BUT these arrays are generated ONLY ONCE and re-used
  * to load events. Vectors could have been used in the ROOT file format, but
@@ -22,8 +24,6 @@
 
 namespace Storage {
 
-class Event;
-
 enum Mode { INPUT = 0, OUTPUT };
 
 namespace Flags {
@@ -36,7 +36,7 @@ enum TreeFlags {
 };
 }
 
-class StorageIO {
+class StorageIO : public Io::EventReader, public Io::EventWriter {
 public:
   /** Constructor. */
   StorageIO(const std::string& filePath,
@@ -47,14 +47,15 @@ public:
   /** Destructor */
   ~StorageIO();
 
-  uint64_t getNumEvents() const { return _numEvents; }
   unsigned int getNumPlanes() const { return _numPlanes; }
   Storage::Mode getMode() const { return _fileMode; }
 
+  std::string name() const;
+  uint64_t numEvents() const;
+  void skip(uint64_t n);
   /** Read the event in-place. Replaces all existing event content. */
-  void readEvent(uint64_t n, Event* event);
-  Event* readEvent(uint64_t n);  // Read an event and generate its objects
-  void writeEvent(Event* event); // Write an event at the end of the file
+  bool readNext(Event& event);
+  void append(const Event& event);
 
 private:
   StorageIO(const StorageIO&);            // Disable the copy constructor
@@ -67,6 +68,8 @@ private:
   TFile* _file;            // Storage file
   const Mode _fileMode;    // How to open and process the file
   unsigned int _numPlanes; // This can be read from the file structure
+  int64_t m_next;
+  int64_t m_entries;
   uint64_t _numEvents;     // Number of events in the input file
 
   /* NOTE: trees can easily be added and removed from a file. So each type

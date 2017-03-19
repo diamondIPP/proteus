@@ -305,6 +305,11 @@ StorageIO::~StorageIO()
   }
 }
 
+std::string StorageIO::name() const
+{
+  return "RceRootEventReaderWriter";
+}
+
 //=========================================================
 void StorageIO::clearVariables()
 {
@@ -355,23 +360,37 @@ void StorageIO::clearVariables()
   }
 }
 
+uint64_t StorageIO::numEvents() const { return _numEvents; }
+
+void StorageIO::skip(uint64_t n)
+{
+  if (m_entries <= static_cast<int64_t>(m_next + n)) {
+    INFO("skipping ", n, " events goes beyond available events");
+    m_next = m_entries;
+  } else {
+    m_next += n;
+  }
+}
+
 //=========================================================
-void StorageIO::readEvent(uint64_t n, Event* event)
+bool StorageIO::readNext(Event& event)
 {
   /* Note: fill in reversed order: tracks first, hits last. This is so that
    * once a hit is produced, it can immediately recieve the address of its
    * parent cluster, likewise for clusters and track. */
 
-  if (n >= _numEvents)
-    throw std::runtime_error("StorageIO: requested event outside range");
+  if (m_entries <= m_next)
+    return false;
 
-  if (_eventInfo && _eventInfo->GetEntry(n) <= 0)
+  int64_t ientry = m_next++;
+
+  if (_eventInfo && _eventInfo->GetEntry(ientry) <= 0)
     throw std::runtime_error("StorageIO: error reading event tree");
-  if (_tracks && _tracks->GetEntry(n) <= 0)
+  if (_tracks && _tracks->GetEntry(ientry) <= 0)
     throw std::runtime_error("StorageIO: error reading tracks tree");
 
-  event->clear(_numPlanes);
-  event->setFrameNumber(frameNumber);
+  event.clear(_numPlanes);
+  event.setFrameNumber(frameNumber);
   // listen chap, here's the deal:
   // we want a timestamp, i.e. a simple counter of clockcycles or bunch
   // crossings, for each event that defines the trigger/ readout time with
@@ -382,11 +401,11 @@ void StorageIO::readEvent(uint64_t n, Event* event)
   // to the actual trigger time and has only a 1s resolution, i.e. it is
   // completely useless. The `TriggerTime` actually stores the internal
   // FPGA timestamp/ clock cyles and is what we need to use.
-  event->setTimestamp(triggerTime);
-  event->setTriggerInfo(triggerInfo);
-  event->setTriggerOffset(triggerOffset);
-  event->setTriggerPhase(triggerPhase);
-  event->setInvalid(invalid);
+  event.setTimestamp(triggerTime);
+  event.setTriggerInfo(triggerInfo);
+  event.setTriggerOffset(triggerOffset);
+  event.setTriggerPhase(triggerPhase);
+  event.setInvalid(invalid);
 
   // Generate a list of track objects
   for (int ntrack = 0; ntrack < numTracks; ntrack++) {
@@ -395,17 +414,17 @@ void StorageIO::readEvent(uint64_t n, Event* event)
     state.setCov(trackCov[ntrack]);
     std::unique_ptr<Track> track(new Track(state));
     track->setGoodnessOfFit(trackChi2[ntrack], trackDof[ntrack]);
-    event->addTrack(std::move(track));
+    event.addTrack(std::move(track));
   }
 
   for (unsigned int nplane = 0; nplane < _numPlanes; nplane++) {
-    Storage::Plane* plane = event->getPlane(nplane);
+    Storage::Plane* plane = event.getPlane(nplane);
 
-    if (_hits.at(nplane) && (_hits[nplane]->GetEntry(n) <= 0))
+    if (_hits.at(nplane) && (_hits[nplane]->GetEntry(ientry) <= 0))
       throw std::runtime_error("StorageIO: error reading hits tree");
-    if (_clusters.at(nplane) && (_clusters[nplane]->GetEntry(n) <= 0))
+    if (_clusters.at(nplane) && (_clusters[nplane]->GetEntry(ientry) <= 0))
       throw std::runtime_error("StorageIO: error reading clusters tree");
-    if (_intercepts.at(nplane) && (_intercepts[nplane]->GetEntry(n) <= 0))
+    if (_intercepts.at(nplane) && (_intercepts[nplane]->GetEntry(ientry) <= 0))
       throw std::runtime_error("StorageIO: error reading intercepts tree");
 
     // Add local track states
@@ -414,7 +433,7 @@ void StorageIO::readEvent(uint64_t n, Event* event)
                                 interceptSlopeU[iintercept],
                                 interceptSlopeV[iintercept]);
       local.setCov(interceptCov[iintercept]);
-      local.setTrack(event->getTrack(interceptTrack[iintercept]));
+      local.setTrack(event.getTrack(interceptTrack[iintercept]));
       plane->addState(std::move(local));
     }
 
@@ -431,7 +450,7 @@ void StorageIO::readEvent(uint64_t n, Event* event)
       // If this cluster is in a track, mark this (and the tracks tree is
       // active)
       if (_tracks && (0 <= clusterTrack[ncluster])) {
-        Track* track = event->getTrack(clusterTrack[ncluster]);
+        Track* track = event.getTrack(clusterTrack[ncluster]);
         track->addCluster(cluster);
         cluster->setTrack(track);
       }
@@ -450,37 +469,30 @@ void StorageIO::readEvent(uint64_t n, Event* event)
       }
     }
   } // end loop in planes
-}
-
-Event* StorageIO::readEvent(uint64_t index)
-{
-  Event* event = new Event();
-  readEvent(index, event);
-  return event;
+  return true;
 }
 
 //=========================================================
-void StorageIO::writeEvent(Event* event)
+void StorageIO::append(const Event& event)
 {
-
   if (_fileMode == INPUT)
     throw std::runtime_error("StorageIO: can't write event in input mode");
 
-  frameNumber = event->frameNumber();
+  frameNumber = event.frameNumber();
   timestamp = 0;
-  triggerTime = event->timestamp();
-  triggerInfo = event->triggerInfo();
-  triggerOffset = event->triggerOffset();
-  triggerPhase = event->triggerPhase();
-  invalid = event->invalid();
+  triggerTime = event.timestamp();
+  triggerInfo = event.triggerInfo();
+  triggerOffset = event.triggerOffset();
+  triggerPhase = event.triggerPhase();
+  invalid = event.invalid();
 
-  numTracks = event->numTracks();
+  numTracks = event.numTracks();
   if (numTracks > MAX_TRACKS)
     throw std::runtime_error("StorageIO: event exceeds MAX_TRACKS");
 
   // Set the object track values into the arrays for writing to the root file
   for (int ntrack = 0; ntrack < numTracks; ntrack++) {
-    const Track& track = *event->getTrack(ntrack);
+    const Track& track = *event.getTrack(ntrack);
     trackChi2[ntrack] = track.chi2();
     trackDof[ntrack] = track.degreesOfFreedom();
     const TrackState& state = track.globalState();
@@ -492,7 +504,7 @@ void StorageIO::writeEvent(Event* event)
   }
 
   for (unsigned int nplane = 0; nplane < _numPlanes; nplane++) {
-    Plane* plane = event->getPlane(nplane);
+    const Plane* plane = event.getPlane(nplane);
 
     // fill local states
     for (Index istate = 0; istate < plane->numStates(); ++istate) {
@@ -528,7 +540,7 @@ void StorageIO::writeEvent(Event* event)
     // Set the object hit values into the arrays for writing into the root
     // file
     for (int nhit = 0; nhit < numHits; nhit++) {
-      Hit* hit = plane->getHit(nhit);
+      const Hit* hit = plane->getHit(nhit);
       hitPixX[nhit] = hit->digitalCol();
       hitPixY[nhit] = hit->digitalRow();
       hitValue[nhit] = hit->value();
