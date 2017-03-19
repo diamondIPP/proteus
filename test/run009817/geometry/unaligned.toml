@@ -1,66 +1,66 @@
 [beam]
-slope_x = 0.
-slope_y = 0.
+slope_x = 0.0
+slope_y = 0.0
 
 [[sensors]]
 id = 0
-offset_x = 0.
-offset_y = 0.
-offset_z = 0.
-rotation_x = 0.
-rotation_y = 0.
+offset_x = 0.0
+offset_y = 0.0
+offset_z = 0.0
+rotation_x = 0.0
+rotation_y = 0.0
 rotation_z = 3.1415926535897
 
 [[sensors]]
 id = 1
-offset_x = 0.
-offset_y = 0.
-offset_z = 158000.
-rotation_x = 0.
-rotation_y = 0.
+offset_x = 0.0
+offset_y = 0.0
+offset_z = 158000.0
+rotation_x = 0.0
+rotation_y = 0.0
 rotation_z = 1.570796326795
 
 [[sensors]]
 id = 2
-offset_x = 0.
-offset_y = 0.
-offset_z = 208000.
-rotation_x = 0.
-rotation_y = 0.
+offset_x = 0.0
+offset_y = 0.0
+offset_z = 208000.0
+rotation_x = 0.0
+rotation_y = 0.0
 rotation_z = 3.1415926535897
 
 [[sensors]]
 id = 3
-offset_x = 0.
-offset_y = 0.
-offset_z = 678000.
+offset_x = 0.0
+offset_y = 0.0
+offset_z = 678000.0
 rotation_x = 3.1415926535897
-rotation_y = 0.
-rotation_z = 0.
+rotation_y = 0.0
+rotation_z = 0.0
 
 [[sensors]]
 id = 4
-offset_x = 0.
-offset_y = 0.
-offset_z = 728000.
-rotation_x = 0.
+offset_x = 0.0
+offset_y = 0.0
+offset_z = 728000.0
+rotation_x = 0.0
 rotation_y = 3.1415926535897
 rotation_z = 1.570796326795
 
 [[sensors]]
 id = 5
-offset_x = 0.
-offset_y = 0.
-offset_z = 862000.
+offset_x = 0.0
+offset_y = 0.0
+offset_z = 862000.0
 rotation_x = 3.1415926535897
-rotation_y = 0.
-rotation_z = 0.
+rotation_y = 0.0
+rotation_z = 0.0
 
 [[sensors]]
 id = 6
-offset_x = 0.
-offset_y = 0.
-offset_z = 501000.
-rotation_x = 0.
-rotation_y = 0.
-rotation_z = 0.
+offset_x = 0.0
+offset_y = 0.0
+offset_z = 501000.0
+rotation_x = 0.0
+rotation_y = 0.0
+rotation_z = 0.0

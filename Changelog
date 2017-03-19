@@ -14,6 +14,11 @@ User-visible changes
 *   Remove support for custom ini-like config format and custom mask
     file format.
 
+Bugfixes
+--------
+
+*   Example configurations in the test directory use valid toml syntax.
+
 Internal changes
 ----------------
 
