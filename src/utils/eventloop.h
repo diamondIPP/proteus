@@ -43,9 +43,6 @@ public:
   void addAnalyzer(std::shared_ptr<Analyzers::Analyzer> analyzer);
   void run();
 
-  std::unique_ptr<Storage::Event> readStartEvent();
-  std::unique_ptr<Storage::Event> readEndEvent();
-
 private:
   uint64_t numEvents() { return m_numEvents; }
 

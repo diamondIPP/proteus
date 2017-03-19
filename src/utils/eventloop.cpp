@@ -215,14 +215,3 @@ void Utils::EventLoop::run()
   timing.summarize(numEvents(), m_processors, m_analyzers);
   stats.summarize();
 }
-
-std::unique_ptr<Storage::Event> Utils::EventLoop::readStartEvent()
-{
-  return std::unique_ptr<Storage::Event>(m_input->readEvent(m_startEvent));
-}
-
-std::unique_ptr<Storage::Event> Utils::EventLoop::readEndEvent()
-{
-  return std::unique_ptr<Storage::Event>(
-      m_input->readEvent(m_startEvent + m_numEvents - 1));
-}
