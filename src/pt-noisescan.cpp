@@ -18,8 +18,8 @@
 #include "analyzers/noisescan.h"
 #include "analyzers/occupancy.h"
 #include "application.h"
+#include "io/rceroot.h"
 #include "mechanics/device.h"
-#include "storage/storageio.h"
 #include "utils/eventloop.h"
 #include "utils/logger.h"
 

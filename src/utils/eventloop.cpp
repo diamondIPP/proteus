@@ -10,8 +10,8 @@
 #include <numeric>
 #include <sstream>
 
+#include "io/rceroot.h"
 #include "storage/event.h"
-#include "storage/storageio.h"
 #include "utils/logger.h"
 #include "utils/progressbar.h"
 #include "utils/statistics.h"

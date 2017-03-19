@@ -7,13 +7,13 @@
 #include "analyzers/residuals.h"
 #include "analyzers/trackinfo.h"
 #include "application.h"
+#include "io/rceroot.h"
 #include "mechanics/device.h"
 #include "processors/applygeometry.h"
 #include "processors/matcher.h"
 #include "processors/setupsensors.h"
 #include "processors/trackfitter.h"
 #include "storage/event.h"
-#include "storage/storageio.h"
 #include "utils/eventloop.h"
 
 int main(int argc, char const* argv[])

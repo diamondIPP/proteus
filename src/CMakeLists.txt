@@ -18,6 +18,7 @@ set(common_SRCS
     analyzers/residuals.cpp
 #   converters/kartelconvert.cpp
     io/io.cpp
+    io/rceroot.cpp
     mechanics/device.cpp
     mechanics/geometry.cpp
     mechanics/pixelmasks.cpp
@@ -41,7 +42,6 @@ set(common_SRCS
     storage/track.cpp
     storage/trackstate.cpp
     storage/plane.cpp
-    storage/storageio.cpp
     utils/arguments.cpp
     utils/config.cpp
     utils/densemask.cpp
