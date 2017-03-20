@@ -233,7 +233,10 @@ void Analyzers::BasicEfficiency::Hists::finalize()
     }
   }
 
-  INFO("  median: ", effDist->GetBinCenter(effDist->GetMaximumBin()));
-  INFO("  mean ", effDist->GetMean(), " +-", effDist->GetMeanError());
-  INFO("  min: ", effMin);
+  auto nTotal = total->GetEntries();
+  auto nPass = pass->GetEntries();
+  auto effMedian = effDist->GetBinCenter(effDist->GetMaximumBin());
+  auto effMean = effDist->GetMean();
+  INFO("  tracks (total/pass): ", nTotal, "/", nPass);
+  INFO("  eff (median/mean/min): ", effMedian, "/", effMean, "/", effMin);
 }
