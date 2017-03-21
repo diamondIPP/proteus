@@ -13,6 +13,9 @@ User-visible changes
 *   Remove Judith-style ``proteus`` tool.
 *   Remove support for custom ini-like config format and custom mask
     file format.
+*   Efficiencies are calculated for the selected area only, i.e. the
+    whole sensor or a sensor region, and the area is not enlarged by
+    two pixels anymore.
 
 Bugfixes
 --------

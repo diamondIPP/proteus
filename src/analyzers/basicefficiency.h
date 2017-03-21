@@ -56,7 +56,7 @@ public:
   BasicEfficiency(const Mechanics::Sensor& sensor,
                   TDirectory* dir,
                   int maskedPixelRange = 1,
-                  int increaseArea = 2,
+                  int increaseArea = 0,
                   int inPixelPeriod = 2,
                   int inPixelBinsMin = 32,
                   int efficiencyDistBins = 128);
