@@ -196,40 +196,37 @@ void Analyzers::BasicEfficiency::finalize()
 
 void Analyzers::BasicEfficiency::Hists::finalize()
 {
-  for (auto* h2 : {total, pass, inPixTotal, inPixPass})
-    h2->Sumw2();
-  for (auto* h1 : {colTotal, rowTotal, colPass, rowPass})
-    h1->Sumw2();
-
+  // we just need the plain number differences w/o sumw2
   fail->Add(total, pass, 1, -1);
   colFail->Add(colTotal, colPass, 1, -1);
   rowFail->Add(rowTotal, rowFail, 1, -1);
   inPixFail->Add(inPixTotal, inPixPass, 1, -1);
-  // Use simple division here w/o full TEfficiency power for simplicity.
+  // ensure errors are available
+  for (TH2D* h : {total, pass, fail, inPixTotal, inPixPass, inPixFail})
+    h->Sumw2();
+  for (TH1D* h : {colTotal, colPass, colFail, rowTotal, rowPass, rowFail})
+    h->Sumw2();
+  // Use simple division here w/o full TEfficiency for simplicity.
   eff->Divide(pass, total);
   colEff->Divide(colPass, colTotal);
   rowEff->Divide(rowPass, rowTotal);
   inPixEff->Divide(inPixPass, inPixTotal);
   // construct the pixel efficiencies distribution
-  // we only want min/max inside the region-of-interest w/o edges
-  double effMin = std::numeric_limits<double>::max();
-  double effMax = std::numeric_limits<double>::lowest();
+  // get minimum efficiency inside the input roi
+  double effMin = DBL_MAX;
   for (int i = (1 + edgeBins); (i + edgeBins) <= total->GetNbinsX(); ++i) {
     for (int j = (1 + edgeBins); (j + edgeBins) <= total->GetNbinsY(); ++j) {
       // w/o input tracks we get no efficiency estimate
       if (0 < total->GetBinContent(i, j)) {
-        double effVal = eff->GetBinContent(i, j);
-        effMin = std::min(effMin, effVal);
-        effMax = std::max(effMax, effVal);
+        effMin = std::min(effMin, eff->GetBinContent(i, j));
       }
     }
   }
-  // ensure maximum value is within the histogram
-  effMax = std::nextafter(effMax, effMax + 1);
-  effDist->SetBins(effDist->GetNbinsX(), effMin, effMax);
-  // The efficiency distribution should *not* contain the edges
-  for (int i = (1 + edgeBins); (i + edgeBins) <= total->GetNbinsX(); ++i) {
-    for (int j = (1 + edgeBins); (j + edgeBins) <= total->GetNbinsY(); ++j) {
+  // make sure 1.0 is still included in the upper bin
+  effDist->SetBins(effDist->GetNbinsX(), effMin, std::nextafter(1.0, 2.0));
+  for (int i = 1; i <= total->GetNbinsX(); ++i) {
+    for (int j = 1; j <= total->GetNbinsY(); ++j) {
+      // only add pixels for which we have measurements
       if (0 < total->GetBinContent(i, j)) {
         effDist->Fill(eff->GetBinContent(i, j));
       }
@@ -238,5 +235,5 @@ void Analyzers::BasicEfficiency::Hists::finalize()
 
   INFO("  median: ", effDist->GetBinCenter(effDist->GetMaximumBin()));
   INFO("  mean ", effDist->GetMean(), " +-", effDist->GetMeanError());
-  INFO("  range: ", effMin, " - ", effMax);
+  INFO("  min: ", effMin);
 }
