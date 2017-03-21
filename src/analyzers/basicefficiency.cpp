@@ -109,7 +109,7 @@ Analyzers::BasicEfficiency::Hists::Hists(const std::string& prefix,
   inPixTotal = makeH2(dir, name("InPixTracksTotal"), axInPixU, axInPixV);
   inPixPass = makeH2(dir, name("InPixTracksPass"), axInPixU, axInPixV);
   inPixFail = makeH2(dir, name("InPixTracksFail"), axInPixU, axInPixV);
-  inPixEff = makeH2(dir, name("InPixTracksEfficiency"), axInPixU, axInPixV);
+  inPixEff = makeH2(dir, name("InPixEfficiency"), axInPixU, axInPixV);
 }
 
 std::string Analyzers::BasicEfficiency::name() const
