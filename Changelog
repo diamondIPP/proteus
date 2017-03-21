@@ -20,6 +20,7 @@ User-visible changes
     distribution instead of the mean. This should make it more robust
     for noisy sensors at the expense of limiting the precision to
     approximately one pixel.
+*   The ``activate.sh`` script is also copied during the ``install`` phase.
 
 Bugfixes
 --------
