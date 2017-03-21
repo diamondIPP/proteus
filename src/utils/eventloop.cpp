@@ -19,26 +19,31 @@
 PT_SETUP_LOCAL_LOGGER(EventLoop)
 
 Utils::EventLoop::EventLoop(Storage::StorageIO* input,
-                            uint64_t startEvent,
-                            uint64_t numEvents)
-    : m_input(input)
-    , m_output(NULL)
-    , m_startEvent(startEvent)
-    , m_showProgress(false)
+                            uint64_t start,
+                            uint64_t events)
+    : m_input(input), m_output(NULL), m_startEvent(start), m_showProgress(false)
 {
   assert(input && "input storage is NULL");
 
   uint64_t eventsOnFile = m_input->getNumEvents();
-  if (numEvents == static_cast<uint64_t>(-1)) {
-    m_endEvent = eventsOnFile - 1;
-  } else {
-    m_endEvent = m_startEvent + numEvents - 1;
-  }
 
-  if (eventsOnFile < m_startEvent)
-    throw std::runtime_error("start event exceeds available events in storage");
-  if (eventsOnFile < m_endEvent)
-    throw std::runtime_error("end event exceeds available events in storage");
+  DEBUG("requested start: ", start);
+  DEBUG("requested events: ", events);
+  DEBUG("available events: ", eventsOnFile);
+
+  if (eventsOnFile <= start)
+    FAIL("start event exceeeds available events: start=", start, ", events=",
+         eventsOnFile);
+  if (events == UINT64_MAX) {
+    m_numEvents = eventsOnFile - m_startEvent;
+  } else {
+    if (eventsOnFile < (start + events)) {
+      m_numEvents = eventsOnFile - m_startEvent;
+      INFO("restrict to available number of events ", m_numEvents);
+    } else {
+      m_numEvents = events;
+    }
+  }
 }
 
 Utils::EventLoop::~EventLoop() {}
@@ -114,10 +119,10 @@ void Utils::EventLoop::run()
   if (m_showProgress)
     progress.update(0);
   Time startWall = Clock::now();
-  for (uint64_t ievent = m_startEvent; ievent <= m_endEvent; ievent++) {
+  for (uint64_t ievent = 0; ievent < m_numEvents; ++ievent) {
     {
       Time start = Clock::now();
-      m_input->readEvent(ievent, &event);
+      m_input->readEvent(m_startEvent + ievent, &event);
       durationInput += Clock::now() - start;
     }
     for (size_t i = 0; i < m_processors.size(); ++i) {
@@ -138,7 +143,7 @@ void Utils::EventLoop::run()
 
     stats.fill(event.getNumHits(), event.getNumClusters(), event.numTracks());
     if (m_showProgress)
-      progress.update((float)(ievent - m_startEvent + 1) / numEvents());
+      progress.update((float)(ievent + 1) / numEvents());
   }
   if (m_showProgress)
     progress.clear();
@@ -158,8 +163,7 @@ void Utils::EventLoop::run()
   // allow fractional tics when calculating time per event
   const char* unit = " us/event";
   auto time_per_event = [&](const Duration& dt) -> float {
-    float n = m_endEvent - m_startEvent + 1;
-    return (std::chrono::duration<float, std::micro>(dt) / n).count();
+    return (std::chrono::duration<float, std::micro>(dt) / m_numEvents).count();
   };
   INFO("time: ", time_per_event(durationTotal), unit);
   INFO("  input: ", time_per_event(durationInput), unit);
@@ -197,5 +201,6 @@ std::unique_ptr<Storage::Event> Utils::EventLoop::readStartEvent()
 
 std::unique_ptr<Storage::Event> Utils::EventLoop::readEndEvent()
 {
-  return std::unique_ptr<Storage::Event>(m_input->readEvent(m_endEvent));
+  return std::unique_ptr<Storage::Event>(
+      m_input->readEvent(m_startEvent + m_numEvents - 1));
 }

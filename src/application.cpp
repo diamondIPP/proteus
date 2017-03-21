@@ -33,7 +33,8 @@ void Application::initialize(int argc, char const* argv[])
   args.addOptional('u', "subsection",
                    "use the given configuration sub-section");
   args.addOptional('s', "skip_events", "skip the first n events", 0);
-  args.addOptional('n', "num_events", "number of events to process", -1);
+  args.addOptional('n', "num_events", "number of events to process",
+                   UINT64_MAX);
   args.addFlag('q', "quiet", "print only errors");
   args.addFlag('\0', "debug", "print more information");
   args.addFlag('\0', "no-progress", "do not show a progress bar");
