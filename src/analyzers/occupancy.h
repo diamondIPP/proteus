@@ -4,16 +4,13 @@
 #include <cstdint>
 #include <vector>
 
-#include <TDirectory.h>
-#include <TH1D.h>
-#include <TH2D.h>
-
-#include "analyzers/singleanalyzer.h"
+#include "analyzers/analyzer.h"
 #include "utils/definitions.h"
 
-namespace Storage {
-class Event;
-}
+class TDirectory;
+class TH1D;
+class TH2D;
+
 namespace Mechanics {
 class Device;
 class Sensor;
@@ -21,22 +18,13 @@ class Sensor;
 
 namespace Analyzers {
 
-class Occupancy : public SingleAnalyzer {
+class Occupancy : public Analyzer {
 public:
-  Occupancy(const Mechanics::Device* device,
-            TDirectory* dir,
-            const char* suffix = "");
+  Occupancy(const Mechanics::Device* device, TDirectory* dir);
 
-  void processEvent(const Storage::Event* event);
-  void postProcessing();
-
-  /** Returns Hit occupancy 2D-map for given sensor. */
-  TH2D* getHitOcc(Index isensor);
-  /** Returns Hit occupancy 1D-dist for given sensor.
-      postProcessing() must have been called beforehand. */
-  TH1D* getHitOccDist(Index isensor);
-  /** Returns total number of hits for given sensor. */
-  uint64_t getTotalHitOccupancy(Index isensor);
+  std::string name() const;
+  void analyze(const Storage::Event& event);
+  void finalize();
 
 private:
   struct Hists {

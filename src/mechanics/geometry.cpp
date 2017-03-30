@@ -8,7 +8,6 @@
 #include <stdexcept>
 #include <string>
 
-#include "utils/configparser.h"
 #include "utils/logger.h"
 
 PT_SETUP_GLOBAL_LOGGER
@@ -29,14 +28,7 @@ Mechanics::Geometry::Geometry() : m_beamSlopeX(0), m_beamSlopeY(0) {}
 
 Mechanics::Geometry Mechanics::Geometry::fromFile(const std::string& path)
 {
-  Geometry alignment;
-
-  if (Utils::Config::pathExtension(path) == "toml") {
-    alignment = fromConfig(Utils::Config::readConfig(path));
-  } else {
-    // fall-back to old format
-    alignment = fromConfig(ConfigParser(path.c_str()));
-  }
+  Geometry alignment = fromConfig(Utils::Config::readConfig(path));
   INFO("read geometry from '", path, "'");
   return alignment;
 }
@@ -45,60 +37,6 @@ void Mechanics::Geometry::writeFile(const std::string& path) const
 {
   Utils::Config::writeConfig(toConfig(), path);
   INFO("wrote geometry to '", path, "'");
-}
-
-Mechanics::Geometry Mechanics::Geometry::fromConfig(const ConfigParser& config)
-{
-  Geometry alignment;
-
-  for (unsigned int nrow = 0; nrow < config.getNumRows(); nrow++) {
-    const ConfigParser::Row* row = config.getRow(nrow);
-
-    // No action to take when encoutering a header
-    if (row->isHeader)
-      continue;
-
-    if (!row->header.compare("Device")) {
-      const double value = ConfigParser::valueToNumerical(row->value);
-      if (!row->key.compare("slope x"))
-        alignment.m_beamSlopeX = value;
-      else if (!row->key.compare("slope y"))
-        alignment.m_beamSlopeY = value;
-      // 2017-01-12 msmk: not supported anymore in Proteus
-      // else if (!row->key.compare("sync ratio"))
-      //   alignment.m_syncRatio = value;
-      else
-        throw std::runtime_error("Geometry: failed to parse row");
-      continue;
-    }
-
-    if (!row->header.compare("End Sensor"))
-      continue;
-
-    // header format should be "Sensor <#sensor_id>"
-    if ((row->header.size() <= 7) ||
-        row->header.substr(0, 7).compare("Sensor "))
-      throw std::runtime_error("Geometry: found an invalid header");
-
-    unsigned int isens = std::stoi(row->header.substr(7));
-    const double value = ConfigParser::valueToNumerical(row->value);
-    if (!row->key.compare("offset x"))
-      alignment.m_params[isens].offsetX = value;
-    else if (!row->key.compare("offset y"))
-      alignment.m_params[isens].offsetY = value;
-    else if (!row->key.compare("offset z"))
-      alignment.m_params[isens].offsetZ = value;
-    else if (!row->key.compare("rotation x"))
-      alignment.m_params[isens].rotationX = value;
-    else if (!row->key.compare("rotation y"))
-      alignment.m_params[isens].rotationY = value;
-    else if (!row->key.compare("rotation z"))
-      alignment.m_params[isens].rotationZ = value;
-    else
-      throw std::runtime_error("Geometry: failed to parse row");
-  }
-
-  return alignment;
 }
 
 Mechanics::Geometry Mechanics::Geometry::fromConfig(const toml::Value& cfg)

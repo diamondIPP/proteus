@@ -58,8 +58,6 @@ public:
 
   void setTrack(const Track* track);
   const Track* track() const { return m_track; }
-  /** \deprecated Use `track()` instead. */
-  const Track* getTrack() const { return m_track; }
 
   void setMatchedState(const TrackState* state) { m_matchedState = state; }
   const TrackState* matchedState() const { return m_matchedState; }
@@ -67,28 +65,6 @@ public:
   void setMatchedTrack(const Track* track) { m_matched = track; }
   bool hasMatchedTrack() const { return (m_matched != NULL); }
   const Track* matchedTrack() const { return m_matched; }
-  /** \deprecated Use `matchedTrack()` instead. */
-  const Track* getMatchedTrack() const { return m_matched; }
-
-  Index getNumHits() const { return m_hits.size(); }
-  double getPixX() const { return m_cr.x(); }
-  double getPixY() const { return m_cr.y(); }
-  double getPixErrX() const { return std::sqrt(m_crCov(0, 0)); }
-  double getPixErrY() const { return std::sqrt(m_crCov(1, 1)); }
-  double getPosX() const { return m_xyz.x(); }
-  double getPosY() const { return m_xyz.y(); }
-  double getPosZ() const { return m_xyz.z(); }
-  double getPosErrX() const { return std::sqrt(m_xyzCov(0, 0)); }
-  double getPosErrY() const { return std::sqrt(m_xyzCov(1, 1)); }
-  double getPosErrZ() const { return std::sqrt(m_xyzCov(2, 2)); }
-  double getTiming() const { return time(); }
-  double getValue() const { return value(); }
-  void setMatchDistance(double value) { m_matchDistance = value; }
-  double getMatchDistance() const { return m_matchDistance; }
-  int getIndex() const { return m_index; }
-
-  /** \deprecated Access via `Plane` already provides that information. */
-  Plane* getPlane() const { return m_plane; }
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 

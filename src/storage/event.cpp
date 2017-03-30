@@ -36,6 +36,7 @@ unsigned int Storage::Event::getNumHits() const
     n += plane->numHits();
   return n;
 }
+
 unsigned int Storage::Event::getNumClusters() const
 {
   Index n = 0;

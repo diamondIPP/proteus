@@ -42,15 +42,6 @@ public:
   void setCluster(const Cluster* cluster);
   const Cluster* cluster() const { return m_cluster; }
 
-  unsigned int getPixX() const { return m_col; }
-  unsigned int getPixY() const { return m_row; }
-  /** \deprecated Only clusters have global position information. */
-  double getPosX() const { return NAN; }
-  double getPosY() const { return NAN; }
-  double getPosZ() const { return NAN; }
-  double getValue() const { return value(); }
-  double getTiming() const { return time(); }
-
 private:
   Hit(); // Hits memory is managed by the event class
   Hit(Index col, Index row, double time, double value);

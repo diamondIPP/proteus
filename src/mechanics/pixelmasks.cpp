@@ -8,75 +8,13 @@
 
 #include "mechanics/device.h"
 #include "mechanics/sensor.h"
-#include "utils/configparser.h"
 #include "utils/logger.h"
 
 PT_SETUP_GLOBAL_LOGGER
 
-static void parseLine(std::stringstream& line, Index& nsens, Index& x, Index& y)
-{
-  Index counter = 0;
-  while (line.good()) {
-    std::string value;
-    std::getline(line, value, ',');
-    std::stringstream convert(value);
-    switch (counter) {
-    case 0:
-      convert >> nsens;
-      break;
-    case 1:
-      convert >> x;
-      break;
-    case 2:
-      convert >> y;
-      break;
-    }
-    counter++;
-  }
-  if (counter != 3)
-    throw std::runtime_error("PixelMasks: failed to parse line");
-}
-
-static void parseFile(const std::string& path, Mechanics::PixelMasks& mask)
-{
-  std::fstream input(path, std::ios_base::in);
-
-  if (!input)
-    throw std::runtime_error("PixelMasks: failed to open file '" + path + "'");
-
-  std::stringstream comments;
-  std::size_t numLines = 0;
-  while (input) {
-    unsigned int nsens = 0;
-    unsigned int x = 0;
-    unsigned int y = 0;
-    std::string line;
-    std::getline(input, line);
-    if (!line.size())
-      continue;
-    if (line[0] == '#') {
-      comments << line << "\n";
-      continue;
-    }
-    std::stringstream lineStream(line);
-    parseLine(lineStream, nsens, x, y);
-    mask.maskPixel(nsens, x, y);
-    numLines += 1;
-  }
-
-  if (numLines == 0)
-    throw std::runtime_error("PixelMasks: empty file '" + path + "'");
-}
-
 Mechanics::PixelMasks Mechanics::PixelMasks::fromFile(const std::string& path)
 {
-  PixelMasks mask;
-
-  if (Utils::Config::pathExtension(path) == "toml") {
-    mask = fromConfig(Utils::Config::readConfig(path));
-  } else {
-    parseFile(path, mask);
-  }
+  PixelMasks mask = PixelMasks::fromConfig(Utils::Config::readConfig(path));
   INFO("read noise mask from '", path, "'");
   return mask;
 }

@@ -14,9 +14,6 @@
 #include "analyzers/analyzer.h"
 #include "processors/processor.h"
 
-namespace Analyzers {
-class SingleAnalyzer;
-}
 namespace Storage {
 class Event;
 class StorageIO;
@@ -44,8 +41,6 @@ public:
 
   void addProcessor(std::shared_ptr<Processors::Processor> processor);
   void addAnalyzer(std::shared_ptr<Analyzers::Analyzer> analyzer);
-  /** For backward compatibility: add old-style analyzer. */
-  void addAnalyzer(std::shared_ptr<Analyzers::SingleAnalyzer> analyzer);
   void run();
 
   std::unique_ptr<Storage::Event> readStartEvent();

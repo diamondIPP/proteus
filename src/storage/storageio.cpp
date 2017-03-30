@@ -10,7 +10,6 @@
 #include <TFile.h>
 #include <TTree.h>
 
-#include "loopers/noisescan.h"
 #include "mechanics/device.h"
 #include "mechanics/sensor.h"
 #include "storage/cluster.h"
@@ -453,15 +452,15 @@ void StorageIO::writeEvent(Event* event)
   if (_fileMode == INPUT)
     throw std::runtime_error("StorageIO: can't write event in input mode");
 
-  timestamp = event->getTimeStamp();
-  frameNumber = event->getFrameNumber();
-  triggerOffset = event->getTriggerOffset();
-  triggerInfo = event->getTriggerInfo();
-  triggerPhase = event->getTriggerPhase();
+  timestamp = event->timestamp();
+  frameNumber = event->frameNumber();
+  triggerOffset = event->triggerOffset();
+  triggerInfo = event->triggerInfo();
+  triggerPhase = event->triggerPhase();
   // cout<<triggerPhase<<endl;
-  invalid = event->getInvalid();
+  invalid = event->invalid();
 
-  numTracks = event->getNumTracks();
+  numTracks = event->numTracks();
   if (numTracks > MAX_TRACKS)
     throw std::runtime_error("StorageIO: event exceeds MAX_TRACKS");
 

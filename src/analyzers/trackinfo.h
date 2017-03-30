@@ -3,33 +3,30 @@
 
 #include <vector>
 
-#include "singleanalyzer.h"
+#include "analyzer.h"
 
 class TDirectory;
 class TH1D;
 class TH2D;
 
-namespace Storage {
-class Event;
-}
 namespace Mechanics {
 class Device;
 }
 
 namespace Analyzers {
 
-class TrackInfo : public SingleAnalyzer {
+class TrackInfo : public Analyzer {
 public:
   TrackInfo(const Mechanics::Device* device,
             TDirectory* dir,
-            const char* suffix = "",
             /* Histogram options */
             const double reducedChi2Max = 10,
             const double slopeMax = 0.01,
             const int bins = 128);
 
-  void processEvent(const Storage::Event* event);
-  void postProcessing();
+  std::string name() const;
+  void analyze(const Storage::Event& event);
+  void finalize();
 
 private:
   TH1D* m_numClusters;

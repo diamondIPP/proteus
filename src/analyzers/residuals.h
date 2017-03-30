@@ -4,7 +4,6 @@
 #include <vector>
 
 #include "analyzers/analyzer.h"
-#include "analyzers/singleanalyzer.h"
 #include "utils/definitions.h"
 
 class TDirectory;
@@ -48,7 +47,7 @@ struct SensorResidualHists {
 
 } // namespace detail
 
-class Residuals : public SingleAnalyzer {
+class Residuals : public Analyzer {
 public:
   /**
    * \param pixelRange Residual histogram range in number of pixels
@@ -58,23 +57,17 @@ public:
   Residuals(
       const Mechanics::Device* device,
       TDirectory* dir = 0,
-      const char* suffix = "",
       /* Histogram options */
       const double pixelRange = 2.0,
       const double slopeRange = 0.001,
       const int bins = 128); // Number of bins for the vertical in AB plots
 
-  void processEvent(const Storage::Event* refEvent);
-  void postProcessing();
-
-  TH1D* getResidualX(Index sensorId);
-  TH1D* getResidualY(Index sensorId);
-  TH2D* getResidualXX(Index sensorId);
-  TH2D* getResidualXY(Index sensorId);
-  TH2D* getResidualYY(Index sensorId);
-  TH2D* getResidualYX(Index sensorId);
+  std::string name() const;
+  void analyze(const Storage::Event& refEvent);
+  void finalize();
 
 private:
+  const Mechanics::Device& m_device;
   std::vector<detail::SensorResidualHists> m_hists;
 };
 

@@ -114,11 +114,6 @@ public:
   XYPoint transformGlobalToLocal(const XYZPoint& xyz) const;
   XYZPoint transformPixelToGlobal(const XYPoint& cr) const;
   XYPoint transformGlobalToPixel(const XYZPoint& xyz) const;
-  // \deprecated Use transformations above
-  void
-  pixelToSpace(double pixX, double pixY, double& x, double& y, double& z) const;
-  void
-  spaceToPixel(double x, double y, double z, double& pixX, double& pixY) const;
 
   //
   // noise-pixels functions
@@ -130,30 +125,6 @@ public:
   // Misc functions
   //
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
-  static bool sort(const Sensor* s1, const Sensor* s2);
-
-  // \deprecated For backward compatibility.
-  unsigned int getNumX() const { return m_numCols; }
-  unsigned int getNumY() const { return m_numRows; }
-  unsigned int getNumPixels() const { return m_numCols * m_numRows; }
-  unsigned int getPosNumX() const;
-  unsigned int getPosNumY() const;
-  double getPitchX() const { return m_pitchCol; }
-  double getPitchY() const { return m_pitchRow; }
-  double getPosPitchX() const;
-  double getPosPitchY() const;
-  double getDepth() const { return m_thickness; }
-  double getXox0() const { return m_xX0; }
-  double getSensitiveX() const { return m_numCols * m_pitchCol; }
-  double getSensitiveY() const { return m_numRows * m_pitchRow; }
-  double getPosSensitiveX() const;
-  double getPosSensitiveY() const;
-  double getOffX() const;
-  double getOffY() const;
-  double getOffZ() const;
-  void getGlobalOrigin(double& x, double& y, double& z) const;
-  void getNormalVector(double& x, double& y, double& z) const;
-  const std::string& getName() const { return m_name; }
 
 private:
   Area m_sensitiveAreaPixel; // sensitive (useful) area inside the matrix

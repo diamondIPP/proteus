@@ -28,21 +28,6 @@ void Storage::Track::freezeClusterAssociation()
     (*cluster)->setTrack(this);
 }
 
-void Storage::Track::setMatchedCluster(Index sensorId, const Cluster* cluster)
-{
-  if (m_matchedClusters.size() <= sensorId) {
-    m_matchedClusters.resize(sensorId + 1, NULL);
-  }
-  m_matchedClusters[sensorId] = cluster;
-}
-
-const Storage::Cluster* Storage::Track::getMatchedCluster(Index sensorId) const
-{
-  if (sensorId < m_matchedClusters.size())
-    return m_matchedClusters[sensorId];
-  return NULL;
-}
-
 void Storage::Track::print(std::ostream& os, const std::string& prefix) const
 {
   os << prefix << "chi2/dof: " << m_chi2 << " / " << m_dof << '\n';

@@ -103,7 +103,7 @@ void Storage::Cluster::print(std::ostream& os, const std::string& prefix) const
   os << prefix << "pixel stddev: " << ep << '\n';
   os << prefix << "global: " << posGlobal() << '\n';
   os << prefix << "global stddev: " << eg << '\n';
-  os << prefix << "size: " << getNumHits() << '\n';
+  os << prefix << "size: " << numHits() << '\n';
   os.flush();
 }
 

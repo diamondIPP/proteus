@@ -8,8 +8,6 @@
 #include "utils/config.h"
 #include "utils/definitions.h"
 
-class ConfigParser;
-
 namespace Mechanics {
 
 /** Store and process geometry parameters for the whole setup.
@@ -39,8 +37,6 @@ public:
   /** Write alignment to a configuration file. */
   void writeFile(const std::string& path) const;
 
-  /** Construct geometry from old configuration parser. */
-  static Geometry fromConfig(const ConfigParser& cfg);
   /** Construct geometry from a configuration object. */
   static Geometry fromConfig(const toml::Value& cfg);
   /** Convert geometry into a configuration object. */
