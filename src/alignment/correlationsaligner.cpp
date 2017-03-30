@@ -52,11 +52,11 @@ Mechanics::Geometry Alignment::CorrelationsAligner::updatedGeometry() const
     Index id1 = m_sensorIds[i + 1];
 
     const TH1D* hX = m_corr->getHistDiffX(id0, id1);
-    deltaX -= hX->GetMean();
+    deltaX -= hX->GetBinCenter(hX->GetMaximumBin());
     deltaXVar += hX->GetMeanError() * hX->GetMeanError();
 
     const TH1D* hY = m_corr->getHistDiffY(id0, id1);
-    deltaY -= hY->GetMean();
+    deltaY -= hY->GetBinCenter(hY->GetMaximumBin());
     deltaYVar += hY->GetMeanError() * hY->GetMeanError();
 
     INFO(m_device.getSensor(id1)->name(), " alignment corrections:");

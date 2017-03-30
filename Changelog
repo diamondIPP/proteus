@@ -16,6 +16,10 @@ User-visible changes
 *   Efficiencies are calculated for the selected area only, i.e. the
     whole sensor or a sensor region, and the area is not enlarged by
     two pixels anymore.
+*   The coarse alignment uses the peak position of the cluster distance
+    distribution instead of the mean. This should make it more robust
+    for noisy sensors at the expense of limiting the precision to
+    approximately one pixel.
 
 Bugfixes
 --------
