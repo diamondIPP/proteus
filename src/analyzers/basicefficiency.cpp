@@ -110,6 +110,8 @@ Analyzers::BasicEfficiency::Hists::Hists(const std::string& prefix,
   inPixPass = makeH2(dir, name("InPixTracksPass"), axInPixU, axInPixV);
   inPixFail = makeH2(dir, name("InPixTracksFail"), axInPixU, axInPixV);
   inPixEff = makeH2(dir, name("InPixEfficiency"), axInPixU, axInPixV);
+  clustersPass = makeH2(dir, name("ClustersPass"), axCol, axRow);
+  clustersFail = makeH2(dir, name("ClustersFail"), axCol, axRow);
 }
 
 std::string Analyzers::BasicEfficiency::name() const
@@ -119,9 +121,9 @@ std::string Analyzers::BasicEfficiency::name() const
 
 void Analyzers::BasicEfficiency::analyze(const Storage::Event& event)
 {
-  const Storage::Plane& sensorEvent = *event.getPlane(m_sensor.id());
-  for (Index istate = 0; istate < sensorEvent.numStates(); ++istate) {
-    const Storage::TrackState& state = sensorEvent.getState(istate);
+  const Storage::Plane& localEvent = *event.getPlane(m_sensor.id());
+  for (Index istate = 0; istate < localEvent.numStates(); ++istate) {
+    const Storage::TrackState& state = localEvent.getState(istate);
     auto posPixel = m_sensor.transformLocalToPixel(state.offset());
 
     // ignore tracks that fall within a masked area
@@ -142,6 +144,12 @@ void Analyzers::BasicEfficiency::analyze(const Storage::Event& event)
         continue;
       regionHists.fill(state, posPixel);
     }
+  }
+  for (Index icluster = 0; icluster < localEvent.numClusters(); ++icluster) {
+    const Storage::Cluster& cluster = *localEvent.getCluster(icluster);
+    m_sensorHists.fill(cluster);
+    if (cluster.region() != kInvalidIndex)
+      m_regionsHists[cluster.region()].fill(cluster);
   }
 }
 
@@ -180,15 +188,24 @@ void Analyzers::BasicEfficiency::Hists::fill(const Storage::TrackState& state,
   }
 }
 
+void Analyzers::BasicEfficiency::Hists::fill(const Storage::Cluster& cluster)
+{
+  if (cluster.matchedState()) {
+    clustersPass->Fill(cluster.posPixel().x(), cluster.posPixel().y());
+  } else {
+    clustersFail->Fill(cluster.posPixel().x(), cluster.posPixel().y());
+  }
+}
+
 void Analyzers::BasicEfficiency::finalize()
 {
-  INFO("efficiency for ", m_sensor.name());
+  INFO(m_sensor.name(), " efficiency:");
   m_sensorHists.finalize();
 
   Index iregion = 0;
   for (auto& hists : m_regionsHists) {
     const auto& region = m_sensor.regions().at(iregion);
-    INFO("efficiency for ", m_sensor.name(), "/", region.name);
+    INFO(m_sensor.name(), "/", region.name, " efficiency:");
     hists.finalize();
     iregion += 1;
   }
@@ -232,11 +249,16 @@ void Analyzers::BasicEfficiency::Hists::finalize()
       }
     }
   }
-
-  auto nTotal = total->GetEntries();
-  auto nPass = pass->GetEntries();
+  // overview statistics
+  auto cluPass = clustersPass->GetEntries();
+  auto cluFail = clustersFail->GetEntries();
+  auto cluTotal = cluPass + cluFail;
+  auto trkPass = pass->GetEntries();
+  auto trkFail = fail->GetEntries();
+  auto trkTotal = total->GetEntries();
   auto effMedian = effDist->GetBinCenter(effDist->GetMaximumBin());
   auto effMean = effDist->GetMean();
-  INFO("  tracks (total/pass): ", nTotal, "/", nPass);
-  INFO("  eff (median/mean/min): ", effMedian, "/", effMean, "/", effMin);
+  INFO("  clusters (pass/fail/total): ", cluPass, "/", cluFail, "/", cluTotal);
+  INFO("  tracks (pass/fail/total): ", trkPass, "/", trkFail, "/", trkTotal);
+  INFO("  pixel eff (median/mean/min): ", effMedian, "/", effMean, "/", effMin);
 }

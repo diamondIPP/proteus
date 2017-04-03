@@ -21,6 +21,7 @@ namespace Mechanics {
 class Sensor;
 }
 namespace Storage {
+class Cluster;
 class TrackState;
 }
 
@@ -89,6 +90,8 @@ private:
     TH2D* inPixPass;
     TH2D* inPixFail;
     TH2D* inPixEff;
+    TH2D* clustersPass;
+    TH2D* clustersFail;
 
     Hists() = default;
     Hists(const std::string& prefix,
@@ -100,6 +103,7 @@ private:
           int efficiencyDistBins,
           TDirectory* dir);
     void fill(const Storage::TrackState& state, const XYPoint& posPixel);
+    void fill(const Storage::Cluster& cluster);
     void finalize();
   };
 
