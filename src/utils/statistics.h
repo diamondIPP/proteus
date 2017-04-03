@@ -10,7 +10,6 @@
 #include <cmath>
 #include <limits>
 #include <ostream>
-#include <string>
 
 namespace Utils {
 
@@ -52,18 +51,6 @@ private:
   uint64_t m_entries;
   double m_avg, m_m2;
   T m_min, m_max;
-};
-
-/** Summary statistics for basic c event information. */
-struct EventStatistics {
-  uint64_t events, eventsWithHits, eventsWithClusters, eventsWithTracks,
-      eventsWithOneTrack;
-  StatAccumulator<uint64_t> hits, clusters, tracks;
-
-  EventStatistics();
-  void fill(uint64_t nHits, uint64_t nClusters, uint64_t nTracks);
-
-  std::string str(const std::string& prefix = "") const;
 };
 
 template <typename T>

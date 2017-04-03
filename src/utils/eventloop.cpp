@@ -17,6 +17,31 @@
 
 PT_SETUP_LOCAL_LOGGER(EventLoop)
 
+namespace {
+// Summary statistics for basic event information.
+struct Statistics {
+  uint64_t events = 0;
+  uint64_t eventsWithTracks = 0;
+  Utils::StatAccumulator<uint64_t> hits, clusters, tracks;
+
+  void fill(uint64_t nHits, uint64_t nClusters, uint64_t nTracks)
+  {
+    events += 1;
+    eventsWithTracks += (0 < nTracks) ? 1 : 0;
+    hits.fill(nHits);
+    clusters.fill(nClusters);
+    tracks.fill(nTracks);
+  }
+  void summarize()
+  {
+    INFO("events (with tracks/total): ", eventsWithTracks, "/", events);
+    INFO("hits/event: ", hits);
+    INFO("clusters/event: ", clusters);
+    INFO("tracks/event: ", tracks);
+  }
+};
+}
+
 Utils::EventLoop::EventLoop(Storage::StorageIO* input,
                             uint64_t start,
                             uint64_t events)
@@ -75,7 +100,7 @@ void Utils::EventLoop::run()
   using Time = Clock::time_point;
 
   Storage::Event event(m_input->getNumPlanes());
-  Utils::EventStatistics stats;
+  Statistics stats;
   Duration durationInput = Duration::zero();
   Duration durationOutput = Duration::zero();
   std::vector<Duration> durationProcs(m_processors.size(), Duration::zero());
@@ -166,9 +191,7 @@ void Utils::EventLoop::run()
        " min ",
        std::chrono::duration_cast<std::chrono::seconds>(durationWall).count(),
        " s");
-
-  // print common event statistics
-  INFO("statistics:\n", stats.str("  "));
+  stats.summarize();
 }
 
 std::unique_ptr<Storage::Event> Utils::EventLoop::readStartEvent()

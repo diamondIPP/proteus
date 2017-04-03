@@ -46,7 +46,6 @@ set(common_SRCS
     utils/densemask.cpp
     utils/eventloop.cpp
     utils/logger.cpp
-    utils/statistics.cpp
     application.cpp)
 file(GLOB_RECURSE common_HDRS LIST_DIRECTORIES false *.h)
 
