@@ -21,6 +21,8 @@ User-visible changes
     for noisy sensors at the expense of limiting the precision to
     approximately one pixel.
 *   The ``activate.sh`` script is also copied during the ``install`` phase.
+*   The TTree-based match output stores the hit information for each hit
+    in a cluster in addition to the combined cluster information.
 
 Bugfixes
 --------

@@ -7,6 +7,7 @@
 #ifndef PT_MATCHEXPORTER_H
 #define PT_MATCHEXPORTER_H
 
+#include <cstdint>
 #include <string>
 
 #include "analyzers/analyzer.h"
@@ -35,24 +36,30 @@ public:
   void finalize();
 
 private:
+  static constexpr int16_t MAX_CLUSTER_SIZE = 1024;
+
   struct EventData {
-    int nTracks;
+    int16_t nTracks;
   };
   struct TrackData {
     float u, v;
     float stdU, stdV, corrUV;
     float col, row;
     float chi2;
-    int dof;
-    int nClusters;
+    int16_t dof;
+    int16_t nClusters;
   };
   struct ClusterData {
     float u, v;
     float stdU, stdV, corrUV;
     float col, row;
     float time, value;
-    int region;
-    int size, sizeCol, sizeRow;
+    int16_t region;
+    int16_t size, sizeCol, sizeRow;
+    int16_t hitCol[MAX_CLUSTER_SIZE];
+    int16_t hitRow[MAX_CLUSTER_SIZE];
+    float hitTime[MAX_CLUSTER_SIZE];
+    float hitValue[MAX_CLUSTER_SIZE];
   };
   struct MatchData {
     float d2;

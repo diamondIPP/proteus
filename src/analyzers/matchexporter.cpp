@@ -37,6 +37,14 @@ Analyzers::MatchExporter::MatchExporter(const Mechanics::Device& device,
     tree->Branch((prefix + "size").c_str(), &data.size);
     tree->Branch((prefix + "size_col").c_str(), &data.sizeCol);
     tree->Branch((prefix + "size_row").c_str(), &data.sizeRow);
+    tree->Branch((prefix + "hit_col").c_str(), &data.hitCol,
+                 (prefix + "hit_col[" + prefix + "size]/S").c_str());
+    tree->Branch((prefix + "hit_row").c_str(), &data.hitRow,
+                 (prefix + "hit_row[" + prefix + "size]/S").c_str());
+    tree->Branch((prefix + "hit_time").c_str(), &data.hitTime,
+                 (prefix + "hit_time[" + prefix + "size]/F").c_str());
+    tree->Branch((prefix + "hit_value").c_str(), &data.hitValue,
+                 (prefix + "hit_value[" + prefix + "size]/F").c_str());
   };
 
   m_treeTrk = new TTree("tracks", "");
@@ -54,7 +62,6 @@ Analyzers::MatchExporter::MatchExporter(const Mechanics::Device& device,
   m_treeTrk->Branch("trk_nclusters", &m_track.nClusters);
   m_treeTrk->Branch("mat_d2", &m_match.d2);
   setupCluster(m_treeTrk, "clu_", m_clusterMatched);
-
   m_treeClu = new TTree("clusters_unmatched", "");
   m_treeClu->SetDirectory(sub);
   setupCluster(m_treeClu, std::string(), m_clusterUnmatched);
@@ -78,9 +85,16 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
     data.time = cluster.time();
     data.value = cluster.value();
     data.region = ((cluster.region() == kInvalidIndex) ? -1 : cluster.region());
-    data.size = cluster.size();
+    data.size = std::min(cluster.size(), int(MAX_CLUSTER_SIZE));
     data.sizeCol = cluster.sizeCol();
     data.sizeRow = cluster.sizeRow();
+    for (int ihit = 0; ihit < data.size; ++ihit) {
+      const Storage::Hit& hit = *cluster.getHit(ihit);
+      data.hitCol[ihit] = hit.col();
+      data.hitRow[ihit] = hit.row();
+      data.hitTime[ihit] = hit.time();
+      data.hitValue[ihit] = hit.value();
+    }
   };
   auto invalidateCluster = [](ClusterData& data) {
     data.u = std::numeric_limits<float>::quiet_NaN();
@@ -93,9 +107,9 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
     data.time = -1;
     data.value = -1;
     data.region = -1;
-    data.size = -1;
-    data.sizeCol = -1;
-    data.sizeRow = -1;
+    data.size = 0; // required to have empty hit information
+    data.sizeCol = 0;
+    data.sizeRow = 0;
   };
 
   // global event information
