@@ -12,7 +12,6 @@
 
 #include "analyzers/analyzer.h"
 #include "utils/definitions.h"
-#include "utils/statistics.h"
 
 class TDirectory;
 class TTree;
@@ -74,10 +73,6 @@ private:
   ClusterData m_clusterUnmatched;
   TTree* m_treeTrk;
   TTree* m_treeClu;
-  Utils::StatAccumulator<double> m_statMatTrkFraction;
-  Utils::StatAccumulator<double> m_statMatCluFraction;
-  Utils::StatAccumulator<double> m_statUnmTrk;
-  Utils::StatAccumulator<double> m_statUnmClu;
   std::string m_name;
 };
 
