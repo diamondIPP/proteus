@@ -41,7 +41,7 @@ void Application::initialize(int argc, char const* argv[])
   args.addRequired("input", "path to the input file");
   args.addRequired("output_prefix", "output path prefix");
 
-  // should print help automatically
+  // parse should print help automatically
   if (args.parse(argc, argv))
     std::exit(EXIT_FAILURE);
 
@@ -54,34 +54,37 @@ void Application::initialize(int argc, char const* argv[])
     Utils::Logger::setGlobalLevel(Utils::Logger::Level::Info);
   }
 
+  // hide progress-bar
   if (!args.has("no-progress"))
     m_showProgress = true;
 
-  // define configuration section
+  // select configuration (sub-)section
   std::string section = m_name;
   if (args.has("subsection")) {
     section += '.';
     section += args.get("subsection");
   }
-  // read configuration w/ automatic handling of defaults
+
+  // load device w/ optional geometry override
+  auto pathDev = args.get("device");
+  auto pathGeo = (args.has("geometry") ? args.get("geometry") : std::string());
+  auto dev = Mechanics::Device::fromFile(pathDev, pathGeo);
+  m_dev.reset(new Mechanics::Device(std::move(dev)));
+
+  // load additional pixel masks
+  if (args.has("mask")) {
+    for (const auto& maskPath : args.get<std::vector<std::string>>("mask")) {
+      m_dev->applyPixelMasks(Mechanics::PixelMasks::fromFile(maskPath));
+    }
+  }
+
+  // read analysis configuration w/ automatic handling of defaults
   const toml::Value cfgAll = Utils::Config::readConfig(args.get("config"));
   const toml::Value* cfg = cfgAll.find(section);
   if (!cfg)
     FAIL("configuration section '", section, "' is missing");
   m_cfg = Utils::Config::withDefaults(*cfg, m_cfg);
   INFO("read configuration '", section, "' from '", args.get("config"), "'");
-
-  // read device w/ optional geometry override and additional pixel masks
-  m_dev.reset(
-      new Mechanics::Device(Mechanics::Device::fromFile(args.get("device"))));
-  if (args.has("geometry"))
-    m_dev->setGeometry(Mechanics::Geometry::fromFile(args.get("geometry")));
-  if (args.has("mask")) {
-    auto maskPaths = args.get<std::vector<std::string>>("mask");
-    for (const auto& path : maskPaths) {
-      m_dev->applyPixelMasks(Mechanics::PixelMasks::fromFile(path));
-    }
-  }
 
   // setup input and i/o settings
   m_input.reset(new Storage::StorageIO(args.get("input"), Storage::INPUT,
