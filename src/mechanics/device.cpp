@@ -198,14 +198,9 @@ void Mechanics::Device::print(std::ostream& os, const std::string& prefix) const
     getSensor(sensorId)->print(os, prefix + "  ");
   }
   os << prefix << "geometry:\n";
-  if (!m_pathGeometry.empty())
-    os << prefix << "  path: " << m_pathGeometry << '\n';
   m_geometry.print(os, prefix + "  ");
   os << prefix << "noise mask:\n";
-  if (!m_pathNoiseMask.empty())
-    os << prefix << "  path: " << m_pathNoiseMask << '\n';
   m_pixelMasks.print(os, prefix + "  ");
-
   os.flush();
 }
 
