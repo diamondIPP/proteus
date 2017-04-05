@@ -10,7 +10,7 @@
 
 #include "utils/logger.h"
 
-PT_SETUP_GLOBAL_LOGGER
+PT_SETUP_LOCAL_LOGGER(Geometry)
 
 // ensure geometry parameters have sensible defaults
 Mechanics::Geometry::PlaneParams::PlaneParams()
@@ -28,9 +28,9 @@ Mechanics::Geometry::Geometry() : m_beamSlopeX(0), m_beamSlopeY(0) {}
 
 Mechanics::Geometry Mechanics::Geometry::fromFile(const std::string& path)
 {
-  Geometry alignment = fromConfig(Utils::Config::readConfig(path));
+  auto cfg = Utils::Config::readConfig(path);
   INFO("read geometry from '", path, "'");
-  return alignment;
+  return fromConfig(cfg);
 }
 
 void Mechanics::Geometry::writeFile(const std::string& path) const
@@ -41,21 +41,20 @@ void Mechanics::Geometry::writeFile(const std::string& path) const
 
 Mechanics::Geometry Mechanics::Geometry::fromConfig(const toml::Value& cfg)
 {
-  Geometry alignment;
+  Geometry geo;
 
-  alignment.setBeamSlope(cfg.get<double>("beam.slope_x"),
-                         cfg.get<double>("beam.slope_y"));
+  geo.setBeamSlope(cfg.get<double>("beam.slope_x"),
+                   cfg.get<double>("beam.slope_y"));
 
   auto sensors = cfg.get<toml::Array>("sensors");
   for (auto is = sensors.begin(); is != sensors.end(); ++is) {
-    alignment.setOffset(is->get<int>("id"), is->get<double>("offset_x"),
-                        is->get<double>("offset_y"),
-                        is->get<double>("offset_z"));
-    alignment.setRotationAngles(
-        is->get<int>("id"), is->get<double>("rotation_x"),
-        is->get<double>("rotation_y"), is->get<double>("rotation_z"));
+    geo.setOffset(is->get<int>("id"), is->get<double>("offset_x"),
+                  is->get<double>("offset_y"), is->get<double>("offset_z"));
+    geo.setRotationAngles(is->get<int>("id"), is->get<double>("rotation_x"),
+                          is->get<double>("rotation_y"),
+                          is->get<double>("rotation_z"));
   }
-  return alignment;
+  return geo;
 }
 
 toml::Value Mechanics::Geometry::toConfig() const
