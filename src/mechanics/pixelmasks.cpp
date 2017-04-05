@@ -10,24 +10,24 @@
 #include "mechanics/sensor.h"
 #include "utils/logger.h"
 
-PT_SETUP_GLOBAL_LOGGER
+PT_SETUP_LOCAL_LOGGER(PixelMasks)
 
 Mechanics::PixelMasks Mechanics::PixelMasks::fromFile(const std::string& path)
 {
-  PixelMasks mask = PixelMasks::fromConfig(Utils::Config::readConfig(path));
-  INFO("read noise mask from '", path, "'");
-  return mask;
+  auto cfg = Utils::Config::readConfig(path);
+  INFO("read pixel masks from '", path, "'");
+  return fromConfig(cfg);
 }
 
 void Mechanics::PixelMasks::writeFile(const std::string& path) const
 {
   Utils::Config::writeConfig(toConfig(), path);
-  INFO("wrote noise mask to '", path, "'");
+  INFO("wrote pixel masks to '", path, "'");
 }
 
 Mechanics::PixelMasks Mechanics::PixelMasks::fromConfig(const toml::Value& cfg)
 {
-  PixelMasks mask;
+  PixelMasks masks;
 
   auto sensors = cfg.get<toml::Array>("sensors");
   for (auto is = sensors.begin(); is != sensors.end(); ++is) {
@@ -38,10 +38,10 @@ Mechanics::PixelMasks Mechanics::PixelMasks::fromConfig(const toml::Value& cfg)
       if (ip->size() != 2)
         throw std::runtime_error("PixelMasks: column/row array size " +
                                  std::to_string(ip->size()) + " != 2");
-      mask.maskPixel(id, ip->get<int>(0), ip->get<int>(1));
+      masks.maskPixel(id, ip->get<int>(0), ip->get<int>(1));
     }
   }
-  return mask;
+  return masks;
 }
 
 toml::Value Mechanics::PixelMasks::toConfig() const
