@@ -23,8 +23,16 @@ public:
          const std::string& spaceUnit = std::string(),
          const std::string& timeUnit = std::string());
 
-  /** Construct device from a configuration file. */
-  static Device fromFile(const std::string& path);
+  /** Construct device from a configuration file.
+   *
+   * \param path         Path to the device file
+   * \param pathGeometry Path to a geometry file
+   *
+   * If the optional geometry path is non-empty, the geometry config is read
+   * from there and any information in the device file is ignored.
+   */
+  static Device fromFile(const std::string& path,
+                         const std::string& pathGeometry = std::string());
   /** Construct device from a configuration object. */
   static Device fromConfig(const toml::Value& cfg);
 
