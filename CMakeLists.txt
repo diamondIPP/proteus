@@ -21,4 +21,12 @@ add_subdirectory(doc)
 add_subdirectory(src)
 
 # activation script to use the build directory directly
+set(BASEDIR ${PROJECT_BINARY_DIR})
 configure_file(cmake/activate.sh.in activate.sh @ONLY)
+# activation script to be installed to the install directory
+set(BASEDIR ${CMAKE_INSTALL_PREFIX})
+configure_file(cmake/activate.sh.in DONOTUSE-activate.sh @ONLY)
+install(
+  FILES ${CMAKE_BINARY_DIR}/DONOTUSE-activate.sh
+  DESTINATION .
+  RENAME activate.sh)

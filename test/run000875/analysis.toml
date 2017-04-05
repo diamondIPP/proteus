@@ -1,7 +1,7 @@
 [track]
 sensor_ids = [0, 1, 2, 3, 4, 5]
 num_points_min = 4
-search_sigma_max = 10.
+search_sigma_max = 10.0
 
 [match]
 sensor_ids = [6, 7]

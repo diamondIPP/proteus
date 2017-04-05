@@ -109,7 +109,9 @@ Analyzers::BasicEfficiency::Hists::Hists(const std::string& prefix,
   inPixTotal = makeH2(dir, name("InPixTracksTotal"), axInPixU, axInPixV);
   inPixPass = makeH2(dir, name("InPixTracksPass"), axInPixU, axInPixV);
   inPixFail = makeH2(dir, name("InPixTracksFail"), axInPixU, axInPixV);
-  inPixEff = makeH2(dir, name("InPixTracksEfficiency"), axInPixU, axInPixV);
+  inPixEff = makeH2(dir, name("InPixEfficiency"), axInPixU, axInPixV);
+  clustersPass = makeH2(dir, name("ClustersPass"), axCol, axRow);
+  clustersFail = makeH2(dir, name("ClustersFail"), axCol, axRow);
 }
 
 std::string Analyzers::BasicEfficiency::name() const
@@ -119,9 +121,9 @@ std::string Analyzers::BasicEfficiency::name() const
 
 void Analyzers::BasicEfficiency::analyze(const Storage::Event& event)
 {
-  const Storage::Plane& sensorEvent = *event.getPlane(m_sensor.id());
-  for (Index istate = 0; istate < sensorEvent.numStates(); ++istate) {
-    const Storage::TrackState& state = sensorEvent.getState(istate);
+  const Storage::Plane& localEvent = *event.getPlane(m_sensor.id());
+  for (Index istate = 0; istate < localEvent.numStates(); ++istate) {
+    const Storage::TrackState& state = localEvent.getState(istate);
     auto posPixel = m_sensor.transformLocalToPixel(state.offset());
 
     // ignore tracks that fall within a masked area
@@ -142,6 +144,12 @@ void Analyzers::BasicEfficiency::analyze(const Storage::Event& event)
         continue;
       regionHists.fill(state, posPixel);
     }
+  }
+  for (Index icluster = 0; icluster < localEvent.numClusters(); ++icluster) {
+    const Storage::Cluster& cluster = *localEvent.getCluster(icluster);
+    m_sensorHists.fill(cluster);
+    if (cluster.region() != kInvalidIndex)
+      m_regionsHists[cluster.region()].fill(cluster);
   }
 }
 
@@ -180,15 +188,24 @@ void Analyzers::BasicEfficiency::Hists::fill(const Storage::TrackState& state,
   }
 }
 
+void Analyzers::BasicEfficiency::Hists::fill(const Storage::Cluster& cluster)
+{
+  if (cluster.matchedState()) {
+    clustersPass->Fill(cluster.posPixel().x(), cluster.posPixel().y());
+  } else {
+    clustersFail->Fill(cluster.posPixel().x(), cluster.posPixel().y());
+  }
+}
+
 void Analyzers::BasicEfficiency::finalize()
 {
-  INFO("efficiency for ", m_sensor.name());
+  INFO(m_sensor.name(), " efficiency:");
   m_sensorHists.finalize();
 
   Index iregion = 0;
   for (auto& hists : m_regionsHists) {
     const auto& region = m_sensor.regions().at(iregion);
-    INFO("efficiency for ", m_sensor.name(), "/", region.name);
+    INFO(m_sensor.name(), "/", region.name, " efficiency:");
     hists.finalize();
     iregion += 1;
   }
@@ -196,47 +213,52 @@ void Analyzers::BasicEfficiency::finalize()
 
 void Analyzers::BasicEfficiency::Hists::finalize()
 {
-  for (auto* h2 : {total, pass, inPixTotal, inPixPass})
-    h2->Sumw2();
-  for (auto* h1 : {colTotal, rowTotal, colPass, rowPass})
-    h1->Sumw2();
-
+  // we just need the plain number differences w/o sumw2
   fail->Add(total, pass, 1, -1);
   colFail->Add(colTotal, colPass, 1, -1);
   rowFail->Add(rowTotal, rowFail, 1, -1);
   inPixFail->Add(inPixTotal, inPixPass, 1, -1);
-  // Use simple division here w/o full TEfficiency power for simplicity.
+  // ensure errors are available
+  for (TH2D* h : {total, pass, fail, inPixTotal, inPixPass, inPixFail})
+    h->Sumw2();
+  for (TH1D* h : {colTotal, colPass, colFail, rowTotal, rowPass, rowFail})
+    h->Sumw2();
+  // Use simple division here w/o full TEfficiency for simplicity.
   eff->Divide(pass, total);
   colEff->Divide(colPass, colTotal);
   rowEff->Divide(rowPass, rowTotal);
   inPixEff->Divide(inPixPass, inPixTotal);
   // construct the pixel efficiencies distribution
-  // we only want min/max inside the region-of-interest w/o edges
-  double effMin = std::numeric_limits<double>::max();
-  double effMax = std::numeric_limits<double>::lowest();
+  // get minimum efficiency inside the input roi
+  double effMin = DBL_MAX;
   for (int i = (1 + edgeBins); (i + edgeBins) <= total->GetNbinsX(); ++i) {
     for (int j = (1 + edgeBins); (j + edgeBins) <= total->GetNbinsY(); ++j) {
       // w/o input tracks we get no efficiency estimate
       if (0 < total->GetBinContent(i, j)) {
-        double effVal = eff->GetBinContent(i, j);
-        effMin = std::min(effMin, effVal);
-        effMax = std::max(effMax, effVal);
+        effMin = std::min(effMin, eff->GetBinContent(i, j));
       }
     }
   }
-  // ensure maximum value is within the histogram
-  effMax = std::nextafter(effMax, effMax + 1);
-  effDist->SetBins(effDist->GetNbinsX(), effMin, effMax);
-  // The efficiency distribution should *not* contain the edges
-  for (int i = (1 + edgeBins); (i + edgeBins) <= total->GetNbinsX(); ++i) {
-    for (int j = (1 + edgeBins); (j + edgeBins) <= total->GetNbinsY(); ++j) {
+  // make sure 1.0 is still included in the upper bin
+  effDist->SetBins(effDist->GetNbinsX(), effMin, std::nextafter(1.0, 2.0));
+  for (int i = 1; i <= total->GetNbinsX(); ++i) {
+    for (int j = 1; j <= total->GetNbinsY(); ++j) {
+      // only add pixels for which we have measurements
       if (0 < total->GetBinContent(i, j)) {
         effDist->Fill(eff->GetBinContent(i, j));
       }
     }
   }
-
-  INFO("  median: ", effDist->GetBinCenter(effDist->GetMaximumBin()));
-  INFO("  mean ", effDist->GetMean(), " +-", effDist->GetMeanError());
-  INFO("  range: ", effMin, " - ", effMax);
+  // overview statistics
+  auto cluPass = clustersPass->GetEntries();
+  auto cluFail = clustersFail->GetEntries();
+  auto cluTotal = cluPass + cluFail;
+  auto trkPass = pass->GetEntries();
+  auto trkFail = fail->GetEntries();
+  auto trkTotal = total->GetEntries();
+  auto effMedian = effDist->GetBinCenter(effDist->GetMaximumBin());
+  auto effMean = effDist->GetMean();
+  INFO("  clusters (pass/fail/total): ", cluPass, "/", cluFail, "/", cluTotal);
+  INFO("  tracks (pass/fail/total): ", trkPass, "/", trkFail, "/", trkTotal);
+  INFO("  pixel eff (median/mean/min): ", effMedian, "/", effMean, "/", effMin);
 }

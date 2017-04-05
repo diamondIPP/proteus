@@ -13,6 +13,21 @@ User-visible changes
 *   Remove Judith-style ``proteus`` tool.
 *   Remove support for custom ini-like config format and custom mask
     file format.
+*   Efficiencies are calculated for the selected area only, i.e. the
+    whole sensor or a sensor region, and the area is not enlarged by
+    two pixels anymore.
+*   The coarse alignment uses the peak position of the cluster distance
+    distribution instead of the mean. This should make it more robust
+    for noisy sensors at the expense of limiting the precision to
+    approximately one pixel.
+*   The ``activate.sh`` script is also copied during the ``install`` phase.
+*   The TTree-based match output stores the hit information for each hit
+    in a cluster in addition to the combined cluster information.
+
+Bugfixes
+--------
+
+*   Example configurations in the test directory use valid toml syntax.
 
 Internal changes
 ----------------
@@ -21,6 +36,7 @@ Internal changes
     obsolete. Disable code that is currently unused but should be
     ported to the new APIs in the future.
 *   Fully replace ``SingleAnalyzer`` with ``Analyzer`` interface.
+*   Clean up event loop specific timing measurements and event statistics.
 
 v1.1.3 (2017-03-21)
 ===================

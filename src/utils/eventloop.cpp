@@ -8,6 +8,7 @@
 #include <cassert>
 #include <chrono>
 #include <numeric>
+#include <sstream>
 
 #include "storage/event.h"
 #include "storage/storageio.h"
@@ -16,6 +17,97 @@
 #include "utils/statistics.h"
 
 PT_SETUP_LOCAL_LOGGER(EventLoop)
+
+namespace {
+
+// Timing measurements for the different parts of the event loop
+struct Timing {
+  using Clock = std::chrono::steady_clock;
+  using Duration = Clock::duration;
+  using Time = Clock::time_point;
+
+  Time start_, stop_;
+  Duration input = Duration::zero();
+  Duration output = Duration::zero();
+  std::vector<Duration> processors;
+  std::vector<Duration> analyzers;
+
+  Timing(size_t numProcessors, size_t numAnalyzers)
+      : processors(numProcessors, Duration::zero())
+      , analyzers(numAnalyzers, Duration::zero())
+  {
+  }
+
+  static Time now() { return Clock::now(); }
+  void start() { start_ = Clock::now(); }
+  void stop() { stop_ = Clock::now(); }
+  template <typename Processors, typename Analyzers>
+  void
+  summarize(uint64_t numEvents, const Processors& ps, const Analyzers& as) const
+  {
+    auto proc =
+        std::accumulate(processors.begin(), processors.end(), Duration::zero());
+    auto anas =
+        std::accumulate(analyzers.begin(), analyzers.end(), Duration::zero());
+    auto total = input + output + proc + anas;
+
+    // print timing
+    // allow fractional tics when calculating time per event
+    auto time_us_per_event = [&](const Duration& dt) {
+      std::ostringstream s;
+      s << (std::chrono::duration<float, std::micro>(dt) / numEvents).count()
+        << " us/event";
+      return s.str();
+    };
+    auto time_min_s = [](const Duration& dt) {
+      std::ostringstream s;
+      s << std::chrono::duration_cast<std::chrono::minutes>(dt).count()
+        << " min "
+        << std::chrono::duration_cast<std::chrono::seconds>(dt).count() << " s";
+      return s.str();
+    };
+
+    INFO("time: ", time_us_per_event(total));
+    INFO("  input: ", time_us_per_event(input));
+    INFO("  output: ", time_us_per_event(output));
+    INFO("  processors: ", time_us_per_event(proc));
+    size_t ip = 0;
+    for (const auto& p : ps) {
+      DEBUG("    ", p->name(), ": ", time_us_per_event(processors[ip++]));
+    }
+    INFO("  analyzers: ", time_us_per_event(anas));
+    size_t ia = 0;
+    for (const auto& a : as) {
+      DEBUG("    ", a->name(), ": ", time_us_per_event(analyzers[ia++]));
+    }
+    INFO("time (clocked): ", time_min_s(total));
+    INFO("time (wall): ", time_min_s(stop_ - start_));
+  }
+};
+
+// Summary statistics for basic event information.
+struct Statistics {
+  uint64_t events = 0;
+  uint64_t eventsWithTracks = 0;
+  Utils::StatAccumulator<uint64_t> hits, clusters, tracks;
+
+  void fill(uint64_t nHits, uint64_t nClusters, uint64_t nTracks)
+  {
+    events += 1;
+    eventsWithTracks += (0 < nTracks) ? 1 : 0;
+    hits.fill(nHits);
+    clusters.fill(nClusters);
+    tracks.fill(nTracks);
+  }
+  void summarize() const
+  {
+    INFO("events (with tracks/total): ", eventsWithTracks, "/", events);
+    INFO("hits/event: ", hits);
+    INFO("clusters/event: ", clusters);
+    INFO("tracks/event: ", tracks);
+  }
+};
+}
 
 Utils::EventLoop::EventLoop(Storage::StorageIO* input,
                             uint64_t start,
@@ -70,16 +162,9 @@ void Utils::EventLoop::addAnalyzer(
 
 void Utils::EventLoop::run()
 {
-  using Clock = std::chrono::steady_clock;
-  using Duration = Clock::duration;
-  using Time = Clock::time_point;
-
   Storage::Event event(m_input->getNumPlanes());
-  Utils::EventStatistics stats;
-  Duration durationInput = Duration::zero();
-  Duration durationOutput = Duration::zero();
-  std::vector<Duration> durationProcs(m_processors.size(), Duration::zero());
-  std::vector<Duration> durationAnas(m_analyzers.size(), Duration::zero());
+  Statistics stats;
+  Timing timing(m_processors.size(), m_analyzers.size());
 
   if (!m_processors.empty()) {
     DEBUG("configured processors:");
@@ -95,80 +180,40 @@ void Utils::EventLoop::run()
   Utils::ProgressBar progress;
   if (m_showProgress)
     progress.update(0);
-  Time startWall = Clock::now();
+  timing.start();
   for (uint64_t ievent = 0; ievent < m_numEvents; ++ievent) {
     {
-      Time start = Clock::now();
+      auto start = Timing::now();
       m_input->readEvent(m_startEvent + ievent, &event);
-      durationInput += Clock::now() - start;
+      timing.input += Timing::now() - start;
     }
     for (size_t i = 0; i < m_processors.size(); ++i) {
-      Time start = Clock::now();
+      auto start = Timing::now();
       m_processors[i]->process(event);
-      durationProcs[i] += Clock::now() - start;
+      timing.processors[i] += Timing::now() - start;
     }
     for (size_t i = 0; i < m_analyzers.size(); ++i) {
-      Time start = Clock::now();
+      auto start = Timing::now();
       m_analyzers[i]->analyze(event);
-      durationAnas[i] += Clock::now() - start;
+      timing.analyzers[i] += Timing::now() - start;
     }
     if (m_output) {
-      Time start = Clock::now();
+      auto start = Timing::now();
       m_output->writeEvent(&event);
-      durationOutput += Clock::now() - start;
+      timing.output += Timing::now() - start;
     }
-
     stats.fill(event.getNumHits(), event.getNumClusters(), event.numTracks());
     if (m_showProgress)
       progress.update((float)(ievent + 1) / numEvents());
   }
   if (m_showProgress)
     progress.clear();
-
   for (auto a = m_analyzers.begin(); a != m_analyzers.end(); ++a) {
     (*a)->finalize();
   }
-  Duration durationWall = Clock::now() - startWall;
-  Duration durationProc = std::accumulate(
-      durationProcs.begin(), durationProcs.end(), Duration::zero());
-  Duration durationAna = std::accumulate(durationAnas.begin(),
-                                         durationAnas.end(), Duration::zero());
-  Duration durationTotal =
-      durationInput + durationProc + durationAna + durationOutput;
-
-  // print timing
-  // allow fractional tics when calculating time per event
-  const char* unit = " us/event";
-  auto time_per_event = [&](const Duration& dt) -> float {
-    return (std::chrono::duration<float, std::micro>(dt) / m_numEvents).count();
-  };
-  INFO("time: ", time_per_event(durationTotal), unit);
-  INFO("  input: ", time_per_event(durationInput), unit);
-  if (m_output)
-    INFO("  output: ", time_per_event(durationOutput), unit);
-  INFO("  processors: ", time_per_event(durationProc), unit);
-  for (size_t i = 0; i < m_processors.size(); ++i) {
-    DEBUG("    ", m_processors[i]->name(), ": ",
-          time_per_event(durationProcs[i]), unit);
-  }
-  INFO("  analyzers: ", time_per_event(durationAna), unit);
-  for (size_t i = 0; i < m_analyzers.size(); ++i) {
-    DEBUG("    ", m_analyzers[i]->name(), ": ", time_per_event(durationAnas[i]),
-          unit);
-  }
-  INFO("time (clocked): ",
-       std::chrono::duration_cast<std::chrono::minutes>(durationTotal).count(),
-       " min ",
-       std::chrono::duration_cast<std::chrono::seconds>(durationTotal).count(),
-       " s");
-  INFO("time (wall): ",
-       std::chrono::duration_cast<std::chrono::minutes>(durationWall).count(),
-       " min ",
-       std::chrono::duration_cast<std::chrono::seconds>(durationWall).count(),
-       " s");
-
-  // print common event statistics
-  INFO("statistics:\n", stats.str("  "));
+  timing.stop();
+  timing.summarize(numEvents(), m_processors, m_analyzers);
+  stats.summarize();
 }
 
 std::unique_ptr<Storage::Event> Utils::EventLoop::readStartEvent()
