@@ -11,14 +11,12 @@
 #include <memory>
 #include <string>
 
+#include "io/io.h"
 #include "utils/config.h"
 #include "utils/eventloop.h"
 
 namespace Mechanics {
 class Device;
-}
-namespace Storage {
-class StorageIO;
 }
 
 /** Common application class.
@@ -60,7 +58,7 @@ private:
   std::string m_desc;
   toml::Value m_cfg;
   std::unique_ptr<Mechanics::Device> m_dev;
-  std::unique_ptr<Storage::StorageIO> m_input;
+  std::unique_ptr<Io::EventReader> m_reader;
   std::string m_outputPrefix;
   uint64_t m_skipEvents;
   uint64_t m_numEvents;

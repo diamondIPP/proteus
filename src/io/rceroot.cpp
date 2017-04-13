@@ -1,17 +1,5 @@
 #include "rceroot.h"
 
-#include <cassert>
-#include <iostream>
-#include <sstream>
-#include <stdexcept>
-#include <vector>
-
-#include <TDirectory.h>
-#include <TFile.h>
-#include <TTree.h>
-
-#include "mechanics/device.h"
-#include "mechanics/sensor.h"
 #include "storage/cluster.h"
 #include "storage/event.h"
 #include "storage/hit.h"
@@ -20,349 +8,142 @@
 #include "storage/trackstate.h"
 #include "utils/logger.h"
 
-PT_SETUP_LOCAL_LOGGER(StorageIO)
+PT_SETUP_LOCAL_LOGGER(RceRoot)
 
-void Storage::StorageIO::openRead(const std::string& path,
-                                  const std::vector<bool>* planeMask)
+// -----------------------------------------------------------------------------
+// common
+
+Io::RceRootCommon::RceRootCommon(TFile* file)
+    : m_file(file)
+    , m_entries(0)
+    , m_next(0)
+    , m_eventInfo(nullptr)
+    , m_tracks(nullptr)
 {
-  _file = TFile::Open(path.c_str(), "READ");
-  if (!_file)
-    throw std::runtime_error("Could not open file '" + path + "' for reading.");
+}
 
-  if (_numPlanes)
-    INFO("disregarding specified number of planes");
+// -----------------------------------------------------------------------------
+// reader
 
-  _numPlanes = 0; // Determine num planes from file structure
+Io::RceRootReader::RceRootReader(const std::string& path)
+    : RceRootCommon(TFile::Open(path.c_str(), "READ"))
+{
+  if (!m_file)
+    FAIL("could not open '", path, "' to read");
+  INFO("read data from '", path, "'");
 
-  unsigned int planeCount = 0;
+  // event tree **must** be available
+  m_file->GetObject("Event", m_eventInfo);
+  if (!m_eventInfo)
+    FAIL("could not setup 'Event' tree");
+  m_eventInfo->SetBranchAddress("FrameNumber", &frameNumber);
+  m_eventInfo->SetBranchAddress("TimeStamp", &timestamp);
+  m_eventInfo->SetBranchAddress("TriggerTime", &triggerTime);
+  m_eventInfo->SetBranchAddress("TriggerInfo", &triggerInfo);
+  m_eventInfo->SetBranchAddress("TriggerOffset", &triggerOffset);
+  m_eventInfo->SetBranchAddress("TriggerPhase", &triggerPhase);
+  m_eventInfo->SetBranchAddress("Invalid", &invalid);
+
+  // tracks tree is optional
+  m_file->GetObject("Tracks", m_tracks);
+  if (m_tracks) {
+    m_tracks->SetBranchAddress("NTracks", &numTracks);
+    m_tracks->SetBranchAddress("Chi2", trackChi2);
+    m_tracks->SetBranchAddress("Dof", trackDof);
+    m_tracks->SetBranchAddress("X", trackX);
+    m_tracks->SetBranchAddress("Y", trackY);
+    m_tracks->SetBranchAddress("SlopeX", trackSlopeX);
+    m_tracks->SetBranchAddress("SlopeY", trackSlopeY);
+    m_tracks->SetBranchAddress("Cov", trackCov);
+  }
+
+  // per-sensor trees
+  size_t numSensors = 0;
   while (true) {
-    std::string name("Plane" + std::to_string(planeCount));
-
-    // Try to get this plane's directory
-    TDirectory* dir = 0;
-    _file->GetObject(name.c_str(), dir);
-    if (!dir)
+    std::string name("Plane" + std::to_string(numSensors));
+    TDirectory* sensorDir = nullptr;
+    m_file->GetObject(name.c_str(), sensorDir);
+    if (!sensorDir)
       break;
-
-    planeCount++;
-
-    if (planeMask && planeCount > planeMask->size())
-      throw std::runtime_error("StorageIO: plane mask is too small");
-
-    if (planeMask && planeMask->at(planeCount - 1))
-      continue;
-
-    _numPlanes++;
-
-    TTree* hits;
-    dir->GetObject("Hits", hits);
-    _hits.push_back(hits);
-    if (hits) {
-      hits->SetBranchAddress("NHits", &numHits, &bNumHits);
-      hits->SetBranchAddress("PixX", hitPixX, &bHitPixX);
-      hits->SetBranchAddress("PixY", hitPixY, &bHitPixY);
-      hits->SetBranchAddress("Timing", hitTiming, &bHitTiming);
-      hits->SetBranchAddress("Value", hitValue, &bHitValue);
-      hits->SetBranchAddress("HitInCluster", hitInCluster, &bHitInCluster);
-    }
-
-    TTree* clusters;
-    dir->GetObject("Clusters", clusters);
-    _clusters.push_back(clusters);
-    if (clusters) {
-      clusters->SetBranchAddress("NClusters", &numClusters, &bNumClusters);
-      clusters->SetBranchAddress("Col", clusterCol, &bClusterCol);
-      clusters->SetBranchAddress("Row", clusterRow, &bClusterRow);
-      clusters->SetBranchAddress("VarCol", clusterVarCol, &bClusterVarCol);
-      clusters->SetBranchAddress("VarRow", clusterVarRow, &bClusterVarRow);
-      clusters->SetBranchAddress("CovColRow", clusterCovColRow,
-                                 &bClusterCovColRow);
-      clusters->SetBranchAddress("Track", clusterTrack, &bClusterTrack);
-    }
-
-    TTree* intercepts;
-    dir->GetObject("Intercepts", intercepts);
-    _intercepts.push_back(intercepts);
-    if (intercepts) {
-      intercepts->SetBranchAddress("NIntercepts", &numIntercepts,
-                                   &bNumIntercepts);
-      intercepts->SetBranchAddress("U", interceptU, &bInterceptU);
-      intercepts->SetBranchAddress("V", interceptV, &bInterceptV);
-      intercepts->SetBranchAddress("SlopeU", interceptSlopeU,
-                                   &bInterceptSlopeU);
-      intercepts->SetBranchAddress("SlopeV", interceptSlopeV,
-                                   &bInterceptSlopeV);
-      intercepts->SetBranchAddress("Cov", interceptCov, &bInterceptCov);
-      intercepts->SetBranchAddress("Track", interceptTrack, &bInterceptTrack);
-    }
+    addSensor(sensorDir);
+    numSensors += 1;
   }
+  INFO("found ", numSensors, " sensors");
 
-  _file->GetObject("Event", _eventInfo);
-  if (_eventInfo) {
-    _eventInfo->SetBranchAddress("FrameNumber", &frameNumber, &bFrameNumber);
-    _eventInfo->SetBranchAddress("TimeStamp", &timestamp, &bTimeStamp);
-    _eventInfo->SetBranchAddress("TriggerTime", &triggerTime, &bTriggerTime);
-    _eventInfo->SetBranchAddress("TriggerInfo", &triggerInfo, &bTriggerInfo);
-    _eventInfo->SetBranchAddress("TriggerOffset", &triggerOffset,
-                                 &bTriggerOffset);
-    _eventInfo->SetBranchAddress("TriggerPhase", &triggerPhase, &bTriggerPhase);
-    _eventInfo->SetBranchAddress("Invalid", &invalid, &bInvalid);
-  }
+  // verify that all trees have consistent number of entries
+  auto verifiedEntries = [](TTree* tree) {
+    int64_t entries = tree->GetEntriesFast();
+    if (entries < 0)
+      FAIL("could not determine number of entries");
+    return entries;
+  };
 
-  _file->GetObject("Tracks", _tracks);
-  if (_tracks) {
-    _tracks->SetBranchAddress("NTracks", &numTracks, &bNumTracks);
-    _tracks->SetBranchAddress("Chi2", trackChi2, &bTrackChi2);
-    _tracks->SetBranchAddress("Dof", trackDof, &bTrackDof);
-    _tracks->SetBranchAddress("X", trackX, &bTrackX);
-    _tracks->SetBranchAddress("Y", trackY, &bTrackY);
-    _tracks->SetBranchAddress("SlopeX", trackSlopeX, &bTrackSlopeX);
-    _tracks->SetBranchAddress("SlopeY", trackSlopeY, &bTrackSlopeY);
-    _tracks->SetBranchAddress("Cov", trackCov, &bTrackCov);
+  m_entries = verifiedEntries(m_eventInfo);
+  if (m_tracks && (verifiedEntries(m_tracks) != m_entries))
+    FAIL("inconsistent 'Tracks' entries");
+  for (const auto& trees : m_sensors) {
+    if (trees.hits && (verifiedEntries(trees.hits) != m_entries))
+      FAIL("inconsistent 'Hits' entries");
+    if (trees.clusters && (verifiedEntries(trees.clusters) != m_entries))
+      FAIL("inconsistent 'Clusters' entries");
+    if (trees.intercepts && (verifiedEntries(trees.intercepts) != m_entries))
+      FAIL("inconsistent 'Intercepts' entries");
   }
 }
 
-void Storage::StorageIO::openTruncate(const std::string& path)
+void Io::RceRootReader::addSensor(TDirectory* dir)
 {
-  _file = TFile::Open(path.c_str(), "RECREATE");
-  if (!_file)
-    throw std::runtime_error("Could not open file '" + path + "' for writing.");
+  SensorTrees trees;
 
-  TDirectory* dir = 0;
-  for (unsigned int nplane = 0; nplane < _numPlanes; nplane++) {
-    std::string name("Plane" + std::to_string(nplane));
-
-    dir = _file->mkdir(name.c_str());
-    dir->cd();
-
-    // Hits tree
-    TTree* hits = new TTree("Hits", "Hits");
-    _hits.push_back(hits);
-    hits->Branch("NHits", &numHits, "NHits/I");
-    hits->Branch("PixX", hitPixX, "HitPixX[NHits]/I");
-    hits->Branch("PixY", hitPixY, "HitPixY[NHits]/I");
-    hits->Branch("Timing", hitTiming, "HitTiming[NHits]/I");
-    hits->Branch("Value", hitValue, "HitValue[NHits]/I");
-    hits->Branch("HitInCluster", hitInCluster, "HitInCluster[NHits]/I");
-
-    // Clusters tree
-    TTree* clusters = new TTree("Clusters", "Clusters");
-    _clusters.push_back(clusters);
-    clusters->Branch("NClusters", &numClusters, "NClusters/I");
-    clusters->Branch("Col", clusterCol, "Col[NClusters]/D");
-    clusters->Branch("Row", clusterRow, "Row[NClusters]/D");
-    clusters->Branch("VarCol", clusterVarCol, "VarCol[NClusters]/D");
-    clusters->Branch("VarRow", clusterVarRow, "VarRow[NClusters]/D");
-    clusters->Branch("CovColRow", clusterCovColRow, "CovColRow[NClusters]/D");
-    clusters->Branch("Track", clusterTrack, "Track[NClusters]/I");
-
-    // Local track state tree
-    TTree* intercepts = new TTree("Intercepts", "Intercepts");
-    _intercepts.push_back(intercepts);
-    intercepts->Branch("NIntercepts", &numIntercepts, "NIntercepts/I");
-    intercepts->Branch("U", interceptU, "U[NIntercepts]/D");
-    intercepts->Branch("V", interceptU, "V[NIntercepts]/D");
-    intercepts->Branch("SlopeU", interceptSlopeU, "SlopeU[NIntercepts]/D");
-    intercepts->Branch("SlopeV", interceptSlopeV, "SlopeV[NIntercepts]/D");
-    intercepts->Branch("Cov", interceptCov, "Cov[NIntercepts][10]/D");
-    intercepts->Branch("Track", interceptTrack, "Track[NIntercepts]/I");
+  dir->GetObject("Hits", trees.hits);
+  if (trees.hits) {
+    trees.hits->SetBranchAddress("NHits", &numHits);
+    trees.hits->SetBranchAddress("PixX", hitPixX);
+    trees.hits->SetBranchAddress("PixY", hitPixY);
+    trees.hits->SetBranchAddress("Timing", hitTiming);
+    trees.hits->SetBranchAddress("Value", hitValue);
+    trees.hits->SetBranchAddress("HitInCluster", hitInCluster);
+  }
+  dir->GetObject("Clusters", trees.clusters);
+  if (trees.clusters) {
+    trees.clusters->SetBranchAddress("NClusters", &numClusters);
+    trees.clusters->SetBranchAddress("Col", clusterCol);
+    trees.clusters->SetBranchAddress("Row", clusterRow);
+    trees.clusters->SetBranchAddress("VarCol", clusterVarCol);
+    trees.clusters->SetBranchAddress("VarRow", clusterVarRow);
+    trees.clusters->SetBranchAddress("CovColRow", clusterCovColRow);
+    trees.clusters->SetBranchAddress("Track", clusterTrack);
+  }
+  dir->GetObject("Intercepts", trees.intercepts);
+  if (trees.intercepts) {
+    trees.intercepts->SetBranchAddress("NIntercepts", &numIntercepts);
+    trees.intercepts->SetBranchAddress("U", interceptU);
+    trees.intercepts->SetBranchAddress("V", interceptV);
+    trees.intercepts->SetBranchAddress("SlopeU", interceptSlopeU);
+    trees.intercepts->SetBranchAddress("SlopeV", interceptSlopeV);
+    trees.intercepts->SetBranchAddress("Cov", interceptCov);
+    trees.intercepts->SetBranchAddress("Track", interceptTrack);
   }
 
-  _file->cd();
-
-  // EventInfo tree
-  _eventInfo = new TTree("Event", "Event information");
-  _eventInfo->Branch("FrameNumber", &frameNumber, "FrameNumber/l");
-  _eventInfo->Branch("TimeStamp", &timestamp, "TimeStamp/l");
-  _eventInfo->Branch("TriggerTime", &triggerTime, "TriggerTime/l");
-  _eventInfo->Branch("TriggerInfo", &triggerInfo, "TriggerInfo/I");
-  _eventInfo->Branch("TriggerOffset", &triggerOffset, "TriggerOffset/I");
-  _eventInfo->Branch("TriggerPhase", &triggerPhase, "TriggerPhase/I");
-  _eventInfo->Branch("Invalid", &invalid, "Invalid/O");
-
-  // Tracks tree
-  _tracks = new TTree("Tracks", "Track parameters");
-  _tracks->Branch("NTracks", &numTracks, "NTracks/I");
-  _tracks->Branch("Chi2", trackChi2, "Chi2[NTracks]/D");
-  _tracks->Branch("Dof", trackDof, "Dof[NTracks]/I");
-  _tracks->Branch("X", trackX, "X[NTracks]/D");
-  _tracks->Branch("Y", trackY, "Y[NTracks]/D");
-  _tracks->Branch("SlopeX", trackSlopeX, "SlopeX[NTracks]/D");
-  _tracks->Branch("SlopeY", trackSlopeY, "SlopeY[NTracks]/D");
-  _tracks->Branch("Cov", trackCov, "Cov[NTracks][10]/D");
+  m_sensors.push_back(trees);
 }
 
-namespace Storage {
-
-//=========================================================
-StorageIO::StorageIO(const std::string& filePath,
-                     Mode fileMode,
-                     unsigned int numPlanes,
-                     const unsigned int treeMask,
-                     const std::vector<bool>* planeMask)
-    : _file(NULL)
-    , _fileMode(fileMode)
-    , _numPlanes(numPlanes)
-    , _numEvents(0)
-    , _tracks(0)
-    , _eventInfo(0)
+Io::RceRootReader::~RceRootReader()
 {
-
-  // Plane mask holds a true for masked planes
-  if (planeMask && fileMode == OUTPUT)
-    throw std::runtime_error(
-        "StorageIO: can't use a plane mask in output mode");
-
-  clearVariables();
-
-  if (fileMode == INPUT) {
-    openRead(filePath, planeMask);
-  } else {
-    openTruncate(filePath);
-  }
-
-  // debug info
-  INFO("file path: ", _file->GetPath());
-  INFO("file mode: ", (_fileMode ? "OUTPUT" : "INPUT"));
-  INFO("planes: ", _numPlanes);
-  INFO("tree mask: ", treeMask);
-
-  if (_numPlanes < 1)
-    throw std::runtime_error("StorageIO: didn't initialize any planes");
-
-  // Delete trees as per the tree flags
-  if (treeMask) {
-    for (unsigned int nplane = 0; nplane < _numPlanes; nplane++) {
-      if (treeMask & Flags::HITS) {
-        delete _hits.at(nplane);
-        _hits.at(nplane) = NULL;
-      }
-      if (treeMask & Flags::CLUSTERS) {
-        delete _clusters.at(nplane);
-        _clusters.at(nplane) = NULL;
-      }
-    }
-    if (treeMask & Flags::TRACKS) {
-      delete _tracks;
-      _tracks = NULL;
-    }
-    if (treeMask & Flags::EVENTINFO) {
-      delete _eventInfo;
-      _eventInfo = NULL;
-    }
-  }
-
-  assert(_hits.size() == _clusters.size() &&
-         "StorageIO: varying number of planes");
-
-  _numEvents = 0;
-  if (_fileMode == INPUT) { // INPUT mode
-    Long64_t nEventInfo = (_eventInfo) ? _eventInfo->GetEntriesFast() : 0;
-    Long64_t nTracks = (_tracks) ? _tracks->GetEntriesFast() : 0;
-    Long64_t nHits = 0;
-    Long64_t nClusters = 0;
-    for (unsigned int nplane = 0; nplane < _numPlanes; nplane++) {
-      if (_hits.at(nplane))
-        nHits += _hits.at(nplane)->GetEntriesFast();
-      if (_clusters.at(nplane))
-        nClusters += _clusters.at(nplane)->GetEntriesFast();
-    }
-
-    if (nHits % _numPlanes || nClusters % _numPlanes)
-      throw std::runtime_error(
-          "StorageIO: number of events in different planes mismatch");
-
-    nHits /= _numPlanes;
-    nClusters /= _numPlanes;
-
-    if (!_numEvents && nEventInfo)
-      _numEvents = nEventInfo;
-    if (!_numEvents && nTracks)
-      _numEvents = nTracks;
-    if (!_numEvents && nHits)
-      _numEvents = nHits;
-    if (!_numEvents && nClusters)
-      _numEvents = nClusters;
-
-    if ((nEventInfo && _numEvents != nEventInfo) ||
-        (nTracks && _numEvents != nTracks) || (nHits && _numEvents != nHits) ||
-        (nClusters && _numEvents != nClusters))
-      throw std::runtime_error(
-          "StorageIO: all trees don't have the same number of events");
-
-  } // end if (_fileMode == INPUT)
-} // end of StorageIO constructor
-
-//=========================================================
-StorageIO::~StorageIO()
-{
-  if (_file && _fileMode == OUTPUT) {
-    INFO("file path: ", _file->GetPath());
-    INFO("file mode: ", (_fileMode ? "OUTPUT" : "INPUT"));
-    INFO("planes: ", _numPlanes);
-    _file->Write();
-    delete _file;
+  if (m_file) {
+    m_file->Close();
+    delete m_file;
   }
 }
 
-std::string StorageIO::name() const
+std::string Io::RceRootReader::name() const { return "RceRootReader"; }
+
+uint64_t Io::RceRootReader::numEvents() const
 {
-  return "RceRootEventReaderWriter";
+  return static_cast<uint64_t>(m_entries);
 }
 
-//=========================================================
-void StorageIO::clearVariables()
-{
-  frameNumber = 0;
-  timestamp = 0;
-  triggerTime = 0;
-  triggerInfo = 0;
-  triggerOffset = 0;
-  triggerPhase = 0;
-  invalid = false;
-
-  numHits = 0;
-  for (int i = 0; i < MAX_HITS; i++) {
-    hitPixX[i] = 0;
-    hitPixY[i] = 0;
-    hitTiming[i] = 0;
-    hitValue[i] = 0;
-    hitInCluster[i] = -1;
-  }
-
-  numClusters = 0;
-  for (int i = 0; i < MAX_HITS; i++) {
-    clusterCol[i] = 0;
-    clusterRow[i] = 0;
-    clusterVarCol[i] = 0;
-    clusterVarRow[i] = 0;
-    clusterCovColRow[i] = 0;
-    clusterTrack[i] = 0;
-  }
-
-  numIntercepts = 0;
-  for (int i = 0; i < MAX_HITS; ++i) {
-    interceptU[i] = 0;
-    interceptV[i] = 0;
-    interceptSlopeU[i] = 0;
-    interceptSlopeV[i] = 0;
-    interceptTrack[i] = -1;
-  }
-
-  numTracks = 0;
-  for (int i = 0; i < MAX_HITS; i++) {
-    trackChi2[i] = -1;
-    trackDof[i] = -1;
-    trackX[i] = 0;
-    trackY[i] = 0;
-    trackSlopeX[i] = 0;
-    trackSlopeY[i] = 0;
-  }
-}
-
-uint64_t StorageIO::numEvents() const { return _numEvents; }
-
-void StorageIO::skip(uint64_t n)
+void Io::RceRootReader::skip(uint64_t n)
 {
   if (m_entries <= static_cast<int64_t>(m_next + n)) {
     INFO("skipping ", n, " events goes beyond available events");
@@ -373,7 +154,7 @@ void StorageIO::skip(uint64_t n)
 }
 
 //=========================================================
-bool StorageIO::readNext(Event& event)
+bool Io::RceRootReader::readNext(Storage::Event& event)
 {
   /* Note: fill in reversed order: tracks first, hits last. This is so that
    * once a hit is produced, it can immediately recieve the address of its
@@ -382,14 +163,12 @@ bool StorageIO::readNext(Event& event)
   if (m_entries <= m_next)
     return false;
 
-  int64_t ientry = m_next++;
+  int64_t ievent = m_next++;
 
-  if (_eventInfo && _eventInfo->GetEntry(ientry) <= 0)
-    throw std::runtime_error("StorageIO: error reading event tree");
-  if (_tracks && _tracks->GetEntry(ientry) <= 0)
-    throw std::runtime_error("StorageIO: error reading tracks tree");
-
-  event.clear(_numPlanes);
+  // global event data
+  if (m_eventInfo->GetEntry(ievent) <= 0)
+    FAIL("could not read 'Events' entry ", ievent);
+  event.clear();
   event.setFrameNumber(frameNumber);
   // listen chap, here's the deal:
   // we want a timestamp, i.e. a simple counter of clockcycles or bunch
@@ -407,77 +186,176 @@ bool StorageIO::readNext(Event& event)
   event.setTriggerPhase(triggerPhase);
   event.setInvalid(invalid);
 
-  // Generate a list of track objects
-  for (int ntrack = 0; ntrack < numTracks; ntrack++) {
-    TrackState state(trackX[ntrack], trackY[ntrack], trackSlopeX[ntrack],
-                     trackSlopeY[ntrack]);
-    state.setCov(trackCov[ntrack]);
-    std::unique_ptr<Track> track(new Track(state));
-    track->setGoodnessOfFit(trackChi2[ntrack], trackDof[ntrack]);
-    event.addTrack(std::move(track));
+  // global tracks info
+  if (m_tracks) {
+    if (m_tracks->GetEntry(ievent) <= 0)
+      FAIL("could not read 'Tracks' entry ", ievent);
+    for (Int_t itrack = 0; itrack < numTracks; ++itrack) {
+      Storage::TrackState state(trackX[itrack], trackY[itrack],
+                                trackSlopeX[itrack], trackSlopeY[itrack]);
+      state.setCov(trackCov[itrack]);
+      std::unique_ptr<Storage::Track> track(new Storage::Track(state));
+      track->setGoodnessOfFit(trackChi2[itrack], trackDof[itrack]);
+      event.addTrack(std::move(track));
+    }
   }
 
-  for (unsigned int nplane = 0; nplane < _numPlanes; nplane++) {
-    Storage::Plane* plane = event.getPlane(nplane);
+  // per-sensor data
+  for (size_t isensor = 0; isensor < numSensors(); ++isensor) {
+    SensorTrees& trees = m_sensors[isensor];
+    Storage::Plane* localEvent = event.getPlane(isensor);
 
-    if (_hits.at(nplane) && (_hits[nplane]->GetEntry(ientry) <= 0))
-      throw std::runtime_error("StorageIO: error reading hits tree");
-    if (_clusters.at(nplane) && (_clusters[nplane]->GetEntry(ientry) <= 0))
-      throw std::runtime_error("StorageIO: error reading clusters tree");
-    if (_intercepts.at(nplane) && (_intercepts[nplane]->GetEntry(ientry) <= 0))
-      throw std::runtime_error("StorageIO: error reading intercepts tree");
+    // local track states
+    if (trees.intercepts) {
+      if (trees.intercepts->GetEntry(ievent) <= 0)
+        FAIL("could not read 'Intercepts' entry ", ievent);
 
-    // Add local track states
-    for (Int_t iintercept = 0; iintercept < numIntercepts; ++iintercept) {
-      Storage::TrackState local(interceptU[iintercept], interceptV[iintercept],
-                                interceptSlopeU[iintercept],
-                                interceptSlopeV[iintercept]);
-      local.setCov(interceptCov[iintercept]);
-      local.setTrack(event.getTrack(interceptTrack[iintercept]));
-      plane->addState(std::move(local));
-    }
-
-    // Generate the cluster objects
-    for (int ncluster = 0; ncluster < numClusters; ncluster++) {
-      SymMatrix2 cov;
-      cov(0, 0) = clusterVarCol[ncluster];
-      cov(1, 1) = clusterVarRow[ncluster];
-      cov(0, 1) = clusterCovColRow[ncluster];
-      Cluster* cluster = plane->newCluster();
-      cluster->setPixel(XYPoint(clusterCol[ncluster], clusterRow[ncluster]),
-                        cov);
-
-      // If this cluster is in a track, mark this (and the tracks tree is
-      // active)
-      if (_tracks && (0 <= clusterTrack[ncluster])) {
-        Track* track = event.getTrack(clusterTrack[ncluster]);
-        track->addCluster(cluster);
-        cluster->setTrack(track);
+      for (Int_t iintercept = 0; iintercept < numIntercepts; ++iintercept) {
+        Storage::TrackState local(
+            interceptU[iintercept], interceptV[iintercept],
+            interceptSlopeU[iintercept], interceptSlopeV[iintercept]);
+        local.setCov(interceptCov[iintercept]);
+        local.setTrack(event.getTrack(interceptTrack[iintercept]));
+        localEvent->addState(std::move(local));
       }
     }
 
-    // Generate a list of all hit objects
-    for (int nhit = 0; nhit < numHits; nhit++) {
-      Hit* hit = plane->addHit(hitPixX[nhit], hitPixY[nhit], hitTiming[nhit],
-                               hitValue[nhit]);
+    // local clusters
+    if (trees.clusters) {
+      if (trees.clusters->GetEntry(ievent) <= 0)
+        FAIL("could not read 'Clusters' entry ", ievent);
 
-      // If this hit is in a cluster, mark this (and the clusters tree is
-      // active)
-      if (_clusters.at(nplane) && hitInCluster[nhit] >= 0) {
-        Cluster* cluster = plane->getCluster(hitInCluster[nhit]);
-        cluster->addHit(hit);
+      for (Int_t icluster = 0; icluster < numClusters; ++icluster) {
+        SymMatrix2 cov;
+        cov(0, 0) = clusterVarCol[icluster];
+        cov(1, 1) = clusterVarRow[icluster];
+        cov(0, 1) = clusterCovColRow[icluster];
+        Storage::Cluster* cluster = localEvent->newCluster();
+        cluster->setPixel(XYPoint(clusterCol[icluster], clusterRow[icluster]),
+                          cov);
+        // Fix cluster/track relationship if possible
+        if (m_tracks && (0 <= clusterTrack[icluster])) {
+          Storage::Track* track = event.getTrack(clusterTrack[icluster]);
+          track->addCluster(cluster);
+          cluster->setTrack(track);
+        }
+      }
+    }
+
+    // local hits
+    if (trees.hits) {
+      if (trees.hits->GetEntry(ievent) <= 0)
+        FAIL("could not read 'Hits' entry ", ievent);
+
+      for (Int_t ihit = 0; ihit < numHits; ++ihit) {
+        Storage::Hit* hit = localEvent->addHit(hitPixX[ihit], hitPixY[ihit],
+                                               hitTiming[ihit], hitValue[ihit]);
+        // Fix hit/cluster relationship is possibl
+        if (trees.clusters && hitInCluster[ihit] >= 0) {
+          Storage::Cluster* cluster =
+              localEvent->getCluster(hitInCluster[ihit]);
+          cluster->addHit(hit);
+        }
       }
     }
   } // end loop in planes
   return true;
 }
 
-//=========================================================
-void StorageIO::append(const Event& event)
-{
-  if (_fileMode == INPUT)
-    throw std::runtime_error("StorageIO: can't write event in input mode");
+// -----------------------------------------------------------------------------
+// writer
 
+Io::RceRootWriter::RceRootWriter(const std::string& path, size_t numSensors)
+    : RceRootCommon(TFile::Open(path.c_str(), "RECREATE"))
+{
+  if (!m_file)
+    FAIL("could not open '", path, "' to write");
+  INFO("write data to '", path, "'");
+
+  // global event tree
+  m_eventInfo = new TTree("Event", "Event information");
+  m_eventInfo->Branch("FrameNumber", &frameNumber, "FrameNumber/l");
+  m_eventInfo->Branch("TimeStamp", &timestamp, "TimeStamp/l");
+  m_eventInfo->Branch("TriggerTime", &triggerTime, "TriggerTime/l");
+  m_eventInfo->Branch("TriggerInfo", &triggerInfo, "TriggerInfo/I");
+  m_eventInfo->Branch("TriggerOffset", &triggerOffset, "TriggerOffset/I");
+  m_eventInfo->Branch("TriggerPhase", &triggerPhase, "TriggerPhase/I");
+  m_eventInfo->Branch("Invalid", &invalid, "Invalid/O");
+
+  // global track tree
+  m_tracks = new TTree("Tracks", "Track parameters");
+  m_tracks->Branch("NTracks", &numTracks, "NTracks/I");
+  m_tracks->Branch("Chi2", trackChi2, "Chi2[NTracks]/D");
+  m_tracks->Branch("Dof", trackDof, "Dof[NTracks]/I");
+  m_tracks->Branch("X", trackX, "X[NTracks]/D");
+  m_tracks->Branch("Y", trackY, "Y[NTracks]/D");
+  m_tracks->Branch("SlopeX", trackSlopeX, "SlopeX[NTracks]/D");
+  m_tracks->Branch("SlopeY", trackSlopeY, "SlopeY[NTracks]/D");
+  m_tracks->Branch("Cov", trackCov, "Cov[NTracks][10]/D");
+
+  // per-sensor trees
+  for (size_t isensor = 0; isensor < numSensors; ++isensor) {
+    std::string name("Plane" + std::to_string(isensor));
+    TDirectory* sensorDir = m_file->mkdir(name.c_str());
+    addSensor(sensorDir);
+  }
+}
+
+void Io::RceRootWriter::addSensor(TDirectory* dir)
+{
+  dir->cd();
+
+  SensorTrees trees;
+  // local hits
+  trees.hits = new TTree("Hits", "Hits");
+  trees.hits->Branch("NHits", &numHits, "NHits/I");
+  trees.hits->Branch("PixX", hitPixX, "HitPixX[NHits]/I");
+  trees.hits->Branch("PixY", hitPixY, "HitPixY[NHits]/I");
+  trees.hits->Branch("Timing", hitTiming, "HitTiming[NHits]/I");
+  trees.hits->Branch("Value", hitValue, "HitValue[NHits]/I");
+  trees.hits->Branch("HitInCluster", hitInCluster, "HitInCluster[NHits]/I");
+  // local clusters
+  trees.clusters = new TTree("Clusters", "Clusters");
+  trees.clusters->Branch("NClusters", &numClusters, "NClusters/I");
+  trees.clusters->Branch("Col", clusterCol, "Col[NClusters]/D");
+  trees.clusters->Branch("Row", clusterRow, "Row[NClusters]/D");
+  trees.clusters->Branch("VarCol", clusterVarCol, "VarCol[NClusters]/D");
+  trees.clusters->Branch("VarRow", clusterVarRow, "VarRow[NClusters]/D");
+  trees.clusters->Branch("CovColRow", clusterCovColRow,
+                         "CovColRow[NClusters]/D");
+  trees.clusters->Branch("Track", clusterTrack, "Track[NClusters]/I");
+  // local track states
+  trees.intercepts = new TTree("Intercepts", "Intercepts");
+  trees.intercepts->Branch("NIntercepts", &numIntercepts, "NIntercepts/I");
+  trees.intercepts->Branch("U", interceptU, "U[NIntercepts]/D");
+  trees.intercepts->Branch("V", interceptU, "V[NIntercepts]/D");
+  trees.intercepts->Branch("SlopeU", interceptSlopeU, "SlopeU[NIntercepts]/D");
+  trees.intercepts->Branch("SlopeV", interceptSlopeV, "SlopeV[NIntercepts]/D");
+  trees.intercepts->Branch("Cov", interceptCov, "Cov[NIntercepts][10]/D");
+  trees.intercepts->Branch("Track", interceptTrack, "Track[NIntercepts]/I");
+  m_sensors.emplace_back(trees);
+}
+
+Io::RceRootWriter::~RceRootWriter()
+{
+  if (m_file) {
+    INFO("wrote data for ", m_sensors.size(), " sensors to '",
+         m_file->GetPath(), "'");
+    m_file->Write();
+    m_file->Close();
+    delete m_file;
+  }
+}
+
+std::string Io::RceRootWriter::name() const { return "RceRootWriter"; }
+
+void Io::RceRootWriter::append(const Storage::Event& event)
+{
+  if (event.numPlanes() != m_sensors.size())
+    FAIL("inconsistent sensors numbers. events has ", event.numPlanes(),
+         ", but the writer expected ", m_sensors.size());
+
+  // global event info is **always** filled
   frameNumber = event.frameNumber();
   timestamp = 0;
   triggerTime = event.timestamp();
@@ -485,92 +363,81 @@ void StorageIO::append(const Event& event)
   triggerOffset = event.triggerOffset();
   triggerPhase = event.triggerPhase();
   invalid = event.invalid();
+  m_eventInfo->Fill();
 
-  numTracks = event.numTracks();
-  if (numTracks > MAX_TRACKS)
-    throw std::runtime_error("StorageIO: event exceeds MAX_TRACKS");
-
-  // Set the object track values into the arrays for writing to the root file
-  for (int ntrack = 0; ntrack < numTracks; ntrack++) {
-    const Track& track = *event.getTrack(ntrack);
-    trackChi2[ntrack] = track.chi2();
-    trackDof[ntrack] = track.degreesOfFreedom();
-    const TrackState& state = track.globalState();
-    trackX[ntrack] = state.offset().x();
-    trackY[ntrack] = state.offset().y();
-    trackSlopeX[ntrack] = state.slope().x();
-    trackSlopeY[ntrack] = state.slope().y();
-    std::copy(state.cov().begin(), state.cov().end(), trackCov[ntrack]);
+  // tracks
+  if (m_tracks) {
+    if (MAX_TRACKS < event.numTracks())
+      FAIL("tracks exceed MAX_TRACKS");
+    numTracks = event.numTracks();
+    for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
+      const Storage::Track& track = *event.getTrack(itrack);
+      trackChi2[itrack] = track.chi2();
+      trackDof[itrack] = track.degreesOfFreedom();
+      const Storage::TrackState& state = track.globalState();
+      trackX[itrack] = state.offset().x();
+      trackY[itrack] = state.offset().y();
+      trackSlopeX[itrack] = state.slope().x();
+      trackSlopeY[itrack] = state.slope().y();
+      std::copy(state.cov().begin(), state.cov().end(), trackCov[itrack]);
+    }
+    m_tracks->Fill();
   }
 
-  for (unsigned int nplane = 0; nplane < _numPlanes; nplane++) {
-    const Plane* plane = event.getPlane(nplane);
+  // per-sensor data
+  for (Index isensor = 0; isensor < event.numPlanes(); ++isensor) {
+    SensorTrees& trees = m_sensors[isensor];
+    const Storage::Plane* localEvent = event.getPlane(isensor);
 
-    // fill local states
-    for (Index istate = 0; istate < plane->numStates(); ++istate) {
-      const TrackState& local = plane->getState(istate);
-      interceptU[istate] = local.offset().x();
-      interceptV[istate] = local.offset().y();
-      interceptSlopeU[istate] = local.slope().x();
-      interceptSlopeV[istate] = local.slope().y();
-      std::copy(local.cov().begin(), local.cov().end(), interceptCov[istate]);
-      interceptTrack[istate] = local.track()->index();
+    // local hits
+    if (trees.hits) {
+      if (MAX_HITS < localEvent->numHits())
+        FAIL("hits exceed MAX_HITS");
+      numHits = localEvent->numHits();
+      for (Index ihit = 0; ihit < localEvent->numHits(); ++ihit) {
+        const Storage::Hit* hit = localEvent->getHit(ihit);
+        hitPixX[ihit] = hit->digitalCol();
+        hitPixY[ihit] = hit->digitalRow();
+        hitValue[ihit] = hit->value();
+        hitTiming[ihit] = hit->time();
+        hitInCluster[ihit] = hit->cluster() ? hit->cluster()->index() : -1;
+      }
+      trees.hits->Fill();
     }
 
-    numClusters = plane->numClusters();
-    if (numClusters > MAX_CLUSTERS)
-      throw std::runtime_error("StorageIO: event exceeds MAX_CLUSTERS");
-
-    // Set the object cluster values into the arrays for writig into the root
-    // file
-    for (int ncluster = 0; ncluster < numClusters; ncluster++) {
-      const Cluster& cluster = *plane->getCluster(ncluster);
-      clusterCol[ncluster] = cluster.posPixel().x();
-      clusterRow[ncluster] = cluster.posPixel().y();
-      clusterVarCol[ncluster] = cluster.covPixel()(0, 0);
-      clusterVarRow[ncluster] = cluster.covPixel()(1, 1);
-      clusterCovColRow[ncluster] = cluster.covPixel()(0, 1);
-      clusterTrack[ncluster] = cluster.track() ? cluster.track()->index() : -1;
+    // local clusters
+    if (trees.clusters) {
+      if (MAX_HITS < localEvent->numClusters())
+        FAIL("clusters exceed MAX_HITS");
+      numClusters = localEvent->numClusters();
+      for (Index iclu = 0; iclu < localEvent->numClusters(); ++iclu) {
+        const Storage::Cluster& cluster = *localEvent->getCluster(iclu);
+        clusterCol[iclu] = cluster.posPixel().x();
+        clusterRow[iclu] = cluster.posPixel().y();
+        clusterVarCol[iclu] = cluster.covPixel()(0, 0);
+        clusterVarRow[iclu] = cluster.covPixel()(1, 1);
+        clusterCovColRow[iclu] = cluster.covPixel()(0, 1);
+        clusterTrack[iclu] = cluster.track() ? cluster.track()->index() : -1;
+      }
+      trees.clusters->Fill();
     }
 
-    numHits = plane->numHits();
-    if (numHits > MAX_HITS)
-      throw std::runtime_error("StorageIO: event exceeds MAX_HITS");
-
-    // Set the object hit values into the arrays for writing into the root
-    // file
-    for (int nhit = 0; nhit < numHits; nhit++) {
-      const Hit* hit = plane->getHit(nhit);
-      hitPixX[nhit] = hit->digitalCol();
-      hitPixY[nhit] = hit->digitalRow();
-      hitValue[nhit] = hit->value();
-      hitTiming[nhit] = hit->time();
-      hitInCluster[nhit] = hit->cluster() ? hit->cluster()->index() : -1;
+    // local track states
+    if (trees.intercepts) {
+      if (MAX_TRACKS < localEvent->numStates())
+        FAIL("intercepts exceed MAX_TRACKS");
+      numIntercepts = localEvent->numStates();
+      for (Index istate = 0; istate < localEvent->numStates(); ++istate) {
+        const Storage::TrackState& local = localEvent->getState(istate);
+        interceptU[istate] = local.offset().x();
+        interceptV[istate] = local.offset().y();
+        interceptSlopeU[istate] = local.slope().x();
+        interceptSlopeV[istate] = local.slope().y();
+        std::copy(local.cov().begin(), local.cov().end(), interceptCov[istate]);
+        interceptTrack[istate] = local.track()->index();
+      }
+      trees.intercepts->Fill();
     }
-
-    if (nplane >= _hits.size())
-      throw std::runtime_error(
-          "StorageIO: event has too many planes for the storage");
-
-    // Fill the plane by plane trees for this plane
-    if (_hits.at(nplane))
-      _hits.at(nplane)->Fill();
-    if (_clusters.at(nplane))
-      _clusters.at(nplane)->Fill();
-    if (_intercepts.at(nplane))
-      _intercepts.at(nplane)->Fill();
-
-  } // end of nplane loop
-
-  // Write the track and event info here so that if any errors occured they
-  // won't be desynchronized
-  if (_tracks)
-    _tracks->Fill();
-  if (_eventInfo)
-    _eventInfo->Fill();
-
-  _numEvents++;
-
-} // end of writeEvent
-
-} // end of namespace
+  }
+  m_entries += 1;
+}

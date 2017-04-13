@@ -87,8 +87,7 @@ void Application::initialize(int argc, char const* argv[])
   INFO("read configuration '", section, "' from '", args.get("config"), "'");
 
   // setup input and i/o settings
-  m_input.reset(new Storage::StorageIO(args.get("input"), Storage::INPUT,
-                                       m_dev->numSensors()));
+  m_reader.reset(new Io::RceRootReader(args.get("input")));
   m_outputPrefix = args.get("output_prefix");
   m_skipEvents = args.get<uint64_t>("skip_events");
   m_numEvents = args.get<uint64_t>("num_events");

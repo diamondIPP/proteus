@@ -41,12 +41,9 @@ int main(int argc, char const* argv[])
   auto redChi2Max = app.config().get<double>("reduced_chi2_max");
 
   // output
-  Storage::StorageIO output(app.outputPath("data.root"), Storage::OUTPUT,
-                            app.device().numSensors());
   TFile hists(app.outputPath("hists.root").c_str(), "RECREATE");
 
   auto loop = app.makeEventLoop();
-  loop.setOutput(&output);
   setupHitPreprocessing(app.device(), loop);
   setupClusterizers(app.device(), loop);
   loop.addProcessor(std::make_shared<ApplyGeometry>(app.device()));
@@ -60,6 +57,8 @@ int main(int argc, char const* argv[])
   loop.addAnalyzer(std::make_shared<Correlations>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<Residuals>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(app.device(), &hists));
+  loop.addWriter(std::make_shared<Io::RceRootWriter>(
+      app.outputPath("data.root"), app.device().numSensors()));
   loop.run();
 
   hists.Write();
