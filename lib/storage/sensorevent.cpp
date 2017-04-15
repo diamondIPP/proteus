@@ -37,8 +37,8 @@ void Storage::SensorEvent::print(std::ostream& os,
     for (size_t icluster = 0; icluster < m_clusters.size(); ++icluster) {
       const Cluster& cluster = *m_clusters[icluster];
       os << prefix << "  cluster " << icluster << ": " << cluster;
-      if (cluster.track())
-        os << " track=" << cluster.track()->index();
+      if (cluster.isInTrack())
+        os << " track=" << cluster.track();
       os << '\n';
     }
   }

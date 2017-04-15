@@ -15,8 +15,6 @@ class Sensor;
 namespace Storage {
 
 class Hit;
-class Track;
-class TrackState;
 
 class Cluster {
 public:
@@ -30,6 +28,8 @@ public:
   void setValue(float value_) { m_value = value_; }
   /** Calculate local and global coordinates from the pixel coordinates. */
   void transform(const Mechanics::Sensor& sensor);
+  void setTrack(Index track);
+  void setMatchedState(Index state);
 
   Index sensorId() const { return m_sensorId; }
   Index region() const;
@@ -58,10 +58,10 @@ public:
   Hit* getHit(Index i) { return m_hits.at(i); }
   const Hit* getHit(Index i) const { return m_hits.at(i); }
 
-  void setTrack(const Track* track);
-  const Track* track() const { return m_track; }
-  void setMatchedState(const TrackState* state) { m_matchedState = state; }
-  const TrackState* matchedState() const { return m_matchedState; }
+  bool isInTrack() const { return m_track != kInvalidIndex; }
+  Index track() const { return m_track; }
+  bool isMatched() const { return m_matchedState != kInvalidIndex; }
+  Index matchedState() const { return m_matchedState; }
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
@@ -77,10 +77,10 @@ private:
 
   std::vector<Hit*> m_hits; // List of hits composing the cluster
 
-  Index m_sensorId;
   Index m_index;
-  const Track* m_track; // The track containing this cluster
-  const TrackState* m_matchedState;
+  Index m_sensorId;
+  Index m_track;
+  Index m_matchedState;
 };
 
 std::ostream& operator<<(std::ostream& os, const Cluster& cluster);

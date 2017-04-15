@@ -17,10 +17,10 @@ Storage::Cluster::Cluster(Index sensorId_, Index index_)
     : m_cr(-1, -1)
     , m_time(-1)
     , m_value(-1)
-    , m_sensorId(sensorId_)
     , m_index(index_)
-    , m_track(NULL)
-    , m_matchedState(NULL)
+    , m_sensorId(sensorId_)
+    , m_track(kInvalidIndex)
+    , m_matchedState(kInvalidIndex)
 {
 }
 
@@ -58,6 +58,19 @@ void Storage::Cluster::transform(const Mechanics::Sensor& sensor)
   m_xyzCov = ROOT::Math::Similarity(l2g.Sub<Matrix32>(0, 0), m_uvCov);
 }
 
+void Storage::Cluster::setTrack(Index track)
+{
+  assert((m_track == kInvalidIndex) && "cluster can only be in one track");
+  m_track = track;
+}
+
+void Storage::Cluster::setMatchedState(Index state)
+{
+  assert((m_matched == kInvalidIndex) &&
+         "cluster can only be matched to one track state");
+  m_matched = state;
+}
+
 Index Storage::Cluster::region() const
 {
   return m_hits.empty() ? kInvalidIndex : m_hits.front()->region();
@@ -74,12 +87,6 @@ Storage::Cluster::Area Storage::Cluster::areaPixel() const
 
 int Storage::Cluster::sizeCol() const { return areaPixel().length(0); }
 int Storage::Cluster::sizeRow() const { return areaPixel().length(1); }
-
-void Storage::Cluster::setTrack(const Storage::Track* track)
-{
-  assert(!m_track && "Cluster: can't use a cluster for more than one track");
-  m_track = track;
-}
 
 void Storage::Cluster::addHit(Storage::Hit* hit)
 {

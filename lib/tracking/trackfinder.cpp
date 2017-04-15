@@ -53,7 +53,7 @@ void Tracking::TrackFinder::process(Storage::Event& event) const
     candidates.clear();
     for (Index icluster = 0; icluster < seedEvent.numClusters(); ++icluster) {
       Cluster* cluster = seedEvent.getCluster(icluster);
-      if (cluster->track())
+      if (cluster->isInTrack())
         continue;
       candidates.push_back(TrackPtr(new Track()));
       candidates.back()->addCluster(cluster);
@@ -111,7 +111,7 @@ void Tracking::TrackFinder::searchSensor(
       Storage::Cluster* curr = sensorEvent.getCluster(icluster);
 
       // clusters already in use must be ignored
-      if (curr->track())
+      if (curr->isInTrack())
         continue;
 
       XYZVector delta = curr->posGlobal() - last->posGlobal();
@@ -172,7 +172,8 @@ void Tracking::TrackFinder::selectTracks(std::vector<TrackPtr>& candidates,
     // check that all constituent clusters are still unused
     Index unique = 0;
     for (Index icluster = 0; icluster < track->numClusters(); ++icluster)
-      unique += (track->getCluster(icluster)->track() ? 0 : 1);
+      unique +=
+          ((track->getCluster(icluster)->isInTrack()) ? 1 : 0);
     // some clusters are already used by other tracks
     if (unique != track->numClusters())
       continue;

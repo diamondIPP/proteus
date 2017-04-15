@@ -188,7 +188,7 @@ void Analyzers::Efficiency::Hists::fill(const Storage::TrackState& state,
 
 void Analyzers::Efficiency::Hists::fill(const Storage::Cluster& cluster)
 {
-  if (cluster.matchedState()) {
+  if (cluster.isMatched()) {
     clustersPass->Fill(cluster.posPixel().x(), cluster.posPixel().y());
   } else {
     clustersFail->Fill(cluster.posPixel().x(), cluster.posPixel().y());

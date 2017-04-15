@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <set>
 #include <vector>
 
 #include "mechanics/device.h"
@@ -19,58 +20,49 @@ Processors::Matcher::Matcher(const Mechanics::Device& device,
 
 std::string Processors::Matcher::name() const { return m_name; }
 
-struct Pair {
-  Storage::TrackState* state;
-  Storage::Cluster* cluster;
-
-  double d2() const
-  {
-    XYVector delta = cluster->posLocal() - state->offset();
-    SymMatrix2 cov = cluster->covLocal() + state->covOffset();
-    return mahalanobisSquared(cov, delta);
-  }
+namespace {
+struct PossibleMatch {
+  Index state;
+  Index cluster;
+  double d2;
 };
-
-struct PairDistanceCompare {
-  bool operator()(const Pair& a, const Pair& b) const
-  {
-    return a.d2() < b.d2();
-  }
-};
-
-// match a pair if both elements are still unmatched to anything
-struct PairMatchUnmatched {
-  void operator()(Pair& a) const
-  {
-    if (a.state->matchedCluster() || a.cluster->matchedState())
-      return;
-    a.state->setMatchedCluster(a.cluster);
-    a.cluster->setMatchedState(a.state);
-  }
-};
+} // namespace
 
 void Processors::Matcher::process(Storage::Event& event) const
 {
-  std::vector<Pair> pairs;
   Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
 
-  pairs.clear();
-  pairs.reserve(sensorEvent.numStates() * sensorEvent.numClusters());
+  std::vector<PossibleMatch> possibleMatches;
+  std::set<Index> matchedStates;
+  std::set<Index> matchedClusters;
 
   // preselect possible track state / cluster pairs
   for (Index istate = 0; istate < sensorEvent.numStates(); ++istate) {
     for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
-      Pair pair = {&sensorEvent.getState(istate),
-                   sensorEvent.getCluster(icluster)};
+      const auto& state = sensorEvent.getState(istate);
+      const auto& cluster = *sensorEvent.getCluster(icluster);
 
-      if ((m_distSquaredMax < 0) || (pair.d2() < m_distSquaredMax)) {
-        pairs.push_back(pair);
-      }
+      // compute mahalanobis distance between state/cluster
+      XYVector delta = cluster.posLocal() - state.offset();
+      SymMatrix2 cov = cluster.covLocal() + state.covOffset();
+      double d2 = mahalanobisSquared(cov, delta);
+
+      if ((m_distSquaredMax < 0) || (d2 < m_distSquaredMax))
+        possibleMatches.emplace_back(PossibleMatch{istate, icluster, d2});
     }
   }
 
   // sort by pair distance, closest distance first
-  std::sort(pairs.begin(), pairs.end(), PairDistanceCompare());
+  std::sort(possibleMatches.begin(), possibleMatches.end(),
+            [](const auto& a, const auto& b) { return (a.d2 < b.d2); });
   // select unique matches, closest distance first
-  std::for_each(pairs.begin(), pairs.end(), PairMatchUnmatched());
+  for (const auto& match : possibleMatches) {
+    if ((0 < matchedStates.count(match.state)) ||
+        (0 < matchedClusters.count(match.cluster)))
+      continue;
+    matchedStates.insert(match.state);
+    matchedClusters.insert(match.cluster);
+    sensorEvent.getCluster(match.cluster)->setMatchedState(match.state);
+    // TODO 2017-06-08 msmk: set matched cluster for state
+  }
 }

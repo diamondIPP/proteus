@@ -23,7 +23,7 @@ void Storage::Track::addCluster(Cluster* cluster)
 void Storage::Track::freezeClusterAssociation()
 {
   for (const auto& cluster : m_clusters)
-    cluster->setTrack(this);
+    cluster->setTrack(m_index);
 }
 
 void Storage::Track::print(std::ostream& os, const std::string& prefix) const

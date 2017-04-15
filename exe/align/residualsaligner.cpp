@@ -64,13 +64,12 @@ void Alignment::ResidualsAligner::analyze(const Storage::Event& event)
 
     for (Index iclu = 0; iclu < sensorEvent.numClusters(); ++iclu) {
       const Storage::Cluster& cluster = *sensorEvent.getCluster(iclu);
-      const Storage::Track* track = cluster.track();
 
-      if (!track)
+      if (!cluster.isInTrack())
         continue;
 
       // refit track w/o selected sensor for unbiased residuals
-      const Storage::Track& track = event.getTrack(cluster.trackId());
+      const Storage::Track& track = event.getTrack(cluster.track());
       Storage::TrackState state = Processors::fitTrackLocalUnbiased(
           track, m_device.geometry(), sensorId);
 
