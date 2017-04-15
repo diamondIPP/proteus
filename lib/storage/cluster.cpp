@@ -7,7 +7,7 @@
 
 #include "mechanics/sensor.h"
 #include "storage/hit.h"
-#include "storage/plane.h"
+#include "storage/sensorevent.h"
 #include "storage/track.h"
 #include "utils/logger.h"
 
@@ -17,7 +17,7 @@ Storage::Cluster::Cluster()
     : m_cr(-1, -1)
     , m_time(-1)
     , m_value(-1)
-    , m_plane(NULL)
+    , m_sensorEvent(NULL)
     , m_track(NULL)
     , m_matchedState(NULL)
     , m_matched(NULL)
@@ -59,7 +59,7 @@ void Storage::Cluster::transform(const Mechanics::Sensor& sensor)
   m_xyzCov = ROOT::Math::Similarity(l2g.Sub<Matrix32>(0, 0), m_uvCov);
 }
 
-Index Storage::Cluster::sensorId() const { return m_plane->sensorId(); }
+Index Storage::Cluster::sensorId() const { return m_sensorEvent->sensorId(); }
 
 Index Storage::Cluster::region() const
 {

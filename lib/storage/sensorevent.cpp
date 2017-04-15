@@ -1,27 +1,28 @@
-#include "plane.h"
+#include "sensorevent.h"
 
 #include <ostream>
 
 #include "storage/track.h"
 
-void Storage::Plane::clear()
+void Storage::SensorEvent::clear()
 {
   m_states.clear();
   m_clusters.clear();
   m_hits.clear();
 }
 
-Storage::Plane::Plane(Index sensorId) : m_sensorId(sensorId) {}
+Storage::SensorEvent::SensorEvent(Index sensorId) : m_sensorId(sensorId) {}
 
-Storage::Cluster* Storage::Plane::newCluster()
+Storage::Cluster* Storage::SensorEvent::newCluster()
 {
   m_clusters.emplace_back(new Cluster());
   m_clusters.back()->m_index = m_clusters.size() - 1;
-  m_clusters.back()->m_plane = this;
+  m_clusters.back()->m_sensorEvent = this;
   return m_clusters.back().get();
 }
 
-void Storage::Plane::print(std::ostream& os, const std::string& prefix) const
+void Storage::SensorEvent::print(std::ostream& os,
+                                 const std::string& prefix) const
 {
   if (!m_hits.empty()) {
     os << prefix << "hits:\n";

@@ -69,7 +69,7 @@ Analyzers::SensorClusters::SensorClusters(TDirectory* dir,
   }
 }
 
-void Analyzers::SensorClusters::analyze(const Storage::Plane& sensorEvent)
+void Analyzers::SensorClusters::analyze(const Storage::SensorEvent& sensorEvent)
 {
   auto fill = [](const Storage::Cluster& cluster, AreaHists& hists) {
     auto pos = cluster.posPixel();
@@ -136,7 +136,7 @@ std::string Analyzers::Clusters::name() const { return "ClusterInfo"; }
 void Analyzers::Clusters::analyze(const Storage::Event& event)
 {
   for (Index isensor = 0; isensor < m_sensors.size(); ++isensor)
-    m_sensors[isensor].analyze(*event.getPlane(isensor));
+    m_sensors[isensor].analyze(event.getSensorEvent(isensor));
 }
 
 void Analyzers::Clusters::finalize()

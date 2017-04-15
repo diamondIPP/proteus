@@ -12,7 +12,7 @@
 
 using Storage::Cluster;
 using Storage::Event;
-using Storage::Plane;
+using Storage::SensorEvent;
 using Storage::Track;
 using Storage::TrackState;
 
@@ -45,8 +45,9 @@ void Tracking::TrackFinder::process(Storage::Event& event) const
   std::vector<TrackPtr> candidates;
 
   // first iteration over all seed sensors
-  for (size_t i = 0; i < (1 + (m_sensorIds.size() - m_numClustersMin)); ++i) {
-    Plane& seedEvent = *event.getPlane(m_sensorIds[i]);
+  size_t numSeedSeensors = 1 + (m_sensorIds.size() - m_numClustersMin);
+  for (size_t i = 0; i < numSeedSeensors; ++i) {
+    SensorEvent& seedEvent = event.getSensorEvent(m_sensorIds[i]);
 
     // generate track candidates from all unused clusters on the seed sensor
     candidates.clear();
@@ -60,12 +61,12 @@ void Tracking::TrackFinder::process(Storage::Event& event) const
 
     // second iteration over remaining sensors to find compatible points
     for (size_t j = i + 1; j < m_sensorIds.size(); ++j) {
-      searchSensor(*event.getPlane(m_sensorIds[j]), candidates);
+      searchSensor(event.getSensorEvent(m_sensorIds[j]), candidates);
 
       // remove seeds that are already too short
       Index remainingSensors = m_sensorIds.size() - (j + 1);
-      auto isLongEnough = [&](const TrackPtr& seed) {
-        return (m_numClustersMin <= (seed->numClusters() + remainingSensors));
+      auto isLongEnough = [&](const TrackPtr& cand) {
+        return (m_numClustersMin <= (cand->numClusters() + remainingSensors));
       };
       auto beginBad =
           std::partition(candidates.begin(), candidates.end(), isLongEnough);
@@ -97,7 +98,7 @@ void Tracking::TrackFinder::process(Storage::Event& event) const
  * Ambiguities are not resolved but result in additional track candidates.
  */
 void Tracking::TrackFinder::searchSensor(
-    Storage::Plane& sensorEvent, std::vector<TrackPtr>& candidates) const
+    Storage::SensorEvent& sensorEvent, std::vector<TrackPtr>& candidates) const
 {
   // loop only over the initial candidates and not the added ones
   Index numTracks = static_cast<Index>(candidates.size());

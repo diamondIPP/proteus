@@ -31,7 +31,7 @@ void Tracking::StraightFitter::process(Storage::Event& event) const
     fitTrackGlobal(track);
 
     for (auto sensorId : m_sensorIds) {
-      Storage::Plane& sensorEvent = *event.getPlane(sensorId);
+      Storage::SensorEvent& sensorEvent = event.getSensorEvent(sensorId);
       // local fit for correct errors in the local frame
       Storage::TrackState state =
           fitTrackLocal(track, m_device.geometry(), sensorId);

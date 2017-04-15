@@ -24,9 +24,9 @@ std::string Processors::CCPDv4HitMapper::name() const
 
 void Processors::CCPDv4HitMapper::process(Storage::Event& event) const
 {
-  Storage::Plane* plane = event.getPlane(m_sensorId);
-  for (Index ihit = 0; ihit < plane->numHits(); ++ihit) {
-    Storage::Hit& hit = *plane->getHit(ihit);
+  Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
+  for (Index ihit = 0; ihit < sensorEvent.numHits(); ++ihit) {
+    Storage::Hit& hit = *sensorEvent.getHit(ihit);
 
     // two hits in digital column correspond to two hits in a sensor row.
     // * lower digital hit -> left sensor hit

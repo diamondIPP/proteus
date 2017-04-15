@@ -1,5 +1,5 @@
-#ifndef PT_PLANE_H
-#define PT_PLANE_H
+#ifndef PT_SENSOREVENT_H
+#define PT_SENSOREVENT_H
 
 #include <iosfwd>
 #include <memory>
@@ -13,11 +13,11 @@
 
 namespace Storage {
 
-/** An readout event for a single sensor.
+/** An event for a single sensor containing only local information.
  *
- * This provides access to all hits and clusters on a single sensor.
+ * Contains hits, clusters, and local track states.
  */
-class Plane {
+class SensorEvent {
 public:
   Index sensorId() const { return m_sensorId; }
 
@@ -40,7 +40,7 @@ public:
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
-  Plane(Index sensorId);
+  SensorEvent(Index sensorId);
 
   void clear();
 
@@ -55,15 +55,15 @@ private:
 } // namespace Storage
 
 template <typename... HitParams>
-inline Storage::Hit* Storage::Plane::addHit(HitParams&&... params)
+inline Storage::Hit* Storage::SensorEvent::addHit(HitParams&&... params)
 {
   m_hits.emplace_back(new Hit(std::forward<HitParams>(params)...));
   return m_hits.back().get();
 }
 
-inline void Storage::Plane::addState(TrackState&& state)
+inline void Storage::SensorEvent::addState(TrackState&& state)
 {
   m_states.emplace_back(new TrackState(std::forward<TrackState>(state)));
 }
 
-#endif // PT_PLANE_H
+#endif // PT_SENSOREVENT_H

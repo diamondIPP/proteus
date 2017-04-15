@@ -95,15 +95,15 @@ void Analyzers::Correlations::analyze(const Storage::Event& event)
     Index id0 = entry.first.first;
     Index id1 = entry.first.second;
     Hists& hist = entry.second;
-    const Storage::Plane& plane0 = *event.getPlane(id0);
-    const Storage::Plane& plane1 = *event.getPlane(id1);
+    const Storage::SensorEvent& sensor0 = event.getSensorEvent(id0);
+    const Storage::SensorEvent& sensor1 = event.getSensorEvent(id1);
 
-    for (Index c0 = 0; c0 < plane0.numClusters(); ++c0) {
-      const Storage::Cluster* cluster0 = plane0.getCluster(c0);
+    for (Index c0 = 0; c0 < sensor0.numClusters(); ++c0) {
+      const Storage::Cluster* cluster0 = sensor0.getCluster(c0);
       const XYZPoint& xyz0 = cluster0->posGlobal();
 
-      for (Index c1 = 0; c1 < plane1.numClusters(); ++c1) {
-        const Storage::Cluster* cluster1 = plane1.getCluster(c1);
+      for (Index c1 = 0; c1 < sensor1.numClusters(); ++c1) {
+        const Storage::Cluster* cluster1 = sensor1.getCluster(c1);
         const XYZPoint& xyz1 = cluster1->posGlobal();
 
         hist.corrX->Fill(xyz0.x(), xyz1.x());

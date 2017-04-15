@@ -52,15 +52,16 @@ struct PairMatchUnmatched {
 void Processors::Matcher::process(Storage::Event& event) const
 {
   std::vector<Pair> pairs;
-  Storage::Plane& plane = *event.getPlane(m_sensorId);
+  Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
 
   pairs.clear();
-  pairs.reserve(plane.numStates() * plane.numClusters());
+  pairs.reserve(sensorEvent.numStates() * sensorEvent.numClusters());
 
   // preselect possible track state / cluster pairs
-  for (Index istate = 0; istate < plane.numStates(); ++istate) {
-    for (Index icluster = 0; icluster < plane.numClusters(); ++icluster) {
-      Pair pair = {&plane.getState(istate), plane.getCluster(icluster)};
+  for (Index istate = 0; istate < sensorEvent.numStates(); ++istate) {
+    for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
+      Pair pair = {&sensorEvent.getState(istate),
+                   sensorEvent.getCluster(icluster)};
 
       if ((m_distSquaredMax < 0) || (pair.d2() < m_distSquaredMax)) {
         pairs.push_back(pair);

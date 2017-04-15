@@ -22,9 +22,9 @@ class Sensor;
 namespace Storage {
 class Cluster;
 class Event;
-class Plane;
 class Track;
 class TrackState;
+class SensorEvent;
 } // namespace Storage
 
 namespace Io {
@@ -47,7 +47,7 @@ private:
     int16_t nTracks;
 
     void addToTree(TTree* tree);
-    void set(const Storage::Event& e, const Storage::Plane& s);
+    void set(const Storage::Event& e, const Storage::SensorEvent& s);
   };
   struct TrackData {
     float u, v, du, dv;

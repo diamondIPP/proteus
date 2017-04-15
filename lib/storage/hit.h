@@ -53,9 +53,8 @@ private:
   double m_value;           // Time over threshold, typically
   const Cluster* m_cluster; // The cluster containing this hit
 
-  friend class Plane;     // Access set plane method
-  friend class Event;     // Access cluster index
-  friend class StorageIO; // Constructor and destructor
+  friend class Event;       // Access cluster index
+  friend class SensorEvent; // Access set plane method
 };
 
 std::ostream& operator<<(std::ostream& os, const Hit& hit);

@@ -15,9 +15,9 @@ class Sensor;
 namespace Storage {
 
 class Hit;
+class SensorEvent;
 class Track;
 class TrackState;
-class Plane;
 
 class Cluster {
 public:
@@ -84,16 +84,15 @@ private:
   std::vector<Hit*> m_hits; // List of hits composing the cluster
 
   int m_index;
-  Plane* m_plane;       //<! The plane containing the cluster
-  const Track* m_track; // The track containing this cluster
+  SensorEvent* m_sensorEvent; //<! The plane containing the cluster
+  const Track* m_track;       // The track containing this cluster
   const TrackState* m_matchedState;
   const Track* m_matched; // Track matched to this cluster in DUT analysis (not
                           // stored)
   double m_matchDistance; // Distance to matched track
 
-  friend class Plane;     // Needs to use the set plane method
-  friend class Event;     // Needs access the constructor and destructor
-  friend class StorageIO; // Needs access to the track index
+  friend class Event;       // Needs access the constructor and destructor
+  friend class SensorEvent; // Needs to use the set plane method
 };
 
 std::ostream& operator<<(std::ostream& os, const Cluster& cluster);

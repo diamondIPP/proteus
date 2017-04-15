@@ -119,9 +119,9 @@ std::string Analyzers::Efficiency::name() const
 
 void Analyzers::Efficiency::analyze(const Storage::Event& event)
 {
-  const Storage::Plane& localEvent = *event.getPlane(m_sensor.id());
-  for (Index istate = 0; istate < localEvent.numStates(); ++istate) {
-    const Storage::TrackState& state = localEvent.getState(istate);
+  const Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensor.id());
+  for (Index istate = 0; istate < sensorEvent.numStates(); ++istate) {
+    const Storage::TrackState& state = sensorEvent.getState(istate);
     auto posPixel = m_sensor.transformLocalToPixel(state.offset());
 
     // ignore tracks that fall within a masked area
@@ -143,8 +143,8 @@ void Analyzers::Efficiency::analyze(const Storage::Event& event)
       regionHists.fill(state, posPixel);
     }
   }
-  for (Index icluster = 0; icluster < localEvent.numClusters(); ++icluster) {
-    const Storage::Cluster& cluster = *localEvent.getCluster(icluster);
+  for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
+    const Storage::Cluster& cluster = *sensorEvent.getCluster(icluster);
     m_sensorHists.fill(cluster);
     if (cluster.region() != kInvalidIndex)
       m_regionsHists[cluster.region()].fill(cluster);

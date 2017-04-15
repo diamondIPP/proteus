@@ -7,11 +7,12 @@
 #include <string>
 #include <vector>
 
-#include "storage/plane.h"
+#include "storage/sensorevent.h"
 #include "storage/track.h"
 
 namespace Storage {
 
+/** An event containing all global and local information for one trigger. */
 class Event {
 public:
   Event(size_t sensors);
@@ -29,9 +30,9 @@ public:
   int32_t triggerPhase() const { return m_triggerPhase; }
   bool invalid() const { return m_invalid; }
 
-  Index numPlanes() const { return static_cast<Index>(m_planes.size()); }
-  Plane* getPlane(Index i) { return &m_planes.at(i); }
-  const Plane* getPlane(Index i) const { return &m_planes.at(i); }
+  Index numSensorEvents() const { return static_cast<Index>(m_sensors.size()); }
+  SensorEvent& getSensorEvent(Index i) { return m_sensors.at(i); }
+  const SensorEvent& getSensorEvent(Index i) const { return m_sensors.at(i); }
 
   /** Add track to the event and fix the cluster to track association. */
   void addTrack(std::unique_ptr<Track> track);
@@ -52,7 +53,7 @@ private:
   int32_t m_triggerPhase;
   bool m_invalid;
 
-  std::vector<Plane> m_planes;
+  std::vector<SensorEvent> m_sensors;
   std::vector<std::unique_ptr<Track>> m_tracks;
 };
 

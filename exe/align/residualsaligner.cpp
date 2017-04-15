@@ -58,9 +58,9 @@ std::string Alignment::ResidualsAligner::name() const
 
 void Alignment::ResidualsAligner::analyze(const Storage::Event& event)
 {
-  for (auto hists = m_hists.begin(); hists != m_hists.end(); ++hists) {
-    Index sensorId = hists->sensorId;
-    const Storage::Plane& sensorEvent = *event.getPlane(sensorId);
+  for (const auto& hists : m_hists) {
+    Index sensorId = hists.sensorId;
+    const Storage::SensorEvent& sensorEvent = event.getSensorEvent(sensorId);
 
     for (Index iclu = 0; iclu < sensorEvent.numClusters(); ++iclu) {
       const Storage::Cluster& cluster = *sensorEvent.getCluster(iclu);
@@ -93,9 +93,9 @@ void Alignment::ResidualsAligner::analyze(const Storage::Event& event)
       double dv = (rv + rv * v * v + ru * u * v) / f;
       double dgamma = (rv * u - ru * v) / f;
 
-      hists->corrU->Fill(du);
-      hists->corrV->Fill(dv);
-      hists->corrGamma->Fill(dgamma);
+      hists.corrU->Fill(du);
+      hists.corrV->Fill(dv);
+      hists.corrGamma->Fill(dgamma);
     }
   }
   m_tracks->analyze(event);

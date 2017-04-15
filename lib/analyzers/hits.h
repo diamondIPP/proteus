@@ -14,7 +14,7 @@ class Device;
 class Sensor;
 } // namespace Mechanics
 namespace Storage {
-class Plane;
+class SensorEvent;
 }
 
 namespace Analyzers {
@@ -27,7 +27,7 @@ public:
              const int timeMax,
              const int valueMax);
 
-  void analyze(const Storage::Plane& sensorEvent);
+  void analyze(const Storage::SensorEvent& sensorEvent);
   void finalize();
 
 private:

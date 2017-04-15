@@ -42,13 +42,14 @@ static bool compatible(const Storage::Cluster* cluster, const Storage::Hit* hit)
   return (cluster->region() == hit->region()) && connected(cluster, hit);
 }
 
-static void cluster(std::vector<Storage::Hit*>& hits, Storage::Plane& plane)
+static void cluster(std::vector<Storage::Hit*>& hits,
+                    Storage::SensorEvent& sensorEvent)
 {
   while (!hits.empty()) {
     Storage::Hit* seed = hits.back();
     hits.pop_back();
 
-    Storage::Cluster* cluster = plane.newCluster();
+    Storage::Cluster* cluster = sensorEvent.newCluster();
     cluster->addHit(seed);
 
     while (!hits.empty()) {
@@ -78,22 +79,22 @@ std::string Processors::BaseClusterizer::name() const { return m_name; }
 void Processors::BaseClusterizer::process(Storage::Event& event) const
 {
   std::vector<Storage::Hit*> hits;
-  Storage::Plane& plane = *event.getPlane(m_sensor.id());
+  auto& sensorEvent = event.getSensorEvent(m_sensor.id());
 
   // don't try to cluster masked pixels
   hits.clear();
-  hits.reserve(plane.numHits());
-  for (Index ihit = 0; ihit < plane.numHits(); ++ihit) {
-    Storage::Hit* hit = plane.getHit(ihit);
+  hits.reserve(sensorEvent.numHits());
+  for (Index ihit = 0; ihit < sensorEvent.numHits(); ++ihit) {
+    Storage::Hit* hit = sensorEvent.getHit(ihit);
     if (m_sensor.pixelMask().isMasked(hit->col(), hit->row()))
       continue;
     hits.push_back(hit);
   }
-  cluster(hits, plane);
+  cluster(hits, sensorEvent);
 
   // estimate cluster properties
-  for (Index icluster = 0; icluster < plane.numClusters(); ++icluster)
-    estimateProperties(*plane.getCluster(icluster));
+  for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster)
+    estimateProperties(*sensorEvent.getCluster(icluster));
 }
 
 Processors::BinaryClusterizer::BinaryClusterizer(

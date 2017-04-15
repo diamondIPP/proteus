@@ -22,7 +22,7 @@ std::string Processors::ApplyRegions::name() const
 
 void Processors::ApplyRegions::process(Storage::Event& event) const
 {
-  Storage::Plane& sensorEvent = *event.getPlane(m_sensor.id());
+  Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensor.id());
 
   // TODO 2017-02 msmk: check whether is better (faster) to iterate first
   //                    over hits or first over regions
