@@ -83,7 +83,7 @@ void Storage::Cluster::setTrack(const Storage::Track* track)
 
 void Storage::Cluster::addHit(Storage::Hit* hit)
 {
-  hit->setCluster(this);
+  hit->setCluster(m_index);
   m_hits.push_back(hit);
 }
 

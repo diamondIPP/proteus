@@ -13,7 +13,7 @@ Storage::Hit::Hit(int col, int row, float time, float value)
     , m_time(time)
     , m_value(value)
     , m_region(kInvalidIndex)
-    , m_cluster(nullptr)
+    , m_cluster(kInvalidIndex)
 {
 }
 
@@ -23,9 +23,9 @@ void Storage::Hit::setPhysicalAddress(int col, int row)
   m_row = row;
 }
 
-void Storage::Hit::setCluster(const Storage::Cluster* cluster)
+void Storage::Hit::setCluster(Index cluster)
 {
-  assert(!m_cluster && "Hit: can't cluster an already clustered hit.");
+  assert((m_cluster == kInvalidIndex) && "hit can only be in one cluster");
   m_cluster = cluster;
 }
 

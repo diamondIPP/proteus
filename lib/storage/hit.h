@@ -8,8 +8,6 @@
 
 namespace Storage {
 
-class Cluster;
-
 /** A sensor hit identified by its address, time, and value.
  *
  * To support devices where the recorded hit address does not directly
@@ -27,6 +25,8 @@ public:
   void setPhysicalAddress(int col, int row);
   /** Set the region id. */
   void setRegion(Index region) { m_region = region; }
+  /** Set the cluster index. */
+  void setCluster(Index cluster);
 
   Index region() const { return m_region; }
   int digitalCol() const { return m_digitalCol; }
@@ -41,8 +41,8 @@ public:
   /** The area of the hit in pixel coordinates. */
   Area areaPixel() const;
 
-  void setCluster(const Cluster* cluster);
-  const Cluster* cluster() const { return m_cluster; }
+  bool isInCluster() const { return m_cluster != kInvalidIndex; }
+  Index cluster() const { return m_cluster; }
 
 private:
   int m_digitalCol, m_digitalRow;
@@ -50,7 +50,7 @@ private:
   float m_time;  // Level 1 accept, typically
   float m_value; // Time over threshold, typically
   Index m_region;
-  const Cluster* m_cluster; // The cluster containing this hit
+  Index m_cluster;
 };
 
 std::ostream& operator<<(std::ostream& os, const Hit& hit);

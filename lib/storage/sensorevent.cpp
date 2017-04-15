@@ -27,8 +27,8 @@ void Storage::SensorEvent::print(std::ostream& os,
     for (size_t ihit = 0; ihit < m_hits.size(); ++ihit) {
       const Hit& hit = *m_hits[ihit];
       os << prefix << "  hit " << ihit << ": " << hit;
-      if (hit.cluster())
-        os << " cluster=" << hit.cluster()->index();
+      if (hit.isInCluster())
+        os << " cluster=" << hit.cluster();
       os << '\n';
     }
   }
