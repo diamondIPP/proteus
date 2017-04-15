@@ -21,6 +21,9 @@ class Hit {
 public:
   using Area = Utils::Box<2, int>;
 
+  Hit();
+  Hit(Index col, Index row, double time, double value);
+
   /** Set only the physical address leaving the digital address untouched. */
   void setPhysicalAddress(Index col, Index row);
   /** Set the region id. */
@@ -43,46 +46,16 @@ public:
   const Cluster* cluster() const { return m_cluster; }
 
 private:
-  Hit(); // Hits memory is managed by the event class
-  Hit(Index col, Index row, double time, double value);
-
   Index m_digitalCol, m_digitalRow;
   Index m_col, m_row;
   Index m_region;
   double m_time;            // Level 1 accept, typically
   double m_value;           // Time over threshold, typically
   const Cluster* m_cluster; // The cluster containing this hit
-
-  friend class Event;       // Access cluster index
-  friend class SensorEvent; // Access set plane method
 };
 
 std::ostream& operator<<(std::ostream& os, const Hit& hit);
 
 } // namespace Storage
-
-inline Storage::Hit::Hit(Index col, Index row, double time, double value)
-    : m_digitalCol(col)
-    , m_digitalRow(row)
-    , m_col(col)
-    , m_row(row)
-    , m_region(kInvalidIndex)
-    , m_time(time)
-    , m_value(value)
-    , m_cluster(nullptr)
-{
-}
-
-inline void Storage::Hit::setPhysicalAddress(Index col, Index row)
-{
-  m_col = col;
-  m_row = row;
-}
-
-inline Storage::Hit::Area Storage::Hit::areaPixel() const
-{
-  return Area(Area::AxisInterval(m_col, m_col + 1),
-              Area::AxisInterval(m_row, m_row + 1));
-}
 
 #endif // PT_HIT_H
