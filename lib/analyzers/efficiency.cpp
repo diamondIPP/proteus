@@ -137,8 +137,8 @@ void Analyzers::Efficiency::analyze(const Storage::Event& event)
       if (!regionHists.areaPixel.isInside(posPixel.x(), posPixel.y()))
         continue;
       // ignore tracks that are matched to a cluster in a different region
-      if (state.matchedCluster() &&
-          (state.matchedCluster()->region() != iregion))
+      if ((state.isMatched()) &&
+          (sensorEvent.getCluster(state.matchedCluster())->region() != iregion))
         continue;
       regionHists.fill(state, posPixel);
     }
@@ -154,7 +154,7 @@ void Analyzers::Efficiency::analyze(const Storage::Event& event)
 void Analyzers::Efficiency::Hists::fill(const Storage::TrackState& state,
                                         const XYPoint& posPixel)
 {
-  bool isMatched = state.matchedCluster();
+  bool isMatched = state.isMatched();
 
   total->Fill(posPixel.x(), posPixel.y());
   if (isMatched)

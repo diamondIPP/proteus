@@ -35,7 +35,7 @@ void Tracking::StraightFitter::process(Storage::Event& event) const
       // local fit for correct errors in the local frame
       Storage::TrackState state =
           fitTrackLocal(track, m_device.geometry(), sensorId);
-      state.setTrack(&track);
+      state.setTrack(itrack);
       sensorEvent.addState(std::move(state));
     }
   }

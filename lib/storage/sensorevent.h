@@ -59,7 +59,9 @@ inline Storage::Hit* Storage::SensorEvent::addHit(HitParams&&... params)
 
 inline void Storage::SensorEvent::addState(TrackState&& state)
 {
+  Index stateId = m_states.size();
   m_states.emplace_back(new TrackState(std::forward<TrackState>(state)));
+  m_states.back()->m_index = stateId;
 }
 
 #endif // PT_SENSOREVENT_H

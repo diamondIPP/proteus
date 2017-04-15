@@ -93,10 +93,11 @@ void Analyzers::Distances::analyze(const Storage::Event& event)
   }
   // matched pairs
   for (Index istate = 0; istate < sensorEvent.numStates(); ++istate) {
-    const Storage::TrackState& state = sensorEvent.getState(istate);
-    if (state.matchedCluster()) {
-      m_match.fill(state.matchedCluster()->posLocal() - state.offset(),
-                   state.matchedCluster()->covLocal() + state.covOffset());
+    const auto& state = sensorEvent.getState(istate);
+    if (state.isMatched()) {
+      const auto& cluster = *sensorEvent.getCluster(state.matchedCluster());
+      m_match.fill(cluster.posLocal() - state.offset(),
+                   cluster.covLocal() + state.covOffset());
     }
   }
 }

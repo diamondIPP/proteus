@@ -47,8 +47,8 @@ void Storage::SensorEvent::print(std::ostream& os,
     for (size_t istate = 0; istate < m_states.size(); ++istate) {
       const TrackState& state = *m_states[istate];
       os << prefix << "  state " << istate << ": " << state;
-      if (state.track())
-        os << " track=" << state.track()->index();
+      if (state.track() != kInvalidIndex)
+        os << " track=" << state.track();
       os << '\n';
     }
   }

@@ -51,7 +51,6 @@ void Processors::Matcher::process(Storage::Event& event) const
         possibleMatches.emplace_back(PossibleMatch{istate, icluster, d2});
     }
   }
-
   // sort by pair distance, closest distance first
   std::sort(possibleMatches.begin(), possibleMatches.end(),
             [](const auto& a, const auto& b) { return (a.d2 < b.d2); });
@@ -63,6 +62,6 @@ void Processors::Matcher::process(Storage::Event& event) const
     matchedStates.insert(match.state);
     matchedClusters.insert(match.cluster);
     sensorEvent.getCluster(match.cluster)->setMatchedState(match.state);
-    // TODO 2017-06-08 msmk: set matched cluster for state
+    sensorEvent.getState(match.state).setMatchedCluster(match.cluster);
   }
 }
