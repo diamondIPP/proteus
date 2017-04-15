@@ -21,8 +21,6 @@ Storage::Cluster::Cluster(Index sensorId_, Index index_)
     , m_index(index_)
     , m_track(NULL)
     , m_matchedState(NULL)
-    , m_matched(NULL)
-    , m_matchDistance(-1)
 {
 }
 

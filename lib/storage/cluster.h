@@ -60,13 +60,8 @@ public:
 
   void setTrack(const Track* track);
   const Track* track() const { return m_track; }
-
   void setMatchedState(const TrackState* state) { m_matchedState = state; }
   const TrackState* matchedState() const { return m_matchedState; }
-
-  void setMatchedTrack(const Track* track) { m_matched = track; }
-  bool hasMatchedTrack() const { return (m_matched != NULL); }
-  const Track* matchedTrack() const { return m_matched; }
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
@@ -86,9 +81,6 @@ private:
   Index m_index;
   const Track* m_track; // The track containing this cluster
   const TrackState* m_matchedState;
-  const Track* m_matched; // Track matched to this cluster in DUT analysis (not
-                          // stored)
-  double m_matchDistance; // Distance to matched track
 };
 
 std::ostream& operator<<(std::ostream& os, const Cluster& cluster);
