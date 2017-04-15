@@ -12,23 +12,24 @@ Storage::Hit::Hit()
     , m_row(-1)
     , m_time(-1)
     , m_value(-1)
+    , m_region(kInvalidIndex)
     , m_cluster(NULL)
 {
 }
 
-Storage::Hit::Hit(Index col, Index row, double time, double value)
+Storage::Hit::Hit(int col, int row, float time, float value)
     : m_digitalCol(col)
     , m_digitalRow(row)
     , m_col(col)
     , m_row(row)
-    , m_region(kInvalidIndex)
     , m_time(time)
     , m_value(value)
+    , m_region(kInvalidIndex)
     , m_cluster(nullptr)
 {
 }
 
-void Storage::Hit::setPhysicalAddress(Index col, Index row)
+void Storage::Hit::setPhysicalAddress(int col, int row)
 {
   m_col = col;
   m_row = row;

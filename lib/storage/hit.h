@@ -22,22 +22,22 @@ public:
   using Area = Utils::Box<2, int>;
 
   Hit();
-  Hit(Index col, Index row, double time, double value);
+  Hit(int col, int row, float time, float value);
 
   /** Set only the physical address leaving the digital address untouched. */
-  void setPhysicalAddress(Index col, Index row);
+  void setPhysicalAddress(int col, int row);
   /** Set the region id. */
   void setRegion(Index region) { m_region = region; }
 
   Index region() const { return m_region; }
-  Index digitalCol() const { return m_digitalCol; }
-  Index digitalRow() const { return m_digitalRow; }
-  Index col() const { return m_col; }
-  Index row() const { return m_row; }
+  int digitalCol() const { return m_digitalCol; }
+  int digitalRow() const { return m_digitalRow; }
+  int col() const { return m_col; }
+  int row() const { return m_row; }
   /** Return the pixel center position in pixel coordinates. */
   XYPoint posPixel() const { return XYPoint(col() + 0.5, row() + 0.5); }
-  double time() const { return m_time; }
-  double value() const { return m_value; }
+  float time() const { return m_time; }
+  float value() const { return m_value; }
 
   /** The area of the hit in pixel coordinates. */
   Area areaPixel() const;
@@ -46,11 +46,11 @@ public:
   const Cluster* cluster() const { return m_cluster; }
 
 private:
-  Index m_digitalCol, m_digitalRow;
-  Index m_col, m_row;
+  int m_digitalCol, m_digitalRow;
+  int m_col, m_row;
+  float m_time;  // Level 1 accept, typically
+  float m_value; // Time over threshold, typically
   Index m_region;
-  double m_time;            // Level 1 accept, typically
-  double m_value;           // Time over threshold, typically
   const Cluster* m_cluster; // The cluster containing this hit
 };
 
