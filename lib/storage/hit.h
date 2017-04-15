@@ -21,7 +21,6 @@ class Hit {
 public:
   using Area = Utils::Box<2, int>;
 
-  Hit();
   Hit(int col, int row, float time, float value);
 
   /** Set only the physical address leaving the digital address untouched. */

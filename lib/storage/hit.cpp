@@ -5,18 +5,6 @@
 
 #include "cluster.h"
 
-Storage::Hit::Hit()
-    : m_digitalCol(-1)
-    , m_digitalRow(-1)
-    , m_col(-1)
-    , m_row(-1)
-    , m_time(-1)
-    , m_value(-1)
-    , m_region(kInvalidIndex)
-    , m_cluster(NULL)
-{
-}
-
 Storage::Hit::Hit(int col, int row, float time, float value)
     : m_digitalCol(col)
     , m_digitalRow(row)
