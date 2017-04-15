@@ -13,11 +13,12 @@
 
 PT_SETUP_LOCAL_LOGGER(Cluster)
 
-Storage::Cluster::Cluster()
+Storage::Cluster::Cluster(Index sensorId_, Index index_)
     : m_cr(-1, -1)
     , m_time(-1)
     , m_value(-1)
-    , m_sensorEvent(NULL)
+    , m_sensorId(sensorId_)
+    , m_index(index_)
     , m_track(NULL)
     , m_matchedState(NULL)
     , m_matched(NULL)
@@ -31,10 +32,10 @@ void Storage::Cluster::setPixel(const XYPoint& cr, const SymMatrix2& cov)
   m_crCov = cov;
 }
 
-void Storage::Cluster::setPixel(double col,
-                                double row,
-                                double stdCol,
-                                double stdRow)
+void Storage::Cluster::setPixel(float col,
+                                float row,
+                                float stdCol,
+                                float stdRow)
 {
   m_cr.SetXY(col, row);
   m_crCov(0, 0) = stdCol * stdCol;
@@ -58,8 +59,6 @@ void Storage::Cluster::transform(const Mechanics::Sensor& sensor)
   m_xyz = sensor.transformLocalToGlobal(m_uv);
   m_xyzCov = ROOT::Math::Similarity(l2g.Sub<Matrix32>(0, 0), m_uvCov);
 }
-
-Index Storage::Cluster::sensorId() const { return m_sensorEvent->sensorId(); }
 
 Index Storage::Cluster::region() const
 {

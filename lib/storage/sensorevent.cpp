@@ -15,9 +15,7 @@ Storage::SensorEvent::SensorEvent(Index sensorId) : m_sensorId(sensorId) {}
 
 Storage::Cluster* Storage::SensorEvent::newCluster()
 {
-  m_clusters.emplace_back(new Cluster());
-  m_clusters.back()->m_index = m_clusters.size() - 1;
-  m_clusters.back()->m_sensorEvent = this;
+  m_clusters.emplace_back(new Cluster(m_sensorId, m_clusters.size() - 1));
   return m_clusters.back().get();
 }
 
