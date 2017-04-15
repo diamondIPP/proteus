@@ -19,7 +19,9 @@ namespace Storage {
  */
 class SensorEvent {
 public:
-  Index sensorId() const { return m_sensorId; }
+  SensorEvent(Index sensorId);
+
+  void clear();
 
   template <typename... HitParams>
   Hit* addHit(HitParams&&... params);
@@ -40,16 +42,10 @@ public:
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
-  SensorEvent(Index sensorId);
-
-  void clear();
-
   std::vector<std::unique_ptr<Hit>> m_hits;
   std::vector<std::unique_ptr<Cluster>> m_clusters;
   std::vector<std::unique_ptr<TrackState>> m_states;
   Index m_sensorId;
-
-  friend class Event;
 };
 
 } // namespace Storage

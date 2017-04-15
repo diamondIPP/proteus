@@ -4,14 +4,14 @@
 
 #include "storage/track.h"
 
+Storage::SensorEvent::SensorEvent(Index sensorId) : m_sensorId(sensorId) {}
+
 void Storage::SensorEvent::clear()
 {
-  m_states.clear();
-  m_clusters.clear();
   m_hits.clear();
+  m_clusters.clear();
+  m_states.clear();
 }
-
-Storage::SensorEvent::SensorEvent(Index sensorId) : m_sensorId(sensorId) {}
 
 Storage::Cluster* Storage::SensorEvent::newCluster()
 {
