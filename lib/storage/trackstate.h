@@ -26,7 +26,7 @@ class TrackState {
 public:
   TrackState();
   TrackState(const XYPoint& offset, const XYVector& slope = XYVector(0, 0));
-  TrackState(double u, double v, double dU = 0, double dV = 0);
+  TrackState(float u, float v, float dU = 0, float dV = 0);
 
   /** Set full covariance matrix from entries.
    *
@@ -36,8 +36,8 @@ public:
    */
   template <typename InputIterator>
   void setCov(InputIterator first);
-  void setCovU(double varOffset, double varSlope, double cov = 0);
-  void setCovV(double varOffset, double varSlope, double cov = 0);
+  void setCovU(float varOffset, float varSlope, float cov = 0);
+  void setCovV(float varOffset, float varSlope, float cov = 0);
 
   /** Covariance matrix of the full parameter vector. */
   const SymMatrix4& cov() const { return m_cov; }
