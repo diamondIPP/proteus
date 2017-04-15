@@ -88,7 +88,7 @@ std::string Analyzers::Residuals::name() const { return "Residuals"; }
 void Analyzers::Residuals::analyze(const Storage::Event& event)
 {
   for (Index itrack = 0; itrack < event.numTracks(); itrack++) {
-    const Storage::Track& track = *event.getTrack(itrack);
+    const Storage::Track& track = event.getTrack(itrack);
 
     for (Index icluster = 0; icluster < track.numClusters(); ++icluster) {
       const Storage::Cluster& cluster = *track.getCluster(icluster);
@@ -125,7 +125,7 @@ std::string Analyzers::UnbiasedResiduals::UnbiasedResiduals::name() const
 void Analyzers::UnbiasedResiduals::analyze(const Storage::Event& event)
 {
   for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
-    const Storage::Track& track = *event.getTrack(itrack);
+    const Storage::Track& track = event.getTrack(itrack);
     for (Index icluster = 0; icluster < track.numClusters(); ++icluster) {
       const Storage::Cluster& cluster = *track.getCluster(icluster);
       // refit w/o current sensor information

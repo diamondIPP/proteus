@@ -35,8 +35,8 @@ public:
   /** Add track to the event and fix the cluster to track association. */
   void addTrack(std::unique_ptr<Track> track);
   Index numTracks() const { return static_cast<Index>(m_tracks.size()); }
-  Track* getTrack(Index i) { return m_tracks.at(i).get(); }
-  const Track* getTrack(Index i) const { return m_tracks.at(i).get(); }
+  Track& getTrack(Index i) { return *m_tracks.at(i).get(); }
+  const Track& getTrack(Index i) const { return *m_tracks.at(i).get(); }
 
   size_t getNumHits() const;
   size_t getNumClusters() const;

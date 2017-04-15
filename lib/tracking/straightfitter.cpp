@@ -25,7 +25,7 @@ std::string Tracking::StraightFitter::name() const { return "StraightFitter"; }
 void Tracking::StraightFitter::process(Storage::Event& event) const
 {
   for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
-    Storage::Track& track = *event.getTrack(itrack);
+    Storage::Track& track = event.getTrack(itrack);
 
     // global fit for common goodness-of-fit
     fitTrackGlobal(track);

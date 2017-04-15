@@ -70,8 +70,9 @@ void Alignment::ResidualsAligner::analyze(const Storage::Event& event)
         continue;
 
       // refit track w/o selected sensor for unbiased residuals
-      Storage::TrackState state = Tracking::fitTrackLocalUnbiased(
-          *track, m_device.geometry(), sensorId);
+      const Storage::Track& track = event.getTrack(cluster.trackId());
+      Storage::TrackState state = Processors::fitTrackLocalUnbiased(
+          track, m_device.geometry(), sensorId);
 
       double u = state.offset().x();
       double v = state.offset().y();
