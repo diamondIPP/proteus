@@ -29,6 +29,13 @@ void Storage::Event::clear(uint64_t frame, uint64_t timestamp)
   m_tracks.clear();
 }
 
+void Storage::Event::setTrigger(int32_t info, int32_t offset, int32_t phase)
+{
+  m_triggerInfo = info;
+  m_triggerOffset = offset;
+  m_triggerPhase = phase;
+}
+
 void Storage::Event::addTrack(std::unique_ptr<Track> track)
 {
   m_tracks.emplace_back(std::move(track));

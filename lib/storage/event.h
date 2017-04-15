@@ -18,9 +18,7 @@ public:
   Event(size_t sensors);
 
   void clear(uint64_t frame, uint64_t timestamp);
-  void setTriggerInfo(int32_t info) { m_triggerInfo = info; }
-  void setTriggerOffset(int32_t offset) { m_triggerOffset = offset; }
-  void setTriggerPhase(int32_t phase) { m_triggerPhase = phase; }
+  void setTrigger(int32_t info, int32_t offset, int32_t phase);
   void setInvalid(bool value) { m_invalid = value; }
 
   uint64_t frame() const { return m_frame; }
