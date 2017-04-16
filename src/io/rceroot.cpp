@@ -367,7 +367,7 @@ void Io::RceRootWriter::append(const Storage::Event& event)
 
   // tracks
   if (m_tracks) {
-    if (MAX_TRACKS < event.numTracks())
+    if (kMaxTracks < event.numTracks())
       FAIL("tracks exceed MAX_TRACKS");
     numTracks = event.numTracks();
     for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
@@ -391,7 +391,7 @@ void Io::RceRootWriter::append(const Storage::Event& event)
 
     // local hits
     if (trees.hits) {
-      if (MAX_HITS < localEvent->numHits())
+      if (kMaxHits < localEvent->numHits())
         FAIL("hits exceed MAX_HITS");
       numHits = localEvent->numHits();
       for (Index ihit = 0; ihit < localEvent->numHits(); ++ihit) {
@@ -407,7 +407,7 @@ void Io::RceRootWriter::append(const Storage::Event& event)
 
     // local clusters
     if (trees.clusters) {
-      if (MAX_HITS < localEvent->numClusters())
+      if (kMaxHits < localEvent->numClusters())
         FAIL("clusters exceed MAX_HITS");
       numClusters = localEvent->numClusters();
       for (Index iclu = 0; iclu < localEvent->numClusters(); ++iclu) {
@@ -424,7 +424,7 @@ void Io::RceRootWriter::append(const Storage::Event& event)
 
     // local track states
     if (trees.intercepts) {
-      if (MAX_TRACKS < localEvent->numStates())
+      if (kMaxTracks < localEvent->numStates())
         FAIL("intercepts exceed MAX_TRACKS");
       numIntercepts = localEvent->numStates();
       for (Index istate = 0; istate < localEvent->numStates(); ++istate) {

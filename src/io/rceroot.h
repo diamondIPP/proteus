@@ -23,8 +23,8 @@ protected:
    * hit information. BUT these arrays are generated ONLY ONCE and re-used
    * to load events. Vectors could have been used in the ROOT file format, but
    * they would need to be constructed at each event reading step. */
-  static constexpr Index MAX_HITS = 10000;
-  static constexpr Index MAX_TRACKS = 10000;
+  static constexpr Index kMaxHits = 1 << 14;
+  static constexpr Index kMaxTracks = 1 << 14;
 
   struct SensorTrees {
     TTree* hits = nullptr;
@@ -51,36 +51,36 @@ protected:
   Bool_t invalid;
   // global track state and info
   Int_t numTracks;
-  Double_t trackChi2[MAX_TRACKS];
-  Int_t trackDof[MAX_TRACKS];
-  Double_t trackX[MAX_TRACKS];
-  Double_t trackY[MAX_TRACKS];
-  Double_t trackSlopeX[MAX_TRACKS];
-  Double_t trackSlopeY[MAX_TRACKS];
-  Double_t trackCov[MAX_TRACKS][10];
+  Double_t trackChi2[kMaxTracks];
+  Int_t trackDof[kMaxTracks];
+  Double_t trackX[kMaxTracks];
+  Double_t trackY[kMaxTracks];
+  Double_t trackSlopeX[kMaxTracks];
+  Double_t trackSlopeY[kMaxTracks];
+  Double_t trackCov[kMaxTracks][10];
   // local hits
   Int_t numHits;
-  Int_t hitPixX[MAX_HITS];
-  Int_t hitPixY[MAX_HITS];
-  Int_t hitTiming[MAX_HITS];
-  Int_t hitValue[MAX_HITS];
-  Int_t hitInCluster[MAX_HITS];
+  Int_t hitPixX[kMaxHits];
+  Int_t hitPixY[kMaxHits];
+  Int_t hitTiming[kMaxHits];
+  Int_t hitValue[kMaxHits];
+  Int_t hitInCluster[kMaxHits];
   // local clusters
   Int_t numClusters;
-  Double_t clusterCol[MAX_HITS];
-  Double_t clusterRow[MAX_HITS];
-  Double_t clusterVarCol[MAX_HITS];
-  Double_t clusterVarRow[MAX_HITS];
-  Double_t clusterCovColRow[MAX_HITS];
-  Int_t clusterTrack[MAX_HITS];
+  Double_t clusterCol[kMaxHits];
+  Double_t clusterRow[kMaxHits];
+  Double_t clusterVarCol[kMaxHits];
+  Double_t clusterVarRow[kMaxHits];
+  Double_t clusterCovColRow[kMaxHits];
+  Int_t clusterTrack[kMaxHits];
   // local track states
   Int_t numIntercepts;
-  Double_t interceptU[MAX_TRACKS];
-  Double_t interceptV[MAX_TRACKS];
-  Double_t interceptSlopeU[MAX_TRACKS];
-  Double_t interceptSlopeV[MAX_TRACKS];
-  Double_t interceptCov[MAX_TRACKS][10];
-  Int_t interceptTrack[MAX_TRACKS];
+  Double_t interceptU[kMaxTracks];
+  Double_t interceptV[kMaxTracks];
+  Double_t interceptSlopeU[kMaxTracks];
+  Double_t interceptSlopeV[kMaxTracks];
+  Double_t interceptCov[kMaxTracks][10];
+  Int_t interceptTrack[kMaxTracks];
 };
 
 /** Read events from a RCE ROOT file. */
