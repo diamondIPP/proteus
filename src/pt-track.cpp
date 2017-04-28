@@ -28,8 +28,8 @@ int main(int argc, char const* argv[])
   using namespace Analyzers;
   using namespace Processors;
 
-  toml::Table defaults = {{"search_sigma_max", 5.},
-                          {"num_points_min", 3},
+  toml::Table defaults = {{"num_points_min", 3},
+                          {"search_sigma_max", 5.},
                           {"reduced_chi2_max", -1.}};
   Application app("track", "preprocess, cluster, and track", defaults);
   app.initialize(argc, argv);
@@ -51,7 +51,7 @@ int main(int argc, char const* argv[])
   setupClusterizers(app.device(), loop);
   loop.addProcessor(std::make_shared<ApplyGeometry>(app.device()));
   loop.addProcessor(std::make_shared<TrackFinder>(
-      app.device(), sensorIds, searchSigmaMax, numPointsMin, redChi2Max));
+      app.device(), sensorIds, numPointsMin, searchSigmaMax, redChi2Max));
   loop.addAnalyzer(std::make_shared<EventInfo>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<HitInfo>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<ClusterInfo>(&app.device(), &hists));

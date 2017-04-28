@@ -19,21 +19,20 @@ using Storage::TrackState;
 PT_SETUP_GLOBAL_LOGGER
 
 Processors::TrackFinder::TrackFinder(const Mechanics::Device& device,
-                                     const std::vector<Index> sensors,
-                                     double searchSigmaMax,
+                                     std::vector<Index> sensors,
                                      Index numClustersMin,
+                                     double searchSigmaMax,
                                      double redChi2Max)
-    : m_sensors(sensors)
-    , m_numSeedSensors(1 + sensors.size() - numClustersMin)
-    // 2-d Mahalanobis distance peaks at 2 and not at 1
-    , m_d2Max(2 * searchSigmaMax * searchSigmaMax)
-    , m_redChi2Max(redChi2Max)
+    : m_sensorIds(std::move(sensors))
     , m_numClustersMin(numClustersMin)
+    // 2-d Mahalanobis distance peaks at 2 and not at 1
+    , m_d2Max((searchSigmaMax < 0) ? -1 : (2 * searchSigmaMax * searchSigmaMax))
+    , m_redChi2Max(redChi2Max)
     , m_beamDirection(device.geometry().beamDirection())
 {
-  if (sensors.size() < 2)
+  if (m_sensorIds.size() < 2)
     throw std::runtime_error("Need at least two sensors two find tracks");
-  if (sensors.size() < numClustersMin)
+  if (m_sensorIds.size() < m_numClustersMin)
     throw std::runtime_error(
         "Number of tracking sensors < minimum number of clusters");
   // TODO 2016-11 msmk: check that sensor ids are unique
@@ -45,30 +44,51 @@ void Processors::TrackFinder::process(Storage::Event& event) const
 {
   std::vector<TrackPtr> candidates;
 
-  // start a track search from each seed sensor.
+  // first iteration over all seed sensors
+  for (size_t i = 0; i < (1 + (m_sensorIds.size() - m_numClustersMin)); ++i) {
+    Plane& seedEvent = *event.getPlane(m_sensorIds[i]);
 
-  for (auto seed = m_sensors.begin();
-       seed != m_sensors.begin() + m_numSeedSensors; ++seed) {
-    Plane& seedSensorEvent = *event.getPlane(*seed);
-
-    // generate track candidates from unused clusters on the seed sensor
+    // generate track candidates from all unused clusters on the seed sensor
     candidates.clear();
-    for (Index icluster = 0; icluster < seedSensorEvent.numClusters();
-         ++icluster) {
-      Cluster* cluster = seedSensorEvent.getCluster(icluster);
+    for (Index icluster = 0; icluster < seedEvent.numClusters(); ++icluster) {
+      Cluster* cluster = seedEvent.getCluster(icluster);
       if (cluster->track())
         continue;
       candidates.push_back(TrackPtr(new Track()));
       candidates.back()->addCluster(cluster);
     }
-    // search for additional hits on all other sensors
-    for (auto id = m_sensors.begin(); id != m_sensors.end(); ++id) {
-      // ignore seed sensor to prevent adding the same cluster twice
-      if (*id == *seed)
-        continue;
-      searchSensor(*event.getPlane(*id), candidates);
+
+    // second iteration over remaining sensors to find compatible points
+    for (size_t j = i + 1; j < m_sensorIds.size(); ++j) {
+      searchSensor(*event.getPlane(m_sensorIds[j]), candidates);
+
+      // remove seeds that are already too short
+      Index remainingSensors = m_sensorIds.size() - (j + 1);
+      auto isLongEnough = [&](const TrackPtr& seed) {
+        return (m_numClustersMin <= (seed->numClusters() + remainingSensors));
+      };
+      auto beginBad =
+          std::partition(candidates.begin(), candidates.end(), isLongEnough);
+      candidates.erase(beginBad, candidates.end());
     }
+
+    // select final tracks after all possible candidates have been found to
+    // allow a more global selection of track candidates.
     selectTracks(candidates, event);
+
+    // TODO 2017-05-10 msmk:
+    // ideally we would find all candidates starting from all seed planes first
+    // and only then select the final tracks. this should avoid cases where
+    // a bad 6-hit track, e.g. with one noise hit, shadows a good 5-hit track
+    // with the same cluster content.
+    // this would require a combined metric that sorts both by number of hits
+    // and by track quality. defining such a combined metric is always a bit
+    // arbitrary and introduces additional corner cases that i would prefer
+    // to avoid.
+    // just sorting by chi2 along results yields 50% 5-hit tracks in the
+    // test samples; compared to 90% 6-hit tracks with the default algorithm.
+    // a single misaligned sensor will always result in a better track with
+    // less hits.
   }
 }
 
@@ -79,12 +99,12 @@ void Processors::TrackFinder::process(Storage::Event& event) const
 void Processors::TrackFinder::searchSensor(
     Storage::Plane& sensorEvent, std::vector<TrackPtr>& candidates) const
 {
-  // we must loop only over the initial candidates and not the added ones
+  // loop only over the initial candidates and not the added ones
   Index numTracks = static_cast<Index>(candidates.size());
   for (Index itrack = 0; itrack < numTracks; ++itrack) {
     Storage::Track& track = *candidates[itrack];
     Storage::Cluster* last = track.getCluster(track.numClusters() - 1);
-    Storage::Cluster* matched = NULL;
+    Storage::Cluster* matched = nullptr;
 
     for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
       Storage::Cluster* curr = sensorEvent.getCluster(icluster);
@@ -99,10 +119,10 @@ void Processors::TrackFinder::searchSensor(
                        curr->covGlobal().Sub<SymMatrix2>(0, 0);
       double d2 = mahalanobisSquared(cov, Vector2(delta.x(), delta.y()));
 
-      if (m_d2Max < d2)
+      if ((0 < m_d2Max) && (m_d2Max < d2))
         continue;
 
-      if (matched == NULL) {
+      if (matched == nullptr) {
         // first matching cluster
         matched = curr;
       } else {
@@ -131,37 +151,33 @@ struct CompareNumClusterChi2 {
   }
 };
 
-/** Add track selected by chi2 and unique cluster association to the event. */
+/** Add tracks selected by chi2 and unique cluster association to the event. */
 void Processors::TrackFinder::selectTracks(std::vector<TrackPtr>& candidates,
                                            Storage::Event& event) const
 {
-  // ensure chi2 is up-to-date
-  for (auto itrack = candidates.begin(); itrack != candidates.end(); ++itrack)
-    Processors::fitTrackGlobal(**itrack);
-
-  // sort by number of hits and chi2 value
+  // ensure chi2 value is up-to-date
+  std::for_each(candidates.begin(), candidates.end(),
+                [&](TrackPtr& t) { Processors::fitTrackGlobal(*t); });
+  // sort good candidates first, i.e. longest track and smallest chi2
   std::sort(candidates.begin(), candidates.end(), CompareNumClusterChi2());
 
   // fix cluster assignment starting w/ best tracks first
-  for (auto itrack = candidates.begin(); itrack != candidates.end(); ++itrack) {
-    Storage::Track& track = **itrack;
+  for (auto& track : candidates) {
 
     // apply track cuts
-    if ((0 < m_redChi2Max) && (m_redChi2Max < track.reducedChi2()))
-      continue;
-    if (track.numClusters() < m_numClustersMin)
+    if ((0 < m_redChi2Max) && (m_redChi2Max < track->reducedChi2()))
       continue;
 
     // check that all constituent clusters are still unused
     Index unique = 0;
-    for (Index icluster = 0; icluster < track.numClusters(); ++icluster)
-      unique += (track.getCluster(icluster)->track() ? 0 : 1);
+    for (Index icluster = 0; icluster < track->numClusters(); ++icluster)
+      unique += (track->getCluster(icluster)->track() ? 0 : 1);
     // some clusters are already used by other tracks
-    if (unique != track.numClusters())
+    if (unique != track->numClusters())
       continue;
 
     // this is a good track
-    track.freezeClusterAssociation();
-    event.addTrack(TrackPtr(itrack->release()));
+    track->freezeClusterAssociation();
+    event.addTrack(TrackPtr(track.release()));
   }
 }
