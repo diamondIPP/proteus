@@ -25,6 +25,9 @@ User-visible changes
     in a cluster in addition to the combined cluster information.
 *   An missing or unreadable pixel masks file is now considered a fatal
     error, consistent with how all other configuration files are handled.
+*   The ``search_sigma_max`` cut for finding tracks can be disabled by
+    setting it to a negative value. This enables an exhaustive track
+    search that considers all possible hit combinations.
 
 Bugfixes
 --------
