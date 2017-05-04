@@ -23,11 +23,17 @@ User-visible changes
 *   The ``activate.sh`` script is also copied during the ``install`` phase.
 *   The TTree-based match output stores the hit information for each hit
     in a cluster in addition to the combined cluster information.
+*   An missing or unreadable pixel masks file is now considered a fatal
+    error, consistent with how all other configuration files are handled.
 
 Bugfixes
 --------
 
 *   Example configurations in the test directory use valid toml syntax.
+*   Only the geometry file that is used is read in. When the geometry is
+    set via a command line flag, the geometry file specified in the
+    device file is not read. This also allows device files without a
+    predefined geometry.
 
 Internal changes
 ----------------

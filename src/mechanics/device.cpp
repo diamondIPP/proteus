@@ -28,50 +28,52 @@ Mechanics::Device::Device(const std::string& name,
   std::replace(m_spaceUnit.begin(), m_spaceUnit.end(), '\\', '#');
 }
 
-Mechanics::Device Mechanics::Device::fromFile(const std::string& path)
+Mechanics::Device Mechanics::Device::fromFile(const std::string& path,
+                                              const std::string& pathGeometry)
 {
   using namespace Utils::Config;
 
-  std::string dir = pathDirname(path);
+  auto dir = pathDirname(path);
   DEBUG("config base dir '", dir, "'");
 
   auto cfg = readConfig(path);
-  Device device = fromConfig(cfg);
+  INFO("read device from '", path, "'");
 
-  auto cfgGeo = cfg.find("geometry");
-  if (cfgGeo && cfgGeo->is<std::string>()) {
-    auto p = pathRebaseIfRelative(cfgGeo->as<std::string>(), dir);
-    device.setGeometry(Geometry::fromFile(p));
-    device.m_pathGeometry = p;
-  } else if (cfgGeo && cfgGeo->is<toml::Table>()) {
-    device.setGeometry(Geometry::fromConfig(*cfgGeo));
-  } else if (cfgGeo) {
-    FAIL("invalid 'geometry' setting. must be string or object.");
-  } else {
-    FAIL("missing 'geometry' setting");
-  }
+  Device dev = fromConfig(cfg);
 
+  // load all pixel masks
   auto cfgMask = cfg.find("pixel_masks");
-  // missing noise masks should not be treated as fatal errors
-  // allow overlay of multiple noise masks
   if (cfgMask && cfgMask->is<std::vector<std::string>>()) {
     for (const auto& path : cfgMask->as<std::vector<std::string>>()) {
-      try {
-        auto fullPath = pathRebaseIfRelative(path, dir);
-        device.applyPixelMasks(PixelMasks::fromFile(fullPath));
-      } catch (const std::exception& e) {
-        ERROR(e.what());
-      }
+      auto fullPath = pathRebaseIfRelative(path, dir);
+      dev.applyPixelMasks(PixelMasks::fromFile(fullPath));
     }
   } else if (cfgMask && cfgMask->is<toml::Table>()) {
-    device.applyPixelMasks(PixelMasks::fromConfig(*cfgMask));
+    dev.applyPixelMasks(PixelMasks::fromConfig(*cfgMask));
   } else if (cfgMask) {
     // the pixel_masks settings exists but does not have the right type. just
     // a missing pixel_masks settings is ok, but this must be fatal mistake.
-    FAIL("invalid 'pixel_masks' setting. must be list of paths or object.");
+    FAIL("invalid 'pixel_masks' setting. must be array of strings or object.");
   }
-  INFO("read device from '", path, "'");
-  return device;
+
+  // load geometry
+  if (!pathGeometry.empty()) {
+    dev.setGeometry(Geometry::fromFile(pathGeometry));
+  } else {
+    auto cfgGeo = cfg.find("geometry");
+    if (cfgGeo && cfgGeo->is<std::string>()) {
+      auto p = pathRebaseIfRelative(cfgGeo->as<std::string>(), dir);
+      dev.setGeometry(Geometry::fromFile(p));
+    } else if (cfgGeo && cfgGeo->is<toml::Table>()) {
+      dev.setGeometry(Geometry::fromConfig(*cfgGeo));
+    } else if (cfgGeo) {
+      FAIL("invalid 'geometry' setting. must be string or object.");
+    } else {
+      FAIL("missing 'geometry' setting");
+    }
+  }
+
+  return dev;
 }
 
 Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
@@ -196,14 +198,9 @@ void Mechanics::Device::print(std::ostream& os, const std::string& prefix) const
     getSensor(sensorId)->print(os, prefix + "  ");
   }
   os << prefix << "geometry:\n";
-  if (!m_pathGeometry.empty())
-    os << prefix << "  path: " << m_pathGeometry << '\n';
   m_geometry.print(os, prefix + "  ");
   os << prefix << "noise mask:\n";
-  if (!m_pathNoiseMask.empty())
-    os << prefix << "  path: " << m_pathNoiseMask << '\n';
   m_pixelMasks.print(os, prefix + "  ");
-
   os.flush();
 }
 
