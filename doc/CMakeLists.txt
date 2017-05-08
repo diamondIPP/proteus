@@ -10,6 +10,8 @@ else()
 endif()
 
 set(DOC_SRC basic_steps.rst
+            changelog.rst
+            commands.rst
             configuration_files.rst
             contribution_guide.rst
             index.rst)
