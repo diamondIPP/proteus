@@ -6,5 +6,6 @@ Proteus --- Pixel telescope reconstruction
    
    changelog
    basic_steps
-   configuration_files
+   commands
+   configuration
    contribution_guide
