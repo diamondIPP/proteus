@@ -4,6 +4,8 @@ project(Proteus CXX)
 
 set(Proteus_VERSION v1.1.3)
 
+option(PROTEUS_ENABLE_DOC "Enable the documentation build" OFF)
+
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
@@ -17,7 +19,9 @@ include(RequireCXX11)
 
 include_directories(external/tinytoml/include)
 
-add_subdirectory(doc)
+if(PROTEUS_ENABLE_DOC)
+  add_subdirectory(doc)
+endif()
 add_subdirectory(src)
 
 # activation script to use the build directory directly
