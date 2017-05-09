@@ -108,7 +108,7 @@ run000875_align:
   script:
     - cd test
     - ./download_data.py
-    - ./run_tel_align.sh 875 -n 100000 --no-progress
+    - ./run_tel_align.sh 875 -n 20000 --no-progress
 
 run000875_analysis:
   stage: test
@@ -127,8 +127,8 @@ run001066_noisescan:
   script:
     - cd test
     - ./download_data.py
-    - ./run_tel_noisescan.sh 1066 --no-progress
-    - ./run_dut0_noisescan.sh 1066 --no-progress
+    - ./run_tel_noisescan.sh 1066 -n 100000 --no-progress
+    - ./run_dut0_noisescan.sh 1066 -n 100000 --no-progress
 
 run001066_align:
   stage: test
@@ -137,8 +137,8 @@ run001066_align:
   script:
     - cd test
     - ./download_data.py
-    - ./run_tel_align.sh 1066 --no-progress
-    - ./run_dut_align.sh 1066 --no-progress
+    - ./run_tel_align.sh 1066 -n 20000 --no-progress
+    - ./run_dut_align.sh 1066 -n 20000 --no-progress
 
 run001066_analysis:
   stage: test
@@ -147,5 +147,5 @@ run001066_analysis:
   script:
     - cd test
     - ./download_data.py
-    - ./run_track.sh 1066 --no-progress
+    - ./run_track.sh 1066 -n 100000 --no-progress
     - ./run_match.sh 1066 --no-progress
