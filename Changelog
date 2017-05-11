@@ -43,6 +43,8 @@ Internal changes
     ported to the new APIs in the future.
 *   Fully replace ``SingleAnalyzer`` with ``Analyzer`` interface.
 *   Clean up event loop specific timing measurements and event statistics.
+*   Enabling the documentation building must be explicitely requested by
+    addding ``-DPROTEUS_ENABLE_DOC=on`` to the cmake commandline.
 
 v1.1.3 (2017-03-21)
 ===================

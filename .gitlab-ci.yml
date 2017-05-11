@@ -77,7 +77,7 @@ doc:
   script:
     - mkdir build
     - cd build
-    - cmake -GNinja ..
+    - cmake -GNinja -DPROTEUS_ENABLE_DOC=on ..
     - cmake --build . -- doc
   artifacts:
     paths:
