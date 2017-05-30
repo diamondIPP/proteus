@@ -5,7 +5,7 @@
 #include "utils/definitions.h"
 
 namespace Mechanics {
-class Sensor;
+class Geometry;
 }
 
 namespace Processors {
@@ -19,21 +19,24 @@ void fitTrack(Storage::Track& track);
 /** Fit a straight track in the local reference coordinates.
  *
  * \param[in] track Only the track clusters are used.
- * \param[in] reference Reference sensor that defines the local coordinates.
+ * \param[in] geo Detector geometry with local-to-global transformations.
+ * \param[in] referenceId Sensor index corresponding to the reference sensor.
  * \return Fitted state in local coordinates on the reference sensor.
  */
 Storage::TrackState fitTrackLocal(const Storage::Track& track,
-                                  const Mechanics::Sensor& reference);
+                                  const Mechanics::Geometry& geo,
+                                  Index referenceId);
 
 /** Fit track to clusters ignoring the measurement on the reference sensor.
  *
  * \param[in] track Only the track clusters are used.
- * \param[in] reference Reference sensor that defines the local coordinates.
+ * \param[in] geo Detector geometry with local-to-global transformations.
  * \param[in] referenceId Sensor index corresponding to the reference sensor.
  * \return Fitted state in local coordinates on the reference sensor.
  */
 Storage::TrackState fitTrackLocalUnbiased(const Storage::Track& track,
-                                          const Mechanics::Sensor& reference);
+                                          const Mechanics::Geometry& geo,
+                                          Index referenceId);
 
 } // namespace Processors
 
