@@ -76,7 +76,6 @@ void Alignment::ResidualsAligner::analyze(const Storage::Event& event)
 
   for (auto hists = m_hists.begin(); hists != m_hists.end(); ++hists) {
     Index sensorId = hists->sensorId;
-    const Mechanics::Sensor& sensor = *m_device.getSensor(sensorId);
     const Storage::Plane& sensorEvent = *event.getPlane(sensorId);
 
     for (Index iclu = 0; iclu < sensorEvent.numClusters(); ++iclu) {
@@ -87,8 +86,8 @@ void Alignment::ResidualsAligner::analyze(const Storage::Event& event)
         continue;
 
       // refit track w/o selected sensor for unbiased residuals
-      Storage::TrackState state =
-          Processors::fitTrackLocalUnbiased(*track, sensor);
+      Storage::TrackState state = Processors::fitTrackLocalUnbiased(
+          *track, m_device.geometry(), sensorId);
 
       double u = state.offset().x();
       double v = state.offset().y();
