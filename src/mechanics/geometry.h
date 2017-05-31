@@ -42,16 +42,8 @@ public:
   /** Convert geometry into a configuration object. */
   toml::Value toConfig() const;
 
-  void setOffset(Index sensorId, const XYZPoint& offset);
-  void setOffset(Index sensorId, double x, double y, double z);
-  void setRotationAngles(Index sensorId, double rotX, double rotY, double rotZ);
   /** Change the global offset by small values. */
   void correctGlobalOffset(Index sensorId, double dx, double dy, double dz);
-  /** Change the rotation angles by small values. */
-  void correctRotationAngles(Index sensorId,
-                             double dalpha,
-                             double dbeta,
-                             double dgamma);
   /** Add small local corrections du, dv, dw, dRotU, dRotV, dRotW. */
   void
   correctLocal(Index sensorId, const Vector6& delta, const SymMatrix6& cov);

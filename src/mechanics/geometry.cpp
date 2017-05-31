@@ -46,12 +46,22 @@ Mechanics::Geometry Mechanics::Geometry::fromConfig(const toml::Value& cfg)
                    cfg.get<double>("beam.slope_y"));
 
   auto sensors = cfg.get<toml::Array>("sensors");
-  for (auto is = sensors.begin(); is != sensors.end(); ++is) {
-    geo.setOffset(is->get<int>("id"), is->get<double>("offset_x"),
-                  is->get<double>("offset_y"), is->get<double>("offset_z"));
-    geo.setRotationAngles(is->get<int>("id"), is->get<double>("rotation_x"),
-                          is->get<double>("rotation_y"),
-                          is->get<double>("rotation_z"));
+  for (const auto& cs : sensors) {
+    auto sensorId = cs.get<int>("id");
+    auto rotX = cs.get<double>("rotation_x");
+    auto rotY = cs.get<double>("rotation_y");
+    auto rotZ = cs.get<double>("rotation_z");
+    auto offX = cs.get<double>("offset_x");
+    auto offY = cs.get<double>("offset_y");
+    auto offZ = cs.get<double>("offset_z");
+    // missing parameter object gets automatically created
+    auto& params = geo.m_params[sensorId];
+    params.offsetX = offX;
+    params.offsetY = offY;
+    params.offsetZ = offZ;
+    params.rotationX = rotX;
+    params.rotationY = rotY;
+    params.rotationZ = rotZ;
   }
   return geo;
 }
@@ -81,35 +91,6 @@ toml::Value Mechanics::Geometry::toConfig() const
   return cfg;
 }
 
-void Mechanics::Geometry::setOffset(Index sensorId, const XYZPoint& offset)
-{
-  setOffset(sensorId, offset.x(), offset.y(), offset.z());
-}
-
-void Mechanics::Geometry::setOffset(Index sensorId,
-                                    double x,
-                                    double y,
-                                    double z)
-{
-  // will automatically create a missing PlaneParams
-  auto& params = m_params[sensorId];
-  params.offsetX = x;
-  params.offsetY = y;
-  params.offsetZ = z;
-}
-
-void Mechanics::Geometry::setRotationAngles(Index sensorId,
-                                            double rotX,
-                                            double rotY,
-                                            double rotZ)
-{
-  // will automatically create a missing PlaneParams
-  auto& params = m_params[sensorId];
-  params.rotationX = rotX;
-  params.rotationY = rotY;
-  params.rotationZ = rotZ;
-}
-
 void Mechanics::Geometry::correctGlobalOffset(Index sensorId,
                                               double dx,
                                               double dy,
@@ -119,17 +100,6 @@ void Mechanics::Geometry::correctGlobalOffset(Index sensorId,
   params.offsetX += dx;
   params.offsetY += dy;
   params.offsetZ += dz;
-}
-
-void Mechanics::Geometry::correctRotationAngles(Index sensorId,
-                                                double dalpha,
-                                                double dbeta,
-                                                double dgamma)
-{
-  auto& params = m_params.at(sensorId);
-  params.rotationX += dalpha;
-  params.rotationY += dbeta;
-  params.rotationZ += dgamma;
 }
 
 void Mechanics::Geometry::correctLocal(Index sensorId,
