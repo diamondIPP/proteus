@@ -52,6 +52,8 @@ Internal changes
 *   Clean up event loop specific timing measurements and event statistics.
 *   Enabling the documentation building must be explicitely requested by
     addding ``-DPROTEUS_ENABLE_DOC=on`` to the cmake commandline.
+*   The :math:`\chi^2` value of the straight line fit is calculated
+    directly without looping over the input data again.
 
 v1.1.3 (2017-03-21)
 ===================
