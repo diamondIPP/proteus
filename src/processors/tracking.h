@@ -10,11 +10,11 @@ class Geometry;
 
 namespace Processors {
 
-/** Fit track to clusters using a simple straight line fit.
+/** Fit a straight track in the global coordinates.
  *
  * \param[in,out] track The global track state is set to fit result.
  */
-void fitTrack(Storage::Track& track);
+void fitTrackGlobal(Storage::Track& track);
 
 /** Fit a straight track in the local reference coordinates.
  *
@@ -27,7 +27,7 @@ Storage::TrackState fitTrackLocal(const Storage::Track& track,
                                   const Mechanics::Geometry& geo,
                                   Index referenceId);
 
-/** Fit track to clusters ignoring the measurement on the reference sensor.
+/** Fit a straight track ignoring the measurement on the reference sensor.
  *
  * \param[in] track Only the track clusters are used.
  * \param[in] geo Detector geometry with local-to-global transformations.

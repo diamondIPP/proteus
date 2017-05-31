@@ -31,7 +31,7 @@ void Processors::StraightTrackFitter::process(Storage::Event& event) const
     Storage::Track& track = *event.getTrack(itrack);
 
     // global fit for common goodness-of-fit
-    fitTrack(track);
+    fitTrackGlobal(track);
 
     for (auto id = m_sensorIds.begin(); id != m_sensorIds.end(); ++id) {
       const Mechanics::Sensor& sensor = *m_device.getSensor(*id);

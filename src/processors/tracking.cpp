@@ -109,7 +109,7 @@ static inline SymMatrix2 refCovariance(const SymMatrix2& cov,
   return Similarity(jac.Sub<Matrix2>(0, 0), cov);
 }
 
-void Processors::fitTrack(Storage::Track& track)
+void Processors::fitTrackGlobal(Storage::Track& track)
 {
   SimpleStraightFitter fit;
 
