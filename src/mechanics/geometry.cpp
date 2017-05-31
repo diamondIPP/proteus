@@ -12,6 +12,37 @@
 
 PT_SETUP_LOCAL_LOGGER(Geometry)
 
+Mechanics::Plane Mechanics::Plane::fromAnglesZYX(double rotZ,
+                                                 double rotY,
+                                                 double rotX,
+                                                 const Vector3& offset)
+{
+  Plane p;
+  Rotation3D rot(RotationZYX(rotZ, rotY, rotX));
+  rot.GetRotationMatrix(p.rotation);
+  p.offset = offset;
+  return p;
+}
+
+Mechanics::Plane Mechanics::Plane::fromDirections(const Vector3& dirU,
+                                                  const Vector3& dirV,
+                                                  const Vector3& offset)
+{
+  Plane p;
+  p.rotation.Place_in_col(Unit(dirU), 0, 0);
+  p.rotation.Place_in_col(Unit(dirV), 0, 1);
+  p.rotation.Place_in_col(Unit(Cross(dirU, dirV)), 0, 2);
+  p.offset = offset;
+  return p;
+}
+
+Transform3D Mechanics::Plane::asTransform3D() const
+{
+  Rotation3D r;
+  r.SetRotationMatrix(rotation);
+  return Transform3D(r, Translation3D(offset[0], offset[1], offset[2]));
+}
+
 // ensure geometry parameters have sensible defaults
 Mechanics::Geometry::PlaneParams::PlaneParams()
     : offsetX(0)

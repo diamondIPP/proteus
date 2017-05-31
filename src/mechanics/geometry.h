@@ -10,6 +10,25 @@
 
 namespace Mechanics {
 
+/** A two-dimensional plane in three-dimensional space.
+ *
+ * The plane is defined by two internal, orthogonal axes, and one offset
+ * that describes the origin of the plane in the global coordinates.
+ */
+struct Plane {
+  Matrix3 rotation; // from local to global coordinates
+  Vector3 offset;   // position of the origin in global coordinates
+
+  static Plane
+  fromAnglesZYX(double rotZ, double rotY, double rotX, const Vector3& offset);
+  static Plane fromDirections(const Vector3& dirU,
+                              const Vector3& dirV,
+                              const Vector3& offset);
+
+  /** Compute the equivalent Transform3D for the local-to-global transform. */
+  Transform3D asTransform3D() const;
+};
+
 /** Store and process geometry parameters for the whole setup.
  *
  * The geometry of each sensor plane is defined by the position
