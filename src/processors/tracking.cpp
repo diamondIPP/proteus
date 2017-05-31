@@ -2,22 +2,20 @@
 
 #include "mechanics/geometry.h"
 #include "storage/cluster.h"
+#include "utils/logger.h"
+
+PT_SETUP_LOCAL_LOGGER(Tracking)
 
 /** Linear weighted regression in one dimension.
  *
  * Straight from Numerical Recipes with offset = a and slope = b.
  */
 struct LineFitter1D {
-  double s, sx, sy, sxx, sxy;
-  double d_inv;
+  double s, sx, sy, sxx, sxy, syy; // weighted sums of inputs
+  double cxx;                      // (unscaled) input variance
 
-  double offset() const { return (sxx * sy - sx * sxy) * d_inv; }
-  double slope() const { return (s * sxy - sx * sy) * d_inv; }
-  double varOffset() const { return sxx * d_inv; }
-  double varSlope() const { return s * d_inv; }
-  double cov() const { return -sx * d_inv; }
+  LineFitter1D() : s(0), sx(0), sy(0), sxx(0), sxy(0), syy(0), cxx(0) {}
 
-  LineFitter1D() : s(0), sx(0), sy(0), sxx(0), sxy(0), d_inv(0) {}
   void addPoint(double x, double y, double w = 1)
   {
     s += w;
@@ -25,8 +23,19 @@ struct LineFitter1D {
     sy += w * y;
     sxx += w * x * x;
     sxy += w * x * y;
+    syy += w * y * y;
   }
-  void fit() { d_inv = 1 / (s * sxx - sx * sx); }
+  void fit() { cxx = (s * sxx - sx * sx); }
+
+  double offset() const { return (sy * sxx - sx * sxy) / cxx; }
+  double slope() const { return (s * sxy - sx * sy) / cxx; }
+  double varOffset() const { return sxx / cxx; }
+  double varSlope() const { return s / cxx; }
+  double cov() const { return -sx / cxx; }
+  double chi2() const
+  {
+    return syy + (sxy * (2 * sx * sy - s * sxy) - sxx * sy * sy) / cxx;
+  }
 };
 
 /** Fit a 3D straight line assuming a propagation along the third dimension. */
@@ -42,6 +51,7 @@ struct SimpleStraightFitter {
     s.setCovV(v.varOffset(), v.varSlope(), v.cov());
     return s;
   }
+  double chi2() const { return u.chi2() + v.chi2(); }
 
   void addPoint(const XYZPoint& pos, double wu = 1, double wv = 1)
   {
@@ -109,7 +119,7 @@ void Processors::fitTrack(Storage::Track& track)
   }
   fit.fit();
   track.setGlobalState(fit.state());
-  track.setGoodnessOfFit(straightChi2(track), 2 * (track.numClusters() - 2));
+  track.setGoodnessOfFit(fit.chi2(), 2 * (track.numClusters() - 2));
 }
 
 Storage::TrackState Processors::fitTrackLocal(const Storage::Track& track,
