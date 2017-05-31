@@ -30,10 +30,17 @@ Bugfixes
 --------
 
 *   Example configurations in the test directory use valid toml syntax.
-*   Only the geometry file that is used is read in. When the geometry is
-    set via a command line flag, the geometry file specified in the
-    device file is not read. This also allows device files without a
-    predefined geometry.
+*   Only read the geometry file that is actually used.
+
+    When the geometry is set via a command line flag, the geometry
+    file specified in the device file is not read. This also allows
+    device files without a predefined geometry.
+*   Correctly transform cluster covariances to the local reference
+    system for the track fit.
+
+    This fixes the fitted track positions on rotated sensors that were
+    previously showing unexpected patterns due to incorrect input
+    covariances.
 
 Internal changes
 ----------------
