@@ -43,15 +43,20 @@ Transform3D Mechanics::Plane::asTransform3D() const
   return Transform3D(r, Translation3D(offset[0], offset[1], offset[2]));
 }
 
-// ensure geometry parameters have sensible defaults
-Mechanics::Geometry::PlaneParams::PlaneParams()
-    : offsetX(0)
-    , offsetY(0)
-    , offsetZ(0)
-    , rotationX(0)
-    , rotationY(0)
-    , rotationZ(0)
+Vector6 Mechanics::Plane::asParams() const
 {
+  Vector6 params;
+  params[0] = offset[0];
+  params[1] = offset[1];
+  params[2] = offset[2];
+  // decompose rotation matrix into zyx angles
+  Rotation3D rot;
+  rot.SetRotationMatrix(rotation);
+  RotationZYX zyx(rot);
+  params[3] = zyx.Psi();   // RotX
+  params[4] = zyx.Theta(); // RotY
+  params[5] = zyx.Phi();   // RotZ
+  return params;
 }
 
 Mechanics::Geometry::Geometry() : m_beamSlopeX(0), m_beamSlopeY(0) {}
@@ -85,14 +90,8 @@ Mechanics::Geometry Mechanics::Geometry::fromConfig(const toml::Value& cfg)
     auto offX = cs.get<double>("offset_x");
     auto offY = cs.get<double>("offset_y");
     auto offZ = cs.get<double>("offset_z");
-    // missing parameter object gets automatically created
-    auto& params = geo.m_params[sensorId];
-    params.offsetX = offX;
-    params.offsetY = offY;
-    params.offsetZ = offZ;
-    params.rotationX = rotX;
-    params.rotationY = rotY;
-    params.rotationZ = rotZ;
+    geo.m_planes[sensorId] =
+        Plane::fromAnglesZYX(rotZ, rotY, rotX, {offX, offY, offZ});
   }
   return geo;
 }
@@ -105,18 +104,18 @@ toml::Value Mechanics::Geometry::toConfig() const
   cfg["beam"]["slope_y"] = m_beamSlopeY;
 
   cfg["sensors"] = toml::Array();
-  for (auto ig = m_params.begin(); ig != m_params.end(); ++ig) {
-    int id = static_cast<int>(ig->first);
-    const PlaneParams& params = ig->second;
+  for (const auto& ip : m_planes) {
+    int id = static_cast<int>(ip.first);
+    Vector6 params = ip.second.asParams();
 
     toml::Value cfgSensor;
     cfgSensor["id"] = id;
-    cfgSensor["offset_x"] = params.offsetX;
-    cfgSensor["offset_y"] = params.offsetY;
-    cfgSensor["offset_z"] = params.offsetZ;
-    cfgSensor["rotation_x"] = params.rotationX;
-    cfgSensor["rotation_y"] = params.rotationY;
-    cfgSensor["rotation_z"] = params.rotationZ;
+    cfgSensor["offset_x"] = params[0];
+    cfgSensor["offset_y"] = params[1];
+    cfgSensor["offset_z"] = params[2];
+    cfgSensor["rotation_x"] = params[3];
+    cfgSensor["rotation_y"] = params[4];
+    cfgSensor["rotation_z"] = params[5];
     cfg["sensors"].push(std::move(cfgSensor));
   }
   return cfg;
@@ -127,80 +126,49 @@ void Mechanics::Geometry::correctGlobalOffset(Index sensorId,
                                               double dy,
                                               double dz)
 {
-  auto& params = m_params.at(sensorId);
-  params.offsetX += dx;
-  params.offsetY += dy;
-  params.offsetZ += dz;
+  m_planes.at(sensorId).offset += Vector3(dx, dy, dz);
 }
 
 void Mechanics::Geometry::correctLocal(Index sensorId,
                                        const Vector6& delta,
                                        const SymMatrix6& cov)
 {
-  auto& params = m_params.at(sensorId);
-
-  // small angle approximation rotation matrix
-  // clang-format off
-  double coeffs[9] = {
-           1, -delta[5], -delta[4],
-    delta[5],         1, -delta[3],
-    delta[4],  delta[3],         1};
-  // clang-format on
-  Matrix3 deltaQ(coeffs, 9);
-  Matrix3 rot;
-  Vector3 off;
-  Transform3D old = getLocalToGlobal(sensorId);
-
-  // construct new rotation matrix and offset
-  old.Rotation().GetRotationMatrix(rot);
-  old.Translation().GetComponents(off.begin(), off.end());
-  rot *= deltaQ;
-  off += rot * delta.Sub<Vector3>(0);
-
-  // decompose transformation back into offsets and angles
-  params.offsetX = off[0];
-  params.offsetY = off[1];
-  params.offsetZ = off[2];
-  // ROOT WTF: multiple rotation matrix types that do not work together
-  Rotation3D tmp;
-  tmp.SetRotationMatrix(rot);
-  RotationZYX(tmp).GetComponents(params.rotationZ, params.rotationY,
-                                 params.rotationX);
+  auto& plane = m_planes.at(sensorId);
 
   // Jacobian from local corrections to global geometry parameters
   // TODO 2016-11-28 msmk: jacobian from local rotU,... to alpha, beta, gamma
   Matrix6 jac;
-  jac.Place_at(rot, 0, 0);
+  jac.Place_at(plane.rotation, 0, 0);
   jac(3, 3) = 1;
   jac(4, 4) = 1;
   jac(5, 5) = 1;
   m_covs[sensorId] = ROOT::Math::Similarity(jac, cov);
+
+  // small angle approximation rotation matrix
+  Matrix3 deltaQ;
+  deltaQ(0, 0) = 1;
+  deltaQ(0, 1) = -delta[5];
+  deltaQ(0, 2) = -delta[4];
+  deltaQ(1, 0) = delta[5];
+  deltaQ(1, 1) = 1;
+  deltaQ(1, 2) = -delta[3];
+  deltaQ(2, 0) = delta[4];
+  deltaQ(2, 1) = delta[3];
+  deltaQ(2, 2) = 1;
+
+  plane.rotation *= deltaQ;
+  plane.offset += plane.rotation * delta.Sub<Vector3>(0);
+  // TODO 2017-05-31 msmk: rectify the rotation matrix
 }
 
 Transform3D Mechanics::Geometry::getLocalToGlobal(Index sensorId) const
 {
-  auto it = m_params.find(sensorId);
-  if (it == m_params.cend())
-    return Transform3D();
-
-  const PlaneParams& params = it->second;
-
-  XYZVector off(params.offsetX, params.offsetY, params.offsetZ);
-  RotationZYX rot(params.rotationZ, params.rotationY, params.rotationX);
-  return Transform3D(rot, off);
+  return m_planes.at(sensorId).asTransform3D();
 }
 
 Vector6 Mechanics::Geometry::getParams(Index sensorId) const
 {
-  const PlaneParams& params = m_params.at(sensorId);
-  Vector6 p;
-  p[0] = params.offsetX;
-  p[1] = params.offsetY;
-  p[2] = params.offsetZ;
-  p[3] = params.rotationX;
-  p[4] = params.rotationY;
-  p[5] = params.rotationZ;
-  return p;
+  return m_planes.at(sensorId).asParams();
 }
 
 SymMatrix6 Mechanics::Geometry::getParamsCov(Index sensorId) const
@@ -227,28 +195,15 @@ XYZVector Mechanics::Geometry::beamDirection() const
 void Mechanics::Geometry::print(std::ostream& os,
                                 const std::string& prefix) const
 {
-  const double RAD2DEG = 180 / M_PI;
-
   os << prefix << "beam:\n"
-     << prefix << "  slope X: " << m_beamSlopeX << '\n'
-     << prefix << "  slope Y: " << m_beamSlopeY << '\n';
-
-  for (auto params = m_params.begin(); params != m_params.end(); ++params) {
-    Index sensorId = params->first;
-    const PlaneParams& p = params->second;
-    Vector3 unitU, unitV, unitW;
-    getLocalToGlobal(sensorId).Rotation().GetComponents(unitU, unitV, unitW);
-
-    os << prefix << "sensor " << sensorId << ":\n";
-    os << prefix << "  offset x: " << p.offsetX << '\n'
-       << prefix << "  offset y: " << p.offsetY << '\n'
-       << prefix << "  offset z: " << p.offsetZ << '\n';
-    os << prefix << "  rotation x: " << p.rotationX * RAD2DEG << " deg\n"
-       << prefix << "  rotation y: " << p.rotationY * RAD2DEG << " deg\n"
-       << prefix << "  rotation z: " << p.rotationZ * RAD2DEG << " deg\n";
-    os << prefix << "  unit vector u: [" << unitU << "]\n"
-       << prefix << "  unit vector v: [" << unitV << "]\n"
-       << prefix << "  unit vector w: [" << unitW << "]\n";
+     << prefix << "  slope x: " << m_beamSlopeX << '\n'
+     << prefix << "  slope y: " << m_beamSlopeY << '\n';
+  for (const auto& ip : m_planes) {
+    os << prefix << "sensor " << ip.first << ":\n"
+       << prefix << "  offset: [" << ip.second.offset << "]\n"
+       << prefix << "  unit u: [" << ip.second.unitU() << "]\n"
+       << prefix << "  unit v: [" << ip.second.unitV() << "]\n"
+       << prefix << "  unit w: [" << ip.second.unitNormal() << "]\n";
   }
   os.flush();
 }

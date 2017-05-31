@@ -27,6 +27,12 @@ struct Plane {
 
   /** Compute the equivalent Transform3D for the local-to-global transform. */
   Transform3D asTransform3D() const;
+  /** Compute minimal parameter vector [x, y, z, rotX, rotY, rotZ]. */
+  Vector6 asParams() const;
+
+  Vector3 unitU() const { return rotation.SubCol<Vector3>(0); }
+  Vector3 unitV() const { return rotation.SubCol<Vector3>(1); }
+  Vector3 unitNormal() const { return rotation.SubCol<Vector3>(2); }
 };
 
 /** Store and process geometry parameters for the whole setup.
@@ -80,14 +86,7 @@ public:
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
-  struct PlaneParams {
-    double offsetX, offsetY, offsetZ;
-    double rotationX, rotationY, rotationZ;
-
-    PlaneParams();
-  };
-
-  std::map<Index, PlaneParams> m_params;
+  std::map<Index, Plane> m_planes;
   std::map<Index, SymMatrix6> m_covs;
   double m_beamSlopeX, m_beamSlopeY;
 };
