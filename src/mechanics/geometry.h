@@ -60,7 +60,7 @@ public:
   /** Geometry parameters x, y, z, alpha, beta, gamma for the sensor. */
   Vector6 getParams(Index sensorId) const;
   /** Geometry parameters covariance matrix. */
-  const SymMatrix6& getParamsCov(Index sensorId) const;
+  SymMatrix6 getParamsCov(Index sensorId) const;
 
   void setBeamSlope(double slopeX, double slopeY);
   /** Beam direction in the global coordinate system. */
@@ -72,12 +72,12 @@ private:
   struct PlaneParams {
     double offsetX, offsetY, offsetZ;
     double rotationX, rotationY, rotationZ;
-    SymMatrix6 cov;
 
     PlaneParams();
   };
 
   std::map<Index, PlaneParams> m_params;
+  std::map<Index, SymMatrix6> m_covs;
   double m_beamSlopeX, m_beamSlopeY;
 };
 

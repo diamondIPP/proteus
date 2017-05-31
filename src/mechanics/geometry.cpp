@@ -21,7 +21,6 @@ Mechanics::Geometry::PlaneParams::PlaneParams()
     , rotationY(0)
     , rotationZ(0)
 {
-  // covariance should be zero by default constructor
 }
 
 Mechanics::Geometry::Geometry() : m_beamSlopeX(0), m_beamSlopeY(0) {}
@@ -174,7 +173,7 @@ void Mechanics::Geometry::correctLocal(Index sensorId,
   jac(3, 3) = 1;
   jac(4, 4) = 1;
   jac(5, 5) = 1;
-  params.cov += ROOT::Math::Similarity(jac, cov);
+  m_covs[sensorId] = ROOT::Math::Similarity(jac, cov);
 }
 
 Transform3D Mechanics::Geometry::getLocalToGlobal(Index sensorId) const
@@ -203,9 +202,14 @@ Vector6 Mechanics::Geometry::getParams(Index sensorId) const
   return p;
 }
 
-const SymMatrix6& Mechanics::Geometry::getParamsCov(Index sensorId) const
+SymMatrix6 Mechanics::Geometry::getParamsCov(Index sensorId) const
 {
-  return m_params.at(sensorId).cov;
+  auto it = m_covs.find(sensorId);
+  if (it != m_covs.end()) {
+    return it->second;
+  } else {
+    return SymMatrix6(); // zero by default
+  }
 }
 
 void Mechanics::Geometry::setBeamSlope(double slopeX, double slopeY)
