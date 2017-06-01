@@ -84,14 +84,32 @@ Mechanics::Geometry Mechanics::Geometry::fromConfig(const toml::Value& cfg)
   auto sensors = cfg.get<toml::Array>("sensors");
   for (const auto& cs : sensors) {
     auto sensorId = cs.get<int>("id");
-    auto rotX = cs.get<double>("rotation_x");
-    auto rotY = cs.get<double>("rotation_y");
-    auto rotZ = cs.get<double>("rotation_z");
-    auto offX = cs.get<double>("offset_x");
-    auto offY = cs.get<double>("offset_y");
-    auto offZ = cs.get<double>("offset_z");
-    geo.m_planes[sensorId] =
-        Plane::fromAnglesZYX(rotZ, rotY, rotX, {offX, offY, offZ});
+
+    if (cs.has("offset")) {
+      auto off = cs.get<std::vector<double>>("offset");
+      auto unU = cs.get<std::vector<double>>("unit_u");
+      auto unV = cs.get<std::vector<double>>("unit_v");
+
+      if (off.size() != 3)
+        FAIL("number of entries != 3 in offset for sensor ", sensorId);
+      if (unU.size() != 3)
+        FAIL("number of entries != 3 in unit_u for sensor ", sensorId);
+      if (unV.size() != 3)
+        FAIL("number of entries != 3 in unit_v for sensor ", sensorId);
+
+      geo.m_planes[sensorId] = Plane::fromDirections(
+          Vector3(unU[0], unU[1], unU[2]), Vector3(unV[0], unV[1], unV[2]),
+          Vector3(off[0], off[1], off[2]));
+    } else {
+      auto rotX = cs.get<double>("rotation_x");
+      auto rotY = cs.get<double>("rotation_y");
+      auto rotZ = cs.get<double>("rotation_z");
+      auto offX = cs.get<double>("offset_x");
+      auto offY = cs.get<double>("offset_y");
+      auto offZ = cs.get<double>("offset_z");
+      geo.m_planes[sensorId] =
+          Plane::fromAnglesZYX(rotZ, rotY, rotX, {offX, offY, offZ});
+    }
   }
   return geo;
 }
@@ -106,16 +124,15 @@ toml::Value Mechanics::Geometry::toConfig() const
   cfg["sensors"] = toml::Array();
   for (const auto& ip : m_planes) {
     int id = static_cast<int>(ip.first);
-    Vector6 params = ip.second.asParams();
+    Vector3 unU = ip.second.unitU();
+    Vector3 unV = ip.second.unitV();
+    Vector3 off = ip.second.offset;
 
     toml::Value cfgSensor;
     cfgSensor["id"] = id;
-    cfgSensor["offset_x"] = params[0];
-    cfgSensor["offset_y"] = params[1];
-    cfgSensor["offset_z"] = params[2];
-    cfgSensor["rotation_x"] = params[3];
-    cfgSensor["rotation_y"] = params[4];
-    cfgSensor["rotation_z"] = params[5];
+    cfgSensor["offset"] = toml::Array{off[0], off[1], off[2]};
+    cfgSensor["unit_u"] = toml::Array{unU[0], unU[1], unU[2]};
+    cfgSensor["unit_v"] = toml::Array{unV[0], unV[1], unV[2]};
     cfg["sensors"].push(std::move(cfgSensor));
   }
   return cfg;
