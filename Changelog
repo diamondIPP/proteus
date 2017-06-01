@@ -13,6 +13,22 @@ User-visible changes
 *   Remove Judith-style ``proteus`` tool.
 *   Remove support for custom ini-like config format and custom mask
     file format.
+*   The geometry information is now stored as three vectors, i.e. two
+    unit vectors too define the local plane axes and one offset
+    vector, instead of three scalar offsets and three rotation
+    angles. This avoids conversions between rotation angles and
+    rotation matrix and confusion due to different rotation angle
+    conventions. The relevant part of the config file now looks like
+    this:
+
+    .. code::
+
+        offset = [0.0, 0.0, 100.0]
+        unit_u = [0.0, 1.0, 0.0]
+        unit_v = [1.0, 0.0, 0.0]
+
+    The old format is still accepted, but all output files are based
+    on the new format.
 *   Efficiencies are calculated for the selected area only, i.e. the
     whole sensor or a sensor region, and the area is not enlarged by
     two pixels anymore.
@@ -20,7 +36,7 @@ User-visible changes
     distribution instead of the mean. This should make it more robust
     for noisy sensors at the expense of limiting the precision to
     approximately one pixel.
-*   The ``activate.sh`` script is also copied during the ``install`` phase.
+*   The ``activate.sh`` script is copied during the ``install`` phase.
 *   The TTree-based match output stores the hit information for each hit
     in a cluster in addition to the combined cluster information.
 *   An missing or unreadable pixel masks file is now considered a fatal
@@ -44,6 +60,9 @@ Bugfixes
     This fixes the fitted track positions on rotated sensors that were
     previously showing unexpected patterns due to incorrect input
     covariances.
+*   Updating a sensor geometry using local corrections now overwrites
+    the stored geometry covariance instead of adding it to the
+    existing value.
 
 Internal changes
 ----------------
