@@ -12,8 +12,29 @@ namespace Mechanics {
 
 /** A two-dimensional plane in three-dimensional space.
  *
- * The plane is defined by two internal, orthogonal axes, and one offset
- * that describes the origin of the plane in the global coordinates.
+ * The plane is defined by two internal, orthogonal axes, and the origin of
+ * the plane in the global coordinates. The normal direction to the plane is
+ * already defined by its two internal axes.
+ *
+ * The unit vectors corresponding to the internal axes and the normal direction
+ * are the columns of the local-to-global rotation matrix Q. The transformation
+ * from local coordinates q=(u,v,w) to global coordinates r=(x,y,z) follows
+ * as
+ *
+ *     r = r_0 + Q * q ,
+ *
+ * with r_0 being the plane offset. Representing the plane orientation with
+ * a rotation matrix allows for easy, direct calculations, but is not a
+ * minimal set of parameters. The minimal set of six parameters contains the
+ * three offsets and three rotation angles that define the rotation matrix
+ * as a product of three elementary rotations
+ *
+ *     Q = R_0(alpha) * R_1(beta) * R_2(gamma) ,
+ *
+ * i.e. first a rotation by gamma around the local third axis
+ * (normal axis), then a rotation by beta around the updated second
+ * axis, followed with a roation by alpha around the first axis. This is the
+ * 3-2-1 convention.
  */
 struct Plane {
   Matrix3 rotation; // from local to global coordinates
@@ -25,9 +46,9 @@ struct Plane {
                               const Vector3& dirV,
                               const Vector3& offset);
 
-  /** Compute the equivalent Transform3D for the local-to-global transform. */
+  /** Compute the equivalent local-to-global Transform3D object. */
   Transform3D asTransform3D() const;
-  /** Compute minimal parameter vector [x, y, z, rotX, rotY, rotZ]. */
+  /** Compute geometry parameters [x, y, z, alpha, beta, gamma]. */
   Vector6 asParams() const;
 
   Vector3 unitU() const { return rotation.SubCol<Vector3>(0); }
@@ -35,19 +56,7 @@ struct Plane {
   Vector3 unitNormal() const { return rotation.SubCol<Vector3>(2); }
 };
 
-/** Store and process geometry parameters for the whole setup.
- *
- * The geometry of each sensor plane is defined by the position
- * [x, y, z] of its origin in the global system and by three rotation
- * angles [alpha, beta, gamma] that define the rotation from the local
- * to the global system using the 3-2-1 convention. The rotation
- * matrix is constructed by rotations around each axis as
- *
- *    R = R_1(alpha) * R_2(beta) * R_3(gamma),
- *
- * i.e. first a rotation by gamma around the local third axis
- * (w coordinate), then a rotation by beta around the updated second
- * axis, followed with a roation by alpha around the first axis.
+/** Store and process the geometry of the telescope setup.
  *
  * The class also stores uncertainties for the geometry parameters.
  * They are only used transiently and are not stored in the geometry
@@ -74,7 +83,7 @@ public:
   correctLocal(Index sensorId, const Vector6& delta, const SymMatrix6& cov);
   /** Transformation from local to global coordinates for the sensor. */
   Transform3D getLocalToGlobal(Index sensorId) const;
-  /** Geometry parameters x, y, z, alpha, beta, gamma for the sensor. */
+  /** Geometry parameters [x, y, z, alpha, beta, gamma] for a sensor. */
   Vector6 getParams(Index sensorId) const;
   /** Geometry parameters covariance matrix. */
   SymMatrix6 getParamsCov(Index sensorId) const;

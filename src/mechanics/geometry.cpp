@@ -53,9 +53,9 @@ Vector6 Mechanics::Plane::asParams() const
   Rotation3D rot;
   rot.SetRotationMatrix(rotation);
   RotationZYX zyx(rot);
-  params[3] = zyx.Psi();   // RotX
-  params[4] = zyx.Theta(); // RotY
-  params[5] = zyx.Phi();   // RotZ
+  params[3] = zyx.Psi();   // alpha
+  params[4] = zyx.Theta(); // beta
+  params[5] = zyx.Phi();   // gamma
   return params;
 }
 
