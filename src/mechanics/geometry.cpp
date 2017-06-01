@@ -1,5 +1,7 @@
 #include "geometry.h"
 
+#include <TDecompSVD.h>
+#include <TMatrix.h>
 #include <cassert>
 #include <fstream>
 #include <iomanip>
@@ -183,7 +185,45 @@ void Mechanics::Geometry::correctLocal(Index sensorId,
 
   plane.rotation *= deltaQ;
   plane.offset += plane.rotation * delta.Sub<Vector3>(0);
-  // TODO 2017-05-31 msmk: rectify the rotation matrix
+
+  // due to the small angle approximation the combined rotation matrix might
+  // be non-orthogonal (if only by small amounts). replace it by the closest
+  // orthogonal matrix. see also:
+  // https://en.wikipedia.org/wiki/Orthogonal_matrix#Nearest_orthogonal_matrix
+
+  // Ahh ROOT, we have to use yet another linear algebra/ geometry package.
+  // GenVector, SMatrix, and TMatrix; none of which like to talk to each other.
+
+  TMatrixD M(3, 3);
+  for (int i = 0; i < 3; ++i)
+    for (int j = 0; j < 3; ++j)
+      M(i, j) = plane.rotation(i, j);
+  TDecompSVD svd(M);
+  if (!svd.Decompose())
+    FAIL("sensor", sensorId, " rotation matrix decomposition failed.");
+
+  DEBUG("sensor", sensorId, " updated matrix:");
+  DEBUG("  unit u: [", plane.unitU(), "]");
+  DEBUG("  unit v: [", plane.unitV(), "]");
+  DEBUG("  unit w: [", plane.unitNormal(), "]");
+  DEBUG("  singular values: [", svd.GetSig()[0], ", ", svd.GetSig()[1], ", ",
+        svd.GetSig()[2], "]");
+  double d1, d2;
+  svd.Det(d1, d2);
+  DEBUG("  determinant: ", d1 * std::pow(2, d2), " = (", d1, ")*2^(", d2, ")");
+
+  // compute closest orthogonal matrix by setting singular values to 1
+  TMatrixD U = svd.GetU();
+  TMatrixD V = svd.GetV();
+  TMatrixD Q = U * V.T();
+  for (int i = 0; i < 3; ++i)
+    for (int j = 0; j < 3; ++j)
+      plane.rotation(i, j) = Q(i, j);
+
+  DEBUG("sensor", sensorId, " nearest rotation matrix:");
+  DEBUG("  unit u: [", plane.unitU(), "]");
+  DEBUG("  unit v: [", plane.unitV(), "]");
+  DEBUG("  unit w: [", plane.unitNormal(), "]");
 }
 
 Transform3D Mechanics::Geometry::getLocalToGlobal(Index sensorId) const
