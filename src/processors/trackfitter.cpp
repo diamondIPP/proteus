@@ -31,16 +31,15 @@ void Processors::StraightTrackFitter::process(Storage::Event& event) const
     Storage::Track& track = *event.getTrack(itrack);
 
     // global fit for common goodness-of-fit
-    fitTrack(track);
+    fitTrackGlobal(track);
 
-    for (auto id = m_sensorIds.begin(); id != m_sensorIds.end(); ++id) {
-      const Mechanics::Sensor& sensor = *m_device.getSensor(*id);
-      Storage::Plane& plane = *event.getPlane(*id);
-
+    for (auto sensorId : m_sensorIds) {
+      Storage::Plane& sensorEvent = *event.getPlane(sensorId);
       // local fit for correct errors in the local frame
-      Storage::TrackState state = fitTrackLocal(track, sensor);
+      Storage::TrackState state =
+          fitTrackLocal(track, m_device.geometry(), sensorId);
       state.setTrack(&track);
-      plane.addState(std::move(state));
+      sensorEvent.addState(std::move(state));
     }
   }
 }

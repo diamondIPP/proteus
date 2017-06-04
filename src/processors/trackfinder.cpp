@@ -137,7 +137,7 @@ void Processors::TrackFinder::selectTracks(std::vector<TrackPtr>& candidates,
 {
   // ensure chi2 is up-to-date
   for (auto itrack = candidates.begin(); itrack != candidates.end(); ++itrack)
-    Processors::fitTrack(**itrack);
+    Processors::fitTrackGlobal(**itrack);
 
   // sort by number of hits and chi2 value
   std::sort(candidates.begin(), candidates.end(), CompareNumClusterChi2());

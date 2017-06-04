@@ -97,8 +97,8 @@ void Analyzers::Residuals::analyze(const Storage::Event& event)
 
     for (Index icluster = 0; icluster < track.numClusters(); ++icluster) {
       const Storage::Cluster& cluster = *track.getCluster(icluster);
-      const Mechanics::Sensor& sensor = *m_device.getSensor(cluster.sensorId());
-      Storage::TrackState state = Processors::fitTrackLocal(track, sensor);
+      Storage::TrackState state = Processors::fitTrackLocal(
+          track, m_device.geometry(), cluster.sensorId());
 
       m_hists[cluster.sensorId()].fill(state, cluster);
     }
@@ -135,10 +135,9 @@ void Analyzers::UnbiasedResiduals::analyze(const Storage::Event& event)
     const Storage::Track& track = *event.getTrack(itrack);
     for (Index icluster = 0; icluster < track.numClusters(); ++icluster) {
       const Storage::Cluster& cluster = *track.getCluster(icluster);
-      const Mechanics::Sensor& sensor = *m_device.getSensor(cluster.sensorId());
       // refit w/o current sensor information
-      Storage::TrackState state =
-          Processors::fitTrackLocalUnbiased(track, sensor);
+      Storage::TrackState state = Processors::fitTrackLocalUnbiased(
+          track, m_device.geometry(), cluster.sensorId());
 
       m_hists[cluster.sensorId()].fill(state, cluster);
     }

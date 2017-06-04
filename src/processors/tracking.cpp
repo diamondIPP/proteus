@@ -1,23 +1,21 @@
 #include "tracking.h"
 
-#include "mechanics/sensor.h"
+#include "mechanics/geometry.h"
 #include "storage/cluster.h"
+#include "utils/logger.h"
+
+PT_SETUP_LOCAL_LOGGER(Tracking)
 
 /** Linear weighted regression in one dimension.
  *
  * Straight from Numerical Recipes with offset = a and slope = b.
  */
 struct LineFitter1D {
-  double s, sx, sy, sxx, sxy;
-  double d_inv;
+  double s, sx, sy, sxx, sxy, syy; // weighted sums of inputs
+  double cxx;                      // (unscaled) input variance
 
-  double offset() const { return (sxx * sy - sx * sxy) * d_inv; }
-  double slope() const { return (s * sxy - sx * sy) * d_inv; }
-  double varOffset() const { return sxx * d_inv; }
-  double varSlope() const { return s * d_inv; }
-  double cov() const { return -sx * d_inv; }
+  LineFitter1D() : s(0), sx(0), sy(0), sxx(0), sxy(0), syy(0), cxx(0) {}
 
-  LineFitter1D() : s(0), sx(0), sy(0), sxx(0), sxy(0), d_inv(0) {}
   void addPoint(double x, double y, double w = 1)
   {
     s += w;
@@ -25,8 +23,19 @@ struct LineFitter1D {
     sy += w * y;
     sxx += w * x * x;
     sxy += w * x * y;
+    syy += w * y * y;
   }
-  void fit() { d_inv = 1 / (s * sxx - sx * sx); }
+  void fit() { cxx = (s * sxx - sx * sx); }
+
+  double offset() const { return (sy * sxx - sx * sxy) / cxx; }
+  double slope() const { return (s * sxy - sx * sy) / cxx; }
+  double varOffset() const { return sxx / cxx; }
+  double varSlope() const { return s / cxx; }
+  double cov() const { return -sx / cxx; }
+  double chi2() const
+  {
+    return syy + (sxy * (2 * sx * sy - s * sxy) - sxx * sy * sy) / cxx;
+  }
 };
 
 /** Fit a 3D straight line assuming a propagation along the third dimension. */
@@ -42,6 +51,7 @@ struct SimpleStraightFitter {
     s.setCovV(v.varOffset(), v.varSlope(), v.cov());
     return s;
   }
+  double chi2() const { return u.chi2() + v.chi2(); }
 
   void addPoint(const XYZPoint& pos, double wu = 1, double wv = 1)
   {
@@ -49,6 +59,10 @@ struct SimpleStraightFitter {
     v.addPoint(pos.z(), pos.y(), wv);
   }
   void addPoint(const XYZPoint& pos, const SymMatrix3& cov)
+  {
+    addPoint(pos, 1 / cov(0, 0), 1 / cov(1, 1));
+  }
+  void addPoint(const XYZPoint& pos, const SymMatrix2& cov)
   {
     addPoint(pos, 1 / cov(0, 0), 1 / cov(1, 1));
   }
@@ -77,7 +91,25 @@ static inline double straightChi2(Storage::Track& track)
   return chi2;
 }
 
-void Processors::fitTrack(Storage::Track& track)
+static inline XYZPoint refPosition(const XYPoint& pos,
+                                   const Transform3D& localToGlobal,
+                                   const Transform3D& globalToReference)
+{
+  return globalToReference * localToGlobal * XYZPoint(pos.x(), pos.y(), 0);
+}
+
+static inline SymMatrix2 refCovariance(const SymMatrix2& cov,
+                                       const Transform3D& localToGlobal,
+                                       const Transform3D& globalToReference)
+{
+  // ROOT GenVector does not want to play with SMatrix
+  Rotation3D tmp = globalToReference.Rotation() * localToGlobal.Rotation();
+  Matrix3 jac;
+  tmp.GetRotationMatrix(jac);
+  return Similarity(jac.Sub<Matrix2>(0, 0), cov);
+}
+
+void Processors::fitTrackGlobal(Storage::Track& track)
 {
   SimpleStraightFitter fit;
 
@@ -87,20 +119,22 @@ void Processors::fitTrack(Storage::Track& track)
   }
   fit.fit();
   track.setGlobalState(fit.state());
-  track.setGoodnessOfFit(straightChi2(track), 2 * (track.numClusters() - 2));
+  track.setGoodnessOfFit(fit.chi2(), 2 * (track.numClusters() - 2));
 }
 
-Storage::TrackState
-Processors::fitTrackLocal(const Storage::Track& track,
-                          const Mechanics::Sensor& reference)
+Storage::TrackState Processors::fitTrackLocal(const Storage::Track& track,
+                                              const Mechanics::Geometry& geo,
+                                              Index referenceId)
 {
   SimpleStraightFitter fit;
+  auto globalToRef = geo.getLocalToGlobal(referenceId).Inverse();
 
   for (Index icluster = 0; icluster < track.numClusters(); ++icluster) {
-    const Storage::Cluster* cluster = track.getCluster(icluster);
-    XYZPoint pos = reference.globalToLocal() * cluster->posGlobal();
-    // TODO 2016-10-13 msmk: also transform error to local frame
-    fit.addPoint(pos, cluster->covGlobal());
+    const Storage::Cluster& cluster = *track.getCluster(icluster);
+    auto localToGlobal = geo.getLocalToGlobal(cluster.sensorId());
+    auto pos = refPosition(cluster.posLocal(), localToGlobal, globalToRef);
+    auto cov = refCovariance(cluster.covLocal(), localToGlobal, globalToRef);
+    fit.addPoint(pos, cov);
   }
   fit.fit();
   return fit.state();
@@ -108,17 +142,20 @@ Processors::fitTrackLocal(const Storage::Track& track,
 
 Storage::TrackState
 Processors::fitTrackLocalUnbiased(const Storage::Track& track,
-                                  const Mechanics::Sensor& reference)
+                                  const Mechanics::Geometry& geo,
+                                  Index referenceId)
 {
   SimpleStraightFitter fit;
+  auto globalToRef = geo.getLocalToGlobal(referenceId).Inverse();
 
   for (Index icluster = 0; icluster < track.numClusters(); ++icluster) {
     const Storage::Cluster& cluster = *track.getCluster(icluster);
-    if (cluster.sensorId() == reference.id())
+    if (cluster.sensorId() == referenceId)
       continue;
-    XYZPoint pos = reference.globalToLocal() * cluster.posGlobal();
-    // TODO 2016-10-13 msmk: also transform error to local frame
-    fit.addPoint(pos, cluster.covGlobal());
+    auto localToGlobal = geo.getLocalToGlobal(cluster.sensorId());
+    auto pos = refPosition(cluster.posLocal(), localToGlobal, globalToRef);
+    auto cov = refCovariance(cluster.covLocal(), localToGlobal, globalToRef);
+    fit.addPoint(pos, cov);
   }
   fit.fit();
   return fit.state();
