@@ -43,6 +43,8 @@ Analyzers::MatchExporter::MatchExporter(const Mechanics::Device& device,
 
   m_treeTrk = new TTree("tracks", "");
   m_treeTrk->SetDirectory(sub);
+  m_treeTrk->Branch("evt_timestamp", &m_event.timestamp);
+  m_treeTrk->Branch("evt_nclusters", &m_event.nClusters);
   m_treeTrk->Branch("evt_ntracks", &m_event.nTracks);
   m_treeTrk->Branch("trk_u", &m_track.u);
   m_treeTrk->Branch("trk_v", &m_track.v);
@@ -106,7 +108,10 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
   };
 
   // global event information
-  m_event.nTracks = event.numTracks();
+  m_event.timestamp = event.timestamp();
+  m_event.nClusters = plane.numClusters();
+  m_event.nTracks = plane.numStates();
+
   // export tracks and possible matched clusters
   for (Index istate = 0; istate < plane.numStates(); ++istate) {
     const Storage::TrackState& state = plane.getState(istate);
@@ -124,6 +129,7 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
     m_track.chi2 = track.chi2();
     m_track.dof = track.degreesOfFreedom();
     m_track.nClusters = track.numClusters();
+
     // matching cluster data
     if (state.matchedCluster()) {
       const Storage::Cluster& cluster = *state.matchedCluster();
@@ -140,6 +146,7 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
     }
     m_treeTrk->Fill();
   }
+
   // export unmatched clusters
   for (Index icluster = 0; icluster < plane.numClusters(); ++icluster) {
     const Storage::Cluster& cluster = *plane.getCluster(icluster);
