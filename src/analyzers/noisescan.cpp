@@ -24,7 +24,8 @@ Analyzers::NoiseScan::NoiseScan(const Mechanics::Sensor& sensor,
                                 TDirectory* parent,
                                 const int binsOccupancy)
     : m_sensorId(sensor.id())
-    , m_densityBandwidth(bandwidth)
+    , m_bandwithCol(bandwidth)
+    , m_bandwithRow(bandwidth)
     , m_sigmaMax(sigmaMax)
     , m_rateMax(rateMax)
     , m_numEvents(0)
@@ -120,7 +121,10 @@ static double estimateDensityAtPosition(
 }
 
 /** Write a smoothed density estimate to the density histogram. */
-static void estimateDensity(const TH2D* values, double bandwidth, TH2D* density)
+static void estimateDensity(const TH2D* values,
+                            double bandwidthX,
+                            double bandwidthY,
+                            TH2D* density)
 {
   assert(values->GetNbinsX() == density->GetNbinsX());
   assert(values->GetNbinsY() == density->GetNbinsY());
@@ -128,7 +132,7 @@ static void estimateDensity(const TH2D* values, double bandwidth, TH2D* density)
   for (int icol = 1; icol <= values->GetNbinsX(); ++icol) {
     for (int irow = 1; irow <= values->GetNbinsY(); ++irow) {
       auto den =
-          estimateDensityAtPosition(values, icol, irow, bandwidth, bandwidth);
+          estimateDensityAtPosition(values, icol, irow, bandwidthX, bandwidthY);
       density->SetBinContent(icol, irow, den);
     }
   }
@@ -138,7 +142,7 @@ static void estimateDensity(const TH2D* values, double bandwidth, TH2D* density)
 
 void Analyzers::NoiseScan::finalize()
 {
-  estimateDensity(m_occupancy, m_densityBandwidth, m_density);
+  estimateDensity(m_occupancy, m_bandwithCol, m_bandwithRow, m_density);
   // calculate local signifance, i.e. (hits - density) / sqrt(density)
   for (int icol = 1; icol <= m_occupancy->GetNbinsX(); ++icol) {
     for (int irow = 1; irow <= m_occupancy->GetNbinsY(); ++irow) {
