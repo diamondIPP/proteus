@@ -21,29 +21,24 @@ Analyzers::MatchExporter::MatchExporter(const Mechanics::Device& device,
 {
   TDirectory* sub = dir->mkdir(m_sensor.name().c_str());
 
-  auto setupCluster = [](TTree* tree, const std::string& prefix,
-                         ClusterData& data) {
-    tree->Branch((prefix + "u").c_str(), &data.u);
-    tree->Branch((prefix + "v").c_str(), &data.v);
-    tree->Branch((prefix + "std_u").c_str(), &data.stdU);
-    tree->Branch((prefix + "std_v").c_str(), &data.stdV);
-    tree->Branch((prefix + "corr_uv").c_str(), &data.corrUV);
-    tree->Branch((prefix + "col").c_str(), &data.col);
-    tree->Branch((prefix + "row").c_str(), &data.row);
-    tree->Branch((prefix + "time").c_str(), &data.time);
-    tree->Branch((prefix + "value").c_str(), &data.value);
-    tree->Branch((prefix + "region").c_str(), &data.region);
-    tree->Branch((prefix + "size").c_str(), &data.size);
-    tree->Branch((prefix + "size_col").c_str(), &data.sizeCol);
-    tree->Branch((prefix + "size_row").c_str(), &data.sizeRow);
-    tree->Branch((prefix + "hit_col").c_str(), &data.hitCol,
-                 (prefix + "hit_col[" + prefix + "size]/S").c_str());
-    tree->Branch((prefix + "hit_row").c_str(), &data.hitRow,
-                 (prefix + "hit_row[" + prefix + "size]/S").c_str());
-    tree->Branch((prefix + "hit_time").c_str(), &data.hitTime,
-                 (prefix + "hit_time[" + prefix + "size]/F").c_str());
-    tree->Branch((prefix + "hit_value").c_str(), &data.hitValue,
-                 (prefix + "hit_value[" + prefix + "size]/F").c_str());
+  auto setupCluster = [](TTree* tree, ClusterData& data) {
+    tree->Branch("clu_u", &data.u);
+    tree->Branch("clu_v", &data.v);
+    tree->Branch("clu_std_u", &data.stdU);
+    tree->Branch("clu_std_v", &data.stdV);
+    tree->Branch("clu_corr_uv", &data.corrUV);
+    tree->Branch("clu_col", &data.col);
+    tree->Branch("clu_row", &data.row);
+    tree->Branch("clu_time", &data.time);
+    tree->Branch("clu_value", &data.value);
+    tree->Branch("clu_region", &data.region);
+    tree->Branch("clu_size", &data.size);
+    tree->Branch("clu_size_col", &data.sizeCol);
+    tree->Branch("clu_size_row", &data.sizeRow);
+    tree->Branch("hit_col", &data.hitCol, "hit_col[clu_size]/S");
+    tree->Branch("hit_row", &data.hitRow, "hit_row[clu_size]/S");
+    tree->Branch("hit_time", &data.hitTime, "hit_time[clu_size]/F");
+    tree->Branch("hit_value", &data.hitValue, "hit_value[clu_size]/F");
   };
 
   m_treeTrk = new TTree("tracks", "");
@@ -60,10 +55,10 @@ Analyzers::MatchExporter::MatchExporter(const Mechanics::Device& device,
   m_treeTrk->Branch("trk_dof", &m_track.dof);
   m_treeTrk->Branch("trk_nclusters", &m_track.nClusters);
   m_treeTrk->Branch("mat_d2", &m_match.d2);
-  setupCluster(m_treeTrk, "clu_", m_clusterMatched);
+  setupCluster(m_treeTrk, m_clusterMatched);
   m_treeClu = new TTree("clusters_unmatched", "");
   m_treeClu->SetDirectory(sub);
-  setupCluster(m_treeClu, std::string(), m_clusterUnmatched);
+  setupCluster(m_treeClu, m_clusterUnmatched);
 }
 
 std::string Analyzers::MatchExporter::name() const { return m_name; }
