@@ -43,7 +43,7 @@ Analyzers::MatchExporter::MatchExporter(const Mechanics::Device& device,
 
   m_treeTrk = new TTree("tracks", "");
   m_treeTrk->SetDirectory(sub);
-  m_treeTrk->Branch("evt_timestamp", &m_event.timestamp);
+  m_treeTrk->Branch("evt_timestamp", &m_event.timestamp, "evt_timestamp/l");
   m_treeTrk->Branch("evt_nclusters", &m_event.nClusters);
   m_treeTrk->Branch("evt_ntracks", &m_event.nTracks);
   m_treeTrk->Branch("trk_u", &m_track.u);
@@ -61,6 +61,22 @@ Analyzers::MatchExporter::MatchExporter(const Mechanics::Device& device,
   m_treeClu = new TTree("clusters_unmatched", "");
   m_treeClu->SetDirectory(sub);
   setupCluster(m_treeClu, m_clusterUnmatched);
+
+  TTree* maskTree = new TTree("masked_pixels", "");
+  int16_t maskedCol, maskedRow;
+  maskTree->SetDirectory(sub);
+  maskTree->Branch("col", &maskedCol);
+  maskTree->Branch("row", &maskedRow);
+  auto mask = m_sensor.pixelMask();
+  for (Index c = 0; c < m_sensor.numCols(); ++c) {
+    for (Index r = 0; r < m_sensor.numRows(); ++r) {
+      if (mask.isMasked(c, r)) {
+        maskedCol = static_cast<int16_t>(c);
+        maskedRow = static_cast<int16_t>(r);
+        maskTree->Fill();
+      }
+    }
+  }
 }
 
 std::string Analyzers::MatchExporter::name() const { return m_name; }
