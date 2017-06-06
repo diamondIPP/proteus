@@ -79,8 +79,8 @@ void Analyzers::NoiseScan::analyze(const Storage::Event& event)
  * Use kernel density estimation w/ an Epanechnikov kernel to estimate the
  * density at the given point without using the actual value.
  */
-static double
-estimateDensityAtPosition(const TH2D* values, int i, int j, double bandwidth)
+static double estimateDensityAtPosition(
+    const TH2D* values, int i, int j, double bandwidthI, double bandwidthJ)
 {
   assert((1 <= i) && (i <= values->GetNbinsX()));
   assert((1 <= j) && (j <= values->GetNbinsY()));
@@ -90,18 +90,19 @@ estimateDensityAtPosition(const TH2D* values, int i, int j, double bandwidth)
   // with a bounded kernel only a subset of the points need to be considered.
   // define 2*bandwidth sized window around selected point to speed up
   // calculation.
-  int bw = std::ceil(std::abs(bandwidth));
-  int imin = std::max(1, i - bw);
-  int imax = std::min(i + bw, values->GetNbinsX());
-  int jmin = std::max(1, j - bw);
-  int jmax = std::min(j + bw, values->GetNbinsY());
+  int bwi = std::ceil(std::abs(bandwidthI));
+  int bwj = std::ceil(std::abs(bandwidthJ));
+  int imin = std::max(1, i - bwi);
+  int imax = std::min(i + bwi, values->GetNbinsX());
+  int jmin = std::max(1, j - bwj);
+  int jmax = std::min(j + bwj, values->GetNbinsY());
   for (int l = imin; l <= imax; ++l) {
     for (int m = jmin; m <= jmax; ++m) {
       if ((l == i) && (m == j))
         continue;
 
-      double ui = (l - i) / bandwidth;
-      double uj = (m - j) / bandwidth;
+      double ui = (l - i) / static_cast<double>(bwi);
+      double uj = (m - j) / static_cast<double>(bwj);
       double u2 = ui * ui + uj * uj;
 
       if (1 < u2)
@@ -126,7 +127,8 @@ static void estimateDensity(const TH2D* values, double bandwidth, TH2D* density)
 
   for (int icol = 1; icol <= values->GetNbinsX(); ++icol) {
     for (int irow = 1; irow <= values->GetNbinsY(); ++irow) {
-      auto den = estimateDensityAtPosition(values, icol, irow, bandwidth);
+      auto den =
+          estimateDensityAtPosition(values, icol, irow, bandwidth, bandwidth);
       density->SetBinContent(icol, irow, den);
     }
   }
