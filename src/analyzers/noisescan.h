@@ -52,7 +52,7 @@ public:
 
 private:
   Index m_sensorId;
-  double m_bandwithCol, m_bandwithRow, m_sigmaMax, m_rateMax;
+  double m_bandwidthCol, m_bandwidthRow, m_sigmaMax, m_rateMax;
   uint64_t m_numEvents;
   TH2D* m_occupancy;
   TH1D* m_occupancyDist;

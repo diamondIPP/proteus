@@ -24,13 +24,21 @@ Analyzers::NoiseScan::NoiseScan(const Mechanics::Sensor& sensor,
                                 TDirectory* parent,
                                 const int binsOccupancy)
     : m_sensorId(sensor.id())
-    , m_bandwithCol(bandwidth)
-    , m_bandwithRow(bandwidth)
     , m_sigmaMax(sigmaMax)
     , m_rateMax(rateMax)
     , m_numEvents(0)
 {
   using namespace Utils;
+
+  // adjust per-axis bandwith for pixel pitch along each axis such that the
+  // covered area is approximately circular in metric coordinates.
+  double scale = std::hypot(sensor.pitchCol(), sensor.pitchRow()) / M_SQRT2;
+  m_bandwidthCol = bandwidth * scale / sensor.pitchCol();
+  m_bandwidthRow = bandwidth * scale / sensor.pitchRow();
+
+  DEBUG("pixel pitch scale: ", scale);
+  DEBUG("bandwidth col: ", m_bandwidthCol);
+  DEBUG("bandwidth row: ", m_bandwidthRow);
 
   // region-of-interest must be bounded by the actual sensor size
   Area roi = intersection(regionOfInterest, sensor.sensitiveAreaPixel());
@@ -142,7 +150,7 @@ static void estimateDensity(const TH2D* values,
 
 void Analyzers::NoiseScan::finalize()
 {
-  estimateDensity(m_occupancy, m_bandwithCol, m_bandwithRow, m_density);
+  estimateDensity(m_occupancy, m_bandwidthCol, m_bandwidthRow, m_density);
   // calculate local signifance, i.e. (hits - density) / sqrt(density)
   for (int icol = 1; icol <= m_occupancy->GetNbinsX(); ++icol) {
     for (int irow = 1; irow <= m_occupancy->GetNbinsY(); ++irow) {
