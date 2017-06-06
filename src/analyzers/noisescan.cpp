@@ -33,8 +33,8 @@ Analyzers::NoiseScan::NoiseScan(const Mechanics::Sensor& sensor,
   // adjust per-axis bandwith for pixel pitch along each axis such that the
   // covered area is approximately circular in metric coordinates.
   double scale = std::hypot(sensor.pitchCol(), sensor.pitchRow()) / M_SQRT2;
-  m_bandwidthCol = bandwidth * scale / sensor.pitchCol();
-  m_bandwidthRow = bandwidth * scale / sensor.pitchRow();
+  m_bandwidthCol = std::ceil(bandwidth * scale / sensor.pitchCol());
+  m_bandwidthRow = std::ceil(bandwidth * scale / sensor.pitchRow());
 
   DEBUG("pixel pitch scale: ", scale);
   DEBUG("bandwidth col: ", m_bandwidthCol);
@@ -88,19 +88,18 @@ void Analyzers::NoiseScan::analyze(const Storage::Event& event)
  * Use kernel density estimation w/ an Epanechnikov kernel to estimate the
  * density at the given point without using the actual value.
  */
-static double estimateDensityAtPosition(
-    const TH2D* values, int i, int j, double bandwidthI, double bandwidthJ)
+static double
+estimateDensityAtPosition(const TH2D* values, int i, int j, int bwi, int bwj)
 {
   assert((1 <= i) && (i <= values->GetNbinsX()));
   assert((1 <= j) && (j <= values->GetNbinsY()));
+  assert(0 < bwi);
+  assert(1 < bwj);
 
   double sumWeights = 0;
   double sumValues = 0;
-  // with a bounded kernel only a subset of the points need to be considered.
-  // define 2*bandwidth sized window around selected point to speed up
-  // calculation.
-  int bwi = std::ceil(std::abs(bandwidthI));
-  int bwj = std::ceil(std::abs(bandwidthJ));
+  // with a bounded kernel only a subset of the gpoints need to be considered.
+  // only 2*bandwidth sized window around selected point needs to be considered.
   int imin = std::max(1, i - bwi);
   int imax = std::min(i + bwi, values->GetNbinsX());
   int jmin = std::max(1, j - bwj);
@@ -130,8 +129,8 @@ static double estimateDensityAtPosition(
 
 /** Write a smoothed density estimate to the density histogram. */
 static void estimateDensity(const TH2D* values,
-                            double bandwidthX,
-                            double bandwidthY,
+                            int bandwidthX,
+                            int bandwidthY,
                             TH2D* density)
 {
   assert(values->GetNbinsX() == density->GetNbinsX());
