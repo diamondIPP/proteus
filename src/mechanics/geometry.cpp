@@ -91,15 +91,23 @@ Mechanics::Geometry Mechanics::Geometry::fromConfig(const toml::Value& cfg)
       auto unV = cs.get<std::vector<double>>("unit_v");
 
       if (off.size() != 3)
-        FAIL("number of entries != 3 in offset for sensor ", sensorId);
+        FAIL("sensor ", sensorId, " has offset number of entries != 3");
       if (unU.size() != 3)
-        FAIL("number of entries != 3 in unit_u for sensor ", sensorId);
+        FAIL("sensor ", sensorId, " has unit_u number of entries != 3");
       if (unV.size() != 3)
-        FAIL("number of entries != 3 in unit_v for sensor ", sensorId);
+        FAIL("sensor ", sensorId, " has unitv_ number of entries != 3");
 
-      geo.m_planes[sensorId] = Plane::fromDirections(
-          Vector3(unU[0], unU[1], unU[2]), Vector3(unV[0], unV[1], unV[2]),
-          Vector3(off[0], off[1], off[2]));
+      Vector3 unitU(unU[0], unU[1], unU[2]);
+      Vector3 unitV(unV[0], unV[1], unV[2]);
+      Vector3 offset(off[0], off[1], off[2]);
+      double dot = Dot(unitU.Unit(), unitV.Unit());
+
+      DEBUG("sensor ", sensorId, " unit vector projection ", dot);
+      // approximate zero check; the number of ignored bits is a bit arbitrary
+      if ((4 * std::numeric_limits<double>::epsilon()) < std::abs(dot))
+        FAIL("sensor ", sensorId, " has non-orthogonal unit vectors");
+
+      geo.m_planes[sensorId] = Plane::fromDirections(unitU, unitV, offset);
     } else {
       auto rotX = cs.get<double>("rotation_x");
       auto rotY = cs.get<double>("rotation_y");
