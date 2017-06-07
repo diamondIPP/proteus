@@ -1,0 +1,15 @@
+[beam]
+slope_x = 0.0
+slope_y = 0.0
+
+[[sensors]]
+id = 0
+offset = [0.0, 0.0, 0.0]
+unit_u = [-1.0, 0.0, 0.0]
+unit_v = [0.1, -0.9, 0.0]
+
+[[sensors]]
+id = 1
+offset = [0.0, 0.0, 158000.0]
+unit_u = [0.125, 1.25, 0.0]
+unit_v = [-1.0, 0.0, 0.0]
