@@ -29,7 +29,6 @@ public:
   /** Calculate local and global coordinates from the pixel coordinates. */
   void transform(const Mechanics::Sensor& sensor);
   void setTrack(Index track);
-  void setMatchedState(Index state);
 
   Index sensorId() const { return m_sensorId; }
   Index region() const;
@@ -81,6 +80,8 @@ private:
   Index m_sensorId;
   Index m_track;
   Index m_matchedState;
+
+  friend class SensorEvent;
 };
 
 std::ostream& operator<<(std::ostream& os, const Cluster& cluster);

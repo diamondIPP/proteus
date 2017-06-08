@@ -47,13 +47,6 @@ void Storage::TrackState::setTrack(Index track)
   m_track = track;
 }
 
-void Storage::TrackState::setMatchedCluster(Index cluster)
-{
-  assert((m_matchedCluster == kInvalidIndex) &&
-         "track state can only be matched to one cluster");
-  m_matchedCluster = cluster;
-}
-
 std::ostream& Storage::operator<<(std::ostream& os, const TrackState& state)
 {
   os << "offset=" << state.offset() << " slope=" << state.slope();

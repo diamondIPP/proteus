@@ -39,6 +39,9 @@ public:
   TrackState& getState(Index i) { return *m_states[i]; }
   const TrackState& getState(Index i) const { return *m_states[i]; }
 
+  /** Associate one cluster to one track state. */
+  void addMatch(Index cluster, Index state);
+
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:

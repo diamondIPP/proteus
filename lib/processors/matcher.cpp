@@ -22,8 +22,8 @@ std::string Processors::Matcher::name() const { return m_name; }
 
 namespace {
 struct PossibleMatch {
-  Index state;
   Index cluster;
+  Index state;
   double d2;
 };
 } // namespace
@@ -33,14 +33,14 @@ void Processors::Matcher::process(Storage::Event& event) const
   Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
 
   std::vector<PossibleMatch> possibleMatches;
-  std::set<Index> matchedStates;
   std::set<Index> matchedClusters;
+  std::set<Index> matchedStates;
 
   // preselect possible track state / cluster pairs
   for (Index istate = 0; istate < sensorEvent.numStates(); ++istate) {
     for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
-      const auto& state = sensorEvent.getState(istate);
       const auto& cluster = *sensorEvent.getCluster(icluster);
+      const auto& state = sensorEvent.getState(istate);
 
       // compute mahalanobis distance between state/cluster
       XYVector delta = cluster.posLocal() - state.offset();
@@ -48,7 +48,7 @@ void Processors::Matcher::process(Storage::Event& event) const
       double d2 = mahalanobisSquared(cov, delta);
 
       if ((m_distSquaredMax < 0) || (d2 < m_distSquaredMax))
-        possibleMatches.emplace_back(PossibleMatch{istate, icluster, d2});
+        possibleMatches.emplace_back(PossibleMatch{icluster, istate, d2});
     }
   }
   // sort by pair distance, closest distance first
@@ -56,12 +56,11 @@ void Processors::Matcher::process(Storage::Event& event) const
             [](const auto& a, const auto& b) { return (a.d2 < b.d2); });
   // select unique matches, closest distance first
   for (const auto& match : possibleMatches) {
-    if ((0 < matchedStates.count(match.state)) ||
-        (0 < matchedClusters.count(match.cluster)))
+    if ((0 < matchedClusters.count(match.cluster)) ||
+        (0 < matchedStates.count(match.state)))
       continue;
-    matchedStates.insert(match.state);
     matchedClusters.insert(match.cluster);
-    sensorEvent.getCluster(match.cluster)->setMatchedState(match.state);
-    sensorEvent.getState(match.state).setMatchedCluster(match.cluster);
+    matchedStates.insert(match.state);
+    sensorEvent.addMatch(match.cluster, match.state);
   }
 }

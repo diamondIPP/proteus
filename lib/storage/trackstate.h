@@ -35,9 +35,7 @@ public:
   void setCov(InputIterator first);
   void setCovU(float varOffset, float varSlope, float cov = 0);
   void setCovV(float varOffset, float varSlope, float cov = 0);
-
   void setTrack(Index track);
-  void setMatchedCluster(Index cluster);
 
   /** Covariance matrix of the full parameter vector. */
   const SymMatrix4& cov() const { return m_cov; }

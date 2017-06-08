@@ -64,13 +64,6 @@ void Storage::Cluster::setTrack(Index track)
   m_track = track;
 }
 
-void Storage::Cluster::setMatchedState(Index state)
-{
-  assert((m_matched == kInvalidIndex) &&
-         "cluster can only be matched to one track state");
-  m_matched = state;
-}
-
 Index Storage::Cluster::region() const
 {
   return m_hits.empty() ? kInvalidIndex : m_hits.front()->region();

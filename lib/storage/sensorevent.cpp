@@ -19,6 +19,20 @@ Storage::Cluster* Storage::SensorEvent::newCluster()
   return m_clusters.back().get();
 }
 
+void Storage::SensorEvent::addMatch(Index cluster, Index state)
+{
+  assert((0 <= cluster) && (cluster < m_clusters.size()) &&
+         "invalid cluster index");
+  assert((0 <= state) && (state < m_states.size()) && "invalid state index");
+  assert(!m_clusters[cluster].isMatched() &&
+         "cluster can only be matched to one track state");
+  assert(!m_states[state].isMatched() &&
+         "cluster can only be matched to one track state");
+
+  m_clusters[cluster]->m_matchedState = state;
+  m_states[state]->m_matchedCluster = cluster;
+}
+
 void Storage::SensorEvent::print(std::ostream& os,
                                  const std::string& prefix) const
 {
