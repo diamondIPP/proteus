@@ -9,7 +9,6 @@ Storage::Event::Event(size_t sensors)
     , m_triggerInfo(-1)
     , m_triggerOffset(-1)
     , m_triggerPhase(-1)
-    , m_invalid(false)
 {
   m_sensors.reserve(sensors);
   for (size_t isensor = 0; isensor < sensors; ++isensor)
@@ -23,7 +22,6 @@ void Storage::Event::clear(uint64_t frame, uint64_t timestamp)
   m_triggerInfo = -1;
   m_triggerOffset = -1;
   m_triggerPhase = -1;
-  m_invalid = false;
   for (auto& se : m_sensors)
     se.clear();
   m_tracks.clear();
@@ -62,7 +60,6 @@ void Storage::Event::print(std::ostream& os, const std::string& prefix) const
 {
   os << prefix << "frame: " << frame() << '\n';
   os << prefix << "timestamp: " << timestamp() << '\n';
-  os << prefix << "invalid: " << invalid() << '\n';
   os << prefix << "sensors:\n";
   for (size_t isensor = 0; isensor < m_sensors.size(); ++isensor) {
     const auto& sensorEvent = m_sensors[isensor];

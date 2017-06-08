@@ -19,14 +19,12 @@ public:
 
   void clear(uint64_t frame, uint64_t timestamp);
   void setTrigger(int32_t info, int32_t offset, int32_t phase);
-  void setInvalid(bool value) { m_invalid = value; }
 
   uint64_t frame() const { return m_frame; }
   uint64_t timestamp() const { return m_timestamp; }
   int32_t triggerInfo() const { return m_triggerInfo; }
   int32_t triggerOffset() const { return m_triggerOffset; }
   int32_t triggerPhase() const { return m_triggerPhase; }
-  bool invalid() const { return m_invalid; }
 
   Index numSensorEvents() const { return static_cast<Index>(m_sensors.size()); }
   SensorEvent& getSensorEvent(Index i) { return m_sensors.at(i); }
@@ -49,7 +47,6 @@ private:
   int32_t m_triggerInfo; // Dammit Andrej!
   int32_t m_triggerOffset;
   int32_t m_triggerPhase;
-  bool m_invalid;
 
   std::vector<SensorEvent> m_sensors;
   std::vector<std::unique_ptr<Track>> m_tracks;
