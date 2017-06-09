@@ -41,7 +41,13 @@ Io::RceRootReader::RceRootReader(const std::string& path)
   m_eventInfo->SetBranchAddress("TriggerTime", &triggerTime);
   m_eventInfo->SetBranchAddress("TriggerInfo", &triggerInfo);
   m_eventInfo->SetBranchAddress("TriggerOffset", &triggerOffset);
-  m_eventInfo->SetBranchAddress("TriggerPhase", &triggerPhase);
+  // trigger phase is a custom addition for the trigger phase busy and
+  // might not be available
+  if (m_eventInfo->FindBranch("TriggerPhase")) {
+    m_eventInfo->SetBranchAddress("TriggerPhase", &triggerPhase);
+  } else {
+    triggerPhase = -1;
+  }
   m_eventInfo->SetBranchAddress("Invalid", &invalid);
 
   // tracks tree is optional
