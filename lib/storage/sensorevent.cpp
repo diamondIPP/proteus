@@ -4,10 +4,15 @@
 
 #include "storage/track.h"
 
-Storage::SensorEvent::SensorEvent(Index sensorId) : m_sensorId(sensorId) {}
-
-void Storage::SensorEvent::clear()
+Storage::SensorEvent::SensorEvent(Index sensorId)
+    : m_sensorId(sensorId), m_frame(UINT64_MAX), m_timestamp(UINT64_MAX)
 {
+}
+
+void Storage::SensorEvent::clear(uint64_t frame, uint64_t timestamp)
+{
+  m_frame = frame;
+  m_timestamp = timestamp;
   m_hits.clear();
   m_clusters.clear();
   m_states.clear();
@@ -24,9 +29,9 @@ void Storage::SensorEvent::addMatch(Index cluster, Index state)
   assert((0 <= cluster) && (cluster < m_clusters.size()) &&
          "invalid cluster index");
   assert((0 <= state) && (state < m_states.size()) && "invalid state index");
-  assert(!m_clusters[cluster].isMatched() &&
+  assert(!m_clusters[cluster]->isMatched() &&
          "cluster can only be matched to one track state");
-  assert(!m_states[state].isMatched() &&
+  assert(!m_states[state]->isMatched() &&
          "cluster can only be matched to one track state");
 
   m_clusters[cluster]->m_matchedState = state;

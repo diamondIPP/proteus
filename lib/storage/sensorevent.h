@@ -21,7 +21,10 @@ class SensorEvent {
 public:
   SensorEvent(Index sensorId);
 
-  void clear();
+  void clear(uint64_t frame, uint64_t timestamp);
+
+  uint64_t frame() const { return m_frame; }
+  uint64_t timestamp() const { return m_timestamp; }
 
   template <typename... HitParams>
   Hit* addHit(HitParams&&... params);
@@ -45,10 +48,12 @@ public:
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
+  Index m_sensorId;
+  uint64_t m_frame;
+  uint64_t m_timestamp;
   std::vector<std::unique_ptr<Hit>> m_hits;
   std::vector<std::unique_ptr<Cluster>> m_clusters;
   std::vector<std::unique_ptr<TrackState>> m_states;
-  Index m_sensorId;
 };
 
 } // namespace Storage

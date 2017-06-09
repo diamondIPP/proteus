@@ -22,8 +22,8 @@ void Storage::Event::clear(uint64_t frame, uint64_t timestamp)
   m_triggerInfo = -1;
   m_triggerOffset = -1;
   m_triggerPhase = -1;
-  for (auto& se : m_sensors)
-    se.clear();
+  for (auto& sensorEvent : m_sensors)
+    sensorEvent.clear(frame, timestamp);
   m_tracks.clear();
 }
 
