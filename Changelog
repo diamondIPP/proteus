@@ -73,6 +73,13 @@ Bugfixes
 *   Updating a sensor geometry using local corrections now overwrites
     the stored geometry covariance instead of adding it to the
     existing value.
+*   Write correct pixel masks for noise scans with a region-of-interest
+    cut.
+
+    When a region-of-interest cut was configured for the noise scan,
+    the column/row index of masked pixels was calculated only relative
+    to the region-of-interest. This lead to incorrect or empty output
+    pixel masks.
 
 Internal changes
 ----------------
