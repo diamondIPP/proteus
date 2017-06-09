@@ -179,7 +179,7 @@ void Analyzers::NoiseScan::finalize()
       // pixel occupancy is above absolute limit
       bool isAboveAbsolute = (m_rateMax < rate);
       if (isAboveRelative || isAboveAbsolute) {
-        m_mask->Fill(icol - 1, irow - 1);
+        m_mask->SetBinContent(icol, irow, 1);
       }
     }
   }
@@ -198,8 +198,9 @@ Mechanics::PixelMasks Analyzers::NoiseScan::constructMasks() const
   for (int icol = 1; icol <= m_mask->GetNbinsX(); ++icol) {
     for (int irow = 1; irow <= m_mask->GetNbinsY(); ++irow) {
       if (0 < m_mask->GetBinContent(icol, irow)) {
-        // index of first data bin in ROOT histograms is 1
-        newMask.maskPixel(m_sensorId, icol - 1, irow - 1);
+        auto col = static_cast<Index>(m_mask->GetXaxis()->GetBinLowEdge(icol));
+        auto row = static_cast<Index>(m_mask->GetYaxis()->GetBinLowEdge(irow));
+        newMask.maskPixel(m_sensorId, col, row);
       }
     }
   }
