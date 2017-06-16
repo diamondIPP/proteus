@@ -94,6 +94,18 @@ struct Timing {
   }
 };
 
+// RAII-based stop-watch that adds time to the given duration
+struct StopWatch {
+  Timing::Duration& clock;
+  Timing::Time start;
+
+  StopWatch(Timing::Duration& clock_)
+      : clock(clock_), start(Timing::Clock::now())
+  {
+  }
+  ~StopWatch() { clock += Timing::Clock::now() - start; }
+};
+
 // Summary statistics for basic event information.
 struct Statistics {
   uint64_t events = 0;
@@ -140,16 +152,16 @@ Utils::EventLoop::EventLoop(Io::EventReader* reader,
     if (available < (start + events)) {
       m_events = available - start;
       INFO("restrict to ", available, " events available");
-    // there are enought events available
+      // there are enought events available
     } else {
       m_events = events - start;
     }
-  // case 2: users wants to process all events available
+    // case 2: users wants to process all events available
   } else {
     // number of events is known
     if (available != UINT64_MAX) {
       m_events = available - start;
-    // number of events is unkown
+      // number of events is unkown
     } else {
       m_events = UINT64_MAX;
     }
@@ -200,32 +212,26 @@ void Utils::EventLoop::run()
     progress.update<uint64_t>(0, m_events);
   timing.start();
   {
-    auto start = Timing::now();
+    StopWatch sw(timing.reader);
     m_reader->skip(m_start);
-    timing.reader += Timing::now() - start;
   }
   for (uint64_t nevents = 1; nevents <= m_events; ++nevents) {
     {
-      auto start = Timing::now();
-      bool areEventsLeft = m_reader->readNext(event);
-      timing.reader += Timing::now() - start;
-      if (!areEventsLeft)
+      StopWatch sw(timing.reader);
+      if (!m_reader->readNext(event))
         break;
     }
     for (size_t i = 0; i < m_processors.size(); ++i) {
-      auto start = Timing::now();
+      StopWatch sw(timing.processors[i]);
       m_processors[i]->process(event);
-      timing.processors[i] += Timing::now() - start;
     }
     for (size_t i = 0; i < m_analyzers.size(); ++i) {
-      auto start = Timing::now();
+      StopWatch sw(timing.analyzers[i]);
       m_analyzers[i]->analyze(event);
-      timing.analyzers[i] += Timing::now() - start;
     }
     for (size_t i = 0; i < m_writers.size(); ++i) {
-      auto start = Timing::now();
+      StopWatch sw(timing.writers[i]);
       m_writers[i]->append(event);
-      timing.writers[i] += Timing::now() - start;
     }
     stats.fill(event.getNumHits(), event.getNumClusters(), event.numTracks());
     if (m_showProgress)
