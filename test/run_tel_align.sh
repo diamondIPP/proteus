@@ -12,7 +12,7 @@ prefix=$(printf "output/run%06d-" $RUN)
 echo "using $(which pt-align)"
 
 pt-align $FLAGS \
-  -d ${rundir}/device.toml \
+  -d ${rundir}/device.toml -g ${rundir}/geometry/unaligned.toml \
   -c ${rundir}/analysis.toml -u tel_coarse \
   ${rawfile} ${prefix}tel_align0
 pt-align $FLAGS \

@@ -21,3 +21,8 @@ pt-cfg run001066/masks/tel_mask_empty.toml
 # failing command `false` is needed.
 ! pt-cfg run000875/ || false # directory
 ! pt-cfg run000875/does-not-exists || false
+
+! pt-cfg geometry/missing_id.toml || false
+! pt-cfg geometry/non_orthogonal.toml || false
+pt-cfg geometry/with_angles.toml
+pt-cfg geometry/with_directions.toml

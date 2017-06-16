@@ -4,72 +4,48 @@ slope_y = 0.0
 
 [[sensors]]
 id = 0
-offset_x = 0.0
-offset_y = 0.0
-offset_z = 0.0
-rotation_x = 0.0
-rotation_y = 0.0
-rotation_z = 3.1415926535897
+offset = [0.0, 0.0, 0.0]
+unit_u = [-1.0, 0.0, 0.0]
+unit_v = [0.0, -1.0, 0.0]
 
 [[sensors]]
 id = 1
-offset_x = 0.0
-offset_y = 0.0
-offset_z = 50000.0
-rotation_x = 0.0
-rotation_y = 0.0
-rotation_z = 1.570796326795
+offset = [0.0, 0.0, 50000.0]
+unit_u = [0.0, 1.0, 0.0]
+unit_v = [-1.0, 0.0, 0.0]
 
 [[sensors]]
 id = 2
-offset_x = 0.0
-offset_y = 0.0
-offset_z = 100000.0
-rotation_x = 0.0
-rotation_y = 0.0
-rotation_z = 3.1415926535897
+offset = [0.0, 0.0, 100000.0]
+unit_u = [-1.0, 0.0, 0.0]
+unit_v = [0.0, -1.0, 0.0]
 
 [[sensors]]
 id = 3
-offset_x = 0.0
-offset_y = 0.0
-offset_z = 570000.0
-rotation_x = 3.1415926535897
-rotation_y = 0.0
-rotation_z = 0.0
+offset = [0.0, 0.0, 570000.0]
+unit_u = [1.0, 0.0, 0.0]
+unit_v = [0.0, -1.0, 0.0]
 
 [[sensors]]
 id = 4
-offset_x = 0.0
-offset_y = 0.0
-offset_z = 625000.0
-rotation_x = 0.0
-rotation_y = 3.1415926535897
-rotation_z = 1.570796326795
+offset = [0.0, 0.0, 625000.0]
+unit_u = [0.0, 1.0, 0.0]
+unit_v = [1.0, 0.0, 0.0]
 
 [[sensors]]
 id = 5
-offset_x = 0.0
-offset_y = 0.0
-offset_z = 675000.0
-rotation_x = 3.1415926535897
-rotation_y = 0.0
-rotation_z = 0.0
+offset = [0.0, 0.0, 675000.0]
+unit_u = [1.0, 0.0, 0.0]
+unit_v = [0.0, -1.0, 0.0]
 
 [[sensors]]
 id = 6
-offset_x = 0.0
-offset_y = 0.0
-offset_z = 300000.0
-rotation_x = 0.0
-rotation_y = 0.0
-rotation_z = 3.1415926535897
+offset = [0.0, 0.0, 300000.0]
+unit_u = [0.0, 1.0, 0.0]
+unit_v = [-1.0, 0.0, 0.0]
 
 [[sensors]]
 id = 7
-offset_x = 0.0
-offset_y = 0.0
-offset_z = 400000.0
-rotation_x = 0.0
-rotation_y = 0.0
-rotation_z = 3.1415926535897
+offset = [0.0, 0.0, 400000.0]
+unit_u = [0.0, 1.0, 0.0]
+unit_v = [-1.0, 0.0, 0.0]
