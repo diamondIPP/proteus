@@ -43,7 +43,7 @@ private:
     int16_t nTracks;
   };
   struct TrackData {
-    float u, v;
+    float u, v, du, dv;
     float stdU, stdV, corrUV;
     float col, row;
     float chi2;

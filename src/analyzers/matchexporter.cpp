@@ -48,6 +48,8 @@ Analyzers::MatchExporter::MatchExporter(const Mechanics::Device& device,
   m_treeTrk->Branch("evt_ntracks", &m_event.nTracks);
   m_treeTrk->Branch("trk_u", &m_track.u);
   m_treeTrk->Branch("trk_v", &m_track.v);
+  m_treeTrk->Branch("trk_du", &m_track.du);
+  m_treeTrk->Branch("trk_dv", &m_track.dv);
   m_treeTrk->Branch("trk_std_u", &m_track.stdU);
   m_treeTrk->Branch("trk_std_v", &m_track.stdV);
   m_treeTrk->Branch("trk_corr_uv", &m_track.corrUV);
@@ -137,6 +139,8 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
     XYPoint cr = m_sensor.transformLocalToPixel(state.offset());
     m_track.u = state.offset().x();
     m_track.v = state.offset().y();
+    m_track.du = state.slope().x();
+    m_track.dv = state.slope().y();
     m_track.stdU = std::sqrt(state.covOffset()(0, 0));
     m_track.stdV = std::sqrt(state.covOffset()(1, 1));
     m_track.corrUV = state.covOffset()(0, 1) / (m_track.stdU * m_track.stdV);
