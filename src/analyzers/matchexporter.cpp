@@ -41,7 +41,7 @@ Analyzers::MatchExporter::MatchExporter(const Mechanics::Device& device,
     tree->Branch("hit_value", &data.hitValue, "hit_value[clu_size]/F");
   };
 
-  m_treeTrk = new TTree("tracks", "");
+  m_treeTrk = new TTree("tracks_clusters_matched", "");
   m_treeTrk->SetDirectory(sub);
   m_treeTrk->Branch("evt_timestamp", &m_event.timestamp, "evt_timestamp/l");
   m_treeTrk->Branch("evt_nclusters", &m_event.nClusters);
