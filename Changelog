@@ -44,6 +44,16 @@ User-visible changes
 *   The ``search_sigma_max`` cut for finding tracks can be disabled by
     setting it to a negative value. This enables an exhaustive track
     search that considers all possible hit combinations.
+*   The noisescan adjusts the density bandwidth to non-quadratic pixels.
+
+    The ``density_bandwidth`` setting is now measured in lengths of
+    the pixel diagonal divided by square root of two, instead of the
+    number of pixels along each axis. The bandwidth along each axis is
+    calculated as the projection onto each axes, e.g. a setting of 5.0
+    for a 250um x 50um pixels yields a bandwidth of 2 and 6 along the
+    corresponding axes. This should result in an approximately
+    cirulare area in metric coordinates over which the particle
+    density is estimated.
 
 Bugfixes
 --------
@@ -63,6 +73,13 @@ Bugfixes
 *   Updating a sensor geometry using local corrections now overwrites
     the stored geometry covariance instead of adding it to the
     existing value.
+*   Write correct pixel masks for noise scans with a region-of-interest
+    cut.
+
+    When a region-of-interest cut was configured for the noise scan,
+    the column/row index of masked pixels was calculated only relative
+    to the region-of-interest. This lead to incorrect or empty output
+    pixel masks.
 
 Internal changes
 ----------------
