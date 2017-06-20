@@ -50,7 +50,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = '@PROJECT_NAME@'
-copyright = '2014-2016, The Proteus authors'
+copyright = '2014-2017, The Proteus authors'
 author = 'The Proteus authors'
 
 # The version info for the project you're documenting, acts as replacement for
