@@ -21,36 +21,35 @@ Analyzers::MatchExporter::MatchExporter(const Mechanics::Device& device,
 {
   TDirectory* sub = dir->mkdir(m_sensor.name().c_str());
 
-  auto setupCluster = [](TTree* tree, const std::string& prefix,
-                         ClusterData& data) {
-    tree->Branch((prefix + "u").c_str(), &data.u);
-    tree->Branch((prefix + "v").c_str(), &data.v);
-    tree->Branch((prefix + "std_u").c_str(), &data.stdU);
-    tree->Branch((prefix + "std_v").c_str(), &data.stdV);
-    tree->Branch((prefix + "corr_uv").c_str(), &data.corrUV);
-    tree->Branch((prefix + "col").c_str(), &data.col);
-    tree->Branch((prefix + "row").c_str(), &data.row);
-    tree->Branch((prefix + "time").c_str(), &data.time);
-    tree->Branch((prefix + "value").c_str(), &data.value);
-    tree->Branch((prefix + "region").c_str(), &data.region);
-    tree->Branch((prefix + "size").c_str(), &data.size);
-    tree->Branch((prefix + "size_col").c_str(), &data.sizeCol);
-    tree->Branch((prefix + "size_row").c_str(), &data.sizeRow);
-    tree->Branch((prefix + "hit_col").c_str(), &data.hitCol,
-                 (prefix + "hit_col[" + prefix + "size]/S").c_str());
-    tree->Branch((prefix + "hit_row").c_str(), &data.hitRow,
-                 (prefix + "hit_row[" + prefix + "size]/S").c_str());
-    tree->Branch((prefix + "hit_time").c_str(), &data.hitTime,
-                 (prefix + "hit_time[" + prefix + "size]/F").c_str());
-    tree->Branch((prefix + "hit_value").c_str(), &data.hitValue,
-                 (prefix + "hit_value[" + prefix + "size]/F").c_str());
+  auto setupCluster = [](TTree* tree, ClusterData& data) {
+    tree->Branch("clu_u", &data.u);
+    tree->Branch("clu_v", &data.v);
+    tree->Branch("clu_std_u", &data.stdU);
+    tree->Branch("clu_std_v", &data.stdV);
+    tree->Branch("clu_corr_uv", &data.corrUV);
+    tree->Branch("clu_col", &data.col);
+    tree->Branch("clu_row", &data.row);
+    tree->Branch("clu_time", &data.time);
+    tree->Branch("clu_value", &data.value);
+    tree->Branch("clu_region", &data.region);
+    tree->Branch("clu_size", &data.size);
+    tree->Branch("clu_size_col", &data.sizeCol);
+    tree->Branch("clu_size_row", &data.sizeRow);
+    tree->Branch("hit_col", &data.hitCol, "hit_col[clu_size]/S");
+    tree->Branch("hit_row", &data.hitRow, "hit_row[clu_size]/S");
+    tree->Branch("hit_time", &data.hitTime, "hit_time[clu_size]/F");
+    tree->Branch("hit_value", &data.hitValue, "hit_value[clu_size]/F");
   };
 
-  m_treeTrk = new TTree("tracks", "");
+  m_treeTrk = new TTree("tracks_clusters_matched", "");
   m_treeTrk->SetDirectory(sub);
+  m_treeTrk->Branch("evt_timestamp", &m_event.timestamp, "evt_timestamp/l");
+  m_treeTrk->Branch("evt_nclusters", &m_event.nClusters);
   m_treeTrk->Branch("evt_ntracks", &m_event.nTracks);
   m_treeTrk->Branch("trk_u", &m_track.u);
   m_treeTrk->Branch("trk_v", &m_track.v);
+  m_treeTrk->Branch("trk_du", &m_track.du);
+  m_treeTrk->Branch("trk_dv", &m_track.dv);
   m_treeTrk->Branch("trk_std_u", &m_track.stdU);
   m_treeTrk->Branch("trk_std_v", &m_track.stdV);
   m_treeTrk->Branch("trk_corr_uv", &m_track.corrUV);
@@ -60,10 +59,26 @@ Analyzers::MatchExporter::MatchExporter(const Mechanics::Device& device,
   m_treeTrk->Branch("trk_dof", &m_track.dof);
   m_treeTrk->Branch("trk_nclusters", &m_track.nClusters);
   m_treeTrk->Branch("mat_d2", &m_match.d2);
-  setupCluster(m_treeTrk, "clu_", m_clusterMatched);
+  setupCluster(m_treeTrk, m_clusterMatched);
   m_treeClu = new TTree("clusters_unmatched", "");
   m_treeClu->SetDirectory(sub);
-  setupCluster(m_treeClu, std::string(), m_clusterUnmatched);
+  setupCluster(m_treeClu, m_clusterUnmatched);
+
+  TTree* maskTree = new TTree("masked_pixels", "");
+  int16_t maskedCol, maskedRow;
+  maskTree->SetDirectory(sub);
+  maskTree->Branch("col", &maskedCol);
+  maskTree->Branch("row", &maskedRow);
+  auto mask = m_sensor.pixelMask();
+  for (Index c = 0; c < m_sensor.numCols(); ++c) {
+    for (Index r = 0; r < m_sensor.numRows(); ++r) {
+      if (mask.isMasked(c, r)) {
+        maskedCol = static_cast<int16_t>(c);
+        maskedRow = static_cast<int16_t>(r);
+        maskTree->Fill();
+      }
+    }
+  }
 }
 
 std::string Analyzers::MatchExporter::name() const { return m_name; }
@@ -111,7 +126,10 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
   };
 
   // global event information
-  m_event.nTracks = event.numTracks();
+  m_event.timestamp = event.timestamp();
+  m_event.nClusters = plane.numClusters();
+  m_event.nTracks = plane.numStates();
+
   // export tracks and possible matched clusters
   for (Index istate = 0; istate < plane.numStates(); ++istate) {
     const Storage::TrackState& state = plane.getState(istate);
@@ -121,6 +139,8 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
     XYPoint cr = m_sensor.transformLocalToPixel(state.offset());
     m_track.u = state.offset().x();
     m_track.v = state.offset().y();
+    m_track.du = state.slope().x();
+    m_track.dv = state.slope().y();
     m_track.stdU = std::sqrt(state.covOffset()(0, 0));
     m_track.stdV = std::sqrt(state.covOffset()(1, 1));
     m_track.corrUV = state.covOffset()(0, 1) / (m_track.stdU * m_track.stdV);
@@ -129,6 +149,7 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
     m_track.chi2 = track.chi2();
     m_track.dof = track.degreesOfFreedom();
     m_track.nClusters = track.numClusters();
+
     // matching cluster data
     if (state.matchedCluster()) {
       const Storage::Cluster& cluster = *state.matchedCluster();
@@ -145,6 +166,7 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
     }
     m_treeTrk->Fill();
   }
+
   // export unmatched clusters
   for (Index icluster = 0; icluster < plane.numClusters(); ++icluster) {
     const Storage::Cluster& cluster = *plane.getCluster(icluster);

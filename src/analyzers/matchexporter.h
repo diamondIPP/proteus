@@ -38,10 +38,12 @@ private:
   static constexpr int16_t MAX_CLUSTER_SIZE = 1024;
 
   struct EventData {
+    uint64_t timestamp;
+    int16_t nClusters;
     int16_t nTracks;
   };
   struct TrackData {
-    float u, v;
+    float u, v, du, dv;
     float stdU, stdV, corrUV;
     float col, row;
     float chi2;

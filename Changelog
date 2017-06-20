@@ -37,8 +37,19 @@ User-visible changes
     for noisy sensors at the expense of limiting the precision to
     approximately one pixel.
 *   The ``activate.sh`` script is copied during the ``install`` phase.
-*   The TTree-based match output stores the hit information for each hit
-    in a cluster in addition to the combined cluster information.
+*   The TTree-based match output stores additional information and uses
+    consistent tree and variable names:
+
+    *   Match tree is renamed to ``tracks_clusters_matched``.
+    *   The event timestamp and total number of clusters in the event
+        are stored.
+    *   The track slopes are stored.
+    *   Cluster variables are consistently prefixed with ``clu_...` in
+        both matched and unmatched trees.
+    *   The information for each hit in a cluster are stored in addition
+        to the combined cluster information.
+    *   Masked pixels are stored in the ``masked_pixels`` tree.
+
 *   An missing or unreadable pixel masks file is now considered a fatal
     error, consistent with how all other configuration files are handled.
 *   The ``search_sigma_max`` cut for finding tracks can be disabled by
