@@ -90,12 +90,13 @@ void Analyzers::Residuals::analyze(const Storage::Event& event)
   for (Index itrack = 0; itrack < event.numTracks(); itrack++) {
     const Storage::Track& track = event.getTrack(itrack);
 
-    for (Index icluster = 0; icluster < track.numClusters(); ++icluster) {
-      const Storage::Cluster& cluster = *track.getCluster(icluster);
-      Storage::TrackState state = Tracking::fitTrackLocal(
-          track, m_device.geometry(), cluster.sensorId());
+    for (const auto& c : track.clusters()) {
+      Index sensor = c.first;
+      const Storage::Cluster& cluster = c.second;
 
-      m_hists[cluster.sensorId()].fill(state, cluster);
+      Storage::TrackState state = Tracking::fitTrackLocal(
+          track, m_device.geometry(), sensor);
+      m_hists[sensor].fill(state, cluster);
     }
   }
 }
@@ -126,13 +127,15 @@ void Analyzers::UnbiasedResiduals::analyze(const Storage::Event& event)
 {
   for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
     const Storage::Track& track = event.getTrack(itrack);
-    for (Index icluster = 0; icluster < track.numClusters(); ++icluster) {
-      const Storage::Cluster& cluster = *track.getCluster(icluster);
+
+    for (const auto& c : track.clusters()) {
+      Index sensor = c.first;
+      const Storage::Cluster& cluster = c.second;
+
       // refit w/o current sensor information
       Storage::TrackState state = Tracking::fitTrackLocalUnbiased(
           track, m_device.geometry(), cluster.sensorId());
-
-      m_hists[cluster.sensorId()].fill(state, cluster);
+      m_hists[sensor].fill(state, cluster);
     }
   }
 }

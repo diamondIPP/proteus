@@ -47,7 +47,8 @@ void Tracking::TrackFinder::process(Storage::Event& event) const
   // first iteration over all seed sensors
   size_t numSeedSeensors = 1 + (m_sensorIds.size() - m_numClustersMin);
   for (size_t i = 0; i < numSeedSeensors; ++i) {
-    SensorEvent& seedEvent = event.getSensorEvent(m_sensorIds[i]);
+    Index seedSensor = m_sensorIds[i];
+    SensorEvent& seedEvent = event.getSensorEvent(seedSensor);
 
     // generate track candidates from all unused clusters on the seed sensor
     candidates.clear();
@@ -56,7 +57,7 @@ void Tracking::TrackFinder::process(Storage::Event& event) const
       if (cluster->isInTrack())
         continue;
       candidates.push_back(TrackPtr(new Track()));
-      candidates.back()->addCluster(cluster);
+      candidates.back()->addCluster(seedSensor, *cluster);
     }
 
     // second iteration over remaining sensors to find compatible points
@@ -64,9 +65,9 @@ void Tracking::TrackFinder::process(Storage::Event& event) const
       searchSensor(event.getSensorEvent(m_sensorIds[j]), candidates);
 
       // remove seeds that are already too short
-      Index remainingSensors = m_sensorIds.size() - (j + 1);
+      size_t remainingSensors = m_sensorIds.size() - (j + 1);
       auto isLongEnough = [&](const TrackPtr& cand) {
-        return (m_numClustersMin <= (cand->numClusters() + remainingSensors));
+        return (m_numClustersMin <= (cand->size() + remainingSensors));
       };
       auto beginBad =
           std::partition(candidates.begin(), candidates.end(), isLongEnough);
@@ -104,7 +105,8 @@ void Tracking::TrackFinder::searchSensor(
   Index numTracks = static_cast<Index>(candidates.size());
   for (Index itrack = 0; itrack < numTracks; ++itrack) {
     Storage::Track& track = *candidates[itrack];
-    Storage::Cluster* last = track.getCluster(track.numClusters() - 1);
+    // TODO use the cluster on the closest sensor and not on the last
+    Storage::Cluster& last = track.clusters().end()->second;
     Storage::Cluster* matched = nullptr;
 
     for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
@@ -114,22 +116,22 @@ void Tracking::TrackFinder::searchSensor(
       if (curr->isInTrack())
         continue;
 
-      XYZVector delta = curr->posGlobal() - last->posGlobal();
+      XYZVector delta = curr->posGlobal() - last.posGlobal();
       delta -= delta.z() * m_beamDirection;
-      SymMatrix2 cov = last->covGlobal().Sub<SymMatrix2>(0, 0) +
+      SymMatrix2 cov = last.covGlobal().Sub<SymMatrix2>(0, 0) +
                        curr->covGlobal().Sub<SymMatrix2>(0, 0);
       double d2 = mahalanobisSquared(cov, Vector2(delta.x(), delta.y()));
 
       if ((0 < m_d2Max) && (m_d2Max < d2))
         continue;
 
-      if (matched == nullptr) {
+      if (!matched) {
         // first matching cluster
         matched = curr;
       } else {
         // matching ambiguity -> bifurcate track
         candidates.push_back(TrackPtr(new Track(track)));
-        candidates.back()->addCluster(curr);
+        candidates.back()->addCluster(sensorEvent.sensor(), *curr);
       }
     }
     // first matched cluster can be only be added after all other clusters
@@ -137,7 +139,7 @@ void Tracking::TrackFinder::searchSensor(
     // candidate when it bifurcates and the new candidate would have two
     // clusters on this sensor.
     if (matched)
-      track.addCluster(matched);
+      track.addCluster(sensorEvent.sensor(), *matched);
   }
 }
 
@@ -146,9 +148,9 @@ struct CompareNumClusterChi2 {
   bool operator()(const std::unique_ptr<Storage::Track>& a,
                   const std::unique_ptr<Storage::Track>& b)
   {
-    if (a->numClusters() == b->numClusters())
+    if (a->size() == b->size())
       return (a->reducedChi2() < b->reducedChi2());
-    return (b->numClusters() < a->numClusters());
+    return (b->size() < a->size());
   }
 };
 
@@ -170,12 +172,16 @@ void Tracking::TrackFinder::selectTracks(std::vector<TrackPtr>& candidates,
       continue;
 
     // check that all constituent clusters are still unused
-    Index unique = 0;
-    for (Index icluster = 0; icluster < track->numClusters(); ++icluster)
-      unique +=
-          ((track->getCluster(icluster)->isInTrack()) ? 1 : 0);
+    bool hasUsedClusters = false;
+    for (const auto& c : track->clusters()) {
+      const Storage::Cluster& cluster = c.second;
+      if (cluster.isInTrack()) {
+        hasUsedClusters = true;
+        break;
+      }
+    }
     // some clusters are already used by other tracks
-    if (unique != track->numClusters())
+    if (hasUsedClusters)
       continue;
 
     // this is a good track

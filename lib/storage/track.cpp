@@ -14,16 +14,16 @@ Storage::Track::Track(const TrackState& global)
 {
 }
 
-// NOTE: this doesn't tell the cluster about the track to allow trial tracks
-void Storage::Track::addCluster(Cluster* cluster)
+// NOTE: this doesn't tell the cluster about the track
+void Storage::Track::addCluster(Index sensor, Cluster& cluster)
 {
-  m_clusters.push_back(cluster);
+  m_clusters.emplace(sensor, cluster);
 }
 
 void Storage::Track::freezeClusterAssociation()
 {
-  for (const auto& cluster : m_clusters)
-    cluster->setTrack(m_index);
+  for (const auto& c : m_clusters)
+    c.second.get().setTrack(m_index);
 }
 
 void Storage::Track::print(std::ostream& os, const std::string& prefix) const

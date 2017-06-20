@@ -72,25 +72,7 @@ struct SimpleStraightFitter {
     v.fit();
   }
 };
-
-// Calculate chi2 value for a simple straight track fit.
-static inline double straightChi2(Storage::Track& track)
-{
-  const Storage::TrackState& state = track.globalState();
-
-  double chi2 = 0;
-  for (Index icluster = 0; icluster < track.numClusters(); ++icluster) {
-    const Storage::Cluster& cluster = *track.getCluster(icluster);
-    // xy residual at the z-position of the cluster
-    XYPoint trk(state.offset() + state.slope() * cluster.posGlobal().z());
-    Vector2 res(cluster.posGlobal().x() - trk.x(),
-                cluster.posGlobal().y() - trk.y());
-    // z-covariance is ignored in simple straight fit anyways
-    chi2 += mahalanobisSquared(cluster.covGlobal().Sub<SymMatrix2>(0, 0), res);
-  }
-  return chi2;
-}
-
+  
 static inline XYZPoint refPosition(const XYPoint& pos,
                                    const Transform3D& localToGlobal,
                                    const Transform3D& globalToReference)
@@ -113,13 +95,14 @@ void Tracking::fitTrackGlobal(Storage::Track& track)
 {
   SimpleStraightFitter fit;
 
-  for (Index icluster = 0; icluster < track.numClusters(); ++icluster) {
-    const Storage::Cluster& cluster = *track.getCluster(icluster);
+  for (const auto& c : track.clusters()) {
+    const Storage::Cluster& cluster = c.second;
+
     fit.addPoint(cluster.posGlobal(), cluster.covGlobal());
   }
   fit.fit();
   track.setGlobalState(fit.state());
-  track.setGoodnessOfFit(fit.chi2(), 2 * (track.numClusters() - 2));
+  track.setGoodnessOfFit(fit.chi2(), 2 * (track.size() - 2));
 }
 
 Storage::TrackState Tracking::fitTrackLocal(const Storage::Track& track,
@@ -129,9 +112,11 @@ Storage::TrackState Tracking::fitTrackLocal(const Storage::Track& track,
   SimpleStraightFitter fit;
   auto globalToRef = geo.getLocalToGlobal(referenceId).Inverse();
 
-  for (Index icluster = 0; icluster < track.numClusters(); ++icluster) {
-    const Storage::Cluster& cluster = *track.getCluster(icluster);
-    auto localToGlobal = geo.getLocalToGlobal(cluster.sensorId());
+  for (const auto& c : track.clusters()) {
+    Index sensor = c.first;
+    const Storage::Cluster& cluster = c.second;
+
+    auto localToGlobal = geo.getLocalToGlobal(sensor);
     auto pos = refPosition(cluster.posLocal(), localToGlobal, globalToRef);
     auto cov = refCovariance(cluster.covLocal(), localToGlobal, globalToRef);
     fit.addPoint(pos, cov);
@@ -148,11 +133,14 @@ Tracking::fitTrackLocalUnbiased(const Storage::Track& track,
   SimpleStraightFitter fit;
   auto globalToRef = geo.getLocalToGlobal(referenceId).Inverse();
 
-  for (Index icluster = 0; icluster < track.numClusters(); ++icluster) {
-    const Storage::Cluster& cluster = *track.getCluster(icluster);
-    if (cluster.sensorId() == referenceId)
+  for (const auto& c : track.clusters()) {
+    Index sensor = c.first;
+    const Storage::Cluster& cluster = c.second;
+
+    if (sensor == referenceId)
       continue;
-    auto localToGlobal = geo.getLocalToGlobal(cluster.sensorId());
+
+    auto localToGlobal = geo.getLocalToGlobal(sensor);
     auto pos = refPosition(cluster.posLocal(), localToGlobal, globalToRef);
     auto cov = refCovariance(cluster.covLocal(), localToGlobal, globalToRef);
     fit.addPoint(pos, cov);
