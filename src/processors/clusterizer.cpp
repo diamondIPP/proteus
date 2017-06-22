@@ -108,7 +108,7 @@ static const SymMatrix2 HIT_COV(HIT_COV_ENTRIES, false);
 void Processors::BinaryClusterizer::estimateProperties(
     Storage::Cluster& cluster) const
 {
-  XYPoint pos;
+  XYPoint pos(0, 0);
   double time = std::numeric_limits<double>::max();
 
   for (Index ihit = 0; ihit < cluster.numHits(); ++ihit) {
@@ -124,6 +124,7 @@ void Processors::BinaryClusterizer::estimateProperties(
 
   cluster.setPixel(pos, cov);
   cluster.setTime(time);
+  cluster.setValue(cluster.numHits());
 }
 
 Processors::ValueWeightedClusterizer::ValueWeightedClusterizer(
@@ -136,17 +137,17 @@ Processors::ValueWeightedClusterizer::ValueWeightedClusterizer(
 void Processors::ValueWeightedClusterizer::estimateProperties(
     Storage::Cluster& cluster) const
 {
-  XYPoint pos;
+  XYPoint pos(0, 0);
   double time = std::numeric_limits<double>::max();
-  double weight = 0;
+  double value = 0;
 
   for (Index ihit = 0; ihit < cluster.numHits(); ++ihit) {
     const Storage::Hit* hit = cluster.getHit(ihit);
     pos += hit->value() * XYVector(hit->posPixel());
     time = std::min(time, hit->time());
-    weight += hit->value();
+    value += hit->value();
   }
-  pos /= weight;
+  pos /= value;
 
   // TODO 2016-11-14 msmk: consider also the value weighting
   SymMatrix2 cov = HIT_COV;
@@ -155,6 +156,7 @@ void Processors::ValueWeightedClusterizer::estimateProperties(
 
   cluster.setPixel(pos, cov);
   cluster.setTime(time);
+  cluster.setValue(value);
 }
 
 Processors::FastestHitClusterizer::FastestHitClusterizer(
@@ -167,17 +169,20 @@ Processors::FastestHitClusterizer::FastestHitClusterizer(
 void Processors::FastestHitClusterizer::estimateProperties(
     Storage::Cluster& cluster) const
 {
-  XYPoint pos;
+  XYPoint pos(0, 0);
   double time = std::numeric_limits<double>::max();
+  double value = -1;
 
   for (Index ihit = 0; ihit < cluster.numHits(); ++ihit) {
     const Storage::Hit* hit = cluster.getHit(ihit);
     if (hit->time() < time) {
       pos = hit->posPixel();
       time = hit->time();
+      value = hit->value();
     }
   }
 
   cluster.setPixel(pos, HIT_COV);
   cluster.setTime(time);
+  cluster.setValue(value);
 }
