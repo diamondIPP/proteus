@@ -33,7 +33,6 @@ private:
   virtual void estimateProperties(Storage::Cluster& cluster) const = 0;
 
   const Mechanics::Sensor& m_sensor;
-  double m_maxDistSquared;
   std::string m_name;
 };
 
