@@ -4,8 +4,7 @@
 #include <iostream>
 
 Storage::Event::Event(size_t sensors)
-    : m_id(-1)
-    , m_frameNumber(0)
+    : m_frameNumber(0)
     , m_timestamp(0)
     , m_triggerOffset(0)
     , m_invalid(false)

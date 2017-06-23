@@ -371,7 +371,6 @@ void StorageIO::readEvent(uint64_t n, Event* event)
     throw std::runtime_error("StorageIO: error reading tracks tree");
 
   event->clear(_numPlanes);
-  event->setId(n);
   event->setFrameNumber(frameNumber);
   // listen chap, here's the deal:
   // we want a timestamp, i.e. a simple counter of clockcycles or bunch

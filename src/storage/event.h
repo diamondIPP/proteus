@@ -17,7 +17,6 @@ public:
   Event(size_t sensors);
 
   void clear();
-  void setId(uint64_t id) { m_id = id; }
   void setFrameNumber(uint64_t frameNumber) { m_frameNumber = frameNumber; }
   void setTimestamp(uint64_t timestamp) { m_timestamp = timestamp; }
   void setTriggerOffset(unsigned int offset) { m_triggerOffset = offset; }
@@ -25,7 +24,6 @@ public:
   void setTriggerPhase(unsigned int phase) { m_triggerPhase = phase; }
   void setInvalid(bool value) { m_invalid = value; }
 
-  uint64_t id() const { return m_id; }
   uint64_t frameNumber() const { return m_frameNumber; }
   uint64_t timestamp() const { return m_timestamp; }
   unsigned int triggerOffset() const { return m_triggerOffset; }
@@ -50,7 +48,6 @@ public:
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
-  uint64_t m_id;
   uint64_t m_frameNumber;
   uint64_t m_timestamp;
   unsigned int m_triggerOffset;
