@@ -30,11 +30,11 @@ namespace Utils {
 class EventLoop {
 public:
   EventLoop(Io::EventReader* reader,
+            size_t sensors,
             uint64_t start = 0,
-            uint64_t events = UINT64_MAX);
+            uint64_t events = UINT64_MAX,
+            bool showProgress = false);
   ~EventLoop();
-
-  void enableProgressBar();
 
   void addProcessor(std::shared_ptr<Processors::Processor> processor);
   void addAnalyzer(std::shared_ptr<Analyzers::Analyzer> analyzer);
@@ -47,6 +47,7 @@ private:
   std::vector<std::shared_ptr<Analyzers::Analyzer>> m_analyzers;
   std::vector<std::shared_ptr<Io::EventWriter>> m_writers;
   uint64_t m_start, m_events;
+  size_t m_sensors;
   bool m_showProgress;
 };
 

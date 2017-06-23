@@ -101,8 +101,6 @@ std::string Application::outputPath(const std::string& name) const
 
 Utils::EventLoop Application::makeEventLoop() const
 {
-  Utils::EventLoop loop(m_input.get(), m_skipEvents, m_numEvents);
-  if (m_showProgress)
-    loop.enableProgressBar();
-  return loop;
+  return Utils::EventLoop(m_reader.get(), m_dev->numSensors(), m_skipEvents,
+                          m_numEvents, m_showProgress);
 }

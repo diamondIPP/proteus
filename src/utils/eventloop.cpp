@@ -131,9 +131,15 @@ struct Statistics {
 } // namespace
 
 Utils::EventLoop::EventLoop(Io::EventReader* reader,
+                            size_t sensors,
                             uint64_t start,
-                            uint64_t events)
-    : m_reader(reader), m_start(start), m_events(0), m_showProgress(false)
+                            uint64_t events,
+                            bool showProgress)
+    : m_reader(reader)
+    , m_start(start)
+    , m_events(0)
+    , m_sensors(sensors)
+    , m_showProgress(showProgress)
 {
   assert(reader && "EventReader must be non-NULL");
 
@@ -170,8 +176,6 @@ Utils::EventLoop::EventLoop(Io::EventReader* reader,
 
 Utils::EventLoop::~EventLoop() {}
 
-void Utils::EventLoop::enableProgressBar() { m_showProgress = true; }
-
 void Utils::EventLoop::addProcessor(
     std::shared_ptr<Processors::Processor> processor)
 {
@@ -193,7 +197,7 @@ void Utils::EventLoop::run()
 {
   Timing timing(m_processors.size(), m_analyzers.size(), m_writers.size());
   Statistics stats;
-  Storage::Event event;
+  Storage::Event event(m_sensors);
 
   DEBUG("configured readers:");
   DEBUG("  ", m_reader->name());
