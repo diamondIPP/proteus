@@ -140,13 +140,14 @@ Analyzers::MatchExporter::MatchExporter(const Mechanics::Device& device,
 
   m_treeTrk = new TTree("tracks_clusters_matched", "");
   m_treeTrk->SetDirectory(sub);
-  m_event.setup(m_treeTrk);
+  m_matchedEvent.setup(m_treeTrk);
   m_track.setup(m_treeTrk);
   m_clusterMatched.setup(m_treeTrk);
   m_match.setup(m_treeTrk);
 
   m_treeClu = new TTree("clusters_unmatched", "");
   m_treeClu->SetDirectory(sub);
+  m_unmatchEvent.setup(m_treeClu);
   m_clusterUnmatched.setup(m_treeClu);
 
   // pixel masks
@@ -172,7 +173,8 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
 {
   const Storage::Plane& plane = *event.getPlane(m_sensorId);
 
-  m_event.set(event, plane);
+  m_matchedEvent.set(event, plane);
+  m_unmatchEvent.set(event, plane);
 
   // export tracks and possible matched clusters
   for (Index istate = 0; istate < plane.numStates(); ++istate) {

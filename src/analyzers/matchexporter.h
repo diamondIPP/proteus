@@ -93,7 +93,8 @@ private:
 
   const Mechanics::Sensor& m_sensor;
   Index m_sensorId;
-  EventData m_event;
+  EventData m_matchedEvent;
+  EventData m_unmatchEvent;
   TrackData m_track;
   MatchData m_match;
   ClusterData m_clusterMatched;
