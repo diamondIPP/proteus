@@ -373,7 +373,17 @@ void StorageIO::readEvent(uint64_t n, Event* event)
   event->clear();
   event->setId(n);
   event->setFrameNumber(frameNumber);
-  event->setTimestamp(timestamp);
+  // listen chap, here's the deal:
+  // we want a timestamp, i.e. a simple counter of clockcycles or bunch
+  // crossings, for each event that defines the trigger/ readout time with
+  // the highest possible precision. Unfortunately, the RCE ROOT output format
+  // has stupid names. The `TimeStamp` branch stores the Unix-`timestamp`
+  // (number of seconds since 01.01.1970) of the point in time when the event
+  // was written to disk. This might or might not have a constant correlation
+  // to the actual trigger time and has only a 1s resolution, i.e. it is
+  // completely useless. The `TriggerTime` actually stores the internal
+  // FPGA timestamp/ clock cyles and is what we need to use.
+  event->setTimestamp(triggerTime);
   event->setTriggerInfo(triggerInfo);
   event->setTriggerOffset(triggerOffset);
   event->setTriggerPhase(triggerPhase);
@@ -458,7 +468,8 @@ void StorageIO::writeEvent(Event* event)
     throw std::runtime_error("StorageIO: can't write event in input mode");
 
   frameNumber = event->frameNumber();
-  timestamp = event->timestamp();
+  timestamp = 0;
+  triggerTime = event->timestamp();
   triggerInfo = event->triggerInfo();
   triggerOffset = event->triggerOffset();
   triggerPhase = event->triggerPhase();
