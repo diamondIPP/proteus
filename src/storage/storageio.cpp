@@ -370,7 +370,7 @@ void StorageIO::readEvent(uint64_t n, Event* event)
   if (_tracks && _tracks->GetEntry(n) <= 0)
     throw std::runtime_error("StorageIO: error reading tracks tree");
 
-  event->clear();
+  event->clear(_numPlanes);
   event->setId(n);
   event->setFrameNumber(frameNumber);
   // listen chap, here's the deal:
@@ -455,7 +455,7 @@ void StorageIO::readEvent(uint64_t n, Event* event)
 
 Event* StorageIO::readEvent(uint64_t index)
 {
-  Event* event = new Event(_numPlanes);
+  Event* event = new Event();
   readEvent(index, event);
   return event;
 }

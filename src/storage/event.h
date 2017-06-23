@@ -14,7 +14,7 @@ namespace Storage {
 
 class Event {
 public:
-  Event(Index numPlanes);
+  Event(size_t sensors);
 
   void clear();
   void setId(uint64_t id) { m_id = id; }

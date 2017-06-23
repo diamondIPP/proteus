@@ -3,23 +3,22 @@
 #include <cassert>
 #include <iostream>
 
-Storage::Event::Event(Index numPlanes)
+Storage::Event::Event(size_t sensors)
     : m_id(-1)
     , m_frameNumber(0)
     , m_timestamp(0)
     , m_triggerOffset(0)
     , m_invalid(false)
 {
-  for (Index isensor = 0; isensor < numPlanes; ++isensor) {
-    m_planes.push_back(Plane(isensor));
-  }
+  m_planes.reserve(sensors);
+  for (size_t isensor = 0; isensor < sensors; ++isensor)
+    m_planes.emplace_back(Plane(isensor));
 }
 
 void Storage::Event::clear()
 {
-  for (auto plane = m_planes.begin(); plane != m_planes.end(); ++plane) {
-    plane->clear();
-  }
+  for (auto& plane : m_planes)
+    plane.clear();
   m_tracks.clear();
 }
 
