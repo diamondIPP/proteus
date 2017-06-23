@@ -48,7 +48,7 @@ private:
     float col, row;
     float chi2;
     int16_t dof;
-    int16_t nClusters;
+    int16_t size;
   };
   struct ClusterData {
     float u, v;

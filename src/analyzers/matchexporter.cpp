@@ -57,7 +57,7 @@ Analyzers::MatchExporter::MatchExporter(const Mechanics::Device& device,
   m_treeTrk->Branch("trk_row", &m_track.row);
   m_treeTrk->Branch("trk_chi2", &m_track.chi2);
   m_treeTrk->Branch("trk_dof", &m_track.dof);
-  m_treeTrk->Branch("trk_nclusters", &m_track.nClusters);
+  m_treeTrk->Branch("trk_size", &m_track.size);
   m_treeTrk->Branch("mat_d2", &m_match.d2);
   setupCluster(m_treeTrk, m_clusterMatched);
   m_treeClu = new TTree("clusters_unmatched", "");
@@ -148,7 +148,7 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
     m_track.row = cr.y();
     m_track.chi2 = track.chi2();
     m_track.dof = track.degreesOfFreedom();
-    m_track.nClusters = track.numClusters();
+    m_track.size = track.numClusters();
 
     // matching cluster data
     if (state.matchedCluster()) {
