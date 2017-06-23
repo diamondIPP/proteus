@@ -37,6 +37,13 @@ User-visible changes
     for noisy sensors at the expense of limiting the precision to
     approximately one pixel.
 *   The ``activate.sh`` script is copied during the ``install`` phase.
+*   The ``TriggerTime`` variable is used as the 64bit event timestamp.
+
+    The ``TimeStamp`` variable that was used is the Unix timestamp, i.e.
+    number of seconds since 1.1.1970, of the time when the event was written
+    to disk. It only has a 1s resolution. The ``TriggerTime`` variable is
+    a clock counter on the HSIO/RCE FPGA that should provide a resolution
+    given by the FPGA clock frequency.
 *   The TTree-based match output stores additional information and uses
     consistent tree and variable names:
 
