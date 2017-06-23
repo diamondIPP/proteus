@@ -24,7 +24,7 @@ public:
   ProgressBar() : ProgressBar(queryLineLength()) {}
   /** Construct with a fixed line length. */
   ProgressBar(int lineLength)
-      : m_os(std::cout)
+      : m_os(std::cerr)
       , m_lastUpdate(std::chrono::steady_clock::now())
       , m_length(std::max(lineLength - 8, 0))
   {
