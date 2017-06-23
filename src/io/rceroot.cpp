@@ -30,12 +30,11 @@ Io::RceRootReader::RceRootReader(const std::string& path)
 {
   if (!m_file)
     FAIL("could not open '", path, "' to read");
-  INFO("read data from '", path, "'");
 
   // event tree **must** be available
   m_file->GetObject("Event", m_eventInfo);
   if (!m_eventInfo)
-    FAIL("could not setup 'Event' tree");
+    FAIL("could not setup 'Event' tree from '", path, "'");
   m_eventInfo->SetBranchAddress("FrameNumber", &frameNumber);
   m_eventInfo->SetBranchAddress("TimeStamp", &timestamp);
   m_eventInfo->SetBranchAddress("TriggerTime", &triggerTime);
@@ -74,7 +73,7 @@ Io::RceRootReader::RceRootReader(const std::string& path)
     addSensor(sensorDir);
     numSensors += 1;
   }
-  INFO("found ", numSensors, " sensors");
+  INFO("read ", numSensors, " sensors from '", path, "'");
 
   // verify that all trees have consistent number of entries
   auto verifiedEntries = [](TTree* tree) {
@@ -276,7 +275,6 @@ Io::RceRootWriter::RceRootWriter(const std::string& path, size_t numSensors)
 {
   if (!m_file)
     FAIL("could not open '", path, "' to write");
-  INFO("write data to '", path, "'");
 
   // global event tree
   m_eventInfo = new TTree("Event", "Event information");
@@ -345,8 +343,7 @@ void Io::RceRootWriter::addSensor(TDirectory* dir)
 Io::RceRootWriter::~RceRootWriter()
 {
   if (m_file) {
-    INFO("wrote data for ", m_sensors.size(), " sensors to '",
-         m_file->GetPath(), "'");
+    INFO("wrote ", m_sensors.size(), " sensors to '", m_file->GetPath(), "'");
     m_file->Write();
     m_file->Close();
     delete m_file;
