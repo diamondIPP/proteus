@@ -41,9 +41,11 @@ User-visible changes
     consistent tree and variable names:
 
     *   Match tree is renamed to ``tracks_clusters_matched``.
-    *   The event timestamp and total number of clusters in the event
-        are stored.
+    *   The event frame, event timestamp, number of tracks, and number
+        of clusters on the sensor are stored both for tracks with matched
+        clusters and for unmatched clusters.
     *   The track slopes are stored.
+    *   The track size variable is renamed to ``trk_size``.
     *   Cluster variables are consistently prefixed with ``clu_...` in
         both matched and unmatched trees.
     *   The information for each hit in a cluster are stored in addition
