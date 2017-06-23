@@ -17,6 +17,7 @@ void Analyzers::MatchExporter::EventData::setup(TTree* tree)
 {
   assert(tree);
 
+  tree->Branch("evt_frame", &frame, "evt_frame/l");
   tree->Branch("evt_timestamp", &timestamp, "evt_timestamp/l");
   tree->Branch("evt_nclusters", &nClusters);
   tree->Branch("evt_ntracks", &nTracks);
@@ -25,6 +26,7 @@ void Analyzers::MatchExporter::EventData::setup(TTree* tree)
 void Analyzers::MatchExporter::EventData::set(const Storage::Event& e,
                                               const Storage::Plane& s)
 {
+  frame = e.frameNumber();
   timestamp = e.timestamp();
   nClusters = s.numClusters();
   nTracks = e.numTracks();

@@ -45,6 +45,7 @@ private:
   static constexpr int16_t MAX_CLUSTER_SIZE = 1024;
 
   struct EventData {
+    uint64_t frame;
     uint64_t timestamp;
     int16_t nClusters;
     int16_t nTracks;
