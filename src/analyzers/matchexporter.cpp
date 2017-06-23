@@ -13,7 +13,7 @@
 
 PT_SETUP_GLOBAL_LOGGER
 
-void Analyzers::MatchExporter::EventData::setup(TTree* tree)
+void Analyzers::MatchExporter::EventData::addToTree(TTree* tree)
 {
   assert(tree);
 
@@ -32,7 +32,7 @@ void Analyzers::MatchExporter::EventData::set(const Storage::Event& e,
   nTracks = e.numTracks();
 }
 
-void Analyzers::MatchExporter::TrackData::setup(TTree* tree)
+void Analyzers::MatchExporter::TrackData::addToTree(TTree* tree)
 {
   assert(tree);
 
@@ -50,7 +50,7 @@ void Analyzers::MatchExporter::TrackData::setup(TTree* tree)
   tree->Branch("trk_size", &size);
 }
 
-void Analyzers::MatchExporter::ClusterData::setup(TTree* tree)
+void Analyzers::MatchExporter::ClusterData::addToTree(TTree* tree)
 {
   assert(tree);
 
@@ -114,7 +114,7 @@ void Analyzers::MatchExporter::ClusterData::invalidate()
   sizeRow = 0;
 }
 
-void Analyzers::MatchExporter::MaskData::setup(TTree* tree)
+void Analyzers::MatchExporter::MaskData::addToTree(TTree* tree)
 {
   assert(tree);
 
@@ -122,7 +122,7 @@ void Analyzers::MatchExporter::MaskData::setup(TTree* tree)
   tree->Branch("row", &row);
 }
 
-void Analyzers::MatchExporter::MatchData::setup(TTree* tree)
+void Analyzers::MatchExporter::DistData::addToTree(TTree* tree)
 {
   assert(tree);
 
@@ -138,23 +138,23 @@ Analyzers::MatchExporter::MatchExporter(const Mechanics::Device& device,
 {
   TDirectory* sub = dir->mkdir(m_sensor.name().c_str());
 
-  m_treeTrk = new TTree("tracks_clusters_matched", "");
-  m_treeTrk->SetDirectory(sub);
-  m_matchedEvent.setup(m_treeTrk);
-  m_track.setup(m_treeTrk);
-  m_clusterMatched.setup(m_treeTrk);
-  m_match.setup(m_treeTrk);
+  m_matchedTree = new TTree("tracks_clusters_matched", "");
+  m_matchedTree->SetDirectory(sub);
+  m_event.addToTree(m_matchedTree);
+  m_track.addToTree(m_matchedTree);
+  m_matchedCluster.addToTree(m_matchedTree);
+  m_matchedDist.addToTree(m_matchedTree);
 
-  m_treeClu = new TTree("clusters_unmatched", "");
-  m_treeClu->SetDirectory(sub);
-  m_unmatchEvent.setup(m_treeClu);
-  m_clusterUnmatched.setup(m_treeClu);
+  m_unmatchTree = new TTree("clusters_unmatched", "");
+  m_unmatchTree->SetDirectory(sub);
+  m_event.addToTree(m_unmatchTree);
+  m_unmatchCluster.addToTree(m_unmatchTree);
 
   // pixel masks
   TTree* treeMask = new TTree("masked_pixels", "");
   treeMask->SetDirectory(sub);
   MaskData maskData;
-  maskData.setup(treeMask);
+  maskData.addToTree(treeMask);
   auto mask = m_sensor.pixelMask();
   for (Index c = 0; c < m_sensor.numCols(); ++c) {
     for (Index r = 0; r < m_sensor.numRows(); ++r) {
@@ -173,8 +173,7 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
 {
   const Storage::Plane& plane = *event.getPlane(m_sensorId);
 
-  m_matchedEvent.set(event, plane);
-  m_unmatchEvent.set(event, plane);
+  m_event.set(event, plane);
 
   // export tracks and possible matched clusters
   for (Index istate = 0; istate < plane.numStates(); ++istate) {
@@ -200,17 +199,17 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
     if (state.matchedCluster()) {
       const Storage::Cluster& cluster = *state.matchedCluster();
       // set cluster information
-      m_clusterMatched.set(cluster);
+      m_matchedCluster.set(cluster);
       // set matching information
       SymMatrix2 cov = cluster.covLocal() + state.covOffset();
       XYVector delta = cluster.posLocal() - state.offset();
-      m_match.d2 = mahalanobisSquared(cov, delta);
+      m_matchedDist.d2 = mahalanobisSquared(cov, delta);
     } else {
       // fill invalid data if no matching cluster exists
-      m_clusterMatched.invalidate();
-      m_match.d2 = std::numeric_limits<float>::quiet_NaN();
+      m_matchedCluster.invalidate();
+      m_matchedDist.d2 = std::numeric_limits<float>::quiet_NaN();
     }
-    m_treeTrk->Fill();
+    m_matchedTree->Fill();
   }
 
   // export unmatched clusters
@@ -221,8 +220,8 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
     if (cluster.matchedTrack())
       continue;
 
-    m_clusterUnmatched.set(cluster);
-    m_treeClu->Fill();
+    m_unmatchCluster.set(cluster);
+    m_unmatchTree->Fill();
   }
 }
 
