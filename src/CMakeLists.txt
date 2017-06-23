@@ -11,13 +11,13 @@ set(common_SRCS
     analyzers/eventinfo.cpp
     analyzers/eventprinter.cpp
     analyzers/hitinfo.cpp
-    analyzers/matchexporter.cpp
     analyzers/noisescan.cpp
     analyzers/occupancy.cpp
     analyzers/trackinfo.cpp
     analyzers/residuals.cpp
 #   converters/kartelconvert.cpp
     io/io.cpp
+    io/match.cpp
     io/rceroot.cpp
     mechanics/device.cpp
     mechanics/geometry.cpp

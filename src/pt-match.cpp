@@ -3,10 +3,10 @@
 
 #include "analyzers/basicefficiency.h"
 #include "analyzers/distances.h"
-#include "analyzers/matchexporter.h"
 #include "analyzers/residuals.h"
 #include "analyzers/trackinfo.h"
 #include "application.h"
+#include "io/match.h"
 #include "io/rceroot.h"
 #include "mechanics/device.h"
 #include "processors/applygeometry.h"
@@ -46,8 +46,8 @@ int main(int argc, char const* argv[])
         std::make_shared<Distances>(app.device(), sensorId, &hists));
     loop.addAnalyzer(std::make_shared<BasicEfficiency>(
         *app.device().getSensor(sensorId), &hists));
-    loop.addAnalyzer(
-        std::make_shared<MatchExporter>(app.device(), sensorId, &trees));
+    loop.addWriter(
+        std::make_shared<Io::MatchWriter>(app.device(), sensorId, &trees));
   }
   loop.run();
 
