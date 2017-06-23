@@ -119,6 +119,10 @@ Internal changes
     addding ``-DPROTEUS_ENABLE_DOC=on`` to the cmake commandline.
 *   The :math:`\chi^2` value of the straight line fit is calculated
     directly without looping over the input data again.
+*   All cluster properties, i.e. position, value, and time, must be set
+    explicitely by the clusterizer. Adding a hit to a cluster only sets the
+    relationship, but does not implictely change any cluster properties anymore.
+*   Small refactorization of the clusterizer code to clarify its algorithm.
 
 v1.1.3 (2017-03-21)
 ===================
