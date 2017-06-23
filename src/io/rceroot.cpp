@@ -76,23 +76,38 @@ Io::RceRootReader::RceRootReader(const std::string& path)
   INFO("read ", numSensors, " sensors from '", path, "'");
 
   // verify that all trees have consistent number of entries
-  auto verifiedEntries = [](TTree* tree) {
+  m_entries = m_eventInfo->GetEntriesFast();
+  if (m_entries < 0)
+    FAIL("could not determine number of entries");
+
+  auto hasConsistentEntries = [&](TTree* tree) {
     int64_t entries = tree->GetEntriesFast();
     if (entries < 0)
       FAIL("could not determine number of entries");
-    return entries;
+    return (entries == m_entries);
   };
 
-  m_entries = verifiedEntries(m_eventInfo);
-  if (m_tracks && (verifiedEntries(m_tracks) != m_entries))
+  // tracks must be consistent with events
+  if (m_tracks && !hasConsistentEntries(m_tracks))
     FAIL("inconsistent 'Tracks' entries");
-  for (const auto& trees : m_sensors) {
-    if (trees.hits && (verifiedEntries(trees.hits) != m_entries))
-      FAIL("inconsistent 'Hits' entries");
-    if (trees.clusters && (verifiedEntries(trees.clusters) != m_entries))
-      FAIL("inconsistent 'Clusters' entries");
-    if (trees.intercepts && (verifiedEntries(trees.intercepts) != m_entries))
-      FAIL("inconsistent 'Intercepts' entries");
+  // per-sensor trees should be consistent, but Mimosa26 trees can have
+  // an inconsistent number of entries. ignore those cases
+  for (size_t isensor = 0; isensor < m_sensors.size(); ++isensor) {
+    auto& trees = m_sensors[isensor];
+    if (trees.hits && !hasConsistentEntries(trees.hits)) {
+      INFO("ignore sensor ", isensor, " 'Hits' due to inconsistent entries");
+      trees.hits = nullptr;
+    }
+    if (trees.clusters && !hasConsistentEntries(trees.clusters)) {
+      INFO("ignore sensor ", isensor,
+           " 'Clusters' due to inconsistent entries");
+      trees.clusters = nullptr;
+    }
+    if (trees.intercepts && !hasConsistentEntries(trees.intercepts)) {
+      INFO("ignore sensor ", isensor,
+           " 'Intercepts' due to inconsistent entries");
+      trees.intercepts = nullptr;
+    }
   }
 }
 
