@@ -19,7 +19,14 @@ class TTree;
 namespace Mechanics {
 class Device;
 class Sensor;
-}
+} // namespace Mechanics
+namespace Storage {
+class Cluster;
+class Event;
+class Plane;
+class Track;
+class TrackState;
+} // namespace Storage
 
 namespace Analyzers {
 
@@ -41,6 +48,9 @@ private:
     uint64_t timestamp;
     int16_t nClusters;
     int16_t nTracks;
+
+    void setup(TTree* tree);
+    void set(const Storage::Event& e, const Storage::Plane& s);
   };
   struct TrackData {
     float u, v, du, dv;
@@ -49,6 +59,8 @@ private:
     float chi2;
     int16_t dof;
     int16_t size;
+
+    void setup(TTree* tree);
   };
   struct ClusterData {
     float u, v;
@@ -61,9 +73,21 @@ private:
     int16_t hitRow[MAX_CLUSTER_SIZE];
     float hitTime[MAX_CLUSTER_SIZE];
     float hitValue[MAX_CLUSTER_SIZE];
+
+    void setup(TTree* tree);
+    void set(const Storage::Cluster& c);
+    void invalidate();
   };
   struct MatchData {
     float d2;
+
+    void setup(TTree* tree);
+    void invalidate();
+  };
+  struct MaskData {
+    int16_t col, row;
+
+    void setup(TTree* tree);
   };
 
   const Mechanics::Sensor& m_sensor;
