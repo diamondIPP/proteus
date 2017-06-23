@@ -91,6 +91,12 @@ Bugfixes
     the column/row index of masked pixels was calculated only relative
     to the region-of-interest. This lead to incorrect or empty output
     pixel masks.
+*   Fix distance comparison in cluster/track matching.
+
+    Due to a type missmatch the relative distances between different
+    possible cluster/track pairs was not correctly calculated. This
+    could have lead to incorrect assignments for events with more than
+    one possible cluster/track pairs.
 
 Internal changes
 ----------------

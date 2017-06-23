@@ -23,7 +23,7 @@ struct Pair {
   Storage::TrackState* state;
   Storage::Cluster* cluster;
 
-  bool d2() const
+  double d2() const
   {
     XYVector delta = cluster->posLocal() - state->offset();
     SymMatrix2 cov = cluster->covLocal() + state->covOffset();
