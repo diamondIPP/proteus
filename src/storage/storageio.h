@@ -111,10 +111,11 @@ private:
   Int_t interceptTrack[MAX_TRACKS];
 
   // EVENT INFO
-  ULong64_t timestamp;
-  Int_t triggerOffset;
   ULong64_t frameNumber;
+  ULong64_t timestamp;
+  ULong64_t triggerTime;
   Int_t triggerInfo;
+  Int_t triggerOffset;
   Int_t triggerPhase;
   Bool_t invalid;
 
@@ -152,10 +153,11 @@ private:
   TBranch* bInterceptCov;
   TBranch* bInterceptTrack;
 
-  TBranch* bTimeStamp;
   TBranch* bFrameNumber;
-  TBranch* bTriggerOffset;
+  TBranch* bTimeStamp;
+  TBranch* bTriggerTime;
   TBranch* bTriggerInfo;
+  TBranch* bTriggerOffset;
   TBranch* bTriggerPhase;
   TBranch* bInvalid;
 

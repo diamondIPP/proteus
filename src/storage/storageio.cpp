@@ -99,11 +99,12 @@ void Storage::StorageIO::openRead(const std::string& path,
 
   _file->GetObject("Event", _eventInfo);
   if (_eventInfo) {
-    _eventInfo->SetBranchAddress("TimeStamp", &timestamp, &bTimeStamp);
     _eventInfo->SetBranchAddress("FrameNumber", &frameNumber, &bFrameNumber);
+    _eventInfo->SetBranchAddress("TimeStamp", &timestamp, &bTimeStamp);
+    _eventInfo->SetBranchAddress("TriggerTime", &triggerTime, &bTriggerTime);
+    _eventInfo->SetBranchAddress("TriggerInfo", &triggerInfo, &bTriggerInfo);
     _eventInfo->SetBranchAddress("TriggerOffset", &triggerOffset,
                                  &bTriggerOffset);
-    _eventInfo->SetBranchAddress("TriggerInfo", &triggerInfo, &bTriggerInfo);
     _eventInfo->SetBranchAddress("TriggerPhase", &triggerPhase, &bTriggerPhase);
     _eventInfo->SetBranchAddress("Invalid", &invalid, &bInvalid);
   }
@@ -171,10 +172,11 @@ void Storage::StorageIO::openTruncate(const std::string& path)
 
   // EventInfo tree
   _eventInfo = new TTree("Event", "Event information");
-  _eventInfo->Branch("TimeStamp", &timestamp, "TimeStamp/l");
   _eventInfo->Branch("FrameNumber", &frameNumber, "FrameNumber/l");
-  _eventInfo->Branch("TriggerOffset", &triggerOffset, "TriggerOffset/I");
+  _eventInfo->Branch("TimeStamp", &timestamp, "TimeStamp/l");
+  _eventInfo->Branch("TriggerTime", &triggerTime, "TriggerTime/l");
   _eventInfo->Branch("TriggerInfo", &triggerInfo, "TriggerInfo/I");
+  _eventInfo->Branch("TriggerOffset", &triggerOffset, "TriggerOffset/I");
   _eventInfo->Branch("TriggerPhase", &triggerPhase, "TriggerPhase/I");
   _eventInfo->Branch("Invalid", &invalid, "Invalid/O");
 
@@ -306,9 +308,12 @@ StorageIO::~StorageIO()
 //=========================================================
 void StorageIO::clearVariables()
 {
-  timestamp = 0;
   frameNumber = 0;
+  timestamp = 0;
+  triggerTime = 0;
+  triggerInfo = 0;
   triggerOffset = 0;
+  triggerPhase = 0;
   invalid = false;
 
   numHits = 0;
@@ -367,10 +372,10 @@ void StorageIO::readEvent(uint64_t n, Event* event)
 
   event->clear();
   event->setId(n);
-  event->setTimestamp(timestamp);
   event->setFrameNumber(frameNumber);
-  event->setTriggerOffset(triggerOffset);
+  event->setTimestamp(timestamp);
   event->setTriggerInfo(triggerInfo);
+  event->setTriggerOffset(triggerOffset);
   event->setTriggerPhase(triggerPhase);
   event->setInvalid(invalid);
 
@@ -452,12 +457,11 @@ void StorageIO::writeEvent(Event* event)
   if (_fileMode == INPUT)
     throw std::runtime_error("StorageIO: can't write event in input mode");
 
-  timestamp = event->timestamp();
   frameNumber = event->frameNumber();
-  triggerOffset = event->triggerOffset();
+  timestamp = event->timestamp();
   triggerInfo = event->triggerInfo();
+  triggerOffset = event->triggerOffset();
   triggerPhase = event->triggerPhase();
-  // cout<<triggerPhase<<endl;
   invalid = event->invalid();
 
   numTracks = event->numTracks();
