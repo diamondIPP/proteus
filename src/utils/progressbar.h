@@ -26,7 +26,7 @@ public:
   ProgressBar(int lineLength)
       : m_os(std::cerr)
       , m_lastUpdate(std::chrono::steady_clock::now())
-      , m_length(std::max(lineLength - 8, 0))
+      , m_length(lineLength)
   {
   }
 
@@ -53,7 +53,7 @@ public:
   /** Overwrite the progress bar with empty spaces. */
   void clear()
   {
-    for (int i = 0; i < (m_length + 8); ++i)
+    for (int i = 0; i < m_length; ++i)
       m_os << ' ';
     m_os << '\r' << std::flush;
   }
@@ -80,17 +80,20 @@ private:
   template <typename I, typename = typename std::is_integral<I>::type>
   void drawBar(I current, I total)
   {
-    int bars = (m_length * current) / total;
+    int full = (m_length - 8);
+    int bars = (full * current) / total;
     int percent = (100 * current) / total;
 
+    m_os << " " << std::setw(3) << percent << "% ";
     m_os << "[";
     for (int i = 0; i < bars; ++i)
       m_os << '=';
-    for (int i = bars; i < m_length; ++i)
+    for (int i = bars; i < full; ++i)
       m_os << ' ';
+    m_os << "]";
     // after printing rewind back to the beginning of the line so that the
     // next update (or unrelated messages) can overwrite the current status
-    m_os << "] " << std::setw(3) << percent << "%\r" << std::flush;
+    m_os << '\r' << std::flush;
   }
 
   std::ostream& m_os;
