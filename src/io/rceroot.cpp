@@ -188,8 +188,6 @@ bool Io::RceRootReader::readNext(Storage::Event& event)
   // global event data
   if (m_eventInfo->GetEntry(ievent) <= 0)
     FAIL("could not read 'Events' entry ", ievent);
-  event.clear();
-  event.setFrameNumber(frameNumber);
   // listen chap, here's the deal:
   // we want a timestamp, i.e. a simple counter of clockcycles or bunch
   // crossings, for each event that defines the trigger/ readout time with
@@ -200,7 +198,7 @@ bool Io::RceRootReader::readNext(Storage::Event& event)
   // to the actual trigger time and has only a 1s resolution, i.e. it is
   // completely useless. The `TriggerTime` actually stores the internal
   // FPGA timestamp/ clock cyles and is what we need to use.
-  event.setTimestamp(triggerTime);
+  event.clear(frameNumber, triggerTime);
   event.setTriggerInfo(triggerInfo);
   event.setTriggerOffset(triggerOffset);
   event.setTriggerPhase(triggerPhase);

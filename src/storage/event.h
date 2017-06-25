@@ -16,9 +16,7 @@ class Event {
 public:
   Event(size_t sensors);
 
-  void clear();
-  void setFrameNumber(uint64_t frameNumber) { m_frameNumber = frameNumber; }
-  void setTimestamp(uint64_t timestamp) { m_timestamp = timestamp; }
+  void clear(uint64_t frame, uint64_t timestamp);
   void setTriggerInfo(int32_t info) { m_triggerInfo = info; }
   void setTriggerOffset(int32_t offset) { m_triggerOffset = offset; }
   void setTriggerPhase(int32_t phase) { m_triggerPhase = phase; }

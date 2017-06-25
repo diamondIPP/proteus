@@ -16,8 +16,13 @@ Storage::Event::Event(size_t sensors)
     m_planes.emplace_back(Plane(isensor));
 }
 
-void Storage::Event::clear()
+void Storage::Event::clear(uint64_t frame, uint64_t timestamp)
 {
+  m_frameNumber = frame;
+  m_timestamp = timestamp;
+  m_triggerInfo = -1;
+  m_triggerOffset = -1;
+  m_triggerPhase = -1;
   for (auto& plane : m_planes)
     plane.clear();
   m_tracks.clear();
