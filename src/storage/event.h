@@ -22,7 +22,7 @@ public:
   void setTriggerPhase(int32_t phase) { m_triggerPhase = phase; }
   void setInvalid(bool value) { m_invalid = value; }
 
-  uint64_t frameNumber() const { return m_frameNumber; }
+  uint64_t frame() const { return m_frame; }
   uint64_t timestamp() const { return m_timestamp; }
   int32_t triggerInfo() const { return m_triggerInfo; }
   int32_t triggerOffset() const { return m_triggerOffset; }
@@ -46,7 +46,7 @@ public:
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
-  uint64_t m_frameNumber;
+  uint64_t m_frame;
   uint64_t m_timestamp;
   int32_t m_triggerInfo; // Dammit Andrej!
   int32_t m_triggerOffset;

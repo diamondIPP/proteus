@@ -4,8 +4,8 @@
 #include <iostream>
 
 Storage::Event::Event(size_t sensors)
-    : m_frameNumber(0)
-    , m_timestamp(0)
+    : m_frame(UINT64_MAX)
+    , m_timestamp(UINT64_MAX)
     , m_triggerInfo(-1)
     , m_triggerOffset(-1)
     , m_triggerPhase(-1)
@@ -18,11 +18,12 @@ Storage::Event::Event(size_t sensors)
 
 void Storage::Event::clear(uint64_t frame, uint64_t timestamp)
 {
-  m_frameNumber = frame;
+  m_frame = frame;
   m_timestamp = timestamp;
   m_triggerInfo = -1;
   m_triggerOffset = -1;
   m_triggerPhase = -1;
+  m_invalid = false;
   for (auto& plane : m_planes)
     plane.clear();
   m_tracks.clear();
@@ -52,11 +53,9 @@ unsigned int Storage::Event::getNumClusters() const
 
 void Storage::Event::print(std::ostream& os, const std::string& prefix) const
 {
-  os << prefix << "frame number: " << frameNumber() << '\n';
+  os << prefix << "frame: " << frame() << '\n';
   os << prefix << "timestamp: " << timestamp() << '\n';
-  os << prefix << "trigger offset: " << triggerOffset() << '\n';
   os << prefix << "invalid: " << invalid() << '\n';
-
   os << prefix << "sensors:\n";
   for (size_t isensor = 0; isensor < m_planes.size(); ++isensor) {
     const Storage::Plane& sensorEvent = m_planes[isensor];

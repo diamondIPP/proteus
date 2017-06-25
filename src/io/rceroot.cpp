@@ -372,7 +372,7 @@ void Io::RceRootWriter::append(const Storage::Event& event)
          ", but the writer expected ", m_sensors.size());
 
   // global event info is **always** filled
-  frameNumber = event.frameNumber();
+  frameNumber = event.frame();
   timestamp = 0;
   triggerTime = event.timestamp();
   triggerInfo = event.triggerInfo();

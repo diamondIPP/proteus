@@ -26,7 +26,7 @@ void Io::MatchWriter::EventData::addToTree(TTree* tree)
 void Io::MatchWriter::EventData::set(const Storage::Event& e,
                                      const Storage::Plane& s)
 {
-  frame = e.frameNumber();
+  frame = e.frame();
   timestamp = e.timestamp();
   nClusters = s.numClusters();
   nTracks = e.numTracks();
