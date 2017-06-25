@@ -6,7 +6,9 @@
 Storage::Event::Event(size_t sensors)
     : m_frameNumber(0)
     , m_timestamp(0)
-    , m_triggerOffset(0)
+    , m_triggerInfo(-1)
+    , m_triggerOffset(-1)
+    , m_triggerPhase(-1)
     , m_invalid(false)
 {
   m_planes.reserve(sensors);
