@@ -39,9 +39,8 @@ public:
   Track* getTrack(Index i) { return m_tracks.at(i).get(); }
   const Track* getTrack(Index i) const { return m_tracks.at(i).get(); }
 
-  // deprecated accessors
-  unsigned int getNumHits() const;
-  unsigned int getNumClusters() const;
+  size_t getNumHits() const;
+  size_t getNumClusters() const;
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 

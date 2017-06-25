@@ -35,19 +35,19 @@ void Storage::Event::addTrack(std::unique_ptr<Track> track)
   m_tracks.back()->m_index = m_tracks.size() - 1;
 }
 
-unsigned int Storage::Event::getNumHits() const
+size_t Storage::Event::getNumHits() const
 {
-  Index n = 0;
-  for (auto plane = m_planes.begin(); plane != m_planes.end(); ++plane)
-    n += plane->numHits();
+  size_t n = 0;
+  for (const auto& plane : m_planes)
+    n += plane.numHits();
   return n;
 }
 
-unsigned int Storage::Event::getNumClusters() const
+size_t Storage::Event::getNumClusters() const
 {
-  Index n = 0;
-  for (auto plane = m_planes.begin(); plane != m_planes.end(); ++plane)
-    n += plane->numClusters();
+  size_t n = 0;
+  for (const auto& plane : m_planes)
+    n += plane.numClusters();
   return n;
 }
 
