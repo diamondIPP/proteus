@@ -106,6 +106,8 @@ Bugfixes
     pairs was not correctly calculated due to a type missmatch in the
     code. This could have lead to incorrect assignments for events
     with more than one possible cluster/track pairs.
+*   When exporting the match output for more than one device-under-test,
+    all trees are created in the correct subdirectory.
 
 Internal changes
 ----------------
