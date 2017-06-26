@@ -137,6 +137,7 @@ Analyzers::MatchExporter::MatchExporter(const Mechanics::Device& device,
     , m_name("MatchExporter(" + device.getSensor(sensorId)->name() + ')')
 {
   TDirectory* sub = dir->mkdir(m_sensor.name().c_str());
+  sub->cd();
 
   m_matchedTree = new TTree("tracks_clusters_matched", "");
   m_matchedTree->SetDirectory(sub);
