@@ -29,7 +29,7 @@ namespace Utils {
  */
 class EventLoop {
 public:
-  EventLoop(Io::EventReader* reader,
+  EventLoop(std::shared_ptr<Io::EventReader> reader,
             size_t sensors,
             uint64_t start = 0,
             uint64_t events = UINT64_MAX,
@@ -42,7 +42,7 @@ public:
   void run();
 
 private:
-  Io::EventReader* m_reader;
+  std::shared_ptr<Io::EventReader> m_reader;
   std::vector<std::shared_ptr<Processors::Processor>> m_processors;
   std::vector<std::shared_ptr<Analyzers::Analyzer>> m_analyzers;
   std::vector<std::shared_ptr<Io::EventWriter>> m_writers;

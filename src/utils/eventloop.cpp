@@ -130,19 +130,17 @@ struct Statistics {
 };
 } // namespace
 
-Utils::EventLoop::EventLoop(Io::EventReader* reader,
+Utils::EventLoop::EventLoop(std::shared_ptr<Io::EventReader> reader,
                             size_t sensors,
                             uint64_t start,
                             uint64_t events,
                             bool showProgress)
-    : m_reader(reader)
+    : m_reader(std::move(reader))
     , m_start(start)
     , m_events(0)
     , m_sensors(sensors)
     , m_showProgress(showProgress)
 {
-  assert(reader && "EventReader must be non-NULL");
-
   uint64_t available = m_reader->numEvents();
 
   DEBUG("requested start: ", start);
