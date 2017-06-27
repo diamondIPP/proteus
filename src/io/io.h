@@ -7,6 +7,7 @@
 #define PT_IO_H
 
 #include <cstdint>
+#include <memory>
 #include <string>
 
 namespace Storage {
@@ -58,6 +59,9 @@ public:
    */
   virtual void append(const Storage::Event& event) = 0;
 };
+
+/** Open an event file with automatic determination of the file type. */
+std::shared_ptr<EventReader> openRead(const std::string& path);
 
 } // namespace Io
 
