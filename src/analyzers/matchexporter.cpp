@@ -1,5 +1,6 @@
 #include "matchexporter.h"
 
+#include <cassert>
 #include <limits>
 #include <string>
 
@@ -12,6 +13,122 @@
 
 PT_SETUP_GLOBAL_LOGGER
 
+void Analyzers::MatchExporter::EventData::addToTree(TTree* tree)
+{
+  assert(tree);
+
+  tree->Branch("evt_frame", &frame, "evt_frame/l");
+  tree->Branch("evt_timestamp", &timestamp, "evt_timestamp/l");
+  tree->Branch("evt_nclusters", &nClusters);
+  tree->Branch("evt_ntracks", &nTracks);
+}
+
+void Analyzers::MatchExporter::EventData::set(const Storage::Event& e,
+                                              const Storage::Plane& s)
+{
+  frame = e.frameNumber();
+  timestamp = e.timestamp();
+  nClusters = s.numClusters();
+  nTracks = e.numTracks();
+}
+
+void Analyzers::MatchExporter::TrackData::addToTree(TTree* tree)
+{
+  assert(tree);
+
+  tree->Branch("trk_u", &u);
+  tree->Branch("trk_v", &v);
+  tree->Branch("trk_du", &du);
+  tree->Branch("trk_dv", &dv);
+  tree->Branch("trk_std_u", &stdU);
+  tree->Branch("trk_std_v", &stdV);
+  tree->Branch("trk_corr_uv", &corrUV);
+  tree->Branch("trk_col", &col);
+  tree->Branch("trk_row", &row);
+  tree->Branch("trk_chi2", &chi2);
+  tree->Branch("trk_dof", &dof);
+  tree->Branch("trk_size", &size);
+}
+
+void Analyzers::MatchExporter::ClusterData::addToTree(TTree* tree)
+{
+  assert(tree);
+
+  tree->Branch("clu_u", &u);
+  tree->Branch("clu_v", &v);
+  tree->Branch("clu_std_u", &stdU);
+  tree->Branch("clu_std_v", &stdV);
+  tree->Branch("clu_corr_uv", &corrUV);
+  tree->Branch("clu_col", &col);
+  tree->Branch("clu_row", &row);
+  tree->Branch("clu_time", &time);
+  tree->Branch("clu_value", &value);
+  tree->Branch("clu_region", &region);
+  tree->Branch("clu_size", &size);
+  tree->Branch("clu_size_col", &sizeCol);
+  tree->Branch("clu_size_row", &sizeRow);
+  tree->Branch("hit_col", &hitCol, "hit_col[clu_size]/S");
+  tree->Branch("hit_row", &hitRow, "hit_row[clu_size]/S");
+  tree->Branch("hit_time", &hitTime, "hit_time[clu_size]/F");
+  tree->Branch("hit_value", &hitValue, "hit_value[clu_size]/F");
+}
+
+void Analyzers::MatchExporter::ClusterData::set(const Storage::Cluster& c)
+{
+  u = c.posLocal().x();
+  v = c.posLocal().y();
+  stdU = std::sqrt(c.covLocal()(0, 0));
+  stdV = std::sqrt(c.covLocal()(1, 1));
+  corrUV = c.covLocal()(0, 1) / (stdU * stdV);
+  col = c.posPixel().x();
+  row = c.posPixel().y();
+  time = c.time();
+  value = c.value();
+  region = ((c.region() == kInvalidIndex) ? -1 : c.region());
+  size = std::min(c.size(), int(MAX_CLUSTER_SIZE));
+  sizeCol = c.sizeCol();
+  sizeRow = c.sizeRow();
+  for (int ihit = 0; ihit < size; ++ihit) {
+    const Storage::Hit& hit = *c.getHit(ihit);
+    hitCol[ihit] = hit.col();
+    hitRow[ihit] = hit.row();
+    hitTime[ihit] = hit.time();
+    hitValue[ihit] = hit.value();
+  }
+}
+
+void Analyzers::MatchExporter::ClusterData::invalidate()
+{
+  u = std::numeric_limits<float>::quiet_NaN();
+  v = std::numeric_limits<float>::quiet_NaN();
+  stdU = std::numeric_limits<float>::quiet_NaN();
+  stdV = std::numeric_limits<float>::quiet_NaN();
+  corrUV = std::numeric_limits<float>::quiet_NaN();
+  col = std::numeric_limits<float>::quiet_NaN();
+  row = std::numeric_limits<float>::quiet_NaN();
+  time = std::numeric_limits<float>::quiet_NaN();
+  value = std::numeric_limits<float>::quiet_NaN();
+  region = -1;
+  size = 0; // required to have empty hit information
+  sizeCol = 0;
+  sizeRow = 0;
+}
+
+void Analyzers::MatchExporter::MaskData::addToTree(TTree* tree)
+{
+  assert(tree);
+
+  tree->Branch("col", &col);
+  tree->Branch("row", &row);
+}
+
+void Analyzers::MatchExporter::DistData::addToTree(TTree* tree)
+{
+  assert(tree);
+
+  tree->Branch("mat_d2", &d2);
+}
+
 Analyzers::MatchExporter::MatchExporter(const Mechanics::Device& device,
                                         Index sensorId,
                                         TDirectory* dir)
@@ -20,62 +137,32 @@ Analyzers::MatchExporter::MatchExporter(const Mechanics::Device& device,
     , m_name("MatchExporter(" + device.getSensor(sensorId)->name() + ')')
 {
   TDirectory* sub = dir->mkdir(m_sensor.name().c_str());
+  sub->cd();
 
-  auto setupCluster = [](TTree* tree, ClusterData& data) {
-    tree->Branch("clu_u", &data.u);
-    tree->Branch("clu_v", &data.v);
-    tree->Branch("clu_std_u", &data.stdU);
-    tree->Branch("clu_std_v", &data.stdV);
-    tree->Branch("clu_corr_uv", &data.corrUV);
-    tree->Branch("clu_col", &data.col);
-    tree->Branch("clu_row", &data.row);
-    tree->Branch("clu_time", &data.time);
-    tree->Branch("clu_value", &data.value);
-    tree->Branch("clu_region", &data.region);
-    tree->Branch("clu_size", &data.size);
-    tree->Branch("clu_size_col", &data.sizeCol);
-    tree->Branch("clu_size_row", &data.sizeRow);
-    tree->Branch("hit_col", &data.hitCol, "hit_col[clu_size]/S");
-    tree->Branch("hit_row", &data.hitRow, "hit_row[clu_size]/S");
-    tree->Branch("hit_time", &data.hitTime, "hit_time[clu_size]/F");
-    tree->Branch("hit_value", &data.hitValue, "hit_value[clu_size]/F");
-  };
+  m_matchedTree = new TTree("tracks_clusters_matched", "");
+  m_matchedTree->SetDirectory(sub);
+  m_event.addToTree(m_matchedTree);
+  m_track.addToTree(m_matchedTree);
+  m_matchedCluster.addToTree(m_matchedTree);
+  m_matchedDist.addToTree(m_matchedTree);
 
-  m_treeTrk = new TTree("tracks_clusters_matched", "");
-  m_treeTrk->SetDirectory(sub);
-  m_treeTrk->Branch("evt_timestamp", &m_event.timestamp, "evt_timestamp/l");
-  m_treeTrk->Branch("evt_nclusters", &m_event.nClusters);
-  m_treeTrk->Branch("evt_ntracks", &m_event.nTracks);
-  m_treeTrk->Branch("trk_u", &m_track.u);
-  m_treeTrk->Branch("trk_v", &m_track.v);
-  m_treeTrk->Branch("trk_du", &m_track.du);
-  m_treeTrk->Branch("trk_dv", &m_track.dv);
-  m_treeTrk->Branch("trk_std_u", &m_track.stdU);
-  m_treeTrk->Branch("trk_std_v", &m_track.stdV);
-  m_treeTrk->Branch("trk_corr_uv", &m_track.corrUV);
-  m_treeTrk->Branch("trk_col", &m_track.col);
-  m_treeTrk->Branch("trk_row", &m_track.row);
-  m_treeTrk->Branch("trk_chi2", &m_track.chi2);
-  m_treeTrk->Branch("trk_dof", &m_track.dof);
-  m_treeTrk->Branch("trk_nclusters", &m_track.nClusters);
-  m_treeTrk->Branch("mat_d2", &m_match.d2);
-  setupCluster(m_treeTrk, m_clusterMatched);
-  m_treeClu = new TTree("clusters_unmatched", "");
-  m_treeClu->SetDirectory(sub);
-  setupCluster(m_treeClu, m_clusterUnmatched);
+  m_unmatchTree = new TTree("clusters_unmatched", "");
+  m_unmatchTree->SetDirectory(sub);
+  m_event.addToTree(m_unmatchTree);
+  m_unmatchCluster.addToTree(m_unmatchTree);
 
-  TTree* maskTree = new TTree("masked_pixels", "");
-  int16_t maskedCol, maskedRow;
-  maskTree->SetDirectory(sub);
-  maskTree->Branch("col", &maskedCol);
-  maskTree->Branch("row", &maskedRow);
+  // pixel masks
+  TTree* treeMask = new TTree("masked_pixels", "");
+  treeMask->SetDirectory(sub);
+  MaskData maskData;
+  maskData.addToTree(treeMask);
   auto mask = m_sensor.pixelMask();
   for (Index c = 0; c < m_sensor.numCols(); ++c) {
     for (Index r = 0; r < m_sensor.numRows(); ++r) {
       if (mask.isMasked(c, r)) {
-        maskedCol = static_cast<int16_t>(c);
-        maskedRow = static_cast<int16_t>(r);
-        maskTree->Fill();
+        maskData.col = static_cast<int16_t>(c);
+        maskData.row = static_cast<int16_t>(r);
+        treeMask->Fill();
       }
     }
   }
@@ -87,55 +174,14 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
 {
   const Storage::Plane& plane = *event.getPlane(m_sensorId);
 
-  auto fillCluster = [](const Storage::Cluster& cluster, ClusterData& data) {
-    data.u = cluster.posLocal().x();
-    data.v = cluster.posLocal().y();
-    data.stdU = std::sqrt(cluster.covLocal()(0, 0));
-    data.stdV = std::sqrt(cluster.covLocal()(1, 1));
-    data.corrUV = cluster.covLocal()(0, 1) / (data.stdU * data.stdV);
-    data.col = cluster.posPixel().x();
-    data.row = cluster.posPixel().y();
-    data.time = cluster.time();
-    data.value = cluster.value();
-    data.region = ((cluster.region() == kInvalidIndex) ? -1 : cluster.region());
-    data.size = std::min(cluster.size(), int(MAX_CLUSTER_SIZE));
-    data.sizeCol = cluster.sizeCol();
-    data.sizeRow = cluster.sizeRow();
-    for (int ihit = 0; ihit < data.size; ++ihit) {
-      const Storage::Hit& hit = *cluster.getHit(ihit);
-      data.hitCol[ihit] = hit.col();
-      data.hitRow[ihit] = hit.row();
-      data.hitTime[ihit] = hit.time();
-      data.hitValue[ihit] = hit.value();
-    }
-  };
-  auto invalidateCluster = [](ClusterData& data) {
-    data.u = std::numeric_limits<float>::quiet_NaN();
-    data.v = std::numeric_limits<float>::quiet_NaN();
-    data.stdU = std::numeric_limits<float>::quiet_NaN();
-    data.stdV = std::numeric_limits<float>::quiet_NaN();
-    data.corrUV = std::numeric_limits<float>::quiet_NaN();
-    data.col = -1;
-    data.row = -1;
-    data.time = -1;
-    data.value = -1;
-    data.region = -1;
-    data.size = 0; // required to have empty hit information
-    data.sizeCol = 0;
-    data.sizeRow = 0;
-  };
-
-  // global event information
-  m_event.timestamp = event.timestamp();
-  m_event.nClusters = plane.numClusters();
-  m_event.nTracks = plane.numStates();
+  m_event.set(event, plane);
 
   // export tracks and possible matched clusters
   for (Index istate = 0; istate < plane.numStates(); ++istate) {
     const Storage::TrackState& state = plane.getState(istate);
     const Storage::Track& track = *state.track();
 
-    // track data
+    // always set track data
     XYPoint cr = m_sensor.transformLocalToPixel(state.offset());
     m_track.u = state.offset().x();
     m_track.v = state.offset().y();
@@ -148,33 +194,35 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
     m_track.row = cr.y();
     m_track.chi2 = track.chi2();
     m_track.dof = track.degreesOfFreedom();
-    m_track.nClusters = track.numClusters();
+    m_track.size = track.numClusters();
 
     // matching cluster data
     if (state.matchedCluster()) {
       const Storage::Cluster& cluster = *state.matchedCluster();
-      // fill matching information
+      // set cluster information
+      m_matchedCluster.set(cluster);
+      // set matching information
       SymMatrix2 cov = cluster.covLocal() + state.covOffset();
       XYVector delta = cluster.posLocal() - state.offset();
-      m_match.d2 = mahalanobisSquared(cov, delta);
-      // fill cluster information
-      fillCluster(cluster, m_clusterMatched);
+      m_matchedDist.d2 = mahalanobisSquared(cov, delta);
     } else {
       // fill invalid data if no matching cluster exists
-      m_match.d2 = std::numeric_limits<float>::quiet_NaN();
-      invalidateCluster(m_clusterMatched);
+      m_matchedCluster.invalidate();
+      m_matchedDist.d2 = std::numeric_limits<float>::quiet_NaN();
     }
-    m_treeTrk->Fill();
+    m_matchedTree->Fill();
   }
 
   // export unmatched clusters
   for (Index icluster = 0; icluster < plane.numClusters(); ++icluster) {
     const Storage::Cluster& cluster = *plane.getCluster(icluster);
+
     // already exported during track iteration
     if (cluster.matchedTrack())
       continue;
-    fillCluster(cluster, m_clusterUnmatched);
-    m_treeClu->Fill();
+
+    m_unmatchCluster.set(cluster);
+    m_unmatchTree->Fill();
   }
 }
 

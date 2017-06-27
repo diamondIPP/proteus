@@ -16,28 +16,33 @@
 
 PT_SETUP_GLOBAL_LOGGER
 
-/** Check if the given hit is unconnected to the cluster. */
-struct Unconnected {
-  const Storage::Cluster* cluster;
-  double maxDistSquared;
+// return true if both hits are connected, i.e. share one edge.
+//
+// WARNING: hits w/ the same position are counted as connected
+static bool connected(const Storage::Hit* hit0, const Storage::Hit* hit1)
+{
+  auto dc = std::abs(int(hit1->col()) - int(hit0->col()));
+  auto dr = std::abs(int(hit1->row()) - int(hit0->row()));
+  return ((dc == 0) && (dr <= 1)) || ((dc <= 1) && (dr == 0));
+}
 
-  bool operator()(const Storage::Hit* hit)
-  {
-    // don't cluster hits from different sensor regions
-    if (cluster->region() != hit->region())
+// return true if the hit is connected to any hit in the cluster.
+static bool connected(const Storage::Cluster* cluster, const Storage::Hit* hit)
+{
+  for (Index ihit = 0; ihit < cluster->numHits(); ++ihit) {
+    if (connected(cluster->getHit(ihit), hit))
       return true;
-    for (Index icompare = 0; icompare < cluster->numHits(); ++icompare) {
-      XYVector delta = hit->posPixel() - cluster->getHit(icompare)->posPixel();
-      if (delta.Mag2() <= maxDistSquared)
-        return false;
-    }
-    return true;
   }
-};
+  return false;
+}
 
-static void cluster(double maxDistSquared,
-                    std::vector<Storage::Hit*>& hits,
-                    Storage::Plane& plane)
+// return true if the hit and cluster are connected and in the same region
+static bool compatible(const Storage::Cluster* cluster, const Storage::Hit* hit)
+{
+  return (cluster->region() == hit->region()) && connected(cluster, hit);
+}
+
+static void cluster(std::vector<Storage::Hit*>& hits, Storage::Plane& plane)
 {
   while (!hits.empty()) {
     Storage::Hit* seed = hits.back();
@@ -47,16 +52,16 @@ static void cluster(double maxDistSquared,
     cluster->addHit(seed);
 
     while (!hits.empty()) {
-      // all hits connected to the cluster are moved to the end
-      auto connected = std::partition(hits.begin(), hits.end(),
-                                      Unconnected{cluster, maxDistSquared});
-      // all other hits are unconnected, cluster is complete
+      // move all compatible hits to the end
+      auto connected = std::partition(
+          hits.begin(), hits.end(),
+          [&](const Storage::Hit* hit) { return !compatible(cluster, hit); });
+      // there are no more compatible hits and the cluster is complete
       if (connected == hits.end())
         break;
-      // add connected hits to cluster and remove from further consideration
-      for (auto hit = connected; hit != hits.end(); ++hit) {
+      // add compatible hits to cluster and remove from further consideration
+      for (auto hit = connected; hit != hits.end(); ++hit)
         cluster->addHit(*hit);
-      }
       hits.erase(connected, hits.end());
     }
   }
@@ -64,9 +69,7 @@ static void cluster(double maxDistSquared,
 
 Processors::BaseClusterizer::BaseClusterizer(const std::string& namePrefix,
                                              const Mechanics::Sensor& sensor)
-    : m_sensor(sensor)
-    , m_maxDistSquared(1)
-    , m_name(namePrefix + '(' + sensor.name() + ')')
+    : m_sensor(sensor), m_name(namePrefix + '(' + sensor.name() + ')')
 {
 }
 
@@ -86,7 +89,7 @@ void Processors::BaseClusterizer::process(Storage::Event& event) const
       continue;
     hits.push_back(hit);
   }
-  cluster(m_maxDistSquared, hits, plane);
+  cluster(hits, plane);
 
   // estimate cluster properties
   for (Index icluster = 0; icluster < plane.numClusters(); ++icluster)
@@ -108,7 +111,7 @@ static const SymMatrix2 HIT_COV(HIT_COV_ENTRIES, false);
 void Processors::BinaryClusterizer::estimateProperties(
     Storage::Cluster& cluster) const
 {
-  XYPoint pos;
+  XYPoint pos(0, 0);
   double time = std::numeric_limits<double>::max();
 
   for (Index ihit = 0; ihit < cluster.numHits(); ++ihit) {
@@ -124,6 +127,7 @@ void Processors::BinaryClusterizer::estimateProperties(
 
   cluster.setPixel(pos, cov);
   cluster.setTime(time);
+  cluster.setValue(cluster.numHits());
 }
 
 Processors::ValueWeightedClusterizer::ValueWeightedClusterizer(
@@ -136,17 +140,17 @@ Processors::ValueWeightedClusterizer::ValueWeightedClusterizer(
 void Processors::ValueWeightedClusterizer::estimateProperties(
     Storage::Cluster& cluster) const
 {
-  XYPoint pos;
+  XYPoint pos(0, 0);
   double time = std::numeric_limits<double>::max();
-  double weight = 0;
+  double value = 0;
 
   for (Index ihit = 0; ihit < cluster.numHits(); ++ihit) {
     const Storage::Hit* hit = cluster.getHit(ihit);
     pos += hit->value() * XYVector(hit->posPixel());
     time = std::min(time, hit->time());
-    weight += hit->value();
+    value += hit->value();
   }
-  pos /= weight;
+  pos /= value;
 
   // TODO 2016-11-14 msmk: consider also the value weighting
   SymMatrix2 cov = HIT_COV;
@@ -155,6 +159,7 @@ void Processors::ValueWeightedClusterizer::estimateProperties(
 
   cluster.setPixel(pos, cov);
   cluster.setTime(time);
+  cluster.setValue(value);
 }
 
 Processors::FastestHitClusterizer::FastestHitClusterizer(
@@ -167,17 +172,20 @@ Processors::FastestHitClusterizer::FastestHitClusterizer(
 void Processors::FastestHitClusterizer::estimateProperties(
     Storage::Cluster& cluster) const
 {
-  XYPoint pos;
+  XYPoint pos(0, 0);
   double time = std::numeric_limits<double>::max();
+  double value = -1;
 
   for (Index ihit = 0; ihit < cluster.numHits(); ++ihit) {
     const Storage::Hit* hit = cluster.getHit(ihit);
     if (hit->time() < time) {
       pos = hit->posPixel();
       time = hit->time();
+      value = hit->value();
     }
   }
 
   cluster.setPixel(pos, HIT_COV);
   cluster.setTime(time);
+  cluster.setValue(value);
 }

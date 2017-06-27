@@ -86,12 +86,8 @@ void Storage::Cluster::setTrack(const Storage::Track* track)
 
 void Storage::Cluster::addHit(Storage::Hit* hit)
 {
-  if (m_hits.empty() == 0)
-    m_time = hit->time();
   hit->setCluster(this);
   m_hits.push_back(hit);
-  // Fill the value and timing from this hit
-  m_value += hit->value();
 }
 
 void Storage::Cluster::print(std::ostream& os, const std::string& prefix) const

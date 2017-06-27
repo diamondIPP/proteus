@@ -30,6 +30,7 @@ public:
   void setPixel(const XYPoint& cr, const SymMatrix2& cov);
   void setPixel(double col, double row, double stdCol, double stdRow);
   void setTime(double time_) { m_time = time_; }
+  void setValue(double value_) { m_value = value_; }
   /** Calculate local and global coordinates from the pixel coordinates. */
   void transform(const Mechanics::Sensor& sensor);
 

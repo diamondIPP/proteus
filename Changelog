@@ -14,7 +14,7 @@ User-visible changes
 *   Remove support for custom ini-like config format and custom mask
     file format.
 *   The geometry information is now stored as three vectors, i.e. two
-    unit vectors too define the local plane axes and one offset
+    unit vectors to define the local plane axes and one offset
     vector, instead of three scalar offsets and three rotation
     angles. This avoids conversions between rotation angles and
     rotation matrix and confusion due to different rotation angle
@@ -27,7 +27,7 @@ User-visible changes
         unit_u = [0.0, 1.0, 0.0]
         unit_v = [1.0, 0.0, 0.0]
 
-    The old format is still accepted, but all output files are based
+    The old format is still accepted, but all output files are written
     on the new format.
 *   Efficiencies are calculated for the selected area only, i.e. the
     whole sensor or a sensor region, and the area is not enlarged by
@@ -37,13 +37,22 @@ User-visible changes
     for noisy sensors at the expense of limiting the precision to
     approximately one pixel.
 *   The ``activate.sh`` script is copied during the ``install`` phase.
+*   The ``TriggerTime`` variable is used as the 64bit event timestamp.
+
+    The ``TimeStamp`` variable that was used is the Unix timestamp, i.e.
+    number of seconds since 1.1.1970, of the time when the event was written
+    to disk. It only has a 1s resolution. The ``TriggerTime`` variable is
+    a clock counter on the HSIO/RCE FPGA that should provide a resolution
+    given by the FPGA clock frequency.
 *   The TTree-based match output stores additional information and uses
     consistent tree and variable names:
 
     *   Match tree is renamed to ``tracks_clusters_matched``.
-    *   The event timestamp and total number of clusters in the event
-        are stored.
+    *   The event frame, event timestamp, number of tracks, and number
+        of clusters on the sensor are stored both for tracks with matched
+        clusters and for unmatched clusters.
     *   The track slopes are stored.
+    *   The track size variable is renamed to ``trk_size``.
     *   Cluster variables are consistently prefixed with ``clu_...` in
         both matched and unmatched trees.
     *   The information for each hit in a cluster are stored in addition
@@ -91,12 +100,14 @@ Bugfixes
     the column/row index of masked pixels was calculated only relative
     to the region-of-interest. This lead to incorrect or empty output
     pixel masks.
-*   Fix distance comparison in cluster/track matching.
+*   Fix distance calculation in cluster/track matching.
 
-    Due to a type missmatch the relative distances between different
-    possible cluster/track pairs was not correctly calculated. This
-    could have lead to incorrect assignments for events with more than
-    one possible cluster/track pairs.
+    The relative distances between different possible cluster/track
+    pairs was not correctly calculated due to a type missmatch in the
+    code. This could have lead to incorrect assignments for events
+    with more than one possible cluster/track pairs.
+*   When exporting the match output for more than one device-under-test,
+    all trees are created in the correct subdirectory.
 
 Internal changes
 ----------------
@@ -110,6 +121,13 @@ Internal changes
     addding ``-DPROTEUS_ENABLE_DOC=on`` to the cmake commandline.
 *   The :math:`\chi^2` value of the straight line fit is calculated
     directly without looping over the input data again.
+*   All cluster properties, i.e. position, value, and time, must be set
+    explicitely by the clusterizer. Adding a hit to a cluster only sets the
+    relationship, but does not implictely change any cluster properties anymore.
+*   Small refactorization of the clusterizer code to clarify its algorithm.
+*   Add ``Mechanics::Plane`` as internal representation of a planar
+    surface in three-dimensional space with well-defined local
+    coordinates and additional constraints on the transformation.
 
 v1.1.3 (2017-03-21)
 ===================
