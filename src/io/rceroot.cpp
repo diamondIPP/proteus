@@ -25,6 +25,21 @@ Io::RceRootCommon::RceRootCommon(TFile* file)
 // -----------------------------------------------------------------------------
 // reader
 
+bool Io::RceRootReader::isValid(const std::string& path)
+{
+  std::unique_ptr<TFile> file(TFile::Open(path.c_str(), "READ"));
+  TTree* event = nullptr;
+
+  if (!file)
+    return false;
+  // Minimal file must have at least the Event tree
+  file->GetObject("Event", event);
+  if (!event)
+    return false;
+  // readable file + event tree -> probably an RCE ROOT file
+  return true;
+}
+
 Io::RceRootReader::RceRootReader(const std::string& path)
     : RceRootCommon(TFile::Open(path.c_str(), "READ"))
 {

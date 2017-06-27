@@ -86,6 +86,9 @@ protected:
 /** Read events from a RCE ROOT file. */
 class RceRootReader : public RceRootCommon, public EventReader {
 public:
+  /** Return true if the file is a valid rce input file. */
+  static bool isValid(const std::string& path);
+
   /** Open an existing file and determine the number of sensors and events. */
   RceRootReader(const std::string& path);
   ~RceRootReader();
