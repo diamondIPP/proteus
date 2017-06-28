@@ -10,7 +10,7 @@
 
 #include "utils/logger.h"
 
-PT_SETUP_GLOBAL_LOGGER
+PT_SETUP_LOCAL_LOGGER(Arguments)
 
 Utils::Arguments::Arguments(std::string description)
     : m_description(std::move(description))
@@ -78,16 +78,24 @@ void Utils::Arguments::printHelp(const std::string& arg0) const
   std::string name(arg0.substr(arg0.find_last_of('/') + 1));
 
   cerr << "usage: " << name << " [options]";
-  for (const auto& arg : m_requireds) {
+  for (const auto& arg : m_requireds)
     cerr << " " << arg.name;
-  }
+  for (const auto& arg : m_optionals)
+    cerr << " [" << arg.name << "]";
   cerr << "\n\n";
   cerr << m_description << "\n";
   cerr << "\n";
-  cerr << "arguments:\n";
+  if (!m_requireds.empty())
+    cerr << "required arguments:\n";
   for (const auto& arg : m_requireds) {
     cerr << "  " << std::left << std::setw(17) << arg.name;
     cerr << " " << arg.help << "\n";
+  }
+  if (!m_optionals.empty())
+    cerr << "optional arguments:\n";
+  for (const auto& arg : m_optionals) {
+    cerr << "  " << std::left << std::setw(17) << arg.name;
+    cerr << " " << arg.help << " (default=" << arg.defaultValue << ")\n";
   }
   cerr << "options:\n";
   for (const auto& opt : m_options) {
@@ -156,13 +164,22 @@ bool Utils::Arguments::parse(int argc, char const* argv[])
         assert(false && "The option type uses an undefined value.");
       }
 
-    } else {
-      DEBUG("arg ", i, " argument ", arg);
+    } else if (numArgs < m_requireds.size()) {
+      DEBUG("arg ", i, " required ", arg);
 
-      if (m_requireds.size() < (numArgs + 1))
-        return args_fail("too many arguments");
+      // add required arguments
       m_values[m_requireds[numArgs].name] = arg;
       numArgs += 1;
+
+    } else if (numArgs < (m_requireds.size() + m_optionals.size())) {
+      DEBUG("arg ", i, " optional ", arg);
+
+      // add optional argument
+      m_values[m_optionals[numArgs - m_requireds.size()].name] = arg;
+      numArgs += 1;
+
+    } else {
+      return args_fail("too many arguments");
     }
   }
 
@@ -174,11 +191,14 @@ bool Utils::Arguments::parse(int argc, char const* argv[])
   if (numArgs < m_requireds.size())
     return args_fail("not enough arguments");
 
-  // add missing default values for optional argument
+  // add missing default values for options and optional argument
   for (const auto& opt : m_options) {
-    if (!opt.defaultValue.empty() && (m_values.count(opt.name) == 0)) {
+    if (!opt.defaultValue.empty() && (m_values.count(opt.name) == 0))
       m_values[opt.name] = opt.defaultValue;
-    }
+  }
+  for (const auto& arg : m_optionals) {
+    if (!arg.defaultValue.empty() && (m_values.count(arg.name) == 0))
+      m_values[arg.name] = arg.defaultValue;
   }
   // debug list of available values
   for (const auto& val : m_values)

@@ -32,6 +32,13 @@ public:
   void addOptionMulti(char key, std::string name, std::string help);
   /** Add a required command line argument. */
   void addRequired(std::string name, std::string help = std::string());
+  /** Add an optional command line argument with a default value.
+   *
+   * These are always parsed after all require arguments regardless of their
+   * definition order.
+   */
+  template <typename T>
+  void addOptional(std::string name, std::string help, T value);
 
   /** Parse command lines and return true on error. */
   bool parse(int argc, char const* argv[]);
@@ -61,6 +68,11 @@ private:
     std::string name;
     std::string help;
   };
+  struct OptionalArgument {
+    std::string name;
+    std::string help;
+    std::string defaultValue;
+  };
 
   template <typename T>
   static void fromString(const std::string& in, std::vector<T>& out);
@@ -74,6 +86,7 @@ private:
   const std::string m_description;
   std::vector<Option> m_options;
   std::vector<RequiredArgument> m_requireds;
+  std::vector<OptionalArgument> m_optionals;
   std::map<std::string, std::string> m_values;
 };
 
@@ -81,9 +94,9 @@ private:
 
 template <typename T>
 inline void Utils::Arguments::addOption(char key,
-                                          std::string name,
-                                          std::string help,
-                                          T value)
+                                        std::string name,
+                                        std::string help,
+                                        T value)
 {
   // value is always stored as string
   std::ostringstream sval;
@@ -94,6 +107,20 @@ inline void Utils::Arguments::addOption(char key,
   opt.help = std::move(help);
   opt.defaultValue = sval.str();
   m_options.push_back(std::move(opt));
+}
+
+template <typename T>
+inline void
+Utils::Arguments::addOptional(std::string name, std::string help, T value)
+{
+  // value is always stored as string
+  std::ostringstream sval;
+  sval << value;
+  OptionalArgument opt;
+  opt.name = std::move(name);
+  opt.help = std::move(help);
+  opt.defaultValue = sval.str();
+  m_optionals.push_back(std::move(opt));
 }
 
 inline bool Utils::Arguments::has(const std::string& name) const
