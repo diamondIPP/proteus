@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.12)
 
 project(Proteus CXX)
 
-set(Proteus_VERSION v1.1.3)
+set(Proteus_VERSION v1.2.0)
 
 option(PROTEUS_ENABLE_DOC "Enable the documentation build" OFF)
 
