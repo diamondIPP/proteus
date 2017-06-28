@@ -3,8 +3,8 @@
  * \date    2017-03
  */
 
-#ifndef PT_IO_H
-#define PT_IO_H
+#ifndef PT_READER_H
+#define PT_READER_H
 
 #include <cstdint>
 #include <memory>
@@ -47,22 +47,9 @@ public:
   virtual bool readNext(Storage::Event& event) = 0;
 };
 
-/** Event writer interface. */
-class EventWriter {
-public:
-  virtual ~EventWriter();
-  virtual std::string name() const = 0;
-  /** Add the event to the underlying device.
-   *
-   * The reference to the event is only valid for the duration of the call.
-   * Errors must be handled by throwing an appropriate exception.
-   */
-  virtual void append(const Storage::Event& event) = 0;
-};
-
 /** Open an event file with automatic determination of the file type. */
 std::shared_ptr<EventReader> openRead(const std::string& path);
 
 } // namespace Io
 
-#endif // PT_IO_H
+#endif // PT_READER_H

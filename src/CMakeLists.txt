@@ -16,9 +16,10 @@ set(common_SRCS
     analyzers/trackinfo.cpp
     analyzers/residuals.cpp
 #   converters/kartelconvert.cpp
-    io/io.cpp
     io/match.cpp
     io/rceroot.cpp
+    io/reader.cpp
+    io/writer.cpp
     mechanics/device.cpp
     mechanics/geometry.cpp
     mechanics/pixelmasks.cpp

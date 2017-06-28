@@ -9,7 +9,8 @@
 #include <TFile.h>
 #include <TTree.h>
 
-#include "io.h"
+#include "io/reader.h"
+#include "io/writer.h"
 #include "utils/definitions.h"
 
 namespace Io {

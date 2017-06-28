@@ -12,7 +12,8 @@
 #include <vector>
 
 #include "analyzers/analyzer.h"
-#include "io/io.h"
+#include "io/reader.h"
+#include "io/writer.h"
 #include "processors/processor.h"
 
 namespace Utils {

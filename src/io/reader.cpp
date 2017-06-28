@@ -1,4 +1,4 @@
-#include "io.h"
+#include "reader.h"
 
 #include "io/rceroot.h"
 #include "utils/logger.h"
@@ -6,8 +6,6 @@
 PT_SETUP_LOCAL_LOGGER(Io);
 
 Io::EventReader::~EventReader() {}
-
-Io::EventWriter::~EventWriter() {}
 
 std::shared_ptr<Io::EventReader> Io::openRead(const std::string& path)
 {

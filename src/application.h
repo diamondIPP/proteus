@@ -11,7 +11,6 @@
 #include <memory>
 #include <string>
 
-#include "io/io.h"
 #include "utils/config.h"
 #include "utils/eventloop.h"
 
