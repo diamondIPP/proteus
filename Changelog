@@ -53,7 +53,7 @@ User-visible changes
         clusters and for unmatched clusters.
     *   The track slopes are stored.
     *   The track size variable is renamed to ``trk_size``.
-    *   Cluster variables are consistently prefixed with ``clu_...` in
+    *   Cluster variables are consistently prefixed with ``clu_...`` in
         both matched and unmatched trees.
     *   The information for each hit in a cluster are stored in addition
         to the combined cluster information.
@@ -285,7 +285,7 @@ User-visible changes
     also in a simple ``TTree``-based output format to allow specific
     analyses not covered by the existing tools.
 *   The intermediate output ROOT file format, specifically the content
-    of the ``TTree``s, only contains the necessary local
+    of the ``TTree``, only contains the necessary local
     information. The positions and uncertainties in the global
     coordinate system are calculated automatically by the software.
     The input format is unchanged but any global position information

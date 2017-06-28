@@ -23,7 +23,7 @@ separate build directory:
     mkdir build
     cd build
     cmake ..
-    cmake --build .
+    make
 
 The resulting binaries will be located in `build/bin`. An additional
 activation script is provided that updates the paths variables in the shell
@@ -37,13 +37,7 @@ explicitly.
 Authors
 -------
 
-The original Judith software was written by
-
-*   Garrin McGoldrick
-*   Matevž Červ
-*   Andrej Gorišek
-
-The Proteus fork has seen contributions from (in alphabetical order):
+Proteus has seen contributions from (in alphabetical order):
 
 *   Javier Bilbao de Mendizabal
 *   Reina Camacho
@@ -53,6 +47,12 @@ The Proteus fork has seen contributions from (in alphabetical order):
 *   Marco Rimoldi
 *   Branislav Ristic
 *   Sergio Gonzalez Sevilla
+
+The original Judith software was written by
+
+*   Garrin McGoldrick
+*   Matevž Červ
+*   Andrej Gorišek
 
 Citations
 ---------
