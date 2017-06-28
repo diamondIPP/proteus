@@ -26,6 +26,6 @@ void Storage::Track::freezeClusterAssociation()
 void Storage::Track::print(std::ostream& os, const std::string& prefix) const
 {
   os << prefix << "chi2/dof: " << m_chi2 << " / " << m_dof << '\n';
-  os << prefix << "points: " << m_clusters.size() << '\n';
+  os << prefix << "size: " << m_clusters.size() << '\n';
   os << prefix << "global: " << m_state << '\n';
 }

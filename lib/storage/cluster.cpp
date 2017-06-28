@@ -101,7 +101,11 @@ std::ostream& Storage::operator<<(std::ostream& os, const Cluster& cluster)
   auto u = cluster.posLocal().x();
   auto v = cluster.posLocal().y();
   os << "size=" << cluster.size();
-  os << " pixel=(" << c << "," << r << ")";
-  os << " local=(" << u << "," << v << ")";
+  os << " pixel=[" << c << "," << r << "]";
+  os << " local=[" << u << "," << v << "]";
+  if (cluster.isInTrack())
+    os << " track=" << cluster.track();
+  if (cluster.isMatched())
+    os << " matched=" << cluster.track();
   return os;
 }

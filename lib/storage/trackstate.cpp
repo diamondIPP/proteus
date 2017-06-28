@@ -63,6 +63,6 @@ std::ostream& Storage::operator<<(std::ostream& os, const TrackState& state)
   auto v = state.offset().y();
   auto du = state.slope().x();
   auto dv = state.slope().y();
-  os << "offset=(" << u << "," << v << ") slope=(" << du << "," << dv << ")";
+  os << "offset=[" << u << "," << v << "] slope=[" << du << "," << dv << "]";
   return os;
 }

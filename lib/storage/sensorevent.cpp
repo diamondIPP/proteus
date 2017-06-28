@@ -39,32 +39,18 @@ void Storage::SensorEvent::print(std::ostream& os,
   os << prefix << "timestamp: " << m_timestamp << '\n';
   if (!m_hits.empty()) {
     os << prefix << "hits:\n";
-    for (size_t ihit = 0; ihit < m_hits.size(); ++ihit) {
-      const Hit& hit = *m_hits[ihit];
-      os << prefix << "  hit " << ihit << ": " << hit;
-      if (hit.isInCluster())
-        os << " cluster=" << hit.cluster();
-      os << '\n';
-    }
+    for (size_t ihit = 0; ihit < m_hits.size(); ++ihit)
+      os << prefix << "  hit " << ihit << ": " << *m_hits[ihit] << '\n';
   }
   if (!m_clusters.empty()) {
     os << prefix << "clusters:\n";
-    for (size_t icluster = 0; icluster < m_clusters.size(); ++icluster) {
-      const Cluster& cluster = *m_clusters[icluster];
-      os << prefix << "  cluster " << icluster << ": " << cluster;
-      if (cluster.isInTrack())
-        os << " track=" << cluster.track();
-      os << '\n';
-    }
+    for (size_t iclu = 0; iclu < m_clusters.size(); ++iclu){
+      os << prefix << "  cluster " << iclu << ": " << *m_clusters[iclu] << '\n';}
   }
   if (!m_states.empty()) {
     os << prefix << "states:\n";
-    for (const auto& ts : m_states) {
-      Index itrack = ts.first;
-      const TrackState& state = ts.second;
-
-      os << prefix << "  track " << itrack << ": " << state << '\n';
-    }
+    for (const auto& ts : m_states)
+      os << prefix << "  track " << ts.first << ": " << ts.second << '\n';
   }
   os.flush();
 }

@@ -37,13 +37,14 @@ Storage::Hit::Area Storage::Hit::areaPixel() const
 
 std::ostream& Storage::operator<<(std::ostream& os, const Storage::Hit& hit)
 {
-  if ((hit.digitalCol() != hit.col()) || (hit.digitalRow() != hit.row())) {
-    os << "addr=(" << hit.digitalCol() << ", " << hit.digitalRow() << ") ";
-  }
+  if ((hit.digitalCol() != hit.col()) || (hit.digitalRow() != hit.row()))
+    os << "addr=[" << hit.digitalCol() << "," << hit.digitalRow() << "] ";
   os << "col=" << hit.col() << " row=" << hit.row();
   os << " time=" << hit.time();
   os << " value=" << hit.value();
   if (hit.hasRegion())
     os << " region=" << hit.region();
+  if (hit.isInCluster())
+    os << " cluster=" << hit.cluster();
   return os;
 }
