@@ -14,7 +14,8 @@ set(DOC_SRC basic_steps.rst
             commands.rst
             configuration_files.rst
             contribution_guide.rst
-            index.rst)
+            index.rst
+            internal_structure.rst)
 
 configure_file(conf.py.in ${CMAKE_CURRENT_BINARY_DIR}/conf.py @ONLY)
 configure_file(doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/doxyfile @ONLY)

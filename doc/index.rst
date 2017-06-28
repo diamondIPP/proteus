@@ -9,3 +9,4 @@ Proteus --- Pixel telescope reconstruction
    commands
    configuration_files
    contribution_guide
+   internal_structure
