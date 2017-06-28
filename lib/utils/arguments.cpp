@@ -28,7 +28,7 @@ void Utils::Arguments::addFlag(char key, std::string name, std::string help)
   m_options.emplace_back(std::move(opt));
 }
 
-void Utils::Arguments::addOptional(char key, std::string name, std::string help)
+void Utils::Arguments::addOption(char key, std::string name, std::string help)
 {
   Option opt;
   opt.abbreviation = key;
@@ -38,7 +38,9 @@ void Utils::Arguments::addOptional(char key, std::string name, std::string help)
   m_options.emplace_back(std::move(opt));
 }
 
-void Utils::Arguments::addMulti(char key, std::string name, std::string help)
+void Utils::Arguments::addOptionMulti(char key,
+                                      std::string name,
+                                      std::string help)
 {
   Option opt;
   opt.abbreviation = key;
@@ -50,10 +52,10 @@ void Utils::Arguments::addMulti(char key, std::string name, std::string help)
 
 void Utils::Arguments::addRequired(std::string name, std::string help)
 {
-  Required req;
-  req.name = std::move(name);
-  req.help = std::move(help);
-  m_requireds.emplace_back(std::move(req));
+  RequiredArgument arg;
+  arg.name = std::move(name);
+  arg.help = std::move(help);
+  m_requireds.emplace_back(std::move(arg));
 }
 
 std::string Utils::Arguments::Option::description() const
@@ -76,16 +78,16 @@ void Utils::Arguments::printHelp(const std::string& arg0) const
   std::string name(arg0.substr(arg0.find_last_of('/') + 1));
 
   cerr << "usage: " << name << " [options]";
-  for (const auto& req : m_requireds) {
-    cerr << " " << req.name;
+  for (const auto& arg : m_requireds) {
+    cerr << " " << arg.name;
   }
   cerr << "\n\n";
   cerr << m_description << "\n";
   cerr << "\n";
-  cerr << "required:\n";
-  for (const auto& req : m_requireds) {
-    cerr << "  " << std::left << std::setw(17) << req.name;
-    cerr << " " << req.help << "\n";
+  cerr << "arguments:\n";
+  for (const auto& arg : m_requireds) {
+    cerr << "  " << std::left << std::setw(17) << arg.name;
+    cerr << " " << arg.help << "\n";
   }
   cerr << "options:\n";
   for (const auto& opt : m_options) {
@@ -115,7 +117,7 @@ bool Utils::Arguments::parse(int argc, char const* argv[])
     std::string arg(argv[i]);
 
     if (arg.find("-") == 0) {
-      DEBUG("arg ", i, " optional ", arg);
+      DEBUG("arg ", i, " option ", arg);
 
       // search for compatible long or short option
       const Option* opt = nullptr;
@@ -155,7 +157,7 @@ bool Utils::Arguments::parse(int argc, char const* argv[])
       }
 
     } else {
-      DEBUG("arg ", i, " required ", arg);
+      DEBUG("arg ", i, " argument ", arg);
 
       if (m_requireds.size() < (numArgs + 1))
         return args_fail("too many arguments");

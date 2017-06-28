@@ -21,15 +21,15 @@ class Arguments {
 public:
   Arguments(std::string description);
 
-  /** Add an optional boolean flag. */
+  /** Add a command line option without parameter. */
   void addFlag(char key, std::string name, std::string help);
-  /** Add an optional command line flag. */
-  void addOptional(char key, std::string name, std::string help);
-  /** Add an optional command line flag with a default value. */
+  /** Add a command line option. */
+  void addOption(char key, std::string name, std::string help);
+  /** Add a command line option with a default value. */
   template <typename T>
-  void addOptional(char key, std::string name, std::string help, T value);
-  /** Add an optional command line flag that can be given multiple times. */
-  void addMulti(char key, std::string name, std::string help);
+  void addOption(char key, std::string name, std::string help, T value);
+  /** Add a command line option that can be given multiple times. */
+  void addOptionMulti(char key, std::string name, std::string help);
   /** Add a required command line argument. */
   void addRequired(std::string name, std::string help = std::string());
 
@@ -57,7 +57,7 @@ private:
 
     std::string description() const;
   };
-  struct Required {
+  struct RequiredArgument {
     std::string name;
     std::string help;
   };
@@ -73,14 +73,14 @@ private:
 
   const std::string m_description;
   std::vector<Option> m_options;
-  std::vector<Required> m_requireds;
+  std::vector<RequiredArgument> m_requireds;
   std::map<std::string, std::string> m_values;
 };
 
 } // namespace Utils
 
 template <typename T>
-inline void Utils::Arguments::addOptional(char key,
+inline void Utils::Arguments::addOption(char key,
                                           std::string name,
                                           std::string help,
                                           T value)
