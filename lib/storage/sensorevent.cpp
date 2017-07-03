@@ -18,12 +18,6 @@ void Storage::SensorEvent::clear(uint64_t frame, uint64_t timestamp)
   m_states.clear();
 }
 
-Storage::Cluster* Storage::SensorEvent::newCluster()
-{
-  m_clusters.emplace_back(new Cluster(m_clusters.size() - 1));
-  return m_clusters.back().get();
-}
-
 void Storage::SensorEvent::addMatch(Index cluster, Index state)
 {
   assert((0 <= cluster) && (cluster < m_clusters.size()) &&

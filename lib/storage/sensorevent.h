@@ -33,10 +33,11 @@ public:
   Hit* getHit(Index i) { return m_hits.at(i).get(); }
   const Hit* getHit(Index i) const { return m_hits.at(i).get(); }
 
-  Cluster* newCluster();
+  template <typename... Params>
+  Cluster& addCluster(Params&&... params);
   Index numClusters() const { return static_cast<Index>(m_clusters.size()); }
-  Cluster* getCluster(Index i) { return m_clusters.at(i).get(); }
-  const Cluster* getCluster(Index i) const { return m_clusters.at(i).get(); }
+  Cluster& getCluster(Index i) { return *m_clusters.at(i); }
+  const Cluster& getCluster(Index i) const { return *m_clusters.at(i); }
 
   template <typename... Params>
   void addState(Params&&... params);
@@ -65,6 +66,14 @@ inline Storage::Hit* Storage::SensorEvent::addHit(HitParams&&... params)
 {
   m_hits.emplace_back(new Hit(std::forward<HitParams>(params)...));
   return m_hits.back().get();
+}
+
+template <typename... Params>
+inline Storage::Cluster& Storage::SensorEvent::addCluster(Params&&... params)
+{
+  m_clusters.emplace_back(new Cluster(std::forward<Params>(params)...));
+  m_clusters.back()->m_index = m_clusters.size() - 1;
+  return *m_clusters.back();
 }
 
 template <typename... Params>
