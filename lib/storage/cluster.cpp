@@ -95,12 +95,12 @@ void Storage::Cluster::print(std::ostream& os, const std::string& prefix) const
   os << prefix << "pixel stddev: " << ep << '\n';
   os << prefix << "global: " << posGlobal() << '\n';
   os << prefix << "global stddev: " << eg << '\n';
-  os << prefix << "size: " << numHits() << '\n';
+  os << prefix << "size: " << size() << '\n';
   os.flush();
 }
 
 std::ostream& Storage::operator<<(std::ostream& os, const Cluster& cluster)
 {
-  os << "pixel=" << cluster.posPixel() << " size=" << cluster.numHits();
+  os << "pixel=" << cluster.posPixel() << " size=" << cluster.size();
   return os;
 }
