@@ -99,7 +99,7 @@ public:
   Index numSensors() const { return static_cast<Index>(m_sensors.size()); }
 
   void skip(uint64_t n);
-  bool readNext(Storage::Event& event);
+  bool read(Storage::Event& event);
 
 private:
   void addSensor(TDirectory* dir);

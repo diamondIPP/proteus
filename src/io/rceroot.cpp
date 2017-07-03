@@ -189,7 +189,7 @@ void Io::RceRootReader::skip(uint64_t n)
 }
 
 //=========================================================
-bool Io::RceRootReader::readNext(Storage::Event& event)
+bool Io::RceRootReader::read(Storage::Event& event)
 {
   /* Note: fill in reversed order: tracks first, hits last. This is so that
    * once a hit is produced, it can immediately recieve the address of its

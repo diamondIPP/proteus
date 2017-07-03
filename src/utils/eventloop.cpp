@@ -220,7 +220,7 @@ void Utils::EventLoop::run()
   for (uint64_t nevents = 1; nevents <= m_events; ++nevents) {
     {
       StopWatch sw(timing.reader);
-      if (!m_reader->readNext(event))
+      if (!m_reader->read(event))
         break;
     }
     for (size_t i = 0; i < m_processors.size(); ++i) {

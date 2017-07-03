@@ -44,7 +44,7 @@ public:
    * clearing previous contents. Errors must be handled by throwing
    * an appropriate exception.
    */
-  virtual bool readNext(Storage::Event& event) = 0;
+  virtual bool read(Storage::Event& event) = 0;
 };
 
 /** Open an event file with automatic determination of the file type. */
