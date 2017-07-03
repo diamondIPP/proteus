@@ -4,8 +4,8 @@
 
 #include "storage/track.h"
 
-Storage::SensorEvent::SensorEvent(Index sensorId)
-    : m_sensorId(sensorId), m_frame(UINT64_MAX), m_timestamp(UINT64_MAX)
+Storage::SensorEvent::SensorEvent(Index sensor)
+    : m_sensor(sensor), m_frame(UINT64_MAX), m_timestamp(UINT64_MAX)
 {
 }
 
@@ -20,7 +20,7 @@ void Storage::SensorEvent::clear(uint64_t frame, uint64_t timestamp)
 
 Storage::Cluster* Storage::SensorEvent::newCluster()
 {
-  m_clusters.emplace_back(new Cluster(m_sensorId, m_clusters.size() - 1));
+  m_clusters.emplace_back(new Cluster(m_sensor, m_clusters.size() - 1));
   return m_clusters.back().get();
 }
 

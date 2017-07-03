@@ -19,10 +19,11 @@ namespace Storage {
  */
 class SensorEvent {
 public:
-  SensorEvent(Index sensorId);
+  SensorEvent(Index sensor);
 
   void clear(uint64_t frame, uint64_t timestamp);
 
+  Index sensor() const { return m_sensor; }
   uint64_t frame() const { return m_frame; }
   uint64_t timestamp() const { return m_timestamp; }
 
@@ -48,7 +49,7 @@ public:
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
-  Index m_sensorId;
+  Index m_sensor;
   uint64_t m_frame;
   uint64_t m_timestamp;
   std::vector<std::unique_ptr<Hit>> m_hits;
