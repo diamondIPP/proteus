@@ -20,7 +20,7 @@ void Storage::SensorEvent::clear(uint64_t frame, uint64_t timestamp)
 
 Storage::Cluster* Storage::SensorEvent::newCluster()
 {
-  m_clusters.emplace_back(new Cluster(m_sensor, m_clusters.size() - 1));
+  m_clusters.emplace_back(new Cluster(m_clusters.size() - 1));
   return m_clusters.back().get();
 }
 

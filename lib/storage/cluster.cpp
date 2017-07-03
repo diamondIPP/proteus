@@ -13,12 +13,11 @@
 
 PT_SETUP_LOCAL_LOGGER(Cluster)
 
-Storage::Cluster::Cluster(Index sensorId_, Index index_)
+Storage::Cluster::Cluster(Index index)
     : m_cr(-1, -1)
     , m_time(-1)
     , m_value(-1)
-    , m_index(index_)
-    , m_sensorId(sensorId_)
+    , m_index(index)
     , m_track(kInvalidIndex)
     , m_matchedState(kInvalidIndex)
 {

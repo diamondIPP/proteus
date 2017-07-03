@@ -20,7 +20,7 @@ class Cluster {
 public:
   using Area = Utils::Box<2, int>;
 
-  Cluster(Index sensorId_, Index index_);
+  Cluster(Index index);
 
   void setPixel(const XYPoint& cr, const SymMatrix2& cov);
   void setPixel(float col, float row, float stdCol, float stdRow);
@@ -30,7 +30,6 @@ public:
   void transform(const Mechanics::Sensor& sensor);
   void setTrack(Index track);
 
-  Index sensorId() const { return m_sensorId; }
   Index region() const;
   const XYPoint& posPixel() const { return m_cr; }
   const XYPoint& posLocal() const { return m_uv; }
@@ -75,7 +74,6 @@ private:
   std::vector<Hit*> m_hits; // List of hits composing the cluster
 
   Index m_index;
-  Index m_sensorId;
   Index m_track;
   Index m_matchedState;
 
