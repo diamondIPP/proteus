@@ -23,13 +23,12 @@ void Io::MatchWriter::EventData::addToTree(TTree* tree)
   tree->Branch("evt_ntracks", &nTracks);
 }
 
-void Io::MatchWriter::EventData::set(const Storage::Event& e,
-                                     const Storage::SensorEvent& s)
+void Io::MatchWriter::EventData::set(const Storage::SensorEvent& e)
 {
   frame = e.frame();
   timestamp = e.timestamp();
-  nClusters = s.numClusters();
-  nTracks = e.numTracks();
+  nClusters = e.numClusters();
+  nTracks = e.numStates();
 }
 
 void Io::MatchWriter::TrackData::addToTree(TTree* tree)
@@ -172,7 +171,7 @@ void Io::MatchWriter::append(const Storage::Event& event)
 {
   const auto& sensorEvent = event.getSensorEvent(m_sensorId);
 
-  m_event.set(event, sensorEvent);
+  m_event.set(sensorEvent);
 
   // export tracks and possible matched clusters
   for (Index istate = 0; istate < sensorEvent.numStates(); ++istate) {

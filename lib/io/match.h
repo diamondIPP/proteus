@@ -47,7 +47,7 @@ private:
     int16_t nTracks;
 
     void addToTree(TTree* tree);
-    void set(const Storage::Event& e, const Storage::SensorEvent& s);
+    void set(const Storage::SensorEvent& e);
   };
   struct TrackData {
     float u, v, du, dv;
