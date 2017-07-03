@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <climits>
+#include <limits>
 #include <numeric>
 #include <ostream>
 
@@ -13,11 +14,14 @@
 
 PT_SETUP_LOCAL_LOGGER(Cluster)
 
-Storage::Cluster::Cluster(Index index)
-    : m_cr(-1, -1)
-    , m_time(-1)
-    , m_value(-1)
-    , m_index(index)
+Storage::Cluster::Cluster()
+    : m_cr(std::numeric_limits<double>::quiet_NaN(),
+           std::numeric_limits<double>::quiet_NaN())
+    , m_uv(std::numeric_limits<double>::quiet_NaN(),
+           std::numeric_limits<double>::quiet_NaN())
+    , m_time(std::numeric_limits<float>::quiet_NaN())
+    , m_value(std::numeric_limits<float>::quiet_NaN())
+    , m_index(kInvalidIndex)
     , m_track(kInvalidIndex)
     , m_matchedState(kInvalidIndex)
 {

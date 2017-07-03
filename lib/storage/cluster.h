@@ -22,7 +22,7 @@ public:
   using Area = Utils::Box<2, int>;
   using Hits = std::vector<std::reference_wrapper<Hit>>;
 
-  Cluster(Index index);
+  Cluster();
 
   void setPixel(const XYPoint& cr, const SymMatrix2& cov);
   void setPixel(float col, float row, float stdCol, float stdRow);
@@ -63,11 +63,11 @@ public:
 
 private:
   XYPoint m_cr;
-  float m_time;  // The timing of the underlying hits
-  float m_value; // The combined value of all its hits
   XYPoint m_uv;
-  SymMatrix2 m_uvCov;
+  float m_time;
+  float m_value;
   SymMatrix2 m_crCov;
+  SymMatrix2 m_uvCov;
   XYZPoint m_xyz;
   SymMatrix3 m_xyzCov;
 
