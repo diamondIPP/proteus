@@ -94,8 +94,8 @@ void Analyzers::Residuals::analyze(const Storage::Event& event)
       Index sensor = c.first;
       const Storage::Cluster& cluster = c.second;
 
-      Storage::TrackState state = Tracking::fitTrackLocal(
-          track, m_device.geometry(), sensor);
+      Storage::TrackState state =
+          Tracking::fitTrackLocal(track, m_device.geometry(), sensor);
       m_hists[sensor].fill(state, cluster);
     }
   }
@@ -133,8 +133,8 @@ void Analyzers::UnbiasedResiduals::analyze(const Storage::Event& event)
       const Storage::Cluster& cluster = c.second;
 
       // refit w/o current sensor information
-      Storage::TrackState state = Tracking::fitTrackLocalUnbiased(
-          track, m_device.geometry(), cluster.sensorId());
+      Storage::TrackState state =
+          Tracking::fitTrackLocalUnbiased(track, m_device.geometry(), sensor);
       m_hists[sensor].fill(state, cluster);
     }
   }

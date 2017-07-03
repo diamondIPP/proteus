@@ -65,13 +65,13 @@ void Storage::Cluster::setTrack(Index track)
 
 Index Storage::Cluster::region() const
 {
-  return m_hits.empty() ? kInvalidIndex : m_hits.front()->region();
+  return m_hits.empty() ? kInvalidIndex : m_hits.front().get().region();
 }
 
 Storage::Cluster::Area Storage::Cluster::areaPixel() const
 {
-  auto grow = [](Area a, const Hit* hit) {
-    a.enclose(hit->areaPixel());
+  auto grow = [](Area a, const Hit& hit) {
+    a.enclose(hit.areaPixel());
     return a;
   };
   return std::accumulate(m_hits.begin(), m_hits.end(), Area::Empty(), grow);
@@ -80,10 +80,10 @@ Storage::Cluster::Area Storage::Cluster::areaPixel() const
 int Storage::Cluster::sizeCol() const { return areaPixel().length(0); }
 int Storage::Cluster::sizeRow() const { return areaPixel().length(1); }
 
-void Storage::Cluster::addHit(Storage::Hit* hit)
+void Storage::Cluster::addHit(Storage::Hit& hit)
 {
-  hit->setCluster(m_index);
-  m_hits.push_back(hit);
+  hit.setCluster(m_index);
+  m_hits.push_back(std::ref(hit));
 }
 
 void Storage::Cluster::print(std::ostream& os, const std::string& prefix) const

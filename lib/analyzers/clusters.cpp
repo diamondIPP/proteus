@@ -82,8 +82,7 @@ void Analyzers::SensorClusters::analyze(const Storage::SensorEvent& sensorEvent)
     hists.sizeValue->Fill(cluster.size(), cluster.value());
     hists.uncertaintyU->Fill(std::sqrt(cluster.covLocal()(0, 0)));
     hists.uncertaintyV->Fill(std::sqrt(cluster.covLocal()(1, 1)));
-    for (Index ihit = 0; ihit < cluster.numHits(); ++ihit) {
-      const Storage::Hit& hit = *cluster.getHit(ihit);
+    for (const Storage::Hit& hit : cluster.hits()) {
       hists.hitPos->Fill(hit.col(), hit.row());
       hists.sizeHitTime->Fill(cluster.size(), hit.time());
       hists.sizeHitValue->Fill(cluster.size(), hit.value());

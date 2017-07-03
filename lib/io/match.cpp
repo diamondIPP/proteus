@@ -87,8 +87,9 @@ void Io::MatchWriter::ClusterData::set(const Storage::Cluster& c)
   size = std::min(c.size(), size_t(MAX_CLUSTER_SIZE));
   sizeCol = c.sizeCol();
   sizeRow = c.sizeRow();
-  for (int ihit = 0; ihit < size; ++ihit) {
-    const Storage::Hit& hit = *c.getHit(ihit);
+  const auto& hits = c.hits();
+  for (int16_t ihit = 0; ihit < size; ++ihit) {
+    const Storage::Hit& hit = hits[ihit];
     hitCol[ihit] = hit.col();
     hitRow[ihit] = hit.row();
     hitTime[ihit] = hit.time();

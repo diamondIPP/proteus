@@ -279,7 +279,7 @@ bool Io::RceRootReader::read(Storage::Event& event)
         if (trees.clusters && hitInCluster[ihit] >= 0) {
           Storage::Cluster* cluster =
               sensorEvent.getCluster(hitInCluster[ihit]);
-          cluster->addHit(hit);
+          cluster->addHit(*hit);
         }
       }
     }

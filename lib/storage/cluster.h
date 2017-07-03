@@ -1,6 +1,7 @@
 #ifndef PT_CLUSTER_H
 #define PT_CLUSTER_H
 
+#include <functional>
 #include <iosfwd>
 #include <string>
 #include <vector>
@@ -19,6 +20,7 @@ class Hit;
 class Cluster {
 public:
   using Area = Utils::Box<2, int>;
+  using Hits = std::vector<std::reference_wrapper<Hit>>;
 
   Cluster(Index index);
 
@@ -47,11 +49,9 @@ public:
   int sizeCol() const;
   int sizeRow() const;
 
-  void addHit(Hit* hit);
+  void addHit(Hit& hit);
   size_t size() const { return m_hits.size(); }
-  Index numHits() const { return static_cast<Index>(m_hits.size()); }
-  Hit* getHit(Index i) { return m_hits.at(i); }
-  const Hit* getHit(Index i) const { return m_hits.at(i); }
+  const Hits& hits() const { return m_hits; }
 
   Index index() const { return m_index; }
   bool isInTrack() const { return m_track != kInvalidIndex; }
@@ -71,7 +71,7 @@ private:
   XYZPoint m_xyz;
   SymMatrix3 m_xyzCov;
 
-  std::vector<Hit*> m_hits; // List of hits composing the cluster
+  Hits m_hits; // List of hits composing the cluster
 
   Index m_index;
   Index m_track;

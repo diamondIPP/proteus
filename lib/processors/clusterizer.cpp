@@ -19,27 +19,26 @@ PT_SETUP_GLOBAL_LOGGER
 // return true if both hits are connected, i.e. share one edge.
 //
 // WARNING: hits w/ the same position are counted as connected
-static bool connected(const Storage::Hit* hit0, const Storage::Hit* hit1)
+static bool connected(const Storage::Hit& hit0, const Storage::Hit& hit1)
 {
-  auto dc = std::abs(int(hit1->col()) - int(hit0->col()));
-  auto dr = std::abs(int(hit1->row()) - int(hit0->row()));
+  auto dc = std::abs(hit1.col() - hit0.col());
+  auto dr = std::abs(hit1.row() - hit0.row());
   return ((dc == 0) && (dr <= 1)) || ((dc <= 1) && (dr == 0));
 }
 
 // return true if the hit is connected to any hit in the cluster.
-static bool connected(const Storage::Cluster* cluster, const Storage::Hit* hit)
+static bool connected(const Storage::Cluster* cluster, const Storage::Hit& hit)
 {
-  for (Index ihit = 0; ihit < cluster->numHits(); ++ihit) {
-    if (connected(cluster->getHit(ihit), hit))
-      return true;
-  }
-  return false;
+  const auto& hits = cluster->hits();
+  return std::any_of(hits.begin(), hits.end(), [&](const auto& clusterHit) {
+    return connected(clusterHit, hit);
+  });
 }
 
 // return true if the hit and cluster are connected and in the same region
-static bool compatible(const Storage::Cluster* cluster, const Storage::Hit* hit)
+static bool compatible(const Storage::Cluster* cluster, const Storage::Hit& hit)
 {
-  return (cluster->region() == hit->region()) && connected(cluster, hit);
+  return (cluster->region() == hit.region()) && connected(cluster, hit);
 }
 
 static void cluster(std::vector<Storage::Hit*>& hits,
@@ -50,19 +49,19 @@ static void cluster(std::vector<Storage::Hit*>& hits,
     hits.pop_back();
 
     Storage::Cluster* cluster = sensorEvent.newCluster();
-    cluster->addHit(seed);
+    cluster->addHit(*seed);
 
     while (!hits.empty()) {
       // move all compatible hits to the end
       auto connected = std::partition(
           hits.begin(), hits.end(),
-          [&](const Storage::Hit* hit) { return !compatible(cluster, hit); });
+          [&](const Storage::Hit* hit) { return !compatible(cluster, *hit); });
       // there are no more compatible hits and the cluster is complete
       if (connected == hits.end())
         break;
       // add compatible hits to cluster and remove from further consideration
       for (auto hit = connected; hit != hits.end(); ++hit)
-        cluster->addHit(*hit);
+        cluster->addHit(**hit);
       hits.erase(connected, hits.end());
     }
   }
@@ -115,12 +114,11 @@ void Processors::BinaryClusterizer::estimateProperties(
   XYPoint pos(0, 0);
   float time = std::numeric_limits<float>::max();
 
-  for (Index ihit = 0; ihit < cluster.numHits(); ++ihit) {
-    const Storage::Hit* hit = cluster.getHit(ihit);
-    pos += XYVector(hit->posPixel());
-    time = std::min(time, hit->time());
+  for (const Storage::Hit& hit : cluster.hits()) {
+    pos += XYVector(hit.posPixel());
+    time = std::min(time, hit.time());
   }
-  pos /= cluster.numHits();
+  pos /= cluster.size();
 
   SymMatrix2 cov = HIT_COV;
   cov(0, 0) /= cluster.sizeCol();
@@ -128,7 +126,7 @@ void Processors::BinaryClusterizer::estimateProperties(
 
   cluster.setPixel(pos, cov);
   cluster.setTime(time);
-  cluster.setValue(cluster.numHits());
+  cluster.setValue(cluster.size());
 }
 
 Processors::ValueWeightedClusterizer::ValueWeightedClusterizer(
@@ -145,11 +143,10 @@ void Processors::ValueWeightedClusterizer::estimateProperties(
   float time = std::numeric_limits<float>::max();
   float value = 0;
 
-  for (Index ihit = 0; ihit < cluster.numHits(); ++ihit) {
-    const Storage::Hit* hit = cluster.getHit(ihit);
-    pos += hit->value() * XYVector(hit->posPixel());
-    time = std::min(time, hit->time());
-    value += hit->value();
+  for (const Storage::Hit& hit : cluster.hits()) {
+    pos += hit.value() * XYVector(hit.posPixel());
+    time = std::min(time, hit.time());
+    value += hit.value();
   }
   pos /= value;
 
@@ -177,12 +174,11 @@ void Processors::FastestHitClusterizer::estimateProperties(
   float time = std::numeric_limits<float>::max();
   float value = 0;
 
-  for (Index ihit = 0; ihit < cluster.numHits(); ++ihit) {
-    const Storage::Hit* hit = cluster.getHit(ihit);
-    if (hit->time() < time) {
-      pos = hit->posPixel();
-      time = hit->time();
-      value = hit->value();
+  for (const Storage::Hit& hit : cluster.hits()) {
+    if (hit.time() < time) {
+      pos = hit.posPixel();
+      time = hit.time();
+      value = hit.value();
     }
   }
 
