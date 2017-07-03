@@ -209,10 +209,7 @@ bool Io::RceRootReader::read(Storage::Event& event)
   // completely useless. The `TriggerTime` actually stores the internal
   // FPGA timestamp/ clock cyles and is what we need to use.
   event.clear(frameNumber, triggerTime);
-  event.setTriggerInfo(triggerInfo);
-  event.setTriggerOffset(triggerOffset);
-  event.setTriggerPhase(triggerPhase);
-  event.setInvalid(invalid);
+  event.setTrigger(triggerInfo, triggerOffset, triggerPhase);
 
   // global tracks info
   if (m_tracks) {
@@ -243,7 +240,7 @@ bool Io::RceRootReader::read(Storage::Event& event)
             interceptU[iintercept], interceptV[iintercept],
             interceptSlopeU[iintercept], interceptSlopeV[iintercept]);
         local.setCov(interceptCov[iintercept]);
-        local.setTrack(event.getTrack(interceptTrack[iintercept]));
+        local.setTrack(interceptTrack[iintercept]);
         sensorEvent.addState(std::move(local));
       }
     }
@@ -263,9 +260,9 @@ bool Io::RceRootReader::read(Storage::Event& event)
                           cov);
         // Fix cluster/track relationship if possible
         if (m_tracks && (0 <= clusterTrack[icluster])) {
-          Storage::Track* track = event.getTrack(clusterTrack[icluster]);
-          track->addCluster(cluster);
-          cluster->setTrack(track);
+          Storage::Track& track = event.getTrack(clusterTrack[icluster]);
+          track.addCluster(cluster);
+          cluster->setTrack(clusterTrack[icluster]);
         }
       }
     }
@@ -388,7 +385,7 @@ void Io::RceRootWriter::append(const Storage::Event& event)
   triggerInfo = event.triggerInfo();
   triggerOffset = event.triggerOffset();
   triggerPhase = event.triggerPhase();
-  invalid = event.invalid();
+  invalid = false;
   m_eventInfo->Fill();
 
   // tracks
@@ -397,7 +394,7 @@ void Io::RceRootWriter::append(const Storage::Event& event)
       FAIL("tracks exceed MAX_TRACKS");
     numTracks = event.numTracks();
     for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
-      const Storage::Track& track = *event.getTrack(itrack);
+      const Storage::Track& track = event.getTrack(itrack);
       trackChi2[itrack] = track.chi2();
       trackDof[itrack] = track.degreesOfFreedom();
       const Storage::TrackState& state = track.globalState();
@@ -426,7 +423,7 @@ void Io::RceRootWriter::append(const Storage::Event& event)
         hitPixY[ihit] = hit->digitalRow();
         hitValue[ihit] = hit->value();
         hitTiming[ihit] = hit->time();
-        hitInCluster[ihit] = hit->cluster() ? hit->cluster()->index() : -1;
+        hitInCluster[ihit] = hit->isInCluster() ? hit->cluster() : -1;
       }
       trees.hits->Fill();
     }
@@ -443,7 +440,7 @@ void Io::RceRootWriter::append(const Storage::Event& event)
         clusterVarCol[iclu] = cluster.covPixel()(0, 0);
         clusterVarRow[iclu] = cluster.covPixel()(1, 1);
         clusterCovColRow[iclu] = cluster.covPixel()(0, 1);
-        clusterTrack[iclu] = cluster.track() ? cluster.track()->index() : -1;
+        clusterTrack[iclu] = cluster.isInTrack() ? cluster.track() : -1;
       }
       trees.clusters->Fill();
     }
@@ -460,7 +457,7 @@ void Io::RceRootWriter::append(const Storage::Event& event)
         interceptSlopeU[istate] = local.slope().x();
         interceptSlopeV[istate] = local.slope().y();
         std::copy(local.cov().begin(), local.cov().end(), interceptCov[istate]);
-        interceptTrack[istate] = local.track()->index();
+        interceptTrack[istate] = local.track();
       }
       trees.intercepts->Fill();
     }
