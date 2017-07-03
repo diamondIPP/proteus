@@ -38,7 +38,8 @@ public:
   Cluster* getCluster(Index i) { return m_clusters.at(i).get(); }
   const Cluster* getCluster(Index i) const { return m_clusters.at(i).get(); }
 
-  void addState(TrackState&& state);
+  template <typename... Params>
+  void addState(Params&&... params);
   Index numStates() const { return static_cast<Index>(m_states.size()); }
   TrackState& getState(Index i) { return *m_states[i]; }
   const TrackState& getState(Index i) const { return *m_states[i]; }
@@ -66,11 +67,11 @@ inline Storage::Hit* Storage::SensorEvent::addHit(HitParams&&... params)
   return m_hits.back().get();
 }
 
-inline void Storage::SensorEvent::addState(TrackState&& state)
+template <typename... Params>
+inline void Storage::SensorEvent::addState(Params&&... params)
 {
-  Index stateId = m_states.size();
-  m_states.emplace_back(new TrackState(std::forward<TrackState>(state)));
-  m_states.back()->m_index = stateId;
+  m_states.emplace_back(new TrackState(std::forward<Params>(params)...));
+  m_states.back()->m_index = m_states.size() - 1;
 }
 
 #endif // PT_SENSOREVENT_H
