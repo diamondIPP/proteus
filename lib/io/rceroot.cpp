@@ -261,7 +261,7 @@ bool Io::RceRootReader::read(Storage::Event& event)
         // Fix cluster/track relationship if possible
         if (m_tracks && (0 <= clusterTrack[icluster])) {
           Storage::Track& track = event.getTrack(clusterTrack[icluster]);
-          track.addCluster(cluster);
+          track.addCluster(isensor, *cluster);
           cluster->setTrack(clusterTrack[icluster]);
         }
       }

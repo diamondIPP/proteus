@@ -191,7 +191,7 @@ void Io::MatchWriter::append(const Storage::Event& event)
     m_track.row = cr.y();
     m_track.chi2 = track.chi2();
     m_track.dof = track.degreesOfFreedom();
-    m_track.size = track.numClusters();
+    m_track.size = track.size();
 
     // matching cluster data
     if (state.isMatched()) {
