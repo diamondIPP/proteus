@@ -32,8 +32,6 @@ public:
 
   Index sensorId() const { return m_sensorId; }
   Index region() const;
-  Index index() const { return m_index; }
-
   const XYPoint& posPixel() const { return m_cr; }
   const XYPoint& posLocal() const { return m_uv; }
   const XYZPoint& posGlobal() const { return m_xyz; }
@@ -42,21 +40,21 @@ public:
   const SymMatrix3& covGlobal() const { return m_xyzCov; }
   float time() const { return m_time; }
   float value() const { return m_value; }
-
   /** The area enclosing the cluster in pixel coordinates.
    *
-   * \return Returns an empty area for an empty cluster.
+   * \returns Empty area for an empty cluster.
    */
   Area areaPixel() const;
-  int size() const { return static_cast<int>(m_hits.size()); }
   int sizeCol() const;
   int sizeRow() const;
 
   void addHit(Hit* hit);
+  size_t size() const { return m_hits.size(); }
   Index numHits() const { return static_cast<Index>(m_hits.size()); }
   Hit* getHit(Index i) { return m_hits.at(i); }
   const Hit* getHit(Index i) const { return m_hits.at(i); }
 
+  Index index() const { return m_index; }
   bool isInTrack() const { return m_track != kInvalidIndex; }
   Index track() const { return m_track; }
   bool isMatched() const { return m_matchedState != kInvalidIndex; }
