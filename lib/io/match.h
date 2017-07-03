@@ -38,7 +38,7 @@ public:
   void append(const Storage::Event& event);
 
 private:
-  static constexpr int16_t MAX_CLUSTER_SIZE = 1024;
+  static constexpr size_t MAX_CLUSTER_SIZE = 1024;
 
   struct EventData {
     uint64_t frame;

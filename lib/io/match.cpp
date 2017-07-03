@@ -85,7 +85,7 @@ void Io::MatchWriter::ClusterData::set(const Storage::Cluster& c)
   time = c.time();
   value = c.value();
   region = ((c.region() == kInvalidIndex) ? -1 : c.region());
-  size = std::min(c.size(), int(MAX_CLUSTER_SIZE));
+  size = std::min(c.size(), size_t(MAX_CLUSTER_SIZE));
   sizeCol = c.sizeCol();
   sizeRow = c.sizeRow();
   for (int ihit = 0; ihit < size; ++ihit) {
@@ -177,7 +177,7 @@ void Io::MatchWriter::append(const Storage::Event& event)
   // export tracks and possible matched clusters
   for (Index istate = 0; istate < sensorEvent.numStates(); ++istate) {
     const Storage::TrackState& state = sensorEvent.getState(istate);
-    const Storage::Track& track = *state.track();
+    const Storage::Track& track = event.getTrack(state.track());
 
     // always set track data
     XYPoint cr = m_sensor.transformLocalToPixel(state.offset());
@@ -195,8 +195,9 @@ void Io::MatchWriter::append(const Storage::Event& event)
     m_track.size = track.numClusters();
 
     // matching cluster data
-    if (state.matchedCluster()) {
-      const Storage::Cluster& cluster = *state.matchedCluster();
+    if (state.isMatched()) {
+      const Storage::Cluster& cluster =
+          *sensorEvent.getCluster(state.matchedCluster());
       // set cluster information
       m_matchedCluster.set(cluster);
       // set matching information
@@ -216,7 +217,7 @@ void Io::MatchWriter::append(const Storage::Event& event)
     const Storage::Cluster& cluster = *sensorEvent.getCluster(icluster);
 
     // already exported during track iteration
-    if (cluster.matchedTrack())
+    if (cluster.isMatched())
       continue;
 
     m_unmatchCluster.set(cluster);
