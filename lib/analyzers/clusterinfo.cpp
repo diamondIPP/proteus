@@ -12,6 +12,8 @@
 
 void Analyzers::ClusterInfo::ClusterHists::fill(const Storage::Cluster& cluster)
 {
+  auto cluPix = cluster.posPixel();
+  clusters->Fill(cluPix.x(), cluPix.y());
   size->Fill(cluster.size());
   sizeSizeCol->Fill(cluster.size(), cluster.sizeCol());
   sizeSizeRow->Fill(cluster.size(), cluster.sizeRow());
@@ -22,6 +24,8 @@ void Analyzers::ClusterInfo::ClusterHists::fill(const Storage::Cluster& cluster)
   uncertaintyV->Fill(std::sqrt(cluster.covLocal()(1, 1)));
   for (Index ihit = 0; ihit < cluster.numHits(); ++ihit) {
     const Storage::Hit& hit = *cluster.getHit(ihit);
+    auto hitPix = hit.posPixel();
+    clusteredHits->Fill(hitPix.x(), hitPix.y());
     sizeHitTime->Fill(cluster.size(), hit.time());
     sizeHitValue->Fill(cluster.size(), hit.value());
     hitValueHitTime->Fill(hit.value(), hit.time());
@@ -47,7 +51,12 @@ Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
   assert(device && "Analyzer: can't initialize with null device");
 
   auto makeClusterHists = [&](const Mechanics::Sensor& sensor,
+                              const Mechanics::Sensor::Area& area,
                               TDirectory* sub) {
+    HistAxis axClusterCol(area.interval(0), area.length(0), "Cluster column");
+    HistAxis axClusterRow(area.interval(1), area.length(1), "Cluster row");
+    HistAxis axHitCol(area.interval(0), area.length(0), "Hit column");
+    HistAxis axHitRow(area.interval(1), area.length(1), "Hit row");
     HistAxis axSize(1, sizeMax, "Cluster size");
     HistAxis axSizeCol(1, sizeMax, "Cluster column size");
     HistAxis axSizeRow(1, sizeMax, "Cluster row size");
@@ -60,6 +69,8 @@ Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
                    "Cluster uncertainty v");
 
     ClusterHists hs;
+    hs.clusters = makeH2(sub, "cluster_map", axClusterCol, axClusterRow);
+    hs.clusteredHits = makeH2(sub, "clustered_hit_map", axHitCol, axHitRow);
     hs.size = makeH1(sub, "size", axSize);
     hs.sizeSizeCol = makeH2(sub, "size_col-size", axSize, axSizeCol);
     hs.sizeSizeRow = makeH2(sub, "size_row-size", axSize, axSizeRow);
@@ -80,11 +91,11 @@ Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
     TDirectory* sub = Utils::makeDir(dir, sensor.name() + "/clusters");
 
     SensorHists hists;
-    hists.whole = makeClusterHists(sensor, sub);
+    hists.whole = makeClusterHists(sensor, sensor.sensitiveAreaPixel(), sub);
 
     for (const auto& region : sensor.regions()) {
       TDirectory* rsub = Utils::makeDir(sub, region.name);
-      hists.regions.push_back(makeClusterHists(sensor, rsub));
+      hists.regions.push_back(makeClusterHists(sensor, region.areaPixel, rsub));
     }
 
     m_hists.push_back(std::move(hists));

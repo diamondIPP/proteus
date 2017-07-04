@@ -34,6 +34,8 @@ public:
 
 private:
   struct ClusterHists {
+    TH2D* clusters;
+    TH2D* clusteredHits;
     TH1D* size;
     TH2D* sizeSizeCol;
     TH2D* sizeSizeRow;
