@@ -6,8 +6,6 @@
 #include <TGraphErrors.h>
 #include <TTree.h>
 
-#include "alignment/correlationsaligner.h"
-#include "alignment/residualsaligner.h"
 #include "analyzers/correlations.h"
 #include "analyzers/residuals.h"
 #include "analyzers/trackinfo.h"
@@ -21,6 +19,9 @@
 #include "storage/event.h"
 #include "utils/eventloop.h"
 #include "utils/logger.h"
+
+#include "correlationsaligner.h"
+#include "residualsaligner.h"
 
 PT_SETUP_LOCAL_LOGGER(align)
 
@@ -67,8 +68,7 @@ struct SensorStepsGraphs {
       g->SetName((sensorName + "-" + paramName).c_str());
       g->SetTitle("");
       g->GetXaxis()->SetTitle("Alignment step");
-      g->GetYaxis()->SetTitle(
-          (sensorName + ' ' + paramName).c_str());
+      g->GetYaxis()->SetTitle((sensorName + ' ' + paramName).c_str());
       dir->WriteTObject(g);
     };
     makeGraph("Offset0", off0, errOff0);

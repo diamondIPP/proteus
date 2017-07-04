@@ -1,6 +1,4 @@
 set(SOURCES
-    alignment/correlationsaligner.cpp
-    alignment/residualsaligner.cpp
     analyzers/analyzer.cpp
     analyzers/basicefficiency.cpp
     analyzers/clusterinfo.cpp
