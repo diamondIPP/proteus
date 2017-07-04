@@ -20,7 +20,7 @@ void Processors::ApplyGeometry::process(Storage::Event& event) const
     const Mechanics::Sensor& sensor = *m_device.getSensor(iplane);
 
     for (Index icluster = 0; icluster < sensorEvent.numClusters(); icluster++)
-      sensorEvent.getCluster(icluster)->transform(sensor);
+      sensorEvent.getCluster(icluster).transform(sensor);
   }
 }
 

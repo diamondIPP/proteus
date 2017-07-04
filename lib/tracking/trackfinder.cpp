@@ -53,11 +53,11 @@ void Tracking::TrackFinder::process(Storage::Event& event) const
     // generate track candidates from all unused clusters on the seed sensor
     candidates.clear();
     for (Index icluster = 0; icluster < seedEvent.numClusters(); ++icluster) {
-      Cluster* cluster = seedEvent.getCluster(icluster);
-      if (cluster->isInTrack())
+      Cluster& cluster = seedEvent.getCluster(icluster);
+      if (cluster.isInTrack())
         continue;
       candidates.push_back(TrackPtr(new Track()));
-      candidates.back()->addCluster(seedSensor, *cluster);
+      candidates.back()->addCluster(seedSensor, cluster);
     }
 
     // second iteration over remaining sensors to find compatible points
@@ -106,40 +106,40 @@ void Tracking::TrackFinder::searchSensor(
   for (Index itrack = 0; itrack < numTracks; ++itrack) {
     Storage::Track& track = *candidates[itrack];
     // TODO use the cluster on the closest sensor and not on the last
-    Storage::Cluster& last = track.clusters().end()->second;
-    Storage::Cluster* matched = nullptr;
+    Storage::Cluster& last = track.clusters().rbegin()->second;
+    Index matched = kInvalidIndex;
 
     for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
-      Storage::Cluster* curr = sensorEvent.getCluster(icluster);
+      Storage::Cluster& curr = sensorEvent.getCluster(icluster);
 
       // clusters already in use must be ignored
-      if (curr->isInTrack())
+      if (curr.isInTrack())
         continue;
 
-      XYZVector delta = curr->posGlobal() - last.posGlobal();
+      XYZVector delta = curr.posGlobal() - last.posGlobal();
       delta -= delta.z() * m_beamDirection;
       SymMatrix2 cov = last.covGlobal().Sub<SymMatrix2>(0, 0) +
-                       curr->covGlobal().Sub<SymMatrix2>(0, 0);
+                       curr.covGlobal().Sub<SymMatrix2>(0, 0);
       double d2 = mahalanobisSquared(cov, Vector2(delta.x(), delta.y()));
 
       if ((0 < m_d2Max) && (m_d2Max < d2))
         continue;
 
-      if (!matched) {
+      if (matched == kInvalidIndex) {
         // first matching cluster
-        matched = curr;
+        matched = icluster;
       } else {
         // matching ambiguity -> bifurcate track
         candidates.push_back(TrackPtr(new Track(track)));
-        candidates.back()->addCluster(sensorEvent.sensor(), *curr);
+        candidates.back()->addCluster(sensorEvent.sensor(), curr);
       }
     }
     // first matched cluster can be only be added after all other clusters
     // have been considered. otherwise it would be already added to the
     // candidate when it bifurcates and the new candidate would have two
     // clusters on this sensor.
-    if (matched)
-      track.addCluster(sensorEvent.sensor(), *matched);
+    if (matched != kInvalidIndex)
+      track.addCluster(sensorEvent.sensor(), sensorEvent.getCluster(matched));
   }
 }
 

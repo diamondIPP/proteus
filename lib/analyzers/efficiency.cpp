@@ -138,13 +138,13 @@ void Analyzers::Efficiency::analyze(const Storage::Event& event)
         continue;
       // ignore tracks that are matched to a cluster in a different region
       if ((state.isMatched()) &&
-          (sensorEvent.getCluster(state.matchedCluster())->region() != iregion))
+          (sensorEvent.getCluster(state.matchedCluster()).region() != iregion))
         continue;
       regionHists.fill(state, posPixel);
     }
   }
   for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
-    const Storage::Cluster& cluster = *sensorEvent.getCluster(icluster);
+    const Storage::Cluster& cluster = sensorEvent.getCluster(icluster);
     m_sensorHists.fill(cluster);
     if (cluster.region() != kInvalidIndex)
       m_regionsHists[cluster.region()].fill(cluster);

@@ -86,7 +86,7 @@ void Analyzers::Distances::analyze(const Storage::Event& event)
   for (Index istate = 0; istate < sensorEvent.numStates(); ++istate) {
     for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
       const Storage::TrackState& state = sensorEvent.getState(istate);
-      const Storage::Cluster& cluster = *sensorEvent.getCluster(icluster);
+      const Storage::Cluster& cluster = sensorEvent.getCluster(icluster);
       m_trackCluster.fill(cluster.posLocal() - state.offset(),
                           cluster.covLocal() + state.covOffset());
     }
@@ -95,7 +95,8 @@ void Analyzers::Distances::analyze(const Storage::Event& event)
   for (Index istate = 0; istate < sensorEvent.numStates(); ++istate) {
     const auto& state = sensorEvent.getState(istate);
     if (state.isMatched()) {
-      const auto& cluster = *sensorEvent.getCluster(state.matchedCluster());
+      const Storage::Cluster& cluster =
+          sensorEvent.getCluster(state.matchedCluster());
       m_match.fill(cluster.posLocal() - state.offset(),
                    cluster.covLocal() + state.covOffset());
     }

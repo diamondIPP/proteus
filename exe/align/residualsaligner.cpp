@@ -63,7 +63,7 @@ void Alignment::ResidualsAligner::analyze(const Storage::Event& event)
     const Storage::SensorEvent& sensorEvent = event.getSensorEvent(sensorId);
 
     for (Index iclu = 0; iclu < sensorEvent.numClusters(); ++iclu) {
-      const Storage::Cluster& cluster = *sensorEvent.getCluster(iclu);
+      const Storage::Cluster& cluster = sensorEvent.getCluster(iclu);
 
       if (!cluster.isInTrack())
         continue;

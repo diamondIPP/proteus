@@ -99,12 +99,10 @@ void Analyzers::Correlations::analyze(const Storage::Event& event)
     const Storage::SensorEvent& sensor1 = event.getSensorEvent(id1);
 
     for (Index c0 = 0; c0 < sensor0.numClusters(); ++c0) {
-      const Storage::Cluster* cluster0 = sensor0.getCluster(c0);
-      const XYZPoint& xyz0 = cluster0->posGlobal();
+      const XYZPoint& xyz0 = sensor0.getCluster(c0).posGlobal();
 
       for (Index c1 = 0; c1 < sensor1.numClusters(); ++c1) {
-        const Storage::Cluster* cluster1 = sensor1.getCluster(c1);
-        const XYZPoint& xyz1 = cluster1->posGlobal();
+        const XYZPoint& xyz1 = sensor1.getCluster(c1).posGlobal();
 
         hist.corrX->Fill(xyz0.x(), xyz1.x());
         hist.corrY->Fill(xyz0.y(), xyz1.y());

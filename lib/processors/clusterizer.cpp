@@ -27,18 +27,18 @@ static bool connected(const Storage::Hit& hit0, const Storage::Hit& hit1)
 }
 
 // return true if the hit is connected to any hit in the cluster.
-static bool connected(const Storage::Cluster* cluster, const Storage::Hit& hit)
+static bool connected(const Storage::Cluster& cluster, const Storage::Hit& hit)
 {
-  const auto& hits = cluster->hits();
+  const auto& hits = cluster.hits();
   return std::any_of(hits.begin(), hits.end(), [&](const auto& clusterHit) {
     return connected(clusterHit, hit);
   });
 }
 
 // return true if the hit and cluster are connected and in the same region
-static bool compatible(const Storage::Cluster* cluster, const Storage::Hit& hit)
+static bool compatible(const Storage::Cluster& cluster, const Storage::Hit& hit)
 {
-  return (cluster->region() == hit.region()) && connected(cluster, hit);
+  return (cluster.region() == hit.region()) && connected(cluster, hit);
 }
 
 static void cluster(std::vector<Storage::Hit*>& hits,
@@ -48,8 +48,8 @@ static void cluster(std::vector<Storage::Hit*>& hits,
     Storage::Hit* seed = hits.back();
     hits.pop_back();
 
-    Storage::Cluster* cluster = sensorEvent.newCluster();
-    cluster->addHit(*seed);
+    Storage::Cluster& cluster = sensorEvent.addCluster();
+    cluster.addHit(*seed);
 
     while (!hits.empty()) {
       // move all compatible hits to the end
@@ -61,7 +61,7 @@ static void cluster(std::vector<Storage::Hit*>& hits,
         break;
       // add compatible hits to cluster and remove from further consideration
       for (auto hit = connected; hit != hits.end(); ++hit)
-        cluster->addHit(**hit);
+        cluster.addHit(**hit);
       hits.erase(connected, hits.end());
     }
   }
@@ -93,7 +93,7 @@ void Processors::BaseClusterizer::process(Storage::Event& event) const
 
   // estimate cluster properties
   for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster)
-    estimateProperties(*sensorEvent.getCluster(icluster));
+    estimateProperties(sensorEvent.getCluster(icluster));
 }
 
 Processors::BinaryClusterizer::BinaryClusterizer(

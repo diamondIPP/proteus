@@ -39,7 +39,7 @@ void Processors::Matcher::process(Storage::Event& event) const
   // preselect possible track state / cluster pairs
   for (Index istate = 0; istate < sensorEvent.numStates(); ++istate) {
     for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
-      const auto& cluster = *sensorEvent.getCluster(icluster);
+      const auto& cluster = sensorEvent.getCluster(icluster);
       const auto& state = sensorEvent.getState(istate);
 
       // compute mahalanobis distance between state/cluster
