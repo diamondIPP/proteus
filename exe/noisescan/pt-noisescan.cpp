@@ -15,13 +15,14 @@
 
 #include <TFile.h>
 
-#include "analyzers/noisescan.h"
 #include "analyzers/occupancy.h"
 #include "application.h"
 #include "io/rceroot.h"
 #include "mechanics/device.h"
 #include "utils/eventloop.h"
 #include "utils/logger.h"
+
+#include "noisescan.h"
 
 int main(int argc, char const* argv[])
 {
@@ -48,10 +49,10 @@ int main(int argc, char const* argv[])
   // construct per-sensor noise analyzer
   std::vector<toml::Value> cfg =
       Utils::Config::perSensor(app.config(), toml::Table());
-  std::vector<std::shared_ptr<Analyzers::NoiseScan>> noiseScans;
+  std::vector<std::shared_ptr<NoiseScan>> noiseScans;
   for (auto c = cfg.begin(); c != cfg.end(); ++c) {
-    typedef Analyzers::NoiseScan::Area Area;
-    typedef Analyzers::NoiseScan::Area::AxisInterval Interval;
+    using Area = NoiseScan::Area;
+    using Interval = NoiseScan::Area::AxisInterval;
 
     auto id = c->get<Index>("id");
     auto bandwidth = c->get<double>("density_bandwidth");
@@ -60,7 +61,7 @@ int main(int argc, char const* argv[])
     // min/max are inclusive but Area uses right-open intervals
     Area roi(Interval(c->get<int>("col_min"), c->get<int>("col_max") + 1),
              Interval(c->get<int>("row_min"), c->get<int>("row_max") + 1));
-    noiseScans.push_back(std::make_shared<Analyzers::NoiseScan>(
+    noiseScans.push_back(std::make_shared<NoiseScan>(
         *app.device().getSensor(id), bandwidth, sigmaMax, rateMax, roi, hists));
   }
 

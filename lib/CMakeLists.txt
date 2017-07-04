@@ -9,7 +9,6 @@ set(SOURCES
     analyzers/eventinfo.cpp
     analyzers/eventprinter.cpp
     analyzers/hitinfo.cpp
-    analyzers/noisescan.cpp
     analyzers/occupancy.cpp
     analyzers/trackinfo.cpp
     analyzers/residuals.cpp

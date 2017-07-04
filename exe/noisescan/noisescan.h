@@ -11,7 +11,7 @@
 
 #include <vector>
 
-#include "analyzer.h"
+#include "analyzers/analyzer.h"
 #include "mechanics/pixelmasks.h"
 #include "utils/definitions.h"
 #include "utils/interval.h"
@@ -24,15 +24,13 @@ namespace Mechanics {
 class Sensor;
 }
 
-namespace Analyzers {
-
 /** Estimate noisy pixels from hit occupancies.
  *
  * Noise estimation uses a local estimate of the expected hit rate to
  * find pixels that are a certain number of standard deviations away from
  * this estimate.
  */
-class NoiseScan : public Analyzer {
+class NoiseScan : public Analyzers::Analyzer {
 public:
   typedef Utils::Box<2, int> Area;
 
@@ -62,7 +60,5 @@ private:
   TH1D* m_significanceDist;
   TH2D* m_mask;
 };
-
-} // namespace Analyzers
 
 #endif // PT_NOISESCAN_H
