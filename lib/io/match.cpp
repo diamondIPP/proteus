@@ -197,7 +197,7 @@ void Io::MatchWriter::append(const Storage::Event& event)
     // matching cluster data
     if (state.isMatched()) {
       const Storage::Cluster& cluster =
-          *sensorEvent.getCluster(state.matchedCluster());
+          sensorEvent.getCluster(state.matchedCluster());
       // set cluster information
       m_matchedCluster.set(cluster);
       // set matching information
@@ -214,7 +214,7 @@ void Io::MatchWriter::append(const Storage::Event& event)
 
   // export unmatched clusters
   for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
-    const Storage::Cluster& cluster = *sensorEvent.getCluster(icluster);
+    const Storage::Cluster& cluster = sensorEvent.getCluster(icluster);
 
     // already exported during track iteration
     if (cluster.isMatched())
