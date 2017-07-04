@@ -27,11 +27,11 @@ public:
   uint64_t frame() const { return m_frame; }
   uint64_t timestamp() const { return m_timestamp; }
 
-  template <typename... HitParams>
-  Hit* addHit(HitParams&&... params);
+  template <typename... Params>
+  Hit& addHit(Params&&... params);
   Index numHits() const { return static_cast<Index>(m_hits.size()); }
-  Hit* getHit(Index i) { return m_hits.at(i).get(); }
-  const Hit* getHit(Index i) const { return m_hits.at(i).get(); }
+  Hit& getHit(Index i) { return *m_hits.at(i); }
+  const Hit& getHit(Index i) const { return *m_hits.at(i); }
 
   template <typename... Params>
   Cluster& addCluster(Params&&... params);
@@ -62,10 +62,10 @@ private:
 } // namespace Storage
 
 template <typename... HitParams>
-inline Storage::Hit* Storage::SensorEvent::addHit(HitParams&&... params)
+inline Storage::Hit& Storage::SensorEvent::addHit(HitParams&&... params)
 {
   m_hits.emplace_back(new Hit(std::forward<HitParams>(params)...));
-  return m_hits.back().get();
+  return *m_hits.back();
 }
 
 template <typename... Params>

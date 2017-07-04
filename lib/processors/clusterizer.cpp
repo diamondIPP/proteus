@@ -79,10 +79,10 @@ void Processors::BaseClusterizer::process(Storage::Event& event) const
   hits.clear();
   hits.reserve(sensorEvent.numHits());
   for (Index ihit = 0; ihit < sensorEvent.numHits(); ++ihit) {
-    Storage::Hit* hit = sensorEvent.getHit(ihit);
-    if (m_sensor.pixelMask().isMasked(hit->col(), hit->row()))
+    Storage::Hit& hit = sensorEvent.getHit(ihit);
+    if (m_sensor.pixelMask().isMasked(hit.col(), hit.row()))
       continue;
-    hits.push_back(std::ref(*hit));
+    hits.push_back(std::ref(hit));
   }
   cluster(hits, sensorEvent);
 

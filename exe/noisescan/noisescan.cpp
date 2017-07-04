@@ -74,7 +74,7 @@ void NoiseScan::analyze(const Storage::Event& event)
   const Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
 
   for (Index i = 0; i < sensorEvent.numHits(); ++i) {
-    const Storage::Hit& hit = *sensorEvent.getHit(i);
+    const Storage::Hit& hit = sensorEvent.getHit(i);
     m_occupancy->Fill(hit.col(), hit.row());
   }
   m_numEvents += 1;

@@ -273,11 +273,11 @@ bool Io::RceRootReader::read(Storage::Event& event)
         FAIL("could not read 'Hits' entry ", ievent);
 
       for (Int_t ihit = 0; ihit < numHits; ++ihit) {
-        Storage::Hit* hit = sensorEvent.addHit(hitPixX[ihit], hitPixY[ihit],
+        Storage::Hit& hit = sensorEvent.addHit(hitPixX[ihit], hitPixY[ihit],
                                                hitTiming[ihit], hitValue[ihit]);
         // Fix hit/cluster relationship is possibl
         if (trees.clusters && hitInCluster[ihit] >= 0)
-          sensorEvent.getCluster(hitInCluster[ihit]).addHit(*hit);
+          sensorEvent.getCluster(hitInCluster[ihit]).addHit(hit);
       }
     }
   } // end loop in planes
@@ -415,12 +415,12 @@ void Io::RceRootWriter::append(const Storage::Event& event)
         FAIL("hits exceed MAX_HITS");
       numHits = sensorEvent.numHits();
       for (Index ihit = 0; ihit < sensorEvent.numHits(); ++ihit) {
-        const Storage::Hit* hit = sensorEvent.getHit(ihit);
-        hitPixX[ihit] = hit->digitalCol();
-        hitPixY[ihit] = hit->digitalRow();
-        hitValue[ihit] = hit->value();
-        hitTiming[ihit] = hit->time();
-        hitInCluster[ihit] = hit->isInCluster() ? hit->cluster() : -1;
+        const Storage::Hit hit = sensorEvent.getHit(ihit);
+        hitPixX[ihit] = hit.digitalCol();
+        hitPixY[ihit] = hit.digitalRow();
+        hitValue[ihit] = hit.value();
+        hitTiming[ihit] = hit.time();
+        hitInCluster[ihit] = hit.isInCluster() ? hit.cluster() : -1;
       }
       trees.hits->Fill();
     }

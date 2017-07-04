@@ -27,7 +27,7 @@ void Processors::ApplyRegions::process(Storage::Event& event) const
   // TODO 2017-02 msmk: check whether is better (faster) to iterate first
   //                    over hits or first over regions
   for (Index ihit = 0; ihit < sensorEvent.numHits(); ++ihit) {
-    Storage::Hit& hit = *sensorEvent.getHit(ihit);
+    Storage::Hit& hit = sensorEvent.getHit(ihit);
 
     for (Index iregion = 0; iregion < m_sensor.regions().size(); ++iregion) {
       const auto& region = m_sensor.regions()[iregion];

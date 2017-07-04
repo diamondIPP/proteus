@@ -50,7 +50,7 @@ void Analyzers::SensorHits::analyze(const Storage::SensorEvent& sensorEvent)
   m_nHits->Fill(sensorEvent.numHits());
 
   for (Index ihit = 0; ihit < sensorEvent.numHits(); ++ihit) {
-    const Storage::Hit& hit = *sensorEvent.getHit(ihit);
+    const Storage::Hit& hit = sensorEvent.getHit(ihit);
 
     m_pos->Fill(hit.col(), hit.row());
     m_time->Fill(hit.time());
