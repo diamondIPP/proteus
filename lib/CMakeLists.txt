@@ -1,4 +1,4 @@
-set(common_SRCS
+set(SOURCES
     alignment/correlationsaligner.cpp
     alignment/residualsaligner.cpp
     analyzers/analyzer.cpp
@@ -49,20 +49,8 @@ set(common_SRCS
     utils/eventloop.cpp
     utils/logger.cpp
     application.cpp)
-file(GLOB_RECURSE common_HDRS LIST_DIRECTORIES false *.h)
+file(GLOB_RECURSE HEADERS LIST_DIRECTORIES false *.h)
 
-add_library(pt-common STATIC ${common_SRCS} ${common_HDRS})
-target_include_directories(pt-common PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})
-target_link_libraries(pt-common PUBLIC ${ROOT_LIBRARIES})
-
-function(pt_add_tool name)
-  add_executable(${name} ${ARGN})
-  target_link_libraries(${name} pt-common)
-  install(TARGETS ${name} RUNTIME DESTINATION bin)
-endfunction()
-
-pt_add_tool(pt-align pt-align.cpp)
-pt_add_tool(pt-cfg pt-cfg.cpp)
-pt_add_tool(pt-match pt-match.cpp)
-pt_add_tool(pt-noisescan pt-noisescan.cpp)
-pt_add_tool(pt-track pt-track.cpp)
+add_library(pt-lib STATIC ${SOURCES} ${HEADERS})
+target_include_directories(pt-lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})
+target_link_libraries(pt-lib PUBLIC ${ROOT_LIBRARIES})

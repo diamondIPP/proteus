@@ -22,7 +22,8 @@ include_directories(external/tinytoml/include)
 if(PROTEUS_ENABLE_DOC)
   add_subdirectory(doc)
 endif()
-add_subdirectory(src)
+add_subdirectory(lib)
+add_subdirectory(exe)
 
 # activation script to use the build directory directly
 set(BASEDIR ${PROJECT_BINARY_DIR})

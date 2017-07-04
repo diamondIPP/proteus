@@ -1,0 +1,12 @@
+function(add_tool name)
+  set(_exe "pt-${name}")
+  add_executable(${_exe} ${ARGN})
+  target_link_libraries(${_exe} pt-lib)
+  install(TARGETS ${_exe} RUNTIME DESTINATION bin)
+endfunction()
+
+add_tool(align pt-align.cpp)
+add_tool(cfg pt-cfg.cpp)
+add_tool(match pt-match.cpp)
+add_tool(noisescan pt-noisescan.cpp)
+add_tool(track pt-track.cpp)
