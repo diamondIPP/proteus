@@ -46,17 +46,8 @@ Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
 
   assert(device && "Analyzer: can't initialize with null device");
 
-  // Makes or gets a directory called from inside _dir with this name
-  TDirectory* sub = makeDir(dir, "ClusterInfo");
-
   auto makeClusterHists = [&](const Mechanics::Sensor& sensor,
-                              std::string suffix) {
-    std::string prefix = sensor.name() + '-';
-    if (!suffix.empty()) {
-      prefix += suffix;
-      prefix += '-';
-    }
-
+                              TDirectory* sub) {
     HistAxis axSize(1, sizeMax, "Cluster size");
     HistAxis axSizeCol(1, sizeMax, "Cluster column size");
     HistAxis axSizeRow(1, sizeMax, "Cluster row size");
@@ -69,29 +60,32 @@ Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
                    "Cluster uncertainty v");
 
     ClusterHists hs;
-    hs.size = makeH1(sub, prefix + "Size", axSize);
-    hs.sizeSizeCol = makeH2(sub, prefix + "SizeCol_Size", axSize, axSizeCol);
-    hs.sizeSizeRow = makeH2(sub, prefix + "SizeRow_Size", axSize, axSizeRow);
-    hs.sizeColSizeRow =
-        makeH2(sub, prefix + "SizeRow_SizeCol", axSizeCol, axSizeRow);
-    hs.value = makeH1(sub, prefix + "Value", axValue);
-    hs.sizeValue = makeH2(sub, prefix + "Value_Size", axSize, axValue);
-    hs.uncertaintyU = makeH1(sub, prefix + "UncertaintyU", axUnU);
-    hs.uncertaintyV = makeH1(sub, prefix + "UncertaintyV", axUnV);
-    hs.sizeHitTime = makeH2(sub, prefix + "HitTime_Size", axSize, axHitTime);
-    hs.sizeHitValue = makeH2(sub, prefix + "HitValue_Size", axSize, axHitValue);
+    hs.size = makeH1(sub, "size", axSize);
+    hs.sizeSizeCol = makeH2(sub, "size_col-size", axSize, axSizeCol);
+    hs.sizeSizeRow = makeH2(sub, "size_row-size", axSize, axSizeRow);
+    hs.sizeColSizeRow = makeH2(sub, "size_row-size_col", axSizeCol, axSizeRow);
+    hs.value = makeH1(sub, "value", axValue);
+    hs.sizeValue = makeH2(sub, "value-size", axSize, axValue);
+    hs.uncertaintyU = makeH1(sub, "uncertainty_u", axUnU);
+    hs.uncertaintyV = makeH1(sub, "uncertainty_v", axUnV);
+    hs.sizeHitTime = makeH2(sub, "hit_time-size", axSize, axHitTime);
+    hs.sizeHitValue = makeH2(sub, "hit_value-size", axSize, axHitValue);
     hs.hitValueHitTime =
-        makeH2(sub, prefix + "HitTime_HitValue", axHitValue, axHitTime);
+        makeH2(sub, "hit_time-hit_value", axHitValue, axHitTime);
     return hs;
   };
 
   for (Index isensor = 0; isensor < device->numSensors(); ++isensor) {
     const Mechanics::Sensor& sensor = *device->getSensor(isensor);
+    TDirectory* sub = Utils::makeDir(dir, sensor.name() + "/clusters");
 
     SensorHists hists;
-    hists.whole = makeClusterHists(sensor, std::string());
-    for (const auto& region : sensor.regions())
-      hists.regions.push_back(makeClusterHists(sensor, region.name));
+    hists.whole = makeClusterHists(sensor, sub);
+
+    for (const auto& region : sensor.regions()) {
+      TDirectory* rsub = Utils::makeDir(sub, region.name);
+      hists.regions.push_back(makeClusterHists(sensor, rsub));
+    }
 
     m_hists.push_back(std::move(hists));
   }
