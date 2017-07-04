@@ -21,39 +21,32 @@ Analyzers::HitInfo::HitInfo(const Mechanics::Device* device,
 
   assert(device && "Analyzer: can't initialize with null device");
 
-  TDirectory* sub = Utils::makeDir(dir, "HitInfo");
-
   for (Index isensor = 0; isensor < device->numSensors(); ++isensor) {
     const Mechanics::Sensor& sensor = *device->getSensor(isensor);
     const auto& area = sensor.sensitiveAreaPixel();
-    auto name = [&](const std::string suffix) {
-      return sensor.name() + '-' + suffix;
-    };
-    auto makeRegionHists = [&](std::string name) {
-      std::string prefix = sensor.name() + '-';
-      if (!name.empty()) {
-        prefix += name;
-        prefix += '-';
-      }
-      RegionHists h;
-      h.time = makeH1(sub, prefix + "Time", HistAxis(0, timeMax, "Hit time"));
-      h.value =
-          makeH1(sub, prefix + "Value", HistAxis(0, valueMax, "Hit value"));
-      return h;
-    };
+
+    TDirectory* sub = Utils::makeDir(dir, sensor.name() + "/hits");
 
     HistAxis axCol(area.interval(0), area.length(0), "Hit column");
     HistAxis axRow(area.interval(1), area.length(1), "Hit row");
-    SensorHists hists;
-    // hitmap is only for internal normalization
-    hists.hitMap = makeTransientH2(axCol, axRow);
-    hists.meanTimeMap = makeH2(sub, name("MeanTimeMap"), axCol, axRow);
-    hists.meanValueMap = makeH2(sub, name("MeanValueMap"), axCol, axRow);
-    hists.whole = makeRegionHists(std::string());
+    HistAxis axTime(0, timeMax, "Hit value");
+    HistAxis axValue(0, valueMax, "Hit value");
+
+    SensorHists sh;
+    sh.hitMap = makeH2(sub, "hit_map", axCol, axRow);
+    sh.time = makeH1(sub, "time", axTime);
+    sh.value = makeH1(sub, "value", axValue);
+    sh.meanTimeMap = makeH2(sub, "mean_time_map", axCol, axRow);
+    sh.meanValueMap = makeH2(sub, "mean_value_map", axCol, axRow);
+
     for (const auto& region : sensor.regions()) {
-      hists.regions.push_back(makeRegionHists(region.name));
+      TDirectory* rsub = Utils::makeDir(sub, region.name);
+      RegionHists rh;
+      rh.time = makeH1(rsub, "time", axTime);
+      rh.value = makeH1(rsub, "value", axValue);
+      sh.regions.push_back(std::move(rh));
     }
-    m_hists.push_back(std::move(hists));
+    m_hists.push_back(std::move(sh));
   }
 }
 
@@ -69,10 +62,10 @@ void Analyzers::HitInfo::analyze(const Storage::Event& event)
       const Storage::Hit& hit = *plane.getHit(ihit);
 
       hists.hitMap->Fill(hit.col(), hit.row());
+      hists.time->Fill(hit.time());
+      hists.value->Fill(hit.value());
       hists.meanTimeMap->Fill(hit.col(), hit.row(), hit.time());
       hists.meanValueMap->Fill(hit.col(), hit.row(), hit.value());
-      hists.whole.time->Fill(hit.time());
-      hists.whole.value->Fill(hit.value());
       if (hit.region() != kInvalidIndex) {
         hists.regions[hit.region()].time->Fill(hit.time());
         hists.regions[hit.region()].value->Fill(hit.value());

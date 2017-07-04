@@ -36,7 +36,8 @@ private:
     TH2D* hitMap;
     TH2D* meanTimeMap;
     TH2D* meanValueMap;
-    RegionHists whole;
+    TH1D* time;
+    TH1D* value;
     std::vector<RegionHists> regions;
   };
 
