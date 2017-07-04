@@ -87,8 +87,14 @@ inline TDirectory* Utils::makeDir(TDirectory* parent, const std::string& path)
   assert(parent && "Parent directory must be non-NULL");
 
   TDirectory* dir = parent->GetDirectory(path.c_str());
-  if (!dir)
+  if (!dir) {
+    // the return value of this is useless:
+    // NULL means both the directory exists and everything is ok, or a failure.
+    // not-NULL returns only the first subdirectory if path defines a hierachy,
+    // but we want the final directory that was created.
     dir = parent->mkdir(path.c_str());
+    dir = parent->GetDirectory(path.c_str());
+  }
   if (!dir)
     throw std::runtime_error("Could not create ROOT directory '" + path + '\'');
   return dir;
@@ -148,8 +154,8 @@ inline TH2D* Utils::makeTransientH2(HistAxis axis0, HistAxis axis1)
   name += std::to_string(axis1.limit1);
   name += std::to_string(axis1.bins);
 
-  TH2D* h = new TH2D("", "", axis0.bins, axis0.limit0, axis0.limit1,
-                     axis1.bins, axis1.limit0, axis1.limit1);
+  TH2D* h = new TH2D("", "", axis0.bins, axis0.limit0, axis0.limit1, axis1.bins,
+                     axis1.limit0, axis1.limit1);
   h->SetXTitle(axis0.label.c_str());
   h->SetYTitle(axis1.label.c_str());
   h->SetDirectory(nullptr);
