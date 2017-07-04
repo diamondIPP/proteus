@@ -255,14 +255,14 @@ bool Io::RceRootReader::read(Storage::Event& event)
         cov(0, 0) = clusterVarCol[icluster];
         cov(1, 1) = clusterVarRow[icluster];
         cov(0, 1) = clusterCovColRow[icluster];
-        Storage::Cluster* cluster = sensorEvent.newCluster();
-        cluster->setPixel(XYPoint(clusterCol[icluster], clusterRow[icluster]),
-                          cov);
+        Storage::Cluster& cluster = sensorEvent.addCluster();
+        cluster.setPixel(XYPoint(clusterCol[icluster], clusterRow[icluster]),
+                         cov);
         // Fix cluster/track relationship if possible
         if (m_tracks && (0 <= clusterTrack[icluster])) {
           Storage::Track& track = event.getTrack(clusterTrack[icluster]);
-          track.addCluster(isensor, *cluster);
-          cluster->setTrack(clusterTrack[icluster]);
+          track.addCluster(isensor, cluster);
+          cluster.setTrack(clusterTrack[icluster]);
         }
       }
     }
@@ -276,11 +276,8 @@ bool Io::RceRootReader::read(Storage::Event& event)
         Storage::Hit* hit = sensorEvent.addHit(hitPixX[ihit], hitPixY[ihit],
                                                hitTiming[ihit], hitValue[ihit]);
         // Fix hit/cluster relationship is possibl
-        if (trees.clusters && hitInCluster[ihit] >= 0) {
-          Storage::Cluster* cluster =
-              sensorEvent.getCluster(hitInCluster[ihit]);
-          cluster->addHit(*hit);
-        }
+        if (trees.clusters && hitInCluster[ihit] >= 0)
+          sensorEvent.getCluster(hitInCluster[ihit]).addHit(*hit);
       }
     }
   } // end loop in planes
@@ -434,7 +431,7 @@ void Io::RceRootWriter::append(const Storage::Event& event)
         FAIL("clusters exceed MAX_HITS");
       numClusters = sensorEvent.numClusters();
       for (Index iclu = 0; iclu < sensorEvent.numClusters(); ++iclu) {
-        const Storage::Cluster& cluster = *sensorEvent.getCluster(iclu);
+        const Storage::Cluster& cluster = sensorEvent.getCluster(iclu);
         clusterCol[iclu] = cluster.posPixel().x();
         clusterRow[iclu] = cluster.posPixel().y();
         clusterVarCol[iclu] = cluster.covPixel()(0, 0);
