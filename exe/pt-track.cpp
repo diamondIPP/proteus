@@ -13,7 +13,6 @@
 #include "analyzers/occupancy.h"
 #include "analyzers/residuals.h"
 #include "analyzers/trackinfo.h"
-#include "application.h"
 #include "io/rceroot.h"
 #include "mechanics/device.h"
 #include "processors/applygeometry.h"
@@ -21,6 +20,7 @@
 #include "processors/trackfinder.h"
 #include "processors/trackfitter.h"
 #include "storage/event.h"
+#include "utils/application.h"
 #include "utils/eventloop.h"
 
 int main(int argc, char const* argv[])
@@ -31,7 +31,7 @@ int main(int argc, char const* argv[])
   toml::Table defaults = {{"num_points_min", 3},
                           {"search_sigma_max", 5.},
                           {"reduced_chi2_max", -1.}};
-  Application app("track", "preprocess, cluster, and track", defaults);
+  Utils::Application app("track", "preprocess, cluster, and track", defaults);
   app.initialize(argc, argv);
 
   // configuration

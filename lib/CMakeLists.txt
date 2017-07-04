@@ -40,12 +40,12 @@ set(SOURCES
     storage/track.cpp
     storage/trackstate.cpp
     storage/plane.cpp
+    utils/application.cpp
     utils/arguments.cpp
     utils/config.cpp
     utils/densemask.cpp
     utils/eventloop.cpp
-    utils/logger.cpp
-    application.cpp)
+    utils/logger.cpp)
 file(GLOB_RECURSE HEADERS LIST_DIRECTORIES false *.h)
 
 add_library(pt-lib STATIC ${SOURCES} ${HEADERS})

@@ -5,7 +5,6 @@
 #include "analyzers/distances.h"
 #include "analyzers/residuals.h"
 #include "analyzers/trackinfo.h"
-#include "application.h"
 #include "io/match.h"
 #include "io/rceroot.h"
 #include "mechanics/device.h"
@@ -14,6 +13,7 @@
 #include "processors/setupsensors.h"
 #include "processors/trackfitter.h"
 #include "storage/event.h"
+#include "utils/application.h"
 #include "utils/eventloop.h"
 
 int main(int argc, char const* argv[])
@@ -22,7 +22,7 @@ int main(int argc, char const* argv[])
   using namespace Mechanics;
   using namespace Processors;
 
-  Application app("match", "match tracks and clusters");
+  Utils::Application app("match", "match tracks and clusters");
   app.initialize(argc, argv);
 
   // configuration

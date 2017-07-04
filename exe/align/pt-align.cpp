@@ -9,7 +9,6 @@
 #include "analyzers/correlations.h"
 #include "analyzers/residuals.h"
 #include "analyzers/trackinfo.h"
-#include "application.h"
 #include "io/rceroot.h"
 #include "mechanics/device.h"
 #include "processors/applygeometry.h"
@@ -17,6 +16,7 @@
 #include "processors/trackfinder.h"
 #include "processors/trackfitter.h"
 #include "storage/event.h"
+#include "utils/application.h"
 #include "utils/eventloop.h"
 #include "utils/logger.h"
 
@@ -120,7 +120,7 @@ int main(int argc, char const* argv[])
                           {"search_sigma_max", 5.},
                           {"reduced_chi2_max", -1.},
                           {"damping", 0.9}};
-  Application app("align", "align selected sensors", defaults);
+  Utils::Application app("align", "align selected sensors", defaults);
   app.initialize(argc, argv);
 
   // configuration

@@ -16,9 +16,9 @@
 #include <TFile.h>
 
 #include "analyzers/occupancy.h"
-#include "application.h"
 #include "io/rceroot.h"
 #include "mechanics/device.h"
+#include "utils/application.h"
 #include "utils/eventloop.h"
 #include "utils/logger.h"
 
@@ -39,7 +39,7 @@ int main(int argc, char const* argv[])
     {"row_min", INT_MIN},
     {"row_max", INT_MAX - 1}};
   // clang-format on
-  Application app("noisescan", "run noise scan", defaults);
+  Utils::Application app("noisescan", "run noise scan", defaults);
   app.initialize(argc, argv);
 
   // output
