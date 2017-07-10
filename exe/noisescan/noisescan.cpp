@@ -21,7 +21,7 @@ NoiseScan::NoiseScan(const Mechanics::Sensor& sensor,
                      const double sigmaMax,
                      const double rateMax,
                      const Area& regionOfInterest,
-                     TDirectory* parent,
+                     TDirectory* dir,
                      const int binsOccupancy)
     : m_sensorId(sensor.id())
     , m_sigmaMax(sigmaMax)
@@ -55,16 +55,13 @@ NoiseScan::NoiseScan(const Mechanics::Sensor& sensor,
   HistAxis axOcc(0, 1, binsOccupancy, "Pixel occupancy / hits/pixel/event");
   HistAxis axSig(0, 1, binsOccupancy, "Local significance");
 
-  auto name = [&](const std::string& suffix) {
-    return sensor.name() + '-' + suffix;
-  };
-  TDirectory* dir = makeDir(parent, "NoiseScan");
-  m_occupancy = makeH2(dir, name("Occupancy"), axCol, axRow);
-  m_occupancyDist = makeH1(dir, name("OccupancyDist"), axOcc);
-  m_density = makeH2(dir, name("Density"), axCol, axRow);
-  m_significance = makeH2(dir, name("LocalSignificance"), axCol, axRow);
-  m_significanceDist = makeH1(dir, name("LocalSignificanceDist"), axSig);
-  m_mask = makeH2(dir, name("Mask"), axCol, axRow);
+  TDirectory* sub = Utils::makeDir(dir, sensor.name() + "/noisescan");
+  m_occupancy = makeH2(sub, "occupancy", axCol, axRow);
+  m_occupancyDist = makeH1(sub, "occupancy_dist", axOcc);
+  m_density = makeH2(sub, "density", axCol, axRow);
+  m_significance = makeH2(sub, "local_significance", axCol, axRow);
+  m_significanceDist = makeH1(sub, "local_significance_dist", axSig);
+  m_mask = makeH2(sub, "mask", axCol, axRow);
 }
 
 std::string NoiseScan::name() const
