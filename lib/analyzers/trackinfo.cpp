@@ -23,7 +23,7 @@ Analyzers::TrackInfo::TrackInfo(const Mechanics::Device* device,
   assert(device && "Analyzer: can't initialize with null device");
 
   // Makes or gets a directory called from inside _dir with this name
-  TDirectory* sub = makeDir(dir, "TrackInfo");
+  TDirectory* sub = makeDir(dir, "tracks");
 
   // estimate bounding box of all sensor projections into the xy-plane
   auto active = device->getSensor(0)->projectedEnvelopeXY();
@@ -39,14 +39,14 @@ Analyzers::TrackInfo::TrackInfo(const Mechanics::Device* device,
   HistAxis axSlopeX(-slopeMax, slopeMax, bins, "Track slope x");
   HistAxis axSlopeY(-slopeMax, slopeMax, bins, "Track slope y");
 
-  m_numClusters = makeH1(sub, "NumClusters", axNClusters);
-  m_reducedChi2 = makeH1(sub, "ReducedChi2", axChi2);
-  m_offsetXY = makeH2(sub, "OffsetXY", axOffX, axOffY);
-  m_offsetX = makeH1(sub, "OffsetX", axOffX);
-  m_offsetY = makeH1(sub, "OffsetY", axOffY);
-  m_slopeXY = makeH2(sub, "SlopeXY", axSlopeX, axSlopeY);
-  m_slopeX = makeH1(sub, "SlopeX", axSlopeX);
-  m_slopeY = makeH1(sub, "SlopeY", axSlopeY);
+  m_numClusters = makeH1(sub, "size", axNClusters);
+  m_reducedChi2 = makeH1(sub, "reduced_chi2", axChi2);
+  m_offsetXY = makeH2(sub, "offset", axOffX, axOffY);
+  m_offsetX = makeH1(sub, "offset_x", axOffX);
+  m_offsetY = makeH1(sub, "offset_y", axOffY);
+  m_slopeXY = makeH2(sub, "slope", axSlopeX, axSlopeY);
+  m_slopeX = makeH1(sub, "slope_x", axSlopeX);
+  m_slopeY = makeH1(sub, "slope_y", axSlopeY);
 }
 
 std::string Analyzers::TrackInfo::name() const { return "TrackInfo"; }
