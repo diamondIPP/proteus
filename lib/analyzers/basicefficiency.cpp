@@ -41,22 +41,21 @@ Analyzers::BasicEfficiency::BasicEfficiency(const Mechanics::Sensor& sensor,
     m_mask = sensor.pixelMask().protruded(maskedPixelRange - 1);
   }
 
-  TDirectory* sub = Utils::makeDir(dir, "Efficiency");
+  TDirectory* sub = Utils::makeDir(dir, sensor.name() + "/efficiency");
 
   // one set of histograms for the whole sensor
-  m_sensorHists =
-      Hists(sensor.name(), sensor, sensor.sensitiveAreaPixel(), increaseArea,
-            inPixelPeriod, inPixelBinsMin, efficiencyDistBins, sub);
+  m_sensorHists = Hists(sensor, sensor.sensitiveAreaPixel(), increaseArea,
+                        inPixelPeriod, inPixelBinsMin, efficiencyDistBins, sub);
   // one additional set for each region
   for (const auto& region : sensor.regions()) {
-    m_regionsHists.emplace_back(sensor.name() + '-' + region.name, sensor,
-                                region.areaPixel, increaseArea, inPixelPeriod,
-                                inPixelBinsMin, efficiencyDistBins, sub);
+    TDirectory* rsub = Utils::makeDir(sub, region.name);
+    m_regionsHists.emplace_back(sensor, region.areaPixel, increaseArea,
+                                inPixelPeriod, inPixelBinsMin,
+                                efficiencyDistBins, rsub);
   }
 }
 
-Analyzers::BasicEfficiency::Hists::Hists(const std::string& prefix,
-                                         const Mechanics::Sensor& sensor,
+Analyzers::BasicEfficiency::Hists::Hists(const Mechanics::Sensor& sensor,
                                          Area roi,
                                          int increaseArea,
                                          int inPixelPeriod,
@@ -92,26 +91,25 @@ Analyzers::BasicEfficiency::Hists::Hists(const std::string& prefix,
                     "Folded track position v");
   HistAxis axEff(0, 1, efficiencyDistBins, "Pixel efficiency");
 
-  auto name = [&](const std::string& suffix) { return prefix + '-' + suffix; };
-  total = makeH2(dir, name("TracksTotal"), axCol, axRow);
-  pass = makeH2(dir, name("TracksPass"), axCol, axRow);
-  fail = makeH2(dir, name("TracksFail"), axCol, axRow);
-  eff = makeH2(dir, name("Efficiency"), axCol, axRow);
-  effDist = makeH1(dir, name("EfficiencyDist"), axEff);
-  colTotal = makeH1(dir, name("ColTracksTotal"), axCol);
-  colPass = makeH1(dir, name("ColTracksPass"), axCol);
-  colFail = makeH1(dir, name("ColTracksFail"), axCol);
-  colEff = makeH1(dir, name("ColEfficiency"), axCol);
-  rowTotal = makeH1(dir, name("RowTracksTotal"), axRow);
-  rowPass = makeH1(dir, name("RowTracksPass"), axRow);
-  rowFail = makeH1(dir, name("RowTracksFail"), axRow);
-  rowEff = makeH1(dir, name("RowEfficiency"), axRow);
-  inPixTotal = makeH2(dir, name("InPixTracksTotal"), axInPixU, axInPixV);
-  inPixPass = makeH2(dir, name("InPixTracksPass"), axInPixU, axInPixV);
-  inPixFail = makeH2(dir, name("InPixTracksFail"), axInPixU, axInPixV);
-  inPixEff = makeH2(dir, name("InPixEfficiency"), axInPixU, axInPixV);
-  clustersPass = makeH2(dir, name("ClustersPass"), axCol, axRow);
-  clustersFail = makeH2(dir, name("ClustersFail"), axCol, axRow);
+  total = makeH2(dir, "tracks_total", axCol, axRow);
+  pass = makeH2(dir, "tracks_pass", axCol, axRow);
+  fail = makeH2(dir, "tracks_fail", axCol, axRow);
+  eff = makeH2(dir, "efficiency", axCol, axRow);
+  effDist = makeH1(dir, "efficiency_distribution", axEff);
+  colTotal = makeH1(dir, "col_tracks_total", axCol);
+  colPass = makeH1(dir, "col_tracks_pass", axCol);
+  colFail = makeH1(dir, "col_tracks_fail", axCol);
+  colEff = makeH1(dir, "col_efficiency", axCol);
+  rowTotal = makeH1(dir, "row_tracks_total", axRow);
+  rowPass = makeH1(dir, "row_tracks_pass", axRow);
+  rowFail = makeH1(dir, "row_tracks_fail", axRow);
+  rowEff = makeH1(dir, "row_efficiency", axRow);
+  inPixTotal = makeH2(dir, "inpix_tracks_total", axInPixU, axInPixV);
+  inPixPass = makeH2(dir, "inpix_tracks_pass", axInPixU, axInPixV);
+  inPixFail = makeH2(dir, "inpix_tracks_fail", axInPixU, axInPixV);
+  inPixEff = makeH2(dir, "inpix_efficiency", axInPixU, axInPixV);
+  clustersPass = makeH2(dir, "clusters_pass", axCol, axRow);
+  clustersFail = makeH2(dir, "clusters_fail", axCol, axRow);
 }
 
 std::string Analyzers::BasicEfficiency::name() const

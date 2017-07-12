@@ -23,7 +23,7 @@ class Sensor;
 namespace Storage {
 class Cluster;
 class TrackState;
-}
+} // namespace Storage
 
 namespace Analyzers {
 
@@ -94,8 +94,7 @@ private:
     TH2D* clustersFail;
 
     Hists() = default;
-    Hists(const std::string& prefix,
-          const Mechanics::Sensor& sensor,
+    Hists(const Mechanics::Sensor& sensor,
           Area roi,
           int increaseArea,
           int inPixelPeriod,
