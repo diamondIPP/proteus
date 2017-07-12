@@ -51,6 +51,7 @@ private:
     void fill(const Storage::Cluster& cluster);
   };
   struct SensorHists {
+    TH1D* nClusters;
     ClusterHists whole;
     std::vector<ClusterHists> regions;
 

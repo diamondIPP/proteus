@@ -29,7 +29,8 @@ public:
   void finalize();
 
 private:
-  TH1D* m_numClusters;
+  TH1D* m_nTracks;
+  TH1D* m_size;;
   TH1D* m_reducedChi2;
   TH2D* m_offsetXY;
   TH1D* m_offsetX;

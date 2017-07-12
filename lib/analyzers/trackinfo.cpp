@@ -32,14 +32,16 @@ Analyzers::TrackInfo::TrackInfo(const Mechanics::Device* device,
         active, device->getSensor(isensor)->projectedEnvelopeXY());
   }
 
-  HistAxis axNClusters(0, device->numSensors(), "Clusters on track");
+  HistAxis axNTracks(0, 16, "Tracks / event");
+  HistAxis axSize(0, device->numSensors(), "Clusters on track");
   HistAxis axChi2(0, reducedChi2Max, bins, "#chi^2 / degrees of freedom");
   HistAxis axOffX(active.interval(0), bins, "Track offset x");
   HistAxis axOffY(active.interval(1), bins, "Track offset y");
   HistAxis axSlopeX(-slopeMax, slopeMax, bins, "Track slope x");
   HistAxis axSlopeY(-slopeMax, slopeMax, bins, "Track slope y");
 
-  m_numClusters = makeH1(sub, "size", axNClusters);
+  m_nTracks = makeH1(sub, "ntracks", axNTracks);
+  m_size = makeH1(sub, "size", axSize);
   m_reducedChi2 = makeH1(sub, "reduced_chi2", axChi2);
   m_offsetXY = makeH2(sub, "offset", axOffX, axOffY);
   m_offsetX = makeH1(sub, "offset_x", axOffX);
@@ -53,11 +55,13 @@ std::string Analyzers::TrackInfo::name() const { return "TrackInfo"; }
 
 void Analyzers::TrackInfo::analyze(const Storage::Event& event)
 {
+  m_nTracks->Fill(event.numTracks());
+
   for (Index itrack = 0; itrack < event.numTracks(); itrack++) {
     const Storage::Track& track = *event.getTrack(itrack);
     const Storage::TrackState& state = track.globalState();
 
-    m_numClusters->Fill(track.numClusters());
+    m_size->Fill(track.numClusters());
     m_reducedChi2->Fill(track.reducedChi2());
     m_offsetXY->Fill(state.offset().x(), state.offset().y());
     m_offsetX->Fill(state.offset().x());

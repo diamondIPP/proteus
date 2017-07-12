@@ -30,15 +30,15 @@ Analyzers::HitInfo::HitInfo(const Mechanics::Device* device,
     HistAxis axCol(area.interval(0), area.length(0), "Hit column");
     HistAxis axRow(area.interval(1), area.length(1), "Hit row");
     HistAxis axTime(0, timeMax, "Hit value");
-    HistAxis axValue(0, valueMax, "Hit value");
+    HistAxis axValue(0, valueMax, "Hit time");
 
     SensorHists sh;
+    sh.nHits = makeH1(sub, "nhits", HistAxis{0, 64, "Hits / event"});
     sh.hitMap = makeH2(sub, "hit_map", axCol, axRow);
     sh.time = makeH1(sub, "time", axTime);
     sh.value = makeH1(sub, "value", axValue);
     sh.meanTimeMap = makeH2(sub, "mean_time_map", axCol, axRow);
     sh.meanValueMap = makeH2(sub, "mean_value_map", axCol, axRow);
-
     for (const auto& region : sensor.regions()) {
       TDirectory* rsub = Utils::makeDir(sub, region.name);
       RegionHists rh;
@@ -46,6 +46,7 @@ Analyzers::HitInfo::HitInfo(const Mechanics::Device* device,
       rh.value = makeH1(rsub, "value", axValue);
       sh.regions.push_back(std::move(rh));
     }
+
     m_hists.push_back(std::move(sh));
   }
 }
@@ -56,8 +57,10 @@ void Analyzers::HitInfo::analyze(const Storage::Event& event)
 {
   for (Index isensor = 0; isensor < m_hists.size(); ++isensor) {
     SensorHists& hists = m_hists[isensor];
-
     const Storage::Plane& plane = *event.getPlane(isensor);
+
+    hists.nHits->Fill(plane.numHits());
+
     for (Index ihit = 0; ihit < plane.numHits(); ++ihit) {
       const Storage::Hit& hit = *plane.getHit(ihit);
 

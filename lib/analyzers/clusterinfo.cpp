@@ -91,8 +91,9 @@ Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
     TDirectory* sub = Utils::makeDir(dir, sensor.name() + "/clusters");
 
     SensorHists hists;
+    hists.nClusters =
+        makeH1(sub, "nclusters", HistAxis{0, 64, "Clusters / event"});
     hists.whole = makeClusterHists(sensor, sensor.sensitiveAreaPixel(), sub);
-
     for (const auto& region : sensor.regions()) {
       TDirectory* rsub = Utils::makeDir(sub, region.name);
       hists.regions.push_back(makeClusterHists(sensor, region.areaPixel, rsub));
@@ -108,11 +109,11 @@ void Analyzers::ClusterInfo::analyze(const Storage::Event& event)
 {
   for (Index isensor = 0; isensor < m_hists.size(); ++isensor) {
     SensorHists& hists = m_hists[isensor];
-
     const Storage::Plane& plane = *event.getPlane(isensor);
+
+    hists.nClusters->Fill(plane.numClusters());
     for (Index icluster = 0; icluster < plane.numClusters(); ++icluster) {
       const Storage::Cluster& cluster = *plane.getCluster(icluster);
-
       hists.fill(cluster);
     }
   }

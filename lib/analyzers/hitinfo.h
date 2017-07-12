@@ -33,6 +33,7 @@ private:
     TH1D* value;
   };
   struct SensorHists {
+    TH1D* nHits;
     TH2D* hitMap;
     TH2D* meanTimeMap;
     TH2D* meanValueMap;
