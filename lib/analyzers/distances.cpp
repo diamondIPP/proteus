@@ -21,14 +21,14 @@ Analyzers::Distances::Hists::Hists(TDirectory* dir,
   HistAxis axV(-distMax, distMax, bins, "Cluster - track position v");
   HistAxis axDist(0, distMax, bins, "Cluster to track absolute distance");
 
-  deltaU = makeH1(dir, prefix + "DeltaU", axU);
-  deltaV = makeH1(dir, prefix + "DeltaV", axV);
-  dist = makeH1(dir, prefix + "Dist", axDist);
+  deltaU = makeH1(dir, prefix + "delta_u", axU);
+  deltaV = makeH1(dir, prefix + "delta_v", axV);
+  dist = makeH1(dir, prefix + "dist", axDist);
   if (0 < d2Max) {
     HistAxis axD2(0, d2Max, bins, "Cluster to track weighted squared distance");
-    d2 = makeH1(dir, prefix + "D2", axD2);
+    d2 = makeH1(dir, prefix + "d2", axD2);
   } else {
-    d2 = NULL;
+    d2 = nullptr;
   }
 }
 
@@ -60,12 +60,10 @@ Analyzers::Distances::Distances(const Mechanics::Device& device,
   double trackMax = std::hypot(area.length(0), area.length(1));
   double matchMax = pixelRange * pitch;
 
-  TDirectory* sub = Utils::makeDir(dir, "Distances");
-
-  m_trackTrack = Hists(sub, sensor.name() + "-TrackTrack-", trackMax, -1, bins);
-  m_trackCluster =
-      Hists(sub, sensor.name() + "-TrackCluster-", trackMax, d2Max, bins);
-  m_match = Hists(sub, sensor.name() + "-Match-", matchMax, d2Max, bins);
+  TDirectory* sub = Utils::makeDir(dir, sensor.name() + "/distances");
+  m_trackTrack = Hists(sub, "track_track-", trackMax, -1, bins);
+  m_trackCluster = Hists(sub, "track_cluster-", trackMax, d2Max, bins);
+  m_match = Hists(sub, "match-", matchMax, d2Max, bins);
 }
 
 std::string Analyzers::Distances::name() const
