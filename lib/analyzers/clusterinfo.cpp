@@ -13,19 +13,19 @@
 void Analyzers::ClusterInfo::ClusterHists::fill(const Storage::Cluster& cluster)
 {
   auto cluPix = cluster.posPixel();
-  clusters->Fill(cluPix.x(), cluPix.y());
+  pos->Fill(cluPix.x(), cluPix.y());
+  value->Fill(cluster.value());
   size->Fill(cluster.size());
   sizeSizeCol->Fill(cluster.size(), cluster.sizeCol());
   sizeSizeRow->Fill(cluster.size(), cluster.sizeRow());
   sizeColSizeRow->Fill(cluster.sizeCol(), cluster.sizeRow());
-  value->Fill(cluster.value());
   sizeValue->Fill(cluster.size(), cluster.value());
   uncertaintyU->Fill(std::sqrt(cluster.covLocal()(0, 0)));
   uncertaintyV->Fill(std::sqrt(cluster.covLocal()(1, 1)));
   for (Index ihit = 0; ihit < cluster.numHits(); ++ihit) {
     const Storage::Hit& hit = *cluster.getHit(ihit);
     auto hitPix = hit.posPixel();
-    clusteredHits->Fill(hitPix.x(), hitPix.y());
+    hitPos->Fill(hitPix.x(), hitPix.y());
     sizeHitTime->Fill(cluster.size(), hit.time());
     sizeHitValue->Fill(cluster.size(), hit.value());
     hitValueHitTime->Fill(hit.value(), hit.time());
@@ -55,30 +55,30 @@ Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
                               TDirectory* sub) {
     HistAxis axClusterCol(area.interval(0), area.length(0), "Cluster column");
     HistAxis axClusterRow(area.interval(1), area.length(1), "Cluster row");
-    HistAxis axHitCol(area.interval(0), area.length(0), "Hit column");
-    HistAxis axHitRow(area.interval(1), area.length(1), "Hit row");
+    HistAxis axValue(0, valueMax, "Cluster value");
     HistAxis axSize(1, sizeMax, "Cluster size");
     HistAxis axSizeCol(1, sizeMax, "Cluster column size");
     HistAxis axSizeRow(1, sizeMax, "Cluster row size");
-    HistAxis axValue(0, valueMax, "Cluster value");
-    HistAxis axHitTime(0, timeMax, "Hit time");
-    HistAxis axHitValue(0, valueMax, "Hit value");
     HistAxis axUnU(0, sensor.pitchCol() / 2, binsUncertainty,
                    "Cluster uncertainty u");
     HistAxis axUnV(0, sensor.pitchRow() / 2, binsUncertainty,
                    "Cluster uncertainty v");
+    HistAxis axHitCol(area.interval(0), area.length(0), "Hit column");
+    HistAxis axHitRow(area.interval(1), area.length(1), "Hit row");
+    HistAxis axHitTime(0, timeMax, "Hit time");
+    HistAxis axHitValue(0, valueMax, "Hit value");
 
     ClusterHists hs;
-    hs.clusters = makeH2(sub, "cluster_map", axClusterCol, axClusterRow);
-    hs.clusteredHits = makeH2(sub, "clustered_hit_map", axHitCol, axHitRow);
+    hs.pos = makeH2(sub, "pos", axClusterCol, axClusterRow);
+    hs.value = makeH1(sub, "value", axValue);
     hs.size = makeH1(sub, "size", axSize);
     hs.sizeSizeCol = makeH2(sub, "size_col-size", axSize, axSizeCol);
     hs.sizeSizeRow = makeH2(sub, "size_row-size", axSize, axSizeRow);
     hs.sizeColSizeRow = makeH2(sub, "size_row-size_col", axSizeCol, axSizeRow);
-    hs.value = makeH1(sub, "value", axValue);
     hs.sizeValue = makeH2(sub, "value-size", axSize, axValue);
     hs.uncertaintyU = makeH1(sub, "uncertainty_u", axUnU);
     hs.uncertaintyV = makeH1(sub, "uncertainty_v", axUnV);
+    hs.hitPos = makeH2(sub, "hit_pos", axHitCol, axHitRow);
     hs.sizeHitTime = makeH2(sub, "hit_time-size", axSize, axHitTime);
     hs.sizeHitValue = makeH2(sub, "hit_value-size", axSize, axHitValue);
     hs.hitValueHitTime =

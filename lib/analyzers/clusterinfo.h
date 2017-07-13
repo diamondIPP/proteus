@@ -34,16 +34,16 @@ public:
 
 private:
   struct ClusterHists {
-    TH2D* clusters;
-    TH2D* clusteredHits;
+    TH2D* pos;
+    TH1D* value;
     TH1D* size;
     TH2D* sizeSizeCol;
     TH2D* sizeSizeRow;
     TH2D* sizeColSizeRow;
-    TH1D* value;
     TH2D* sizeValue;
     TH1D* uncertaintyU;
     TH1D* uncertaintyV;
+    TH2D* hitPos;
     TH2D* sizeHitValue;
     TH2D* sizeHitTime;
     TH2D* hitValueHitTime;
