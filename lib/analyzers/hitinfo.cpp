@@ -34,7 +34,7 @@ Analyzers::HitInfo::HitInfo(const Mechanics::Device* device,
 
     SensorHists sh;
     sh.nHits = makeH1(sub, "nhits", HistAxis{0, 64, "Hits / event"});
-    sh.hitMap = makeH2(sub, "hit_map", axCol, axRow);
+    sh.pos = makeH2(sub, "pos", axCol, axRow);
     sh.time = makeH1(sub, "time", axTime);
     sh.value = makeH1(sub, "value", axValue);
     sh.meanTimeMap = makeH2(sub, "mean_time_map", axCol, axRow);
@@ -64,7 +64,7 @@ void Analyzers::HitInfo::analyze(const Storage::Event& event)
     for (Index ihit = 0; ihit < plane.numHits(); ++ihit) {
       const Storage::Hit& hit = *plane.getHit(ihit);
 
-      hists.hitMap->Fill(hit.col(), hit.row());
+      hists.pos->Fill(hit.col(), hit.row());
       hists.time->Fill(hit.time());
       hists.value->Fill(hit.value());
       hists.meanTimeMap->Fill(hit.col(), hit.row(), hit.time());
@@ -81,7 +81,7 @@ void Analyzers::HitInfo::finalize()
 {
   // scale from integrated time/value to mean
   for (auto& hists : m_hists) {
-    hists.meanTimeMap->Divide(hists.hitMap);
-    hists.meanValueMap->Divide(hists.hitMap);
+    hists.meanTimeMap->Divide(hists.pos);
+    hists.meanValueMap->Divide(hists.pos);
   }
 }

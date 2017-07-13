@@ -34,11 +34,11 @@ private:
   };
   struct SensorHists {
     TH1D* nHits;
-    TH2D* hitMap;
-    TH2D* meanTimeMap;
-    TH2D* meanValueMap;
+    TH2D* pos;
     TH1D* time;
     TH1D* value;
+    TH2D* meanTimeMap;
+    TH2D* meanValueMap;
     std::vector<RegionHists> regions;
   };
 
