@@ -13,11 +13,11 @@ class TH2D;
 namespace Storage {
 class Cluster;
 class TrackState;
-}
+} // namespace Storage
 namespace Mechanics {
 class Device;
 class Sensor;
-}
+} // namespace Mechanics
 
 namespace Analyzers {
 namespace detail {
@@ -40,7 +40,8 @@ struct SensorResidualHists {
                       const Mechanics::Sensor& sensor,
                       const double pixelRange,
                       const double slopeRange,
-                      const int bins);
+                      const int bins,
+                      const std::string& name = std::string("residuals"));
 
   void fill(const Storage::TrackState& state, const Storage::Cluster& cluster);
 };

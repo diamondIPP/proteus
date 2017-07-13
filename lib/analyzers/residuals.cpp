@@ -21,7 +21,8 @@ Analyzers::detail::SensorResidualHists::SensorResidualHists(
     const Mechanics::Sensor& sensor,
     const double pixelRange,
     const double slopeRange,
-    const int bins)
+    const int bins,
+    const std::string& name)
 {
   using namespace Utils;
 
@@ -29,28 +30,27 @@ Analyzers::detail::SensorResidualHists::SensorResidualHists(
       pixelRange * std::hypot(sensor.pitchCol(), sensor.pitchRow());
   auto rangeU = sensor.sensitiveAreaLocal().interval(0);
   auto rangeV = sensor.sensitiveAreaLocal().interval(1);
-  auto name = [&](const std::string& suffix) {
-    return sensor.name() + '-' + suffix;
-  };
+
+  TDirectory* sub = makeDir(dir, sensor.name() + "/" + name);
 
   HistAxis axResU(-resRange, resRange, bins, "Cluster - track residual u");
   HistAxis axResV(-resRange, resRange, bins, "Cluster - track residual v");
-  HistAxis axTrackU(rangeU, bins, "Local track position u");
-  HistAxis axTrackV(rangeV, bins, "Local track position v");
+  HistAxis axPosU(rangeU, bins, "Local track position u");
+  HistAxis axPosV(rangeV, bins, "Local track position v");
   HistAxis axSlopeU(-slopeRange, slopeRange, bins, "Local track slope u");
   HistAxis axSlopeV(-slopeRange, slopeRange, bins, "Local track slope v");
 
-  resU = makeH1(dir, name("ResU"), axResU);
-  trackUResU = makeH2(dir, name("ResU_TrackU"), axTrackU, axResU);
-  trackVResU = makeH2(dir, name("ResU_TrackV"), axTrackV, axResU);
-  slopeUResU = makeH2(dir, name("ResU_SlopeU"), axSlopeU, axResU);
-  slopeVResU = makeH2(dir, name("ResU_SlopeV"), axSlopeV, axResU);
-  resV = makeH1(dir, name("ResV"), axResV);
-  trackUResV = makeH2(dir, name("ResV_TrackU"), axTrackU, axResV);
-  trackVResV = makeH2(dir, name("ResV_TrackV"), axTrackV, axResV);
-  slopeUResV = makeH2(dir, name("ResV_SlopeU"), axSlopeU, axResV);
-  slopeVResV = makeH2(dir, name("ResV_SlopeV"), axSlopeV, axResV);
-  resUV = makeH2(dir, name("ResUV"), axResU, axResV);
+  resU = makeH1(sub, "res_u", axResU);
+  trackUResU = makeH2(sub, "res_u-pos_u", axPosU, axResU);
+  trackVResU = makeH2(sub, "res_u-pos_v", axPosV, axResU);
+  slopeUResU = makeH2(sub, "res_u-slope_u", axSlopeU, axResU);
+  slopeVResU = makeH2(sub, "res_u-slope_v", axSlopeV, axResU);
+  resV = makeH1(sub, "res_v", axResV);
+  trackUResV = makeH2(sub, "res_v-pos_u", axPosU, axResV);
+  trackVResV = makeH2(sub, "res_v-pos_v", axPosV, axResV);
+  slopeUResV = makeH2(sub, "res_v-slope_u", axSlopeU, axResV);
+  slopeVResV = makeH2(sub, "res_v-slope_v", axSlopeV, axResV);
+  resUV = makeH2(sub, "res_uv", axResU, axResV);
 }
 
 void Analyzers::detail::SensorResidualHists::fill(
@@ -79,12 +79,9 @@ Analyzers::Residuals::Residuals(const Mechanics::Device* device,
 {
   assert(device && "Analyzer: can't initialize with null device");
 
-  // Makes or gets a directory called from inside _dir with this name
-  TDirectory* sub = Utils::makeDir(dir, "Residuals");
-
   for (Index isensor = 0; isensor < device->numSensors(); ++isensor) {
-    m_hists.emplace_back(sub, *device->getSensor(isensor), pixelRange,
-                         slopeRange, bins);
+    m_hists.emplace_back(dir, *device->getSensor(isensor), pixelRange,
+                         slopeRange, bins, "residuals");
   }
 }
 
@@ -108,7 +105,7 @@ void Analyzers::Residuals::analyze(const Storage::Event& event)
 void Analyzers::Residuals::finalize() {}
 
 Analyzers::UnbiasedResiduals::UnbiasedResiduals(const Mechanics::Device& device,
-                                                TDirectory* parent,
+                                                TDirectory* dir,
                                                 const double pixelRange,
                                                 const double slopeRange,
                                                 const int bins)
@@ -116,11 +113,9 @@ Analyzers::UnbiasedResiduals::UnbiasedResiduals(const Mechanics::Device& device,
 {
   using Mechanics::Sensor;
 
-  TDirectory* dir = parent->mkdir("UnbiasedResiduals");
-
   for (Index isensor = 0; isensor < device.numSensors(); ++isensor) {
     m_hists.emplace_back(dir, *device.getSensor(isensor), pixelRange,
-                         slopeRange, bins);
+                         slopeRange, bins, "residuals_unbiased");
   }
 }
 
