@@ -52,6 +52,7 @@ private:
   };
   struct SensorHists {
     TH1D* nClusters;
+    TH1D* rate;
     ClusterHists whole;
     std::vector<ClusterHists> regions;
 

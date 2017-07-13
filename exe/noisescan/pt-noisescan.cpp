@@ -15,9 +15,9 @@
 
 #include <TFile.h>
 
-#include "analyzers/occupancy.h"
-#include "io/rceroot.h"
+#include "analyzers/hitinfo.h"
 #include "mechanics/device.h"
+#include "noisescan.h"
 #include "utils/application.h"
 #include "utils/eventloop.h"
 #include "utils/logger.h"
@@ -66,8 +66,7 @@ int main(int argc, char const* argv[])
   }
 
   Utils::EventLoop loop = app.makeEventLoop();
-  loop.addAnalyzer(
-      std::make_shared<Analyzers::Occupancy>(&app.device(), hists));
+  loop.addAnalyzer(std::make_shared<Analyzers::HitInfo>(&app.device(), hists));
   for (auto noise = noiseScans.begin(); noise != noiseScans.end(); ++noise)
     loop.addAnalyzer(*noise);
   loop.run();

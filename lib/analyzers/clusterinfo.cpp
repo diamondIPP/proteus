@@ -93,6 +93,8 @@ Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
     SensorHists hists;
     hists.nClusters =
         makeH1(sub, "nclusters", HistAxis{0, 64, "Clusters / event"});
+    hists.rate =
+        makeH1(sub, "rate", HistAxis{0, 1.0, 128, "Clusters / pixel / event"});
     hists.whole = makeClusterHists(sensor, sensor.sensitiveAreaPixel(), sub);
     for (const auto& region : sensor.regions()) {
       TDirectory* rsub = Utils::makeDir(sub, region.name);
@@ -119,4 +121,22 @@ void Analyzers::ClusterInfo::analyze(const Storage::Event& event)
   }
 }
 
-void Analyzers::ClusterInfo::finalize() {}
+void Analyzers::ClusterInfo::finalize()
+{
+  auto fillRate = [](const TH2D* map, const double numEvents, TH1D* rate) {
+    // rescale rate histogram to available range
+    rate->SetBins(rate->GetNbinsX(), 0, map->GetMaximum() / numEvents);
+    rate->Reset();
+    // fill rate
+    for (int ix = 1; ix <= map->GetNbinsX(); ++ix) {
+      for (int iy = 1; iy <= map->GetNbinsY(); ++iy) {
+        auto count = map->GetBinContent(ix, iy);
+        if (count != 0)
+          rate->Fill(count / numEvents);
+      }
+    }
+  };
+
+  for (auto& hists : m_hists)
+    fillRate(hists.whole.pos, hists.nClusters->GetEntries(), hists.rate);
+}

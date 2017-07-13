@@ -34,6 +34,7 @@ private:
   };
   struct SensorHists {
     TH1D* nHits;
+    TH1D* rate;
     TH2D* pos;
     TH1D* time;
     TH1D* value;

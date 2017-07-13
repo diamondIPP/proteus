@@ -9,7 +9,6 @@ set(SOURCES
     analyzers/eventinfo.cpp
     analyzers/eventprinter.cpp
     analyzers/hitinfo.cpp
-    analyzers/occupancy.cpp
     analyzers/trackinfo.cpp
     analyzers/residuals.cpp
 #   converters/kartelconvert.cpp

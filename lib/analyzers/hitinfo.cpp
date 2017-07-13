@@ -34,6 +34,8 @@ Analyzers::HitInfo::HitInfo(const Mechanics::Device* device,
 
     SensorHists sh;
     sh.nHits = makeH1(sub, "nhits", HistAxis{0, 64, "Hits / event"});
+    sh.rate =
+        makeH1(sub, "rate", HistAxis{0.0, 1.0, 128, "Hits / pixel / event"});
     sh.pos = makeH2(sub, "pos", axCol, axRow);
     sh.time = makeH1(sub, "time", axTime);
     sh.value = makeH1(sub, "value", axValue);
@@ -79,8 +81,23 @@ void Analyzers::HitInfo::analyze(const Storage::Event& event)
 
 void Analyzers::HitInfo::finalize()
 {
-  // scale from integrated time/value to mean
+  auto fillRate = [](const TH2D* map, const double numEvents, TH1D* rate) {
+    // rescale rate histogram to available range
+    rate->SetBins(rate->GetNbinsX(), 0, map->GetMaximum() / numEvents);
+    rate->Reset();
+    // fill rate
+    for (int ix = 1; ix <= map->GetNbinsX(); ++ix) {
+      for (int iy = 1; iy <= map->GetNbinsY(); ++iy) {
+        auto count = map->GetBinContent(ix, iy);
+        if (count != 0)
+          rate->Fill(count / numEvents);
+      }
+    }
+  };
+
   for (auto& hists : m_hists) {
+    fillRate(hists.pos, hists.nHits->GetEntries(), hists.rate);
+    // scale from integrated time/value to mean
     hists.meanTimeMap->Divide(hists.pos);
     hists.meanValueMap->Divide(hists.pos);
   }
