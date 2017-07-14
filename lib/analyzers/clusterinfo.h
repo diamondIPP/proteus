@@ -10,14 +10,52 @@ class TH1D;
 class TH2D;
 
 namespace Storage {
-class Cluster;
+class Plane;
 }
 namespace Mechanics {
 class Device;
-}
+class Sensor;
+} // namespace Mechanics
 
 namespace Analyzers {
 
+/** Cluster histograms for a single sensor. */
+class SensorClusters {
+public:
+  SensorClusters(TDirectory* dir,
+                 const Mechanics::Sensor& sensor,
+                 const int timeMax,
+                 const int valueMax,
+                 const int sizeMax,
+                 const int binsUncertainty);
+
+  void analyze(const Storage::Plane& sensorEvent);
+  void finalize();
+
+private:
+  struct AreaHists {
+    TH2D* pos;
+    TH1D* value;
+    TH1D* size;
+    TH2D* sizeSizeCol;
+    TH2D* sizeSizeRow;
+    TH2D* sizeColSizeRow;
+    TH2D* sizeValue;
+    TH1D* uncertaintyU;
+    TH1D* uncertaintyV;
+    TH2D* hitPos;
+    TH2D* sizeHitTime;
+    TH2D* sizeHitValue;
+    TH2D* hitValueHitTime;
+  };
+
+  TH1D* m_nClusters;
+  TH1D* m_rate;
+  AreaHists m_whole;
+  std::vector<AreaHists> m_regions;
+};
+
+/** Cluster histograms for all sensors in the device. */
 class ClusterInfo : public Analyzer {
 public:
   ClusterInfo(const Mechanics::Device* device,
@@ -33,33 +71,7 @@ public:
   void finalize();
 
 private:
-  struct ClusterHists {
-    TH2D* pos;
-    TH1D* value;
-    TH1D* size;
-    TH2D* sizeSizeCol;
-    TH2D* sizeSizeRow;
-    TH2D* sizeColSizeRow;
-    TH2D* sizeValue;
-    TH1D* uncertaintyU;
-    TH1D* uncertaintyV;
-    TH2D* hitPos;
-    TH2D* sizeHitValue;
-    TH2D* sizeHitTime;
-    TH2D* hitValueHitTime;
-
-    void fill(const Storage::Cluster& cluster);
-  };
-  struct SensorHists {
-    TH1D* nClusters;
-    TH1D* rate;
-    ClusterHists whole;
-    std::vector<ClusterHists> regions;
-
-    void fill(const Storage::Cluster& cluster);
-  };
-
-  std::vector<SensorHists> m_hists;
+  std::vector<SensorClusters> m_sensors;
 };
 
 } // namespace Analyzers
