@@ -39,7 +39,7 @@ int main(int argc, char const* argv[])
       std::make_shared<Tracking::StraightFitter>(app.device(), sensorIds));
   for (auto sensorId : sensorIds)
     loop.addProcessor(std::make_shared<Matcher>(app.device(), sensorId));
-  loop.addAnalyzer(std::make_shared<TrackInfo>(&app.device(), &hists));
+  loop.addAnalyzer(std::make_shared<Tracks>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(app.device(), &hists));
   for (auto sensorId : sensorIds) {
     loop.addAnalyzer(

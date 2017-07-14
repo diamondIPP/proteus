@@ -15,14 +15,14 @@ class Device;
 
 namespace Analyzers {
 
-class TrackInfo : public Analyzer {
+class Tracks : public Analyzer {
 public:
-  TrackInfo(const Mechanics::Device* device,
-            TDirectory* dir,
-            /* Histogram options */
-            const double reducedChi2Max = 10,
-            const double slopeMax = 0.01,
-            const int bins = 128);
+  Tracks(const Mechanics::Device* device,
+         TDirectory* dir,
+         /* Histogram options */
+         const double reducedChi2Max = 10,
+         const double slopeMax = 0.01,
+         const int bins = 128);
 
   std::string name() const;
   void analyze(const Storage::Event& event);

@@ -186,7 +186,7 @@ int main(int argc, char const* argv[])
       // use (unbiased) track residuals to align
       loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
           dev, sensorIds, sensorIds.size(), searchSigmaMax, redChi2Max));
-      loop.addAnalyzer(std::make_shared<TrackInfo>(&dev, stepDir));
+      loop.addAnalyzer(std::make_shared<Tracks>(&dev, stepDir));
       loop.addAnalyzer(std::make_shared<Residuals>(&dev, stepDir));
       aligner =
           std::make_shared<ResidualsAligner>(dev, alignIds, stepDir, damping);

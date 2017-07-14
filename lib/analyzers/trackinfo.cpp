@@ -12,11 +12,11 @@
 #include "storage/event.h"
 #include "utils/root.h"
 
-Analyzers::TrackInfo::TrackInfo(const Mechanics::Device* device,
-                                TDirectory* dir,
-                                const double reducedChi2Max,
-                                const double slopeMax,
-                                const int bins)
+Analyzers::Tracks::Tracks(const Mechanics::Device* device,
+                          TDirectory* dir,
+                          const double reducedChi2Max,
+                          const double slopeMax,
+                          const int bins)
 {
   using namespace Utils;
 
@@ -51,9 +51,9 @@ Analyzers::TrackInfo::TrackInfo(const Mechanics::Device* device,
   m_slopeY = makeH1(sub, "slope_y", axSlopeY);
 }
 
-std::string Analyzers::TrackInfo::name() const { return "TrackInfo"; }
+std::string Analyzers::Tracks::name() const { return "Tracks"; }
 
-void Analyzers::TrackInfo::analyze(const Storage::Event& event)
+void Analyzers::Tracks::analyze(const Storage::Event& event)
 {
   m_nTracks->Fill(event.numTracks());
 
@@ -72,4 +72,4 @@ void Analyzers::TrackInfo::analyze(const Storage::Event& event)
   }
 }
 
-void Analyzers::TrackInfo::finalize() {}
+void Analyzers::Tracks::finalize() {}

@@ -52,7 +52,7 @@ int main(int argc, char const* argv[])
   loop.addAnalyzer(std::make_shared<Hits>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<Clusters>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<Correlations>(&app.device(), &hists));
-  loop.addAnalyzer(std::make_shared<TrackInfo>(&app.device(), &hists));
+  loop.addAnalyzer(std::make_shared<Tracks>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<Residuals>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(app.device(), &hists));
   loop.addWriter(std::make_shared<Io::RceRootWriter>(
