@@ -117,12 +117,12 @@ void Analyzers::SensorClusters::finalize()
   }
 }
 
-Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
-                                    TDirectory* dir,
-                                    const int sizeMax,
-                                    const int timeMax,
-                                    const int valueMax,
-                                    const int binsUncertainty)
+Analyzers::Clusters::Clusters(const Mechanics::Device* device,
+                              TDirectory* dir,
+                              const int sizeMax,
+                              const int timeMax,
+                              const int valueMax,
+                              const int binsUncertainty)
 {
   using namespace Utils;
 
@@ -133,15 +133,15 @@ Analyzers::ClusterInfo::ClusterInfo(const Mechanics::Device* device,
                            sizeMax, binsUncertainty);
 }
 
-std::string Analyzers::ClusterInfo::name() const { return "ClusterInfo"; }
+std::string Analyzers::Clusters::name() const { return "ClusterInfo"; }
 
-void Analyzers::ClusterInfo::analyze(const Storage::Event& event)
+void Analyzers::Clusters::analyze(const Storage::Event& event)
 {
   for (Index isensor = 0; isensor < m_sensors.size(); ++isensor)
     m_sensors[isensor].analyze(*event.getPlane(isensor));
 }
 
-void Analyzers::ClusterInfo::finalize()
+void Analyzers::Clusters::finalize()
 {
   for (auto& sensor : m_sensors)
     sensor.finalize();

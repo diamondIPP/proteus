@@ -56,15 +56,15 @@ private:
 };
 
 /** Cluster histograms for all sensors in the device. */
-class ClusterInfo : public Analyzer {
+class Clusters : public Analyzer {
 public:
-  ClusterInfo(const Mechanics::Device* device,
-              TDirectory* dir,
-              /* Histogram options */
-              const int sizeMax = 8,
-              const int timeMax = 32,
-              const int valueMax = 32,
-              const int binsUncertainty = 32);
+  Clusters(const Mechanics::Device* device,
+           TDirectory* dir,
+           /* Histogram options */
+           const int sizeMax = 8,
+           const int timeMax = 32,
+           const int valueMax = 32,
+           const int binsUncertainty = 32);
 
   std::string name() const;
   void analyze(const Storage::Event& event);

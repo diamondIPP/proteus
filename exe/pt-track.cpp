@@ -50,7 +50,7 @@ int main(int argc, char const* argv[])
       app.device(), sensorIds, numPointsMin, searchSigmaMax, redChi2Max));
   loop.addAnalyzer(std::make_shared<EventInfo>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<Hits>(&app.device(), &hists));
-  loop.addAnalyzer(std::make_shared<ClusterInfo>(&app.device(), &hists));
+  loop.addAnalyzer(std::make_shared<Clusters>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<Correlations>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<TrackInfo>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<Residuals>(&app.device(), &hists));
