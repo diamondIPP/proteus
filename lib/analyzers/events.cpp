@@ -1,4 +1,4 @@
-#include "eventinfo.h"
+#include "events.h"
 
 #include <cassert>
 #include <cmath>
@@ -9,14 +9,11 @@
 
 #include "mechanics/device.h"
 #include "storage/event.h"
-#include "utils/logger.h"
 #include "utils/root.h"
 
-PT_SETUP_LOCAL_LOGGER(EventInfo)
-
-Analyzers::EventInfo::EventInfo(const Mechanics::Device* device,
-                                TDirectory* dir,
-                                const int binsTimestamps)
+Analyzers::Events::Events(const Mechanics::Device* device,
+                          TDirectory* dir,
+                          const int binsTimestamps)
 {
   using namespace Utils;
 
@@ -31,12 +28,12 @@ Analyzers::EventInfo::EventInfo(const Mechanics::Device* device,
       makeH1(sub, "trigger_phase", HistAxis{0, triggerMax, "Trigger phase"});
 }
 
-std::string Analyzers::EventInfo::name() const { return "EventInfo"; }
+std::string Analyzers::Events::name() const { return "Events"; }
 
-void Analyzers::EventInfo::analyze(const Storage::Event& event)
+void Analyzers::Events::analyze(const Storage::Event& event)
 {
   m_triggerOffset->Fill(event.triggerOffset());
   m_triggerPhase->Fill(event.triggerPhase());
 }
 
-void Analyzers::EventInfo::finalize() {}
+void Analyzers::Events::finalize() {}

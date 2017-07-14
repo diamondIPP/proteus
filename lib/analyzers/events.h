@@ -1,5 +1,5 @@
-#ifndef PT_EVENTINFO_H
-#define PT_EVENTINFO_H
+#ifndef PT_EVENTS_H
+#define PT_EVENTS_H
 
 #include <vector>
 
@@ -15,12 +15,12 @@ class Device;
 namespace Analyzers {
 
 /** Overall event information, e.g. timing and hit and cluster rates. */
-class EventInfo : public Analyzer {
+class Events : public Analyzer {
 public:
-  EventInfo(const Mechanics::Device* device,
-            TDirectory* dir,
-            /* Histogram options */
-            const int binsTimestamps = 1024);
+  Events(const Mechanics::Device* device,
+         TDirectory* dir,
+         /* Histogram options */
+         const int binsTimestamps = 1024);
 
   std::string name() const;
   void analyze(const Storage::Event& event);

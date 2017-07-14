@@ -6,7 +6,7 @@ set(SOURCES
 #   analyzers/depiction.cpp
     analyzers/distances.cpp
 #   analyzers/efficiency.cpp
-    analyzers/eventinfo.cpp
+    analyzers/events.cpp
     analyzers/eventprinter.cpp
     analyzers/hits.cpp
     analyzers/tracks.cpp

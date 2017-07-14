@@ -8,7 +8,7 @@
 
 #include "analyzers/clusters.h"
 #include "analyzers/correlations.h"
-#include "analyzers/eventinfo.h"
+#include "analyzers/events.h"
 #include "analyzers/hits.h"
 #include "analyzers/residuals.h"
 #include "analyzers/tracks.h"
@@ -48,7 +48,7 @@ int main(int argc, char const* argv[])
   loop.addProcessor(std::make_shared<ApplyGeometry>(app.device()));
   loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
       app.device(), sensorIds, numPointsMin, searchSigmaMax, redChi2Max));
-  loop.addAnalyzer(std::make_shared<EventInfo>(&app.device(), &hists));
+  loop.addAnalyzer(std::make_shared<Events>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<Hits>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<Clusters>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<Correlations>(&app.device(), &hists));
