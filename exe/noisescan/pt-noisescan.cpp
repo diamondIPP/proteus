@@ -66,7 +66,7 @@ int main(int argc, char const* argv[])
   }
 
   Utils::EventLoop loop = app.makeEventLoop();
-  loop.addAnalyzer(std::make_shared<Analyzers::HitInfo>(&app.device(), hists));
+  loop.addAnalyzer(std::make_shared<Analyzers::Hits>(&app.device(), hists));
   for (auto noise = noiseScans.begin(); noise != noiseScans.end(); ++noise)
     loop.addAnalyzer(*noise);
   loop.run();

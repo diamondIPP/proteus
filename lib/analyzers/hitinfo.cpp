@@ -12,10 +12,10 @@
 #include "storage/event.h"
 #include "utils/root.h"
 
-Analyzers::SensorHitInfo::SensorHitInfo(TDirectory* dir,
-                                        const Mechanics::Sensor& sensor,
-                                        const int timeMax,
-                                        const int valueMax)
+Analyzers::SensorHits::SensorHits(TDirectory* dir,
+                                  const Mechanics::Sensor& sensor,
+                                  const int timeMax,
+                                  const int valueMax)
 
 {
   using namespace Utils;
@@ -45,7 +45,7 @@ Analyzers::SensorHitInfo::SensorHitInfo(TDirectory* dir,
   }
 }
 
-void Analyzers::SensorHitInfo::analyze(const Storage::Plane& sensorEvent)
+void Analyzers::SensorHits::analyze(const Storage::Plane& sensorEvent)
 {
   m_nHits->Fill(sensorEvent.numHits());
 
@@ -64,7 +64,7 @@ void Analyzers::SensorHitInfo::analyze(const Storage::Plane& sensorEvent)
   }
 }
 
-void Analyzers::SensorHitInfo::finalize()
+void Analyzers::SensorHits::finalize()
 {
   // rescale rate histogram to available range
   auto numEvents = m_nHits->GetEntries();
@@ -83,10 +83,10 @@ void Analyzers::SensorHitInfo::finalize()
   m_meanValueMap->Divide(m_pos);
 }
 
-Analyzers::HitInfo::HitInfo(const Mechanics::Device* device,
-                            TDirectory* dir,
-                            const int timeMax,
-                            const int valueMax)
+Analyzers::Hits::Hits(const Mechanics::Device* device,
+                      TDirectory* dir,
+                      const int timeMax,
+                      const int valueMax)
 {
   assert(device && "Analyzer: can't initialize with null device");
 
@@ -94,16 +94,16 @@ Analyzers::HitInfo::HitInfo(const Mechanics::Device* device,
     m_sensors.emplace_back(dir, *device->getSensor(isensor), timeMax, valueMax);
 }
 
-std::string Analyzers::HitInfo::name() const { return "HitInfo"; }
+std::string Analyzers::Hits::name() const { return "Hits"; }
 
-void Analyzers::HitInfo::analyze(const Storage::Event& event)
+void Analyzers::Hits::analyze(const Storage::Event& event)
 {
   for (Index isensor = 0; isensor < event.numPlanes(); ++isensor) {
     m_sensors[isensor].analyze(*event.getPlane(isensor));
   }
 }
 
-void Analyzers::HitInfo::finalize()
+void Analyzers::Hits::finalize()
 {
   for (auto& sensor : m_sensors)
     sensor.finalize();

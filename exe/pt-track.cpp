@@ -49,7 +49,7 @@ int main(int argc, char const* argv[])
   loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
       app.device(), sensorIds, numPointsMin, searchSigmaMax, redChi2Max));
   loop.addAnalyzer(std::make_shared<EventInfo>(&app.device(), &hists));
-  loop.addAnalyzer(std::make_shared<HitInfo>(&app.device(), &hists));
+  loop.addAnalyzer(std::make_shared<Hits>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<ClusterInfo>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<Correlations>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<TrackInfo>(&app.device(), &hists));

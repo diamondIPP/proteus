@@ -20,12 +20,12 @@ class Plane;
 namespace Analyzers {
 
 /** Hit histograms for a single sensor. */
-class SensorHitInfo {
+class SensorHits {
 public:
-  SensorHitInfo(TDirectory* dir,
-                const Mechanics::Sensor& sensor,
-                const int timeMax,
-                const int valueMax);
+  SensorHits(TDirectory* dir,
+             const Mechanics::Sensor& sensor,
+             const int timeMax,
+             const int valueMax);
 
   void analyze(const Storage::Plane& sensorEvent);
   void finalize();
@@ -47,20 +47,20 @@ private:
 };
 
 /** Hit histograms for all sensors in the device. */
-class HitInfo : public Analyzer {
+class Hits : public Analyzer {
 public:
-  HitInfo(const Mechanics::Device* device,
-          TDirectory* dir,
-          /* Histogram options */
-          const int timeMax = 16,
-          const int valueMax = 16);
+  Hits(const Mechanics::Device* device,
+       TDirectory* dir,
+       /* Histogram options */
+       const int timeMax = 16,
+       const int valueMax = 16);
 
   std::string name() const;
   void analyze(const Storage::Event& event);
   void finalize();
 
 private:
-  std::vector<SensorHitInfo> m_sensors;
+  std::vector<SensorHits> m_sensors;
 };
 
 } // namespace Analyzers
