@@ -1,5 +1,5 @@
-#ifndef PT_HITINFO_H
-#define PT_HITINFO_H
+#ifndef PT_HITS_H
+#define PT_HITS_H
 
 #include <vector>
 
@@ -65,4 +65,4 @@ private:
 
 } // namespace Analyzers
 
-#endif // PT_HITINFO_H
+#endif // PT_HITS_H

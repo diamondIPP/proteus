@@ -8,8 +8,7 @@
 
 #include "analyzers/correlations.h"
 #include "analyzers/residuals.h"
-#include "analyzers/trackinfo.h"
-#include "io/rceroot.h"
+#include "analyzers/tracks.h"
 #include "mechanics/device.h"
 #include "processors/applygeometry.h"
 #include "processors/setupsensors.h"

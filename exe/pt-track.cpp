@@ -6,12 +6,12 @@
 #include <TFile.h>
 #include <TTree.h>
 
-#include "analyzers/clusterinfo.h"
+#include "analyzers/clusters.h"
 #include "analyzers/correlations.h"
 #include "analyzers/eventinfo.h"
-#include "analyzers/hitinfo.h"
+#include "analyzers/hits.h"
 #include "analyzers/residuals.h"
-#include "analyzers/trackinfo.h"
+#include "analyzers/tracks.h"
 #include "io/rceroot.h"
 #include "mechanics/device.h"
 #include "processors/applygeometry.h"

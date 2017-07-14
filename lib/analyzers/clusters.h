@@ -1,5 +1,5 @@
-#ifndef PT_CLUSTERINFO_H
-#define PT_CLUSTERINFO_H
+#ifndef PT_CLUSTERS_H
+#define PT_CLUSTERS_H
 
 #include <vector>
 

@@ -15,7 +15,7 @@
 
 #include <TFile.h>
 
-#include "analyzers/hitinfo.h"
+#include "analyzers/hits.h"
 #include "mechanics/device.h"
 #include "noisescan.h"
 #include "utils/application.h"

@@ -1,4 +1,4 @@
-#include "hitinfo.h"
+#include "hits.h"
 
 #include <cassert>
 #include <cmath>

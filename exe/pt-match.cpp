@@ -4,7 +4,7 @@
 #include "analyzers/basicefficiency.h"
 #include "analyzers/distances.h"
 #include "analyzers/residuals.h"
-#include "analyzers/trackinfo.h"
+#include "analyzers/tracks.h"
 #include "io/match.h"
 #include "io/rceroot.h"
 #include "mechanics/device.h"

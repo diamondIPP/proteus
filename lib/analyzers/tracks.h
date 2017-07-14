@@ -1,5 +1,5 @@
-#ifndef PT_TRACKINFO_H
-#define PT_TRACKINFO_H
+#ifndef PT_TRACKS_H
+#define PT_TRACKS_H
 
 #include <vector>
 
@@ -42,4 +42,4 @@ private:
 
 } // namespace Analyzers
 
-#endif // PT_TRACKINFO_H
+#endif // PT_TRACKS_H

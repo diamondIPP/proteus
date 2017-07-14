@@ -1,15 +1,15 @@
 set(SOURCES
     analyzers/analyzer.cpp
     analyzers/basicefficiency.cpp
-    analyzers/clusterinfo.cpp
+    analyzers/clusters.cpp
     analyzers/correlations.cpp
 #   analyzers/depiction.cpp
     analyzers/distances.cpp
 #   analyzers/efficiency.cpp
     analyzers/eventinfo.cpp
     analyzers/eventprinter.cpp
-    analyzers/hitinfo.cpp
-    analyzers/trackinfo.cpp
+    analyzers/hits.cpp
+    analyzers/tracks.cpp
     analyzers/residuals.cpp
 #   converters/kartelconvert.cpp
     io/match.cpp

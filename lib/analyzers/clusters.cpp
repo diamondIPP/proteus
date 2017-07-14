@@ -1,4 +1,4 @@
-#include "clusterinfo.h"
+#include "clusters.h"
 
 #include <cassert>
 
