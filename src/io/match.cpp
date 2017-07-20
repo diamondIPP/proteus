@@ -1,4 +1,4 @@
-#include "matchexporter.h"
+#include "match.h"
 
 #include <cassert>
 #include <limits>
@@ -13,7 +13,7 @@
 
 PT_SETUP_GLOBAL_LOGGER
 
-void Analyzers::MatchExporter::EventData::addToTree(TTree* tree)
+void Io::MatchWriter::EventData::addToTree(TTree* tree)
 {
   assert(tree);
 
@@ -23,16 +23,16 @@ void Analyzers::MatchExporter::EventData::addToTree(TTree* tree)
   tree->Branch("evt_ntracks", &nTracks);
 }
 
-void Analyzers::MatchExporter::EventData::set(const Storage::Event& e,
-                                              const Storage::Plane& s)
+void Io::MatchWriter::EventData::set(const Storage::Event& e,
+                                     const Storage::Plane& s)
 {
-  frame = e.frameNumber();
+  frame = e.frame();
   timestamp = e.timestamp();
   nClusters = s.numClusters();
   nTracks = e.numTracks();
 }
 
-void Analyzers::MatchExporter::TrackData::addToTree(TTree* tree)
+void Io::MatchWriter::TrackData::addToTree(TTree* tree)
 {
   assert(tree);
 
@@ -50,7 +50,7 @@ void Analyzers::MatchExporter::TrackData::addToTree(TTree* tree)
   tree->Branch("trk_size", &size);
 }
 
-void Analyzers::MatchExporter::ClusterData::addToTree(TTree* tree)
+void Io::MatchWriter::ClusterData::addToTree(TTree* tree)
 {
   assert(tree);
 
@@ -73,7 +73,7 @@ void Analyzers::MatchExporter::ClusterData::addToTree(TTree* tree)
   tree->Branch("hit_value", &hitValue, "hit_value[clu_size]/F");
 }
 
-void Analyzers::MatchExporter::ClusterData::set(const Storage::Cluster& c)
+void Io::MatchWriter::ClusterData::set(const Storage::Cluster& c)
 {
   u = c.posLocal().x();
   v = c.posLocal().y();
@@ -97,7 +97,7 @@ void Analyzers::MatchExporter::ClusterData::set(const Storage::Cluster& c)
   }
 }
 
-void Analyzers::MatchExporter::ClusterData::invalidate()
+void Io::MatchWriter::ClusterData::invalidate()
 {
   u = std::numeric_limits<float>::quiet_NaN();
   v = std::numeric_limits<float>::quiet_NaN();
@@ -114,7 +114,7 @@ void Analyzers::MatchExporter::ClusterData::invalidate()
   sizeRow = 0;
 }
 
-void Analyzers::MatchExporter::MaskData::addToTree(TTree* tree)
+void Io::MatchWriter::MaskData::addToTree(TTree* tree)
 {
   assert(tree);
 
@@ -122,19 +122,19 @@ void Analyzers::MatchExporter::MaskData::addToTree(TTree* tree)
   tree->Branch("row", &row);
 }
 
-void Analyzers::MatchExporter::DistData::addToTree(TTree* tree)
+void Io::MatchWriter::DistData::addToTree(TTree* tree)
 {
   assert(tree);
 
   tree->Branch("mat_d2", &d2);
 }
 
-Analyzers::MatchExporter::MatchExporter(const Mechanics::Device& device,
-                                        Index sensorId,
-                                        TDirectory* dir)
+Io::MatchWriter::MatchWriter(const Mechanics::Device& device,
+                             Index sensorId,
+                             TDirectory* dir)
     : m_sensor(*device.getSensor(sensorId))
     , m_sensorId(sensorId)
-    , m_name("MatchExporter(" + device.getSensor(sensorId)->name() + ')')
+    , m_name("MatchWriter(" + device.getSensor(sensorId)->name() + ')')
 {
   TDirectory* sub = dir->mkdir(m_sensor.name().c_str());
   sub->cd();
@@ -168,9 +168,9 @@ Analyzers::MatchExporter::MatchExporter(const Mechanics::Device& device,
   }
 }
 
-std::string Analyzers::MatchExporter::name() const { return m_name; }
+std::string Io::MatchWriter::name() const { return m_name; }
 
-void Analyzers::MatchExporter::analyze(const Storage::Event& event)
+void Io::MatchWriter::append(const Storage::Event& event)
 {
   const Storage::Plane& plane = *event.getPlane(m_sensorId);
 
@@ -225,5 +225,3 @@ void Analyzers::MatchExporter::analyze(const Storage::Event& event)
     m_unmatchTree->Fill();
   }
 }
-
-void Analyzers::MatchExporter::finalize() {}

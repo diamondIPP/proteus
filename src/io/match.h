@@ -10,7 +10,7 @@
 #include <cstdint>
 #include <string>
 
-#include "analyzers/analyzer.h"
+#include "io/writer.h"
 #include "utils/definitions.h"
 
 class TDirectory;
@@ -28,18 +28,15 @@ class Track;
 class TrackState;
 } // namespace Storage
 
-namespace Analyzers {
+namespace Io {
 
-/** Export matched (and unmatched) tracks and clusters to a  TTree. */
-class MatchExporter : public Analyzer {
+/** Export matched (and unmatched) tracks and clusters to a TTree. */
+class MatchWriter : public EventWriter {
 public:
-  MatchExporter(const Mechanics::Device& device,
-                Index sensorId,
-                TDirectory* dir);
+  MatchWriter(const Mechanics::Device& device, Index sensorId, TDirectory* dir);
 
   std::string name() const;
-  void analyze(const Storage::Event& event);
-  void finalize();
+  void append(const Storage::Event& event);
 
 private:
   static constexpr int16_t MAX_CLUSTER_SIZE = 1024;
@@ -103,6 +100,6 @@ private:
   std::string m_name;
 };
 
-} // namespace Analyzers
+} // namespace Io
 
 #endif // PT_NOISESCAN_H

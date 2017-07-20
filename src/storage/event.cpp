@@ -3,23 +3,29 @@
 #include <cassert>
 #include <iostream>
 
-Storage::Event::Event(Index numPlanes)
-    : m_id(-1)
-    , m_frameNumber(0)
-    , m_timestamp(0)
-    , m_triggerOffset(0)
+Storage::Event::Event(size_t sensors)
+    : m_frame(UINT64_MAX)
+    , m_timestamp(UINT64_MAX)
+    , m_triggerInfo(-1)
+    , m_triggerOffset(-1)
+    , m_triggerPhase(-1)
     , m_invalid(false)
 {
-  for (Index isensor = 0; isensor < numPlanes; ++isensor) {
-    m_planes.push_back(Plane(isensor));
-  }
+  m_planes.reserve(sensors);
+  for (size_t isensor = 0; isensor < sensors; ++isensor)
+    m_planes.emplace_back(Plane(isensor));
 }
 
-void Storage::Event::clear()
+void Storage::Event::clear(uint64_t frame, uint64_t timestamp)
 {
-  for (auto plane = m_planes.begin(); plane != m_planes.end(); ++plane) {
-    plane->clear();
-  }
+  m_frame = frame;
+  m_timestamp = timestamp;
+  m_triggerInfo = -1;
+  m_triggerOffset = -1;
+  m_triggerPhase = -1;
+  m_invalid = false;
+  for (auto& plane : m_planes)
+    plane.clear();
   m_tracks.clear();
 }
 
@@ -29,29 +35,27 @@ void Storage::Event::addTrack(std::unique_ptr<Track> track)
   m_tracks.back()->m_index = m_tracks.size() - 1;
 }
 
-unsigned int Storage::Event::getNumHits() const
+size_t Storage::Event::getNumHits() const
 {
-  Index n = 0;
-  for (auto plane = m_planes.begin(); plane != m_planes.end(); ++plane)
-    n += plane->numHits();
+  size_t n = 0;
+  for (const auto& plane : m_planes)
+    n += plane.numHits();
   return n;
 }
 
-unsigned int Storage::Event::getNumClusters() const
+size_t Storage::Event::getNumClusters() const
 {
-  Index n = 0;
-  for (auto plane = m_planes.begin(); plane != m_planes.end(); ++plane)
-    n += plane->numClusters();
+  size_t n = 0;
+  for (const auto& plane : m_planes)
+    n += plane.numClusters();
   return n;
 }
 
 void Storage::Event::print(std::ostream& os, const std::string& prefix) const
 {
-  os << prefix << "frame number: " << frameNumber() << '\n';
+  os << prefix << "frame: " << frame() << '\n';
   os << prefix << "timestamp: " << timestamp() << '\n';
-  os << prefix << "trigger offset: " << triggerOffset() << '\n';
   os << prefix << "invalid: " << invalid() << '\n';
-
   os << prefix << "sensors:\n";
   for (size_t isensor = 0; isensor < m_planes.size(); ++isensor) {
     const Storage::Plane& sensorEvent = m_planes[isensor];

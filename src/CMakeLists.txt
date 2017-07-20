@@ -11,12 +11,15 @@ set(common_SRCS
     analyzers/eventinfo.cpp
     analyzers/eventprinter.cpp
     analyzers/hitinfo.cpp
-    analyzers/matchexporter.cpp
     analyzers/noisescan.cpp
     analyzers/occupancy.cpp
     analyzers/trackinfo.cpp
     analyzers/residuals.cpp
 #   converters/kartelconvert.cpp
+    io/match.cpp
+    io/rceroot.cpp
+    io/reader.cpp
+    io/writer.cpp
     mechanics/device.cpp
     mechanics/geometry.cpp
     mechanics/pixelmasks.cpp
@@ -40,7 +43,6 @@ set(common_SRCS
     storage/track.cpp
     storage/trackstate.cpp
     storage/plane.cpp
-    storage/storageio.cpp
     utils/arguments.cpp
     utils/config.cpp
     utils/densemask.cpp

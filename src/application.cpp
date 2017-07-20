@@ -8,8 +8,8 @@
 
 #include <cstdlib>
 
+#include "io/rceroot.h"
 #include "mechanics/device.h"
-#include "storage/storageio.h"
 #include "utils/arguments.h"
 #include "utils/logger.h"
 
@@ -87,8 +87,7 @@ void Application::initialize(int argc, char const* argv[])
   INFO("read configuration '", section, "' from '", args.get("config"), "'");
 
   // setup input and i/o settings
-  m_input.reset(new Storage::StorageIO(args.get("input"), Storage::INPUT,
-                                       m_dev->numSensors()));
+  m_reader = Io::openRead(args.get("input"));
   m_outputPrefix = args.get("output_prefix");
   m_skipEvents = args.get<uint64_t>("skip_events");
   m_numEvents = args.get<uint64_t>("num_events");
@@ -101,8 +100,6 @@ std::string Application::outputPath(const std::string& name) const
 
 Utils::EventLoop Application::makeEventLoop() const
 {
-  Utils::EventLoop loop(m_input.get(), m_skipEvents, m_numEvents);
-  if (m_showProgress)
-    loop.enableProgressBar();
-  return loop;
+  return Utils::EventLoop(m_reader, m_dev->numSensors(), m_skipEvents,
+                          m_numEvents, m_showProgress);
 }

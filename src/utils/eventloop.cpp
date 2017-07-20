@@ -10,8 +10,8 @@
 #include <numeric>
 #include <sstream>
 
+#include "io/rceroot.h"
 #include "storage/event.h"
-#include "storage/storageio.h"
 #include "utils/logger.h"
 #include "utils/progressbar.h"
 #include "utils/statistics.h"
@@ -27,29 +27,34 @@ struct Timing {
   using Time = Clock::time_point;
 
   Time start_, stop_;
-  Duration input = Duration::zero();
-  Duration output = Duration::zero();
+  Duration reader = Duration::zero();
   std::vector<Duration> processors;
   std::vector<Duration> analyzers;
+  std::vector<Duration> writers;
 
-  Timing(size_t numProcessors, size_t numAnalyzers)
+  Timing(size_t numProcessors, size_t numAnalyzers, size_t numWriters)
       : processors(numProcessors, Duration::zero())
       , analyzers(numAnalyzers, Duration::zero())
+      , writers(numWriters, Duration::zero())
   {
   }
 
   static Time now() { return Clock::now(); }
   void start() { start_ = Clock::now(); }
   void stop() { stop_ = Clock::now(); }
-  template <typename Processors, typename Analyzers>
-  void
-  summarize(uint64_t numEvents, const Processors& ps, const Analyzers& as) const
+  template <typename Processors, typename Analyzers, typename Writers>
+  void summarize(uint64_t numEvents,
+                 const Processors& ps,
+                 const Analyzers& as,
+                 const Writers& ws) const
   {
-    auto proc =
+    auto pros =
         std::accumulate(processors.begin(), processors.end(), Duration::zero());
     auto anas =
         std::accumulate(analyzers.begin(), analyzers.end(), Duration::zero());
-    auto total = input + output + proc + anas;
+    auto wrts =
+        std::accumulate(writers.begin(), writers.end(), Duration::zero());
+    auto total = reader + pros + anas + wrts;
 
     // print timing
     // allow fractional tics when calculating time per event
@@ -68,9 +73,8 @@ struct Timing {
     };
 
     INFO("time: ", time_us_per_event(total));
-    INFO("  input: ", time_us_per_event(input));
-    INFO("  output: ", time_us_per_event(output));
-    INFO("  processors: ", time_us_per_event(proc));
+    INFO("  reader: ", time_us_per_event(reader));
+    INFO("  processors: ", time_us_per_event(pros));
     size_t ip = 0;
     for (const auto& p : ps) {
       DEBUG("    ", p->name(), ": ", time_us_per_event(processors[ip++]));
@@ -80,9 +84,26 @@ struct Timing {
     for (const auto& a : as) {
       DEBUG("    ", a->name(), ": ", time_us_per_event(analyzers[ia++]));
     }
+    INFO("  writers: ", time_us_per_event(wrts));
+    size_t iw = 0;
+    for (const auto& w : ws) {
+      DEBUG("    ", w->name(), ": ", time_us_per_event(writers[iw++]));
+    }
     INFO("time (clocked): ", time_min_s(total));
     INFO("time (wall): ", time_min_s(stop_ - start_));
   }
+};
+
+// RAII-based stop-watch that adds time to the given duration
+struct StopWatch {
+  Timing::Duration& clock;
+  Timing::Time start;
+
+  StopWatch(Timing::Duration& clock_)
+      : clock(clock_), start(Timing::Clock::now())
+  {
+  }
+  ~StopWatch() { clock += Timing::Clock::now() - start; }
 };
 
 // Summary statistics for basic event information.
@@ -107,46 +128,51 @@ struct Statistics {
     INFO("tracks/event: ", tracks);
   }
 };
-}
+} // namespace
 
-Utils::EventLoop::EventLoop(Storage::StorageIO* input,
+Utils::EventLoop::EventLoop(std::shared_ptr<Io::EventReader> reader,
+                            size_t sensors,
                             uint64_t start,
-                            uint64_t events)
-    : m_input(input), m_output(NULL), m_startEvent(start), m_showProgress(false)
+                            uint64_t events,
+                            bool showProgress)
+    : m_reader(std::move(reader))
+    , m_start(start)
+    , m_events(0)
+    , m_sensors(sensors)
+    , m_showProgress(showProgress)
 {
-  assert(input && "input storage is NULL");
-
-  uint64_t eventsOnFile = m_input->getNumEvents();
+  uint64_t available = m_reader->numEvents();
 
   DEBUG("requested start: ", start);
   DEBUG("requested events: ", events);
-  DEBUG("available events: ", eventsOnFile);
+  DEBUG("available events: ", available);
 
-  if (eventsOnFile <= start)
-    FAIL("start event exceeeds available events: start=", start, ", events=",
-         eventsOnFile);
-  if (events == UINT64_MAX) {
-    m_numEvents = eventsOnFile - m_startEvent;
-  } else {
-    if (eventsOnFile < (start + events)) {
-      m_numEvents = eventsOnFile - m_startEvent;
-      INFO("restrict to available number of events ", m_numEvents);
+  if (available <= start) {
+    FAIL("start event ", start, " exceeds available ", available, " events");
+  }
+  // case 1: users explicitly requested a specific number of events
+  if (events != UINT64_MAX) {
+    // there are less events available than requested
+    if (available < (start + events)) {
+      m_events = available - start;
+      INFO("restrict to ", available, " events available");
+      // there are enought events available
     } else {
-      m_numEvents = events;
+      m_events = events - start;
+    }
+    // case 2: users wants to process all events available
+  } else {
+    // number of events is known
+    if (available != UINT64_MAX) {
+      m_events = available - start;
+      // number of events is unkown
+    } else {
+      m_events = UINT64_MAX;
     }
   }
 }
 
 Utils::EventLoop::~EventLoop() {}
-
-void Utils::EventLoop::enableProgressBar() { m_showProgress = true; }
-
-void Utils::EventLoop::setOutput(Storage::StorageIO* output)
-{
-  assert(output && "ouput storage is NULL");
-
-  m_output = output;
-};
 
 void Utils::EventLoop::addProcessor(
     std::shared_ptr<Processors::Processor> processor)
@@ -160,69 +186,64 @@ void Utils::EventLoop::addAnalyzer(
   m_analyzers.emplace_back(std::move(analyzer));
 }
 
+void Utils::EventLoop::addWriter(std::shared_ptr<Io::EventWriter> writer)
+{
+  m_writers.emplace_back(std::move(writer));
+}
+
 void Utils::EventLoop::run()
 {
-  Storage::Event event(m_input->getNumPlanes());
+  Timing timing(m_processors.size(), m_analyzers.size(), m_writers.size());
   Statistics stats;
-  Timing timing(m_processors.size(), m_analyzers.size());
+  Storage::Event event(m_sensors);
 
-  if (!m_processors.empty()) {
-    DEBUG("configured processors:");
-    for (auto p = m_processors.begin(); p != m_processors.end(); ++p)
-      DEBUG("  ", (*p)->name());
-  }
-  if (!m_analyzers.empty()) {
-    DEBUG("configured analyzers:");
-    for (auto a = m_analyzers.begin(); a != m_analyzers.end(); ++a)
-      DEBUG("  ", (*a)->name());
-  }
+  DEBUG("configured readers:");
+  DEBUG("  ", m_reader->name());
+  DEBUG("configured processors:");
+  for (const auto& processor : m_processors)
+    DEBUG("  ", processor->name());
+  DEBUG("configured analyzers:");
+  for (const auto& analyzer : m_analyzers)
+    DEBUG("  ", analyzer->name());
+  DEBUG("configured writers:");
+  for (const auto& writer : m_writers)
+    DEBUG("  ", writer->name());
 
   Utils::ProgressBar progress;
   if (m_showProgress)
-    progress.update(0);
+    progress.update<uint64_t>(0, m_events);
   timing.start();
-  for (uint64_t ievent = 0; ievent < m_numEvents; ++ievent) {
+  {
+    StopWatch sw(timing.reader);
+    m_reader->skip(m_start);
+  }
+  for (uint64_t nevents = 1; nevents <= m_events; ++nevents) {
     {
-      auto start = Timing::now();
-      m_input->readEvent(m_startEvent + ievent, &event);
-      timing.input += Timing::now() - start;
+      StopWatch sw(timing.reader);
+      if (!m_reader->read(event))
+        break;
     }
     for (size_t i = 0; i < m_processors.size(); ++i) {
-      auto start = Timing::now();
+      StopWatch sw(timing.processors[i]);
       m_processors[i]->process(event);
-      timing.processors[i] += Timing::now() - start;
     }
     for (size_t i = 0; i < m_analyzers.size(); ++i) {
-      auto start = Timing::now();
+      StopWatch sw(timing.analyzers[i]);
       m_analyzers[i]->analyze(event);
-      timing.analyzers[i] += Timing::now() - start;
     }
-    if (m_output) {
-      auto start = Timing::now();
-      m_output->writeEvent(&event);
-      timing.output += Timing::now() - start;
+    for (size_t i = 0; i < m_writers.size(); ++i) {
+      StopWatch sw(timing.writers[i]);
+      m_writers[i]->append(event);
     }
     stats.fill(event.getNumHits(), event.getNumClusters(), event.numTracks());
     if (m_showProgress)
-      progress.update((float)(ievent + 1) / numEvents());
+      progress.update(nevents, m_events);
   }
   if (m_showProgress)
     progress.clear();
-  for (auto a = m_analyzers.begin(); a != m_analyzers.end(); ++a) {
-    (*a)->finalize();
-  }
+  for (const auto& analyzer : m_analyzers)
+    analyzer->finalize();
   timing.stop();
-  timing.summarize(numEvents(), m_processors, m_analyzers);
+  timing.summarize(m_events, m_processors, m_analyzers, m_writers);
   stats.summarize();
-}
-
-std::unique_ptr<Storage::Event> Utils::EventLoop::readStartEvent()
-{
-  return std::unique_ptr<Storage::Event>(m_input->readEvent(m_startEvent));
-}
-
-std::unique_ptr<Storage::Event> Utils::EventLoop::readEndEvent()
-{
-  return std::unique_ptr<Storage::Event>(
-      m_input->readEvent(m_startEvent + m_numEvents - 1));
 }

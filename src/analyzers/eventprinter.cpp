@@ -8,7 +8,7 @@ std::string Analyzers::EventPrinter::name() const { return "EventPrinter"; }
 
 void Analyzers::EventPrinter::analyze(const Storage::Event& event)
 {
-  std::cout << "event " << event.id() << ":\n";
+  std::cout << "event:\n";
   event.print(std::cout, "  ");
 }
 

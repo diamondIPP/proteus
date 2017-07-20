@@ -12,50 +12,44 @@
 #include <vector>
 
 #include "analyzers/analyzer.h"
+#include "io/reader.h"
+#include "io/writer.h"
 #include "processors/processor.h"
-
-namespace Storage {
-class Event;
-class StorageIO;
-}
 
 namespace Utils {
 
 /** A generic event loop.
  *
- * Implements only the looping logic but no actual event
- * processing. Specific processing logic must be provided by
- * implementing processors and analyzers and adding them via
- * `addProcessor(...)` and `addAnalyzer(...)`. These will be called
- * for each event in the order in which they were added.
+ * Implements only the loop logic but not the actual event processing. Specific
+ * processing logic must be provided by implementing processors and analyzers
+ * and adding them via `addProcessor(...)` and `addAnalyzer(...)`. These will
+ * be called for each event in the order in which they were added.
+ *
+ * The event loop gets its events from a single `EventReader` and can output
+ * data to an arbitrary number of `EventWriter`s.
  */
 class EventLoop {
 public:
-  EventLoop(Storage::StorageIO* storage,
+  EventLoop(std::shared_ptr<Io::EventReader> reader,
+            size_t sensors,
             uint64_t start = 0,
-            uint64_t events = UINT64_MAX);
+            uint64_t events = UINT64_MAX,
+            bool showProgress = false);
   ~EventLoop();
-
-  void enableProgressBar();
-  void setOutput(Storage::StorageIO* output);
 
   void addProcessor(std::shared_ptr<Processors::Processor> processor);
   void addAnalyzer(std::shared_ptr<Analyzers::Analyzer> analyzer);
+  void addWriter(std::shared_ptr<Io::EventWriter> writer);
   void run();
 
-  std::unique_ptr<Storage::Event> readStartEvent();
-  std::unique_ptr<Storage::Event> readEndEvent();
-
 private:
-  uint64_t numEvents() { return m_numEvents; }
-
-  Storage::StorageIO* m_input;
-  Storage::StorageIO* m_output;
-  uint64_t m_startEvent;
-  uint64_t m_numEvents;
-  bool m_showProgress;
+  std::shared_ptr<Io::EventReader> m_reader;
   std::vector<std::shared_ptr<Processors::Processor>> m_processors;
   std::vector<std::shared_ptr<Analyzers::Analyzer>> m_analyzers;
+  std::vector<std::shared_ptr<Io::EventWriter>> m_writers;
+  uint64_t m_start, m_events;
+  size_t m_sensors;
+  bool m_showProgress;
 };
 
 } // namespace Utils
