@@ -109,7 +109,7 @@ static inline SymMatrix2 refCovariance(const SymMatrix2& cov,
   return Similarity(jac.Sub<Matrix2>(0, 0), cov);
 }
 
-void Processors::fitTrackGlobal(Storage::Track& track)
+void Tracking::fitTrackGlobal(Storage::Track& track)
 {
   SimpleStraightFitter fit;
 
@@ -122,9 +122,9 @@ void Processors::fitTrackGlobal(Storage::Track& track)
   track.setGoodnessOfFit(fit.chi2(), 2 * (track.numClusters() - 2));
 }
 
-Storage::TrackState Processors::fitTrackLocal(const Storage::Track& track,
-                                              const Mechanics::Geometry& geo,
-                                              Index referenceId)
+Storage::TrackState Tracking::fitTrackLocal(const Storage::Track& track,
+                                            const Mechanics::Geometry& geo,
+                                            Index referenceId)
 {
   SimpleStraightFitter fit;
   auto globalToRef = geo.getLocalToGlobal(referenceId).Inverse();
@@ -141,9 +141,9 @@ Storage::TrackState Processors::fitTrackLocal(const Storage::Track& track,
 }
 
 Storage::TrackState
-Processors::fitTrackLocalUnbiased(const Storage::Track& track,
-                                  const Mechanics::Geometry& geo,
-                                  Index referenceId)
+Tracking::fitTrackLocalUnbiased(const Storage::Track& track,
+                                const Mechanics::Geometry& geo,
+                                Index referenceId)
 {
   SimpleStraightFitter fit;
   auto globalToRef = geo.getLocalToGlobal(referenceId).Inverse();

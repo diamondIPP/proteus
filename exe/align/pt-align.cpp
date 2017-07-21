@@ -13,9 +13,9 @@
 #include "mechanics/device.h"
 #include "processors/applygeometry.h"
 #include "processors/setupsensors.h"
-#include "processors/trackfinder.h"
-#include "processors/trackfitter.h"
 #include "storage/event.h"
+#include "tracking/straightfitter.h"
+#include "tracking/trackfinder.h"
 #include "utils/application.h"
 #include "utils/eventloop.h"
 #include "utils/logger.h"
@@ -184,7 +184,7 @@ int main(int argc, char const* argv[])
 
     } else if (method == Method::Residuals) {
       // use (unbiased) track residuals to align
-      loop.addProcessor(std::make_shared<TrackFinder>(
+      loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
           dev, sensorIds, sensorIds.size(), searchSigmaMax, redChi2Max));
       loop.addAnalyzer(std::make_shared<TrackInfo>(&dev, stepDir));
       loop.addAnalyzer(std::make_shared<Residuals>(&dev, stepDir));

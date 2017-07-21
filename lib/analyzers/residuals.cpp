@@ -9,7 +9,7 @@
 #include <TH2D.h>
 
 #include "mechanics/device.h"
-#include "processors/tracking.h"
+#include "tracking/tracking.h"
 #include "storage/event.h"
 #include "utils/logger.h"
 #include "utils/root.h"
@@ -97,7 +97,7 @@ void Analyzers::Residuals::analyze(const Storage::Event& event)
 
     for (Index icluster = 0; icluster < track.numClusters(); ++icluster) {
       const Storage::Cluster& cluster = *track.getCluster(icluster);
-      Storage::TrackState state = Processors::fitTrackLocal(
+      Storage::TrackState state = Tracking::fitTrackLocal(
           track, m_device.geometry(), cluster.sensorId());
 
       m_hists[cluster.sensorId()].fill(state, cluster);
@@ -136,7 +136,7 @@ void Analyzers::UnbiasedResiduals::analyze(const Storage::Event& event)
     for (Index icluster = 0; icluster < track.numClusters(); ++icluster) {
       const Storage::Cluster& cluster = *track.getCluster(icluster);
       // refit w/o current sensor information
-      Storage::TrackState state = Processors::fitTrackLocalUnbiased(
+      Storage::TrackState state = Tracking::fitTrackLocalUnbiased(
           track, m_device.geometry(), cluster.sensorId());
 
       m_hists[cluster.sensorId()].fill(state, cluster);

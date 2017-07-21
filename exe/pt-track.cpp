@@ -17,9 +17,9 @@
 #include "mechanics/device.h"
 #include "processors/applygeometry.h"
 #include "processors/setupsensors.h"
-#include "processors/trackfinder.h"
-#include "processors/trackfitter.h"
 #include "storage/event.h"
+#include "tracking/straightfitter.h"
+#include "tracking/trackfinder.h"
 #include "utils/application.h"
 #include "utils/eventloop.h"
 
@@ -47,7 +47,7 @@ int main(int argc, char const* argv[])
   setupHitPreprocessing(app.device(), loop);
   setupClusterizers(app.device(), loop);
   loop.addProcessor(std::make_shared<ApplyGeometry>(app.device()));
-  loop.addProcessor(std::make_shared<TrackFinder>(
+  loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
       app.device(), sensorIds, numPointsMin, searchSigmaMax, redChi2Max));
   loop.addAnalyzer(std::make_shared<EventInfo>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<HitInfo>(&app.device(), &hists));

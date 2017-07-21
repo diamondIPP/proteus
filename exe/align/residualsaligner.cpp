@@ -5,8 +5,8 @@
 #include <TH2.h>
 
 #include "mechanics/device.h"
-#include "processors/tracking.h"
 #include "storage/event.h"
+#include "tracking/tracking.h"
 #include "utils/logger.h"
 #include "utils/root.h"
 
@@ -86,7 +86,7 @@ void Alignment::ResidualsAligner::analyze(const Storage::Event& event)
         continue;
 
       // refit track w/o selected sensor for unbiased residuals
-      Storage::TrackState state = Processors::fitTrackLocalUnbiased(
+      Storage::TrackState state = Tracking::fitTrackLocalUnbiased(
           *track, m_device.geometry(), sensorId);
 
       double u = state.offset().x();

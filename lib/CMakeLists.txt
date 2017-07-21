@@ -31,15 +31,15 @@ set(SOURCES
     processors/processor.cpp
     processors/setupsensors.cpp
 #   processors/synchronizer.cpp
-    processors/trackfinder.cpp
-    processors/trackfitter.cpp
-    processors/tracking.cpp
     storage/cluster.cpp
     storage/event.cpp
     storage/hit.cpp
     storage/track.cpp
     storage/trackstate.cpp
     storage/plane.cpp
+    tracking/trackfinder.cpp
+    tracking/straightfitter.cpp
+    tracking/tracking.cpp
     utils/application.cpp
     utils/arguments.cpp
     utils/config.cpp

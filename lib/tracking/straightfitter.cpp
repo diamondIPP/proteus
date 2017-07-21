@@ -4,28 +4,25 @@
  * \date 2016-10
  */
 
-#include "trackfitter.h"
+#include "straightfitter.h"
 
 #include "mechanics/device.h"
-#include "processors/tracking.h"
 #include "storage/event.h"
+#include "tracking/tracking.h"
 #include "utils/logger.h"
 
 PT_SETUP_GLOBAL_LOGGER
 
-Processors::StraightTrackFitter::StraightTrackFitter(
-    const Mechanics::Device& device, const std::vector<Index>& sensorIds)
+Tracking::StraightFitter::StraightFitter(const Mechanics::Device& device,
+                                         const std::vector<Index>& sensorIds)
     : m_device(device), m_sensorIds(std::begin(sensorIds), std::end(sensorIds))
 {
   DEBUG("fit on sensors: ", m_sensorIds);
 }
 
-std::string Processors::StraightTrackFitter::name() const
-{
-  return "StraightTrackFitter";
-}
+std::string Tracking::StraightFitter::name() const { return "StraightFitter"; }
 
-void Processors::StraightTrackFitter::process(Storage::Event& event) const
+void Tracking::StraightFitter::process(Storage::Event& event) const
 {
   for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
     Storage::Track& track = *event.getTrack(itrack);
