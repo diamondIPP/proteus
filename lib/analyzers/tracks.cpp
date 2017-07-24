@@ -43,12 +43,12 @@ Analyzers::Tracks::Tracks(const Mechanics::Device* device,
   m_nTracks = makeH1(sub, "ntracks", axNTracks);
   m_size = makeH1(sub, "size", axSize);
   m_reducedChi2 = makeH1(sub, "reduced_chi2", axChi2);
-  m_offsetXY = makeH2(sub, "offset", axOffX, axOffY);
   m_offsetX = makeH1(sub, "offset_x", axOffX);
   m_offsetY = makeH1(sub, "offset_y", axOffY);
-  m_slopeXY = makeH2(sub, "slope", axSlopeX, axSlopeY);
+  m_offsetXY = makeH2(sub, "offset_xy", axOffX, axOffY);
   m_slopeX = makeH1(sub, "slope_x", axSlopeX);
   m_slopeY = makeH1(sub, "slope_y", axSlopeY);
+  m_slopeXY = makeH2(sub, "slope_xy", axSlopeX, axSlopeY);
 }
 
 std::string Analyzers::Tracks::name() const { return "Tracks"; }
