@@ -40,8 +40,8 @@ public:
   void analyze(const Storage::Event& event);
   void finalize();
 
-  TH1D* getHistDiffX(Index sensorId0, Index sensorId1) const;
-  TH1D* getHistDiffY(Index sensorId0, Index sensorId1) const;
+  const TH1D* getHistDiffX(Index sensorId0, Index sensorId1) const;
+  const TH1D* getHistDiffY(Index sensorId0, Index sensorId1) const;
 
 private:
   // Shared function to initialize the correlation hist between two sensors

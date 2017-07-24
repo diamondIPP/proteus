@@ -117,14 +117,14 @@ void Analyzers::Correlations::analyze(const Storage::Event& event)
 
 void Analyzers::Correlations::finalize() {}
 
-TH1D* Analyzers::Correlations::getHistDiffX(Index sensorId0,
-                                            Index sensorId1) const
+const TH1D* Analyzers::Correlations::getHistDiffX(Index sensorId0,
+                                                  Index sensorId1) const
 {
   return m_hists.at(std::make_pair(sensorId0, sensorId1)).diffX;
 }
 
-TH1D* Analyzers::Correlations::getHistDiffY(Index sensorId0,
-                                            Index sensorId1) const
+const TH1D* Analyzers::Correlations::getHistDiffY(Index sensorId0,
+                                                  Index sensorId1) const
 {
   return m_hists.at(std::make_pair(sensorId0, sensorId1)).diffY;
 }
