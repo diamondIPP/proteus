@@ -3,9 +3,7 @@ set(SOURCES
     analyzers/basicefficiency.cpp
     analyzers/clusters.cpp
     analyzers/correlations.cpp
-#   analyzers/depiction.cpp
     analyzers/distances.cpp
-#   analyzers/efficiency.cpp
     analyzers/events.cpp
     analyzers/eventprinter.cpp
     analyzers/hits.cpp
