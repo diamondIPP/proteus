@@ -18,6 +18,8 @@ namespace Mechanics {
 class Device;
 }
 
+namespace Utils {
+
 /** Common application class.
  *
  * Handles the command line parameters, configures loggins, reads the analysis
@@ -63,5 +65,7 @@ private:
   uint64_t m_numEvents;
   bool m_showProgress;
 };
+
+} // namespace Utils
 
 #endif // PT_APPLICATION_H

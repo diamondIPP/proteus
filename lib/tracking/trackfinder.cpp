@@ -6,8 +6,8 @@
 #include <iostream>
 
 #include "mechanics/device.h"
-#include "processors/tracking.h"
 #include "storage/event.h"
+#include "tracking/tracking.h"
 #include "utils/logger.h"
 
 using Storage::Cluster;
@@ -18,11 +18,11 @@ using Storage::TrackState;
 
 PT_SETUP_GLOBAL_LOGGER
 
-Processors::TrackFinder::TrackFinder(const Mechanics::Device& device,
-                                     std::vector<Index> sensors,
-                                     Index numClustersMin,
-                                     double searchSigmaMax,
-                                     double redChi2Max)
+Tracking::TrackFinder::TrackFinder(const Mechanics::Device& device,
+                                   std::vector<Index> sensors,
+                                   Index numClustersMin,
+                                   double searchSigmaMax,
+                                   double redChi2Max)
     : m_sensorIds(std::move(sensors))
     , m_numClustersMin(numClustersMin)
     // 2-d Mahalanobis distance peaks at 2 and not at 1
@@ -38,9 +38,9 @@ Processors::TrackFinder::TrackFinder(const Mechanics::Device& device,
   // TODO 2016-11 msmk: check that sensor ids are unique
 }
 
-std::string Processors::TrackFinder::name() const { return "TrackFinder"; }
+std::string Tracking::TrackFinder::name() const { return "TrackFinder"; }
 
-void Processors::TrackFinder::process(Storage::Event& event) const
+void Tracking::TrackFinder::process(Storage::Event& event) const
 {
   std::vector<TrackPtr> candidates;
 
@@ -96,7 +96,7 @@ void Processors::TrackFinder::process(Storage::Event& event) const
  *
  * Ambiguities are not resolved but result in additional track candidates.
  */
-void Processors::TrackFinder::searchSensor(
+void Tracking::TrackFinder::searchSensor(
     Storage::Plane& sensorEvent, std::vector<TrackPtr>& candidates) const
 {
   // loop only over the initial candidates and not the added ones
@@ -152,12 +152,12 @@ struct CompareNumClusterChi2 {
 };
 
 /** Add tracks selected by chi2 and unique cluster association to the event. */
-void Processors::TrackFinder::selectTracks(std::vector<TrackPtr>& candidates,
-                                           Storage::Event& event) const
+void Tracking::TrackFinder::selectTracks(std::vector<TrackPtr>& candidates,
+                                         Storage::Event& event) const
 {
   // ensure chi2 value is up-to-date
   std::for_each(candidates.begin(), candidates.end(),
-                [&](TrackPtr& t) { Processors::fitTrackGlobal(*t); });
+                [&](TrackPtr& t) { fitTrackGlobal(*t); });
   // sort good candidates first, i.e. longest track and smallest chi2
   std::sort(candidates.begin(), candidates.end(), CompareNumClusterChi2());
 

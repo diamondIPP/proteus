@@ -5,15 +5,15 @@
 #include "analyzers/distances.h"
 #include "analyzers/residuals.h"
 #include "analyzers/trackinfo.h"
-#include "application.h"
 #include "io/match.h"
 #include "io/rceroot.h"
 #include "mechanics/device.h"
 #include "processors/applygeometry.h"
 #include "processors/matcher.h"
 #include "processors/setupsensors.h"
-#include "processors/trackfitter.h"
 #include "storage/event.h"
+#include "tracking/straightfitter.h"
+#include "utils/application.h"
 #include "utils/eventloop.h"
 
 int main(int argc, char const* argv[])
@@ -22,7 +22,7 @@ int main(int argc, char const* argv[])
   using namespace Mechanics;
   using namespace Processors;
 
-  Application app("match", "match tracks and clusters");
+  Utils::Application app("match", "match tracks and clusters");
   app.initialize(argc, argv);
 
   // configuration
@@ -36,7 +36,7 @@ int main(int argc, char const* argv[])
   setupHitPreprocessing(app.device(), loop);
   loop.addProcessor(std::make_shared<ApplyGeometry>(app.device()));
   loop.addProcessor(
-      std::make_shared<StraightTrackFitter>(app.device(), sensorIds));
+      std::make_shared<Tracking::StraightFitter>(app.device(), sensorIds));
   for (auto sensorId : sensorIds)
     loop.addProcessor(std::make_shared<Matcher>(app.device(), sensorId));
   loop.addAnalyzer(std::make_shared<TrackInfo>(&app.device(), &hists));

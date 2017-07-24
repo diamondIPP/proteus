@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-#include "processor.h"
+#include "processors/processor.h"
 #include "utils/definitions.h"
 
 namespace Mechanics {
@@ -15,7 +15,7 @@ class Track;
 class Plane;
 }
 
-namespace Processors {
+namespace Tracking {
 
 /** Find tracks assuming straight propagation along the beam direction.
  *
@@ -27,7 +27,7 @@ namespace Processors {
  * form a track. Successive candidates that contain clusters that are already
  * used are dropped.
  */
-class TrackFinder : public Processor {
+class TrackFinder : public Processors::Processor {
 public:
   /**
    * \param numClustersMin Selection cut on number of required clusters
@@ -59,6 +59,6 @@ private:
   XYZVector m_beamDirection;
 };
 
-} // namespace Processors
+} // namespace Tracking
 
 #endif // PT_TRACKFINDER_H

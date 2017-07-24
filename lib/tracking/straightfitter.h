@@ -4,8 +4,8 @@
  * \date 2016-10
  */
 
-#ifndef PT_TRACKFITTER_H
-#define PT_TRACKFITTER_H
+#ifndef PT_STRAIGHTFITTER_H
+#define PT_STRAIGHTFITTER_H
 
 #include <vector>
 
@@ -15,19 +15,19 @@
 namespace Mechanics {
 class Device;
 class Sensor;
-}
+} // namespace Mechanics
 
-namespace Processors {
+namespace Tracking {
 
 /** Estimate local track parameters using a straight line track model.
  *
  * This calculates new global track parameters and goodness-of-fit and
  * calculates the local track parameters on the selected sensor planes.
  */
-class StraightTrackFitter : public Processor {
+class StraightFitter : public Processors::Processor {
 public:
-  StraightTrackFitter(const Mechanics::Device& device,
-                      const std::vector<Index>& sensorIds);
+  StraightFitter(const Mechanics::Device& device,
+                 const std::vector<Index>& sensorIds);
 
   std::string name() const;
   void process(Storage::Event& event) const;
@@ -37,6 +37,6 @@ private:
   std::vector<Index> m_sensorIds;
 };
 
-} // namespace Processors
+} // namespace Tracking
 
-#endif // PT_TRACKFITTER_H
+#endif // PT_STRAIGHTFITTER_H

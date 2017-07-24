@@ -8,7 +8,7 @@ namespace Mechanics {
 class Geometry;
 }
 
-namespace Processors {
+namespace Tracking {
 
 /** Fit a straight track in the global coordinates.
  *
@@ -38,6 +38,6 @@ Storage::TrackState fitTrackLocalUnbiased(const Storage::Track& track,
                                           const Mechanics::Geometry& geo,
                                           Index referenceId);
 
-} // namespace Processors
+} // namespace Tracking
 
 #endif // PT_TRACKING_H

@@ -6,21 +6,22 @@
 #include <TGraphErrors.h>
 #include <TTree.h>
 
-#include "alignment/correlationsaligner.h"
-#include "alignment/residualsaligner.h"
 #include "analyzers/correlations.h"
 #include "analyzers/residuals.h"
 #include "analyzers/trackinfo.h"
-#include "application.h"
 #include "io/rceroot.h"
 #include "mechanics/device.h"
 #include "processors/applygeometry.h"
 #include "processors/setupsensors.h"
-#include "processors/trackfinder.h"
-#include "processors/trackfitter.h"
 #include "storage/event.h"
+#include "tracking/straightfitter.h"
+#include "tracking/trackfinder.h"
+#include "utils/application.h"
 #include "utils/eventloop.h"
 #include "utils/logger.h"
+
+#include "correlationsaligner.h"
+#include "residualsaligner.h"
 
 PT_SETUP_LOCAL_LOGGER(align)
 
@@ -67,8 +68,7 @@ struct SensorStepsGraphs {
       g->SetName((sensorName + "-" + paramName).c_str());
       g->SetTitle("");
       g->GetXaxis()->SetTitle("Alignment step");
-      g->GetYaxis()->SetTitle(
-          (sensorName + ' ' + paramName).c_str());
+      g->GetYaxis()->SetTitle((sensorName + ' ' + paramName).c_str());
       dir->WriteTObject(g);
     };
     makeGraph("Offset0", off0, errOff0);
@@ -120,7 +120,7 @@ int main(int argc, char const* argv[])
                           {"search_sigma_max", 5.},
                           {"reduced_chi2_max", -1.},
                           {"damping", 0.9}};
-  Application app("align", "align selected sensors", defaults);
+  Utils::Application app("align", "align selected sensors", defaults);
   app.initialize(argc, argv);
 
   // configuration
@@ -184,7 +184,7 @@ int main(int argc, char const* argv[])
 
     } else if (method == Method::Residuals) {
       // use (unbiased) track residuals to align
-      loop.addProcessor(std::make_shared<TrackFinder>(
+      loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
           dev, sensorIds, sensorIds.size(), searchSigmaMax, redChi2Max));
       loop.addAnalyzer(std::make_shared<TrackInfo>(&dev, stepDir));
       loop.addAnalyzer(std::make_shared<Residuals>(&dev, stepDir));

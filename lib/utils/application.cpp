@@ -15,14 +15,14 @@
 
 PT_SETUP_LOCAL_LOGGER(Application)
 
-Application::Application(const std::string& name,
-                         const std::string& description,
-                         const toml::Table& defaults)
+Utils::Application::Application(const std::string& name,
+                                const std::string& description,
+                                const toml::Table& defaults)
     : m_name(name), m_desc(description), m_cfg(defaults), m_showProgress(false)
 {
 }
 
-void Application::initialize(int argc, char const* argv[])
+void Utils::Application::initialize(int argc, char const* argv[])
 {
   Utils::Arguments args(m_desc);
   args.addOptional('d', "device", "device configuration file", "device.toml");
@@ -93,12 +93,12 @@ void Application::initialize(int argc, char const* argv[])
   m_numEvents = args.get<uint64_t>("num_events");
 }
 
-std::string Application::outputPath(const std::string& name) const
+std::string Utils::Application::outputPath(const std::string& name) const
 {
   return m_outputPrefix + '-' + name;
 }
 
-Utils::EventLoop Application::makeEventLoop() const
+Utils::EventLoop Utils::Application::makeEventLoop() const
 {
   return Utils::EventLoop(m_reader, m_dev->numSensors(), m_skipEvents,
                           m_numEvents, m_showProgress);

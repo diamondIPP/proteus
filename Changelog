@@ -42,6 +42,11 @@ Internal changes
 *   Split ``StorageIO`` class into separate reader and writer that implement
     the new Io interfaces.
 *   Convert ``MatchExporter`` to the ``EventWriter`` interface.
+*   Split the code structure into library and executables.
+
+    The ``lib`` directory contains common code that is used by more than
+    one executable and build into a single library. The ``exe`` directory
+    contains the code for each tool and tool-specific code that is not shared.
 
 v1.2.0 (2017-06-28)
 ===================

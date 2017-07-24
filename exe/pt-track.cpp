@@ -13,14 +13,14 @@
 #include "analyzers/occupancy.h"
 #include "analyzers/residuals.h"
 #include "analyzers/trackinfo.h"
-#include "application.h"
 #include "io/rceroot.h"
 #include "mechanics/device.h"
 #include "processors/applygeometry.h"
 #include "processors/setupsensors.h"
-#include "processors/trackfinder.h"
-#include "processors/trackfitter.h"
 #include "storage/event.h"
+#include "tracking/straightfitter.h"
+#include "tracking/trackfinder.h"
+#include "utils/application.h"
 #include "utils/eventloop.h"
 
 int main(int argc, char const* argv[])
@@ -31,7 +31,7 @@ int main(int argc, char const* argv[])
   toml::Table defaults = {{"num_points_min", 3},
                           {"search_sigma_max", 5.},
                           {"reduced_chi2_max", -1.}};
-  Application app("track", "preprocess, cluster, and track", defaults);
+  Utils::Application app("track", "preprocess, cluster, and track", defaults);
   app.initialize(argc, argv);
 
   // configuration
@@ -47,7 +47,7 @@ int main(int argc, char const* argv[])
   setupHitPreprocessing(app.device(), loop);
   setupClusterizers(app.device(), loop);
   loop.addProcessor(std::make_shared<ApplyGeometry>(app.device()));
-  loop.addProcessor(std::make_shared<TrackFinder>(
+  loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
       app.device(), sensorIds, numPointsMin, searchSigmaMax, redChi2Max));
   loop.addAnalyzer(std::make_shared<EventInfo>(&app.device(), &hists));
   loop.addAnalyzer(std::make_shared<HitInfo>(&app.device(), &hists));

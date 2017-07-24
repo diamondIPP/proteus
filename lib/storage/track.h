@@ -10,9 +10,8 @@
 #include "storage/trackstate.h"
 #include "utils/definitions.h"
 
-namespace Processors {
+namespace Tracking {
 class TrackFinder;
-class TrackMaker;
 }
 
 namespace Storage {
@@ -59,8 +58,7 @@ private:
   std::vector<Cluster*> m_clusters;
 
   friend class Event;
-  friend class Processors::TrackFinder;
-  friend class Processors::TrackMaker;
+  friend class Tracking::TrackFinder;
 };
 
 } // namespace Storage
