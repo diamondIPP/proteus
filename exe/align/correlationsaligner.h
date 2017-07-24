@@ -36,6 +36,7 @@ public:
                       const Index fixedId,
                       const std::vector<Index>& alignIds,
                       TDirectory* dir);
+  ~CorrelationsAligner();
 
   std::string name() const;
   void analyze(const Storage::Event& event);

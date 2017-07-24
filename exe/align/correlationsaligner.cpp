@@ -29,6 +29,9 @@ Alignment::CorrelationsAligner::CorrelationsAligner(
   m_corr.reset(new Analyzers::Correlations(device, m_sensorIds, dir, 1));
 }
 
+// required to make correlations unique_ptr work
+Alignment::CorrelationsAligner::~CorrelationsAligner() {}
+
 std::string Alignment::CorrelationsAligner::name() const
 {
   return "CorrelationsAligner";
