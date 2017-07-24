@@ -17,7 +17,6 @@ class TDirectory;
 class TTree;
 
 namespace Mechanics {
-class Device;
 class Sensor;
 } // namespace Mechanics
 namespace Storage {
@@ -33,7 +32,7 @@ namespace Io {
 /** Export matched (and unmatched) tracks and clusters to a TTree. */
 class MatchWriter : public EventWriter {
 public:
-  MatchWriter(const Mechanics::Device& device, Index sensorId, TDirectory* dir);
+  MatchWriter(TDirectory* dir, const Mechanics::Sensor& sensor);
 
   std::string name() const;
   void append(const Storage::Event& event);

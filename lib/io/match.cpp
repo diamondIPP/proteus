@@ -7,7 +7,7 @@
 #include <TDirectory.h>
 #include <TTree.h>
 
-#include "mechanics/device.h"
+#include "mechanics/sensor.h"
 #include "storage/event.h"
 #include "utils/logger.h"
 
@@ -129,12 +129,10 @@ void Io::MatchWriter::DistData::addToTree(TTree* tree)
   tree->Branch("mat_d2", &d2);
 }
 
-Io::MatchWriter::MatchWriter(const Mechanics::Device& device,
-                             Index sensorId,
-                             TDirectory* dir)
-    : m_sensor(*device.getSensor(sensorId))
-    , m_sensorId(sensorId)
-    , m_name("MatchWriter(" + device.getSensor(sensorId)->name() + ')')
+Io::MatchWriter::MatchWriter(TDirectory* dir, const Mechanics::Sensor& sensor)
+    : m_sensor(sensor)
+    , m_sensorId(sensor.id())
+    , m_name("MatchWriter(" + sensor.name() + ')')
 {
   TDirectory* sub = dir->mkdir(m_sensor.name().c_str());
   sub->cd();

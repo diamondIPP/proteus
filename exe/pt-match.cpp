@@ -45,8 +45,7 @@ int main(int argc, char const* argv[])
     const auto& sensor = *app.device().getSensor(sensorId);
     loop.addAnalyzer(std::make_shared<Distances>(&hists, sensor));
     loop.addAnalyzer(std::make_shared<Efficiency>(&hists, sensor));
-    loop.addWriter(
-        std::make_shared<Io::MatchWriter>(app.device(), sensorId, &trees));
+    loop.addWriter(std::make_shared<Io::MatchWriter>(&trees, sensor));
   }
   loop.run();
 
