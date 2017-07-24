@@ -28,6 +28,9 @@ public:
   void analyze(const Storage::Event& event);
   void finalize();
 
+  const TH1D* histSlopeX() const { return m_slopeX; }
+  const TH1D* histSlopeY() const { return m_slopeY; }
+
 private:
   TH1D* m_nTracks;
   TH1D* m_size;;
