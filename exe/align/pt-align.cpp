@@ -18,6 +18,7 @@
 #include "utils/application.h"
 #include "utils/eventloop.h"
 #include "utils/logger.h"
+#include "utils/root.h"
 
 #include "correlationsaligner.h"
 #include "residualsaligner.h"
@@ -57,25 +58,26 @@ struct SensorStepsGraphs {
   }
   void writeGraphs(const std::string& sensorName, TDirectory* dir) const
   {
-    auto makeGraph = [&](const std::string& paramName,
+    TDirectory* sub = Utils::makeDir(dir, sensorName);
+    auto makeGraph = [&](const std::string& name,
                          const std::vector<double>& yval,
                          const std::vector<double>& yerr) {
       std::vector<double> x(yval.size());
       std::iota(x.begin(), x.end(), 0);
       TGraphErrors* g =
           new TGraphErrors(x.size(), x.data(), yval.data(), NULL, yerr.data());
-      g->SetName((sensorName + "-" + paramName).c_str());
+      g->SetName(name.c_str());
       g->SetTitle("");
       g->GetXaxis()->SetTitle("Alignment step");
-      g->GetYaxis()->SetTitle((sensorName + ' ' + paramName).c_str());
-      dir->WriteTObject(g);
+      g->GetYaxis()->SetTitle((sensorName + ' ' + name).c_str());
+      sub->WriteTObject(g);
     };
-    makeGraph("Offset0", off0, errOff0);
-    makeGraph("Offset1", off1, errOff1);
-    makeGraph("Offset2", off2, errOff2);
-    makeGraph("Rotation0", rot0, errRot0);
-    makeGraph("Rotation1", rot1, errRot1);
-    makeGraph("Rotation2", rot2, errRot2);
+    makeGraph("offset0", off0, errOff0);
+    makeGraph("offset1", off1, errOff1);
+    makeGraph("offset2", off2, errOff2);
+    makeGraph("rotation0", rot0, errRot0);
+    makeGraph("rotation1", rot1, errRot1);
+    makeGraph("rotation2", rot2, errRot2);
   }
 };
 
@@ -163,7 +165,7 @@ int main(int argc, char const* argv[])
   auto dev = app.device();
 
   for (int step = 1; step <= numSteps; ++step) {
-    TDirectory* stepDir = hists.mkdir(("Step" + std::to_string(step)).c_str());
+    TDirectory* stepDir = Utils::makeDir(&hists, "step" + std::to_string(step));
 
     INFO("alignment step ", step, "/", numSteps);
 
@@ -200,7 +202,7 @@ int main(int argc, char const* argv[])
     dev.geometry().writeFile(app.outputPath("geo.toml"));
   }
 
-  steps.writeGraphs(dev, &hists);
+  steps.writeGraphs(dev, Utils::makeDir(&hists, "results"));
   hists.Write();
   hists.Close();
 
