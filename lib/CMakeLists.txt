@@ -1,9 +1,9 @@
 set(SOURCES
     analyzers/analyzer.cpp
-    analyzers/basicefficiency.cpp
     analyzers/clusters.cpp
     analyzers/correlations.cpp
     analyzers/distances.cpp
+    analyzers/efficiency.cpp
     analyzers/events.cpp
     analyzers/eventprinter.cpp
     analyzers/hits.cpp

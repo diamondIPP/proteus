@@ -3,8 +3,8 @@
  * \date 2017-02-16
  */
 
-#ifndef PT_BASICEFFICIENCY_H
-#define PT_BASICEFFICIENCY_H
+#ifndef PT_EFFICIENCY_H
+#define PT_EFFICIENCY_H
 
 #include <vector>
 
@@ -27,9 +27,9 @@ class TrackState;
 
 namespace Analyzers {
 
-/** Basic efficiency calculation using tracks and matched clusters.
+/** Efficiency calculation using tracks and matched clusters.
  *
- * Computer sensor and in-pixel efficiency maps and projections. Two-dimensional
+ * Computes sensor and in-pixel efficiency maps and projections. Two-dimensional
  * efficiency maps are calculated with additional edges to also include tracks
  * that are matched to a cluster but are located outside the region-of-interest.
  * The per-pixel efficiency distribution is calculated without these edges
@@ -43,7 +43,7 @@ namespace Analyzers {
  * The in-pixel efficiencies are only calculated for tracks fully within the
  * region-of-interest excluding the additional edges.
  */
-class BasicEfficiency : public Analyzer {
+class Efficiency : public Analyzer {
 public:
   /**
    * \param sensor Sensor for which efficiencies should be calculated
@@ -54,13 +54,13 @@ public:
    * \param inPixelBinsMin Minimum number of bins along the smaller direction
    * \param efficiencyDistBins Number of bins in the efficiency distribution
    */
-  BasicEfficiency(const Mechanics::Sensor& sensor,
-                  TDirectory* dir,
-                  int maskedPixelRange = 1,
-                  int increaseArea = 0,
-                  int inPixelPeriod = 2,
-                  int inPixelBinsMin = 32,
-                  int efficiencyDistBins = 128);
+  Efficiency(const Mechanics::Sensor& sensor,
+             TDirectory* dir,
+             int maskedPixelRange = 1,
+             int increaseArea = 0,
+             int inPixelPeriod = 2,
+             int inPixelBinsMin = 32,
+             int efficiencyDistBins = 128);
 
   std::string name() const;
   void analyze(const Storage::Event& event);
@@ -114,4 +114,4 @@ private:
 
 } // namespace Analyzers
 
-#endif // PT_BASICEFFICIENCY_H
+#endif // PT_EFFICIENCY_H

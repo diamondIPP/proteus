@@ -3,7 +3,7 @@
  * \date 2017-02-16
  */
 
-#include "basicefficiency.h"
+#include "efficiency.h"
 
 #include <TDirectory.h>
 #include <TH1D.h>
@@ -15,15 +15,15 @@
 #include "utils/logger.h"
 #include "utils/root.h"
 
-PT_SETUP_LOCAL_LOGGER(BasicEfficiency)
+PT_SETUP_LOCAL_LOGGER(Efficiency)
 
-Analyzers::BasicEfficiency::BasicEfficiency(const Mechanics::Sensor& sensor,
-                                            TDirectory* dir,
-                                            int maskedPixelRange,
-                                            int increaseArea,
-                                            int inPixelPeriod,
-                                            int inPixelBinsMin,
-                                            int efficiencyDistBins)
+Analyzers::Efficiency::Efficiency(const Mechanics::Sensor& sensor,
+                                  TDirectory* dir,
+                                  int maskedPixelRange,
+                                  int increaseArea,
+                                  int inPixelPeriod,
+                                  int inPixelBinsMin,
+                                  int efficiencyDistBins)
     : m_sensor(sensor)
 {
   if (maskedPixelRange < 0)
@@ -55,13 +55,13 @@ Analyzers::BasicEfficiency::BasicEfficiency(const Mechanics::Sensor& sensor,
   }
 }
 
-Analyzers::BasicEfficiency::Hists::Hists(const Mechanics::Sensor& sensor,
-                                         Area roi,
-                                         int increaseArea,
-                                         int inPixelPeriod,
-                                         int inPixelBinsMin,
-                                         int efficiencyDistBins,
-                                         TDirectory* dir)
+Analyzers::Efficiency::Hists::Hists(const Mechanics::Sensor& sensor,
+                                    Area roi,
+                                    int increaseArea,
+                                    int inPixelPeriod,
+                                    int inPixelBinsMin,
+                                    int efficiencyDistBins,
+                                    TDirectory* dir)
     : areaPixel(enlarged(roi, increaseArea))
     , roiPixel(roi)
     , edgeBins(increaseArea)
@@ -112,12 +112,12 @@ Analyzers::BasicEfficiency::Hists::Hists(const Mechanics::Sensor& sensor,
   clustersFail = makeH2(dir, "clusters_fail", axCol, axRow);
 }
 
-std::string Analyzers::BasicEfficiency::name() const
+std::string Analyzers::Efficiency::name() const
 {
-  return "BasicEfficiency(" + std::to_string(m_sensor.id()) + ')';
+  return "Efficiency(" + std::to_string(m_sensor.id()) + ')';
 }
 
-void Analyzers::BasicEfficiency::analyze(const Storage::Event& event)
+void Analyzers::Efficiency::analyze(const Storage::Event& event)
 {
   const Storage::Plane& localEvent = *event.getPlane(m_sensor.id());
   for (Index istate = 0; istate < localEvent.numStates(); ++istate) {
@@ -151,8 +151,8 @@ void Analyzers::BasicEfficiency::analyze(const Storage::Event& event)
   }
 }
 
-void Analyzers::BasicEfficiency::Hists::fill(const Storage::TrackState& state,
-                                             const XYPoint& posPixel)
+void Analyzers::Efficiency::Hists::fill(const Storage::TrackState& state,
+                                        const XYPoint& posPixel)
 {
   bool isMatched = state.matchedCluster();
 
@@ -186,7 +186,7 @@ void Analyzers::BasicEfficiency::Hists::fill(const Storage::TrackState& state,
   }
 }
 
-void Analyzers::BasicEfficiency::Hists::fill(const Storage::Cluster& cluster)
+void Analyzers::Efficiency::Hists::fill(const Storage::Cluster& cluster)
 {
   if (cluster.matchedState()) {
     clustersPass->Fill(cluster.posPixel().x(), cluster.posPixel().y());
@@ -195,7 +195,7 @@ void Analyzers::BasicEfficiency::Hists::fill(const Storage::Cluster& cluster)
   }
 }
 
-void Analyzers::BasicEfficiency::finalize()
+void Analyzers::Efficiency::finalize()
 {
   INFO(m_sensor.name(), " efficiency:");
   m_sensorHists.finalize();
@@ -209,7 +209,7 @@ void Analyzers::BasicEfficiency::finalize()
   }
 }
 
-void Analyzers::BasicEfficiency::Hists::finalize()
+void Analyzers::Efficiency::Hists::finalize()
 {
   // we just need the plain number differences w/o sumw2
   fail->Add(total, pass, 1, -1);

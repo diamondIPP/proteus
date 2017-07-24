@@ -1,8 +1,8 @@
 #include <TFile.h>
 #include <TTree.h>
 
-#include "analyzers/basicefficiency.h"
 #include "analyzers/distances.h"
+#include "analyzers/efficiency.h"
 #include "analyzers/residuals.h"
 #include "analyzers/tracks.h"
 #include "io/match.h"
@@ -44,7 +44,7 @@ int main(int argc, char const* argv[])
   for (auto sensorId : sensorIds) {
     loop.addAnalyzer(
         std::make_shared<Distances>(app.device(), sensorId, &hists));
-    loop.addAnalyzer(std::make_shared<BasicEfficiency>(
+    loop.addAnalyzer(std::make_shared<Efficiency>(
         *app.device().getSensor(sensorId), &hists));
     loop.addWriter(
         std::make_shared<Io::MatchWriter>(app.device(), sensorId, &trees));
