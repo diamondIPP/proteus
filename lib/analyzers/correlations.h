@@ -14,7 +14,7 @@ class TH2D;
 namespace Mechanics {
 class Device;
 class Sensor;
-}
+} // namespace Mechanics
 
 namespace Analyzers {
 
@@ -27,14 +27,14 @@ public:
    * \param dir        Where to put the output histograms.
    * \param neighbors  How many neighboring planes to consider; must be > 1.
    */
-  Correlations(const Mechanics::Device& device,
+  Correlations(TDirectory* dir,
+               const Mechanics::Device& device,
                const std::vector<Index>& sensorIds,
-               TDirectory* dir,
-               int neighbors = 2);
+               const int neighbors = 2);
   /** Consider pair-wise correlations between all configured sensors. */
-  Correlations(const Mechanics::Device* device,
-               TDirectory* dir,
-               int neighbors = 2);
+  Correlations(TDirectory* dir,
+               const Mechanics::Device& device,
+               const int neighbors = 2);
 
   std::string name() const;
   void analyze(const Storage::Event& event);

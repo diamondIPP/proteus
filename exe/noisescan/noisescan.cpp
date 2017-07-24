@@ -16,12 +16,12 @@
 
 PT_SETUP_LOCAL_LOGGER(NoiseScan)
 
-NoiseScan::NoiseScan(const Mechanics::Sensor& sensor,
+NoiseScan::NoiseScan(TDirectory* dir,
+                     const Mechanics::Sensor& sensor,
                      const double bandwidth,
                      const double sigmaMax,
                      const double rateMax,
                      const Area& regionOfInterest,
-                     TDirectory* dir,
                      const int binsOccupancy)
     : m_sensorId(sensor.id())
     , m_sigmaMax(sigmaMax)

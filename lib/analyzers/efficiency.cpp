@@ -17,13 +17,13 @@
 
 PT_SETUP_LOCAL_LOGGER(Efficiency)
 
-Analyzers::Efficiency::Efficiency(const Mechanics::Sensor& sensor,
-                                  TDirectory* dir,
-                                  int maskedPixelRange,
-                                  int increaseArea,
-                                  int inPixelPeriod,
-                                  int inPixelBinsMin,
-                                  int efficiencyDistBins)
+Analyzers::Efficiency::Efficiency(TDirectory* dir,
+                                  const Mechanics::Sensor& sensor,
+                                  const int maskedPixelRange,
+                                  const int increaseArea,
+                                  const int inPixelPeriod,
+                                  const int inPixelBinsMin,
+                                  const int efficiencyDistBins)
     : m_sensor(sensor)
 {
   if (maskedPixelRange < 0)
@@ -44,24 +44,24 @@ Analyzers::Efficiency::Efficiency(const Mechanics::Sensor& sensor,
   TDirectory* sub = Utils::makeDir(dir, sensor.name() + "/efficiency");
 
   // one set of histograms for the whole sensor
-  m_sensorHists = Hists(sensor, sensor.sensitiveAreaPixel(), increaseArea,
-                        inPixelPeriod, inPixelBinsMin, efficiencyDistBins, sub);
+  m_sensorHists = Hists(sub, sensor, sensor.sensitiveAreaPixel(), increaseArea,
+                        inPixelPeriod, inPixelBinsMin, efficiencyDistBins);
   // one additional set for each region
   for (const auto& region : sensor.regions()) {
     TDirectory* rsub = Utils::makeDir(sub, region.name);
-    m_regionsHists.emplace_back(sensor, region.areaPixel, increaseArea,
+    m_regionsHists.emplace_back(rsub, sensor, region.areaPixel, increaseArea,
                                 inPixelPeriod, inPixelBinsMin,
-                                efficiencyDistBins, rsub);
+                                efficiencyDistBins);
   }
 }
 
-Analyzers::Efficiency::Hists::Hists(const Mechanics::Sensor& sensor,
-                                    Area roi,
-                                    int increaseArea,
-                                    int inPixelPeriod,
-                                    int inPixelBinsMin,
-                                    int efficiencyDistBins,
-                                    TDirectory* dir)
+Analyzers::Efficiency::Hists::Hists(TDirectory* dir,
+                                    const Mechanics::Sensor& sensor,
+                                    const Area roi,
+                                    const int increaseArea,
+                                    const int inPixelPeriod,
+                                    const int inPixelBinsMin,
+                                    const int efficiencyDistBins)
     : areaPixel(enlarged(roi, increaseArea))
     , roiPixel(roi)
     , edgeBins(increaseArea)

@@ -16,7 +16,7 @@ class TDirectory;
 class TH1D;
 
 namespace Mechanics {
-class Device;
+class Sensor;
 }
 
 namespace Analyzers {
@@ -28,9 +28,8 @@ public:
    * \param d2Max Maximum weighted squared distance in histogram
    * \param bins Number of histogram bins
    */
-  Distances(const Mechanics::Device& device,
-            Index sensorId,
-            TDirectory* dir,
+  Distances(TDirectory* dir,
+            const Mechanics::Sensor& sensor,
             const double pixelRange = 3.0,
             const double d2Max = 10.0,
             const int bins = 256);

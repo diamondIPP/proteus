@@ -15,10 +15,10 @@
 
 PT_SETUP_LOCAL_LOGGER(Correlations)
 
-Analyzers::Correlations::Correlations(const Mechanics::Device& dev,
+Analyzers::Correlations::Correlations(TDirectory* dir,
+                                      const Mechanics::Device& dev,
                                       const std::vector<Index>& sensorIds,
-                                      TDirectory* dir,
-                                      int neighbors)
+                                      const int neighbors)
 {
   if (sensorIds.size() < 2)
     FAIL("need at least two sensors but ", sensorIds.size(), " given");
@@ -38,10 +38,10 @@ Analyzers::Correlations::Correlations(const Mechanics::Device& dev,
   }
 }
 
-Analyzers::Correlations::Correlations(const Mechanics::Device* device,
-                                      TDirectory* dir,
-                                      int neighbors)
-    : Correlations(*device, device->sensorIds(), dir, neighbors)
+Analyzers::Correlations::Correlations(TDirectory* dir,
+                                      const Mechanics::Device& device,
+                                      const int neighbors)
+    : Correlations(dir, device, device.sensorIds(), neighbors)
 {
 }
 

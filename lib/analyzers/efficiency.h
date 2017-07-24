@@ -54,13 +54,13 @@ public:
    * \param inPixelBinsMin Minimum number of bins along the smaller direction
    * \param efficiencyDistBins Number of bins in the efficiency distribution
    */
-  Efficiency(const Mechanics::Sensor& sensor,
-             TDirectory* dir,
-             int maskedPixelRange = 1,
-             int increaseArea = 0,
-             int inPixelPeriod = 2,
-             int inPixelBinsMin = 32,
-             int efficiencyDistBins = 128);
+  Efficiency(TDirectory* dir,
+             const Mechanics::Sensor& sensor,
+             const int maskedPixelRange = 1,
+             const int increaseArea = 0,
+             const int inPixelPeriod = 2,
+             const int inPixelBinsMin = 32,
+             const int efficiencyDistBins = 128);
 
   std::string name() const;
   void analyze(const Storage::Event& event);
@@ -94,13 +94,13 @@ private:
     TH2D* clustersFail;
 
     Hists() = default;
-    Hists(const Mechanics::Sensor& sensor,
-          Area roi,
-          int increaseArea,
-          int inPixelPeriod,
-          int inPixelBinsMin,
-          int efficiencyDistBins,
-          TDirectory* dir);
+    Hists(TDirectory* dir,
+          const Mechanics::Sensor& sensor,
+          const Area roi,
+          const int increaseArea,
+          const int inPixelPeriod,
+          const int inPixelBinsMin,
+          const int efficiencyDistBins);
     void fill(const Storage::TrackState& state, const XYPoint& posPixel);
     void fill(const Storage::Cluster& cluster);
     void finalize();

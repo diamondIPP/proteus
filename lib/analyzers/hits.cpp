@@ -83,15 +83,13 @@ void Analyzers::SensorHits::finalize()
   m_meanValueMap->Divide(m_pos);
 }
 
-Analyzers::Hits::Hits(const Mechanics::Device* device,
-                      TDirectory* dir,
+Analyzers::Hits::Hits(TDirectory* dir,
+                      const Mechanics::Device& device,
                       const int timeMax,
                       const int valueMax)
 {
-  assert(device && "Analyzer: can't initialize with null device");
-
-  for (Index isensor = 0; isensor < device->numSensors(); ++isensor)
-    m_sensors.emplace_back(dir, *device->getSensor(isensor), timeMax, valueMax);
+  for (Index isensor = 0; isensor < device.numSensors(); ++isensor)
+    m_sensors.emplace_back(dir, *device.getSensor(isensor), timeMax, valueMax);
 }
 
 std::string Analyzers::Hits::name() const { return "Hits"; }

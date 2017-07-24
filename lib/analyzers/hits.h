@@ -49,8 +49,7 @@ private:
 /** Hit histograms for all sensors in the device. */
 class Hits : public Analyzer {
 public:
-  Hits(const Mechanics::Device* device,
-       TDirectory* dir,
+  Hits(TDirectory* dir,const Mechanics::Device& device,
        /* Histogram options */
        const int timeMax = 16,
        const int valueMax = 16);

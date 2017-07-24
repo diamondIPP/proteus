@@ -11,15 +11,13 @@
 #include "storage/event.h"
 #include "utils/root.h"
 
-Analyzers::Events::Events(const Mechanics::Device* device,
-                          TDirectory* dir,
+Analyzers::Events::Events(TDirectory* dir,
+                          const Mechanics::Device& device,
                           const int binsTimestamps)
 {
   using namespace Utils;
 
-  assert(device && "Analyzer: can't initialize with null device");
-
-  int triggerMax = device->readoutWindow();
+  int triggerMax = device.readoutWindow();
 
   TDirectory* sub = makeDir(dir, "events");
   m_triggerOffset =

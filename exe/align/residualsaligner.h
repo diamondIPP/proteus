@@ -29,9 +29,9 @@ public:
    *
    * \warning This will add a `Tracks`-analyzer internally.
    */
-  ResidualsAligner(const Mechanics::Device& device,
+  ResidualsAligner(TDirectory* dir,
+                   const Mechanics::Device& device,
                    const std::vector<Index>& alignIds,
-                   TDirectory* dir,
                    const double damping = 1,
                    const double pixelRange = 1.0,
                    const double gammaRange = 0.1,

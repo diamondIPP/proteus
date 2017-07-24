@@ -46,15 +46,13 @@ void Analyzers::Distances::Hists::fill(const XYVector& delta,
   d2->Fill(mahalanobisSquared(cov, delta));
 }
 
-Analyzers::Distances::Distances(const Mechanics::Device& device,
-                                Index sensorId,
-                                TDirectory* dir,
+Analyzers::Distances::Distances(TDirectory* dir,
+                                const Mechanics::Sensor& sensor,
                                 const double pixelRange,
                                 const double d2Max,
                                 const int bins)
-    : m_sensorId(sensorId)
+    : m_sensorId(sensor.id())
 {
-  const Mechanics::Sensor& sensor = *device.getSensor(sensorId);
   auto area = sensor.sensitiveAreaLocal();
   double pitch = std::hypot(sensor.pitchCol(), sensor.pitchRow());
   double trackMax = std::hypot(area.length(0), area.length(1));

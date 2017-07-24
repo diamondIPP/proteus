@@ -39,13 +39,12 @@ int main(int argc, char const* argv[])
       std::make_shared<Tracking::StraightFitter>(app.device(), sensorIds));
   for (auto sensorId : sensorIds)
     loop.addProcessor(std::make_shared<Matcher>(app.device(), sensorId));
-  loop.addAnalyzer(std::make_shared<Tracks>(&app.device(), &hists));
-  loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(app.device(), &hists));
+  loop.addAnalyzer(std::make_shared<Tracks>(&hists, app.device()));
+  loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(&hists, app.device()));
   for (auto sensorId : sensorIds) {
-    loop.addAnalyzer(
-        std::make_shared<Distances>(app.device(), sensorId, &hists));
-    loop.addAnalyzer(std::make_shared<Efficiency>(
-        *app.device().getSensor(sensorId), &hists));
+    const auto& sensor = *app.device().getSensor(sensorId);
+    loop.addAnalyzer(std::make_shared<Distances>(&hists, sensor));
+    loop.addAnalyzer(std::make_shared<Efficiency>(&hists, sensor));
     loop.addWriter(
         std::make_shared<Io::MatchWriter>(app.device(), sensorId, &trees));
   }

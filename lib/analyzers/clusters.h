@@ -58,8 +58,8 @@ private:
 /** Cluster histograms for all sensors in the device. */
 class Clusters : public Analyzer {
 public:
-  Clusters(const Mechanics::Device* device,
-           TDirectory* dir,
+  Clusters(TDirectory* dir,
+           const Mechanics::Device& device,
            /* Histogram options */
            const int sizeMax = 8,
            const int timeMax = 32,

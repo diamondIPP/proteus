@@ -12,28 +12,25 @@
 #include "storage/event.h"
 #include "utils/root.h"
 
-Analyzers::Tracks::Tracks(const Mechanics::Device* device,
-                          TDirectory* dir,
+Analyzers::Tracks::Tracks(TDirectory* dir,const Mechanics::Device& device,
                           const double reducedChi2Max,
                           const double slopeMax,
                           const int bins)
 {
   using namespace Utils;
 
-  assert(device && "Analyzer: can't initialize with null device");
-
   // Makes or gets a directory called from inside _dir with this name
   TDirectory* sub = makeDir(dir, "tracks");
 
   // estimate bounding box of all sensor projections into the xy-plane
-  auto active = device->getSensor(0)->projectedEnvelopeXY();
-  for (Index isensor = 1; isensor < device->numSensors(); ++isensor) {
+  auto active = device.getSensor(0)->projectedEnvelopeXY();
+  for (Index isensor = 1; isensor < device.numSensors(); ++isensor) {
     active = Utils::boundingBox(
-        active, device->getSensor(isensor)->projectedEnvelopeXY());
+        active, device.getSensor(isensor)->projectedEnvelopeXY());
   }
 
   HistAxis axNTracks(0, 16, "Tracks / event");
-  HistAxis axSize(0, device->numSensors(), "Clusters on track");
+  HistAxis axSize(0, device.numSensors(), "Clusters on track");
   HistAxis axChi2(0, reducedChi2Max, bins, "#chi^2 / degrees of freedom");
   HistAxis axOffX(active.interval(0), bins, "Track offset x");
   HistAxis axOffY(active.interval(1), bins, "Track offset y");

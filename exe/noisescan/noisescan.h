@@ -34,12 +34,12 @@ class NoiseScan : public Analyzers::Analyzer {
 public:
   typedef Utils::Box<2, int> Area;
 
-  NoiseScan(const Mechanics::Sensor& sensor,
+  NoiseScan(TDirectory* dir,
+            const Mechanics::Sensor& sensor,
             const double bandwidth,
             const double sigmaMax,
             const double rateMax,
             const Area& regionOfInterest,
-            TDirectory* dir,
             const int binsOccupancy = 128);
 
   std::string name() const;

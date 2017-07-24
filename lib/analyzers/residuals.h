@@ -55,13 +55,12 @@ public:
    * \param slopeRange Track slope histogram range in radian
    * \param bins Number of histogram bins
    */
-  Residuals(
-      const Mechanics::Device* device,
-      TDirectory* dir = 0,
-      /* Histogram options */
-      const double pixelRange = 2.0,
-      const double slopeRange = 0.001,
-      const int bins = 128); // Number of bins for the vertical in AB plots
+  Residuals(TDirectory* dir,
+            const Mechanics::Device& device,
+            /* Histogram options */
+            const double pixelRange = 2.0,
+            const double slopeRange = 0.001,
+            const int bins = 128);
 
   std::string name() const;
   void analyze(const Storage::Event& refEvent);
@@ -79,8 +78,8 @@ public:
    * \param slopeRange Track slope histogram range in radian
    * \param bins Number of histogram bins
    */
-  UnbiasedResiduals(const Mechanics::Device& device,
-                    TDirectory* dir,
+  UnbiasedResiduals(TDirectory* dir,
+                    const Mechanics::Device& device,
                     const double pixelRange = 2.0,
                     const double slopeRange = 0.001,
                     const int bins = 128);

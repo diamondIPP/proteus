@@ -14,15 +14,15 @@
 PT_SETUP_LOCAL_LOGGER(ResidualsAligner)
 
 Alignment::ResidualsAligner::ResidualsAligner(
+    TDirectory* dir,
     const Mechanics::Device& device,
     const std::vector<Index>& alignIds,
-    TDirectory* dir,
     const double damping,
     const double pixelRange,
     const double gammaRange,
     const double slopeRange,
     const int bins)
-    : m_tracks(new Analyzers::Tracks(&device, dir))
+    : m_tracks(new Analyzers::Tracks(dir, device))
     , m_device(device)
     , m_damping(damping)
 {

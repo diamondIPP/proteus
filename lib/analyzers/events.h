@@ -17,8 +17,8 @@ namespace Analyzers {
 /** Overall event information, e.g. timing and hit and cluster rates. */
 class Events : public Analyzer {
 public:
-  Events(const Mechanics::Device* device,
-         TDirectory* dir,
+  Events(TDirectory* dir,
+         const Mechanics::Device& device,
          /* Histogram options */
          const int binsTimestamps = 1024);
 

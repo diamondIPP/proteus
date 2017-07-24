@@ -9,8 +9,8 @@
 #include <TH2D.h>
 
 #include "mechanics/device.h"
-#include "tracking/tracking.h"
 #include "storage/event.h"
+#include "tracking/tracking.h"
 #include "utils/logger.h"
 #include "utils/root.h"
 
@@ -70,17 +70,15 @@ void Analyzers::detail::SensorResidualHists::fill(
   slopeVResV->Fill(state.slope().y(), res.y());
 }
 
-Analyzers::Residuals::Residuals(const Mechanics::Device* device,
-                                TDirectory* dir,
+Analyzers::Residuals::Residuals(TDirectory* dir,
+                                const Mechanics::Device& device,
                                 const double pixelRange,
                                 const double slopeRange,
                                 const int bins)
-    : m_device(*device)
+    : m_device(device)
 {
-  assert(device && "Analyzer: can't initialize with null device");
-
-  for (Index isensor = 0; isensor < device->numSensors(); ++isensor) {
-    m_hists.emplace_back(dir, *device->getSensor(isensor), pixelRange,
+  for (Index isensor = 0; isensor < device.numSensors(); ++isensor) {
+    m_hists.emplace_back(dir, *device.getSensor(isensor), pixelRange,
                          slopeRange, bins, "residuals");
   }
 }
@@ -104,8 +102,8 @@ void Analyzers::Residuals::analyze(const Storage::Event& event)
 
 void Analyzers::Residuals::finalize() {}
 
-Analyzers::UnbiasedResiduals::UnbiasedResiduals(const Mechanics::Device& device,
-                                                TDirectory* dir,
+Analyzers::UnbiasedResiduals::UnbiasedResiduals(TDirectory* dir,
+                                                const Mechanics::Device& device,
                                                 const double pixelRange,
                                                 const double slopeRange,
                                                 const int bins)

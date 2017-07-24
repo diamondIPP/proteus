@@ -179,15 +179,15 @@ int main(int argc, char const* argv[])
       // coarse method w/o tracks using only cluster correlations
       // use the first sensor that is not in the align set as reference
       aligner = std::make_shared<CorrelationsAligner>(
-          dev, fixedSensorIds.front(), alignIds, stepDir);
+          stepDir, dev, fixedSensorIds.front(), alignIds);
 
     } else if (method == Method::Residuals) {
       // use (unbiased) track residuals to align
       loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
           dev, sensorIds, sensorIds.size(), searchSigmaMax, redChi2Max));
-      loop.addAnalyzer(std::make_shared<Residuals>(&dev, stepDir));
+      loop.addAnalyzer(std::make_shared<Residuals>(stepDir, dev));
       aligner =
-          std::make_shared<ResidualsAligner>(dev, alignIds, stepDir, damping);
+          std::make_shared<ResidualsAligner>(stepDir, dev, alignIds, damping);
     }
     loop.addAnalyzer(aligner);
     loop.run();

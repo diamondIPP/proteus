@@ -17,8 +17,7 @@ namespace Analyzers {
 
 class Tracks : public Analyzer {
 public:
-  Tracks(const Mechanics::Device* device,
-         TDirectory* dir,
+  Tracks(TDirectory* dir,const Mechanics::Device& device,
          /* Histogram options */
          const double reducedChi2Max = 10,
          const double slopeMax = 0.01,

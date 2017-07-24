@@ -117,8 +117,8 @@ void Analyzers::SensorClusters::finalize()
   }
 }
 
-Analyzers::Clusters::Clusters(const Mechanics::Device* device,
-                              TDirectory* dir,
+Analyzers::Clusters::Clusters(TDirectory* dir,
+                              const Mechanics::Device& device,
                               const int sizeMax,
                               const int timeMax,
                               const int valueMax,
@@ -126,10 +126,8 @@ Analyzers::Clusters::Clusters(const Mechanics::Device* device,
 {
   using namespace Utils;
 
-  assert(device && "Analyzer: can't initialize with null device");
-
-  for (Index isensor = 0; isensor < device->numSensors(); ++isensor)
-    m_sensors.emplace_back(dir, *device->getSensor(isensor), timeMax, valueMax,
+  for (Index isensor = 0; isensor < device.numSensors(); ++isensor)
+    m_sensors.emplace_back(dir, *device.getSensor(isensor), timeMax, valueMax,
                            sizeMax, binsUncertainty);
 }
 
