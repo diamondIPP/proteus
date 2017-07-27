@@ -1,115 +1,117 @@
-#ifndef EFFICIENCY_H
-#define EFFICIENCY_H
+/**
+ * \author Moritz Kiehn <msmk@cern.ch>
+ * \date 2017-02-16
+ */
+
+#ifndef PT_EFFICIENCY_H
+#define PT_EFFICIENCY_H
 
 #include <vector>
 
-#include <TH2D.h>
-#include <TH1D.h>
-#include <TEfficiency.h>
-#include <TDirectory.h>
+#include "analyzers/analyzer.h"
+#include "utils/definitions.h"
+#include "utils/densemask.h"
+#include "utils/interval.h"
 
-#include "dualanalyzer.h"
+class TDirectory;
+class TH1D;
+class TH2D;
 
-namespace Storage {
-class Event;
-}
 namespace Mechanics {
-class Device;
+class Sensor;
 }
+namespace Storage {
+class Cluster;
+class TrackState;
+} // namespace Storage
 
 namespace Analyzers {
 
-class Efficiency : public DualAnalyzer
-{
+/** Efficiency calculation using tracks and matched clusters.
+ *
+ * Computes sensor and in-pixel efficiency maps and projections. Two-dimensional
+ * efficiency maps are calculated with additional edges to also include tracks
+ * that are matched to a cluster but are located outside the region-of-interest.
+ * The per-pixel efficiency distribution is calculated without these edges
+ * pixels.
+ *
+ * For the column and row projections, tracks are considered only if they fall
+ * within the region-of-interest in the other axis. E.g. the column projections
+ * are calculated only for tracks whose row position falls within the
+ * region-of-interest excluding the additional edges.
+ *
+ * The in-pixel efficiencies are only calculated for tracks fully within the
+ * region-of-interest excluding the additional edges.
+ */
+class Efficiency : public Analyzer {
 public:
-    Efficiency(const Mechanics::Device *refDevice,
-               const Mechanics::Device *dutDevice,
-               TDirectory *dir = 0,
-               const char *suffix = "",
-               int relativeToSensor = -1, // Only consider events where this sensor has a match
-               int pix_x_min = 1,
-               int pix_x_max = 12,
-               int pix_y_min = 81,
-               int pix_y_max = 94,
-               int min_entries_lvl1 = 51,
-               int min_entries_lvl1_matchedTracks = 0,
-               /* Histogram options */
-               unsigned int rebinX = 1, // This many pixels in X are grouped
-               unsigned int rebinY = 1,
-               unsigned int pixBinsX = 20,
-               unsigned int pixBinsY = 20);
-    int _maxclustersize; //Max Dimension of cluster size
-    void processEvent(const Storage::Event *refEvent,
-                      const Storage::Event *dutDevent);
+  /**
+   * \param sensor Sensor for which efficiencies should be calculated
+   * \param dir Histogram output directory
+   * \param maskedPixelRange Remove tracks around masked pixels, 0 to disable
+   * \param increaseArea Extend histograms beyond the nominal sensor edge
+   * \param inPixelPeriod Folding period in number of pixels
+   * \param inPixelBinsMin Minimum number of bins along the smaller direction
+   * \param efficiencyDistBins Number of bins in the efficiency distribution
+   */
+  Efficiency(TDirectory* dir,
+             const Mechanics::Sensor& sensor,
+             const int maskedPixelRange = 1,
+             const int increaseArea = 0,
+             const int inPixelPeriod = 2,
+             const int inPixelBinsMin = 32,
+             const int efficiencyDistBins = 128);
 
-    void postProcessing();
-
-
+  std::string name() const;
+  void analyze(const Storage::Event& event);
+  void finalize();
 
 private:
-    int _relativeToSensor;
-    int _pix_x_min; //!< minimum pixel (x) to be considered for in-pixel results
-    int _pix_x_max; //!< maximum pixel (x) to be considered for in-pixel results
-    int _pix_y_min; //!< minimum pixel (y) to be considered for in-pixel results
-    int _pix_y_max; //!< maximum pixel (y) to be considered for in-pixel resultsa
+  using Area = Utils::Box<2, double>;
+  struct Hists {
+    Area areaPixel; // region-of-interest area + edge bins
+    Area roiPixel;  // only the region-of-interest
+    int edgeBins;   // how many bins are edges outside the region-of-interest
+    TH2D* total;
+    TH2D* pass;
+    TH2D* fail;
+    TH2D* eff;
+    TH1D* effDist;
+    TH1D* colTotal;
+    TH1D* colPass;
+    TH1D* colFail;
+    TH1D* colEff;
+    TH1D* rowTotal;
+    TH1D* rowPass;
+    TH1D* rowFail;
+    TH1D* rowEff;
+    Area inPixelAreaLocal; // in local coordinates
+    TH2D* inPixTotal;
+    TH2D* inPixPass;
+    TH2D* inPixFail;
+    TH2D* inPixEff;
+    TH2D* clustersPass;
+    TH2D* clustersFail;
 
-    int _min_entries_lvl1; //!< minimum number of entries in LVL1-vs-BC timing map
-    int _min_entries_lvl1_matchedTracks;  //!< minimum number of entries in LVL1-vs-BC timing map (matched tracks)
+    Hists() = default;
+    Hists(TDirectory* dir,
+          const Mechanics::Sensor& sensor,
+          const Area roi,
+          const int increaseArea,
+          const int inPixelPeriod,
+          const int inPixelBinsMin,
+          const int efficiencyDistBins);
+    void fill(const Storage::TrackState& state, const XYPoint& posPixel);
+    void fill(const Storage::Cluster& cluster);
+    void finalize();
+  };
 
+  const Mechanics::Sensor& m_sensor;
+  Utils::DenseMask m_mask;
+  Hists m_sensorHists;
+  std::vector<Hists> m_regionsHists;
+};
 
-    std::vector<TEfficiency *> _efficiencyMap;
-    std::vector<TH1D *> _efficiencyDistribution; // name to be changed
+} // namespace Analyzers
 
-    std::vector<TH1D *> _matchedTracks;
-    std::vector<TH1D *> _matchPositionX;
-    std::vector<TH1D *> _matchPositionY;
-    std::vector<TH1D *> _ResY;
-    std::vector<TH1D *> _ResX;
-    std::vector<TH1D *> _matchTime;
-    std::vector<TH1D *> _matchCluster;
-    std::vector<TH1D *> _matchToT;
-    std::vector<TH1D *> _timing_diff;
-
-    std::vector<TEfficiency *> _efficiencyTime;
-    std::vector<TEfficiency *> _inPixelEfficiency;
-    std::vector<TH2D *> _inPixelTiming;
-    std::vector<TH2D *> _inPixelCounting;
-    std::vector<TH2D *> _inPixelCountingtiming;
-    std::vector<TH2D *> _inPixelToT;
-    std::vector<TH2D *> _lvl1vsToT;
-    
-    typedef std::vector<TH1D *> vecTH1D;
-    typedef std::vector<TH2D *> vecTH2D;
-
-    std::vector<vecTH1D> _TimingCluster;
-    std::vector<vecTH1D> _TimingCluster_slow;
-    std::vector<vecTH1D> _TimingCluster_fast;
-
-    std::vector<vecTH2D> _inPixelTimingLVL1; // name to be changed
-    std::vector<vecTH2D> _TimingTOT_cluster; // name to be changed
-    
-    std::vector<vecTH2D> _TimingCorr; 
-    std::vector<vecTH1D> _TimingPlot;
-    
-    std::vector<TH2D *>  _inPixelEfficiencyLVL1_total; // name to be changed
-    std::vector<vecTH2D> _inPixelEfficiencyLVL1; // name to be changed
-    std::vector<vecTH2D> _inPixelEfficiencyLVL1_passed; // name to be changed
-
-    std::vector<vecTH1D> _triggerPhaseDUT;
-    std::vector<vecTH1D> _triggerPhaseREF;
-    std::vector<TH1D *>  _LVL1TriggerREF;
-
-
-    
-    std::vector<vecTH2D> _cluster_total; 
-    std::vector<vecTH2D> _cluster;
-    std::vector<vecTH2D> _cluster_passed;
-
-    std::vector<vecTH2D> _timing_cluster_total; 
-    std::vector<vecTH2D> _timing_cluster;
-    std::vector<vecTH2D> _timing_cluster_passed;
-}; // end of class
-
-} // end of namespace
-
-#endif // EFFICIENCY_H
+#endif // PT_EFFICIENCY_H

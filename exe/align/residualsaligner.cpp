@@ -4,6 +4,7 @@
 #include <TH1.h>
 #include <TH2.h>
 
+#include "analyzers/tracks.h"
 #include "mechanics/device.h"
 #include "storage/event.h"
 #include "tracking/tracking.h"
@@ -13,52 +14,42 @@
 PT_SETUP_LOCAL_LOGGER(ResidualsAligner)
 
 Alignment::ResidualsAligner::ResidualsAligner(
+    TDirectory* dir,
     const Mechanics::Device& device,
     const std::vector<Index>& alignIds,
-    TDirectory* dir,
     const double damping,
     const double pixelRange,
     const double gammaRange,
     const double slopeRange,
     const int bins)
-    : m_device(device), m_damping(damping)
+    : m_tracks(new Analyzers::Tracks(dir, device))
+    , m_device(device)
+    , m_damping(damping)
 {
   using namespace Utils;
 
-  TDirectory* sub = makeDir(dir, "ResidualsAligner");
-
-  // global track direction histograms
-  XYZVector beamDir = device.geometry().beamDirection();
-  double slopeX = beamDir.x() / beamDir.z();
-  double slopeY = beamDir.y() / beamDir.z();
-  HistAxis axSlopeX(slopeX - slopeRange, slopeX + slopeRange, bins,
-                    "Track slope x");
-  HistAxis axSlopeY(slopeY - slopeRange, slopeY + slopeRange, bins,
-                    "Track slope y");
-  m_trackSlope = makeH2(sub, "TrackSlope", axSlopeX, axSlopeY);
-
-  // per-sensor histograms
   for (auto id = alignIds.begin(); id != alignIds.end(); ++id) {
     const Mechanics::Sensor& sensor = *device.getSensor(*id);
-    auto name = [&](const std::string& suffix) {
-      return sensor.name() + '-' + suffix;
-    };
     double offsetRange =
         pixelRange * std::hypot(sensor.pitchCol(), sensor.pitchRow());
+
+    TDirectory* sub = makeDir(dir, sensor.name() + "/aligner_residuals");
 
     HistAxis axU(-offsetRange, offsetRange, bins, "Local offset u correction");
     HistAxis axV(-offsetRange, offsetRange, bins, "Local offset v correction");
     HistAxis axGamma(-gammaRange, gammaRange, bins,
                      "Local rotation #gamma correction");
-
-    Histograms hists;
+    SensorHists hists;
     hists.sensorId = *id;
-    hists.corrU = makeH1(sub, name("CorrectionU"), axU);
-    hists.corrV = makeH1(sub, name("CorrectionV"), axV);
-    hists.corrGamma = makeH1(sub, name("CorrectionGamma"), axGamma);
+    hists.corrU = makeH1(sub, "correction_u", axU);
+    hists.corrV = makeH1(sub, "correction_v", axV);
+    hists.corrGamma = makeH1(sub, "correction_gamma", axGamma);
     m_hists.push_back(hists);
   }
 }
+
+// required to make pImpled unique_ptr work
+Alignment::ResidualsAligner::~ResidualsAligner() {}
 
 std::string Alignment::ResidualsAligner::name() const
 {
@@ -67,13 +58,6 @@ std::string Alignment::ResidualsAligner::name() const
 
 void Alignment::ResidualsAligner::analyze(const Storage::Event& event)
 {
-  for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
-    const Storage::Track& track = *event.getTrack(itrack);
-    const Storage::TrackState& global = track.globalState();
-
-    m_trackSlope->Fill(global.slope().x(), global.slope().y());
-  }
-
   for (auto hists = m_hists.begin(); hists != m_hists.end(); ++hists) {
     Index sensorId = hists->sensorId;
     const Storage::Plane& sensorEvent = *event.getPlane(sensorId);
@@ -114,21 +98,24 @@ void Alignment::ResidualsAligner::analyze(const Storage::Event& event)
       hists->corrGamma->Fill(dgamma);
     }
   }
+  m_tracks->analyze(event);
 }
 
-void Alignment::ResidualsAligner::finalize() {}
+void Alignment::ResidualsAligner::finalize() { m_tracks->finalize(); }
 
 Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
 {
   Mechanics::Geometry geo = m_device.geometry();
 
-  double slopeX = m_trackSlope->GetMean(1);
-  double slopeY = m_trackSlope->GetMean(2);
+  double slopeX = m_tracks->histSlopeX()->GetMean();
+  double slopeXStd = m_tracks->histSlopeX()->GetStdDev();
+  double slopeY = m_tracks->histSlopeY()->GetMean();
+  double slopeYStd = m_tracks->histSlopeY()->GetStdDev();
   geo.setBeamSlope(slopeX, slopeY);
 
   INFO("mean track slope:");
-  INFO("  slope x: ", slopeX, " +- ", m_trackSlope->GetStdDev(1));
-  INFO("  slope y: ", slopeY, " +- ", m_trackSlope->GetStdDev(2));
+  INFO("  slope x: ", slopeX, " +- ", slopeXStd);
+  INFO("  slope y: ", slopeY, " +- ", slopeYStd);
 
   for (auto hists = m_hists.begin(); hists != m_hists.end(); ++hists) {
     const Mechanics::Sensor& sensor = *m_device.getSensor(hists->sensorId);

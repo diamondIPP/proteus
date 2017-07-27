@@ -1,10 +1,10 @@
 #include <TFile.h>
 #include <TTree.h>
 
-#include "analyzers/basicefficiency.h"
 #include "analyzers/distances.h"
+#include "analyzers/efficiency.h"
 #include "analyzers/residuals.h"
-#include "analyzers/trackinfo.h"
+#include "analyzers/tracks.h"
 #include "io/match.h"
 #include "io/rceroot.h"
 #include "mechanics/device.h"
@@ -39,15 +39,13 @@ int main(int argc, char const* argv[])
       std::make_shared<Tracking::StraightFitter>(app.device(), sensorIds));
   for (auto sensorId : sensorIds)
     loop.addProcessor(std::make_shared<Matcher>(app.device(), sensorId));
-  loop.addAnalyzer(std::make_shared<TrackInfo>(&app.device(), &hists));
-  loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(app.device(), &hists));
+  loop.addAnalyzer(std::make_shared<Tracks>(&hists, app.device()));
+  loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(&hists, app.device()));
   for (auto sensorId : sensorIds) {
-    loop.addAnalyzer(
-        std::make_shared<Distances>(app.device(), sensorId, &hists));
-    loop.addAnalyzer(std::make_shared<BasicEfficiency>(
-        *app.device().getSensor(sensorId), &hists));
-    loop.addWriter(
-        std::make_shared<Io::MatchWriter>(app.device(), sensorId, &trees));
+    const auto& sensor = *app.device().getSensor(sensorId);
+    loop.addAnalyzer(std::make_shared<Distances>(&hists, sensor));
+    loop.addAnalyzer(std::make_shared<Efficiency>(&hists, sensor));
+    loop.addWriter(std::make_shared<Io::MatchWriter>(&trees, sensor));
   }
   loop.run();
 

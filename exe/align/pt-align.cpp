@@ -6,10 +6,7 @@
 #include <TGraphErrors.h>
 #include <TTree.h>
 
-#include "analyzers/correlations.h"
 #include "analyzers/residuals.h"
-#include "analyzers/trackinfo.h"
-#include "io/rceroot.h"
 #include "mechanics/device.h"
 #include "processors/applygeometry.h"
 #include "processors/setupsensors.h"
@@ -19,6 +16,7 @@
 #include "utils/application.h"
 #include "utils/eventloop.h"
 #include "utils/logger.h"
+#include "utils/root.h"
 
 #include "correlationsaligner.h"
 #include "residualsaligner.h"
@@ -27,56 +25,63 @@ PT_SETUP_LOCAL_LOGGER(align)
 
 /** Store sensor geometry parameters for multiple steps. */
 struct SensorStepsGraphs {
-  std::vector<double> off0;
-  std::vector<double> off1;
-  std::vector<double> off2;
-  std::vector<double> rot0;
-  std::vector<double> rot1;
-  std::vector<double> rot2;
-  std::vector<double> errOff0;
-  std::vector<double> errOff1;
-  std::vector<double> errOff2;
-  std::vector<double> errRot0;
-  std::vector<double> errRot1;
-  std::vector<double> errRot2;
+  std::vector<double> offX;
+  std::vector<double> offY;
+  std::vector<double> offZ;
+  std::vector<double> rotX;
+  std::vector<double> rotY;
+  std::vector<double> rotZ;
+  std::vector<double> errOffX;
+  std::vector<double> errOffY;
+  std::vector<double> errOffZ;
+  std::vector<double> errRotX;
+  std::vector<double> errRotY;
+  std::vector<double> errRotZ;
 
   void addStep(const Vector6& delta, const SymMatrix6& cov)
   {
-    off0.push_back(delta[0]);
-    off1.push_back(delta[1]);
-    off2.push_back(delta[2]);
-    rot0.push_back(delta[3]);
-    rot1.push_back(delta[4]);
-    rot2.push_back(delta[5]);
+    // values
+    offX.push_back(delta[0]);
+    offY.push_back(delta[1]);
+    offZ.push_back(delta[2]);
+    rotX.push_back(delta[3]);
+    rotY.push_back(delta[4]);
+    rotZ.push_back(delta[5]);
     // errors
-    errOff0.push_back(std::sqrt(cov(0, 0)));
-    errOff1.push_back(std::sqrt(cov(1, 1)));
-    errOff2.push_back(std::sqrt(cov(2, 2)));
-    errRot0.push_back(std::sqrt(cov(3, 3)));
-    errRot1.push_back(std::sqrt(cov(4, 4)));
-    errRot2.push_back(std::sqrt(cov(5, 5)));
+    errOffX.push_back(std::sqrt(cov(0, 0)));
+    errOffY.push_back(std::sqrt(cov(1, 1)));
+    errOffZ.push_back(std::sqrt(cov(2, 2)));
+    errRotX.push_back(std::sqrt(cov(3, 3)));
+    errRotY.push_back(std::sqrt(cov(4, 4)));
+    errRotZ.push_back(std::sqrt(cov(5, 5)));
   }
   void writeGraphs(const std::string& sensorName, TDirectory* dir) const
   {
-    auto makeGraph = [&](const std::string& paramName,
+    TDirectory* sub = Utils::makeDir(dir, sensorName);
+    auto makeGraph = [&](const std::string& name,
+                         const std::string& ylabel,
                          const std::vector<double>& yval,
-                         const std::vector<double>& yerr) {
-      std::vector<double> x(yval.size());
-      std::iota(x.begin(), x.end(), 0);
-      TGraphErrors* g =
-          new TGraphErrors(x.size(), x.data(), yval.data(), NULL, yerr.data());
-      g->SetName((sensorName + "-" + paramName).c_str());
+                         const std::vector<double>& yerr,
+                         const double yscale = 1.0) {
+      TGraphErrors* g = new TGraphErrors(std::min(yval.size(), yerr.size()));
+      for (int i = 0; i < g->GetN(); ++i) {
+        g->SetPoint(i, i, yscale * yval[i]);
+        g->SetPointError(i, 0.0, yscale * yerr[i]);
+      }
+      g->SetName(name.c_str());
       g->SetTitle("");
       g->GetXaxis()->SetTitle("Alignment step");
-      g->GetYaxis()->SetTitle((sensorName + ' ' + paramName).c_str());
-      dir->WriteTObject(g);
+      g->GetYaxis()->SetTitle((sensorName + ' ' + ylabel).c_str());
+      sub->WriteTObject(g);
     };
-    makeGraph("Offset0", off0, errOff0);
-    makeGraph("Offset1", off1, errOff1);
-    makeGraph("Offset2", off2, errOff2);
-    makeGraph("Rotation0", rot0, errRot0);
-    makeGraph("Rotation1", rot1, errRot1);
-    makeGraph("Rotation2", rot2, errRot2);
+    makeGraph("offset_x", "offset x", offX, errOffX);
+    makeGraph("offset_y", "offset y", offY, errOffY);
+    makeGraph("offset_z", "offset z", offZ, errOffZ);
+    // show rotation angles in degree
+    double yscale = 180.0 / M_PI;
+    makeGraph("rotation_x", "rotation x / degree", rotX, errRotX, yscale);
+    makeGraph("rotation_y", "rotation y / degree", rotY, errRotY, yscale);
+    makeGraph("rotation_z", "rotation z / degree", rotZ, errRotZ, yscale);
   }
 };
 
@@ -164,7 +169,7 @@ int main(int argc, char const* argv[])
   auto dev = app.device();
 
   for (int step = 1; step <= numSteps; ++step) {
-    TDirectory* stepDir = hists.mkdir(("Step" + std::to_string(step)).c_str());
+    TDirectory* stepDir = Utils::makeDir(&hists, "step" + std::to_string(step));
 
     INFO("alignment step ", step, "/", numSteps);
 
@@ -180,16 +185,15 @@ int main(int argc, char const* argv[])
       // coarse method w/o tracks using only cluster correlations
       // use the first sensor that is not in the align set as reference
       aligner = std::make_shared<CorrelationsAligner>(
-          dev, fixedSensorIds.front(), alignIds, stepDir);
+          stepDir, dev, fixedSensorIds.front(), alignIds);
 
     } else if (method == Method::Residuals) {
       // use (unbiased) track residuals to align
       loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
           dev, sensorIds, sensorIds.size(), searchSigmaMax, redChi2Max));
-      loop.addAnalyzer(std::make_shared<TrackInfo>(&dev, stepDir));
-      loop.addAnalyzer(std::make_shared<Residuals>(&dev, stepDir));
+      loop.addAnalyzer(std::make_shared<Residuals>(stepDir, dev));
       aligner =
-          std::make_shared<ResidualsAligner>(dev, alignIds, stepDir, damping);
+          std::make_shared<ResidualsAligner>(stepDir, dev, alignIds, damping);
     }
     loop.addAnalyzer(aligner);
     loop.run();
@@ -201,7 +205,7 @@ int main(int argc, char const* argv[])
     dev.geometry().writeFile(app.outputPath("geo.toml"));
   }
 
-  steps.writeGraphs(dev, &hists);
+  steps.writeGraphs(dev, Utils::makeDir(&hists, "results"));
   hists.Write();
   hists.Close();
 

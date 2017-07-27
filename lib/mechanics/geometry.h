@@ -25,16 +25,17 @@ namespace Mechanics {
  *
  * with r_0 being the plane offset. Representing the plane orientation with
  * a rotation matrix allows for easy, direct calculations, but is not a
- * minimal set of parameters. The minimal set of six parameters contains the
- * three offsets and three rotation angles that define the rotation matrix
- * as a product of three elementary rotations
+ * minimal set of parameters. The minimal set of six parameters contains only
+ * three offsets and three rotation angles that define the rotation matrix.
+ * Multiple conventions exists to define the three rotations. Here, the
+ * 3-2-1 convention is used to build the rotation matrix as a product of
+ * three elementary rotations
  *
- *     Q = R_0(alpha) * R_1(beta) * R_2(gamma) ,
+ *     Q = R_1(a1) * R_2(a2) * R_3(a3) ,
  *
- * i.e. first a rotation by gamma around the local third axis
- * (normal axis), then a rotation by beta around the updated second
- * axis, followed with a roation by alpha around the first axis. This is the
- * 3-2-1 convention.
+ * i.e. first a rotation by a3 around the local third axis
+ * (normal axis), then a rotation by a2 around the updated second
+ * axis, followed with a rotation by a1 around the first axis.
  */
 struct Plane {
   Matrix3 rotation; // from local to global coordinates
@@ -48,7 +49,7 @@ struct Plane {
 
   /** Compute the equivalent local-to-global Transform3D object. */
   Transform3D asTransform3D() const;
-  /** Compute geometry parameters [x, y, z, alpha, beta, gamma]. */
+  /** Compute geometry parameters [x0, y0, z0, a1, a2, a3]. */
   Vector6 asParams() const;
 
   Vector3 unitU() const { return rotation.SubCol<Vector3>(0); }

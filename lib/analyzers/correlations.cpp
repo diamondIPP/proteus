@@ -10,19 +10,22 @@
 
 #include "mechanics/device.h"
 #include "storage/event.h"
+#include "utils/logger.h"
 #include "utils/root.h"
 
-Analyzers::Correlations::Correlations(const Mechanics::Device& dev,
-                                      const std::vector<Index>& sensorIds,
-                                      TDirectory* dir,
-                                      int neighbors)
-{
-  TDirectory* sub = Utils::makeDir(dir, "Correlations");
+PT_SETUP_LOCAL_LOGGER(Correlations)
 
+Analyzers::Correlations::Correlations(TDirectory* dir,
+                                      const Mechanics::Device& dev,
+                                      const std::vector<Index>& sensorIds,
+                                      const int neighbors)
+{
   if (sensorIds.size() < 2)
-    throw std::runtime_error("Correlations: need at least two sensors");
+    FAIL("need at least two sensors but ", sensorIds.size(), " given");
   if (neighbors < 1)
-    throw std::runtime_error("Correlations: need at least one neighbor");
+    FAIL("need at least one neighbor but ", neighbors, " given");
+
+  TDirectory* sub = Utils::makeDir(dir, "correlations");
 
   // correlation between selected number of neighboring sensors
   const size_t n = sensorIds.size();
@@ -35,10 +38,10 @@ Analyzers::Correlations::Correlations(const Mechanics::Device& dev,
   }
 }
 
-Analyzers::Correlations::Correlations(const Mechanics::Device* device,
-                                      TDirectory* dir,
-                                      int neighbors)
-    : Correlations(*device, device->sensorIds(), dir, neighbors)
+Analyzers::Correlations::Correlations(TDirectory* dir,
+                                      const Mechanics::Device& device,
+                                      const int neighbors)
+    : Correlations(dir, device, device.sensorIds(), neighbors)
 {
 }
 
@@ -50,23 +53,23 @@ void Analyzers::Correlations::addHist(const Mechanics::Sensor& sensor0,
 {
   using namespace Utils;
 
+  TDirectory* sub = makeDir(dir, sensor0.name() + "-" + sensor1.name());
+
   auto makeCorr = [&](int axis) {
-    std::string axisName = (axis == 0) ? "X" : "Y";
-    std::string histName =
-        sensor0.name() + "-" + sensor1.name() + "-Correlation" + axisName;
+    std::string axisName = (axis == 0) ? "x" : "y";
+    std::string histName = "correlation_" + axisName;
     std::string xlabel = sensor0.name() + " cluster " + axisName;
     std::string ylabel = sensor1.name() + " cluster " + axisName;
     auto range0 = sensor0.projectedEnvelopeXY().interval(axis);
     auto range1 = sensor1.projectedEnvelopeXY().interval(axis);
     int bins0 = range0.length() / sensor0.projectedPitchXY()[axis];
     int bins1 = range1.length() / sensor1.projectedPitchXY()[axis];
-    return makeH2(dir, histName, {range0, bins0, xlabel},
+    return makeH2(sub, histName, {range0, bins0, xlabel},
                   {range1, bins1, ylabel});
   };
   auto makeDiff = [&](int axis) {
-    std::string axisName = (axis == 0) ? "X" : "Y";
-    std::string histName =
-        sensor0.name() + "-" + sensor1.name() + "-Diff" + axisName;
+    std::string axisName = (axis == 0) ? "x" : "y";
+    std::string histName = "diff_" + axisName;
     std::string xlabel =
         sensor0.name() + " - " + sensor1.name() + " cluster " + axisName;
     double length0 = sensor0.projectedEnvelopeXY().length(axis);
@@ -75,7 +78,7 @@ void Analyzers::Correlations::addHist(const Mechanics::Sensor& sensor0,
     double pitch0 = sensor0.projectedPitchXY()[axis];
     double pitch1 = sensor1.projectedPitchXY()[axis];
     int bins = 2 * maxDist / std::min(pitch0, pitch1);
-    return makeH1(dir, histName, {-maxDist, maxDist, bins, xlabel});
+    return makeH1(sub, histName, {-maxDist, maxDist, bins, xlabel});
   };
 
   Hists hist;
@@ -114,14 +117,14 @@ void Analyzers::Correlations::analyze(const Storage::Event& event)
 
 void Analyzers::Correlations::finalize() {}
 
-TH1D* Analyzers::Correlations::getHistDiffX(Index sensorId0,
-                                            Index sensorId1) const
+const TH1D* Analyzers::Correlations::getHistDiffX(Index sensorId0,
+                                                  Index sensorId1) const
 {
   return m_hists.at(std::make_pair(sensorId0, sensorId1)).diffX;
 }
 
-TH1D* Analyzers::Correlations::getHistDiffY(Index sensorId0,
-                                            Index sensorId1) const
+const TH1D* Analyzers::Correlations::getHistDiffY(Index sensorId0,
+                                                  Index sensorId1) const
 {
   return m_hists.at(std::make_pair(sensorId0, sensorId1)).diffY;
 }

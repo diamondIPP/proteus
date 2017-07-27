@@ -32,10 +32,11 @@ public:
    *
    * \warning This will add a `Correlations`-analyzer internally.
    */
-  CorrelationsAligner(const Mechanics::Device& device,
+  CorrelationsAligner(TDirectory* dir,
+                      const Mechanics::Device& device,
                       const Index fixedId,
-                      const std::vector<Index>& alignIds,
-                      TDirectory* dir);
+                      const std::vector<Index>& alignIds);
+  ~CorrelationsAligner();
 
   std::string name() const;
   void analyze(const Storage::Event& event);

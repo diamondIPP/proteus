@@ -1,18 +1,20 @@
 #ifndef PT_RESIDUALSALIGNER_H
 #define PT_RESIDUALSALIGNER_H
 
+#include <memory>
 #include <vector>
 
 #include "aligner.h"
 
 class TDirectory;
 class TH1D;
-class TH2D;
 
+namespace Analyzers {
+class Tracks;
+}
 namespace Mechanics {
 class Device;
 }
-
 namespace Alignment {
 
 /** Align sensors in the xy-plane using track residuals. */
@@ -24,15 +26,18 @@ public:
    * \param gammaRange Rotation histogram range in radian
    * \param slopeRange Track slope histogram range in radian
    * \param bins Number of histogram bins
+   *
+   * \warning This will add a `Tracks`-analyzer internally.
    */
-  ResidualsAligner(const Mechanics::Device& device,
+  ResidualsAligner(TDirectory* dir,
+                   const Mechanics::Device& device,
                    const std::vector<Index>& alignIds,
-                   TDirectory* dir,
                    const double damping = 1,
                    const double pixelRange = 1.0,
                    const double gammaRange = 0.1,
                    const double slopeRange = 0.01,
                    const int bins = 128);
+  ~ResidualsAligner();
 
   std::string name() const;
   void analyze(const Storage::Event& event);
@@ -41,16 +46,16 @@ public:
   Mechanics::Geometry updatedGeometry() const;
 
 private:
-  struct Histograms {
+  struct SensorHists {
     Index sensorId;
     TH1D* corrU;
     TH1D* corrV;
     TH1D* corrGamma;
   };
 
+  std::vector<SensorHists> m_hists;
+  std::unique_ptr<Analyzers::Tracks> m_tracks;
   const Mechanics::Device& m_device;
-  TH2D* m_trackSlope;
-  std::vector<Histograms> m_hists;
   double m_damping;
 };
 

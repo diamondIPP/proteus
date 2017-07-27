@@ -9,10 +9,10 @@
 PT_SETUP_LOCAL_LOGGER(CorrelationsAligner)
 
 Alignment::CorrelationsAligner::CorrelationsAligner(
+    TDirectory* dir,
     const Mechanics::Device& device,
     const Index fixedId,
-    const std::vector<Index>& alignIds,
-    TDirectory* dir)
+    const std::vector<Index>& alignIds)
     : m_device(device)
 {
   // TODO 2017-02-09 msmk
@@ -26,8 +26,11 @@ Alignment::CorrelationsAligner::CorrelationsAligner(
   std::sort(m_sensorIds.begin() + 1, m_sensorIds.end(),
             Mechanics::CompareSensorIdZ{device});
   // we only need correlations between direct neighbors
-  m_corr.reset(new Analyzers::Correlations(device, m_sensorIds, dir, 1));
+  m_corr.reset(new Analyzers::Correlations(dir, device, m_sensorIds, 1));
 }
+
+// required to make correlations unique_ptr work
+Alignment::CorrelationsAligner::~CorrelationsAligner() {}
 
 std::string Alignment::CorrelationsAligner::name() const
 {

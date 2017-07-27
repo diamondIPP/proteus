@@ -23,6 +23,19 @@ User-visible changes
     in the data than defined in the device configuration to allow e.g.
     device-under-test data that is only be merged after the telescope
     reconstruction has been performed.
+*   Histograms are now organized by sensor and object type, e.g. hit and
+    cluster histograms for a sensor can be found at
+
+        <sensor_name>/hits/...
+                     /clusters/...
+
+    global track information can be found in
+
+        tracks/...
+
+    and correlations between sensors are to be found in
+
+        correlations/<sensor0_name>-<sensor1_name>/...
 
 Bugfixes
 --------
@@ -47,6 +60,9 @@ Internal changes
     The ``lib`` directory contains common code that is used by more than
     one executable and build into a single library. The ``exe`` directory
     contains the code for each tool and tool-specific code that is not shared.
+*   Where appropriate, analyzers classes are split into per-sensor and
+    per-device classes and have been renamed for clarity.
+*   All analyzers have consistent parameter ordering and reference usage.
 
 v1.2.0 (2017-06-28)
 ===================
