@@ -8,7 +8,7 @@
 
 #include <cstdlib>
 
-#include "io/rceroot.h"
+#include "io/reader.h"
 #include "mechanics/device.h"
 #include "utils/arguments.h"
 #include "utils/logger.h"
@@ -86,8 +86,8 @@ void Utils::Application::initialize(int argc, char const* argv[])
   m_cfg = Utils::Config::withDefaults(*cfg, m_cfg);
   INFO("read configuration '", section, "' from '", args.get("config"), "'");
 
-  // setup input and i/o settings
-  m_reader = Io::openRead(args.get("input"));
+  // setup paths and i/o settings
+  m_inputPath = args.get("input");
   m_outputPrefix = args.get("output_prefix");
   m_skipEvents = args.get<uint64_t>("skip_events");
   m_numEvents = args.get<uint64_t>("num_events");
@@ -100,6 +100,8 @@ std::string Utils::Application::outputPath(const std::string& name) const
 
 Utils::EventLoop Utils::Application::makeEventLoop() const
 {
-  return Utils::EventLoop(m_reader, m_dev->numSensors(), m_skipEvents,
-                          m_numEvents, m_showProgress);
+  // NOTE open the file just when the event loop is created to ensure that the
+  //      input reader always starts at the beginning of the file.
+  return Utils::EventLoop(Io::openRead(m_inputPath), m_dev->numSensors(),
+                          m_skipEvents, m_numEvents, m_showProgress);
 }

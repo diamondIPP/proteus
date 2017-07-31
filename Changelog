@@ -42,6 +42,8 @@ Bugfixes
 
 *   The ``TriggerPhase`` variable in the RCE ``Event`` tree is now optional
     to be compatible with the default RCE ROOT format.
+*   Use the same selected events for each alignment step by re-opening the
+    input file at each step.
 
 Internal changes
 ----------------

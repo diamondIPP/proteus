@@ -22,7 +22,7 @@ namespace Utils {
 
 /** Common application class.
  *
- * Handles the command line parameters, configures loggins, reads the analysis
+ * Handles the command line parameters, configures logging, reads the analysis
  * and device configuration including modifications from the command line,
  * and manages the input data. Output data must be handled separately for each
  * tool since the type of output data differs between them.
@@ -33,7 +33,7 @@ public:
               const std::string& description,
               const toml::Table& defaults = toml::Table());
 
-  /** Parse command line arguments and setup configuration and input data.
+  /** Parse command line arguments and setup configuration.
    *
    * \warning This methods exits the program if anything goes wrong.
    */
@@ -43,23 +43,21 @@ public:
   const Mechanics::Device& device() const { return *m_dev; }
   /** Tool configuration w/ defaults. */
   const toml::Value& config() const { return m_cfg; }
-  /** Output path for the given file name. */
+  /** Generate the output path for the given file name. */
   std::string outputPath(const std::string& name) const;
 
   /** Construct an event loop configured w/ input data from this application.
    *
-   * \warning The event loop uses the input data store in this application
-   *          object. Therefore, it is only valid for the life time of the
-   *          application object.
+   * Automatically opens the input file and adds it to the event loop.
    */
   Utils::EventLoop makeEventLoop() const;
 
 private:
   std::string m_name;
   std::string m_desc;
-  toml::Value m_cfg;
   std::unique_ptr<Mechanics::Device> m_dev;
-  std::shared_ptr<Io::EventReader> m_reader;
+  toml::Value m_cfg;
+  std::string m_inputPath;
   std::string m_outputPrefix;
   uint64_t m_skipEvents;
   uint64_t m_numEvents;
