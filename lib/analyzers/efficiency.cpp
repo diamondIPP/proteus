@@ -120,8 +120,9 @@ std::string Analyzers::Efficiency::name() const
 void Analyzers::Efficiency::analyze(const Storage::Event& event)
 {
   const Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensor.id());
-  for (Index istate = 0; istate < sensorEvent.numStates(); ++istate) {
-    const Storage::TrackState& state = sensorEvent.getState(istate);
+
+  for (const auto& s : sensorEvent.localStates()) {
+    const Storage::TrackState& state = s.second;
     auto posPixel = m_sensor.transformLocalToPixel(state.offset());
 
     // ignore tracks that fall within a masked area
