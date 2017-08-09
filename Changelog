@@ -75,6 +75,23 @@ Internal changes
 *   Where appropriate, analyzers classes are split into per-sensor and
     per-device classes and have been renamed for clarity.
 *   All analyzers have consistent parameter ordering and reference usage.
+*   Rename `Storage::Plane` to `Storage::SensorEvent`.
+*   `Storage::Event` and `Storage::SensorEvent` always return references to the
+    contained objects.
+*   Where possible, linking between objects is done by storing the object index
+    instead of a pointer to decouple the classes.
+*   `Storage::Track` stores its constituent clusters indexed by the sensor
+    index.
+*   Local states are always associated to a track and are stored and accessed
+    using the same track index.
+*   Separate track processors and analyzers from the track fit model.
+
+    Track fitting is only performed inside a fit processors with the results for
+    each sensor plane being stored as a local track state in the corresponding
+    sensor event. Algorithms that use the fitted track information, e.g.
+    residual analyzer, alignment, or matching, only use the resulting stored
+    information. This allows easy replacement of the fit algorithm in the
+    future.
 
 v1.2.0 (2017-06-28)
 ===================
