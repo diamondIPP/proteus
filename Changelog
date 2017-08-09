@@ -44,6 +44,7 @@ Bugfixes
     to be compatible with the default RCE ROOT format.
 *   Use the same selected events for each alignment step by re-opening the
     input file at each step.
+*   Fix histogram binning for cluster positions.
 
 Internal changes
 ----------------

@@ -23,7 +23,7 @@ Analyzers::SensorClusters::SensorClusters(TDirectory* dir,
                            const Mechanics::Sensor::Area& area,
                            TDirectory* sub) {
     HistAxis axCol(area.interval(0), area.length(0), "Cluster column position");
-    HistAxis axRow(area.interval(1), area.length(0), "Cluster row position");
+    HistAxis axRow(area.interval(1), area.length(1), "Cluster row position");
     HistAxis axValue(0, valueMax, "Cluster value");
     HistAxis axSize(1, sizeMax, "Cluster size");
     HistAxis axSizeCol(1, sizeMax, "Cluster column size");
@@ -34,7 +34,7 @@ Analyzers::SensorClusters::SensorClusters(TDirectory* dir,
                    "Cluster uncertainty v");
     HistAxis axHitCol(area.interval(0), area.length(0),
                       "Cluster hit column position");
-    HistAxis axHitRow(area.interval(1), area.length(0),
+    HistAxis axHitRow(area.interval(1), area.length(1),
                       "Cluster hit row position");
     HistAxis axHitTime(0, timeMax, "Hit time");
     HistAxis axHitValue(0, valueMax, "Hit value");
