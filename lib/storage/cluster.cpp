@@ -95,16 +95,18 @@ void Storage::Cluster::print(std::ostream& os, const std::string& prefix) const
   Vector2 ep = sqrt(m_crCov.Diagonal());
   Vector3 eg = sqrt(m_xyzCov.Diagonal());
 
+  os << prefix << "size: " << size() << '\n';
   os << prefix << "pixel: " << posPixel() << '\n';
   os << prefix << "pixel stddev: " << ep << '\n';
   os << prefix << "global: " << posGlobal() << '\n';
   os << prefix << "global stddev: " << eg << '\n';
-  os << prefix << "size: " << size() << '\n';
   os.flush();
 }
 
 std::ostream& Storage::operator<<(std::ostream& os, const Cluster& cluster)
 {
-  os << "pixel=" << cluster.posPixel() << " size=" << cluster.size();
+  os << "size=" << cluster.size();
+  os << " pixel=" << cluster.posPixel();
+  os << " local=" << cluster.posLocal();
   return os;
 }
