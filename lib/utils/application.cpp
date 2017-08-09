@@ -8,6 +8,7 @@
 
 #include <cstdlib>
 
+#include "analyzers/eventprinter.h"
 #include "io/reader.h"
 #include "mechanics/device.h"
 #include "utils/arguments.h"
@@ -102,6 +103,10 @@ Utils::EventLoop Utils::Application::makeEventLoop() const
 {
   // NOTE open the file just when the event loop is created to ensure that the
   //      input reader always starts at the beginning of the file.
-  return Utils::EventLoop(Io::openRead(m_inputPath), m_dev->numSensors(),
-                          m_skipEvents, m_numEvents, m_showProgress);
+  Utils::EventLoop loop(Io::openRead(m_inputPath), m_dev->numSensors(),
+                        m_skipEvents, m_numEvents, m_showProgress);
+  // full-event output in debug mode
+  if (Logger::isActive(Logger::Level::Debug))
+    loop.addAnalyzer(std::make_shared<Analyzers::EventPrinter>());
+  return loop;
 }
