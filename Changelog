@@ -36,6 +36,13 @@ User-visible changes
     and correlations between sensors are to be found in
 
         correlations/<sensor0_name>-<sensor1_name>/...
+*   Local track state estimation is now performed by `pt-track`.
+
+    When running `pt-track` the local track states are estimated for all
+    sensors and stored in the data file. `pt-match` does not perform a track
+    fit anymore and only uses the previously reconstructed information to
+    match clusters and tracks on selected sensors.
+*   The `--debug` flag on most tools also prints full event information.
 
 Bugfixes
 --------
