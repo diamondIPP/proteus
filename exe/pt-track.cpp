@@ -48,13 +48,13 @@ int main(int argc, char const* argv[])
   loop.addProcessor(std::make_shared<ApplyGeometry>(app.device()));
   loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
       app.device(), sensorIds, numPointsMin, searchSigmaMax, redChi2Max));
+  loop.addProcessor(std::make_shared<Tracking::StraightFitter>(app.device()));
   loop.addAnalyzer(std::make_shared<Events>(&hists, app.device()));
   loop.addAnalyzer(std::make_shared<Hits>(&hists, app.device()));
   loop.addAnalyzer(std::make_shared<Clusters>(&hists, app.device()));
   loop.addAnalyzer(std::make_shared<Correlations>(&hists, app.device()));
   loop.addAnalyzer(std::make_shared<Tracks>(&hists, app.device()));
   loop.addAnalyzer(std::make_shared<Residuals>(&hists, app.device()));
-  loop.addAnalyzer(std::make_shared<UnbiasedResiduals>(&hists, app.device()));
   loop.addWriter(std::make_shared<Io::RceRootWriter>(
       app.outputPath("data.root"), app.device().numSensors()));
   loop.run();
