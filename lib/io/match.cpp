@@ -28,7 +28,7 @@ void Io::MatchWriter::EventData::set(const Storage::SensorEvent& e)
   frame = e.frame();
   timestamp = e.timestamp();
   nClusters = e.numClusters();
-  nTracks = e.numStates();
+  nTracks = e.localStates().size();
 }
 
 void Io::MatchWriter::TrackData::addToTree(TTree* tree)
@@ -175,9 +175,9 @@ void Io::MatchWriter::append(const Storage::Event& event)
   m_event.set(sensorEvent);
 
   // export tracks and possible matched clusters
-  for (Index istate = 0; istate < sensorEvent.numStates(); ++istate) {
-    const Storage::TrackState& state = sensorEvent.getState(istate);
-    const Storage::Track& track = event.getTrack(state.track());
+  for (const auto& s : sensorEvent.localStates()) {
+    const Storage::TrackState& state = s.second;
+    const Storage::Track& track = event.getTrack(s.first);
 
     // always set track data
     XYPoint cr = m_sensor.transformLocalToPixel(state.offset());
