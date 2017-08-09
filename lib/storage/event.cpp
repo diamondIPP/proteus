@@ -38,6 +38,7 @@ void Storage::Event::addTrack(std::unique_ptr<Track> track)
 {
   m_tracks.emplace_back(std::move(track));
   m_tracks.back()->m_index = m_tracks.size() - 1;
+  m_tracks.back()->freezeClusterAssociation();
 }
 
 size_t Storage::Event::getNumHits() const

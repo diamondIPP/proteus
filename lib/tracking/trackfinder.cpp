@@ -184,8 +184,7 @@ void Tracking::TrackFinder::selectTracks(std::vector<TrackPtr>& candidates,
     if (hasUsedClusters)
       continue;
 
-    // this is a good track
-    track->freezeClusterAssociation();
+    // add new, good track to the event; also fixes cluster-track association
     event.addTrack(TrackPtr(track.release()));
   }
 }

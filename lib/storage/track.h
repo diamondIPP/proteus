@@ -28,8 +28,6 @@ public:
 
   void setGoodnessOfFit(float chi2, int dof) { m_chi2 = chi2, m_dof = dof; }
   void setGlobalState(const TrackState& state) { m_state = state; }
-  /** Inform all track clusters that they belong to this track now. */
-  void freezeClusterAssociation();
 
   float chi2() const { return m_chi2; }
   float reducedChi2() const { return m_chi2 / m_dof; }
@@ -47,6 +45,9 @@ public:
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
+  /** Inform all track clusters that they belong to this track now. */
+  void freezeClusterAssociation();
+
   TrackState m_state;
   float m_chi2;
   int m_dof;
