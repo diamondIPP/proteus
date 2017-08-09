@@ -347,7 +347,7 @@ void Io::RceRootWriter::addSensor(TDirectory* dir)
   trees.intercepts = new TTree("Intercepts", "Intercepts");
   trees.intercepts->Branch("NIntercepts", &numIntercepts, "NIntercepts/I");
   trees.intercepts->Branch("U", interceptU, "U[NIntercepts]/D");
-  trees.intercepts->Branch("V", interceptU, "V[NIntercepts]/D");
+  trees.intercepts->Branch("V", interceptV, "V[NIntercepts]/D");
   trees.intercepts->Branch("SlopeU", interceptSlopeU, "SlopeU[NIntercepts]/D");
   trees.intercepts->Branch("SlopeV", interceptSlopeV, "SlopeV[NIntercepts]/D");
   trees.intercepts->Branch("Cov", interceptCov, "Cov[NIntercepts][10]/D");
