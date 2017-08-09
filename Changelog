@@ -45,6 +45,8 @@ Bugfixes
 *   Use the same selected events for each alignment step by re-opening the
     input file at each step.
 *   Fix histogram binning for cluster positions.
+*   Use correct number of events when skipping some events at the beginning.
+*   Fix incorrectly stored v position for local track states.
 
 Internal changes
 ----------------
