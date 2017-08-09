@@ -57,6 +57,8 @@ public:
 
   Logger(std::string name);
 
+  Level level() const { return s_level; }
+
   template <typename... Ts>
   void error(const Ts&... things)
   {
@@ -101,6 +103,7 @@ private:
   static const char* const kReset;
   static Logger s_global;
   static Level s_level;
+
   std::string m_prefix;
 };
 
