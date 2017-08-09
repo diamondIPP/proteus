@@ -87,16 +87,17 @@ std::string Analyzers::Residuals::name() const { return "Residuals"; }
 
 void Analyzers::Residuals::analyze(const Storage::Event& event)
 {
-  for (Index itrack = 0; itrack < event.numTracks(); itrack++) {
-    const Storage::Track& track = event.getTrack(itrack);
+  for (Index isensor = 0; isensor < event.numSensorEvents(); ++isensor) {
+    const Storage::SensorEvent& sev = event.getSensorEvent(isensor);
+    auto& hists = m_hists[isensor];
 
-    for (const auto& c : track.clusters()) {
-      Index sensor = c.first;
-      const Storage::Cluster& cluster = c.second;
+    for (Index icluster = 0; icluster < sev.numClusters(); ++icluster) {
+      const Storage::Cluster& cluster = sev.getCluster(icluster);
 
-      Storage::TrackState state =
-          Tracking::fitTrackLocal(track, m_device.geometry(), sensor);
-      m_hists[sensor].fill(state, cluster);
+      if (cluster.isInTrack()) {
+        const Storage::TrackState& state = sev.getLocalState(cluster.track());
+        hists.fill(state, cluster);
+      }
     }
   }
 }
