@@ -69,7 +69,6 @@ public:
   void finalize();
 
 private:
-  const Mechanics::Device& m_device;
   std::vector<detail::SensorResidualHists> m_hists;
 };
 

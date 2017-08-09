@@ -75,7 +75,6 @@ Analyzers::Residuals::Residuals(TDirectory* dir,
                                 const double pixelRange,
                                 const double slopeRange,
                                 const int bins)
-    : m_device(device)
 {
   for (Index isensor = 0; isensor < device.numSensors(); ++isensor) {
     m_hists.emplace_back(dir, *device.getSensor(isensor), pixelRange,
