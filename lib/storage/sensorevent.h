@@ -3,6 +3,7 @@
 
 #include <iosfwd>
 #include <memory>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -19,6 +20,8 @@ namespace Storage {
  */
 class SensorEvent {
 public:
+  using TrackStates = std::map<Index, TrackState>;
+
   SensorEvent(Index sensor);
 
   void clear(uint64_t frame, uint64_t timestamp);
@@ -39,14 +42,14 @@ public:
   Cluster& getCluster(Index i) { return *m_clusters.at(i); }
   const Cluster& getCluster(Index i) const { return *m_clusters.at(i); }
 
+  /** Set a local track state for the given track. */
   template <typename... Params>
-  void addState(Params&&... params);
-  Index numStates() const { return static_cast<Index>(m_states.size()); }
-  TrackState& getState(Index i) { return *m_states[i]; }
-  const TrackState& getState(Index i) const { return *m_states[i]; }
+  void setLocalState(Index track, Params&&... params);
+  const TrackState& getLocalState(Index i) const { return m_states.at(i); }
+  const TrackStates& localStates() const { return m_states; }
 
   /** Associate one cluster to one track state. */
-  void addMatch(Index cluster, Index state);
+  void addMatch(Index cluster, Index track);
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
@@ -56,7 +59,7 @@ private:
   uint64_t m_timestamp;
   std::vector<std::unique_ptr<Hit>> m_hits;
   std::vector<std::unique_ptr<Cluster>> m_clusters;
-  std::vector<std::unique_ptr<TrackState>> m_states;
+  TrackStates m_states;
 };
 
 } // namespace Storage
@@ -77,10 +80,9 @@ inline Storage::Cluster& Storage::SensorEvent::addCluster(Params&&... params)
 }
 
 template <typename... Params>
-inline void Storage::SensorEvent::addState(Params&&... params)
+inline void Storage::SensorEvent::setLocalState(Index track, Params&&... params)
 {
-  m_states.emplace_back(new TrackState(std::forward<Params>(params)...));
-  m_states.back()->m_index = m_states.size() - 1;
+  m_states[track] = TrackState(std::forward<Params>(params)...);
 }
 
 #endif // PT_SENSOREVENT_H

@@ -18,18 +18,18 @@ void Storage::SensorEvent::clear(uint64_t frame, uint64_t timestamp)
   m_states.clear();
 }
 
-void Storage::SensorEvent::addMatch(Index cluster, Index state)
+void Storage::SensorEvent::addMatch(Index cluster, Index track)
 {
   assert((0 <= cluster) && (cluster < m_clusters.size()) &&
          "invalid cluster index");
-  assert((0 <= state) && (state < m_states.size()) && "invalid state index");
+  assert((0 < m_states.count(track)) && "invalid track index");
   assert(!m_clusters[cluster]->isMatched() &&
          "cluster can only be matched to one track state");
-  assert(!m_states[state]->isMatched() &&
+  assert(!m_states[track].isMatched() &&
          "cluster can only be matched to one track state");
 
-  m_clusters[cluster]->m_matchedState = state;
-  m_states[state]->m_matchedCluster = cluster;
+  m_clusters[cluster]->m_matchedState = track;
+  m_states[track].m_matchedCluster = cluster;
 }
 
 void Storage::SensorEvent::print(std::ostream& os,
@@ -59,12 +59,11 @@ void Storage::SensorEvent::print(std::ostream& os,
   }
   if (!m_states.empty()) {
     os << prefix << "states:\n";
-    for (size_t istate = 0; istate < m_states.size(); ++istate) {
-      const TrackState& state = *m_states[istate];
-      os << prefix << "  state " << istate << ": " << state;
-      if (state.track() != kInvalidIndex)
-        os << " track=" << state.track();
-      os << '\n';
+    for (const auto& ts : m_states) {
+      Index itrack = ts.first;
+      const TrackState& state = ts.second;
+
+      os << prefix << "  track " << itrack << ": " << state << '\n';
     }
   }
   os.flush();
