@@ -35,6 +35,8 @@ void Storage::SensorEvent::addMatch(Index cluster, Index state)
 void Storage::SensorEvent::print(std::ostream& os,
                                  const std::string& prefix) const
 {
+  os << prefix << "frame: " << m_frame << '\n';
+  os << prefix << "timestamp: " << m_timestamp << '\n';
   if (!m_hits.empty()) {
     os << prefix << "hits:\n";
     for (size_t ihit = 0; ihit < m_hits.size(); ++ihit) {
