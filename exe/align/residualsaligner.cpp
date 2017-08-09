@@ -7,7 +7,6 @@
 #include "analyzers/tracks.h"
 #include "mechanics/device.h"
 #include "storage/event.h"
-#include "tracking/tracking.h"
 #include "utils/logger.h"
 #include "utils/root.h"
 
@@ -59,8 +58,8 @@ std::string Alignment::ResidualsAligner::name() const
 void Alignment::ResidualsAligner::analyze(const Storage::Event& event)
 {
   for (const auto& hists : m_hists) {
-    Index sensorId = hists.sensorId;
-    const Storage::SensorEvent& sensorEvent = event.getSensorEvent(sensorId);
+    Index isensor = hists.sensorId;
+    const Storage::SensorEvent& sensorEvent = event.getSensorEvent(isensor);
 
     for (Index iclu = 0; iclu < sensorEvent.numClusters(); ++iclu) {
       const Storage::Cluster& cluster = sensorEvent.getCluster(iclu);
@@ -68,11 +67,8 @@ void Alignment::ResidualsAligner::analyze(const Storage::Event& event)
       if (!cluster.isInTrack())
         continue;
 
-      // refit track w/o selected sensor for unbiased residuals
-      const Storage::Track& track = event.getTrack(cluster.track());
-      Storage::TrackState state =
-          Tracking::fitTrackLocalUnbiased(track, m_device.geometry(), sensorId);
-
+      const Storage::TrackState& state =
+          sensorEvent.getLocalState(cluster.track());
       double u = state.offset().x();
       double v = state.offset().y();
       double ru = u - cluster.posLocal().x();
