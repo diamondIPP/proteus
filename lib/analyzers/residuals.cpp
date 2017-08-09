@@ -10,7 +10,6 @@
 
 #include "mechanics/device.h"
 #include "storage/event.h"
-#include "tracking/tracking.h"
 #include "utils/logger.h"
 #include "utils/root.h"
 
@@ -103,47 +102,3 @@ void Analyzers::Residuals::analyze(const Storage::Event& event)
 }
 
 void Analyzers::Residuals::finalize() {}
-
-Analyzers::UnbiasedResiduals::UnbiasedResiduals(TDirectory* dir,
-                                                const Mechanics::Device& device,
-                                                const double pixelRange,
-                                                const double slopeRange,
-                                                const int bins)
-    : m_device(device)
-{
-  using Mechanics::Sensor;
-
-  for (Index isensor = 0; isensor < device.numSensors(); ++isensor) {
-    m_hists.emplace_back(dir, *device.getSensor(isensor), pixelRange,
-                         slopeRange, bins, "residuals_unbiased");
-  }
-}
-
-std::string Analyzers::UnbiasedResiduals::UnbiasedResiduals::name() const
-{
-  return "UnbiasedResiduals";
-}
-
-void Analyzers::UnbiasedResiduals::analyze(const Storage::Event& event)
-{
-  for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
-    const Storage::Track& track = event.getTrack(itrack);
-
-    for (const auto& c : track.clusters()) {
-      Index sensor = c.first;
-      const Storage::Cluster& cluster = c.second;
-
-      // refit w/o current sensor information
-      Storage::TrackState state =
-          Tracking::fitTrackLocalUnbiased(track, m_device.geometry(), sensor);
-      m_hists[sensor].fill(state, cluster);
-    }
-  }
-}
-
-void Analyzers::UnbiasedResiduals::finalize() {}
-
-const TH2D* Analyzers::UnbiasedResiduals::getResidualUV(Index sensorId) const
-{
-  return m_hists.at(sensorId).resUV;
-}
