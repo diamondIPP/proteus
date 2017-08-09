@@ -35,3 +35,33 @@ void Tracking::StraightFitter::process(Storage::Event& event) const
     }
   }
 }
+
+Tracking::UnbiasedStraightFitter::UnbiasedStraightFitter(
+    const Mechanics::Device& device)
+    : m_device(device)
+{
+}
+
+std::string Tracking::UnbiasedStraightFitter::name() const
+{
+  return "UnbiasedStraightFitter";
+}
+
+void Tracking::UnbiasedStraightFitter::process(Storage::Event& event) const
+{
+  for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
+    Storage::Track& track = event.getTrack(itrack);
+
+    // global fit for common goodness-of-fit
+    fitTrackGlobal(track);
+
+    for (Index isensor = 0; isensor < m_device.numSensors(); ++isensor) {
+      Storage::SensorEvent& sev = event.getSensorEvent(isensor);
+
+      // local fit for correct errors in the local frame
+      Storage::TrackState state =
+          fitTrackLocalUnbiased(track, m_device.geometry(), isensor);
+      sev.setLocalState(itrack, std::move(state));
+    }
+  }
+}

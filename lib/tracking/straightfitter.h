@@ -33,6 +33,24 @@ private:
   const Mechanics::Device& m_device;
 };
 
+/** Estimate local track parameters w/o the local information.
+ *
+ * This calculates new global track parameters and goodness-of-fit and
+ * calculates the local track parameters on the all sensor planes.
+ * If the track has cluster information on the local sensor, it is ignored
+ * only for calculating the track parameters on that sensor.
+ */
+class UnbiasedStraightFitter : public Processors::Processor {
+public:
+  UnbiasedStraightFitter(const Mechanics::Device& device);
+
+  std::string name() const;
+  void process(Storage::Event& event) const;
+
+private:
+  const Mechanics::Device& m_device;
+};
+
 } // namespace Tracking
 
 #endif // PT_STRAIGHTFITTER_H
