@@ -154,7 +154,6 @@ void Io::RceRootReader::addSensor(TDirectory* dir)
     trees.intercepts->SetBranchAddress("Cov", interceptCov);
     trees.intercepts->SetBranchAddress("Track", interceptTrack);
   }
-
   m_sensors.push_back(trees);
 }
 
@@ -240,8 +239,7 @@ bool Io::RceRootReader::read(Storage::Event& event)
             interceptU[iintercept], interceptV[iintercept],
             interceptSlopeU[iintercept], interceptSlopeV[iintercept]);
         local.setCov(interceptCov[iintercept]);
-        local.setTrack(interceptTrack[iintercept]);
-        sensorEvent.addState(std::move(local));
+        sensorEvent.setLocalState(interceptTrack[iintercept], std::move(local));
       }
     }
 
@@ -444,17 +442,19 @@ void Io::RceRootWriter::append(const Storage::Event& event)
 
     // local track states
     if (trees.intercepts) {
-      if (kMaxTracks < sensorEvent.numStates())
-        FAIL("intercepts exceed MAX_TRACKS");
-      numIntercepts = sensorEvent.numStates();
-      for (Index istate = 0; istate < sensorEvent.numStates(); ++istate) {
-        const Storage::TrackState& local = sensorEvent.getState(istate);
-        interceptU[istate] = local.offset().x();
-        interceptV[istate] = local.offset().y();
-        interceptSlopeU[istate] = local.slope().x();
-        interceptSlopeV[istate] = local.slope().y();
-        std::copy(local.cov().begin(), local.cov().end(), interceptCov[istate]);
-        interceptTrack[istate] = local.track();
+      numIntercepts = 0;
+      for (const auto& s : sensorEvent.localStates()) {
+        if (kMaxTracks < static_cast<Index>(numIntercepts + 1))
+          FAIL("intercepts exceed MAX_TRACKS");
+        const Storage::TrackState& local = s.second;
+        interceptU[numIntercepts] = local.offset().x();
+        interceptV[numIntercepts] = local.offset().y();
+        interceptSlopeU[numIntercepts] = local.slope().x();
+        interceptSlopeV[numIntercepts] = local.slope().y();
+        std::copy(local.cov().begin(), local.cov().end(),
+                  interceptCov[numIntercepts]);
+        interceptTrack[numIntercepts] = s.first;
+        numIntercepts += 1;
       }
       trees.intercepts->Fill();
     }
