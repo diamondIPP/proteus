@@ -5,8 +5,6 @@
 Storage::TrackState::TrackState(float u, float v, float dU, float dV)
     : m_offset(u, v)
     , m_slope(dU, dV)
-    , m_index(kInvalidIndex)
-    , m_track(kInvalidIndex)
     , m_matchedCluster(kInvalidIndex)
 {
 }
@@ -38,13 +36,6 @@ void Storage::TrackState::setCovV(float varOffset, float varSlope, float cov)
   m_cov(Dv, U) = 0;
   m_cov(Dv, Du) = 0;
   m_cov(Dv, Dv) = varSlope;
-}
-
-void Storage::TrackState::setTrack(Index track)
-{
-  assert((m_track == kInvalidIndex) &&
-         "track state can only belong to one track");
-  m_track = track;
 }
 
 std::ostream& Storage::operator<<(std::ostream& os, const TrackState& state)

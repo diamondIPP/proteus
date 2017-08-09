@@ -35,7 +35,6 @@ public:
   void setCov(InputIterator first);
   void setCovU(float varOffset, float varSlope, float cov = 0);
   void setCovV(float varOffset, float varSlope, float cov = 0);
-  void setTrack(Index track);
 
   /** Covariance matrix of the full parameter vector. */
   const SymMatrix4& cov() const { return m_cov; }
@@ -46,8 +45,6 @@ public:
   const XYVector& slope() const { return m_slope; }
   SymMatrix2 covSlope() const { return m_cov.Sub<SymMatrix2>(Du, Du); }
 
-  Index index() const { return m_index; }
-  Index track() const { return m_track; }
   bool isMatched() const { return (m_matchedCluster != kInvalidIndex); }
   Index matchedCluster() const { return m_matchedCluster; }
 
@@ -57,11 +54,10 @@ private:
   XYPoint m_offset;
   XYVector m_slope;
   SymMatrix4 m_cov;
-  Index m_index;
-  Index m_track;
   Index m_matchedCluster;
 
   friend class SensorEvent;
+  friend class Track;
 };
 
 std::ostream& operator<<(std::ostream& os, const TrackState& state);
