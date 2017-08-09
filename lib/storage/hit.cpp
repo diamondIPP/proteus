@@ -38,9 +38,10 @@ Storage::Hit::Area Storage::Hit::areaPixel() const
 std::ostream& Storage::operator<<(std::ostream& os, const Storage::Hit& hit)
 {
   if ((hit.digitalCol() != hit.col()) || (hit.digitalRow() != hit.row())) {
-    os << "digital=(" << hit.digitalCol() << ", " << hit.digitalRow() << ") ";
+    os << "addr=(" << hit.digitalCol() << ", " << hit.digitalRow() << ") ";
   }
-  os << "pixel=(" << hit.col() << ", " << hit.row() << ") ";
-  os << "time=" << hit.time() << " value=" << hit.value();
+  os << "col=" << hit.col() << " row=" << hit.row();
+  os << " time=" << hit.time();
+  os << " value=" << hit.value();
   return os;
 }
