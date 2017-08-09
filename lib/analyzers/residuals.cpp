@@ -71,6 +71,7 @@ void Analyzers::detail::SensorResidualHists::fill(
 
 Analyzers::Residuals::Residuals(TDirectory* dir,
                                 const Mechanics::Device& device,
+                                const std::string& subdir,
                                 const double pixelRange,
                                 const double slopeRange,
                                 const int bins)
@@ -78,7 +79,7 @@ Analyzers::Residuals::Residuals(TDirectory* dir,
 {
   for (Index isensor = 0; isensor < device.numSensors(); ++isensor) {
     m_hists.emplace_back(dir, *device.getSensor(isensor), pixelRange,
-                         slopeRange, bins, "residuals");
+                         slopeRange, bins, subdir);
   }
 }
 

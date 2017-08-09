@@ -41,7 +41,7 @@ struct SensorResidualHists {
                       const double pixelRange,
                       const double slopeRange,
                       const int bins,
-                      const std::string& name = std::string("residuals"));
+                      const std::string& name);
 
   void fill(const Storage::TrackState& state, const Storage::Cluster& cluster);
 };
@@ -51,12 +51,14 @@ struct SensorResidualHists {
 class Residuals : public Analyzer {
 public:
   /**
+   * \param subdir Name of the output subdirectory
    * \param pixelRange Residual histogram range in number of pixels
    * \param slopeRange Track slope histogram range in radian
    * \param bins Number of histogram bins
    */
   Residuals(TDirectory* dir,
             const Mechanics::Device& device,
+            const std::string& subdir = std::string("residuals"),
             /* Histogram options */
             const double pixelRange = 2.0,
             const double slopeRange = 0.001,
