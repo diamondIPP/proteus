@@ -23,7 +23,7 @@ std::string Processors::Matcher::name() const { return m_name; }
 namespace {
 struct PossibleMatch {
   Index cluster;
-  Index state;
+  Index track;
   double d2;
 };
 } // namespace
@@ -37,10 +37,12 @@ void Processors::Matcher::process(Storage::Event& event) const
   std::set<Index> matchedStates;
 
   // preselect possible track state / cluster pairs
-  for (Index istate = 0; istate < sensorEvent.numStates(); ++istate) {
+  for (const auto& s : sensorEvent.localStates()) {
+    Index itrack = s.first;
+    const Storage::TrackState& state = s.second;
+
     for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
-      const auto& cluster = sensorEvent.getCluster(icluster);
-      const auto& state = sensorEvent.getState(istate);
+      const Storage::Cluster& cluster = sensorEvent.getCluster(icluster);
 
       // compute mahalanobis distance between state/cluster
       XYVector delta = cluster.posLocal() - state.offset();
@@ -48,19 +50,21 @@ void Processors::Matcher::process(Storage::Event& event) const
       double d2 = mahalanobisSquared(cov, delta);
 
       if ((m_distSquaredMax < 0) || (d2 < m_distSquaredMax))
-        possibleMatches.emplace_back(PossibleMatch{icluster, istate, d2});
+        possibleMatches.emplace_back(PossibleMatch{icluster, itrack, d2});
     }
   }
   // sort by pair distance, closest distance first
   std::sort(possibleMatches.begin(), possibleMatches.end(),
-            [](const auto& a, const auto& b) { return (a.d2 < b.d2); });
+            [](const PossibleMatch& a, const PossibleMatch& b) {
+              return (a.d2 < b.d2);
+            });
   // select unique matches, closest distance first
   for (const auto& match : possibleMatches) {
     if ((0 < matchedClusters.count(match.cluster)) ||
-        (0 < matchedStates.count(match.state)))
+        (0 < matchedStates.count(match.track)))
       continue;
     matchedClusters.insert(match.cluster);
-    matchedStates.insert(match.state);
-    sensorEvent.addMatch(match.cluster, match.state);
+    matchedStates.insert(match.track);
+    sensorEvent.addMatch(match.cluster, match.track);
   }
 }
