@@ -34,6 +34,7 @@ set(proteus_SOURCES
     storage/sensorevent.cpp
     storage/track.cpp
     storage/trackstate.cpp
+    tracking/gblfitter.cpp
     tracking/propagation.cpp
     tracking/trackfinder.cpp
     tracking/setupfitter.cpp
