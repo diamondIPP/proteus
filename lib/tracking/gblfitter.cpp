@@ -65,6 +65,17 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
   INFO("gblfitter.cpp running");
   INFO("Number of tracks in the event: ", event.numTracks());
 
+  // Specify the initial track direction
+  Eigen::Vector3d trackDirec;
+  if(firstTimeFlag) {
+    trackDirec(0) = 0.0;
+    trackDirec(1) = 0.0;
+    trackDirec(2) = 1.0;
+    double dU = 0;
+    double dV = 0;
+  }
+  INFO("Track Direction: ", trackDirec);
+
   // Get the Jacobians based on geometry
   for (Index isensor = 0; isensor < m_device.numSensors(); ++isensor) {
     if(firstTimeFlag) {
@@ -80,17 +91,41 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       INFO("Sensor L2G: ", m_device.getSensor(isensor)->localToGlobal());
       INFO("Sensor G2L: ", m_device.getSensor(isensor)->globalToLocal());
       INFO("Sensor P2G: ", m_device.getSensor(isensor)->constructPixelToGlobal());
-    }
 
-    if(firstTimeFlag) {
-      Eigen::Vector3d trackDirec;
-      trackDirec(0) = 0.0;
-      trackDirec(1) = 0.0;
-      trackDirec(2) = 1.0;
-      double dU = 0;
-      double dV = 0;
-    }
+      // Get the Plane Normal vector
+      Eigen::Vector3d planeNormal;
+      planeNormal(0) = m_device.getSensor(isensor)->normal().X();
+      planeNormal(1) = m_device.getSensor(isensor)->normal().Y();
+      planeNormal(2) = m_device.getSensor(isensor)->normal().Z();
 
+      INFO("Plane Normal: ", planeNormal);
+
+      // Compute Matrix B
+      Eigen::Matrix3d twt = trackDirec * planeNormal.transpose();
+      double tw = trackDirec.dot(planeNormal);
+      Eigen::Matrix3d eye3 = Eigen::Matrix3d::Identity();
+      Eigen::Matrix3d B = eye3 - (twt/tw);
+
+      //Computer Matrix C
+      double pathLength;
+      if(isensor == 0) {
+        pathLength = m_device.getSensor(isensor)->origin().Z();
+      }
+      else {
+        pathLength = m_device.getSensor(isensor)->origin().Z() - m_device.getSensor(isensor - 1)->origin().Z();
+      }
+      Eigen::Matrix3d ttt = trackDirec * trackDirec.transpose();
+      Eigen::Matrix3d C = pathLength * (eye3 - (ttt/tw));
+
+
+      INFO("TWT: ", twt);
+      INFO("TW: ", tw);
+      INFO("Eye3: ", eye3);
+      INFO("B: ", B);
+      INFO("Path Length: ", pathLength);
+      INFO("TTT: ", ttt);
+      INFO("C: ", C);
+    }
   }
 
   for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
