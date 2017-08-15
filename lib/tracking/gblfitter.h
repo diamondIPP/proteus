@@ -12,6 +12,7 @@
 #include "processors/processor.h"
 #include "utils/definitions.h"
 #include "storage/event.h"
+#include <Eigen/Dense>
 
 namespace Mechanics {
 class Device;

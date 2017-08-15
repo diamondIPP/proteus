@@ -14,7 +14,10 @@
 #include "utils/logger.h"
 #include <GblTrajectory.h>
 
+
 PT_SETUP_LOCAL_LOGGER(GBLFitter)
+
+bool firstTimeFlag = true;
 
 /** Fit a GBL trajectory */
 struct SimpleGBLFitter {
@@ -44,16 +47,9 @@ void Tracking::fitTrackGBL(Storage::Track& track)
     INFO("Number of Hits: ", cluster.size());
     for (const Storage::Hit& someHit : cluster.hits()) {
       INFO("Hit: ", someHit);
-    }
-
-    // Get the Jacobians for propagation
-
     //points.push_back()
-    // fit.addPoint(cluster.posGlobal(), cluster.covGlobal());
+    }
   }
-  // fit.fit();
-  // track.setGlobalState(fit.state());
-  // track.setGoodnessOfFit(fit.chi2(), 2 * (track.numClusters() - 2));
 }
 
 Tracking::GBLFitter::GBLFitter(const Mechanics::Device& device)
@@ -65,27 +61,40 @@ std::string Tracking::GBLFitter::name() const { return "GBLFitter"; }
 
 void Tracking::GBLFitter::process(Storage::Event& event) const
 {
+  INFO("First time flag: ", firstTimeFlag);
   INFO("gblfitter.cpp running");
   INFO("Number of tracks in the event: ", event.numTracks());
 
   // Get the Jacobians based on geometry
   for (Index isensor = 0; isensor < m_device.numSensors(); ++isensor) {
-    INFO("Sensor Id: ", isensor);
-    INFO("Sensor Name: ", m_device.getSensor(isensor)->name());
-    INFO("Sensor Rows: ", m_device.getSensor(isensor)->numRows());
-    INFO("Sensor Cols: ", m_device.getSensor(isensor)->numCols());
-    INFO("Sensor Pitch Row: ", m_device.getSensor(isensor)->pitchRow());
-    INFO("Sensor Pitch Col: ", m_device.getSensor(isensor)->pitchCol());
-    INFO("Sensor Origin: ", m_device.getSensor(isensor)->origin());
-    INFO("Sensor Normal: ", m_device.getSensor(isensor)->normal());
-    //INFO("Sensor Measurement: ", m_device.getSensor(isensor)->measurement());
-    INFO("Sensor L2G: ", m_device.getSensor(isensor)->localToGlobal());
-    INFO("Sensor G2L: ", m_device.getSensor(isensor)->globalToLocal());
-    INFO("Sensor P2G: ", m_device.getSensor(isensor)->constructPixelToGlobal());
+    if(firstTimeFlag) {
+      INFO("Sensor Id: ", isensor);
+      INFO("Sensor Name: ", m_device.getSensor(isensor)->name());
+      INFO("Sensor Rows: ", m_device.getSensor(isensor)->numRows());
+      INFO("Sensor Cols: ", m_device.getSensor(isensor)->numCols());
+      INFO("Sensor Pitch Row: ", m_device.getSensor(isensor)->pitchRow());
+      INFO("Sensor Pitch Col: ", m_device.getSensor(isensor)->pitchCol());
+      INFO("Sensor Origin: ", m_device.getSensor(isensor)->origin());
+      INFO("Sensor Normal: ", m_device.getSensor(isensor)->normal());
+      //INFO("Sensor Measurement: ", m_device.getSensor(isensor)->measurement());
+      INFO("Sensor L2G: ", m_device.getSensor(isensor)->localToGlobal());
+      INFO("Sensor G2L: ", m_device.getSensor(isensor)->globalToLocal());
+      INFO("Sensor P2G: ", m_device.getSensor(isensor)->constructPixelToGlobal());
+    }
+
+    if(firstTimeFlag) {
+      Eigen::Vector3d trackDirec;
+      trackDirec(0) = 0.0;
+      trackDirec(1) = 0.0;
+      trackDirec(2) = 1.0;
+      double dU = 0;
+      double dV = 0;
+    }
+
   }
-  //m_device.print();
 
   for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
+
     Storage::Track& track = event.getTrack(itrack);
 
     // global fit for common goodness-of-fit
@@ -106,14 +115,16 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
 
     for (Index isensor = 0; isensor < m_device.numSensors(); ++isensor) {
       Storage::SensorEvent& sev = event.getSensorEvent(isensor);
-      //INFO(m_device.name());
       // local fit for correct errors in the local frame
       Storage::TrackState state =
           fitTrackLocal(track, m_device.geometry(), isensor);
       sev.setLocalState(itrack, std::move(state));
+      INFO("TrackState: ", state);
     }
   }
+  firstTimeFlag = false;
 }
+
 /*    for (auto sensorId : m_sensorIds) {
       Storage::SensorEvent& sensorEvent = event.getSensorEvent(sensorId);
       // local fit for correct errors in the local frame
