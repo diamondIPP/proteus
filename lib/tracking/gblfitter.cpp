@@ -103,6 +103,8 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
 
       INFO("Plane Normal: ", planeNormal);
 
+      // TODO: Opportunity to optimize code by using fixed size matrices below
+
       // Compute Q0 from L2G matrix
       double xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz;
       m_device.getSensor(isensor)->localToGlobal().GetComponents(
@@ -132,8 +134,16 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       A(2,1) = -f_cubed * dV;
 
       // Compute Matrix F (Local to global)
-      //Eigen::MatrixXd F;
-      //Eigen::Matrix2d F_0 =
+      Eigen::MatrixXd F_0(3,2);
+      F_0 = Q0.block(0,0,3,2);
+      Eigen::MatrixXd F_1 = Eigen::MatrixXd::Zero(3, 2);
+      Eigen::MatrixXd F_2 = Q0 * A;
+      Eigen::MatrixXd F_3(F_0.rows(), F_0.cols() + F_1.cols());
+      F_3 << F_0, F_1;
+      Eigen::MatrixXd F_4(F_1.rows(), F_1.cols() + F_2.cols());
+      F_4 << F_1, F_2;
+      Eigen::MatrixXd F(F_3.rows() + F_4.rows(), F_3.cols());
+      F << F_3, F_4;
 
       // Compute Matrix B
       Eigen::Matrix3d twt = trackDirec * planeNormal.transpose();
@@ -161,7 +171,6 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       D(1,1) = D(0,0);
       D(1,2) = -dV;
 
-
       // Get the L2G or G2L martices for the sensors and
       // compute the matrices F and G and H
       // See how you can update dU and other stuff in next iterations
@@ -178,6 +187,7 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       INFO("f: ", f);
       INFO("f^3: ", f_cubed);
       INFO("A: ", A);
+      INFO("F: ", F);
       INFO("TWT: ", twt);
       INFO("TW: ", tw);
       INFO("Eye3: ", eye3);
