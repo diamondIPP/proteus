@@ -13,6 +13,7 @@
 #include "tracking/tracking.h"
 #include "utils/logger.h"
 #include <GblTrajectory.h>
+#include <math.h>
 
 
 PT_SETUP_LOCAL_LOGGER(GBLFitter)
@@ -67,12 +68,14 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
 
   // Specify the initial track direction
   Eigen::Vector3d trackDirec;
+  double dU;
+  double dV;
   if(firstTimeFlag) {
     trackDirec(0) = 0.0;
     trackDirec(1) = 0.0;
     trackDirec(2) = 1.0;
-    double dU = 0;
-    double dV = 0;
+    dU = 0;
+    dV = 0;
   }
   INFO("Track Direction: ", trackDirec);
 
@@ -100,6 +103,19 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
 
       INFO("Plane Normal: ", planeNormal);
 
+      // Compute Matrix A
+      float f;
+      f = 1 / sqrt(1 + pow(dU, 2) + pow(dV, 2));
+      float f_cubed;
+      f_cubed = pow(f, 3);
+      Eigen::MatrixXd A(3,2);
+      A(0,0) = f - f_cubed * pow(dU, 2);
+      A(0,1) = -f * dU * dV;
+      A(1,0) = A(0,1);
+      A(1,1) = f - f_cubed * pow(dV, 2);
+      A(2,0) = -f_cubed * dU;
+      A(2,1) = -f_cubed * dV;
+
       // Compute Matrix B
       Eigen::Matrix3d twt = trackDirec * planeNormal.transpose();
       double tw = trackDirec.dot(planeNormal);
@@ -117,7 +133,26 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       Eigen::Matrix3d ttt = trackDirec * trackDirec.transpose();
       Eigen::Matrix3d C = pathLength * (eye3 - (ttt/tw));
 
+      // Compute Matrix D
+      Eigen::MatrixXd D(2,3);
+      D(0,0) = f;
+      D(0,1) = 0;
+      D(0,2) = -dU;
+      D(1,0) = D(0,1);
+      D(1,1) = D(0,0);
+      D(1,2) = -dV;
 
+      // Get the L2G or G2L martices for the sensors and
+      // compute the matrices F and G and H
+      // See how you can update dU and other stuff in next iterations
+      // Also, what exactly should be their value?
+      // After that, try to get the measurement on each sensor
+      // Also the uncertainity (pixel size /12 I think)
+      // And then you can define a GBL point
+
+      INFO("f: ", f);
+      INFO("f^3: ", f_cubed);
+      INFO("A: ", A);
       INFO("TWT: ", twt);
       INFO("TW: ", tw);
       INFO("Eye3: ", eye3);
@@ -125,6 +160,7 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       INFO("Path Length: ", pathLength);
       INFO("TTT: ", ttt);
       INFO("C: ", C);
+      INFO("D: ", D);
     }
   }
 
