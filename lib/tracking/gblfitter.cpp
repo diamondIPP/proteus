@@ -103,6 +103,21 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
 
       INFO("Plane Normal: ", planeNormal);
 
+      // Compute Q0 from L2G matrix
+      double xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz;
+      m_device.getSensor(isensor)->localToGlobal().GetComponents(
+        xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz);
+      Eigen::Matrix3d Q0;
+      Q0(0,0) = xx;
+      Q0(0,1) = xy;
+      Q0(0,2) = xz;
+      Q0(1,0) = yx;
+      Q0(1,1) = yy;
+      Q0(1,2) = yz;
+      Q0(2,0) = zx;
+      Q0(2,1) = zy;
+      Q0(2,2) = zz;
+
       // Compute Matrix A
       float f;
       f = 1 / sqrt(1 + pow(dU, 2) + pow(dV, 2));
@@ -115,6 +130,10 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       A(1,1) = f - f_cubed * pow(dV, 2);
       A(2,0) = -f_cubed * dU;
       A(2,1) = -f_cubed * dV;
+
+      // Compute Matrix F (Local to global)
+      //Eigen::MatrixXd F;
+      //Eigen::Matrix2d F_0 =
 
       // Compute Matrix B
       Eigen::Matrix3d twt = trackDirec * planeNormal.transpose();
@@ -142,6 +161,7 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       D(1,1) = D(0,0);
       D(1,2) = -dV;
 
+
       // Get the L2G or G2L martices for the sensors and
       // compute the matrices F and G and H
       // See how you can update dU and other stuff in next iterations
@@ -150,6 +170,11 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       // Also the uncertainity (pixel size /12 I think)
       // And then you can define a GBL point
 
+      // Qs: How to incorporate sensor offsets in x and y direction
+      // in the Jacobians?
+      // How exactly is the path length defined?
+
+      INFO("Q0: ", Q0);
       INFO("f: ", f);
       INFO("f^3: ", f_cubed);
       INFO("A: ", A);
