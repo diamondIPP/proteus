@@ -80,7 +80,7 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
   INFO("Track Direction: ", trackDirec);
 
   // Get the Jacobians based on geometry
-  for (Index isensor = 0; isensor < m_device.numSensors(); ++isensor) {
+  for (Index isensor = 0; isensor < m_device.numSensors() - 1; ++isensor) {
     if(firstTimeFlag) {
       INFO("Sensor Id: ", isensor);
       INFO("Sensor Name: ", m_device.getSensor(isensor)->name());
@@ -145,6 +145,25 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       Eigen::MatrixXd F(F_3.rows() + F_4.rows(), F_3.cols());
       F << F_3, F_4;
 
+      // Compute Q1 from the G2L matrix of the next sensor
+      m_device.getSensor(isensor + 1)->globalToLocal().GetComponents(
+        xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz);
+      Eigen::Matrix3d Q1;
+      Q1(0,0) = xx;
+      Q1(0,1) = xy;
+      Q1(0,2) = xz;
+      Q1(1,0) = yx;
+      Q1(1,1) = yy;
+      Q1(1,2) = yz;
+      Q1(2,0) = zx;
+      Q1(2,1) = zy;
+      Q1(2,2) = zz;
+      // Get the Q1 transpose
+      Eigen::Matrix3d Q1T = Q1.transpose();
+      // Get the Q1T23 block
+      Eigen::MatrixXd Q1T23(2,3);
+      Q1T23 = Q1T.block(0,0,2,3);
+
       // Compute Matrix B
       Eigen::Matrix3d twt = trackDirec * planeNormal.transpose();
       double tw = trackDirec.dot(planeNormal);
@@ -171,6 +190,21 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       D(1,1) = D(0,0);
       D(1,2) = -dV;
 
+      // Compute Matrix G
+      Eigen::MatrixXd G_0(2,3);
+      G_0 = Q1T23 * B;
+      Eigen::MatrixXd G_1(2,3);
+      G_1 = Q1T23 * C;
+      Eigen::MatrixXd G_2 = Eigen::MatrixXd::Zero(2, 3);
+      Eigen::MatrixXd G_3(2,3);
+      G_3 = D * Q1T;
+      Eigen::MatrixXd G_4(G_0.rows(), G_0.cols() + G_1.cols());
+      G_4 << G_0, G_1;
+      Eigen::MatrixXd G_5(G_2.rows(), G_2.cols() + G_3.cols());
+      G_5 << G_2, G_3;
+      Eigen::MatrixXd G(G_4.rows() + G_5.rows(), G_4.cols());
+      G << G_4, G_5;
+
       // Get the L2G or G2L martices for the sensors and
       // compute the matrices F and G and H
       // See how you can update dU and other stuff in next iterations
@@ -182,12 +216,15 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       // Qs: How to incorporate sensor offsets in x and y direction
       // in the Jacobians?
       // How exactly is the path length defined?
+      // Also have to emit the DUT from the reconstruction part
 
       INFO("Q0: ", Q0);
       INFO("f: ", f);
       INFO("f^3: ", f_cubed);
       INFO("A: ", A);
       INFO("F: ", F);
+      INFO("Q1: ", Q1);
+      INFO("Q1 Transpose: ", Q1T);
       INFO("TWT: ", twt);
       INFO("TW: ", tw);
       INFO("Eye3: ", eye3);
@@ -196,6 +233,7 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       INFO("TTT: ", ttt);
       INFO("C: ", C);
       INFO("D: ", D);
+      INFO("G: ", G);
     }
   }
 
