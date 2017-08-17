@@ -205,6 +205,9 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       Eigen::MatrixXd G(G_4.rows() + G_5.rows(), G_4.cols());
       G << G_4, G_5;
 
+      // Compute Matrix H (The complete Jacobian)
+      Eigen::Matrix4d H = G * F;
+
       // Get the L2G or G2L martices for the sensors and
       // compute the matrices F and G and H
       // See how you can update dU and other stuff in next iterations
@@ -234,6 +237,7 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       INFO("C: ", C);
       INFO("D: ", D);
       INFO("G: ", G);
+      INFO("H: ", H);
     }
   }
 
