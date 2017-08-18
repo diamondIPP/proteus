@@ -13,6 +13,7 @@
 #include "utils/definitions.h"
 #include "storage/event.h"
 #include <Eigen/Dense>
+#include <GblTrajectory.h>
 
 namespace Mechanics {
 class Device;
@@ -36,9 +37,6 @@ public:
 private:
   const Mechanics::Device& m_device;
 };
-
-// Initialize list of GblPoints
-//std::vector<GblPoint> points;
 
 // For GBL track fitting
 void fitTrackGBL(Storage::Track& track);
