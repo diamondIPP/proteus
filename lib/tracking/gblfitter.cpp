@@ -229,7 +229,7 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
           // INFO("C: ", C);
           // INFO("D: ", D);
           // INFO("G: ", G);
-          INFO("H: ", H);
+          //INFO("H: ", H);
 
           // We have to make the Jacobain 5x5
           Eigen::Vector4d jac_0(4,1);
@@ -237,17 +237,14 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
           jac_0(1) = 0;
           jac_0(2) = 0;
           jac_0(3) = 0;
-          INFO("jac0: ", jac_0);
           Eigen::MatrixXd jac_1(4,5);
           jac_1 << H, jac_0;
-          INFO("jac1: ", jac_1);
           Eigen::MatrixXd jac_2(1,5);
           jac_2(0,0) = 0;
           jac_2(0,1) = 0;
           jac_2(0,2) = 0;
           jac_2(0,3) = 0;
           jac_2(0,4) = 1;
-          INFO("jac2: ", jac_2);
           Eigen::MatrixXd jac(5,5);
           jac << jac_1, jac_2;
 
