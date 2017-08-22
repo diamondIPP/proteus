@@ -231,8 +231,30 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
           // INFO("G: ", G);
           INFO("H: ", H);
 
+          // We have to make the Jacobain 5x5
+          Eigen::Vector4d jac_0(4,1);
+          jac_0(0) = 0;
+          jac_0(1) = 0;
+          jac_0(2) = 0;
+          jac_0(3) = 0;
+          INFO("jac0: ", jac_0);
+          Eigen::MatrixXd jac_1(4,5);
+          jac_1 << H, jac_0;
+          INFO("jac1: ", jac_1);
+          Eigen::MatrixXd jac_2(1,5);
+          jac_2(0,0) = 0;
+          jac_2(0,1) = 0;
+          jac_2(0,2) = 0;
+          jac_2(0,3) = 0;
+          jac_2(0,4) = 1;
+          INFO("jac2: ", jac_2);
+          Eigen::MatrixXd jac(5,5);
+          jac << jac_1, jac_2;
+
+          INFO("Jacobian: ", jac);
+
           // Initialize the GBL point with the Jacobian
-          //gbl::GblPoint point(H);
+          //gbl::GblPoint point(jac);
       }
 
       // Get the measurement uncertainities for the sensor
