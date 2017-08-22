@@ -17,11 +17,6 @@
 
 PT_SETUP_LOCAL_LOGGER(GBLFitter)
 
-bool firstTimeFlag = true;
-
-// Initialize list of GblPoints
-std::vector<gbl::GblPoint> points;
-
 /** Fit a GBL trajectory */
 struct SimpleGBLFitter {
   // TODO
@@ -34,25 +29,6 @@ struct SimpleGBLFitter {
 
 void Tracking::fitTrackGBL(Storage::Track& track)
 {
-  //SimpleGBLFitter fit;
-  INFO("fitTrackGlobalGBL running");
-  INFO("Number of clusters in the track: ", track.size());
-  for (const auto& c : track.clusters()) {
-    Index isensor = c.first;
-    const Storage::Cluster& cluster = c.second;
-    INFO("Cluster ", cluster);
-    INFO("SensorId: ", isensor);
-    INFO("Position Global: ", cluster.posGlobal());
-    INFO("Position Local: ", cluster.posLocal());
-    INFO("Position Pixel: ", cluster.posPixel());
-    INFO("Covariance: ");
-    INFO(cluster.covGlobal());
-    INFO("Number of Hits: ", cluster.size());
-    for (const Storage::Hit& someHit : cluster.hits()) {
-      INFO("Hit: ", someHit);
-    //points.push_back()
-    }
-  }
 }
 
 Tracking::GBLFitter::GBLFitter(const Mechanics::Device& device)
@@ -64,50 +40,78 @@ std::string Tracking::GBLFitter::name() const { return "GBLFitter"; }
 
 void Tracking::GBLFitter::process(Storage::Event& event) const
 {
-  INFO("First time flag: ", firstTimeFlag);
+  // Initialize list of GblPoints
+  std::vector<gbl::GblPoint> points;
+  bool firstTimeFlag = true;
+
+  // Print Generic Information
   INFO("gblfitter.cpp running");
+  INFO("First time flag: ", firstTimeFlag);
   INFO("Number of tracks in the event: ", event.numTracks());
 
-  // Specify the initial track direction
-  Eigen::Vector3d trackDirec;
-  double dU;
-  double dV;
-  if(firstTimeFlag) {
-    trackDirec(0) = 0.0;
-    trackDirec(1) = 0.0;
-    trackDirec(2) = 1.0;
-    dU = 0;
-    dV = 0;
-  }
-  INFO("Track Direction: ", trackDirec);
+  // Loop over all the tracks in the event
+  for (Index itrack = 0; itrack < event.numTracks(); ++itrack)
+  {
+    // Get the track
+    Storage::Track& track = event.getTrack(itrack);
 
-  // Get the Jacobians based on geometry
-  for (Index isensor = 0; isensor < m_device.numSensors(); ++isensor) {
-    if(firstTimeFlag) {
-      INFO("Sensor Id: ", isensor);
+    // Print Track info
+    DEBUG("TrackState: ", track.globalState());
+    INFO("Number of clusters in the track: ", track.size());
+
+    //Loop over all the clusters
+    for (const auto& c : track.clusters()) {
+
+      // Get the cluster information and associated sensor information
+      Index isensor = c.first;
+      const Storage::Cluster& cluster = c.second;
+      INFO("Cluster ", cluster);
+      INFO("SensorId: ", isensor);
       INFO("Sensor Name: ", m_device.getSensor(isensor)->name());
-      //INFO("Sensor Rows: ", m_device.getSensor(isensor)->numRows());
-      //INFO("Sensor Cols: ", m_device.getSensor(isensor)->numCols());
-      INFO("Sensor Pitch Row: ", m_device.getSensor(isensor)->pitchRow());
-      INFO("Sensor Pitch Col: ", m_device.getSensor(isensor)->pitchCol());
-      //INFO("Sensor Origin: ", m_device.getSensor(isensor)->origin());
-      //INFO("Sensor Normal: ", m_device.getSensor(isensor)->normal());
-      //INFO("Sensor Measurement: ", m_device.getSensor(isensor)->measurement());
-      //INFO("Sensor L2G: ", m_device.getSensor(isensor)->localToGlobal());
-      //INFO("Sensor G2L: ", m_device.getSensor(isensor)->globalToLocal());
-      //INFO("Sensor P2G: ", m_device.getSensor(isensor)->constructPixelToGlobal());
+      DEBUG("Sensor Rows: ", m_device.getSensor(isensor)->numRows());
+      DEBUG("Sensor Cols: ", m_device.getSensor(isensor)->numCols());
+      DEBUG("Sensor Pitch Row: ", m_device.getSensor(isensor)->pitchRow());
+      DEBUG("Sensor Pitch Col: ", m_device.getSensor(isensor)->pitchCol());
+      DEBUG("Sensor Origin: ", m_device.getSensor(isensor)->origin());
+      DEBUG("Sensor Normal: ", m_device.getSensor(isensor)->normal());
+      DEBUG("Sensor L2G: ", m_device.getSensor(isensor)->localToGlobal());
+      DEBUG("Sensor G2L: ", m_device.getSensor(isensor)->globalToLocal());
+      DEBUG("Sensor P2G: ", m_device.getSensor(isensor)->constructPixelToGlobal());
+      DEBUG("Cluster Position Global: ", cluster.posGlobal());
+      DEBUG("Cluster Position Local: ", cluster.posLocal());
+      DEBUG("Cluster Position Pixel: ", cluster.posPixel());
+      DEBUG("Sensor Global Covariance: ");
+      DEBUG(cluster.covGlobal());
+      DEBUG("Sensor Number of Hits: ", cluster.size());
+      for (const Storage::Hit& someHit : cluster.hits()) {
+        DEBUG("Hit: ", someHit);
+      }
+
+      // Specify the initial track direction
+      Eigen::Vector3d trackDirec;
+      double dU;
+      double dV;
+      if(firstTimeFlag) {
+        trackDirec(0) = 0.0;
+        trackDirec(1) = 0.0;
+        trackDirec(2) = 1.0;
+        dU = 0;
+        dV = 0;
+      }
+      DEBUG("Track Direction: ", trackDirec);
 
       // Get the Plane Normal vector
       Eigen::Vector3d planeNormal;
       planeNormal(0) = m_device.getSensor(isensor)->normal().X();
       planeNormal(1) = m_device.getSensor(isensor)->normal().Y();
       planeNormal(2) = m_device.getSensor(isensor)->normal().Z();
-
-      //INFO("Plane Normal: ", planeNormal);
+      DEBUG("Plane Normal: ", planeNormal);
 
       // Caluclate Jacobians, skipping the last sensor
       // TODO: Opportunity to optimize code by using fixed size matrices below
-      if (isensor < m_device.numSensors() - 1)
+      // TODO: I'm probably doing this wrong
+      // TODO: Also, add the DUT as a scatterer
+      if (isensor < m_device.numSensors())
       {
           // Compute Q0 from L2G matrix
           double xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz;
@@ -150,7 +154,7 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
           F << F_3, F_4;
 
           // Compute Q1 from the G2L matrix of the next sensor
-          m_device.getSensor(isensor + 1)->globalToLocal().GetComponents(
+          m_device.getSensor(isensor)->globalToLocal().GetComponents(
             xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz);
           Eigen::Matrix3d Q1;
           Q1(0,0) = xx;
@@ -209,27 +213,27 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
           Eigen::MatrixXd G(G_4.rows() + G_5.rows(), G_4.cols());
           G << G_4, G_5;
 
-          // Compute Matrix H (The complete Jacobian)
+          // Compute Matrix H
           Eigen::Matrix4d H = G * F;
 
           // Print the Jacobian information
-          // INFO("Q0: ", Q0);
-          // INFO("f: ", f);
-          // INFO("f^3: ", f_cubed);
-          // INFO("A: ", A);
-          // INFO("F: ", F);
-          // INFO("Q1: ", Q1);
-          // INFO("Q1 Transpose: ", Q1T);
-          // INFO("TWT: ", twt);
-          // INFO("TW: ", tw);
-          // INFO("Eye3: ", eye3);
-          // INFO("B: ", B);
-          // INFO("Path Length: ", pathLength);
-          // INFO("TTT: ", ttt);
-          // INFO("C: ", C);
-          // INFO("D: ", D);
-          // INFO("G: ", G);
-          //INFO("H: ", H);
+          DEBUG("Q0: ", Q0);
+          DEBUG("f: ", f);
+          DEBUG("f^3: ", f_cubed);
+          DEBUG("A: ", A);
+          DEBUG("F: ", F);
+          DEBUG("Q1: ", Q1);
+          DEBUG("Q1 Transpose: ", Q1T);
+          DEBUG("TWT: ", twt);
+          DEBUG("TW: ", tw);
+          DEBUG("Eye3: ", eye3);
+          DEBUG("B: ", B);
+          DEBUG("Path Length: ", pathLength);
+          DEBUG("TTT: ", ttt);
+          DEBUG("C: ", C);
+          DEBUG("D: ", D);
+          DEBUG("G: ", G);
+          DEBUG("H: ", H);
 
           // We have to make the Jacobain 5x5
           Eigen::Vector4d jac_0(4,1);
@@ -247,76 +251,35 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
           jac_2(0,4) = 1;
           Eigen::MatrixXd jac(5,5);
           jac << jac_1, jac_2;
-
           INFO("Jacobian: ", jac);
 
           // Initialize the GBL point with the Jacobian
           gbl::GblPoint point(jac);
-      }
+          // Add the GblPoint to the list of GblPoints
+          points.push_back(point);
 
-      // Get the measurement uncertainities for the sensor
-      // TODO: Change this to the more accurate formula as per PDG/Simon's code
-      //double sigma_u_sqr, sigma_v_sqr;
-      //sigma_u_sqr = m_device.getSensor(isensor)->pitchCol() * m_device.getSensor(isensor)->pitchCol() / 12;
-      //sigma_v_sqr = m_device.getSensor(isensor)->pitchRow() * m_device.getSensor(isensor)->pitchRow() / 12;
+          //Get theta from the Highland formula
+          // TODO: Seems like we need to adapt this formula for our case
+          // Need energy and particle charge for the calculation
+          // Get the radiation length for the sensor
+          double radLength = m_device.getSensor(isensor)->xX0();
+          double energy = 180000;
+          double theta = 0.0136 * sqrt(radLength) / energy * (1 + 0.038 * log(radLength));
 
-      //Get theta from the Highland formula
-      // TODO: Seems like we need to adapt this formula for our case
-      // Need energy and particle charge for the calculation
-      // Get the radiation length for the sensor
-      double radLength = m_device.getSensor(isensor)->xX0();
-      double energy = 180000;
-      double theta = 0.0136 * sqrt(radLength) / energy * (1 + 0.038 * log(radLength));
+          // Get the scattering uncertainity
+          Eigen::Vector2d scat;
+          scat(0) = 1 / (theta * theta);
+          scat(1) = scat(0);
 
-      // Get the scattering uncertainity
-      Eigen::Vector2d scat;
-      scat(0) = 1 / (theta * theta);
-      scat(1) = scat(0);
+          // Get the measurement uncertainity
+          
+        }
 
-      //
-
-
-      // Initialize the list of GBLPoints
-      //std::vector<gbl::GblPoint> points;
-
-      // Initialize a GBL point for each m
-
-
-
-      // See how you can update dU and other stuff in next iterations
-      // Also, what exactly should be their value?
-      // After that, try to get the measurement on each sensor
-      // Also the uncertainity (pixel size /12 I think)
-      // And then you can define a GBL point
-
-      // Qs: How to incorporate sensor offsets in x and y direction
-      // in the Jacobians?
-      // How exactly is the path length defined?
-      // Also have to emit the DUT from the reconstruction part
     }
-  }
 
-  for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
-
-    Storage::Track& track = event.getTrack(itrack);
-
-    // global fit for common goodness-of-fit
-    fitTrackGBL(track);
-
-    // 1. loop over sensors to build trajectory
-    // std::vector<gbl::points> points
-    // 1.a. for each point: jacobian, scattering uncertaint, measurement
-    // 2. fit full trajectory
-    // gbl::Trajectory traj(points);
-    // trja.fit()
-    // 3. loop over trajectory results
-    ///   for each sensor
-    /// 3.a get corrections
-    /// 3.b calculate new TrackState
-    /// 3.c set per-sensor local state
-    ///     sensorEvent.setLocalState(track_id, state);
-
-    for (Index isensor = 0; isensor < m_device.numSensors(); ++isensor) {
+    // Something I have to keep otherwise it gives some errors :(
+    for (Index isensor = 0; isensor < m_device.numSensors(); ++isensor)
+    {
       Storage::SensorEvent& sev = event.getSensorEvent(isensor);
       // local fit for correct errors in the local frame
       Storage::TrackState state =
@@ -325,6 +288,41 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       INFO("TrackState: ", state);
     }
   }
+
+
+  // // Get the Jacobians based on geometry
+  // for (Index isensor = 0; isensor < m_device.numSensors(); ++isensor) {
+  //   if(firstTimeFlag) {
+  //     INFO("Sensor Id: ", isensor);
+    //
+  //
+  //
+  //     }
+  //
+  //     // Get the measurement uncertainities for the sensor
+  //     // TODO: Change this to the more accurate formula as per PDG/Simon's code
+  //     //double sigma_u_sqr, sigma_v_sqr;
+  //     //sigma_u_sqr = m_device.getSensor(isensor)->pitchCol() * m_device.getSensor(isensor)->pitchCol() / 12;
+  //     //sigma_v_sqr = m_device.getSensor(isensor)->pitchRow() * m_device.getSensor(isensor)->pitchRow() / 12;
+  //
+  //
+  //     // Initialize a GBL point for each m
+  //
+  //
+  //
+  //     // See how you can update dU and other stuff in next iterations
+  //     // Also, what exactly should be their value?
+  //     // After that, try to get the measurement on each sensor
+  //     // Also the uncertainity (pixel size /12 I think)
+  //     // And then you can define a GBL point
+  //
+  //     // Qs: How to incorporate sensor offsets in x and y direction
+  //     // in the Jacobians?
+  //     // How exactly is the path length defined?
+  //     // Also have to emit the DUT from the reconstruction part
+  //   }
+  // }
+
   firstTimeFlag = false;
 }
 
