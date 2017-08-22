@@ -251,7 +251,7 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
           INFO("Jacobian: ", jac);
 
           // Initialize the GBL point with the Jacobian
-          //gbl::GblPoint point(jac);
+          gbl::GblPoint point(jac);
       }
 
       // Get the measurement uncertainities for the sensor
