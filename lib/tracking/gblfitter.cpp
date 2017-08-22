@@ -278,6 +278,13 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
           measPrec(1,0) = cluster.covLocal()(1,0);
           measPrec(1,1) = cluster.covLocal()(1,1);
           DEBUG("measPrec: ", measPrec);
+
+          // Get the measurement
+          // TODO: Check if you're getting the right values i.e. residuals
+          Eigen::Vector2d meas;
+          meas(0) = cluster.posLocal().x();
+          meas(1) = cluster.posLocal().y();
+          DEBUG("Meas: ", meas);
         }
 
     }
