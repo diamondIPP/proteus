@@ -271,8 +271,13 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
           scat(0) = 1 / (theta * theta);
           scat(1) = scat(0);
 
-          // Get the measurement uncertainity
-          
+          // Get the measurement precision
+          Eigen::Matrix2d measPrec;
+          measPrec(0,0) = cluster.covLocal()(0,0);
+          measPrec(0,1) = cluster.covLocal()(0,1);
+          measPrec(1,0) = cluster.covLocal()(1,0);
+          measPrec(1,1) = cluster.covLocal()(1,1);
+          DEBUG("measPrec: ", measPrec);
         }
 
     }
