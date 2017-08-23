@@ -302,6 +302,8 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
           points.push_back(point);
         }
 
+      //Define and initialize the GblTrajectory
+      gbl::GblTrajectory traj(points);
     }
 
     // Something I have to keep otherwise it gives some errors :(
