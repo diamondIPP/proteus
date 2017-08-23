@@ -287,9 +287,10 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
           DEBUG("Meas: ", meas);
 
           // Set the proL2m matrix to unit matrix
+          // TODO: Check if doing it right (Is probably right)
           Eigen::Matrix2d proL2m = Eigen::Matrix2d::Identity();
 
-          // 
+          //
         }
 
     }
