@@ -285,6 +285,11 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
           meas(0) = cluster.posLocal().x();
           meas(1) = cluster.posLocal().y();
           DEBUG("Meas: ", meas);
+
+          // Set the proL2m matrix to unit matrix
+          Eigen::Matrix2d proL2m = Eigen::Matrix2d::Identity();
+
+          // 
         }
 
     }
