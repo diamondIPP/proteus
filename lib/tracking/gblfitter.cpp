@@ -253,8 +253,6 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
 
           // Initialize the GBL point with the Jacobian
           gbl::GblPoint point(jac);
-          // Add the GblPoint to the list of GblPoints
-          points.push_back(point);
 
           // Get the measurement precision
           Eigen::Matrix2d measPrec;
@@ -299,6 +297,9 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
 
           // Add scatterer to the defined GblPoint
           point.addScatterer(scat, scatPrec);
+
+          // Add the GblPoint to the list of GblPoints
+          points.push_back(point);
         }
 
     }
