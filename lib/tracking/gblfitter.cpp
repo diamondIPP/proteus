@@ -296,6 +296,9 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
           Eigen::Vector2d scat;
           scat(0) = 0;
           scat(1) = 0;
+
+          // Add scatterer to the defined GblPoint
+          point.addScatterer(scat, scatPrec);
         }
 
     }
