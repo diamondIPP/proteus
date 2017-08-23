@@ -288,9 +288,14 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
             + 0.038 * log(totalRadLength));
 
           // Get the scattering uncertainity
+          Eigen::Vector2d scatPrec;
+          scatPrec(0) = 1 / (theta * theta);
+          scatPrec(1) = scatPrec(0);
+
+          // Set the scattering mean as Zero
           Eigen::Vector2d scat;
-          scat(0) = 1 / (theta * theta);
-          scat(1) = scat(0);
+          scat(0) = 0;
+          scat(1) = 0;
         }
 
     }
