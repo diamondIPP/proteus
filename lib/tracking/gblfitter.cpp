@@ -17,16 +17,6 @@
 
 PT_SETUP_LOCAL_LOGGER(GBLFitter)
 
-/** Fit a GBL trajectory */
-struct SimpleGBLFitter {
-  // TODO
-  // Derive Jacobians
-  // Define Jacobians according to the GBL Example
-  // Define the procedure to run the propagation similar to the Example
-};
-
-//void Tracking::getJacobians(const Mechanics::Device& device)
-
 void Tracking::fitTrackGBL(Storage::Track& track)
 {
 }
@@ -48,6 +38,14 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
   INFO("gblfitter.cpp running");
   INFO("First time flag: ", firstTimeFlag);
   INFO("Number of tracks in the event: ", event.numTracks());
+
+  // INIT: Loop over all the sensors to get the total radiation length
+  double totalRadLength = 0;
+  for (Index isns = 0; isns < m_device.numSensors(); ++isns)
+  {
+    totalRadLength += m_device.getSensor(isns)->xX0();
+  }
+  DEBUG("Total Radiation Length: ", totalRadLength);
 
   // Loop over all the tracks in the event
   for (Index itrack = 0; itrack < event.numTracks(); ++itrack)
@@ -258,19 +256,6 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
           // Add the GblPoint to the list of GblPoints
           points.push_back(point);
 
-          //Get theta from the Highland formula
-          // TODO: Seems like we need to adapt this formula for our case
-          // Need energy and particle charge for the calculation
-          // Get the radiation length for the sensor
-          double radLength = m_device.getSensor(isensor)->xX0();
-          double energy = 180000;
-          double theta = 0.0136 * sqrt(radLength) / energy * (1 + 0.038 * log(radLength));
-
-          // Get the scattering uncertainity
-          Eigen::Vector2d scat;
-          scat(0) = 1 / (theta * theta);
-          scat(1) = scat(0);
-
           // Get the measurement precision
           Eigen::Matrix2d measPrec;
           measPrec(0,0) = cluster.covLocal()(0,0);
@@ -290,7 +275,22 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
           // TODO: Check if doing it right (Is probably right)
           Eigen::Matrix2d proL2m = Eigen::Matrix2d::Identity();
 
-          //
+          // Add measurement to the defined GblPoint
+          point.addMeasurement(proL2m, meas, measPrec);
+
+          //Get theta from the Highland formula
+          // TODO: Seems like we need to adapt this formula for our case
+          // Need energy and particle charge for the calculation
+          // Get the radiation length for the sensor
+          double radLength = m_device.getSensor(isensor)->xX0();
+          double energy = 180000;
+          double theta = 0.0136 * sqrt(radLength) / energy * (1
+            + 0.038 * log(totalRadLength));
+
+          // Get the scattering uncertainity
+          Eigen::Vector2d scat;
+          scat(0) = 1 / (theta * theta);
+          scat(1) = scat(0);
         }
 
     }
