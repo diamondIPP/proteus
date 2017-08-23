@@ -57,6 +57,17 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
     DEBUG("TrackState: ", track.globalState());
     INFO("Number of clusters in the track: ", track.size());
 
+    // Specify the track direction
+    Eigen::Vector3d trackDirec;
+    double dU;
+    double dV;
+    trackDirec(0) = track.globalState().slope().x();
+    trackDirec(1) = track.globalState().slope().y();
+    trackDirec(2) = 1.0;
+    dU = 0;
+    dV = 0;
+    DEBUG("Track Direction: ", trackDirec);
+
     //Loop over all the clusters
     for (const auto& c : track.clusters()) {
 
@@ -84,19 +95,6 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       for (const Storage::Hit& someHit : cluster.hits()) {
         DEBUG("Hit: ", someHit);
       }
-
-      // Specify the initial track direction
-      Eigen::Vector3d trackDirec;
-      double dU;
-      double dV;
-      if(firstTimeFlag) {
-        trackDirec(0) = 0.0;
-        trackDirec(1) = 0.0;
-        trackDirec(2) = 1.0;
-        dU = 0;
-        dV = 0;
-      }
-      DEBUG("Track Direction: ", trackDirec);
 
       // Get the Plane Normal vector
       Eigen::Vector3d planeNormal;
@@ -301,10 +299,21 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
           // Add the GblPoint to the list of GblPoints
           points.push_back(point);
         }
-
-      //Define and initialize the GblTrajectory
-      gbl::GblTrajectory traj(points);
     }
+    //Define and initialize the GblTrajectory
+    gbl::GblTrajectory traj(points);
+
+    // Fit trajectory
+    double Chi2;
+    int Ndf;
+    double lostWeight;
+    traj.fit(Chi2, Ndf, lostWeight);
+
+    INFO("Chi2: ", Chi2);
+    INFO("Ndf: ", Ndf);
+    INFO("lostWeight: ", lostWeight);
+
+    INFO("Track State: ", track.globalState().slope().x());
 
     // Something I have to keep otherwise it gives some errors :(
     for (Index isensor = 0; isensor < m_device.numSensors(); ++isensor)
@@ -314,53 +323,7 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       Storage::TrackState state =
           fitTrackLocal(track, m_device.geometry(), isensor);
       sev.setLocalState(itrack, std::move(state));
-      INFO("TrackState: ", state);
     }
   }
-
-
-  // // Get the Jacobians based on geometry
-  // for (Index isensor = 0; isensor < m_device.numSensors(); ++isensor) {
-  //   if(firstTimeFlag) {
-  //     INFO("Sensor Id: ", isensor);
-    //
-  //
-  //
-  //     }
-  //
-  //     // Get the measurement uncertainities for the sensor
-  //     // TODO: Change this to the more accurate formula as per PDG/Simon's code
-  //     //double sigma_u_sqr, sigma_v_sqr;
-  //     //sigma_u_sqr = m_device.getSensor(isensor)->pitchCol() * m_device.getSensor(isensor)->pitchCol() / 12;
-  //     //sigma_v_sqr = m_device.getSensor(isensor)->pitchRow() * m_device.getSensor(isensor)->pitchRow() / 12;
-  //
-  //
-  //     // Initialize a GBL point for each m
-  //
-  //
-  //
-  //     // See how you can update dU and other stuff in next iterations
-  //     // Also, what exactly should be their value?
-  //     // After that, try to get the measurement on each sensor
-  //     // Also the uncertainity (pixel size /12 I think)
-  //     // And then you can define a GBL point
-  //
-  //     // Qs: How to incorporate sensor offsets in x and y direction
-  //     // in the Jacobians?
-  //     // How exactly is the path length defined?
-  //     // Also have to emit the DUT from the reconstruction part
-  //   }
-  // }
-
   firstTimeFlag = false;
 }
-
-/*    for (auto sensorId : m_sensorIds) {
-      Storage::SensorEvent& sensorEvent = event.getSensorEvent(sensorId);
-      // local fit for correct errors in the local frame
-      Storage::TrackState state =
-          fitTrackLocal(track, m_device.geometry(), sensorId);
-      sensorEvent.setLocalState(sensorId, std::move(state));
-    }
-  }
-}*/
