@@ -459,6 +459,28 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
     INFO("Ndf: ", Ndf);
     INFO("lostWeight: ", lostWeight);
 
+    // Get the track parameter corrections
+    //Eigen::VectorXd aCorrection(5);
+    //Eigen::MatrixXd aCovariance(5,5);
+    //traj.getResults(2, aCorrection, aCovariance);
+    //INFO("Correction: ", aCorrection);
+    //INFO("Covariance: ", aCovariance);
+
+    // Get the residuals
+    for (Index label = 1; label <= m_device.numSensors(); ++label)
+    {
+      unsigned int numData = 0;
+      Eigen::VectorXd residuals(2), measErr(2), resErr(2), downWeights(2);
+      traj.getMeasResults(label, numData, residuals, measErr, resErr,
+      downWeights);
+      INFO("Measurement Results for Sensor ", label - 1);
+      for (unsigned int i = 0; i < numData; ++i)
+      {
+        INFO(i, " Residual: ", residuals[i], " , Measurement Error: ",
+        measErr[i], " , Residual Error: ", resErr[i]);
+      }
+    }
+
     // Something I have to keep otherwise it gives some errors :(
     for (Index isensor = 0; isensor < m_device.numSensors(); ++isensor)
     {
