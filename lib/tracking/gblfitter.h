@@ -37,10 +37,6 @@ public:
 private:
   const Mechanics::Device& m_device;
 };
-
-// For GBL track fitting
-void fitTrackGBL(Storage::Track& track);
-
 } // namespace Tracking
 
 #endif // PT_GBLFitter_H
