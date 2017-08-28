@@ -7,6 +7,7 @@
 #include "clusterizer.h"
 
 #include <algorithm>
+#include <functional>
 #include <limits>
 
 #include "mechanics/device.h"
@@ -16,54 +17,48 @@
 
 PT_SETUP_GLOBAL_LOGGER
 
-// return true if both hits are connected, i.e. share one edge.
+// return true if both hits are connected, i.e. share one edge
 //
 // WARNING: hits w/ the same position are counted as connected
-static bool connected(const Storage::Hit* hit0, const Storage::Hit* hit1)
+static bool connected(const Storage::Hit& hit0, const Storage::Hit& hit1)
 {
-  auto dc = std::abs(int(hit1->col()) - int(hit0->col()));
-  auto dr = std::abs(int(hit1->row()) - int(hit0->row()));
-  return ((dc == 0) && (dr <= 1)) || ((dc <= 1) && (dr == 0));
+  auto dc = std::abs(hit1.col() - hit0.col());
+  auto dr = std::abs(hit1.row() - hit0.row());
+  bool sameRegion = (hit0.region() == hit1.region());
+  return sameRegion && (((dc == 0) && (dr <= 1)) || ((dc <= 1) && (dr == 0)));
 }
 
-// return true if the hit is connected to any hit in the cluster.
-static bool connected(const Storage::Cluster* cluster, const Storage::Hit* hit)
-{
-  for (Index ihit = 0; ihit < cluster->numHits(); ++ihit) {
-    if (connected(cluster->getHit(ihit), hit))
-      return true;
-  }
-  return false;
-}
-
-// return true if the hit and cluster are connected and in the same region
-static bool compatible(const Storage::Cluster* cluster, const Storage::Hit* hit)
-{
-  return (cluster->region() == hit->region()) && connected(cluster, hit);
-}
-
-static void cluster(std::vector<Storage::Hit*>& hits, Storage::Plane& plane)
+static void cluster(std::vector<std::reference_wrapper<Storage::Hit>>& hits,
+                    Storage::SensorEvent& sensorEvent)
 {
   while (!hits.empty()) {
-    Storage::Hit* seed = hits.back();
-    hits.pop_back();
+    auto clusterStart = --hits.end();
+    auto clusterEnd = hits.end();
 
-    Storage::Cluster* cluster = plane.newCluster();
-    cluster->addHit(seed);
-
-    while (!hits.empty()) {
-      // move all compatible hits to the end
-      auto connected = std::partition(
-          hits.begin(), hits.end(),
-          [&](const Storage::Hit* hit) { return !compatible(cluster, hit); });
-      // there are no more compatible hits and the cluster is complete
-      if (connected == hits.end())
+    // accumulate all connected hits at the end of the vector until
+    // no more compatible hits can be found.
+    // each iteration can only pick up the next neighboring pixels, so we
+    // need to iterate until we find no more connected pixels.
+    while (true) {
+      auto unconnected = [&](const Storage::Hit& hit) {
+        using namespace std::placeholders;
+        return std::none_of(clusterStart, clusterEnd,
+                            std::bind(connected, hit, _1));
+      };
+      // connected hits end up in [moreHits, clusterStart)
+      auto moreHits = std::partition(hits.begin(), clusterStart, unconnected);
+      if (moreHits == clusterStart)
         break;
-      // add compatible hits to cluster and remove from further consideration
-      for (auto hit = connected; hit != hits.end(); ++hit)
-        cluster->addHit(*hit);
-      hits.erase(connected, hits.end());
+      clusterStart = moreHits;
     }
+
+    // construct cluster from connected hits
+    Storage::Cluster& cluster = sensorEvent.addCluster();
+    for (auto hit = clusterStart; hit != clusterEnd; ++hit)
+      cluster.addHit(*hit);
+
+    // remove clustered hits from further consideration
+    hits.erase(clusterStart, clusterEnd);
   }
 }
 
@@ -77,23 +72,23 @@ std::string Processors::BaseClusterizer::name() const { return m_name; }
 
 void Processors::BaseClusterizer::process(Storage::Event& event) const
 {
-  std::vector<Storage::Hit*> hits;
-  Storage::Plane& plane = *event.getPlane(m_sensor.id());
+  auto& sensorEvent = event.getSensorEvent(m_sensor.id());
+  std::vector<std::reference_wrapper<Storage::Hit>> hits;
 
-  // don't try to cluster masked pixels
+  // do not cluster masked pixels
   hits.clear();
-  hits.reserve(plane.numHits());
-  for (Index ihit = 0; ihit < plane.numHits(); ++ihit) {
-    Storage::Hit* hit = plane.getHit(ihit);
-    if (m_sensor.pixelMask().isMasked(hit->col(), hit->row()))
+  hits.reserve(sensorEvent.numHits());
+  for (Index ihit = 0; ihit < sensorEvent.numHits(); ++ihit) {
+    Storage::Hit& hit = sensorEvent.getHit(ihit);
+    if (m_sensor.pixelMask().isMasked(hit.col(), hit.row()))
       continue;
-    hits.push_back(hit);
+    hits.push_back(std::ref(hit));
   }
-  cluster(hits, plane);
+  cluster(hits, sensorEvent);
 
   // estimate cluster properties
-  for (Index icluster = 0; icluster < plane.numClusters(); ++icluster)
-    estimateProperties(*plane.getCluster(icluster));
+  for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster)
+    estimateProperties(sensorEvent.getCluster(icluster));
 }
 
 Processors::BinaryClusterizer::BinaryClusterizer(
@@ -103,7 +98,6 @@ Processors::BinaryClusterizer::BinaryClusterizer(
   DEBUG("binary clustering for ", sensor.name());
 }
 
-// 1/12 factor from pixel size to stddev of equivalent gaussian
 static const Vector3 HIT_COV_ENTRIES(1. / 12., 0., 1. / 12.);
 // set upper triangular part of the covariance matrix
 static const SymMatrix2 HIT_COV(HIT_COV_ENTRIES, false);
@@ -112,22 +106,24 @@ void Processors::BinaryClusterizer::estimateProperties(
     Storage::Cluster& cluster) const
 {
   XYPoint pos(0, 0);
-  double time = std::numeric_limits<double>::max();
+  float time = std::numeric_limits<float>::max();
 
-  for (Index ihit = 0; ihit < cluster.numHits(); ++ihit) {
-    const Storage::Hit* hit = cluster.getHit(ihit);
-    pos += XYVector(hit->posPixel());
-    time = std::min(time, hit->time());
+  for (const Storage::Hit& hit : cluster.hits()) {
+    pos += XYVector(hit.posPixel());
+    time = std::min(time, hit.time());
   }
-  pos /= cluster.numHits();
+  pos /= cluster.size();
 
-  SymMatrix2 cov = HIT_COV;
-  cov(0, 0) /= cluster.sizeCol();
-  cov(1, 1) /= cluster.sizeRow();
+  // 1/12 factor from pixel size to stddev of equivalent gaussian
+  SymMatrix2 cov;
+  cov(0, 0) = 1.0 / (12.0f * cluster.sizeCol());
+  cov(0, 1) = 0;
+  cov(1, 0) = 0;
+  cov(1, 1) = 1.0 / (12.0f * cluster.sizeRow());
 
   cluster.setPixel(pos, cov);
   cluster.setTime(time);
-  cluster.setValue(cluster.numHits());
+  cluster.setValue(cluster.size());
 }
 
 Processors::ValueWeightedClusterizer::ValueWeightedClusterizer(
@@ -141,21 +137,23 @@ void Processors::ValueWeightedClusterizer::estimateProperties(
     Storage::Cluster& cluster) const
 {
   XYPoint pos(0, 0);
-  double time = std::numeric_limits<double>::max();
-  double value = 0;
+  float time = std::numeric_limits<float>::max();
+  float value = 0;
 
-  for (Index ihit = 0; ihit < cluster.numHits(); ++ihit) {
-    const Storage::Hit* hit = cluster.getHit(ihit);
-    pos += hit->value() * XYVector(hit->posPixel());
-    time = std::min(time, hit->time());
-    value += hit->value();
+  for (const Storage::Hit& hit : cluster.hits()) {
+    pos += hit.value() * XYVector(hit.posPixel());
+    time = std::min(time, hit.time());
+    value += hit.value();
   }
   pos /= value;
 
   // TODO 2016-11-14 msmk: consider also the value weighting
-  SymMatrix2 cov = HIT_COV;
-  cov(0, 0) /= cluster.sizeCol();
-  cov(1, 1) /= cluster.sizeRow();
+  // 1/12 factor from pixel size to stddev of equivalent gaussian
+  SymMatrix2 cov;
+  cov(0, 0) = 1.0 / (12.0f * cluster.sizeCol());
+  cov(0, 1) = 0;
+  cov(1, 0) = 0;
+  cov(1, 1) = 1.0 / (12.0f * cluster.sizeRow());
 
   cluster.setPixel(pos, cov);
   cluster.setTime(time);
@@ -173,19 +171,25 @@ void Processors::FastestHitClusterizer::estimateProperties(
     Storage::Cluster& cluster) const
 {
   XYPoint pos(0, 0);
-  double time = std::numeric_limits<double>::max();
-  double value = -1;
+  float time = std::numeric_limits<float>::max();
+  float value = 0;
 
-  for (Index ihit = 0; ihit < cluster.numHits(); ++ihit) {
-    const Storage::Hit* hit = cluster.getHit(ihit);
-    if (hit->time() < time) {
-      pos = hit->posPixel();
-      time = hit->time();
-      value = hit->value();
+  for (const Storage::Hit& hit : cluster.hits()) {
+    if (hit.time() < time) {
+      pos = hit.posPixel();
+      time = hit.time();
+      value = hit.value();
     }
   }
 
-  cluster.setPixel(pos, HIT_COV);
+  // 1/12 factor from pixel size to stddev of equivalent gaussian
+  SymMatrix2 cov;
+  cov(0, 0) = 1.0 / 12.0;
+  cov(0, 1) = 0;
+  cov(1, 0) = 0;
+  cov(1, 1) = 1.0 / 12.0;
+
+  cluster.setPixel(pos, cov);
   cluster.setTime(time);
   cluster.setValue(value);
 }

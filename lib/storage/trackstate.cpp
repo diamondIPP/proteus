@@ -1,7 +1,11 @@
 #include "trackstate.h"
 
-Storage::TrackState::TrackState(double u, double v, double dU, double dV)
-    : m_offset(u, v), m_slope(dU, dV), m_track(NULL), m_matchedCluster(NULL)
+#include <cassert>
+
+Storage::TrackState::TrackState(float u, float v, float dU, float dV)
+    : m_offset(u, v)
+    , m_slope(dU, dV)
+    , m_matchedCluster(kInvalidIndex)
 {
 }
 
@@ -12,7 +16,7 @@ Storage::TrackState::TrackState(const XYPoint& offset, const XYVector& slope)
 
 Storage::TrackState::TrackState() : TrackState(0, 0, 0, 0) {}
 
-void Storage::TrackState::setCovU(double varOffset, double varSlope, double cov)
+void Storage::TrackState::setCovU(float varOffset, float varSlope, float cov)
 {
   m_cov(U, U) = varOffset;
   m_cov(U, V) = 0;
@@ -23,7 +27,7 @@ void Storage::TrackState::setCovU(double varOffset, double varSlope, double cov)
   m_cov(Du, Dv) = 0;
 }
 
-void Storage::TrackState::setCovV(double varOffset, double varSlope, double cov)
+void Storage::TrackState::setCovV(float varOffset, float varSlope, float cov)
 {
   m_cov(V, U) = 0;
   m_cov(V, V) = varOffset;

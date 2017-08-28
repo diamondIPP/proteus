@@ -10,7 +10,6 @@
 
 #include "mechanics/device.h"
 #include "storage/event.h"
-#include "tracking/tracking.h"
 #include "utils/logger.h"
 #include "utils/root.h"
 
@@ -72,14 +71,14 @@ void Analyzers::detail::SensorResidualHists::fill(
 
 Analyzers::Residuals::Residuals(TDirectory* dir,
                                 const Mechanics::Device& device,
+                                const std::string& subdir,
                                 const double pixelRange,
                                 const double slopeRange,
                                 const int bins)
-    : m_device(device)
 {
   for (Index isensor = 0; isensor < device.numSensors(); ++isensor) {
     m_hists.emplace_back(dir, *device.getSensor(isensor), pixelRange,
-                         slopeRange, bins, "residuals");
+                         slopeRange, bins, subdir);
   }
 }
 
@@ -87,59 +86,19 @@ std::string Analyzers::Residuals::name() const { return "Residuals"; }
 
 void Analyzers::Residuals::analyze(const Storage::Event& event)
 {
-  for (Index itrack = 0; itrack < event.numTracks(); itrack++) {
-    const Storage::Track& track = *event.getTrack(itrack);
+  for (Index isensor = 0; isensor < event.numSensorEvents(); ++isensor) {
+    const Storage::SensorEvent& sev = event.getSensorEvent(isensor);
+    auto& hists = m_hists[isensor];
 
-    for (Index icluster = 0; icluster < track.numClusters(); ++icluster) {
-      const Storage::Cluster& cluster = *track.getCluster(icluster);
-      Storage::TrackState state = Tracking::fitTrackLocal(
-          track, m_device.geometry(), cluster.sensorId());
+    for (Index icluster = 0; icluster < sev.numClusters(); ++icluster) {
+      const Storage::Cluster& cluster = sev.getCluster(icluster);
 
-      m_hists[cluster.sensorId()].fill(state, cluster);
+      if (cluster.isInTrack()) {
+        const Storage::TrackState& state = sev.getLocalState(cluster.track());
+        hists.fill(state, cluster);
+      }
     }
   }
 }
 
 void Analyzers::Residuals::finalize() {}
-
-Analyzers::UnbiasedResiduals::UnbiasedResiduals(TDirectory* dir,
-                                                const Mechanics::Device& device,
-                                                const double pixelRange,
-                                                const double slopeRange,
-                                                const int bins)
-    : m_device(device)
-{
-  using Mechanics::Sensor;
-
-  for (Index isensor = 0; isensor < device.numSensors(); ++isensor) {
-    m_hists.emplace_back(dir, *device.getSensor(isensor), pixelRange,
-                         slopeRange, bins, "residuals_unbiased");
-  }
-}
-
-std::string Analyzers::UnbiasedResiduals::UnbiasedResiduals::name() const
-{
-  return "UnbiasedResiduals";
-}
-
-void Analyzers::UnbiasedResiduals::analyze(const Storage::Event& event)
-{
-  for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
-    const Storage::Track& track = *event.getTrack(itrack);
-    for (Index icluster = 0; icluster < track.numClusters(); ++icluster) {
-      const Storage::Cluster& cluster = *track.getCluster(icluster);
-      // refit w/o current sensor information
-      Storage::TrackState state = Tracking::fitTrackLocalUnbiased(
-          track, m_device.geometry(), cluster.sensorId());
-
-      m_hists[cluster.sensorId()].fill(state, cluster);
-    }
-  }
-}
-
-void Analyzers::UnbiasedResiduals::finalize() {}
-
-const TH2D* Analyzers::UnbiasedResiduals::getResidualUV(Index sensorId) const
-{
-  return m_hists.at(sensorId).resUV;
-}

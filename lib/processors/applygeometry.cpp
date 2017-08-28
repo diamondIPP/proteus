@@ -12,15 +12,15 @@ std::string Processors::ApplyGeometry::name() const { return "ApplyGeometry"; }
 
 void Processors::ApplyGeometry::process(Storage::Event& event) const
 {
-  assert(event.numPlanes() == m_device.numSensors() &&
+  assert(event.numSensorEvents() == m_device.numSensors() &&
          "Processors: plane / sensor mismatch");
 
-  for (Index iplane = 0; iplane < event.numPlanes(); iplane++) {
-    Storage::Plane& plane = *event.getPlane(iplane);
+  for (Index iplane = 0; iplane < event.numSensorEvents(); iplane++) {
+    Storage::SensorEvent& sensorEvent = event.getSensorEvent(iplane);
     const Mechanics::Sensor& sensor = *m_device.getSensor(iplane);
 
-    for (unsigned int icluster = 0; icluster < plane.numClusters(); icluster++)
-      plane.getCluster(icluster)->transform(sensor);
+    for (Index icluster = 0; icluster < sensorEvent.numClusters(); icluster++)
+      sensorEvent.getCluster(icluster).transform(sensor);
   }
 }
 

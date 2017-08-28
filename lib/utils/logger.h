@@ -53,6 +53,7 @@ public:
   enum class Level { Error = 0, Info = 1, Debug = 2 };
 
   static void setGlobalLevel(Level lvl) { s_level = lvl; }
+  static bool isActive(Level lvl) { return (lvl <= s_level); }
   static Logger& globalLogger();
 
   Logger(std::string name);
@@ -72,6 +73,15 @@ public:
   {
     log(Level::Debug, things...);
   }
+  /** Log debug information using an objects print(...) function. */
+  template <typename T>
+  void debugp(const T& thing, const std::string& extraPrefix = std::string())
+  {
+    if (isActive(Level::Debug)) {
+      thing.print(stream(Level::Debug), prefix(Level::Debug) + extraPrefix);
+      stream(Level::Debug) << kReset;
+    }
+  }
 
 private:
   template <typename T>
@@ -87,20 +97,25 @@ private:
   }
   static std::ostream& stream(Level lvl)
   {
-    return (lvl <= Level::Error) ? std::cerr : std::cout;
+    return (lvl == Level::Error) ? std::cerr : std::cout;
+  }
+
+  std::string prefix(Level lvl) const
+  {
+    return kLevelPrefix[static_cast<int>(lvl)] + m_prefix;
   }
   template <typename... Ts>
   void log(Level lvl, const Ts&... things)
   {
-    if (lvl <= s_level)
-      print(stream(lvl), kLevelPrefix[static_cast<int>(lvl)], m_prefix,
-            things..., kReset);
+    if (isActive(lvl))
+      print(stream(lvl), prefix(lvl), things..., kReset);
   }
 
   static const char* const kLevelPrefix[3];
   static const char* const kReset;
   static Logger s_global;
   static Level s_level;
+
   std::string m_prefix;
 };
 

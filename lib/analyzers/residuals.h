@@ -41,7 +41,7 @@ struct SensorResidualHists {
                       const double pixelRange,
                       const double slopeRange,
                       const int bins,
-                      const std::string& name = std::string("residuals"));
+                      const std::string& name);
 
   void fill(const Storage::TrackState& state, const Storage::Cluster& cluster);
 };
@@ -51,12 +51,14 @@ struct SensorResidualHists {
 class Residuals : public Analyzer {
 public:
   /**
+   * \param subdir Name of the output subdirectory
    * \param pixelRange Residual histogram range in number of pixels
    * \param slopeRange Track slope histogram range in radian
    * \param bins Number of histogram bins
    */
   Residuals(TDirectory* dir,
             const Mechanics::Device& device,
+            const std::string& subdir = std::string("residuals"),
             /* Histogram options */
             const double pixelRange = 2.0,
             const double slopeRange = 0.001,
@@ -67,31 +69,6 @@ public:
   void finalize();
 
 private:
-  const Mechanics::Device& m_device;
-  std::vector<detail::SensorResidualHists> m_hists;
-};
-
-class UnbiasedResiduals : public Analyzer {
-public:
-  /**
-   * \param pixelRange Residual histogram range in number of pixels
-   * \param slopeRange Track slope histogram range in radian
-   * \param bins Number of histogram bins
-   */
-  UnbiasedResiduals(TDirectory* dir,
-                    const Mechanics::Device& device,
-                    const double pixelRange = 2.0,
-                    const double slopeRange = 0.001,
-                    const int bins = 128);
-
-  std::string name() const;
-  void analyze(const Storage::Event& event);
-  void finalize();
-
-  const TH2D* getResidualUV(Index sensorId) const;
-
-private:
-  const Mechanics::Device& m_device;
   std::vector<detail::SensorResidualHists> m_hists;
 };
 

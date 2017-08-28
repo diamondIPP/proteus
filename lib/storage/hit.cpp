@@ -5,29 +5,43 @@
 
 #include "cluster.h"
 
-Storage::Hit::Hit()
-    : m_digitalCol(-1)
-    , m_digitalRow(-1)
-    , m_col(-1)
-    , m_row(-1)
-    , m_time(-1)
-    , m_value(-1)
-    , m_cluster(NULL)
+Storage::Hit::Hit(int col, int row, float time, float value)
+    : m_digitalCol(col)
+    , m_digitalRow(row)
+    , m_col(col)
+    , m_row(row)
+    , m_time(time)
+    , m_value(value)
+    , m_region(kInvalidIndex)
+    , m_cluster(kInvalidIndex)
 {
 }
 
-void Storage::Hit::setCluster(const Storage::Cluster* cluster)
+void Storage::Hit::setPhysicalAddress(int col, int row)
 {
-  assert(!m_cluster && "Hit: can't cluster an already clustered hit.");
+  m_col = col;
+  m_row = row;
+}
+
+void Storage::Hit::setCluster(Index cluster)
+{
+  assert((m_cluster == kInvalidIndex) && "hit can only be in one cluster");
   m_cluster = cluster;
+}
+
+Storage::Hit::Area Storage::Hit::areaPixel() const
+{
+  return Area(Area::AxisInterval(m_col, m_col + 1),
+              Area::AxisInterval(m_row, m_row + 1));
 }
 
 std::ostream& Storage::operator<<(std::ostream& os, const Storage::Hit& hit)
 {
   if ((hit.digitalCol() != hit.col()) || (hit.digitalRow() != hit.row())) {
-    os << "digital=(" << hit.digitalCol() << ", " << hit.digitalRow() << ") ";
+    os << "addr=(" << hit.digitalCol() << ", " << hit.digitalRow() << ") ";
   }
-  os << "pixel=(" << hit.col() << ", " << hit.row() << ") ";
-  os << "time=" << hit.time() << " value=" << hit.value();
+  os << "col=" << hit.col() << " row=" << hit.row();
+  os << " time=" << hit.time();
+  os << " value=" << hit.value();
   return os;
 }

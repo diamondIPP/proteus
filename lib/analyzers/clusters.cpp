@@ -23,7 +23,7 @@ Analyzers::SensorClusters::SensorClusters(TDirectory* dir,
                            const Mechanics::Sensor::Area& area,
                            TDirectory* sub) {
     HistAxis axCol(area.interval(0), area.length(0), "Cluster column position");
-    HistAxis axRow(area.interval(1), area.length(0), "Cluster row position");
+    HistAxis axRow(area.interval(1), area.length(1), "Cluster row position");
     HistAxis axValue(0, valueMax, "Cluster value");
     HistAxis axSize(1, sizeMax, "Cluster size");
     HistAxis axSizeCol(1, sizeMax, "Cluster column size");
@@ -34,7 +34,7 @@ Analyzers::SensorClusters::SensorClusters(TDirectory* dir,
                    "Cluster uncertainty v");
     HistAxis axHitCol(area.interval(0), area.length(0),
                       "Cluster hit column position");
-    HistAxis axHitRow(area.interval(1), area.length(0),
+    HistAxis axHitRow(area.interval(1), area.length(1),
                       "Cluster hit row position");
     HistAxis axHitTime(0, timeMax, "Hit time");
     HistAxis axHitValue(0, valueMax, "Hit value");
@@ -69,7 +69,7 @@ Analyzers::SensorClusters::SensorClusters(TDirectory* dir,
   }
 }
 
-void Analyzers::SensorClusters::analyze(const Storage::Plane& sensorEvent)
+void Analyzers::SensorClusters::analyze(const Storage::SensorEvent& sensorEvent)
 {
   auto fill = [](const Storage::Cluster& cluster, AreaHists& hists) {
     auto pos = cluster.posPixel();
@@ -82,8 +82,7 @@ void Analyzers::SensorClusters::analyze(const Storage::Plane& sensorEvent)
     hists.sizeValue->Fill(cluster.size(), cluster.value());
     hists.uncertaintyU->Fill(std::sqrt(cluster.covLocal()(0, 0)));
     hists.uncertaintyV->Fill(std::sqrt(cluster.covLocal()(1, 1)));
-    for (Index ihit = 0; ihit < cluster.numHits(); ++ihit) {
-      const Storage::Hit& hit = *cluster.getHit(ihit);
+    for (const Storage::Hit& hit : cluster.hits()) {
       hists.hitPos->Fill(hit.col(), hit.row());
       hists.sizeHitTime->Fill(cluster.size(), hit.time());
       hists.sizeHitValue->Fill(cluster.size(), hit.value());
@@ -93,7 +92,7 @@ void Analyzers::SensorClusters::analyze(const Storage::Plane& sensorEvent)
 
   m_nClusters->Fill(sensorEvent.numClusters());
   for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
-    const Storage::Cluster& cluster = *sensorEvent.getCluster(icluster);
+    const Storage::Cluster& cluster = sensorEvent.getCluster(icluster);
     fill(cluster, m_whole);
     if (cluster.region() != kInvalidIndex)
       fill(cluster, m_regions[cluster.region()]);
@@ -136,7 +135,7 @@ std::string Analyzers::Clusters::name() const { return "ClusterInfo"; }
 void Analyzers::Clusters::analyze(const Storage::Event& event)
 {
   for (Index isensor = 0; isensor < m_sensors.size(); ++isensor)
-    m_sensors[isensor].analyze(*event.getPlane(isensor));
+    m_sensors[isensor].analyze(event.getSensorEvent(isensor));
 }
 
 void Analyzers::Clusters::finalize()

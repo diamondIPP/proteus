@@ -1,11 +1,6 @@
 #include "rceroot.h"
 
-#include "storage/cluster.h"
 #include "storage/event.h"
-#include "storage/hit.h"
-#include "storage/plane.h"
-#include "storage/track.h"
-#include "storage/trackstate.h"
 #include "utils/logger.h"
 
 PT_SETUP_LOCAL_LOGGER(RceRoot)
@@ -159,7 +154,6 @@ void Io::RceRootReader::addSensor(TDirectory* dir)
     trees.intercepts->SetBranchAddress("Cov", interceptCov);
     trees.intercepts->SetBranchAddress("Track", interceptTrack);
   }
-
   m_sensors.push_back(trees);
 }
 
@@ -214,10 +208,7 @@ bool Io::RceRootReader::read(Storage::Event& event)
   // completely useless. The `TriggerTime` actually stores the internal
   // FPGA timestamp/ clock cyles and is what we need to use.
   event.clear(frameNumber, triggerTime);
-  event.setTriggerInfo(triggerInfo);
-  event.setTriggerOffset(triggerOffset);
-  event.setTriggerPhase(triggerPhase);
-  event.setInvalid(invalid);
+  event.setTrigger(triggerInfo, triggerOffset, triggerPhase);
 
   // global tracks info
   if (m_tracks) {
@@ -236,7 +227,7 @@ bool Io::RceRootReader::read(Storage::Event& event)
   // per-sensor data
   for (size_t isensor = 0; isensor < numSensors(); ++isensor) {
     SensorTrees& trees = m_sensors[isensor];
-    Storage::Plane* localEvent = event.getPlane(isensor);
+    Storage::SensorEvent& sensorEvent = event.getSensorEvent(isensor);
 
     // local track states
     if (trees.intercepts) {
@@ -248,8 +239,7 @@ bool Io::RceRootReader::read(Storage::Event& event)
             interceptU[iintercept], interceptV[iintercept],
             interceptSlopeU[iintercept], interceptSlopeV[iintercept]);
         local.setCov(interceptCov[iintercept]);
-        local.setTrack(event.getTrack(interceptTrack[iintercept]));
-        localEvent->addState(std::move(local));
+        sensorEvent.setLocalState(interceptTrack[iintercept], std::move(local));
       }
     }
 
@@ -263,14 +253,14 @@ bool Io::RceRootReader::read(Storage::Event& event)
         cov(0, 0) = clusterVarCol[icluster];
         cov(1, 1) = clusterVarRow[icluster];
         cov(0, 1) = clusterCovColRow[icluster];
-        Storage::Cluster* cluster = localEvent->newCluster();
-        cluster->setPixel(XYPoint(clusterCol[icluster], clusterRow[icluster]),
-                          cov);
+        Storage::Cluster& cluster = sensorEvent.addCluster();
+        cluster.setPixel(XYPoint(clusterCol[icluster], clusterRow[icluster]),
+                         cov);
         // Fix cluster/track relationship if possible
         if (m_tracks && (0 <= clusterTrack[icluster])) {
-          Storage::Track* track = event.getTrack(clusterTrack[icluster]);
-          track->addCluster(cluster);
-          cluster->setTrack(track);
+          Storage::Track& track = event.getTrack(clusterTrack[icluster]);
+          track.addCluster(isensor, cluster);
+          cluster.setTrack(clusterTrack[icluster]);
         }
       }
     }
@@ -281,14 +271,11 @@ bool Io::RceRootReader::read(Storage::Event& event)
         FAIL("could not read 'Hits' entry ", ievent);
 
       for (Int_t ihit = 0; ihit < numHits; ++ihit) {
-        Storage::Hit* hit = localEvent->addHit(hitPixX[ihit], hitPixY[ihit],
+        Storage::Hit& hit = sensorEvent.addHit(hitPixX[ihit], hitPixY[ihit],
                                                hitTiming[ihit], hitValue[ihit]);
         // Fix hit/cluster relationship is possibl
-        if (trees.clusters && hitInCluster[ihit] >= 0) {
-          Storage::Cluster* cluster =
-              localEvent->getCluster(hitInCluster[ihit]);
-          cluster->addHit(hit);
-        }
+        if (trees.clusters && hitInCluster[ihit] >= 0)
+          sensorEvent.getCluster(hitInCluster[ihit]).addHit(hit);
       }
     }
   } // end loop in planes
@@ -360,7 +347,7 @@ void Io::RceRootWriter::addSensor(TDirectory* dir)
   trees.intercepts = new TTree("Intercepts", "Intercepts");
   trees.intercepts->Branch("NIntercepts", &numIntercepts, "NIntercepts/I");
   trees.intercepts->Branch("U", interceptU, "U[NIntercepts]/D");
-  trees.intercepts->Branch("V", interceptU, "V[NIntercepts]/D");
+  trees.intercepts->Branch("V", interceptV, "V[NIntercepts]/D");
   trees.intercepts->Branch("SlopeU", interceptSlopeU, "SlopeU[NIntercepts]/D");
   trees.intercepts->Branch("SlopeV", interceptSlopeV, "SlopeV[NIntercepts]/D");
   trees.intercepts->Branch("Cov", interceptCov, "Cov[NIntercepts][10]/D");
@@ -382,8 +369,8 @@ std::string Io::RceRootWriter::name() const { return "RceRootWriter"; }
 
 void Io::RceRootWriter::append(const Storage::Event& event)
 {
-  if (event.numPlanes() != m_sensors.size())
-    FAIL("inconsistent sensors numbers. events has ", event.numPlanes(),
+  if (event.numSensorEvents() != m_sensors.size())
+    FAIL("inconsistent sensors numbers. events has ", event.numSensorEvents(),
          ", but the writer expected ", m_sensors.size());
 
   // global event info is **always** filled
@@ -393,7 +380,7 @@ void Io::RceRootWriter::append(const Storage::Event& event)
   triggerInfo = event.triggerInfo();
   triggerOffset = event.triggerOffset();
   triggerPhase = event.triggerPhase();
-  invalid = event.invalid();
+  invalid = false;
   m_eventInfo->Fill();
 
   // tracks
@@ -402,7 +389,7 @@ void Io::RceRootWriter::append(const Storage::Event& event)
       FAIL("tracks exceed MAX_TRACKS");
     numTracks = event.numTracks();
     for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
-      const Storage::Track& track = *event.getTrack(itrack);
+      const Storage::Track& track = event.getTrack(itrack);
       trackChi2[itrack] = track.chi2();
       trackDof[itrack] = track.degreesOfFreedom();
       const Storage::TrackState& state = track.globalState();
@@ -416,56 +403,58 @@ void Io::RceRootWriter::append(const Storage::Event& event)
   }
 
   // per-sensor data
-  for (Index isensor = 0; isensor < event.numPlanes(); ++isensor) {
+  for (Index isensor = 0; isensor < event.numSensorEvents(); ++isensor) {
     SensorTrees& trees = m_sensors[isensor];
-    const Storage::Plane* localEvent = event.getPlane(isensor);
+    const auto& sensorEvent = event.getSensorEvent(isensor);
 
     // local hits
     if (trees.hits) {
-      if (kMaxHits < localEvent->numHits())
+      if (kMaxHits < sensorEvent.numHits())
         FAIL("hits exceed MAX_HITS");
-      numHits = localEvent->numHits();
-      for (Index ihit = 0; ihit < localEvent->numHits(); ++ihit) {
-        const Storage::Hit* hit = localEvent->getHit(ihit);
-        hitPixX[ihit] = hit->digitalCol();
-        hitPixY[ihit] = hit->digitalRow();
-        hitValue[ihit] = hit->value();
-        hitTiming[ihit] = hit->time();
-        hitInCluster[ihit] = hit->cluster() ? hit->cluster()->index() : -1;
+      numHits = sensorEvent.numHits();
+      for (Index ihit = 0; ihit < sensorEvent.numHits(); ++ihit) {
+        const Storage::Hit hit = sensorEvent.getHit(ihit);
+        hitPixX[ihit] = hit.digitalCol();
+        hitPixY[ihit] = hit.digitalRow();
+        hitValue[ihit] = hit.value();
+        hitTiming[ihit] = hit.time();
+        hitInCluster[ihit] = hit.isInCluster() ? hit.cluster() : -1;
       }
       trees.hits->Fill();
     }
 
     // local clusters
     if (trees.clusters) {
-      if (kMaxHits < localEvent->numClusters())
+      if (kMaxHits < sensorEvent.numClusters())
         FAIL("clusters exceed MAX_HITS");
-      numClusters = localEvent->numClusters();
-      for (Index iclu = 0; iclu < localEvent->numClusters(); ++iclu) {
-        const Storage::Cluster& cluster = *localEvent->getCluster(iclu);
+      numClusters = sensorEvent.numClusters();
+      for (Index iclu = 0; iclu < sensorEvent.numClusters(); ++iclu) {
+        const Storage::Cluster& cluster = sensorEvent.getCluster(iclu);
         clusterCol[iclu] = cluster.posPixel().x();
         clusterRow[iclu] = cluster.posPixel().y();
         clusterVarCol[iclu] = cluster.covPixel()(0, 0);
         clusterVarRow[iclu] = cluster.covPixel()(1, 1);
         clusterCovColRow[iclu] = cluster.covPixel()(0, 1);
-        clusterTrack[iclu] = cluster.track() ? cluster.track()->index() : -1;
+        clusterTrack[iclu] = cluster.isInTrack() ? cluster.track() : -1;
       }
       trees.clusters->Fill();
     }
 
     // local track states
     if (trees.intercepts) {
-      if (kMaxTracks < localEvent->numStates())
-        FAIL("intercepts exceed MAX_TRACKS");
-      numIntercepts = localEvent->numStates();
-      for (Index istate = 0; istate < localEvent->numStates(); ++istate) {
-        const Storage::TrackState& local = localEvent->getState(istate);
-        interceptU[istate] = local.offset().x();
-        interceptV[istate] = local.offset().y();
-        interceptSlopeU[istate] = local.slope().x();
-        interceptSlopeV[istate] = local.slope().y();
-        std::copy(local.cov().begin(), local.cov().end(), interceptCov[istate]);
-        interceptTrack[istate] = local.track()->index();
+      numIntercepts = 0;
+      for (const auto& s : sensorEvent.localStates()) {
+        if (kMaxTracks < static_cast<Index>(numIntercepts + 1))
+          FAIL("intercepts exceed MAX_TRACKS");
+        const Storage::TrackState& local = s.second;
+        interceptU[numIntercepts] = local.offset().x();
+        interceptV[numIntercepts] = local.offset().y();
+        interceptSlopeU[numIntercepts] = local.slope().x();
+        interceptSlopeV[numIntercepts] = local.slope().y();
+        std::copy(local.cov().begin(), local.cov().end(),
+                  interceptCov[numIntercepts]);
+        interceptTrack[numIntercepts] = s.first;
+        numIntercepts += 1;
       }
       trees.intercepts->Fill();
     }

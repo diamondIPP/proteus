@@ -11,8 +11,8 @@ namespace Mechanics {
 class Device;
 }
 namespace Storage {
+class SensorEvent;
 class Track;
-class Plane;
 }
 
 namespace Tracking {
@@ -47,7 +47,7 @@ public:
 private:
   typedef std::unique_ptr<Storage::Track> TrackPtr;
 
-  void searchSensor(Storage::Plane& sensorEvent,
+  void searchSensor(Storage::SensorEvent& sensorEvent,
                     std::vector<TrackPtr>& candidates) const;
   void selectTracks(std::vector<TrackPtr>& candidates,
                     Storage::Event& event) const;

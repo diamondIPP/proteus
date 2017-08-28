@@ -119,9 +119,10 @@ std::string Analyzers::Efficiency::name() const
 
 void Analyzers::Efficiency::analyze(const Storage::Event& event)
 {
-  const Storage::Plane& localEvent = *event.getPlane(m_sensor.id());
-  for (Index istate = 0; istate < localEvent.numStates(); ++istate) {
-    const Storage::TrackState& state = localEvent.getState(istate);
+  const Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensor.id());
+
+  for (const auto& s : sensorEvent.localStates()) {
+    const Storage::TrackState& state = s.second;
     auto posPixel = m_sensor.transformLocalToPixel(state.offset());
 
     // ignore tracks that fall within a masked area
@@ -137,14 +138,14 @@ void Analyzers::Efficiency::analyze(const Storage::Event& event)
       if (!regionHists.areaPixel.isInside(posPixel.x(), posPixel.y()))
         continue;
       // ignore tracks that are matched to a cluster in a different region
-      if (state.matchedCluster() &&
-          (state.matchedCluster()->region() != iregion))
+      if ((state.isMatched()) &&
+          (sensorEvent.getCluster(state.matchedCluster()).region() != iregion))
         continue;
       regionHists.fill(state, posPixel);
     }
   }
-  for (Index icluster = 0; icluster < localEvent.numClusters(); ++icluster) {
-    const Storage::Cluster& cluster = *localEvent.getCluster(icluster);
+  for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
+    const Storage::Cluster& cluster = sensorEvent.getCluster(icluster);
     m_sensorHists.fill(cluster);
     if (cluster.region() != kInvalidIndex)
       m_regionsHists[cluster.region()].fill(cluster);
@@ -154,7 +155,7 @@ void Analyzers::Efficiency::analyze(const Storage::Event& event)
 void Analyzers::Efficiency::Hists::fill(const Storage::TrackState& state,
                                         const XYPoint& posPixel)
 {
-  bool isMatched = state.matchedCluster();
+  bool isMatched = state.isMatched();
 
   total->Fill(posPixel.x(), posPixel.y());
   if (isMatched)
@@ -188,7 +189,7 @@ void Analyzers::Efficiency::Hists::fill(const Storage::TrackState& state,
 
 void Analyzers::Efficiency::Hists::fill(const Storage::Cluster& cluster)
 {
-  if (cluster.matchedState()) {
+  if (cluster.isMatched()) {
     clustersPass->Fill(cluster.posPixel().x(), cluster.posPixel().y());
   } else {
     clustersFail->Fill(cluster.posPixel().x(), cluster.posPixel().y());

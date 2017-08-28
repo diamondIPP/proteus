@@ -1,6 +1,7 @@
 #ifndef PT_CLUSTER_H
 #define PT_CLUSTER_H
 
+#include <functional>
 #include <iosfwd>
 #include <string>
 #include <vector>
@@ -15,85 +16,68 @@ class Sensor;
 namespace Storage {
 
 class Hit;
-class Track;
-class TrackState;
-class Plane;
 
 class Cluster {
 public:
   using Area = Utils::Box<2, int>;
+  using Hits = std::vector<std::reference_wrapper<Hit>>;
 
-  Index index() const { return m_index; }
-  Index sensorId() const;
-  Index region() const;
+  Cluster();
 
   void setPixel(const XYPoint& cr, const SymMatrix2& cov);
-  void setPixel(double col, double row, double stdCol, double stdRow);
-  void setTime(double time_) { m_time = time_; }
-  void setValue(double value_) { m_value = value_; }
+  void setPixel(float col, float row, float stdCol, float stdRow);
+  void setTime(float time_) { m_time = time_; }
+  void setValue(float value_) { m_value = value_; }
   /** Calculate local and global coordinates from the pixel coordinates. */
   void transform(const Mechanics::Sensor& sensor);
+  void setTrack(Index track);
 
+  Index region() const;
   const XYPoint& posPixel() const { return m_cr; }
   const XYPoint& posLocal() const { return m_uv; }
   const XYZPoint& posGlobal() const { return m_xyz; }
   const SymMatrix2& covPixel() const { return m_crCov; }
   const SymMatrix2& covLocal() const { return m_uvCov; }
   const SymMatrix3& covGlobal() const { return m_xyzCov; }
-  double time() const { return m_time; }
-  double value() const { return m_value; }
-
+  float time() const { return m_time; }
+  float value() const { return m_value; }
   /** The area enclosing the cluster in pixel coordinates.
    *
-   * \return Returns an empty area for an empty cluster.
+   * \returns Empty area for an empty cluster.
    */
   Area areaPixel() const;
-  int size() const { return static_cast<int>(m_hits.size()); }
   int sizeCol() const;
   int sizeRow() const;
 
-  void addHit(Hit* hit);
-  Index numHits() const { return static_cast<Index>(m_hits.size()); }
-  Hit* getHit(Index i) { return m_hits.at(i); }
-  const Hit* getHit(Index i) const { return m_hits.at(i); }
+  void addHit(Hit& hit);
+  size_t size() const { return m_hits.size(); }
+  const Hits& hits() const { return m_hits; }
 
-  void setTrack(const Track* track);
-  const Track* track() const { return m_track; }
-
-  void setMatchedState(const TrackState* state) { m_matchedState = state; }
-  const TrackState* matchedState() const { return m_matchedState; }
-
-  void setMatchedTrack(const Track* track) { m_matched = track; }
-  bool hasMatchedTrack() const { return (m_matched != NULL); }
-  const Track* matchedTrack() const { return m_matched; }
+  Index index() const { return m_index; }
+  bool isInTrack() const { return m_track != kInvalidIndex; }
+  Index track() const { return m_track; }
+  bool isMatched() const { return m_matchedState != kInvalidIndex; }
+  Index matchedState() const { return m_matchedState; }
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
-  Cluster(); // The Event class manages the memory, not the user
-
   XYPoint m_cr;
-  double m_time;  // The timing of the underlying hits
-  double m_value; // The combined value of all its hits
   XYPoint m_uv;
-  SymMatrix2 m_uvCov;
+  float m_time;
+  float m_value;
   SymMatrix2 m_crCov;
+  SymMatrix2 m_uvCov;
   XYZPoint m_xyz;
   SymMatrix3 m_xyzCov;
 
-  std::vector<Hit*> m_hits; // List of hits composing the cluster
+  Hits m_hits; // List of hits composing the cluster
 
-  int m_index;
-  Plane* m_plane;       //<! The plane containing the cluster
-  const Track* m_track; // The track containing this cluster
-  const TrackState* m_matchedState;
-  const Track* m_matched; // Track matched to this cluster in DUT analysis (not
-                          // stored)
-  double m_matchDistance; // Distance to matched track
+  Index m_index;
+  Index m_track;
+  Index m_matchedState;
 
-  friend class Plane;     // Needs to use the set plane method
-  friend class Event;     // Needs access the constructor and destructor
-  friend class StorageIO; // Needs access to the track index
+  friend class SensorEvent;
 };
 
 std::ostream& operator<<(std::ostream& os, const Cluster& cluster);

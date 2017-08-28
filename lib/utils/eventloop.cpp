@@ -158,7 +158,7 @@ Utils::EventLoop::EventLoop(std::shared_ptr<Io::EventReader> reader,
       INFO("restrict to ", available, " events available");
       // there are enought events available
     } else {
-      m_events = events - start;
+      m_events = events;
     }
     // case 2: users wants to process all events available
   } else {

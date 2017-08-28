@@ -45,12 +45,12 @@ Analyzers::SensorHits::SensorHits(TDirectory* dir,
   }
 }
 
-void Analyzers::SensorHits::analyze(const Storage::Plane& sensorEvent)
+void Analyzers::SensorHits::analyze(const Storage::SensorEvent& sensorEvent)
 {
   m_nHits->Fill(sensorEvent.numHits());
 
   for (Index ihit = 0; ihit < sensorEvent.numHits(); ++ihit) {
-    const Storage::Hit& hit = *sensorEvent.getHit(ihit);
+    const Storage::Hit& hit = sensorEvent.getHit(ihit);
 
     m_pos->Fill(hit.col(), hit.row());
     m_time->Fill(hit.time());
@@ -96,8 +96,8 @@ std::string Analyzers::Hits::name() const { return "Hits"; }
 
 void Analyzers::Hits::analyze(const Storage::Event& event)
 {
-  for (Index isensor = 0; isensor < event.numPlanes(); ++isensor) {
-    m_sensors[isensor].analyze(*event.getPlane(isensor));
+  for (Index isensor = 0; isensor < event.numSensorEvents(); ++isensor) {
+    m_sensors[isensor].analyze(event.getSensorEvent(isensor));
   }
 }
 

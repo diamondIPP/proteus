@@ -13,9 +13,6 @@
 
 namespace Storage {
 
-class Cluster;
-class Track;
-
 /** Track state, i.e. position and direction, on a local plane.
  *
  * If the local plane is the global xy-plane, the local track description
@@ -26,7 +23,7 @@ class TrackState {
 public:
   TrackState();
   TrackState(const XYPoint& offset, const XYVector& slope = XYVector(0, 0));
-  TrackState(double u, double v, double dU = 0, double dV = 0);
+  TrackState(float u, float v, float dU = 0, float dV = 0);
 
   /** Set full covariance matrix from entries.
    *
@@ -36,8 +33,8 @@ public:
    */
   template <typename InputIterator>
   void setCov(InputIterator first);
-  void setCovU(double varOffset, double varSlope, double cov = 0);
-  void setCovV(double varOffset, double varSlope, double cov = 0);
+  void setCovU(float varOffset, float varSlope, float cov = 0);
+  void setCovV(float varOffset, float varSlope, float cov = 0);
 
   /** Covariance matrix of the full parameter vector. */
   const SymMatrix4& cov() const { return m_cov; }
@@ -48,11 +45,8 @@ public:
   const XYVector& slope() const { return m_slope; }
   SymMatrix2 covSlope() const { return m_cov.Sub<SymMatrix2>(Du, Du); }
 
-  void setTrack(const Track* track) { m_track = track; }
-  const Track* track() const { return m_track; }
-
-  void setMatchedCluster(const Cluster* cluster) { m_matchedCluster = cluster; }
-  const Cluster* matchedCluster() const { return m_matchedCluster; }
+  bool isMatched() const { return (m_matchedCluster != kInvalidIndex); }
+  Index matchedCluster() const { return m_matchedCluster; }
 
 private:
   enum { U = 0, V = 1, Du = 2, Dv = 3 };
@@ -60,9 +54,9 @@ private:
   XYPoint m_offset;
   XYVector m_slope;
   SymMatrix4 m_cov;
-  const Track* m_track;
-  const Cluster* m_matchedCluster;
+  Index m_matchedCluster;
 
+  friend class SensorEvent;
   friend class Track;
 };
 

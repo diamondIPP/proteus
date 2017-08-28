@@ -58,8 +58,7 @@ struct SensorStepsGraphs {
   void writeGraphs(const std::string& sensorName, TDirectory* dir) const
   {
     TDirectory* sub = Utils::makeDir(dir, sensorName);
-    auto makeGraph = [&](const std::string& name,
-                         const std::string& ylabel,
+    auto makeGraph = [&](const std::string& name, const std::string& ylabel,
                          const std::vector<double>& yval,
                          const std::vector<double>& yerr,
                          const double yscale = 1.0) {
@@ -191,7 +190,10 @@ int main(int argc, char const* argv[])
       // use (unbiased) track residuals to align
       loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
           dev, sensorIds, sensorIds.size(), searchSigmaMax, redChi2Max));
-      loop.addAnalyzer(std::make_shared<Residuals>(stepDir, dev));
+      loop.addProcessor(
+          std::make_shared<Tracking::UnbiasedStraightFitter>(dev));
+      loop.addAnalyzer(
+          std::make_shared<Residuals>(stepDir, dev, "unbiased_residuals"));
       aligner =
           std::make_shared<ResidualsAligner>(stepDir, dev, alignIds, damping);
     }

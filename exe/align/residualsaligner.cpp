@@ -7,7 +7,6 @@
 #include "analyzers/tracks.h"
 #include "mechanics/device.h"
 #include "storage/event.h"
-#include "tracking/tracking.h"
 #include "utils/logger.h"
 #include "utils/root.h"
 
@@ -58,21 +57,18 @@ std::string Alignment::ResidualsAligner::name() const
 
 void Alignment::ResidualsAligner::analyze(const Storage::Event& event)
 {
-  for (auto hists = m_hists.begin(); hists != m_hists.end(); ++hists) {
-    Index sensorId = hists->sensorId;
-    const Storage::Plane& sensorEvent = *event.getPlane(sensorId);
+  for (const auto& hists : m_hists) {
+    Index isensor = hists.sensorId;
+    const Storage::SensorEvent& sensorEvent = event.getSensorEvent(isensor);
 
     for (Index iclu = 0; iclu < sensorEvent.numClusters(); ++iclu) {
-      const Storage::Cluster& cluster = *sensorEvent.getCluster(iclu);
-      const Storage::Track* track = cluster.track();
+      const Storage::Cluster& cluster = sensorEvent.getCluster(iclu);
 
-      if (!track)
+      if (!cluster.isInTrack())
         continue;
 
-      // refit track w/o selected sensor for unbiased residuals
-      Storage::TrackState state = Tracking::fitTrackLocalUnbiased(
-          *track, m_device.geometry(), sensorId);
-
+      const Storage::TrackState& state =
+          sensorEvent.getLocalState(cluster.track());
       double u = state.offset().x();
       double v = state.offset().y();
       double ru = u - cluster.posLocal().x();
@@ -93,9 +89,9 @@ void Alignment::ResidualsAligner::analyze(const Storage::Event& event)
       double dv = (rv + rv * v * v + ru * u * v) / f;
       double dgamma = (rv * u - ru * v) / f;
 
-      hists->corrU->Fill(du);
-      hists->corrV->Fill(dv);
-      hists->corrGamma->Fill(dgamma);
+      hists.corrU->Fill(du);
+      hists.corrV->Fill(dv);
+      hists.corrGamma->Fill(dgamma);
     }
   }
   m_tracks->analyze(event);

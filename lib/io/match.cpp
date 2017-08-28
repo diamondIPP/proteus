@@ -23,13 +23,12 @@ void Io::MatchWriter::EventData::addToTree(TTree* tree)
   tree->Branch("evt_ntracks", &nTracks);
 }
 
-void Io::MatchWriter::EventData::set(const Storage::Event& e,
-                                     const Storage::Plane& s)
+void Io::MatchWriter::EventData::set(const Storage::SensorEvent& e)
 {
   frame = e.frame();
   timestamp = e.timestamp();
-  nClusters = s.numClusters();
-  nTracks = e.numTracks();
+  nClusters = e.numClusters();
+  nTracks = e.localStates().size();
 }
 
 void Io::MatchWriter::TrackData::addToTree(TTree* tree)
@@ -85,11 +84,12 @@ void Io::MatchWriter::ClusterData::set(const Storage::Cluster& c)
   time = c.time();
   value = c.value();
   region = ((c.region() == kInvalidIndex) ? -1 : c.region());
-  size = std::min(c.size(), int(MAX_CLUSTER_SIZE));
+  size = std::min(c.size(), size_t(MAX_CLUSTER_SIZE));
   sizeCol = c.sizeCol();
   sizeRow = c.sizeRow();
-  for (int ihit = 0; ihit < size; ++ihit) {
-    const Storage::Hit& hit = *c.getHit(ihit);
+  const auto& hits = c.hits();
+  for (int16_t ihit = 0; ihit < size; ++ihit) {
+    const Storage::Hit& hit = hits[ihit];
     hitCol[ihit] = hit.col();
     hitRow[ihit] = hit.row();
     hitTime[ihit] = hit.time();
@@ -170,14 +170,14 @@ std::string Io::MatchWriter::name() const { return m_name; }
 
 void Io::MatchWriter::append(const Storage::Event& event)
 {
-  const Storage::Plane& plane = *event.getPlane(m_sensorId);
+  const auto& sensorEvent = event.getSensorEvent(m_sensorId);
 
-  m_event.set(event, plane);
+  m_event.set(sensorEvent);
 
   // export tracks and possible matched clusters
-  for (Index istate = 0; istate < plane.numStates(); ++istate) {
-    const Storage::TrackState& state = plane.getState(istate);
-    const Storage::Track& track = *state.track();
+  for (const auto& s : sensorEvent.localStates()) {
+    const Storage::TrackState& state = s.second;
+    const Storage::Track& track = event.getTrack(s.first);
 
     // always set track data
     XYPoint cr = m_sensor.transformLocalToPixel(state.offset());
@@ -192,11 +192,12 @@ void Io::MatchWriter::append(const Storage::Event& event)
     m_track.row = cr.y();
     m_track.chi2 = track.chi2();
     m_track.dof = track.degreesOfFreedom();
-    m_track.size = track.numClusters();
+    m_track.size = track.size();
 
     // matching cluster data
-    if (state.matchedCluster()) {
-      const Storage::Cluster& cluster = *state.matchedCluster();
+    if (state.isMatched()) {
+      const Storage::Cluster& cluster =
+          sensorEvent.getCluster(state.matchedCluster());
       // set cluster information
       m_matchedCluster.set(cluster);
       // set matching information
@@ -212,11 +213,11 @@ void Io::MatchWriter::append(const Storage::Event& event)
   }
 
   // export unmatched clusters
-  for (Index icluster = 0; icluster < plane.numClusters(); ++icluster) {
-    const Storage::Cluster& cluster = *plane.getCluster(icluster);
+  for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
+    const Storage::Cluster& cluster = sensorEvent.getCluster(icluster);
 
     // already exported during track iteration
-    if (cluster.matchedTrack())
+    if (cluster.isMatched())
       continue;
 
     m_unmatchCluster.set(cluster);

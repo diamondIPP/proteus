@@ -10,7 +10,7 @@ class TH1D;
 class TH2D;
 
 namespace Storage {
-class Plane;
+class SensorEvent;
 }
 namespace Mechanics {
 class Device;
@@ -29,7 +29,7 @@ public:
                  const int sizeMax,
                  const int binsUncertainty);
 
-  void analyze(const Storage::Plane& sensorEvent);
+  void analyze(const Storage::SensorEvent& sensorEvent);
   void finalize();
 
 private:

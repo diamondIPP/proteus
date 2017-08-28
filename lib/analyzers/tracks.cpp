@@ -55,10 +55,10 @@ void Analyzers::Tracks::analyze(const Storage::Event& event)
   m_nTracks->Fill(event.numTracks());
 
   for (Index itrack = 0; itrack < event.numTracks(); itrack++) {
-    const Storage::Track& track = *event.getTrack(itrack);
+    const Storage::Track& track = event.getTrack(itrack);
     const Storage::TrackState& state = track.globalState();
 
-    m_size->Fill(track.numClusters());
+    m_size->Fill(track.size());
     m_reducedChi2->Fill(track.reducedChi2());
     m_offsetXY->Fill(state.offset().x(), state.offset().y());
     m_offsetX->Fill(state.offset().x());

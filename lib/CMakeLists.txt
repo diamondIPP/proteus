@@ -31,9 +31,9 @@ set(SOURCES
     storage/cluster.cpp
     storage/event.cpp
     storage/hit.cpp
+    storage/sensorevent.cpp
     storage/track.cpp
     storage/trackstate.cpp
-    storage/plane.cpp
     tracking/trackfinder.cpp
     tracking/straightfitter.cpp
     tracking/tracking.cpp

@@ -71,32 +71,36 @@ std::string Analyzers::Distances::name() const
 
 void Analyzers::Distances::analyze(const Storage::Event& event)
 {
-  const Storage::Plane& plane = *event.getPlane(m_sensorId);
+  const Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
 
   // combinatorics: all tracks to all other tracks
-  for (Index istate0 = 0; istate0 < plane.numStates(); ++istate0) {
-    for (Index istate1 = 0; istate1 < plane.numStates(); ++istate1) {
-      if (istate0 == istate1)
+  for (const auto& s0 : sensorEvent.localStates()) {
+    for (const auto& s1 : sensorEvent.localStates()) {
+      if (s0.first == s1.first)
         continue;
-      m_trackTrack.fill(plane.getState(istate1).offset() -
-                        plane.getState(istate0).offset());
+      m_trackTrack.fill(s1.second.offset() - s0.second.offset());
     }
   }
   // combinatorics: all clusters to all tracks
-  for (Index istate = 0; istate < plane.numStates(); ++istate) {
-    for (Index icluster = 0; icluster < plane.numClusters(); ++icluster) {
-      const Storage::TrackState& state = plane.getState(istate);
-      const Storage::Cluster& cluster = *plane.getCluster(icluster);
+  for (const auto& s : sensorEvent.localStates()) {
+    const Storage::TrackState& state = s.second;
+
+    for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
+      const Storage::Cluster& cluster = sensorEvent.getCluster(icluster);
+
       m_trackCluster.fill(cluster.posLocal() - state.offset(),
                           cluster.covLocal() + state.covOffset());
     }
   }
   // matched pairs
-  for (Index istate = 0; istate < plane.numStates(); ++istate) {
-    const Storage::TrackState& state = plane.getState(istate);
-    if (state.matchedCluster()) {
-      m_match.fill(state.matchedCluster()->posLocal() - state.offset(),
-                   state.matchedCluster()->covLocal() + state.covOffset());
+  for (const auto& s : sensorEvent.localStates()) {
+    const Storage::TrackState& state = s.second;
+
+    if (state.isMatched()) {
+      const Storage::Cluster& cluster =
+          sensorEvent.getCluster(state.matchedCluster());
+      m_match.fill(cluster.posLocal() - state.offset(),
+                   cluster.covLocal() + state.covOffset());
     }
   }
 }
