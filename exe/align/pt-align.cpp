@@ -7,6 +7,7 @@
 #include <TTree.h>
 
 #include "analyzers/residuals.h"
+#include "analyzers/tracks.h"
 #include "loop/eventloop.h"
 #include "mechanics/device.h"
 #include "processors/applygeometry.h"
@@ -136,6 +137,9 @@ int main(int argc, char const* argv[])
   auto redChi2Max = app.config().get<double>("reduced_chi2_max");
   auto damping = app.config().get<double>("damping");
 
+  // copy device to allow modifications after each alignment step
+  auto dev = app.device();
+
   // split sensors into fixed and alignable set
   std::vector<Index> fixedSensorIds;
   std::sort(sensorIds.begin(), sensorIds.end());
@@ -158,12 +162,10 @@ int main(int argc, char const* argv[])
 
   // output
   TFile hists(app.outputPath("hists.root").c_str(), "RECREATE");
-  StepsGraphs steps;
-  // add initial geometry to alignment graphs
-  steps.addStep(alignIds, app.device().geometry());
 
-  // copy device to allow modifications after each alignment step
-  auto dev = app.device();
+  // alignment steps monitoring starting w/ the initial geometry
+  StepsGraphs steps;
+  steps.addStep(alignIds, dev.geometry());
 
   for (int step = 1; step <= numSteps; ++step) {
     TDirectory* stepDir = Utils::makeDir(&hists, "step" + std::to_string(step));
@@ -177,6 +179,7 @@ int main(int argc, char const* argv[])
     loop.addProcessor(std::make_shared<ApplyGeometry>(dev));
 
     // setup aligment method specific loop logic
+    std::shared_ptr<Tracks> tracks;
     std::shared_ptr<Aligner> aligner;
     if (method == Method::Correlations) {
       // coarse method w/o tracks using only cluster correlations
@@ -190,19 +193,39 @@ int main(int argc, char const* argv[])
           dev, sensorIds, sensorIds.size(), searchSigmaMax, redChi2Max));
       loop.addProcessor(
           std::make_shared<Tracking::UnbiasedStraightFitter>(dev));
-      loop.addAnalyzer(std::make_shared<Residuals>(stepDir, dev, sensorIds,
-                                                   "unbiased_residuals"));
+      // add tracks analyzer for beam slope and divergence
+      tracks = std::make_shared<Tracks>(stepDir, dev);
+      loop.addAnalyzer(tracks);
+      loop.addAnalyzer(
+          std::make_shared<Residuals>(stepDir, dev, "unbiased_residuals"));
       aligner =
           std::make_shared<ResidualsAligner>(stepDir, dev, alignIds, damping);
     }
     loop.addAnalyzer(aligner);
     loop.run();
 
+    // updated geometry from the specified aligner
     Mechanics::Geometry newGeo = aligner->updatedGeometry();
-    steps.addStep(alignIds, newGeo);
+    // update beam slope and divergence if available
+    if (tracks) {
+      auto beamSlope = tracks->beamSlope();
+      auto beamDivergence = tracks->beamDivergence();
+
+      INFO("beam:");
+      INFO("  slope x: ", beamSlope[0]);
+      INFO("  slope y: ", beamSlope[1]);
+      INFO("  divergence x: ", beamDivergence[0]);
+      INFO("  divergence y: ", beamDivergence[1]);
+
+      newGeo.setBeamSlope(beamSlope[0], beamSlope[1]);
+      newGeo.setBeamDivergence(beamDivergence[0], beamDivergence[1]);
+    }
+    // update device for next iteration and write to prevent information loss
     dev.setGeometry(newGeo);
-    // write current geometry after each step to not loose information
     dev.geometry().writeFile(app.outputPath("geo.toml"));
+
+    // register updated geometry in alignment monitoring
+    steps.addStep(alignIds, dev.geometry());
   }
 
   steps.writeGraphs(dev, Utils::makeDir(&hists, "results"));
