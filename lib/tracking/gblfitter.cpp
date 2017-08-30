@@ -403,23 +403,12 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       // TODO: For the sensor event, set the local track state as below
       Storage::SensorEvent& sev = event.getSensorEvent(label);
       Storage::TrackState state(0, 0, 0, 0);
+      sev.setLocalState(itrack, std::move(state));
     }
 
     // debug printout
 	  //traj.printTrajectory(1);
 		//traj.printPoints(1);
 		//traj.printData();
-
-
-
-    // Something I have to keep otherwise it gives some errors :(
-    for (Index isensor = 0; isensor < m_device.numSensors(); ++isensor)
-    {
-      Storage::SensorEvent& sev = event.getSensorEvent(isensor);
-      // local fit for correct errors in the local frame
-      Storage::TrackState state =
-          fitTrackLocal(track, m_device.geometry(), isensor);
-      sev.setLocalState(itrack, std::move(state));
-    }
   }
 }
