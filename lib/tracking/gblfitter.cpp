@@ -14,7 +14,6 @@
 #include "utils/logger.h"
 #include <math.h>
 
-
 PT_SETUP_LOCAL_LOGGER(GBLFitter)
 
 Tracking::GBLFitter::GBLFitter(const Mechanics::Device& device)
@@ -334,7 +333,9 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
           Eigen::Vector2d meas;
           meas(0) = cluster.posLocal().x();
           meas(1) = cluster.posLocal().y();
-          DEBUG("Meas: ", meas);
+          INFO("Meas: ", meas);
+          INFO("Offset: ", track.globalState().offset());
+
 
           // Set the proL2m matrix to unit matrix
           // Identity Matrix since measurement and scattering plane are the same
@@ -365,9 +366,9 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
     // Get the track parameter corrections
     // Eigen::VectorXd aCorrection(5);
     // Eigen::MatrixXd aCovariance(5,5);
-    // traj.getResults(2, aCorrection, aCovariance);
-    // INFO("Correction: ", aCorrection);
-    // INFO("Covariance: ", aCovariance);
+    // traj.getResults(-1, aCorrection, aCovariance);
+    //INFO("Correction: ", aCorrection);
+    //INFO("Covariance: ", aCovariance);
 
     // Loop over all the sensors to get the measurement and scatterer
     // residuals and then update the track state
@@ -392,14 +393,16 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       INFO("Scattering Results for Sensor ", label);
       for (unsigned int i = 0; i < numData; ++i)
       {
-        INFO(i, " Sc1: ", sc1[i], " , Sc2: ", sc2[i], " , Sc3: ", sc3[i]);
+        INFO(i, " Kink: ", sc1[i], " , Kink measurement error: ", sc2[i],
+         " , Kink error: ", sc3[i]);
       }
-
       // TODO: Update the track state
       // TODO: Calcualte the new state: u, v, du, dv
       // TODO: Initialize the new track state with the above parameters
       // TODO: Get the sensor event for each sensor
       // TODO: For the sensor event, set the local track state as below
+      Storage::SensorEvent& sev = event.getSensorEvent(label);
+      Storage::TrackState state(0, 0, 0, 0);
     }
 
     // debug printout
