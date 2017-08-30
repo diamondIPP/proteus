@@ -72,3 +72,13 @@ void Analyzers::Tracks::execute(const Storage::Event& event)
     m_slopeY->Fill(state.slope().y());
   }
 }
+
+Vector2 Analyzers::Tracks::beamSlope() const
+{
+  return Vector2(m_slopeXY->GetMean(1), m_slopeXY->GetMean(2));
+}
+
+Vector2 Analyzers::Tracks::beamDivergence() const
+{
+  return Vector2(m_slopeXY->GetStdDev(1), m_slopeXY->GetStdDev(2));
+}
