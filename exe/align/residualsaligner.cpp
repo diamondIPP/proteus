@@ -95,6 +95,8 @@ Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
   Mechanics::Geometry geo = m_device.geometry();
 
   for (auto hists = m_hists.begin(); hists != m_hists.end(); ++hists) {
+    const Mechanics::Sensor& sensor = *m_device.getSensor(hists->sensorId);
+
     Vector6 delta;
     delta[0] = m_damping * hists->corrU->GetMean();
     delta[1] = m_damping * hists->corrV->GetMean();
@@ -109,7 +111,7 @@ Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
 
     geo.correctLocal(hists->sensorId, delta, cov);
 
-    INFO("sensor ", hists->sensorId, " alignment corrections:");
+    INFO(sensor.name(), " alignment corrections:");
     INFO("  u: ", delta[0], " +- ", stdU);
     INFO("  v: ", delta[1], " +- ", stdV);
     INFO("  gamma: ", delta[5], " +- ", stdGamma);
