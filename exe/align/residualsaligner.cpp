@@ -4,7 +4,6 @@
 #include <TH1.h>
 #include <TH2.h>
 
-#include "analyzers/tracks.h"
 #include "mechanics/device.h"
 #include "storage/event.h"
 #include "utils/logger.h"
@@ -19,11 +18,8 @@ Alignment::ResidualsAligner::ResidualsAligner(
     const double damping,
     const double pixelRange,
     const double gammaRange,
-    const double slopeRange,
     const int bins)
-    : m_tracks(new Analyzers::Tracks(dir, device))
-    , m_device(device)
-    , m_damping(damping)
+    : m_device(device), m_damping(damping)
 {
   using namespace Utils;
 
@@ -47,9 +43,6 @@ Alignment::ResidualsAligner::ResidualsAligner(
     m_hists.push_back(hists);
   }
 }
-
-// required to make pImpled unique_ptr work
-Alignment::ResidualsAligner::~ResidualsAligner() {}
 
 std::string Alignment::ResidualsAligner::name() const
 {
@@ -95,29 +88,13 @@ void Alignment::ResidualsAligner::execute(const Storage::Event& event)
       hists.corrGamma->Fill(dgamma);
     }
   }
-  m_tracks->execute(event);
 }
-
-void Alignment::ResidualsAligner::finalize() { m_tracks->finalize(); }
 
 Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
 {
   Mechanics::Geometry geo = m_device.geometry();
 
-  double slopeX = m_tracks->histSlopeX()->GetMean();
-  double slopeXStd = m_tracks->histSlopeX()->GetStdDev();
-  double slopeY = m_tracks->histSlopeY()->GetMean();
-  double slopeYStd = m_tracks->histSlopeY()->GetStdDev();
-  geo.setBeamSlope(slopeX, slopeY);
-  geo.setBeamDivergence(slopeXStd, slopeYStd);
-
-  INFO("mean track slope:");
-  INFO("  slope x: ", slopeX, " +- ", slopeXStd);
-  INFO("  slope y: ", slopeY, " +- ", slopeYStd);
-
   for (auto hists = m_hists.begin(); hists != m_hists.end(); ++hists) {
-    const Mechanics::Sensor& sensor = *m_device.getSensor(hists->sensorId);
-
     Vector6 delta;
     delta[0] = m_damping * hists->corrU->GetMean();
     delta[1] = m_damping * hists->corrV->GetMean();
@@ -130,9 +107,9 @@ Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
     cov(1, 1) = stdV * stdV;
     cov(5, 5) = stdGamma * stdGamma;
 
-    geo.correctLocal(sensor.id(), delta, cov);
+    geo.correctLocal(hists->sensorId, delta, cov);
 
-    INFO(sensor.name(), " alignment corrections:");
+    INFO("sensor ", hists->sensorId, " alignment corrections:");
     INFO("  u: ", delta[0], " +- ", stdU);
     INFO("  v: ", delta[1], " +- ", stdV);
     INFO("  gamma: ", delta[5], " +- ", stdGamma);
