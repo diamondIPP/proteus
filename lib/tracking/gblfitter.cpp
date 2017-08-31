@@ -56,8 +56,6 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
     Eigen::Vector3d trackPos(offset.x(), offset.y(), 0);
     Eigen::Vector3d trackDirec(slope.x(), slope.y(), 1);
     trackDirec.normalize();
-    double dU = trackDirec(0);
-    double dV = trackDirec(1);
     DEBUG("Track Direction: ", trackDirec);
 
     // Loop over all the sensors
@@ -88,12 +86,12 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       m_device.getSensor(isensor)->localToGlobal().GetComponents(
         xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz);
       Eigen::Vector3d localOrigin(dx, dy, dz);
-      double s = -1 * (trackPos - localOrigin).dot(planeNormal) / trackDirec.dot(planeNormal);
-      DEBUG("s: ", s);
+      double pathLength = -1 * (trackPos - localOrigin).dot(planeNormal) / trackDirec.dot(planeNormal);
+      DEBUG("Path Length: ", pathLength);
       // Get the global intersection coordinates
       Eigen::Vector3d globalIntersection;
-      globalIntersection = trackPos + s * trackDirec;
-      INFO("Track Intersection with sensor in Global coordinates: ",
+      globalIntersection = trackPos + pathLength * trackDirec;
+      DEBUG("Track Intersection with sensor in Global coordinates: ",
        globalIntersection);
 
        // Compute Q1 from the G2L matrix of the sensor
@@ -125,11 +123,11 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
        localIntersection);
        // Convert track direction into local tangents
        Eigen::Vector3d localTangent = Q1 * trackDirec;
-       INFO("Local tangent: ", localTangent);
-       // Co
+       DEBUG("Local tangent: ", localTangent);
+       // Convert local tangents to local slopes
        Eigen::Vector2d localSlope;
        localSlope(0) = localTangent(0) / localTangent(2);
-       localSlope(1) = localTangent(1) / localTangent(2);       
+       localSlope(1) = localTangent(1) / localTangent(2);
        INFO("Local slope: ", localSlope);
 
       // Caluclate Jacobians for all the sensors
@@ -170,16 +168,17 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       // Compute Matrix A
       // TODO use local slope to calculate
       float f;
-      f = 1 / sqrt(1 + dU*dU + dV*dV);
+      f = 1 / sqrt(1 + localSlope(0)*localSlope(0) +
+        localSlope(1)*localSlope(1));
       float f_cubed;
       f_cubed = f*f*f;
       Eigen::MatrixXd A(3,2);
-      A(0,0) = f - f_cubed * dU*dU;
-      A(0,1) = -f * dU * dV;
+      A(0,0) = f - f_cubed * localSlope(0)*localSlope(0);
+      A(0,1) = -f * localSlope(0) * localSlope(1);
       A(1,0) = A(0,1);
-      A(1,1) = f - f_cubed * dV*dV;
-      A(2,0) = -f_cubed * dU;
-      A(2,1) = -f_cubed * dV;
+      A(1,1) = f - f_cubed * localSlope(1)*localSlope(1);
+      A(2,0) = -f_cubed * localSlope(0);
+      A(2,1) = -f_cubed * localSlope(1);
 
       // Compute Matrix F (Local to global)
       Eigen::MatrixXd F_0(3,2);
@@ -200,13 +199,7 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       Eigen::Matrix3d B = eye3 - (twt/tw);
 
       //Computer Matrix C
-      double pathLength;
-      if(isensor == 0) {
-        pathLength = m_device.getSensor(isensor)->origin().Z();
-      }
-      else {
-        pathLength = m_device.getSensor(isensor)->origin().Z() - m_device.getSensor(isensor - 1)->origin().Z();
-      }
+      // TODO: Check which path length I should use
       Eigen::Matrix3d ttt = trackDirec * trackDirec.transpose();
       Eigen::Matrix3d C = pathLength * (eye3 - (ttt/tw));
 
@@ -214,10 +207,10 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       Eigen::MatrixXd D(2,3);
       D(0,0) = f;
       D(0,1) = 0;
-      D(0,2) = -dU;
+      D(0,2) = -localSlope(0);
       D(1,0) = D(0,1);
       D(1,1) = D(0,0);
-      D(1,2) = -dV;
+      D(1,2) = -localSlope(1);
 
       // Compute Matrix G
       Eigen::MatrixXd G_0(2,3);
