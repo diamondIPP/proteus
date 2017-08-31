@@ -31,11 +31,42 @@ namespace Mechanics {
  * 3-2-1 convention is used to build the rotation matrix as a product of
  * three elementary rotations
  *
- *     Q = R_1(a1) * R_2(a2) * R_3(a3) ,
+ *     Q = R_1(alpha) * R_2(beta) * R_3(gamma) ,
  *
- * i.e. first a rotation by a3 around the local third axis
- * (normal axis), then a rotation by a2 around the updated second
- * axis, followed with a rotation by a1 around the first axis.
+ * i.e. first a rotation by gamma around the local third axis
+ * (normal axis), then a rotation by beta around the updated second
+ * axis, followed with a rotation by alpha around the first axis.
+ *
+ * Alignment of a plane corresponds to the multiplication of an additional
+ * rotation matrix and a change of the plane offset, i.e.
+ *
+ *     Q   ->   Q' = Q * dQ
+ *     r_0 -> r_0' = r_0 + dr
+ *
+ * A fixed position r in global coordinates changes its local coordinates
+ * after alignment as follows
+ *
+ *     q' = Q'^T * (r - r_0')
+ *        = dQ'^T * Q'^T * (r - r_0 - dr)
+ *        = dQ'^T * Q'^T * (r - r_0) - dQ'^T * Q'^T * dr
+ *        = dQ'^T q - dq ,
+ *
+ * where dq=(du0,dv0,dw0) are the plane offset changes transformed into the
+ * local coordinates. The rotation correction can again be expressed as a
+ * composition of three elementary rotations
+ *
+ *     dQ = R_1(dalpha) * R_2(dbeta) * R_3(dgamma) ,
+ *
+ * with alignment angles (dalpha,dbeta,dgamma). Usually the alignment angles
+ * are small and the rotation correction can be expressed using the small
+ * angle approximation as
+ *
+ *          |      1  -dgamma    dbeta |
+ *     dQ = | dgamma        1  -dalpha |
+ *          | -dbeta   dalpha        1 |
+ *
+ * The three offset corrections and the three angle corrections are combined
+ * in a single alignment parameter vector (du0,dv0,dw0,dalpha,dbeta,dgamma).
  */
 struct Plane {
   Matrix3 rotation; // from local to global coordinates
