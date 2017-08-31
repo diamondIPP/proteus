@@ -91,8 +91,6 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       // Get the global intersection coordinates
       Eigen::Vector3d globalIntersection;
       globalIntersection = trackPos + pathLength * trackDirec;
-      DEBUG("Track Intersection with sensor in Global coordinates: ",
-       globalIntersection);
 
        // Compute Q1 from the G2L matrix of the sensor
        // NOTE: This would also be used for computing the Jacobian
@@ -119,16 +117,19 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       // Convert position into local coordinates
       Eigen::Vector3d localIntersection = Q1 * (globalIntersection -
         localOrigin);
-      INFO("Track Intersection with sensor in Local coordinates: ",
-       localIntersection);
-       // Convert track direction into local tangents
-       Eigen::Vector3d localTangent = Q1 * trackDirec;
-       DEBUG("Local tangent: ", localTangent);
-       // Convert local tangents to local slopes
-       Eigen::Vector2d localSlope;
-       localSlope(0) = localTangent(0) / localTangent(2);
-       localSlope(1) = localTangent(1) / localTangent(2);
-       INFO("Local slope: ", localSlope);
+      // Convert track direction into local tangents
+      Eigen::Vector3d localTangent = Q1 * trackDirec;
+      // Convert local tangents to local slopes
+      Eigen::Vector2d localSlope;
+      localSlope(0) = localTangent(0) / localTangent(2);
+      localSlope(1) = localTangent(1) / localTangent(2);
+
+      DEBUG("Track Intersection with sensor in Global coordinates: ",
+        globalIntersection);
+      DEBUG("Track Intersection with sensor in Local coordinates: ",
+        localIntersection);
+      DEBUG("Local tangent: ", localTangent);
+      DEBUG("Local slope: ", localSlope);
 
       // Caluclate Jacobians for all the sensors
       // TODO: Opportunity to optimize code by using fixed size matrices below
@@ -330,13 +331,11 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
           measPrec(1,1) = cluster.covLocal()(1,1);
           DEBUG("measPrec: ", measPrec);
 
-          // Get the measurement
-          // TODO: Check if you're getting the right values i.e. residuals
-          // Use residuals instead of measurements
+          // Get the measurement (residuals)
           Eigen::Vector2d meas;
-          meas(0) = cluster.posLocal().x();
-          meas(1) = cluster.posLocal().y();
-          // TODO use residuals relative to local track position
+          // TODO: Check if the subtraction is right (sign?)
+          meas(0) = cluster.posLocal().x() - localIntersection(0);
+          meas(1) = cluster.posLocal().y() - localIntersection(1);
           INFO("Meas: ", meas);
 
           // Set the proL2m matrix to unit matrix
