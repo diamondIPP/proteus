@@ -123,7 +123,9 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
         localOrigin);
       INFO("Track Intersection with sensor in Local coordinates: ",
        localIntersection);
-
+       // Convert slope into local coordinates
+       Eigen::Vector3d localSlope = Q1 * trackDirec;
+       INFO("Local slope: ", localSlope);
 
       // Caluclate Jacobians for all the sensors
       // TODO: Opportunity to optimize code by using fixed size matrices below
