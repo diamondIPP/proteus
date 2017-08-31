@@ -111,10 +111,12 @@ Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
 
     geo.correctLocal(hists->sensorId, delta, cov);
 
+    // output w/ angles in degrees
+    constexpr double toDeg = 180.0 / M_PI;
     INFO(sensor.name(), " alignment corrections:");
-    INFO("  u: ", delta[0], " +- ", stdU);
-    INFO("  v: ", delta[1], " +- ", stdV);
-    INFO("  gamma: ", delta[5], " +- ", stdGamma);
+    INFO("  u0: ", delta[0], " +- ", stdU);
+    INFO("  v0: ", delta[1], " +- ", stdV);
+    INFO("  gamma: ", delta[5] * toDeg, " +- ", stdGamma * toDeg, " degree");
   }
   return geo;
 }
