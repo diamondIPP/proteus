@@ -60,8 +60,8 @@ Mechanics::Geometry Alignment::CorrelationsAligner::updatedGeometry() const
     deltaYVar += hY->GetMeanError() * hY->GetMeanError();
 
     INFO(m_device.getSensor(id1)->name(), " alignment corrections:");
-    INFO("  delta x:  ", deltaX, " +- ", std::sqrt(deltaXVar));
-    INFO("  delta y:  ", deltaY, " +- ", std::sqrt(deltaYVar));
+    INFO("  x0:  ", deltaX, " +- ", std::sqrt(deltaXVar));
+    INFO("  y0:  ", deltaY, " +- ", std::sqrt(deltaYVar));
 
     geo.correctGlobalOffset(id1, deltaX, deltaY, 0);
   }
