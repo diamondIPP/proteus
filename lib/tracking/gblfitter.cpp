@@ -123,8 +123,13 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
         localOrigin);
       INFO("Track Intersection with sensor in Local coordinates: ",
        localIntersection);
-       // Convert slope into local coordinates
-       Eigen::Vector3d localSlope = Q1 * trackDirec;
+       // Convert track direction into local tangents
+       Eigen::Vector3d localTangent = Q1 * trackDirec;
+       INFO("Local tangent: ", localTangent);
+       // Co
+       Eigen::Vector2d localSlope;
+       localSlope(0) = localTangent(0) / localTangent(2);
+       localSlope(1) = localTangent(1) / localTangent(2);       
        INFO("Local slope: ", localSlope);
 
       // Caluclate Jacobians for all the sensors
