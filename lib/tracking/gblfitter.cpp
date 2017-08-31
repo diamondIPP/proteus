@@ -96,10 +96,34 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       INFO("Track Intersection with sensor in Global coordinates: ",
        globalIntersection);
 
+       // Compute Q1 from the G2L matrix of the sensor
+       // NOTE: This would also be used for computing the Jacobian
+       // TODO: Change to iterator version
+       Eigen::Matrix3d Q1;
+       Eigen::Matrix3d Q1T;
+       Eigen::MatrixXd Q1T23(2,3);
+       m_device.getSensor(isensor)->globalToLocal().GetComponents(
+         xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz);
+       Q1(0,0) = xx;
+       Q1(0,1) = xy;
+       Q1(0,2) = xz;
+       Q1(1,0) = yx;
+       Q1(1,1) = yy;
+       Q1(1,2) = yz;
+       Q1(2,0) = zx;
+       Q1(2,1) = zy;
+       Q1(2,2) = zz;
+       // Get the Q1 transpose
+       Q1T = Q1.transpose();
+       // Get the Q1T23 block
+       Q1T23 = Q1T.block(0,0,2,3);
 
-      // // TODO convert position / direction into local coordinates
-      // Eigen::Matrix3d localOrigin;
-      // double s =
+      // Convert position into local coordinates
+      Eigen::Vector3d localIntersection = Q1 * (globalIntersection -
+        localOrigin);
+      INFO("Track Intersection with sensor in Local coordinates: ",
+       localIntersection);
+
 
       // Caluclate Jacobians for all the sensors
       // TODO: Opportunity to optimize code by using fixed size matrices below
@@ -121,7 +145,7 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       }
       else
       {
-        // Compute Q0 from L2G matrix
+        // Compute Q0 from L2G matrix of the previous sensor
         double xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz;
         m_device.getSensor(isensor - 1)->localToGlobal().GetComponents(
           xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz);
@@ -135,27 +159,6 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
         Q0(2,1) = zy;
         Q0(2,2) = zz;
       }
-
-      // Compute Q1 from the G2L matrix of the next sensor
-      // TODO: Change to iterator version
-      Eigen::Matrix3d Q1;
-      Eigen::Matrix3d Q1T;
-      Eigen::MatrixXd Q1T23(2,3);
-      m_device.getSensor(isensor)->globalToLocal().GetComponents(
-        xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz);
-      Q1(0,0) = xx;
-      Q1(0,1) = xy;
-      Q1(0,2) = xz;
-      Q1(1,0) = yx;
-      Q1(1,1) = yy;
-      Q1(1,2) = yz;
-      Q1(2,0) = zx;
-      Q1(2,1) = zy;
-      Q1(2,2) = zz;
-      // Get the Q1 transpose
-      Q1T = Q1.transpose();
-      // Get the Q1T23 block
-      Q1T23 = Q1T.block(0,0,2,3);
 
       // Compute Matrix A
       // TODO use local slope to calculate
