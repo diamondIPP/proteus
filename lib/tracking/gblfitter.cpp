@@ -50,15 +50,14 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
     DEBUG("TrackState: ", track.globalState());
     INFO("Number of clusters in the track: ", track.size());
 
-    // Specify the track direction
-    Eigen::Vector3d trackDirec;
-    double dU;
-    double dV;
-    trackDirec(0) = track.globalState().slope().x();
-    trackDirec(1) = track.globalState().slope().y();
-    trackDirec(2) = 1.0;
-    dU = trackDirec(0);
-    dV = trackDirec(1);
+    // Specify the track in global coordinates
+    auto offset = track.globalState().offset();
+    auto slope = track.globalState().slope();
+    Eigen::Vector3d trackPos(offset.x(), offset.y(), 0);
+    Eigen::Vector3d trackDirec(slope.x(), slope.y(), 1);
+    trackDirec.normalize();
+    double dU = trackDirec(0);
+    double dV = trackDirec(1);
     DEBUG("Track Direction: ", trackDirec);
 
     // Loop over all the sensors
@@ -83,16 +82,31 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       planeNormal(2) = m_device.getSensor(isensor)->normal().Z();
       DEBUG("Plane Normal: ", planeNormal);
 
+      // Propagate global track to intersection to get global path length
+      // to the intersection point between track and sensor
+      double xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz;
+      m_device.getSensor(isensor)->localToGlobal().GetComponents(
+        xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz);
+      Eigen::Vector3d localOrigin(dx, dy, dz);
+      double s = -1 * (trackPos - localOrigin).dot(planeNormal) / trackDirec.dot(planeNormal);
+      DEBUG("s: ", s);
+      // Get the global intersection coordinates
+      Eigen::Vector3d globalIntersection;
+      globalIntersection = trackPos + s * trackDirec;
+      INFO("Track Intersection with sensor in Global coordinates: ",
+       globalIntersection);
+
+
+      // // TODO convert position / direction into local coordinates
+      // Eigen::Matrix3d localOrigin;
+      // double s =
+
       // Caluclate Jacobians for all the sensors
       // TODO: Opportunity to optimize code by using fixed size matrices below
       Eigen::Matrix3d Q0;
-      Eigen::Matrix3d Q1;
-      Eigen::Matrix3d Q1T;
-      Eigen::MatrixXd Q1T23(2,3);
       if (isensor == 0)
       {
         // Compute Q0 from L2G matrix
-        double xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz;
         m_device.getSensor(isensor)->localToGlobal().GetComponents(
           xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz);
         Q0(0,0) = xx;
@@ -104,24 +118,6 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
         Q0(2,0) = zx;
         Q0(2,1) = zy;
         Q0(2,2) = zz;
-
-        // Compute Q1 from the G2L matrix of the next sensor
-        // TODO: Change to iterator version
-        m_device.getSensor(isensor)->globalToLocal().GetComponents(
-          xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz);
-        Q1(0,0) = xx;
-        Q1(0,1) = xy;
-        Q1(0,2) = xz;
-        Q1(1,0) = yx;
-        Q1(1,1) = yy;
-        Q1(1,2) = yz;
-        Q1(2,0) = zx;
-        Q1(2,1) = zy;
-        Q1(2,2) = zz;
-        // Get the Q1 transpose
-        Q1T = Q1.transpose();
-        // Get the Q1T23 block
-        Q1T23 = Q1T.block(0,0,2,3);
       }
       else
       {
@@ -138,27 +134,31 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
         Q0(2,0) = zx;
         Q0(2,1) = zy;
         Q0(2,2) = zz;
-
-        // Compute Q1 from the G2L matrix of the next sensor
-        // TODO: Change to iterator version
-        m_device.getSensor(isensor)->globalToLocal().GetComponents(
-          xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz);
-        Q1(0,0) = xx;
-        Q1(0,1) = xy;
-        Q1(0,2) = xz;
-        Q1(1,0) = yx;
-        Q1(1,1) = yy;
-        Q1(1,2) = yz;
-        Q1(2,0) = zx;
-        Q1(2,1) = zy;
-        Q1(2,2) = zz;
-        // Get the Q1 transpose
-        Q1T = Q1.transpose();
-        // Get the Q1T23 block
-        Q1T23 = Q1T.block(0,0,2,3);
       }
 
+      // Compute Q1 from the G2L matrix of the next sensor
+      // TODO: Change to iterator version
+      Eigen::Matrix3d Q1;
+      Eigen::Matrix3d Q1T;
+      Eigen::MatrixXd Q1T23(2,3);
+      m_device.getSensor(isensor)->globalToLocal().GetComponents(
+        xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz);
+      Q1(0,0) = xx;
+      Q1(0,1) = xy;
+      Q1(0,2) = xz;
+      Q1(1,0) = yx;
+      Q1(1,1) = yy;
+      Q1(1,2) = yz;
+      Q1(2,0) = zx;
+      Q1(2,1) = zy;
+      Q1(2,2) = zz;
+      // Get the Q1 transpose
+      Q1T = Q1.transpose();
+      // Get the Q1T23 block
+      Q1T23 = Q1T.block(0,0,2,3);
+
       // Compute Matrix A
+      // TODO use local slope to calculate
       float f;
       f = 1 / sqrt(1 + dU*dU + dV*dV);
       float f_cubed;
@@ -333,9 +333,8 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
           Eigen::Vector2d meas;
           meas(0) = cluster.posLocal().x();
           meas(1) = cluster.posLocal().y();
+          // TODO use residuals relative to local track position
           INFO("Meas: ", meas);
-          INFO("Offset: ", track.globalState().offset());
-
 
           // Set the proL2m matrix to unit matrix
           // Identity Matrix since measurement and scattering plane are the same
@@ -367,8 +366,8 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
     // Eigen::VectorXd aCorrection(5);
     // Eigen::MatrixXd aCovariance(5,5);
     // traj.getResults(-1, aCorrection, aCovariance);
-    //INFO("Correction: ", aCorrection);
-    //INFO("Covariance: ", aCovariance);
+    // INFO("Correction: ", aCorrection);
+    // INFO("Covariance: ", aCovariance);
 
     // Loop over all the sensors to get the measurement and scatterer
     // residuals and then update the track state
@@ -393,14 +392,12 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       INFO("Scattering Results for Sensor ", label);
       for (unsigned int i = 0; i < numData; ++i)
       {
+        // TODO: Revise these names. Are probably incorrect.
         INFO(i, " Kink: ", sc1[i], " , Kink measurement error: ", sc2[i],
          " , Kink error: ", sc3[i]);
       }
-      // TODO: Update the track state
       // TODO: Calcualte the new state: u, v, du, dv
-      // TODO: Initialize the new track state with the above parameters
-      // TODO: Get the sensor event for each sensor
-      // TODO: For the sensor event, set the local track state as below
+      // TODO: Update the covariances
       Storage::SensorEvent& sev = event.getSensorEvent(label);
       Storage::TrackState state(0, 0, 0, 0);
       sev.setLocalState(itrack, std::move(state));
