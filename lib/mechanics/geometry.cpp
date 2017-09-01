@@ -1,59 +1,85 @@
 #include "geometry.h"
 
 #include <cassert>
-#include <fstream>
-#include <iomanip>
-#include <ostream>
-#include <sstream>
 #include <stdexcept>
 #include <string>
-
-#include <TDecompSVD.h>
-#include <TMatrix.h>
 
 #include "utils/logger.h"
 
 PT_SETUP_LOCAL_LOGGER(Geometry)
 
-// Construct R_1(alpha) * R_2(beta) * R_3(gamma) rotation matrix
-static Matrix3 makeRotationZYX(double gamma, double beta, double alpha)
+// Construct R1(alpha) * R2(beta) * R3(gamma) rotation matrix.
+//
+// see also: https://en.wikipedia.org/wiki/Rotation_matrix#Basic_rotations
+static Matrix3 makeRotation321(double gamma, double beta, double alpha)
 {
   Matrix3 rot;
   Matrix3 tmp;
-  // elementary right-handed rotation around first axis
+  // R1(alpha), elementary right-handed rotation around first axis
+  // column 0
   rot(0, 0) = 1;
-  rot(0, 1) = 0;
-  rot(0, 2) = 0;
   rot(1, 0) = 0;
-  rot(1, 1) = std::cos(alpha);
-  rot(1, 2) = -std::sin(alpha);
   rot(2, 0) = 0;
+  // column 1
+  rot(0, 1) = 0;
+  rot(1, 1) = std::cos(alpha);
   rot(2, 1) = std::sin(alpha);
+  // column 2
+  rot(0, 2) = 0;
+  rot(1, 2) = -std::sin(alpha);
   rot(2, 2) = std::cos(alpha);
-  // elementary right-handed rotation around second axis
+  // R2(beta), elementary right-handed rotation around second axis
+  // column 0
   tmp(0, 0) = std::cos(beta);
-  tmp(0, 1) = 0;
-  tmp(0, 2) = std::sin(beta);
   tmp(1, 0) = 0;
+  tmp(2, 0) = -std::sin(beta);
+  // column 1
+  tmp(0, 1) = 0;
   tmp(1, 1) = 1;
-  tmp(1, 2) = 0;
-  tmp(2, 0) = -std::sin(alpha);
   tmp(2, 1) = 0;
+  // column 2
+  tmp(0, 2) = std::sin(alpha);
+  tmp(1, 2) = 0;
   tmp(2, 2) = std::cos(alpha);
   rot *= tmp;
-  // elementary right-handed rotation around third axis
+  // R3(gamma), elementary right-handed rotation around third axis
+  // column 0
   tmp(0, 0) = std::cos(gamma);
-  tmp(0, 1) = -std::sin(gamma);
-  tmp(0, 2) = 0;
   tmp(1, 0) = std::sin(gamma);
-  tmp(1, 1) = std::cos(gamma);
-  tmp(1, 2) = 0;
   tmp(2, 0) = 0;
+  // column 1
+  tmp(0, 1) = -std::sin(gamma);
+  tmp(1, 1) = std::cos(gamma);
   tmp(2, 1) = 0;
+  // column 2
+  tmp(0, 2) = 0;
+  tmp(1, 2) = 0;
   tmp(2, 2) = 1;
   rot *= tmp;
   return rot;
 };
+
+struct Angles321 {
+  double alpha = 0.0;
+  double beta = 0.0;
+  double gamma = 0.0;
+};
+
+// Extract rotation angles in 321 convention from rotation matrix.
+static Angles321 extractAngles321(const Matrix3& rotation)
+{
+  // TODO remove ROOT dependency and implement matrix to angles directly. See:
+  // https://project-mathlibs.web.cern.ch/project-mathlibs/documents/eulerAngleComputation.pdf
+  Rotation3D rot;
+  rot.SetRotationMatrix(rotation);
+  RotationZYX zyx(rot);
+
+  Angles321 angles;
+  angles.alpha = zyx.Psi();
+  angles.beta = zyx.Theta();
+  angles.gamma = zyx.Phi();
+  return angles;
+}
 
 Mechanics::Plane Mechanics::Plane::fromAnglesZYX(double gamma,
                                                  double beta,
@@ -61,7 +87,7 @@ Mechanics::Plane Mechanics::Plane::fromAnglesZYX(double gamma,
                                                  const Vector3& offset)
 {
   Plane p;
-  p.rotation = makeRotationZYX(gamma, beta, alpha);
+  p.rotation = makeRotation321(gamma, beta, alpha);
   p.offset = offset;
   return p;
 }
@@ -78,19 +104,42 @@ Mechanics::Plane Mechanics::Plane::fromDirections(const Vector3& dirU,
   return p;
 }
 
+Mechanics::Plane Mechanics::Plane::correctedGlobal(const Vector6& delta) const
+{
+  Plane corrected;
+  corrected.rotation = rotation * makeRotation321(delta[5], delta[4], delta[3]);
+  corrected.offset = offset + Vector3(delta[0], delta[1], delta[2]);
+
+  DEBUG("corrected rotation:");
+  DEBUG("  dot(u,v): ", Dot(corrected.unitU(), corrected.unitV()));
+  DEBUG("  dot(u,w): ", Dot(corrected.unitU(), corrected.unitNormal()));
+  DEBUG("  dot(v,w): ", Dot(corrected.unitV(), corrected.unitNormal()));
+  return corrected;
+}
+
+Mechanics::Plane Mechanics::Plane::correctedLocal(const Vector6& delta) const
+{
+  Plane corrected;
+  corrected.rotation = rotation * makeRotation321(delta[5], delta[4], delta[3]);
+  corrected.offset = offset + rotation * Vector3(delta[0], delta[1], delta[2]);
+
+  DEBUG("corrected rotation:");
+  DEBUG("  dot(u,v): ", Dot(corrected.unitU(), corrected.unitV()));
+  DEBUG("  dot(u,w): ", Dot(corrected.unitU(), corrected.unitNormal()));
+  DEBUG("  dot(v,w): ", Dot(corrected.unitV(), corrected.unitNormal()));
+  return corrected;
+}
+
 Vector6 Mechanics::Plane::asParams() const
 {
   Vector6 params;
   params[0] = offset[0];
   params[1] = offset[1];
   params[2] = offset[2];
-  // decompose rotation matrix into zyx angles
-  Rotation3D rot;
-  rot.SetRotationMatrix(rotation);
-  RotationZYX zyx(rot);
-  params[3] = zyx.Psi();   // alpha
-  params[4] = zyx.Theta(); // beta
-  params[5] = zyx.Phi();   // gamma
+  auto angles = extractAngles321(rotation);
+  params[3] = angles.alpha;
+  params[4] = angles.beta;
+  params[5] = angles.gamma;
   return params;
 }
 
@@ -240,7 +289,25 @@ void Mechanics::Geometry::correctGlobalOffset(Index sensorId,
                                               double dy,
                                               double dz)
 {
-  m_planes.at(sensorId).offset += Vector3(dx, dy, dz);
+  Vector6 delta;
+  delta[0] = dx;
+  delta[1] = dy;
+  delta[2] = dz;
+  delta[3] = 0.0;
+  delta[4] = 0.0;
+  delta[5] = 0.0;
+  auto& plane = m_planes.at(sensorId);
+  plane = plane.correctedGlobal(delta);
+}
+
+void Mechanics::Geometry::correctGlobal(Index sensorId,
+                                        const Vector6& delta,
+                                        const SymMatrix6& cov)
+{
+  auto& plane = m_planes.at(sensorId);
+  // TODO jacobian from dalpha,dbeta,dgamma to alpha,beta,gamma
+  plane = plane.correctedGlobal(delta);
+  m_covs[sensorId] = cov;
 }
 
 void Mechanics::Geometry::correctLocal(Index sensorId,
@@ -248,69 +315,16 @@ void Mechanics::Geometry::correctLocal(Index sensorId,
                                        const SymMatrix6& cov)
 {
   auto& plane = m_planes.at(sensorId);
-
-  // Jacobian from local corrections to global geometry parameters
-  // TODO 2016-11-28 msmk: jacobian from local rotU,... to alpha, beta, gamma
+  // Jacobian from local corrections to geometry parameters
+  // TODO 2016-11-28 msmk: jacobian from dalpha,dbeta,dgamma to alpha,beta,gamma
   Matrix6 jac;
   jac.Place_at(plane.rotation, 0, 0);
   jac(3, 3) = 1;
   jac(4, 4) = 1;
   jac(5, 5) = 1;
-  m_covs[sensorId] = ROOT::Math::Similarity(jac, cov);
 
-  // small angle approximation rotation matrix
-  Matrix3 deltaQ;
-  deltaQ(0, 0) = 1;
-  deltaQ(0, 1) = -delta[5];
-  deltaQ(0, 2) = -delta[4];
-  deltaQ(1, 0) = delta[5];
-  deltaQ(1, 1) = 1;
-  deltaQ(1, 2) = -delta[3];
-  deltaQ(2, 0) = delta[4];
-  deltaQ(2, 1) = delta[3];
-  deltaQ(2, 2) = 1;
-
-  plane.rotation *= deltaQ;
-  plane.offset += plane.rotation * delta.Sub<Vector3>(0);
-
-  // due to the small angle approximation the combined rotation matrix might
-  // be non-orthogonal (if only by small amounts). replace it by the closest
-  // orthogonal matrix. see also:
-  // https://en.wikipedia.org/wiki/Orthogonal_matrix#Nearest_orthogonal_matrix
-
-  // Ahh ROOT, we have to use yet another linear algebra/ geometry package.
-  // GenVector, SMatrix, and TMatrix; none of which like to talk to each other.
-
-  TMatrixD M(3, 3);
-  for (int i = 0; i < 3; ++i)
-    for (int j = 0; j < 3; ++j)
-      M(i, j) = plane.rotation(i, j);
-  TDecompSVD svd(M);
-  if (!svd.Decompose())
-    FAIL("sensor", sensorId, " rotation matrix decomposition failed.");
-
-  DEBUG("sensor", sensorId, " updated matrix:");
-  DEBUG("  unit u: [", plane.unitU(), "]");
-  DEBUG("  unit v: [", plane.unitV(), "]");
-  DEBUG("  unit w: [", plane.unitNormal(), "]");
-  DEBUG("  singular values: [", svd.GetSig()[0], ", ", svd.GetSig()[1], ", ",
-        svd.GetSig()[2], "]");
-  double d1, d2;
-  svd.Det(d1, d2);
-  DEBUG("  determinant: ", d1 * std::pow(2, d2), " = (", d1, ")*2^(", d2, ")");
-
-  // compute closest orthogonal matrix by setting singular values to 1
-  TMatrixD U = svd.GetU();
-  TMatrixD V = svd.GetV();
-  TMatrixD Q = U * V.T();
-  for (int i = 0; i < 3; ++i)
-    for (int j = 0; j < 3; ++j)
-      plane.rotation(i, j) = Q(i, j);
-
-  DEBUG("sensor", sensorId, " nearest rotation matrix:");
-  DEBUG("  unit u: [", plane.unitU(), "]");
-  DEBUG("  unit v: [", plane.unitV(), "]");
-  DEBUG("  unit w: [", plane.unitNormal(), "]");
+  plane = plane.correctedLocal(delta);
+  m_covs[sensorId] = Similarity(jac, cov);
 }
 
 const Mechanics::Plane& Mechanics::Geometry::getPlane(Index sensorId) const
