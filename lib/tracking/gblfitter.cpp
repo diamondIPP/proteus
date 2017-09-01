@@ -324,18 +324,20 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
             DEBUG("Hit: ", someHit);
           }
           // Get the measurement precision
+          Eigen::Matrix2d measCoVar;
+          measCoVar(0,0) = cluster.covLocal()(0,0);
+          measCoVar(0,1) = cluster.covLocal()(0,1);
+          measCoVar(1,0) = cluster.covLocal()(1,0);
+          measCoVar(1,1) = cluster.covLocal()(1,1);
           Eigen::Matrix2d measPrec;
-          measPrec(0,0) = cluster.covLocal()(0,0);
-          measPrec(0,1) = cluster.covLocal()(0,1);
-          measPrec(1,0) = cluster.covLocal()(1,0);
-          measPrec(1,1) = cluster.covLocal()(1,1);
+          measPrec = measCoVar.inverse();
           DEBUG("measPrec: ", measPrec);
 
           // Get the measurement (residuals)
           Eigen::Vector2d meas;
           // TODO: Check if the subtraction is right (sign?)
-          meas(0) = cluster.posLocal().x() - localIntersection(0);
-          meas(1) = cluster.posLocal().y() - localIntersection(1);
+          meas(0) = localIntersection(0) - cluster.posLocal().x();
+          meas(1) = localIntersection(1) - cluster.posLocal().y();
           INFO("Meas: ", meas);
 
           // Set the proL2m matrix to unit matrix
@@ -364,24 +366,17 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
     INFO("Ndf: ", Ndf);
     INFO("lostWeight: ", lostWeight);
 
-    // Get the track parameter corrections
-    // Eigen::VectorXd aCorrection(5);
-    // Eigen::MatrixXd aCovariance(5,5);
-    // traj.getResults(-1, aCorrection, aCovariance);
-    // INFO("Correction: ", aCorrection);
-    // INFO("Covariance: ", aCovariance);
-
     // Loop over all the sensors to get the measurement and scatterer
     // residuals and then update the track state
-    for (Index label = 0; label < m_device.numSensors(); ++label)
+    for (Index isensor = 0; isensor < m_device.numSensors(); ++isensor)
     {
       unsigned int numData = 0;
       Eigen::VectorXd residuals(2), measErr(2), resErr(2), downWeights(2);
 
       // Get the measurement residuals
-      traj.getMeasResults(label + 1, numData, residuals, measErr, resErr,
+      traj.getMeasResults(isensor + 1, numData, residuals, measErr, resErr,
       downWeights);
-      INFO("Measurement Results for Sensor ", label);
+      INFO("Measurement Results for Sensor ", isensor);
       for (unsigned int i = 0; i < numData; ++i)
       {
         INFO(i, " Residual: ", residuals[i], " , Measurement Error: ",
@@ -390,17 +385,25 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
 
       // Get the scatterer residuals
       Eigen::VectorXd sc1(2), sc2(2), sc3(2), sc4(2);
-      traj.getScatResults(label + 1, numData, sc1, sc2, sc3, sc4);
-      INFO("Scattering Results for Sensor ", label);
+      traj.getScatResults(isensor + 1, numData, sc1, sc2, sc3, sc4);
+      INFO("Scattering Results for Sensor ", isensor);
       for (unsigned int i = 0; i < numData; ++i)
       {
         // TODO: Revise these names. Are probably incorrect.
         INFO(i, " Kink: ", sc1[i], " , Kink measurement error: ", sc2[i],
          " , Kink error: ", sc3[i]);
       }
+
+      // Get the track parameter corrections
+      Eigen::VectorXd aCorrection(5);
+      Eigen::MatrixXd aCovariance(5,5);
+      traj.getResults(isensor + 1, aCorrection, aCovariance);
+      INFO("Correction: ", aCorrection);
+      INFO("Covariance: ", aCovariance);
+
       // TODO: Calcualte the new state: u, v, du, dv
       // TODO: Update the covariances
-      Storage::SensorEvent& sev = event.getSensorEvent(label);
+      Storage::SensorEvent& sev = event.getSensorEvent(isensor);
       Storage::TrackState state(0, 0, 0, 0);
       sev.setLocalState(itrack, std::move(state));
     }
