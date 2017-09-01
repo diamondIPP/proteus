@@ -15,14 +15,53 @@
 
 PT_SETUP_LOCAL_LOGGER(Geometry)
 
-Mechanics::Plane Mechanics::Plane::fromAnglesZYX(double rotZ,
-                                                 double rotY,
-                                                 double rotX,
+// Construct R_1(alpha) * R_2(beta) * R_3(gamma) rotation matrix
+static Matrix3 makeRotationZYX(double gamma, double beta, double alpha)
+{
+  Matrix3 rot;
+  Matrix3 tmp;
+  // elementary right-handed rotation around first axis
+  rot(0, 0) = 1;
+  rot(0, 1) = 0;
+  rot(0, 2) = 0;
+  rot(1, 0) = 0;
+  rot(1, 1) = std::cos(alpha);
+  rot(1, 2) = -std::sin(alpha);
+  rot(2, 0) = 0;
+  rot(2, 1) = std::sin(alpha);
+  rot(2, 2) = std::cos(alpha);
+  // elementary right-handed rotation around second axis
+  tmp(0, 0) = std::cos(beta);
+  tmp(0, 1) = 0;
+  tmp(0, 2) = std::sin(beta);
+  tmp(1, 0) = 0;
+  tmp(1, 1) = 1;
+  tmp(1, 2) = 0;
+  tmp(2, 0) = -std::sin(alpha);
+  tmp(2, 1) = 0;
+  tmp(2, 2) = std::cos(alpha);
+  rot *= tmp;
+  // elementary right-handed rotation around third axis
+  tmp(0, 0) = std::cos(gamma);
+  tmp(0, 1) = -std::sin(gamma);
+  tmp(0, 2) = 0;
+  tmp(1, 0) = std::sin(gamma);
+  tmp(1, 1) = std::cos(gamma);
+  tmp(1, 2) = 0;
+  tmp(2, 0) = 0;
+  tmp(2, 1) = 0;
+  tmp(2, 2) = 1;
+  rot *= tmp;
+  return rot;
+};
+
+Mechanics::Plane Mechanics::Plane::fromAnglesZYX(double gamma,
+                                                 double beta,
+                                                 double alpha,
                                                  const Vector3& offset)
 {
   Plane p;
-  Rotation3D rot(RotationZYX(rotZ, rotY, rotX));
-  rot.GetRotationMatrix(p.rotation);
+  p.rotation = makeRotationZYX(gamma, beta, alpha);
   p.offset = offset;
   return p;
 }

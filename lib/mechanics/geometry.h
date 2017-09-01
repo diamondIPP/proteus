@@ -73,7 +73,7 @@ struct Plane {
   Vector3 offset;   // position of the origin in global coordinates
 
   static Plane
-  fromAnglesZYX(double rotZ, double rotY, double rotX, const Vector3& offset);
+  fromAnglesZYX(double gamma, double beta, double alpha, const Vector3& offset);
   static Plane fromDirections(const Vector3& dirU,
                               const Vector3& dirV,
                               const Vector3& offset);
