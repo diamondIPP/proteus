@@ -29,6 +29,9 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
   INFO("gblfitter.cpp running");
   INFO("Number of tracks in the event: ", event.numTracks());
 
+  // Declare a vector for storing the original state
+  Eigen::Vector4d originalState;
+
   // INIT: Loop over all the sensors to get the total radiation length
   double totalRadLength = 0;
   for (Index isns = 0; isns < m_device.numSensors(); ++isns)
@@ -123,6 +126,13 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       Eigen::Vector2d localSlope;
       localSlope(0) = localTangent(0) / localTangent(2);
       localSlope(1) = localTangent(1) / localTangent(2);
+
+      // Initialize the state vector
+      originalState(0) = localSlope(0);
+      originalState(1) = localSlope(1);
+      originalState(2) = localIntersection(0);
+      originalState(3) = localIntersection(1);
+      DEBUG("Original State: ", originalState);
 
       DEBUG("Track Intersection with sensor in Global coordinates: ",
         globalIntersection);
@@ -283,7 +293,7 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       DEBUG("D: ", D);
       DEBUG("G: ", G);
       DEBUG("H: ", H);
-      INFO("Jacobian: ", jac);
+      DEBUG("Jacobian: ", jac);
 
       // Initialize the GBL point with the Jacobian
       gbl::GblPoint point(jac);
@@ -316,7 +326,7 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
         const Storage::Cluster& cluster = c.second;
         if (isensor == isensorFromCluster)
         {
-          INFO("Cluster ", cluster);
+          DEBUG("Cluster ", cluster);
           DEBUG("Sensor Global Covariance: ");
           DEBUG(cluster.covGlobal());
           DEBUG("Sensor Number of Hits: ", cluster.size());
@@ -338,7 +348,7 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
           // TODO: Check if the subtraction is right (sign?)
           meas(0) = localIntersection(0) - cluster.posLocal().x();
           meas(1) = localIntersection(1) - cluster.posLocal().y();
-          INFO("Meas: ", meas);
+          DEBUG("Meas: ", meas);
 
           // Set the proL2m matrix to unit matrix
           // Identity Matrix since measurement and scattering plane are the same
@@ -398,13 +408,25 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       Eigen::VectorXd aCorrection(5);
       Eigen::MatrixXd aCovariance(5,5);
       traj.getResults(isensor + 1, aCorrection, aCovariance);
-      INFO("Correction: ", aCorrection);
-      INFO("Covariance: ", aCovariance);
+      DEBUG("Correction: ", aCorrection);
+      DEBUG("Covariance: ", aCovariance);
 
-      // TODO: Calcualte the new state: u, v, du, dv
-      // TODO: Update the covariances
+      // Calcualte the updated state: u', v', u, v
+      Eigen::Vector4d corr = aCorrection.tail(4);
+      Eigen::Vector4d updatedState = originalState + corr;
+      DEBUG("Original State: ", originalState);
+      DEBUG("Updated State: ", updatedState);
+
+      // Initialize and update the sensor event for each sensor
       Storage::SensorEvent& sev = event.getSensorEvent(isensor);
-      Storage::TrackState state(0, 0, 0, 0);
+      Storage::TrackState state(updatedState(2), updatedState(3),
+        updatedState(0), updatedState(1));
+
+      // Update the covariance for each state
+      Eigen::Matrix4d cov = aCovariance.block(1,1,4,4);
+      state.setCovMat(cov);
+
+      // Set the local state for the sensor event
       sev.setLocalState(itrack, std::move(state));
     }
 
