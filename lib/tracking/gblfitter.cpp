@@ -46,6 +46,9 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
     // Initialize list of GblPoints
     std::vector<gbl::GblPoint> points;
 
+    // Initialize the vector of original states
+    std::vector<Eigen::Vector4d> originalStates;
+
     // Get the track
     Storage::Track& track = event.getTrack(itrack);
 
@@ -132,8 +135,10 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       originalState(1) = localSlope(1);
       originalState(2) = localIntersection(0);
       originalState(3) = localIntersection(1);
-      DEBUG("Original State: ", originalState);
+      // Push back the original state to the vectors
+      originalStates.push_back(originalState);
 
+      DEBUG("Original State: ", originalState);
       DEBUG("Track Intersection with sensor in Global coordinates: ",
         globalIntersection);
       DEBUG("Track Intersection with sensor in Local coordinates: ",
@@ -177,7 +182,6 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       }
 
       // Compute Matrix A
-      // TODO use local slope to calculate
       float f;
       f = 1 / sqrt(1 + localSlope(0)*localSlope(0) +
         localSlope(1)*localSlope(1));
@@ -300,9 +304,9 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
 
       //Get theta from the Highland formula
       // TODO: Seems like we need to adapt this formula for our case
-      // Need energy and particle charge for the calculation
+      // Need energy for the calculation
       double radLength = m_device.getSensor(isensor)->xX0();
-      double energy = 180000;
+      double energy = 180;
       double theta = 0.0136 * sqrt(radLength) / energy * (1
         + 0.038 * log(totalRadLength));
 
@@ -326,7 +330,7 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
         const Storage::Cluster& cluster = c.second;
         if (isensor == isensorFromCluster)
         {
-          DEBUG("Cluster ", cluster);
+          INFO("Cluster ", cluster);
           DEBUG("Sensor Global Covariance: ");
           DEBUG(cluster.covGlobal());
           DEBUG("Sensor Number of Hits: ", cluster.size());
@@ -345,7 +349,6 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
 
           // Get the measurement (residuals)
           Eigen::Vector2d meas;
-          // TODO: Check if the subtraction is right (sign?)
           meas(0) = localIntersection(0) - cluster.posLocal().x();
           meas(1) = localIntersection(1) - cluster.posLocal().y();
           DEBUG("Meas: ", meas);
@@ -386,21 +389,21 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       // Get the measurement residuals
       traj.getMeasResults(isensor + 1, numData, residuals, measErr, resErr,
       downWeights);
-      INFO("Measurement Results for Sensor ", isensor);
+      DEBUG("Measurement Results for Sensor ", isensor);
       for (unsigned int i = 0; i < numData; ++i)
       {
-        INFO(i, " Residual: ", residuals[i], " , Measurement Error: ",
+        DEBUG(i, " Residual: ", residuals[i], " , Measurement Error: ",
         measErr[i], " , Residual Error: ", resErr[i]);
       }
 
       // Get the scatterer residuals
       Eigen::VectorXd sc1(2), sc2(2), sc3(2), sc4(2);
       traj.getScatResults(isensor + 1, numData, sc1, sc2, sc3, sc4);
-      INFO("Scattering Results for Sensor ", isensor);
+      DEBUG("Scattering Results for Sensor ", isensor);
       for (unsigned int i = 0; i < numData; ++i)
       {
         // TODO: Revise these names. Are probably incorrect.
-        INFO(i, " Kink: ", sc1[i], " , Kink measurement error: ", sc2[i],
+        DEBUG(i, " Kink: ", sc1[i], " , Kink measurement error: ", sc2[i],
          " , Kink error: ", sc3[i]);
       }
 
@@ -408,14 +411,15 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       Eigen::VectorXd aCorrection(5);
       Eigen::MatrixXd aCovariance(5,5);
       traj.getResults(isensor + 1, aCorrection, aCovariance);
-      DEBUG("Correction: ", aCorrection);
+      DEBUG("aCorrection: ", aCorrection);
       DEBUG("Covariance: ", aCovariance);
 
       // Calcualte the updated state: u', v', u, v
       Eigen::Vector4d corr = aCorrection.tail(4);
-      Eigen::Vector4d updatedState = originalState + corr;
-      DEBUG("Original State: ", originalState);
-      DEBUG("Updated State: ", updatedState);
+      INFO("Correction: ", corr);
+      Eigen::Vector4d updatedState = originalStates[isensor] + corr;
+      INFO("Original State: ", originalStates[isensor]);
+      INFO("Updated State: ", updatedState);
 
       // Initialize and update the sensor event for each sensor
       Storage::SensorEvent& sev = event.getSensorEvent(isensor);
