@@ -26,7 +26,6 @@ std::string Tracking::GBLFitter::name() const { return "GBLFitter"; }
 void Tracking::GBLFitter::process(Storage::Event& event) const
 {
   // Print Generic Information
-  INFO("gblfitter.cpp running");
   INFO("Number of tracks in the event: ", event.numTracks());
 
   // Declare a vector for storing the original state
@@ -67,8 +66,8 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
     // Loop over all the sensors
     for (Index isensor = 0; isensor < m_device.numSensors(); isensor++)
     {
-      INFO("SensorId: ", isensor);
-      INFO("Sensor Name: ", m_device.getSensor(isensor)->name());
+      DEBUG("SensorId: ", isensor);
+      DEBUG("Sensor Name: ", m_device.getSensor(isensor)->name());
       DEBUG("Sensor Rows: ", m_device.getSensor(isensor)->numRows());
       DEBUG("Sensor Cols: ", m_device.getSensor(isensor)->numCols());
       DEBUG("Sensor Pitch Row: ", m_device.getSensor(isensor)->pitchRow());
@@ -330,9 +329,7 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
         const Storage::Cluster& cluster = c.second;
         if (isensor == isensorFromCluster)
         {
-          INFO("Cluster ", cluster);
-          DEBUG("Sensor Global Covariance: ");
-          DEBUG(cluster.covGlobal());
+          DEBUG("Cluster ", cluster);
           DEBUG("Sensor Number of Hits: ", cluster.size());
           for (const Storage::Hit& someHit : cluster.hits()) {
             DEBUG("Hit: ", someHit);
@@ -415,11 +412,12 @@ void Tracking::GBLFitter::process(Storage::Event& event) const
       DEBUG("Covariance: ", aCovariance);
 
       // Calcualte the updated state: u', v', u, v
+      DEBUG("For Sensor: ", isensor);
       Eigen::Vector4d corr = aCorrection.tail(4);
-      INFO("Correction: ", corr);
-      Eigen::Vector4d updatedState = originalStates[isensor] + corr;
-      INFO("Original State: ", originalStates[isensor]);
-      INFO("Updated State: ", updatedState);
+      DEBUG("Correction: ", corr);
+      Eigen::Vector4d updatedState = originalStates[isensor] - corr;
+      DEBUG("Original State: ", originalStates[isensor]);
+      DEBUG("Updated State: ", updatedState);
 
       // Initialize and update the sensor event for each sensor
       Storage::SensorEvent& sev = event.getSensorEvent(isensor);
