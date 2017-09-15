@@ -34,6 +34,17 @@ environment. By sourcing it via
 the `pt-...` binaries can be called directly without specifying its location
 explicitly.
 
+Documentation
+-------------
+
+The documentation for Proteus is provided in the `rst` file format and can either be read directly on the repository website or translated to HTMl documents using the
+
+    make doc
+
+command. The following dependencies are required to build the Proteus HTML documentation (package names provided for Debian):
+
+> sphinx-common python-breathe python-pygments
+
 Authors
 -------
 
