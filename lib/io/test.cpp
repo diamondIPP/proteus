@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <bitset>
 
+//not for use - testing ground for Morag Williams
+
 PT_SETUP_LOCAL_LOGGER(Test)
 
 Timepix3EventLoader::Timepix3EventLoader(bool debugging)
