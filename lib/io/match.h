@@ -34,8 +34,8 @@ class MatchWriter : public EventWriter {
 public:
   MatchWriter(TDirectory* dir, const Mechanics::Sensor& sensor);
 
-  std::string name() const;
-  void append(const Storage::Event& event);
+  std::string name() const override final;
+  void append(const Storage::Event& event) override final;
 
 private:
   static constexpr size_t MAX_CLUSTER_SIZE = 1024;
