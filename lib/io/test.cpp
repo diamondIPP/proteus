@@ -13,7 +13,6 @@
 
 //not for use - testing ground for Morag Williams
 
-PT_SETUP_LOCAL_LOGGER(Test)
 
 Timepix3EventLoader::Timepix3EventLoader(bool debugging)
 : Algorithm("Timepix3EventLoader"){
@@ -376,3 +375,16 @@ bool Timepix3EventLoader::loadData(string detectorID, Pixels* devicedata, SpidrS
 void Timepix3EventLoader::finalise(){
   
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
