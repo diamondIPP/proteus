@@ -94,12 +94,12 @@ public:
   RceRootReader(const std::string& path);
   ~RceRootReader();
 
-  std::string name() const;
-  uint64_t numEvents() const;
-  Index numSensors() const { return static_cast<Index>(m_sensors.size()); }
+  std::string name() const override final;
+  uint64_t numEvents() const override final;
+  size_t numSensors() const override final;
 
-  void skip(uint64_t n);
-  bool read(Storage::Event& event);
+  void skip(uint64_t n) override final;
+  bool read(Storage::Event& event) override final;
 
 private:
   void addSensor(TDirectory* dir);

@@ -172,6 +172,11 @@ uint64_t Io::RceRootReader::numEvents() const
   return static_cast<uint64_t>(m_entries);
 }
 
+size_t Io::RceRootReader::numSensors() const
+{
+  return m_sensors.size();
+}
+
 void Io::RceRootReader::skip(uint64_t n)
 {
   if (m_entries <= static_cast<int64_t>(m_next + n)) {
