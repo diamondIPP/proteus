@@ -7,6 +7,7 @@ endfunction()
 
 add_subdirectory(align)
 add_tool(cfg pt-cfg.cpp)
+add_tool(convert pt-convert.cpp)
 add_tool(match pt-match.cpp)
 add_subdirectory(noisescan)
 add_tool(track pt-track.cpp)
