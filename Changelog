@@ -74,6 +74,7 @@ Internal changes
     The ``lib`` directory contains common code that is used by more than
     one executable and build into a single library. The ``exe`` directory
     contains the code for each tool and tool-specific code that is not shared.
+*   Remove unused code that was leftover from the old Judith codebase.
 *   Where appropriate, analyzers classes are split into per-sensor and
     per-device classes and have been renamed for clarity.
 *   All analyzers have consistent parameter ordering and reference usage.

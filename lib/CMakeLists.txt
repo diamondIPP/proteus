@@ -9,7 +9,6 @@ set(SOURCES
     analyzers/hits.cpp
     analyzers/tracks.cpp
     analyzers/residuals.cpp
-#   converters/kartelconvert.cpp
     io/match.cpp
     io/rceroot.cpp
     io/reader.cpp
@@ -21,13 +20,10 @@ set(SOURCES
     processors/applygeometry.cpp
     processors/applyregions.cpp
     processors/clusterizer.cpp
-#   processors/eventdepictor.cpp
     processors/hitmapper.cpp
-#   processors/largesynchronizer.cpp
     processors/matcher.cpp
     processors/processor.cpp
     processors/setupsensors.cpp
-#   processors/synchronizer.cpp
     storage/cluster.cpp
     storage/event.cpp
     storage/hit.cpp
