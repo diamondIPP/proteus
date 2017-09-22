@@ -42,3 +42,6 @@ Makefile
 # ROOT temporary files
 *.d
 *_ACLiC_dict_rdict.pcm
+
+# Editor backup files
+*~
