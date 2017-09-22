@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "io/rceroot.h"
+#include "io/timepix3.h"
 #include "utils/logger.h"
 
 PT_SETUP_LOCAL_LOGGER(Io);

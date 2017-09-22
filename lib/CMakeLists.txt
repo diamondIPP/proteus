@@ -12,6 +12,7 @@ set(SOURCES
     io/match.cpp
     io/merger.cpp
     io/rceroot.cpp
+    io/timepix3.cpp
     io/reader.cpp
     mechanics/device.cpp
     mechanics/geometry.cpp
