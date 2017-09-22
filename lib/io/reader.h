@@ -29,6 +29,8 @@ public:
    * calls could still succeed.
    */
   virtual uint64_t numEvents() const = 0;
+  /** Return the number of sensors per event. */
+  virtual size_t numSensors() const = 0;
   /** Skip the next n events.
    *
    * If the call would seek beyond the range of available events it should
@@ -37,12 +39,13 @@ public:
   virtual void skip(uint64_t n) = 0;
   /** Read the next event from the underlying device into the given object.
    *
+   * \param[out] event Output event with at least `numSensors()` sensor events.
    * \returns true if an event was read
    * \returns false if no event was read because no more events are available
    *
-   * The implementation is responsible for ensuring consistent events and
-   * clearing previous contents. Errors must be handled by throwing
-   * an appropriate exception.
+   * The Reader implementation is responsible for ensuring consistent events and
+   * clearing previous contents. Errors must be handled by throwing an
+   * appropriate exception.
    */
   virtual bool read(Storage::Event& event) = 0;
 };
