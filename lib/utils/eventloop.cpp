@@ -13,7 +13,7 @@
 #include "io/rceroot.h"
 #include "storage/event.h"
 #include "utils/logger.h"
-#include "utils/progressbar.h"
+#include "utils/progress.h"
 #include "utils/statistics.h"
 
 PT_SETUP_LOCAL_LOGGER(EventLoop)
@@ -209,7 +209,7 @@ void Utils::EventLoop::run()
   for (const auto& writer : m_writers)
     DEBUG("  ", writer->name());
 
-  Utils::ProgressBar progress;
+  Utils::Progress progress;
   if (m_showProgress)
     progress.update<uint64_t>(0, m_events);
   timing.start();

@@ -4,8 +4,8 @@
  * \date 2016-08
  */
 
-#ifndef PT_PROGRESSBAR_H
-#define PT_PROGRESSBAR_H
+#ifndef PT_PROGRESS_H
+#define PT_PROGRESS_H
 
 #include <chrono>
 #include <cstdlib>
@@ -17,23 +17,23 @@
 
 namespace Utils {
 
-/** Display a progress bar on a single output line */
-class ProgressBar {
+/** Display a progress indicator on a single output line */
+class Progress {
 public:
   /** Construct with the line length of the terminal. */
-  ProgressBar() : ProgressBar(queryLineLength()) {}
+  Progress() : Progress(queryLineLength()) {}
   /** Construct with a fixed line length. */
-  ProgressBar(int lineLength)
+  Progress(int lineLength)
       : m_os(std::cerr)
       , m_lastUpdate(std::chrono::steady_clock::now())
       , m_length(lineLength)
   {
   }
 
-  /** Update the progress bar if necessary.
+  /** Update the progress indicator if necessary.
    *
    * \param processed  Number of processed items, must be in [0, total]
-   * \param total      Number of total items
+   * \param total      Total number of items
    */
   template <typename I, typename = typename std::is_integral<I>::type>
   void update(I processed, I total = std::numeric_limits<I>::max())
@@ -50,7 +50,7 @@ public:
     drawBar(processed, total);
     m_lastUpdate = now;
   }
-  /** Overwrite the progress bar with empty spaces. */
+  /** Overwrite the progress indicator with empty spaces. */
   void clear()
   {
     for (int i = 0; i < m_length; ++i)
@@ -103,4 +103,4 @@ private:
 
 } // namespace Utils
 
-#endif // PT_PROGRESSBAR_H
+#endif // PT_PROGRESS_H
