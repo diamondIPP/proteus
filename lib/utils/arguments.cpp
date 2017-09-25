@@ -58,6 +58,12 @@ void Utils::Arguments::addRequired(std::string name, std::string help)
   m_requireds.emplace_back(std::move(arg));
 }
 
+void Utils::Arguments::addVariable(std::string name, std::string help)
+{
+  m_variable.name = std::move(name);
+  m_variable.help = std::move(help);
+}
+
 std::string Utils::Arguments::Option::description() const
 {
   std::string desc;
@@ -82,6 +88,8 @@ void Utils::Arguments::printHelp(const std::string& arg0) const
     cerr << " " << arg.name;
   for (const auto& arg : m_optionals)
     cerr << " [" << arg.name << "]";
+  if (!m_variable.name.empty())
+    cerr << " [" << m_variable.name << " ...]";
   cerr << "\n\n";
   cerr << m_description << "\n";
   cerr << "\n";
@@ -96,6 +104,10 @@ void Utils::Arguments::printHelp(const std::string& arg0) const
   for (const auto& arg : m_optionals) {
     cerr << "  " << std::left << std::setw(17) << arg.name;
     cerr << " " << arg.help << " (default=" << arg.defaultValue << ")\n";
+  }
+  if (!m_variable.name.empty()) {
+    cerr << "  " << std::left << std::setw(17) << m_variable.name;
+    cerr << " " << m_variable.help << "\n";
   }
   cerr << "options:\n";
   for (const auto& opt : m_options) {
@@ -176,6 +188,17 @@ bool Utils::Arguments::parse(int argc, char const* argv[])
 
       // add optional argument
       m_values[m_optionals[numArgs - m_requireds.size()].name] = arg;
+      numArgs += 1;
+
+    } else if (!m_variable.name.empty()) {
+      DEBUG("arg ", i, " variable ", arg);
+
+      // add variable argument
+      // variable arguments are stored internally as komma separated string
+      if (!m_values[m_variable.name].empty()) {
+        m_values[m_variable.name] += ',';
+      }
+      m_values[m_variable.name] += arg;
       numArgs += 1;
 
     } else {

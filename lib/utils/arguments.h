@@ -39,6 +39,12 @@ public:
    */
   template <typename T>
   void addOptional(std::string name, std::string help, T value);
+  /** Allow additional command line arguments at the end.
+   *
+   * This will contain left-over arguments after the required and optional
+   * arguments have been passed. This should be called at most once.
+   */
+  void addVariable(std::string name, std::string help = std::string());
 
   /** Parse command lines and return true on error. */
   bool parse(int argc, char const* argv[]);
@@ -87,6 +93,7 @@ private:
   std::vector<Option> m_options;
   std::vector<RequiredArgument> m_requireds;
   std::vector<OptionalArgument> m_optionals;
+  RequiredArgument m_variable;
   std::map<std::string, std::string> m_values;
 };
 
