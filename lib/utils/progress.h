@@ -20,29 +20,43 @@ namespace Utils {
 /** Display a progress indicator on a single output line */
 class Progress {
 public:
-  /** Construct with the line length of the terminal. */
-  Progress() : Progress(queryLineLength()) {}
-  /** Construct with a fixed line length. */
-  Progress(int lineLength)
+  using Size = uint64_t;
+
+  /** Construct with the line length of the terminal.
+   *
+   * \param total Total number of items
+   *
+   * Which progress indicator is shown depends on the total number of items.
+   *
+   * *   `std::numeric_limits<Size>::min()` means the progress indicator is
+   *     disabled and nothing is shown.
+   * *   `std::numeric_limits<Size>::max()` means tht total number of items
+   *     is unknown. The current item number and the elapsed time is shown.
+   * *   For all other values, the relative progress and a progress bar is
+   *     shown.
+   */
+  Progress(Size total = std::numeric_limits<Size>::max())
       : m_os(std::cerr)
       , m_start(std::chrono::steady_clock::now())
       , m_lastUpdate(m_start)
-      , m_length(lineLength)
+      , m_total(total)
+      , m_length(queryLineLength())
   {
   }
 
   /** Update the progress indicator if necessary.
    *
    * \param processed  Number of processed items, must be in [0, total]
-   * \param total      Total number of items
    */
-  template <typename I, typename = typename std::is_integral<I>::type>
-  void update(I processed, I total = std::numeric_limits<I>::max())
+  void update(Size processed)
   {
     using std::chrono::steady_clock;
     using std::chrono::duration_cast;
     using std::chrono::milliseconds;
 
+    // only continue if enabled
+    if (m_total == std::numeric_limits<Size>::min())
+      return;
     // time-based redraw throttling w/ 30fps
     auto now = steady_clock::now();
     if (duration_cast<milliseconds>(now - m_lastUpdate) < milliseconds(32))
@@ -57,8 +71,8 @@ public:
     m_os << std::setw(2) << std::setfill('0') << min << ':';
     m_os << std::setw(2) << std::setfill('0') << scn;
     // show fractional progress bar only if total number is known
-    if (total < std::numeric_limits<I>::max()) {
-      drawBar(processed, total);
+    if (m_total < std::numeric_limits<Size>::max()) {
+      drawBar(processed);
     } else {
       drawNumber(processed);
     }
@@ -70,6 +84,10 @@ public:
   /** Overwrite the progress indicator with empty spaces. */
   void clear()
   {
+    // only relevant if enabled
+    if (m_total == std::numeric_limits<Size>::min())
+      return;
+
     for (int i = 0; i < m_length; ++i)
       m_os << ' ';
     m_os << '\r' << std::flush;
@@ -94,12 +112,11 @@ private:
 #endif /* TIOCGSIZE */
   }
 
-  template <typename I, typename = typename std::is_integral<I>::type>
-  void drawBar(I current, I total)
+  void drawBar(Size current)
   {
     int full = (m_length - 24);
-    int bars = (full * current) / total;
-    int percent = (100 * current) / total;
+    int bars = (full * current) / m_total;
+    int percent = (100 * current) / m_total;
 
     m_os << " " << std::setw(3) << std::setfill(' ') << percent << "% ";
     m_os << "[";
@@ -109,8 +126,7 @@ private:
       m_os << ' ';
     m_os << "]";
   }
-  template <typename I, typename = typename std::is_integral<I>::type>
-  void drawNumber(I current)
+  void drawNumber(Size current)
   {
     m_os << " processed" << std::setw(9) << std::setfill(' ') << current;
   }
@@ -118,6 +134,7 @@ private:
   std::ostream& m_os;
   std::chrono::steady_clock::time_point m_start;
   std::chrono::steady_clock::time_point m_lastUpdate;
+  Size m_total;
   int m_length;
 };
 
