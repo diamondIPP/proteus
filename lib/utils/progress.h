@@ -25,7 +25,8 @@ public:
   /** Construct with a fixed line length. */
   Progress(int lineLength)
       : m_os(std::cerr)
-      , m_lastUpdate(std::chrono::steady_clock::now())
+      , m_start(std::chrono::steady_clock::now())
+      , m_lastUpdate(m_start)
       , m_length(lineLength)
   {
   }
@@ -42,12 +43,28 @@ public:
     using std::chrono::duration_cast;
     using std::chrono::milliseconds;
 
-    // time-based redraw throttling w/ 60fps
+    // time-based redraw throttling w/ 30fps
     auto now = steady_clock::now();
-    if (duration_cast<milliseconds>(now - m_lastUpdate) < milliseconds(16))
+    if (duration_cast<milliseconds>(now - m_lastUpdate) < milliseconds(32))
       return;
 
-    drawBar(processed, total);
+    // always show elapsed time
+    auto hrs = duration_cast<std::chrono::hours>(now - m_start).count();
+    auto min = duration_cast<std::chrono::minutes>(now - m_start).count();
+    auto scn = duration_cast<std::chrono::seconds>(now - m_start).count();
+    m_os << "elapsed ";
+    m_os << std::setw(2) << std::setfill('0') << hrs << ':';
+    m_os << std::setw(2) << std::setfill('0') << min << ':';
+    m_os << std::setw(2) << std::setfill('0') << scn;
+    // show fractional progress bar only if total number is known
+    if (total < std::numeric_limits<I>::max()) {
+      drawBar(processed, total);
+    } else {
+      drawNumber(processed);
+    }
+    // after printing, rewind back to the beginning of the line so that the
+    // next update (or unrelated messages) can overwrite the current status
+    m_os << '\r' << std::flush;
     m_lastUpdate = now;
   }
   /** Overwrite the progress indicator with empty spaces. */
@@ -80,23 +97,26 @@ private:
   template <typename I, typename = typename std::is_integral<I>::type>
   void drawBar(I current, I total)
   {
-    int full = (m_length - 8);
+    int full = (m_length - 24);
     int bars = (full * current) / total;
     int percent = (100 * current) / total;
 
-    m_os << " " << std::setw(3) << percent << "% ";
+    m_os << " " << std::setw(3) << std::setfill(' ') << percent << "% ";
     m_os << "[";
     for (int i = 0; i < bars; ++i)
       m_os << '=';
     for (int i = bars; i < full; ++i)
       m_os << ' ';
     m_os << "]";
-    // after printing rewind back to the beginning of the line so that the
-    // next update (or unrelated messages) can overwrite the current status
-    m_os << '\r' << std::flush;
+  }
+  template <typename I, typename = typename std::is_integral<I>::type>
+  void drawNumber(I current)
+  {
+    m_os << " processed" << std::setw(9) << std::setfill(' ') << current;
   }
 
   std::ostream& m_os;
+  std::chrono::steady_clock::time_point m_start;
   std::chrono::steady_clock::time_point m_lastUpdate;
   int m_length;
 };
