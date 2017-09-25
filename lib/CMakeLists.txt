@@ -10,6 +10,7 @@ set(SOURCES
     analyzers/tracks.cpp
     analyzers/residuals.cpp
     io/match.cpp
+    io/merger.cpp
     io/rceroot.cpp
     io/reader.cpp
     mechanics/device.cpp
