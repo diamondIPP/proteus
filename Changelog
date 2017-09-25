@@ -56,6 +56,8 @@ Bugfixes
 *   Fix histogram binning for cluster positions.
 *   Use correct number of events when skipping some events at the beginning.
 *   Fix incorrectly stored v position for local track states.
+*   The progress indicator correctly handles the case of unknown number of
+    events.
 
 Internal changes
 ----------------
