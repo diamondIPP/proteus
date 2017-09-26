@@ -130,6 +130,9 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent)
       }
     }
 
+    // Sometimes data left still in the buffers at the start of a run. For that
+    // reason we keep skipping data until this "header" data has been cleared,
+    // when the heart beat signal starts from a low number (~few seconds max)
     if (!m_clearedHeader)
       continue;
 
@@ -200,6 +203,12 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent)
       npixels++;
       m_prevTime = time;
     }
+  }
+
+  // Clear the event if we have more than 10% chip occupancy
+  if (sensorEvent.numHits() > 6553) {
+    ERROR("Event with ", sensorEvent.numHits(), " hits. Cleared.");
+    sensorEvent.clear(m_eventNumber, m_nextEventTimestamp);
   }
 
   // Increment global time stamp:
