@@ -67,7 +67,10 @@ bool Io::Timepix3Reader::read(Storage::Event& event) {
     INFO("Timepix3Reader::read");
     Storage::SensorEvent sensorEvent(0);
     bool status = getSensorEvent(sensorEvent);
+    INFO("Event with ", sensorEvent.numHits(), " hits");
     event.setSensorData(0, std::move(sensorEvent));
+
+    return status;
 }
 
 bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent) {
@@ -85,18 +88,18 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent) {
 
     std::stringstream s;
     s << std::hex << pixdata << std::dec;
-    DEBUG("pixdata: 0x", s.str());
+    DEBUG("data: 0x", s.str());
 
     // Get the header (first 4 bits) and do things depending on what it is
     // 0x4 is the "heartbeat" signal, 0xA and 0xB are pixel data
     const UChar_t header = ((pixdata & 0xF000000000000000) >> 60) & 0xF;
 
     if (header == 0x7) {
-      DEBUG("'Acknowledge' found (Header = 0x7), ignoring.");
+      DEBUG("Header 0x7: 'Config Acknowledge'");
     }
 
     if (header == 0x4) {
-      DEBUG("'Heartbeat' found (Header = 0x4).");
+      DEBUG("Header 0x4: 'Heartbeat'");
       // The 0x4 header tells us that it is part of the timestamp
       // There is a second 4-bit header that says if it is the most or least
       // significant part of the timestamp
@@ -113,7 +116,7 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent) {
 
       // 0x4 is the least significant part of the timestamp
       if (header2 == 0x4) {
-        DEBUG("Header two = 0x4.");
+        DEBUG("            'Heartbeat' LSB");
         // The data is shifted 16 bits to the right, then 12 to the left in
         // order to match the timestamp format (net 4 right)
         m_syncTime = (m_syncTime & 0xFFFFF00000000000) +
@@ -122,7 +125,7 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent) {
 
       // 0x5 is the most significant part of the timestamp
       if (header2 == 0x5) {
-        DEBUG("Header two = 0x5.");
+        DEBUG("            'Heartbeat' MSB");
         // The data is shifted 16 bits to the right, then 44 to the left in
         // order to match the timestamp format (net 28 left)
         m_syncTime = (m_syncTime & 0x00000FFFFFFFFFFF) +
@@ -131,7 +134,7 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent) {
           DEBUG("Cleared header");
           m_clearedHeader = true;
         }
-        DEBUG("Heartbeat timestamp: ", (double)m_syncTime / (4096. * 40000000.));
+        DEBUG("            'Heartbeat' timestamp: ", (double)m_syncTime / (4096. * 40000000.));
       }
     }
 
@@ -140,7 +143,7 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent) {
 
     // Header 0x06 and 0x07 are the start and stop signals for power pulsing
     if (header == 0x0) {
-      DEBUG("Header = 0x0 (start and stop signals for power pulsing).");
+      DEBUG("Header 0x0: 'Power Pulsing'");
       /*
       // Get the second part of the header
       const UChar_t header2 = ((pixdata & 0x0F00000000000000) >> 56) & 0xF;
@@ -167,7 +170,7 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent) {
 
     // Header 0xA and 0xB indicate pixel data
     if (header == 0xA || header == 0xB) {
-      DEBUG("Found pixel data (Header = 0xA or 0xB.");
+      DEBUG("Header 0xA | 0xB: 'Pixel Data'");
       // Decode the pixel information from the relevant bits
       const UShort_t dcol = ((pixdata & 0x0FE0000000000000) >> 52);
       const UShort_t spix = ((pixdata & 0x001F800000000000) >> 45);
@@ -222,9 +225,9 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent) {
       }
 
       // Otherwise create a new pixel object
-      Storage::Hit& hit = sensorEvent.addHit(col, row, time, tot);
+      Storage::Hit& hit = sensorEvent.addHit(col, row, ((float)time / (4096. * 40000000.)), tot);
 
-      DEBUG("Houston, this is pixel #", npixels, ": ", col, ",", row);
+      DEBUG("Pixel #", npixels, ": ", hit);
       npixels++;
       m_prevTime = time;
     }
