@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <fstream>
 
 #include <TDirectory.h>
 #include <TFile.h>
@@ -28,7 +29,10 @@ public:
   bool read(Storage::Event& event);
 
 private:
-
+    std::ifstream m_file;
+    long long int m_syncTime;
+    long long int m_prevTime;
+    bool m_clearedHeader;
 };
 
 } // namespace Io
