@@ -17,7 +17,7 @@ Io::Timepix3Reader::Timepix3Reader(const std::string& path)
     , m_nextEventTimestamp(0)
 {
 
-  m_file = std::ifstream(path, std::ios::binary);
+  m_file.open(path, std::ios::binary);
   if (!m_file.is_open()) {
     FAIL("could not open '", path, "' to read.");
   }
