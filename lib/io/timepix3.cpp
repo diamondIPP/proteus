@@ -3,6 +3,7 @@
 #include <string>
 
 #include "storage/event.h"
+#include "storage/sensorevent.h"
 #include "utils/logger.h"
 
 PT_SETUP_LOCAL_LOGGER(Timepix3)
@@ -49,14 +50,28 @@ Io::Timepix3Reader::~Timepix3Reader() { INFO("Timepix3Reader::deconstructor"); }
 
 std::string Io::Timepix3Reader::name() const { return "Timepix3Reader"; }
 
-void Io::Timepix3Reader::skip(uint64_t n) { INFO("Timepix3Reader::skip"); }
+void Io::Timepix3Reader::skip(uint64_t n) {
+  INFO("Timepix3Reader::skip");
 
-bool Io::Timepix3Reader::read(Storage::Event& event)
-{
+  Storage::SensorEvent evt(0);
+  for(uint64_t i = 0; i < n; i++) {
+      if(!getSensorEvent(evt)) {
+          return;
+      }
+      evt.clear(0,0);
+  }
+}
 
-  INFO("Timepix3Reader::read");
+bool Io::Timepix3Reader::read(Storage::Event& event) {
 
-  int event_size_pixels = 500;
+    INFO("Timepix3Reader::read");
+    Storage::SensorEvent sensorEvent(0);
+    bool status = getSensorEvent(sensorEvent);
+    event.setSensorData(0, std::move(sensorEvent));
+}
+
+bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent) {
+
   double event_length_time = 0.1;
 
   // Count pixels read in this "frame"
@@ -207,8 +222,7 @@ bool Io::Timepix3Reader::read(Storage::Event& event)
       }
 
       // Otherwise create a new pixel object
-      // FIXME here we need to write the proteus data inot Storage::Event
-      // we have: row, col, (int)tot, time
+      Storage::Hit& hit = sensorEvent.addHit(col, row, time, tot);
 
       DEBUG("Houston, this is pixel #", npixels, ": ", col, ",", row);
       npixels++;

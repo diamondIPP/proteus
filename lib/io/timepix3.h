@@ -12,6 +12,7 @@
 
 #include "io/reader.h"
 #include "io/writer.h"
+#include "storage/sensorevent.h"
 #include "utils/definitions.h"
 
 namespace Io {
@@ -24,12 +25,21 @@ public:
 
   std::string name() const;
   uint64_t numEvents() const { return UINT64_MAX; };
+  size_t numSensors() const { return 1; };
 
   void skip(uint64_t n);
   bool read(Storage::Event& event);
 
 private:
+  /** Returns one decoded sensorEvent for the current detector
+   *
+   * \returns SensorEvent for the current detector
+   */
+  bool getSensorEvent(Storage::SensorEvent& sensorEvent);
+
+  /** File stream for the binary data file */
   std::ifstream m_file;
+
   long long int m_syncTime;
   long long int m_prevTime;
   bool m_clearedHeader;
