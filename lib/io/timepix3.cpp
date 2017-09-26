@@ -68,10 +68,6 @@ bool Io::Timepix3Reader::read(Storage::Event& event)
   // Read 64-bit chunks of data
   while (m_file.read(reinterpret_cast<char*>(&pixdata), sizeof pixdata)) {
 
-    if (npixels % 1000 == 0 or (npixels <= 1000 and npixels % 100 == 0)) {
-      INFO("Timepix3Reader - reading pixel number ", npixels, ".");
-    }
-
     std::stringstream s;
     s << std::hex << pixdata << std::dec;
     DEBUG("pixdata: 0x", s.str());
@@ -79,6 +75,10 @@ bool Io::Timepix3Reader::read(Storage::Event& event)
     // Get the header (first 4 bits) and do things depending on what it is
     // 0x4 is the "heartbeat" signal, 0xA and 0xB are pixel data
     const UChar_t header = ((pixdata & 0xF000000000000000) >> 60) & 0xF;
+
+    if (header == 0x7) {
+      DEBUG("'Acknowledge' found (Header = 0x7), ignoring.");
+    }
 
     if (header == 0x4) {
       DEBUG("'Heartbeat' found (Header = 0x4).");
@@ -116,6 +116,7 @@ bool Io::Timepix3Reader::read(Storage::Event& event)
           DEBUG("Cleared header");
           m_clearedHeader = true;
         }
+        DEBUG("Heartbeat timestamp: ", (double)m_syncTime / (4096. * 40000000.));
       }
     }
 
@@ -125,6 +126,7 @@ bool Io::Timepix3Reader::read(Storage::Event& event)
     // Header 0x06 and 0x07 are the start and stop signals for power pulsing
     if (header == 0x0) {
       DEBUG("Header = 0x0 (start and stop signals for power pulsing).");
+      /*
       // Get the second part of the header
       const UChar_t header2 = ((pixdata & 0x0F00000000000000) >> 56) & 0xF;
 
@@ -145,6 +147,7 @@ bool Io::Timepix3Reader::read(Storage::Event& event)
 
         // FIXME re-implement!
       }
+      */
     }
 
     // Header 0xA and 0xB indicate pixel data
@@ -184,7 +187,7 @@ bool Io::Timepix3Reader::read(Storage::Event& event)
       // If the counter overflow happens before reading the new heartbeat
       while (m_syncTime - time > 0x0000020000000000) {
         time += 0x0000040000000000;
-        DEBUG("Woohoo!");
+        DEBUG("Adjusting timestamp to account for pixel timestamp overflow");
       }
 
       // If events are loaded based on time intervals, take all hits where the
@@ -212,10 +215,6 @@ bool Io::Timepix3Reader::read(Storage::Event& event)
       m_prevTime = time;
     }
 
-    // FIXME re-implement break condition for event time or npixel count!
-    if (event_size_pixels > 0 && npixels > event_size_pixels)
-      break;
-
     if (m_file.eof()) {
       INFO("Reached end of file. Fin.");
       return false;
@@ -224,5 +223,6 @@ bool Io::Timepix3Reader::read(Storage::Event& event)
 
   // Increment global time stamp:
   m_globalCurrentTime += event_length_time;
+
   return true;
 }
