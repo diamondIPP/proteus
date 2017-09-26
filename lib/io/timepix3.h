@@ -44,8 +44,8 @@ private:
   long long int m_prevTime;
   bool m_clearedHeader;
 
-  // FIXME global to sync between readers?
-  double m_globalCurrentTime;
+  size_t m_eventNumber;
+  double m_nextEventTimestamp;
 };
 
 } // namespace Io

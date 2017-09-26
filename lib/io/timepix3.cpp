@@ -13,7 +13,8 @@ Io::Timepix3Reader::Timepix3Reader(const std::string& path)
     , m_syncTime(0)
     , m_prevTime(0)
     , m_clearedHeader(false)
-    , m_globalCurrentTime(0)
+    , m_eventNumber(0)
+    , m_nextEventTimestamp(0)
 {
   INFO("Timepix3Reader::constructor");
 
@@ -51,7 +52,7 @@ Io::Timepix3Reader::~Timepix3Reader() { INFO("Timepix3Reader::deconstructor"); }
 std::string Io::Timepix3Reader::name() const { return "Timepix3Reader"; }
 
 void Io::Timepix3Reader::skip(uint64_t n) {
-  INFO("Timepix3Reader::skip");
+  INFO("Timepix3Reader::skip ", n);
 
   Storage::SensorEvent evt(0);
   for(uint64_t i = 0; i < n; i++) {
@@ -67,7 +68,7 @@ bool Io::Timepix3Reader::read(Storage::Event& event) {
     INFO("Timepix3Reader::read");
     Storage::SensorEvent sensorEvent(0);
     bool status = getSensorEvent(sensorEvent);
-    INFO("Event with ", sensorEvent.numHits(), " hits");
+    INFO("Frame ", sensorEvent.frame(), " with ", sensorEvent.numHits(), " hits at ", ((double)sensorEvent.timestamp() / (4096. * 40000000.)), "sec");
     event.setSensorData(0, std::move(sensorEvent));
 
     return status;
@@ -75,7 +76,9 @@ bool Io::Timepix3Reader::read(Storage::Event& event) {
 
 bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent) {
 
-  double event_length_time = 0.1;
+  // Initialize the SensorEvent:
+  sensorEvent.clear(m_eventNumber, m_nextEventTimestamp);
+  double event_length_time = 0.0005;
 
   // Count pixels read in this "frame"
   int npixels = 0;
@@ -179,7 +182,6 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent) {
       const UShort_t row = (spix + (pix & 0x3));
 
       // Get the rest of the data from the pixel
-      const UShort_t pixno = col * 256 + row;
       const UInt_t data = ((pixdata & 0x00000FFFFFFF0000) >> 16);
       const unsigned int tot = (data & 0x00003FF0) >> 4;
       const uint64_t spidrTime(pixdata & 0x000000000000FFFF);
@@ -216,11 +218,12 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent) {
       // reader so that we start with this pixel next event)
       if (event_length_time > 0. &&
           ((double)time / (4096. * 40000000.)) >
-              (m_globalCurrentTime + event_length_time)) {
+              ((m_eventNumber + 1)*event_length_time)) {
         DEBUG("Configured event length reached: ",
               ((double)time / (4096. * 40000000.)), " > ",
-              (m_globalCurrentTime + event_length_time));
+              ((m_eventNumber + 1)*event_length_time));
         m_file.seekg(-1 * sizeof(pixdata), std::ios_base::cur);
+        m_nextEventTimestamp = time;
         break;
       }
 
@@ -239,7 +242,7 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent) {
   }
 
   // Increment global time stamp:
-  m_globalCurrentTime += event_length_time;
+  m_eventNumber++;
 
   return true;
 }
