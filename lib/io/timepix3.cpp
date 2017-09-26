@@ -16,65 +16,55 @@ Io::Timepix3Reader::Timepix3Reader(const std::string& path)
     , m_eventNumber(0)
     , m_nextEventTimestamp(0)
 {
-  INFO("Timepix3Reader::constructor");
-
-  if (path.empty()) {
-    FAIL("Empty file path");
-  }
 
   m_file = std::ifstream(path, std::ios::binary);
   if (!m_file.is_open()) {
     FAIL("could not open '", path, "' to read.");
   }
-  INFO("Timepix3Reader - opened file '", path, "' for reading.");
+
   uint32_t headerID = 0;
   if (!m_file.read(reinterpret_cast<char*>(&headerID), sizeof headerID)) {
     FAIL("Could not read header.");
-  } else {
-    INFO("Header ID: ", headerID);
   }
 
   uint32_t headerSize = 0;
   if (!m_file.read(reinterpret_cast<char*>(&headerSize), sizeof headerSize)) {
     FAIL("Cannot read header size for device.");
-  } else {
-    INFO("Header size: ", headerSize);
   }
 
-  INFO(
-      "Timepix3Reader - read header size for device, skipping rest of header.");
   // Skip the full header:
   m_file.seekg(headerSize);
+  INFO("Reading ''", path, "', skipped ", headerSize, " header bytes");
 }
-
-Io::Timepix3Reader::~Timepix3Reader() { INFO("Timepix3Reader::deconstructor"); }
 
 std::string Io::Timepix3Reader::name() const { return "Timepix3Reader"; }
 
-void Io::Timepix3Reader::skip(uint64_t n) {
-  INFO("Timepix3Reader::skip ", n);
+void Io::Timepix3Reader::skip(uint64_t n)
+{
 
   Storage::SensorEvent evt(0);
-  for(uint64_t i = 0; i < n; i++) {
-      if(!getSensorEvent(evt)) {
-          return;
-      }
-      evt.clear(0,0);
+  for (uint64_t i = 0; i < n; i++) {
+    evt.clear(0, 0);
+    if (!getSensorEvent(evt)) {
+      break;
+    }
   }
 }
 
-bool Io::Timepix3Reader::read(Storage::Event& event) {
+bool Io::Timepix3Reader::read(Storage::Event& event)
+{
 
-    INFO("Timepix3Reader::read");
-    Storage::SensorEvent sensorEvent(0);
-    bool status = getSensorEvent(sensorEvent);
-    INFO("Frame ", sensorEvent.frame(), " with ", sensorEvent.numHits(), " hits at ", ((double)sensorEvent.timestamp() / (4096. * 40000000.)), "sec");
-    event.setSensorData(0, std::move(sensorEvent));
+  Storage::SensorEvent sensorEvent(0);
+  bool status = getSensorEvent(sensorEvent);
+  // INFO("Frame ", sensorEvent.frame(), " with ", sensorEvent.numHits(), " hits
+  // at ", ((double)sensorEvent.timestamp() / (4096. * 40000000.)), "sec");
+  event.setSensorData(0, std::move(sensorEvent));
 
-    return status;
+  return status;
 }
 
-bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent) {
+bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent)
+{
 
   // Initialize the SensorEvent:
   sensorEvent.clear(m_eventNumber, m_nextEventTimestamp);
@@ -83,15 +73,13 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent) {
   // Count pixels read in this "frame"
   int npixels = 0;
 
-  // Read a block of data until we reach the EOF or have enough events:
-  ULong64_t pixdata = 0;
-
   // Read 64-bit chunks of data
+  ULong64_t pixdata = 0;
   while (m_file.read(reinterpret_cast<char*>(&pixdata), sizeof pixdata)) {
 
     std::stringstream s;
     s << std::hex << pixdata << std::dec;
-    DEBUG("data: 0x", s.str());
+    DEBUG("Data: 0x", s.str());
 
     // Get the header (first 4 bits) and do things depending on what it is
     // 0x4 is the "heartbeat" signal, 0xA and 0xB are pixel data
@@ -137,7 +125,8 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent) {
           DEBUG("Cleared header");
           m_clearedHeader = true;
         }
-        DEBUG("            'Heartbeat' timestamp: ", (double)m_syncTime / (4096. * 40000000.));
+        DEBUG("            'Heartbeat' timestamp: ",
+              (double)m_syncTime / (4096. * 40000000.));
       }
     }
 
@@ -147,28 +136,6 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent) {
     // Header 0x06 and 0x07 are the start and stop signals for power pulsing
     if (header == 0x0) {
       DEBUG("Header 0x0: 'Power Pulsing'");
-      /*
-      // Get the second part of the header
-      const UChar_t header2 = ((pixdata & 0x0F00000000000000) >> 56) & 0xF;
-
-      // New implementation of power pulsing signals from Adrian
-      if (header2 == 0x6) {
-        DEBUG("Header two = 0x6.");
-        const uint64_t time((pixdata & 0x0000000FFFFFFFFF) << 12);
-
-        const uint64_t controlbits =
-            ((pixdata & 0x00F0000000000000) >> 52) & 0xF;
-
-        const uint64_t powerOn = ((controlbits & 0x2) >> 1);
-        const uint64_t shutterClosed = ((controlbits & 0x1));
-
-        // Stop looking at data if the signal is after the current event window
-        // (and rewind the file
-        // reader so that we start with this signal next event)
-
-        // FIXME re-implement!
-      }
-      */
     }
 
     // Header 0xA and 0xB indicate pixel data
@@ -199,10 +166,8 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent) {
       // FIXME re-add if necessary
 
       // The time from the pixels has a maximum value of ~26 seconds. We compare
-      // the pixel time
-      // to the "heartbeat" signal (which has an overflow of ~4 years) and check
-      // if the pixel
-      // time has wrapped back around to 0
+      // the pixel time to the "heartbeat" signal (which has an overflow of ~4
+      // years) and check if the pixel time has wrapped back around to 0
 
       // If the counter overflow happens before reading the new heartbeat
       while (m_syncTime - time > 0x0000020000000000) {
@@ -214,35 +179,35 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent) {
       // time is within this window
 
       // Stop looking at data if the pixel is after the current event window
-      // (and rewind the file
-      // reader so that we start with this pixel next event)
+      // (and rewind the file reader so that we start with this pixel next
+      // event)
       if (event_length_time > 0. &&
           ((double)time / (4096. * 40000000.)) >
-              ((m_eventNumber + 1)*event_length_time)) {
+              ((m_eventNumber + 1) * event_length_time)) {
         DEBUG("Configured event length reached: ",
               ((double)time / (4096. * 40000000.)), " > ",
-              ((m_eventNumber + 1)*event_length_time));
+              ((m_eventNumber + 1) * event_length_time));
         m_file.seekg(-1 * sizeof(pixdata), std::ios_base::cur);
         m_nextEventTimestamp = time;
         break;
       }
 
       // Otherwise create a new pixel object
-      Storage::Hit& hit = sensorEvent.addHit(col, row, ((float)time / (4096. * 40000000.)), tot);
+      Storage::Hit& hit = sensorEvent.addHit(
+          col, row, ((float)time / (4096. * 40000000.)), tot);
 
       DEBUG("Pixel #", npixels, ": ", hit);
       npixels++;
       m_prevTime = time;
-    }
-
-    if (m_file.eof()) {
-      INFO("Reached end of file. Fin.");
-      return false;
     }
   }
 
   // Increment global time stamp:
   m_eventNumber++;
 
-  return true;
+  if (m_file.eof()) {
+    return false;
+  } else {
+    return true;
+  }
 }

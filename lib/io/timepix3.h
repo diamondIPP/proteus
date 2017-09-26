@@ -21,7 +21,7 @@ namespace Io {
 class Timepix3Reader : public EventReader {
 public:
   Timepix3Reader(const std::string& path);
-  ~Timepix3Reader();
+  ~Timepix3Reader(){};
 
   std::string name() const;
   uint64_t numEvents() const { return UINT64_MAX; };
