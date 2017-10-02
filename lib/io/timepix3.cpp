@@ -68,7 +68,7 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent)
 
   // Initialize the SensorEvent:
   sensorEvent.clear(m_eventNumber, m_nextEventTimestamp);
-  double event_length_time = 0.0005;
+  double event_length_time = 0.00005;
 
   // Count pixels read in this "frame"
   int npixels = 0;
@@ -207,7 +207,7 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent)
 
   // Clear the event if we have more than 10% chip occupancy
   if (sensorEvent.numHits() > 6553) {
-    ERROR("Event with ", sensorEvent.numHits(), " hits. Cleared.");
+    ERROR("Frame ", m_eventNumber, " has ", sensorEvent.numHits(), " hits. Cleared.");
     sensorEvent.clear(m_eventNumber, m_nextEventTimestamp);
   }
 
