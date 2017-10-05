@@ -144,12 +144,12 @@ int main(int argc, char const* argv[])
   std::set_difference(sortedSensorIds.begin(), sortedSensorIds.end(),
                       sortedAlignIds.begin(), sortedAlignIds.end(),
                       std::back_inserter(fixedSensorIds),
-                      Mechanics::CompareSensorIdZ{app.device()});
+                      Mechanics::SensorZComparator{app.device()});
   INFO("fixed sensors: ", fixedSensorIds);
   INFO("align sensors: ", sortedAlignIds);
   if (!std::includes(sortedSensorIds.begin(), sortedSensorIds.end(),
                      sortedAlignIds.begin(), sortedAlignIds.end(),
-                     Mechanics::CompareSensorIdZ{app.device()})) {
+                     Mechanics::SensorZComparator{app.device()})) {
     ERROR("set of align sensor is not a subset of the input sensor set");
     return EXIT_FAILURE;
   }

@@ -81,7 +81,7 @@ private:
 };
 
 /** Compare sensor ids by the z-position of the corresponding sensors. */
-struct CompareSensorIdZ {
+struct SensorZComparator {
   const Device& device;
 
   bool operator()(Index id0, Index id1) const

@@ -24,7 +24,7 @@ Alignment::CorrelationsAligner::CorrelationsAligner(
   m_sensorIds.push_back(fixedId);
   m_sensorIds.insert(m_sensorIds.end(), alignIds.begin(), alignIds.end());
   std::sort(m_sensorIds.begin() + 1, m_sensorIds.end(),
-            Mechanics::CompareSensorIdZ{device});
+            Mechanics::SensorZComparator{device});
   // we only need correlations between direct neighbors
   m_corr.reset(new Analyzers::Correlations(dir, device, m_sensorIds, 1));
 }
