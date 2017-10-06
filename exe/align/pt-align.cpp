@@ -136,21 +136,19 @@ int main(int argc, char const* argv[])
   auto redChi2Max = app.config().get<double>("reduced_chi2_max");
   auto damping = app.config().get<double>("damping");
 
-  // check sensor selection
-  std::vector<Index> sortedSensorIds = sortedByZ(app.device(), sensorIds);
-  std::vector<Index> sortedAlignIds = sortedByZ(app.device(), alignIds);
+  // split sensors into fixed and alignable set
   std::vector<Index> fixedSensorIds;
-  // all sensors not in the align set are kept fixed
-  std::set_difference(sortedSensorIds.begin(), sortedSensorIds.end(),
-                      sortedAlignIds.begin(), sortedAlignIds.end(),
-                      std::back_inserter(fixedSensorIds),
-                      Mechanics::SensorZComparator{app.device()});
+  std::sort(sensorIds.begin(), sensorIds.end());
+  std::sort(alignIds.begin(), alignIds.end());
+  std::set_difference(sensorIds.begin(), sensorIds.end(), alignIds.begin(),
+                      alignIds.end(), std::back_inserter(fixedSensorIds));
+
   INFO("fixed sensors: ", fixedSensorIds);
-  INFO("align sensors: ", sortedAlignIds);
-  if (!std::includes(sortedSensorIds.begin(), sortedSensorIds.end(),
-                     sortedAlignIds.begin(), sortedAlignIds.end(),
-                     Mechanics::SensorZComparator{app.device()})) {
-    ERROR("set of align sensor is not a subset of the input sensor set");
+  INFO("align sensors: ", alignIds);
+
+  if (!std::includes(sensorIds.begin(), sensorIds.end(), alignIds.begin(),
+                     alignIds.end())) {
+    ERROR("align sensor set is not a subset of the input sensor set");
     return EXIT_FAILURE;
   }
   if (fixedSensorIds.empty()) {
