@@ -208,6 +208,9 @@ std::vector<Index> Mechanics::sortedByZ(const Device& device,
                                         const std::vector<Index>& sensorIds)
 {
   std::vector<Index> sorted(std::begin(sensorIds), std::end(sensorIds));
-  std::sort(sorted.begin(), sorted.end(), SensorZComparator{device});
+  std::sort(sorted.begin(), sorted.end(), [&](Index id0, Index id1) {
+    return device.getSensor(id0)->origin().z() <
+           device.getSensor(id1)->origin().z();
+  });
   return sorted;
 }
