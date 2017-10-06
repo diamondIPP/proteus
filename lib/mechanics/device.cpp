@@ -204,9 +204,12 @@ void Mechanics::Device::print(std::ostream& os, const std::string& prefix) const
   os.flush();
 }
 
-std::vector<Index> Mechanics::sortedByZ(const Device& device,
-                                        const std::vector<Index>& sensorIds)
+std::vector<Index>
+Mechanics::sortedAlongBeam(const Device& device,
+                           const std::vector<Index>& sensorIds)
 {
+  // TODO 2017-10 msmk: actually sort along beam direction and not just along
+  //                    z-axis as proxy.
   std::vector<Index> sorted(std::begin(sensorIds), std::end(sensorIds));
   std::sort(sorted.begin(), sorted.end(), [&](Index id0, Index id1) {
     return device.getSensor(id0)->origin().z() <

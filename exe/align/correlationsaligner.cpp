@@ -13,8 +13,7 @@ Alignment::CorrelationsAligner::CorrelationsAligner(
     const Mechanics::Device& device,
     const Index fixedId,
     const std::vector<Index>& alignIds)
-    : m_device(device)
-    , m_sensorIds(sortedByZ(device, alignIds))
+    : m_device(device), m_sensorIds(sortedAlongBeam(device, alignIds))
 {
   // TODO 2017-02-09 msmk
   // assumes that the fixed sensor is located before the alignment sensors.

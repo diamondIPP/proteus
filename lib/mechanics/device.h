@@ -80,9 +80,9 @@ private:
   std::vector<bool> m_sensorMask;
 };
 
-/** Sort the sensor indices by the position of the sensors along the z-axis. */
-std::vector<Index> sortedByZ(const Device& device,
-                             const std::vector<Index>& sensorIds);
+/** Sort the sensor indices by their position along the beam direction. */
+std::vector<Index> sortedAlongBeam(const Device& device,
+                                   const std::vector<Index>& sensorIds);
 
 } // namespace Mechanics
 
