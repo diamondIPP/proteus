@@ -14,17 +14,14 @@ Alignment::CorrelationsAligner::CorrelationsAligner(
     const Index fixedId,
     const std::vector<Index>& alignIds)
     : m_device(device)
+    , m_sensorIds(sortedByZ(device, alignIds))
 {
   // TODO 2017-02-09 msmk
   // assumes that the fixed sensor is located before the alignment sensors.
   // check which end of the align set is closer and reorder the sensor ids.
 
-  // the fixed sensor must be first entry to get all correlations
-  m_sensorIds.reserve(1 + alignIds.size());
-  m_sensorIds.push_back(fixedId);
-  m_sensorIds.insert(m_sensorIds.end(), alignIds.begin(), alignIds.end());
-  std::sort(m_sensorIds.begin() + 1, m_sensorIds.end(),
-            Mechanics::SensorZComparator{device});
+  // the fixed sensor must be first entry to get the correct correlations
+  m_sensorIds.insert(m_sensorIds.begin(), fixedId);
   // we only need correlations between direct neighbors
   m_corr.reset(new Analyzers::Correlations(dir, device, m_sensorIds, 1));
 }
