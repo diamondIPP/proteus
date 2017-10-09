@@ -82,6 +82,9 @@ public:
   /** Add small local corrections du, dv, dw, dRotU, dRotV, dRotW. */
   void
   correctLocal(Index sensorId, const Vector6& delta, const SymMatrix6& cov);
+
+  /** The local sensor plane object. */
+  const Plane& getPlane(Index sensorId) const;
   /** Transformation from local to global coordinates for the sensor. */
   Transform3D getLocalToGlobal(Index sensorId) const;
   /** Geometry parameters [x, y, z, alpha, beta, gamma] for a sensor. */

@@ -1,7 +1,5 @@
 #include "geometry.h"
 
-#include <TDecompSVD.h>
-#include <TMatrix.h>
 #include <cassert>
 #include <fstream>
 #include <iomanip>
@@ -9,6 +7,9 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+
+#include <TDecompSVD.h>
+#include <TMatrix.h>
 
 #include "utils/logger.h"
 
@@ -224,6 +225,11 @@ void Mechanics::Geometry::correctLocal(Index sensorId,
   DEBUG("  unit u: [", plane.unitU(), "]");
   DEBUG("  unit v: [", plane.unitV(), "]");
   DEBUG("  unit w: [", plane.unitNormal(), "]");
+}
+
+const Mechanics::Plane& Mechanics::Geometry::getPlane(Index sensorId) const
+{
+  return m_planes.at(sensorId);
 }
 
 Transform3D Mechanics::Geometry::getLocalToGlobal(Index sensorId) const
