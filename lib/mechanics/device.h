@@ -80,20 +80,9 @@ private:
   std::vector<bool> m_sensorMask;
 };
 
-/** Compare sensor ids by the z-position of the corresponding sensors. */
-struct CompareSensorIdZ {
-  const Device& device;
-
-  bool operator()(Index id0, Index id1) const
-  {
-    return device.getSensor(id0)->origin().z() <
-           device.getSensor(id1)->origin().z();
-  }
-};
-
-/** Sort the sensor indices by the position of the sensors along the z-axis. */
-std::vector<Index> sortedByZ(const Device& device,
-                             const std::vector<Index>& sensorIds);
+/** Sort the sensor indices by their position along the beam direction. */
+std::vector<Index> sortedAlongBeam(const Device& device,
+                                   const std::vector<Index>& sensorIds);
 
 } // namespace Mechanics
 
