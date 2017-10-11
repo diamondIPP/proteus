@@ -20,8 +20,8 @@ namespace Tracking {
 
 /** Find tracks assuming straight propagation along the beam direction.
  *
- * Matching clusters are searched for only on the selected sensors in the order
- * in which they are given. In case of ambiguities, the track bifurcates info
+ * Matching clusters are searched for only on the selected sensors ordered
+ * along the beam direction. In case of ambiguities, the track bifurcates info
  * multiple candidates. Ambiguities are resolved after all track candidates
  * have been found by associating clusters exclusively to the best candidate,
  * i.e. the one with the highest number of hits and the lowest chi2 value, to
@@ -36,10 +36,10 @@ public:
    * \param redChi2Max Selection cut on chi2/d.o.f, negative to disable
    */
   TrackFinder(const Mechanics::Device& device,
-              std::vector<Index> sensors,
-              Index numClustersMin,
-              double searchSigmaMax = -1,
-              double redChi2Max = -1);
+              const std::vector<Index>& sensors,
+              const Index numClustersMin,
+              const double searchSigmaMax = -1,
+              const double redChi2Max = -1);
 
   std::string name() const;
   /** Find tracks and add them to the event. */

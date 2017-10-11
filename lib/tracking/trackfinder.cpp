@@ -16,12 +16,12 @@ using Storage::Track;
 using Storage::TrackState;
 
 Tracking::TrackFinder::TrackFinder(const Mechanics::Device& device,
-                                   std::vector<Index> sensors,
-                                   Index numClustersMin,
-                                   double searchSigmaMax,
-                                   double redChi2Max)
+                                   const std::vector<Index>& sensors,
+                                   const Index numClustersMin,
+                                   const double searchSigmaMax,
+                                   const double redChi2Max)
     : m_geo(device.geometry())
-    , m_sensorIds(std::move(sensors))
+    , m_sensorIds(Mechanics::sortedAlongBeam(device.geometry(), sensors))
     , m_numClustersMin(numClustersMin)
     // 2-d Mahalanobis distance peaks at 2 and not at 1
     , m_d2Max((searchSigmaMax < 0) ? -1 : (2 * searchSigmaMax * searchSigmaMax))
