@@ -7,12 +7,14 @@
 #ifndef PT_STRAIGHTFITTER_H
 #define PT_STRAIGHTFITTER_H
 
+#include <vector>
+
 #include "processors/processor.h"
 #include "utils/definitions.h"
 
 namespace Mechanics {
 class Device;
-class Sensor;
+class Geometry;
 } // namespace Mechanics
 
 namespace Tracking {
@@ -30,7 +32,8 @@ public:
   void process(Storage::Event& event) const;
 
 private:
-  const Mechanics::Device& m_device;
+  const Mechanics::Geometry& m_geo;
+  std::vector<Index> m_sensorIds;
 };
 
 /** Estimate local track parameters w/o the local information.
@@ -48,7 +51,8 @@ public:
   void process(Storage::Event& event) const;
 
 private:
-  const Mechanics::Device& m_device;
+  const Mechanics::Geometry& m_geo;
+  std::vector<Index> m_sensorIds;
 };
 
 } // namespace Tracking
