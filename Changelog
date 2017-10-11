@@ -42,6 +42,7 @@ User-visible changes
     sensors and stored in the data file. `pt-match` does not perform a track
     fit anymore and only uses the previously reconstructed information to
     match clusters and tracks on selected sensors.
+*   Correlations are calculated using the sensor order along the beam.
 *   Track finding considers the sensors in the order in which they appear along
     the beam and not ordered by their sensor ids.
 *   The `--debug` flag on most tools also prints full event information.
