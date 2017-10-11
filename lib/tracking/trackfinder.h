@@ -9,11 +9,12 @@
 
 namespace Mechanics {
 class Device;
-}
+class Geometry;
+} // namespace Mechanics
 namespace Storage {
 class SensorEvent;
 class Track;
-}
+} // namespace Storage
 
 namespace Tracking {
 
@@ -52,6 +53,7 @@ private:
   void selectTracks(std::vector<TrackPtr>& candidates,
                     Storage::Event& event) const;
 
+  const Mechanics::Geometry& m_geo;
   std::vector<Index> m_sensorIds;
   Index m_numClustersMin;
   double m_d2Max;

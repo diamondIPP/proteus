@@ -7,8 +7,7 @@
 
 #include "mechanics/device.h"
 #include "storage/event.h"
-#include "tracking/tracking.h"
-#include "utils/logger.h"
+#include "tracking/straighttools.h"
 
 using Storage::Cluster;
 using Storage::Event;
@@ -16,14 +15,13 @@ using Storage::SensorEvent;
 using Storage::Track;
 using Storage::TrackState;
 
-PT_SETUP_GLOBAL_LOGGER
-
 Tracking::TrackFinder::TrackFinder(const Mechanics::Device& device,
                                    std::vector<Index> sensors,
                                    Index numClustersMin,
                                    double searchSigmaMax,
                                    double redChi2Max)
-    : m_sensorIds(std::move(sensors))
+    : m_geo(device.geometry())
+    , m_sensorIds(std::move(sensors))
     , m_numClustersMin(numClustersMin)
     // 2-d Mahalanobis distance peaks at 2 and not at 1
     , m_d2Max((searchSigmaMax < 0) ? -1 : (2 * searchSigmaMax * searchSigmaMax))
@@ -160,7 +158,7 @@ void Tracking::TrackFinder::selectTracks(std::vector<TrackPtr>& candidates,
 {
   // ensure chi2 value is up-to-date
   std::for_each(candidates.begin(), candidates.end(),
-                [&](TrackPtr& t) { fitTrackGlobal(*t); });
+                [&](TrackPtr& t) { fitStraightTrackGlobal(m_geo, *t); });
   // sort good candidates first, i.e. longest track and smallest chi2
   std::sort(candidates.begin(), candidates.end(), CompareNumClusterChi2());
 
