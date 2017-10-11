@@ -36,7 +36,6 @@ set(SOURCES
     storage/trackstate.cpp
     tracking/trackfinder.cpp
     tracking/straightfitter.cpp
-    tracking/tracking.cpp
     utils/application.cpp
     utils/arguments.cpp
     utils/config.cpp
