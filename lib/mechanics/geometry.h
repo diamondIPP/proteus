@@ -104,6 +104,10 @@ private:
   double m_beamSlopeX, m_beamSlopeY;
 };
 
+/** Sort the sensor indices by their position along the beam direction. */
+std::vector<Index> sortedAlongBeam(const Geometry& geo,
+                                   const std::vector<Index>& sensorIds);
+
 } // namespace Mechanics
 
 #endif // PT_GEOMETRY_H

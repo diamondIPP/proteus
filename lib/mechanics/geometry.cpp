@@ -278,3 +278,16 @@ void Mechanics::Geometry::print(std::ostream& os,
   }
   os.flush();
 }
+
+std::vector<Index>
+Mechanics::sortedAlongBeam(const Mechanics::Geometry& geo,
+                           const std::vector<Index>& sensorIds)
+{
+  // TODO 2017-10 msmk: actually sort along beam direction and not just along
+  //                    z-axis as proxy.
+  std::vector<Index> sorted(std::begin(sensorIds), std::end(sensorIds));
+  std::sort(sorted.begin(), sorted.end(), [&](Index id0, Index id1) {
+    return geo.getPlane(id0).offset[2] < geo.getPlane(id1).offset[2];
+  });
+  return sorted;
+}

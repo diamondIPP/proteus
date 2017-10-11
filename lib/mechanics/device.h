@@ -80,10 +80,6 @@ private:
   std::vector<bool> m_sensorMask;
 };
 
-/** Sort the sensor indices by their position along the beam direction. */
-std::vector<Index> sortedAlongBeam(const Device& device,
-                                   const std::vector<Index>& sensorIds);
-
 } // namespace Mechanics
 
 #endif // PT_DEVICE_H
