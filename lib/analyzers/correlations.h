@@ -13,6 +13,7 @@ class TH2D;
 
 namespace Mechanics {
 class Device;
+class Geometry;
 class Sensor;
 } // namespace Mechanics
 
@@ -64,6 +65,7 @@ private:
     TH1D* diffY;
   };
 
+  const Mechanics::Geometry& m_geo;
   std::map<Indices, Hists> m_hists;
 };
 
