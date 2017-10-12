@@ -21,9 +21,15 @@ namespace Storage {
  */
 class TrackState {
 public:
+  /** Construct a state w/ undefined parameters. */
   TrackState();
+  /** Construct from local offset and direction vector. */
+  TrackState(const Vector2& offset, const Vector3& direction);
+  /** Construct from local offset and slope values. */
   TrackState(float u, float v, float dU = 0, float dV = 0);
 
+  /** Set the full covariance matrix. */
+  void setCov(const SymMatrix4& cov) { m_cov = cov; }
   /** Set full covariance matrix from entries.
    *
    * The iterator must point to an array of 10 elements that contain the
@@ -34,6 +40,8 @@ public:
   void setCov(InputIterator first);
   void setCovU(float varOffset, float varSlope, float cov = 0);
   void setCovV(float varOffset, float varSlope, float cov = 0);
+  /** Set only the offset covariance. */
+  void setCovOffset(const SymMatrix2& covOffset);
 
   /** Full parameter vector. */
   const Vector4& params() const { return m_params; }
@@ -45,6 +53,8 @@ public:
   /** Slope in local coordinates. */
   XYVector slope() const { return {m_params[Du], m_params[Dv]}; }
   SymMatrix2 covSlope() const { return m_cov.Sub<SymMatrix2>(Du, Du); }
+  /** Direction vector in local coordinates. */
+  Vector3 direction() const { return {m_params[Du], m_params[Dv], 1}; }
 
   bool isMatched() const { return (m_matchedCluster != kInvalidIndex); }
   Index matchedCluster() const { return m_matchedCluster; }
