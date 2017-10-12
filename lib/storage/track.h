@@ -23,7 +23,9 @@ public:
   /** Clusters indexed by the sensor. */
   using Clusters = std::map<Index, std::reference_wrapper<Cluster>>;
 
+  /** Construct a track without hits and undefined global state. */
   Track();
+  /** Construct a track without hits but with known global parameters. */
   Track(const TrackState& global);
 
   void setGoodnessOfFit(float chi2, int dof) { m_chi2 = chi2, m_dof = dof; }
