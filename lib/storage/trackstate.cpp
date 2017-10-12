@@ -3,15 +3,12 @@
 #include <cassert>
 
 Storage::TrackState::TrackState(float u, float v, float dU, float dV)
-    : m_offset(u, v)
-    , m_slope(dU, dV)
-    , m_matchedCluster(kInvalidIndex)
+    : m_matchedCluster(kInvalidIndex)
 {
-}
-
-Storage::TrackState::TrackState(const XYPoint& offset, const XYVector& slope)
-    : TrackState(offset.x(), offset.y(), slope.x(), slope.y())
-{
+  m_params[U] = u;
+  m_params[V] = v;
+  m_params[Du] = dU;
+  m_params[Dv] = dV;
 }
 
 Storage::TrackState::TrackState() : TrackState(0, 0, 0, 0) {}

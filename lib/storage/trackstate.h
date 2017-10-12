@@ -22,7 +22,6 @@ namespace Storage {
 class TrackState {
 public:
   TrackState();
-  TrackState(const XYPoint& offset, const XYVector& slope = XYVector(0, 0));
   TrackState(float u, float v, float dU = 0, float dV = 0);
 
   /** Set full covariance matrix from entries.
@@ -36,13 +35,15 @@ public:
   void setCovU(float varOffset, float varSlope, float cov = 0);
   void setCovV(float varOffset, float varSlope, float cov = 0);
 
+  /** Full parameter vector. */
+  const Vector4& params() const { return m_params; }
   /** Covariance matrix of the full parameter vector. */
   const SymMatrix4& cov() const { return m_cov; }
   /** Plane offset in local coordinates. */
-  const XYPoint& offset() const { return m_offset; }
+  XYPoint offset() const { return {m_params[U], m_params[V]}; }
   SymMatrix2 covOffset() const { return m_cov.Sub<SymMatrix2>(U, U); }
   /** Slope in local coordinates. */
-  const XYVector& slope() const { return m_slope; }
+  XYVector slope() const { return {m_params[Du], m_params[Dv]}; }
   SymMatrix2 covSlope() const { return m_cov.Sub<SymMatrix2>(Du, Du); }
 
   bool isMatched() const { return (m_matchedCluster != kInvalidIndex); }
@@ -51,8 +52,7 @@ public:
 private:
   enum { U = 0, V = 1, Du = 2, Dv = 3 };
 
-  XYPoint m_offset;
-  XYVector m_slope;
+  Vector4 m_params;
   SymMatrix4 m_cov;
   Index m_matchedCluster;
 
