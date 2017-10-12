@@ -62,6 +62,31 @@ Vector6 Mechanics::Plane::asParams() const
   return params;
 }
 
+Vector3 Mechanics::Plane::toLocal(const Vector3& xyz) const
+{
+  return Transpose(rotation) * (xyz - offset);
+}
+
+Vector3 Mechanics::Plane::toLocal(const XYZPoint& xyz) const
+{
+  return Transpose(rotation) * (Vector3(xyz.x(), xyz.y(), xyz.z()) - offset);
+}
+
+Vector3 Mechanics::Plane::toGlobal(const Vector2& uv) const
+{
+  return offset + rotation.Sub<Matrix32>(0, 0) * uv;
+}
+
+Vector3 Mechanics::Plane::toGlobal(const XYPoint& uv) const
+{
+  return offset + rotation.Sub<Matrix32>(0, 0) * Vector2(uv.x(), uv.y());
+}
+
+Vector3 Mechanics::Plane::toGlobal(const Vector3& uvw) const
+{
+  return offset + rotation * uvw;
+}
+
 Mechanics::Geometry::Geometry() : m_beamSlopeX(0), m_beamSlopeY(0) {}
 
 Mechanics::Geometry Mechanics::Geometry::fromFile(const std::string& path)

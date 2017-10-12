@@ -55,6 +55,17 @@ struct Plane {
   Vector3 unitU() const { return rotation.SubCol<Vector3>(0); }
   Vector3 unitV() const { return rotation.SubCol<Vector3>(1); }
   Vector3 unitNormal() const { return rotation.SubCol<Vector3>(2); }
+
+  /** Transform a global position into local coordinates. */
+  Vector3 toLocal(const Vector3& xyz) const;
+  /** Transform a global position into local coordinates. */
+  Vector3 toLocal(const XYZPoint& xyz) const;
+  /** Transform a local position on the plane into global coordinates. */
+  Vector3 toGlobal(const Vector2& uv) const;
+  /** Transform a local position on the plane into global coordinates. */
+  Vector3 toGlobal(const XYPoint& uv) const;
+  /** Transform a local position into global coordinates. */
+  Vector3 toGlobal(const Vector3& uvw) const;
 };
 
 /** Store and process the geometry of the telescope setup.
