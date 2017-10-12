@@ -17,7 +17,7 @@ namespace Io {
 /** Event writer interface. */
 class EventWriter {
 public:
-  virtual ~EventWriter();
+  virtual ~EventWriter() = default;
   virtual std::string name() const = 0;
   /** Add the event to the underlying device.
    *

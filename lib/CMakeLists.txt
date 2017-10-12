@@ -12,7 +12,6 @@ set(SOURCES
     io/match.cpp
     io/rceroot.cpp
     io/reader.cpp
-    io/writer.cpp
     mechanics/device.cpp
     mechanics/geometry.cpp
     mechanics/pixelmasks.cpp
