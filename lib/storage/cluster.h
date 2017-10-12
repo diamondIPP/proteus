@@ -9,10 +9,6 @@
 #include "utils/definitions.h"
 #include "utils/interval.h"
 
-namespace Mechanics {
-class Sensor;
-}
-
 namespace Storage {
 
 class Hit;
@@ -26,19 +22,16 @@ public:
 
   void setPixel(const XYPoint& cr, const SymMatrix2& cov);
   void setPixel(float col, float row, float stdCol, float stdRow);
+  void setLocal(const XYPoint& uv, const SymMatrix2& cov);
   void setTime(float time_) { m_time = time_; }
   void setValue(float value_) { m_value = value_; }
-  /** Calculate local and global coordinates from the pixel coordinates. */
-  void transform(const Mechanics::Sensor& sensor);
   void setTrack(Index track);
 
   Index region() const;
   const XYPoint& posPixel() const { return m_cr; }
   const XYPoint& posLocal() const { return m_uv; }
-  const XYZPoint& posGlobal() const { return m_xyz; }
   const SymMatrix2& covPixel() const { return m_crCov; }
   const SymMatrix2& covLocal() const { return m_uvCov; }
-  const SymMatrix3& covGlobal() const { return m_xyzCov; }
   float time() const { return m_time; }
   float value() const { return m_value; }
   /** The area enclosing the cluster in pixel coordinates.
@@ -68,8 +61,6 @@ private:
   float m_value;
   SymMatrix2 m_crCov;
   SymMatrix2 m_uvCov;
-  XYZPoint m_xyz;
-  SymMatrix3 m_xyzCov;
 
   Hits m_hits; // List of hits composing the cluster
 

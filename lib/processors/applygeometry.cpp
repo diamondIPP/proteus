@@ -19,8 +19,21 @@ void Processors::ApplyGeometry::process(Storage::Event& event) const
     Storage::SensorEvent& sensorEvent = event.getSensorEvent(iplane);
     const Mechanics::Sensor& sensor = *m_device.getSensor(iplane);
 
-    for (Index icluster = 0; icluster < sensorEvent.numClusters(); icluster++)
-      sensorEvent.getCluster(icluster).transform(sensor);
+    // jacobian from pixel to local coordinates
+    Matrix2 p2l;
+    p2l(0, 0) = sensor.pitchCol();
+    p2l(0, 1) = 0;
+    p2l(1, 0) = 0;
+    p2l(1, 1) = sensor.pitchRow();
+
+    for (Index icluster = 0; icluster < sensorEvent.numClusters(); icluster++) {
+      Storage::Cluster& cluster = sensorEvent.getCluster(icluster);
+
+      auto loc = sensor.transformPixelToLocal(cluster.posPixel());
+      auto cov = Similarity(p2l, cluster.covPixel());
+
+      cluster.setLocal(loc, cov);
+    }
   }
 }
 

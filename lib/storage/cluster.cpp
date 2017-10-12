@@ -6,10 +6,7 @@
 #include <numeric>
 #include <ostream>
 
-#include "mechanics/sensor.h"
 #include "storage/hit.h"
-#include "storage/sensorevent.h"
-#include "storage/track.h"
 #include "utils/logger.h"
 
 PT_SETUP_LOCAL_LOGGER(Cluster)
@@ -40,25 +37,14 @@ void Storage::Cluster::setPixel(float col,
 {
   m_cr.SetXY(col, row);
   m_crCov(0, 0) = stdCol * stdCol;
-  m_crCov(0, 1) = 0;
   m_crCov(1, 1) = stdRow * stdRow;
+  m_crCov(0, 1) = m_crCov(1, 0) = 0;
 }
 
-void Storage::Cluster::transform(const Mechanics::Sensor& sensor)
+void Storage::Cluster::setLocal(const XYPoint& uv, const SymMatrix2& cov)
 {
-  Matrix2 p2l;
-  Matrix3 l2g;
-
-  p2l(0, 0) = sensor.pitchCol();
-  p2l(0, 1) = 0;
-  p2l(1, 0) = 0;
-  p2l(1, 1) = sensor.pitchRow();
-  sensor.localToGlobal().Rotation().GetRotationMatrix(l2g);
-
-  m_uv = sensor.transformPixelToLocal(m_cr);
-  m_uvCov = ROOT::Math::Similarity(p2l, m_crCov);
-  m_xyz = sensor.transformLocalToGlobal(m_uv);
-  m_xyzCov = ROOT::Math::Similarity(l2g.Sub<Matrix32>(0, 0), m_uvCov);
+  m_uv = uv;
+  m_uvCov = cov;
 }
 
 void Storage::Cluster::setTrack(Index track)
@@ -93,20 +79,24 @@ void Storage::Cluster::addHit(Storage::Hit& hit)
 void Storage::Cluster::print(std::ostream& os, const std::string& prefix) const
 {
   Vector2 ep = sqrt(m_crCov.Diagonal());
-  Vector3 eg = sqrt(m_xyzCov.Diagonal());
+  Vector2 el = sqrt(m_uvCov.Diagonal());
 
   os << prefix << "size: " << size() << '\n';
   os << prefix << "pixel: " << posPixel() << '\n';
   os << prefix << "pixel stddev: " << ep << '\n';
-  os << prefix << "global: " << posGlobal() << '\n';
-  os << prefix << "global stddev: " << eg << '\n';
+  os << prefix << "local: " << posLocal() << '\n';
+  os << prefix << "local stddev: " << el << '\n';
   os.flush();
 }
 
 std::ostream& Storage::operator<<(std::ostream& os, const Cluster& cluster)
 {
+  auto c = cluster.posPixel().x();
+  auto r = cluster.posPixel().y();
+  auto u = cluster.posLocal().x();
+  auto v = cluster.posLocal().y();
   os << "size=" << cluster.size();
-  os << " pixel=" << cluster.posPixel();
-  os << " local=" << cluster.posLocal();
+  os << " pixel=(" << c << "," << r << ")";
+  os << " local=(" << u << "," << v << ")";
   return os;
 }
