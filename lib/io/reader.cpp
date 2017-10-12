@@ -5,8 +5,6 @@
 
 PT_SETUP_LOCAL_LOGGER(Io);
 
-Io::EventReader::~EventReader() {}
-
 std::shared_ptr<Io::EventReader> Io::openRead(const std::string& path)
 {
   if (Io::RceRootReader::isValid(path))

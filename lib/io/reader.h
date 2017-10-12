@@ -19,7 +19,7 @@ namespace Io {
 /** Event reader interface. */
 class EventReader {
 public:
-  virtual ~EventReader();
+  virtual ~EventReader() = default;
   virtual std::string name() const = 0;
   /** Return the (minimum) number of available events.
    *
