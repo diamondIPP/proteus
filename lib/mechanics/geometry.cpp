@@ -258,9 +258,9 @@ void Mechanics::Geometry::setBeamSlope(double slopeX, double slopeY)
   m_beamSlopeY = slopeY;
 }
 
-XYZVector Mechanics::Geometry::beamDirection() const
+Vector3 Mechanics::Geometry::beamDirection() const
 {
-  return XYZVector(m_beamSlopeX, m_beamSlopeY, 1);
+  return Vector3(m_beamSlopeX, m_beamSlopeY, 1);
 }
 
 void Mechanics::Geometry::print(std::ostream& os,

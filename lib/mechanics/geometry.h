@@ -94,7 +94,7 @@ public:
 
   void setBeamSlope(double slopeX, double slopeY);
   /** Beam direction in the global coordinate system. */
-  XYZVector beamDirection() const;
+  Vector3 beamDirection() const;
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
