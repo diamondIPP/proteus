@@ -46,7 +46,7 @@ public:
   void process(Storage::Event& event) const;
 
 private:
-  typedef std::unique_ptr<Storage::Track> TrackPtr;
+  using TrackPtr = std::unique_ptr<Storage::Track>;
 
   void searchSensor(Storage::SensorEvent& sensorEvent,
                     std::vector<TrackPtr>& candidates) const;
@@ -58,7 +58,6 @@ private:
   Index m_numClustersMin;
   double m_d2Max;
   double m_redChi2Max;
-  XYZVector m_beamDirection;
 };
 
 } // namespace Tracking
