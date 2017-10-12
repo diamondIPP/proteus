@@ -34,6 +34,7 @@ set(SOURCES
     storage/sensorevent.cpp
     storage/track.cpp
     storage/trackstate.cpp
+    tracking/propagation.cpp
     tracking/trackfinder.cpp
     tracking/straightfitter.cpp
     utils/application.cpp
