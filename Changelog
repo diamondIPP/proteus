@@ -42,9 +42,8 @@ User-visible changes
     sensors and stored in the data file. `pt-match` does not perform a track
     fit anymore and only uses the previously reconstructed information to
     match clusters and tracks on selected sensors.
-*   Correlations are calculated using the sensor order along the beam.
-*   Track finding considers the sensors in the order in which they appear along
-    the beam and not ordered by their sensor ids.
+*   Track finding and correlations consider the sensor ordered along the beam
+    an not odered by their sensor ids as before.
 *   The `--debug` flag on most tools also prints full event information.
 
 Bugfixes
@@ -95,6 +94,11 @@ Internal changes
     residual analyzer, alignment, or matching, only use the resulting stored
     information. This allows easy replacement of the fit algorithm in the
     future.
+*   Add ``Mechanics::Plane`` to handle geometric transformations.
+*   The internal event model, i.e. hits, clusters, and track states, only
+    stores information in local coordinates. Whenever global coordinates are
+    required they are calculated on-the-fly or transformations are calculated
+    directly between two local coordinate systems.
 
 v1.2.0 (2017-06-28)
 ===================
