@@ -47,8 +47,6 @@ struct Plane {
                               const Vector3& dirV,
                               const Vector3& offset);
 
-  /** Compute the equivalent local-to-global Transform3D object. */
-  Transform3D asTransform3D() const;
   /** Compute geometry parameters [x0, y0, z0, a1, a2, a3]. */
   Vector6 asParams() const;
 
@@ -96,8 +94,6 @@ public:
 
   /** The local sensor plane object. */
   const Plane& getPlane(Index sensorId) const;
-  /** Transformation from local to global coordinates for the sensor. */
-  Transform3D getLocalToGlobal(Index sensorId) const;
   /** Geometry parameters [x, y, z, alpha, beta, gamma] for a sensor. */
   Vector6 getParams(Index sensorId) const;
   /** Geometry parameters covariance matrix. */

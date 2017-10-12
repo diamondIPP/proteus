@@ -39,13 +39,6 @@ Mechanics::Plane Mechanics::Plane::fromDirections(const Vector3& dirU,
   return p;
 }
 
-Transform3D Mechanics::Plane::asTransform3D() const
-{
-  Rotation3D r;
-  r.SetRotationMatrix(rotation);
-  return Transform3D(r, Translation3D(offset[0], offset[1], offset[2]));
-}
-
 Vector6 Mechanics::Plane::asParams() const
 {
   Vector6 params;
@@ -255,11 +248,6 @@ void Mechanics::Geometry::correctLocal(Index sensorId,
 const Mechanics::Plane& Mechanics::Geometry::getPlane(Index sensorId) const
 {
   return m_planes.at(sensorId);
-}
-
-Transform3D Mechanics::Geometry::getLocalToGlobal(Index sensorId) const
-{
-  return m_planes.at(sensorId).asTransform3D();
 }
 
 Vector6 Mechanics::Geometry::getParams(Index sensorId) const
