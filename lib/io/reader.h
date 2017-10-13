@@ -10,6 +10,9 @@
 #include <memory>
 #include <string>
 
+namespace toml {
+class Value;
+}
 namespace Storage {
 class Event;
 }
