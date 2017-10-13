@@ -20,19 +20,27 @@ Io::RceRootCommon::RceRootCommon(TFile* file)
 // -----------------------------------------------------------------------------
 // reader
 
-bool Io::RceRootReader::isValid(const std::string& path)
+int Io::RceRootReader::check(const std::string& path)
 {
   std::unique_ptr<TFile> file(TFile::Open(path.c_str(), "READ"));
-  TTree* event = nullptr;
-
   if (!file)
-    return false;
-  // Minimal file must have at least the Event tree
+    return 0;
+
+  // Minimal file should have the Event tree, but missing from some converters
+  TTree* event = nullptr;
   file->GetObject("Event", event);
   if (!event)
-    return false;
+    return 10;
+
   // readable file + event tree -> probably an RCE ROOT file
-  return true;
+  return 100;
+}
+
+std::shared_ptr<Io::RceRootReader>
+Io::RceRootReader::open(const std::string& path,
+                        const toml::Value& /* unused configuration */)
+{
+  return std::make_shared<Io::RceRootReader>(path);
 }
 
 Io::RceRootReader::RceRootReader(const std::string& path)
@@ -172,10 +180,7 @@ uint64_t Io::RceRootReader::numEvents() const
   return static_cast<uint64_t>(m_entries);
 }
 
-size_t Io::RceRootReader::numSensors() const
-{
-  return m_sensors.size();
-}
+size_t Io::RceRootReader::numSensors() const { return m_sensors.size(); }
 
 void Io::RceRootReader::skip(uint64_t n)
 {
