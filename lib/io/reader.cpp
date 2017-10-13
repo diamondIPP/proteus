@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "io/rceroot.h"
-#include "utils/config.h"
 #include "utils/logger.h"
 
 PT_SETUP_LOCAL_LOGGER(Io);
@@ -60,7 +59,8 @@ static std::vector<Format> s_formats = {
 } // namespace
 } // namespace Io
 
-std::shared_ptr<Io::EventReader> Io::openRead(const std::string& path)
+std::shared_ptr<Io::EventReader> Io::openRead(const std::string& path,
+                                              const toml::Value& cfg)
 {
   std::set<ScoredFormat> scoredFormats;
 
@@ -75,7 +75,7 @@ std::shared_ptr<Io::EventReader> Io::openRead(const std::string& path)
   // start w/ highest score format until the file is opened or list is exhausted
   for (const auto& sf : scoredFormats) {
     try {
-      auto reader = sf.format.open(path, toml::Value());
+      auto reader = sf.format.open(path, cfg);
       if (reader) {
         return reader;
       }

@@ -53,8 +53,13 @@ public:
   virtual bool read(Storage::Event& event) = 0;
 };
 
-/** Open an event file with automatic determination of the file type. */
-std::shared_ptr<EventReader> openRead(const std::string& path);
+/** Open an event file with automatic determination of the file type.
+ *
+ * \param path  Path to the file to be opened
+ * \param cfg   Configuration that will be passed to the reader
+ */
+std::shared_ptr<EventReader> openRead(const std::string& path,
+                                      const toml::Value& cfg);
 
 } // namespace Io
 
