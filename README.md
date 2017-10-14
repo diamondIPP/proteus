@@ -34,6 +34,22 @@ environment. By sourcing it via
 the `pt-...` binaries can be called directly without specifying its location
 explicitly.
 
+Build options
+-------------
+
+The following options can be set during the cmake configuration to activate
+optional components, e.g.
+
+    cmake -DPROTEUS_ENABLE_DOC=on ..
+
+to enable building the documentation via the `doc` target. By default all
+options are deactivated.
+
+| Option             | Comment |
+| :----------------- | :------ |
+| PROTEUS_ENABLE_DOC | Enable documentation build target `doc`
+| PROTEUS_USE_EUDAQ  | Build EUDAQ readers; set `EUDAQ_DIR` env variable to EUDAQ installation
+
 Documentation
 -------------
 

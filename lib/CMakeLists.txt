@@ -43,6 +43,10 @@ set(proteus_DEFINITIONS)
 set(proteus_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})
 set(proteus_LIBRARIES ${ROOT_LIBRARIES})
 
+if(PROTEUS_USE_EUDAQ)
+  list(APPEND proteus_LIBRARIES EUDAQ::Core)
+endif()
+
 add_library(proteus STATIC ${proteus_SOURCES} ${proteus_HEADERS})
 target_compile_definitions(proteus PUBLIC ${proteus_DEFINITIONS})
 target_include_directories(proteus PUBLIC ${proteus_INCLUDES})
