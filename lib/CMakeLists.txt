@@ -1,4 +1,4 @@
-set(SOURCES
+set(proteus_SOURCES
     analyzers/clusters.cpp
     analyzers/correlations.cpp
     analyzers/distances.cpp
@@ -38,8 +38,12 @@ set(SOURCES
     utils/densemask.cpp
     utils/eventloop.cpp
     utils/logger.cpp)
-file(GLOB_RECURSE HEADERS LIST_DIRECTORIES false *.h)
+file(GLOB_RECURSE proteus_HEADERS LIST_DIRECTORIES false *.h)
+set(proteus_DEFINITIONS)
+set(proteus_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})
+set(proteus_LIBRARIES ${ROOT_LIBRARIES})
 
-add_library(pt-lib STATIC ${SOURCES} ${HEADERS})
-target_include_directories(pt-lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})
-target_link_libraries(pt-lib PUBLIC ${ROOT_LIBRARIES})
+add_library(proteus STATIC ${proteus_SOURCES} ${proteus_HEADERS})
+target_compile_definitions(proteus PUBLIC ${proteus_DEFINITIONS})
+target_include_directories(proteus PUBLIC ${proteus_INCLUDES})
+target_link_libraries(proteus PUBLIC ${proteus_LIBRARIES})
