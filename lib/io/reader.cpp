@@ -4,6 +4,7 @@
 #include <set>
 #include <vector>
 
+#include "io/eudaq.h"
 #include "io/rceroot.h"
 #include "io/timepix3.h"
 #include "utils/logger.h"
@@ -55,8 +56,12 @@ bool operator<(const ScoredFormat& a, const ScoredFormat& b)
 //
 // This version requires manual registration, but just works (tm).
 static std::vector<Format> s_formats = {
+#ifdef PT_EUDAQ
+    {"eudaq", EudaqReader::check, EudaqReader::open},
+#endif
     {"rceroot", RceRootReader::check, RceRootReader::open},
     {"timepix3", Timepix3Reader::check, Timepix3Reader::open}};
+
 } // namespace
 } // namespace Io
 
@@ -64,6 +69,10 @@ std::shared_ptr<Io::EventReader> Io::openRead(const std::string& path,
                                               const toml::Value& cfg)
 {
   std::set<ScoredFormat> scoredFormats;
+
+  DEBUG("supported reader formats:");
+  for (const Format& f : s_formats)
+    DEBUG("  ", f.name);
 
   // find potential readers to open the file, i.e. score > 0.
   // the set automatically sorts them with the most probably format first.
