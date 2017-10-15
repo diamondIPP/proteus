@@ -80,7 +80,13 @@ Vector3 Mechanics::Plane::toGlobal(const Vector3& uvw) const
   return offset + rotation * uvw;
 }
 
-Mechanics::Geometry::Geometry() : m_beamSlopeX(0), m_beamSlopeY(0) {}
+Mechanics::Geometry::Geometry()
+    : m_beamSlopeX(0)
+    , m_beamSlopeY(0)
+    , m_beamDivergenceX(0.00125)
+    , m_beamDivergenceY(0.00125)
+{
+}
 
 Mechanics::Geometry Mechanics::Geometry::fromFile(const std::string& path)
 {
@@ -271,17 +277,30 @@ void Mechanics::Geometry::setBeamSlope(double slopeX, double slopeY)
   m_beamSlopeY = slopeY;
 }
 
+void Mechanics::Geometry::setBeamDivergence(double divergenceX,
+                                            double divergenceY)
+{
+  m_beamDivergenceX = divergenceX;
+  m_beamDivergenceY = divergenceY;
+}
+
 Vector3 Mechanics::Geometry::beamDirection() const
 {
   return Vector3(m_beamSlopeX, m_beamSlopeY, 1);
 }
 
+Vector2 Mechanics::Geometry::beamDivergence() const
+{
+  return Vector2(m_beamDivergenceX, m_beamDivergenceY);
+}
+
 void Mechanics::Geometry::print(std::ostream& os,
                                 const std::string& prefix) const
 {
-  os << prefix << "beam:\n"
-     << prefix << "  slope x: " << m_beamSlopeX << '\n'
-     << prefix << "  slope y: " << m_beamSlopeY << '\n';
+  os << prefix << "beam:\n";
+  os << prefix << "  slope: [" << m_beamSlopeX << "," << m_beamSlopeY << "]";
+  os << prefix << "  divergence: [" << m_beamDivergenceX << ","
+     << m_beamDivergenceY << "]";
   for (const auto& ip : m_planes) {
     os << prefix << "sensor " << ip.first << ":\n"
        << prefix << "  offset: [" << ip.second.offset << "]\n"
