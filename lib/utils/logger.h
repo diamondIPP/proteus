@@ -9,6 +9,8 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -181,5 +183,15 @@ private:
     logger().error(__VA_ARGS__, '\n');                                         \
     std::exit(EXIT_FAILURE);                                                   \
   } while (false)
+
+/** Throw an exception of the given type with a custom error message. */
+#define THROWX(ExceptionType, ...)                                             \
+  do {                                                                         \
+    std::ostringstream os;                                                     \
+    Utils::detail::print(os, __VA_ARGS__);                                     \
+    throw ExceptionType(os.str());                                             \
+  } while (false)
+/** Throw a std::runtimer_error with a custom error message. */
+#define THROW(...) THROWX(std::runtime_error, __VA_ARGS__)
 
 #endif // PT_LOGGER_H
