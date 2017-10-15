@@ -21,6 +21,10 @@ namespace Io {
 /** Read Eudaq native raw files. */
 class EudaqReader : public EventReader {
 public:
+  static int check(const std::string& path);
+  static std::shared_ptr<EudaqReader> open(const std::string& path,
+                                           const toml::Value& cfg);
+
   EudaqReader(const std::string& path);
   ~EudaqReader();
 

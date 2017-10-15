@@ -13,9 +13,12 @@
 #include <eudaq/StandardEvent.hh>
 
 #include "storage/event.h"
+#include "utils/config.h"
 #include "utils/logger.h"
 
 PT_SETUP_LOCAL_LOGGER(EudaqReader);
+
+// local helper functions
 
 // determine the list of all sensor ids
 static std::vector<unsigned> listIds(const eudaq::StandardEvent& sev)
@@ -56,6 +59,24 @@ static void convert(const eudaq::StandardEvent& sev,
     }
   }
 }
+
+// automatic filetype deduction/ global registry
+
+int Io::EudaqReader::check(const std::string& path)
+{
+  if (Utils::Config::pathExtension(path) == "raw")
+    return 10;
+  return 0;
+}
+
+std::shared_ptr<Io::EudaqReader>
+Io::EudaqReader::open(const std::string& path,
+                      const toml::Value& /* unused configuration */)
+{
+  return std::make_shared<EudaqReader>(path);
+}
+
+// FileReader proper
 
 Io::EudaqReader::EudaqReader(const std::string& path)
     : m_reader(new eudaq::FileReader(path)), m_thatsIt(false)
