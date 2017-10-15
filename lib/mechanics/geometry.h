@@ -101,6 +101,8 @@ public:
 
   void setBeamSlope(double slopeX, double slopeY);
   void setBeamDivergence(double divergenceX, double divergenceY);
+  /** Beam energy. */
+  double beamEnergy() const;
   /** Beam direction in the global coordinate system. */
   Vector3 beamDirection() const;
   /** Beam divergence along the z axis in global x and y coordinates. */
@@ -113,6 +115,7 @@ private:
   std::map<Index, SymMatrix6> m_covs;
   double m_beamSlopeX, m_beamSlopeY;
   double m_beamDivergenceX, m_beamDivergenceY;
+  double m_beamEnergy;
 };
 
 /** Sort the sensor indices by their position along the beam direction. */

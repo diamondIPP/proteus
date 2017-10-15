@@ -85,6 +85,7 @@ Mechanics::Geometry::Geometry()
     , m_beamSlopeY(0)
     , m_beamDivergenceX(0.00125)
     , m_beamDivergenceY(0.00125)
+    , m_beamEnergy(0)
 {
 }
 
@@ -298,9 +299,10 @@ void Mechanics::Geometry::print(std::ostream& os,
                                 const std::string& prefix) const
 {
   os << prefix << "beam:\n";
-  os << prefix << "  slope: [" << m_beamSlopeX << "," << m_beamSlopeY << "]";
+  os << prefix << "  energy: " << m_beamEnergy << '\n';
+  os << prefix << "  slope: [" << m_beamSlopeX << "," << m_beamSlopeY << "]\n";
   os << prefix << "  divergence: [" << m_beamDivergenceX << ","
-     << m_beamDivergenceY << "]";
+     << m_beamDivergenceY << "]\n";
   for (const auto& ip : m_planes) {
     os << prefix << "sensor " << ip.first << ":\n"
        << prefix << "  offset: [" << ip.second.offset << "]\n"
