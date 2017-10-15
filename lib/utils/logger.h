@@ -173,7 +173,7 @@ private:
 #else
 #define DEBUG(...)                                                             \
   do {                                                                         \
-    logger().debug(__VA_ARGS__, " (", __FUNCTION__, ':', __LINE__, ")\n");     \
+    logger().debug(__VA_ARGS__, '\n');                                         \
   } while (false)
 #endif
 
