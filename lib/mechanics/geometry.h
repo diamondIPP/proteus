@@ -99,7 +99,9 @@ public:
   /** Geometry parameters covariance matrix. */
   SymMatrix6 getParamsCov(Index sensorId) const;
 
+  /** Set the beam slope along the z axis. */
   void setBeamSlope(double slopeX, double slopeY);
+  /** Set the beam divergence/ standard deviation along the z axis. */
   void setBeamDivergence(double divergenceX, double divergenceY);
   /** Beam energy. */
   double beamEnergy() const;

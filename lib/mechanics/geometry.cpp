@@ -106,8 +106,27 @@ Mechanics::Geometry Mechanics::Geometry::fromConfig(const toml::Value& cfg)
 {
   Geometry geo;
 
-  geo.setBeamSlope(cfg.get<double>("beam.slope_x"),
-                   cfg.get<double>("beam.slope_y"));
+  // read beam parameters, only beam slope is required
+  // stay backward compatible w/ old slope_x/slope_y beam parameters
+  if (cfg.has("beam.slope")) {
+    auto slope = cfg.get<std::vector<double>>("beam.slope");
+    if (slope.size() != 2)
+      FAIL("beam.slope has ", slope.size(), " != 2 entries");
+    geo.setBeamSlope(slope[0], slope[1]);
+  } else if (cfg.has("beam.slope_x") || cfg.has("beam.slope_y")) {
+    ERROR("beam.slope_{x,y} is deprecated, use beam.slope instead");
+    geo.setBeamSlope(cfg.get<double>("beam.slope_x"),
+                     cfg.get<double>("beam.slope_y"));
+  }
+  if (cfg.has("beam.divergence")) {
+    auto div = cfg.get<std::vector<double>>("beam.divergence");
+    if (div.size() != 2)
+      FAIL("beam.divergence has ", div.size(), " != 2 entries");
+    geo.setBeamDivergence(div[0], div[1]);
+  }
+  if (cfg.has("beam.energy")) {
+    geo.m_beamEnergy = cfg.get<double>("beam.energy");
+  }
 
   auto sensors = cfg.get<toml::Array>("sensors");
   for (const auto& cs : sensors) {
@@ -154,8 +173,9 @@ toml::Value Mechanics::Geometry::toConfig() const
 {
   toml::Value cfg;
 
-  cfg["beam"]["slope_x"] = m_beamSlopeX;
-  cfg["beam"]["slope_y"] = m_beamSlopeY;
+  cfg["beam"]["slope"] = toml::Array{m_beamSlopeX, m_beamSlopeY};
+  cfg["beam"]["divergence"] = toml::Array{m_beamDivergenceX, m_beamDivergenceY};
+  cfg["beam"]["energy"] = m_beamEnergy;
 
   cfg["sensors"] = toml::Array();
   for (const auto& ip : m_planes) {
