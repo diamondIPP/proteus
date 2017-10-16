@@ -163,7 +163,7 @@ void Mechanics::Device::setGeometry(const Geometry& geometry)
     sensor.m_projPitchXY = pitchXYZ.Sub<Vector2>(0);
   };
 
-  for (Index sensorId = 0; sensorId < numSensors(); ++sensorId) {
+  for (auto sensorId : m_sensorIds) {
     setProjectedEnvelope(m_geometry.getPlane(sensorId), *getSensor(sensorId));
     setProjectedPitch(m_geometry.getPlane(sensorId), *getSensor(sensorId));
   }
@@ -174,7 +174,7 @@ void Mechanics::Device::applyPixelMasks(const PixelMasks& pixelMasks)
 {
   m_pixelMasks = pixelMasks;
 
-  for (Index sensorId = 0; sensorId < numSensors(); ++sensorId) {
+  for (auto sensorId : m_sensorIds) {
     Sensor* sensor = getSensor(sensorId);
     sensor->setMaskedPixels(m_pixelMasks.getMaskedPixels(sensorId));
   }
@@ -183,7 +183,7 @@ void Mechanics::Device::applyPixelMasks(const PixelMasks& pixelMasks)
 
 void Mechanics::Device::print(std::ostream& os, const std::string& prefix) const
 {
-  for (Index sensorId = 0; sensorId < numSensors(); ++sensorId) {
+  for (auto sensorId : m_sensorIds) {
     os << prefix << "sensor " << sensorId << ":\n";
     getSensor(sensorId)->print(os, prefix + "  ");
   }
