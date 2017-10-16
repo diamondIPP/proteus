@@ -31,7 +31,6 @@ public:
   static Device fromConfig(const toml::Value& cfg);
 
   void addSensor(const Sensor& sensor);
-  void addMaskedSensor();
   const std::vector<Index>& sensorIds() const { return m_sensorIds; }
   Index numSensors() const { return static_cast<Index>(m_sensors.size()); }
   Sensor* getSensor(Index i) { return &m_sensors.at(i); }
@@ -45,8 +44,6 @@ public:
   void applyPixelMasks(const PixelMasks& masks);
   const PixelMasks& pixelMasks() const { return m_pixelMasks; }
 
-  const std::vector<bool>* getSensorMask() const { return &m_sensorMask; }
-
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
@@ -56,7 +53,6 @@ private:
   std::vector<Sensor> m_sensors;
   Geometry m_geometry;
   PixelMasks m_pixelMasks;
-  std::vector<bool> m_sensorMask;
 };
 
 } // namespace Mechanics

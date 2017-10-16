@@ -69,14 +69,10 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
   auto cfgTypes = cfg.get<toml::Table>("sensor_types");
   auto cfgSensors = cfg.get<toml::Array>("sensors");
   for (size_t isensor = 0; isensor < cfgSensors.size(); ++isensor) {
-    toml::Value defaults = toml::Table{
-        {"name", "sensor" + std::to_string(isensor)}, {"is_masked", false}};
+    toml::Value defaults =
+        toml::Table{{"name", "sensor" + std::to_string(isensor)}};
     toml::Value cfgSensor =
         Utils::Config::withDefaults(cfgSensors[isensor], defaults);
-    if (cfgSensor.get<bool>("is_masked")) {
-      device.addMaskedSensor();
-      continue;
-    }
 
     auto name = cfgSensor.get<std::string>("name");
     auto typeName = cfgSensor.get<std::string>("type");
@@ -131,10 +127,7 @@ void Mechanics::Device::addSensor(const Sensor& sensor)
   // TODO 2017-02-07 msmk: assumes ids are indices from 0 to n_sensors w/o gaps
   m_sensorIds.emplace_back(sensor.id());
   m_sensors.emplace_back(sensor);
-  m_sensorMask.push_back(false);
 }
-
-void Mechanics::Device::addMaskedSensor() { m_sensorMask.push_back(true); }
 
 void Mechanics::Device::setGeometry(const Geometry& geometry)
 {
