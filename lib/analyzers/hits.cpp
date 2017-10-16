@@ -26,8 +26,8 @@ Analyzers::SensorHits::SensorHits(TDirectory* dir,
 
   HistAxis axCol(area.interval(0), area.length(0), "Hit column");
   HistAxis axRow(area.interval(1), area.length(1), "Hit row");
-  HistAxis axTime(0, timeMax, "Hit value");
-  HistAxis axValue(0, valueMax, "Hit time");
+  HistAxis axTime(0, timeMax, "Hit time");
+  HistAxis axValue(0, valueMax, "Hit value");
 
   m_nHits = makeH1(sub, "nhits", HistAxis{0, 64, "Hits / event"});
   m_rate = makeH1(sub, "rate", HistAxis{0.0, 1.0, 128, "Hits / pixel / event"});
