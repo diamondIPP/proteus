@@ -25,6 +25,22 @@ User-visible changes
     after the telescope reconstruction has been performed. The number of sensors
     in the data can not exceed the number of sensors defined in the device
     configuration.
+*   The geometry configuration also stores beam energy and divergence. The
+    updated beam section in the geometry file looks like this:
+
+        [beam]
+        slope = [0.001, 0.002]
+        divergence = [0.005, 0.005]
+        energy = 180.0
+
+    All beam parameters are optional. Beam slope and divergence are estimated
+    during the alignment procedure. The old syntax
+
+        [beam]
+        slope_x = 0.001
+        slope_y = 0.002
+
+    is deprecated and will be removed in a future version.
 *   Histograms are now organized by sensor and object type, e.g. hit and
     cluster histograms for a sensor can be found at
 
