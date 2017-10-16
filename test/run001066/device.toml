@@ -6,14 +6,6 @@ geometry = "geometry/aligned.toml"
 pixel_masks = ["masks/tel_mask_empty.toml",
                "masks/duts_mask_empty.toml"]
 
-# common global device settings
-[device]
-name = "FEI4Tel"
-clock = 40.0
-window = 16
-space_unit = "um"
-time_unit = "ns"
-
 # define all possible sensor types in this setup
 # this will be accessed by name later on
 # pitch and thickness in um

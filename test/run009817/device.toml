@@ -1,12 +1,5 @@
 geometry = "geometry/aligned.toml"
 
-[device]
-name = "FEI4Tel"
-clock = 40.0
-window = 16
-space_unit = "um"
-time_unit = "ns"
-
 [sensor_types.fei4-si]
 measurement = "pixel_tot"
 cols = 80
