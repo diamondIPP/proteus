@@ -92,9 +92,9 @@ public:
   const std::vector<Region>& regions() const { return m_regions; }
 
   /** Sensitive area in pixel coordinates. */
-  const Area& sensitiveAreaPixel() const { return m_sensitiveAreaPixel; }
+  Area sensitiveAreaPixel() const;
   /** Sensitive area in local coordinates. */
-  const Area& sensitiveAreaLocal() const { return m_sensitiveAreaLocal; }
+  Area sensitiveAreaLocal() const;
   /** Projected envelope in the xy-plane of the sensitive area. */
   const Area& projectedEnvelopeXY() const { return m_projEnvelopeXY; }
   /** Projected pitch in the xy-plane. */
@@ -111,18 +111,15 @@ public:
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
-  Index m_numCols, m_numRows;      // number of columns and rows
-  double m_pitchCol, m_pitchRow;   // pitch along column and row direction
-  XYVector m_sensitiveCenterPixel; // center position of the sensitive area
-  Area m_sensitiveAreaPixel;       // sensitive (useful) area inside the matrix
-  Area m_sensitiveAreaLocal;       // sensitive (useful) area inside the matrix
-  Area m_projEnvelopeXY;           // projection of the active are into xy-plane
-  Vector2 m_projPitchXY;           // pixel pitch as seen in the xy-plane
-  double m_thickness;              // sensor thickness
-  double m_xX0;                    // X/X0 (thickness in radiation lengths)
-  Measurement m_measurement;
   Index m_id;
   std::string m_name;
+  Index m_numCols, m_numRows;    // number of columns and rows
+  double m_pitchCol, m_pitchRow; // pitch along column and row direction
+  double m_thickness;            // sensor thickness
+  double m_xX0;                  // X/X0 (thickness in radiation lengths)
+  Vector2 m_projPitchXY;         // pixel pitch as seen in the xy-plane
+  Area m_projEnvelopeXY;         // projection of the active are into xy-plane
+  Measurement m_measurement;
   std::vector<Region> m_regions;
   Utils::DenseMask m_pixelMask;
 

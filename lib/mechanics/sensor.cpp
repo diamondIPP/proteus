@@ -56,21 +56,19 @@ Mechanics::Sensor::Sensor(Index id,
                           double thickness,
                           double xX0,
                           const std::vector<Region>& regions)
-    : m_numCols(numCols)
+    : m_id(id)
+    , m_name(name)
+    , m_numCols(numCols)
     , m_numRows(numRows)
     , m_pitchCol(pitchCol)
     , m_pitchRow(pitchRow)
-    // place sensor center on a pixel edge in the middle of the sensitive area
-    , m_sensitiveCenterPixel(std::round(numCols / 2), std::round(numRows / 2))
-    , m_sensitiveAreaPixel(
-          Area(Area::AxisInterval(0, static_cast<double>(numCols)),
-               Area::AxisInterval(0, static_cast<double>(numRows))))
-    , m_projPitchXY(pitchCol, pitchRow)
     , m_thickness(thickness)
     , m_xX0(xX0)
+    // reasonable defaults for global properties that require the full geometry.
+    // this should be updated later on by the device.
+    , m_projPitchXY(pitchCol, pitchRow)
+    , m_projEnvelopeXY(sensitiveAreaLocal())
     , m_measurement(measurement)
-    , m_id(id)
-    , m_name(name)
     , m_regions(regions)
 {
   // ensure that all regions are bounded by the sensor size
@@ -94,28 +92,36 @@ Mechanics::Sensor::Sensor(Index id,
       }
     }
   }
+}
+
+Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaPixel() const
+{
+  return Area(Area::AxisInterval(0, static_cast<double>(m_numCols)),
+              Area::AxisInterval(0, static_cast<double>(m_numRows)));
+}
+
+Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaLocal() const
+{
+  auto pix = sensitiveAreaPixel();
   // calculate local sensitive area
-  XYPoint lowerLeft = transformPixelToLocal(
-      XYPoint(m_sensitiveAreaPixel.min(0), m_sensitiveAreaPixel.min(1)));
-  XYPoint upperRight = transformPixelToLocal(
-      XYPoint(m_sensitiveAreaPixel.max(0), m_sensitiveAreaPixel.max(1)));
-  m_sensitiveAreaLocal =
-      Area(Area::AxisInterval(lowerLeft.x(), upperRight.x()),
-           Area::AxisInterval(lowerLeft.y(), upperRight.y()));
-  // global envelope requires geometry information; must be set by device
-  m_projEnvelopeXY = m_sensitiveAreaLocal;
+  XYPoint lowerLeft = transformPixelToLocal({pix.min(0), pix.min(1)});
+  XYPoint upperRight = transformPixelToLocal({pix.max(0), pix.max(1)});
+  return Area(Area::AxisInterval(lowerLeft.x(), upperRight.x()),
+              Area::AxisInterval(lowerLeft.y(), upperRight.y()));
 }
 
 XYPoint Mechanics::Sensor::transformPixelToLocal(const XYPoint& cr) const
 {
-  return XYPoint(m_pitchCol * (cr.x() - m_sensitiveCenterPixel.x()),
-                 m_pitchRow * (cr.y() - m_sensitiveCenterPixel.y()));
+  // place sensor center on a pixel edge in the middle of the sensitive area
+  return XYPoint(m_pitchCol * (cr.x() - std::round(m_numCols / 2.0)),
+                 m_pitchRow * (cr.y() - std::round(m_numRows / 2.0)));
 }
 
 XYPoint Mechanics::Sensor::transformLocalToPixel(const XYPoint& uv) const
 {
-  return XYPoint((uv.x() / m_pitchCol), (uv.y() / m_pitchRow)) +
-         m_sensitiveCenterPixel;
+  // place sensor center on a pixel edge in the middle of the sensitive area
+  return XYPoint((uv.x() / m_pitchCol) + std::round(m_numCols / 2.0),
+                 (uv.y() / m_pitchRow) + std::round(m_numRows / 2.0));
 }
 
 //=========================================================
