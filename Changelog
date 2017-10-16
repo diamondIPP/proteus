@@ -75,8 +75,10 @@ Bugfixes
     to be compatible with the default RCE ROOT format.
 *   Use the same selected events for each alignment step by re-opening the
     input file at each step.
-*   Fix histogram binning for cluster positions.
 *   Use correct number of events when skipping some events at the beginning.
+*   Add missing cluster time histogram.
+*   Fix histogram binning for cluster positions.
+*   Fix histogram limits for residuals and slope histograms.
 *   Fix incorrectly stored v position for local track states.
 *   The progress indicator correctly handles the case of unknown number of
     events.
