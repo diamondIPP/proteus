@@ -11,23 +11,6 @@
 
 PT_SETUP_LOCAL_LOGGER(Device)
 
-Mechanics::Device::Device(const std::string& name,
-                          double clockRate,
-                          unsigned int readoutWindow,
-                          const std::string& spaceUnit,
-                          const std::string& timeUnit)
-    : m_name(name)
-    , m_clockRate(clockRate)
-    , m_readoutWindow(readoutWindow)
-    , m_timestamp0(0)
-    , m_timestamp1(0)
-    , m_spaceUnit(spaceUnit)
-    , m_timeUnit(timeUnit)
-{
-  std::replace(m_timeUnit.begin(), m_timeUnit.end(), '\\', '#');
-  std::replace(m_spaceUnit.begin(), m_spaceUnit.end(), '\\', '#');
-}
-
 Mechanics::Device Mechanics::Device::fromFile(const std::string& path,
                                               const std::string& pathGeometry)
 {
@@ -78,10 +61,10 @@ Mechanics::Device Mechanics::Device::fromFile(const std::string& path,
 
 Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
 {
-  Device device(cfg.get<std::string>("device.name"),
-                cfg.get<double>("device.clock"), cfg.get<int>("device.window"),
-                cfg.get<std::string>("device.space_unit"),
-                cfg.get<std::string>("device.time_unit"));
+  Device device;
+
+  if (cfg.has("device"))
+    ERROR("device configuration is deprecated and will not be used");
 
   auto cfgTypes = cfg.get<toml::Table>("sensor_types");
   auto cfgSensors = cfg.get<toml::Array>("sensors");
@@ -205,24 +188,8 @@ void Mechanics::Device::applyPixelMasks(const PixelMasks& pixelMasks)
   // TODO 2016-08-18 msmk: check number of sensors / id consistency
 }
 
-double Mechanics::Device::tsToTime(uint64_t timestamp) const
-{
-  return (double)((timestamp - timestampStart()) / (double)clockRate());
-}
-
-void Mechanics::Device::setTimestampRange(uint64_t ts0, uint64_t ts1)
-{
-  if (ts1 < ts0)
-    throw std::runtime_error("start timestamp must come before end");
-  m_timestamp0 = ts0;
-  m_timestamp1 = ts1;
-}
-
 void Mechanics::Device::print(std::ostream& os, const std::string& prefix) const
 {
-  os << prefix << "name: " << m_name << '\n';
-  os << prefix << "clock rate: " << m_clockRate << '\n';
-  os << prefix << "readout window: " << m_readoutWindow << '\n';
   for (Index sensorId = 0; sensorId < numSensors(); ++sensorId) {
     os << prefix << "sensor " << sensorId << ":\n";
     getSensor(sensorId)->print(os, prefix + "  ");
