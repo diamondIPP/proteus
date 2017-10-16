@@ -76,10 +76,9 @@ Analyzers::Residuals::Residuals(TDirectory* dir,
                                 const double rangeStd,
                                 const int bins)
 {
-  for (Index isensor = 0; isensor < device.numSensors(); ++isensor) {
+  for (auto isensor : device.sensorIds())
     m_hists.emplace_back(dir, *device.getSensor(isensor), rangeStd, bins,
                          subdir);
-  }
 }
 
 std::string Analyzers::Residuals::name() const { return "Residuals"; }

@@ -88,7 +88,7 @@ Analyzers::Hits::Hits(TDirectory* dir,
                       const int timeMax,
                       const int valueMax)
 {
-  for (Index isensor = 0; isensor < device.numSensors(); ++isensor)
+  for (auto isensor : device.sensorIds())
     m_sensors.emplace_back(dir, *device.getSensor(isensor), timeMax, valueMax);
 }
 
