@@ -24,6 +24,7 @@ Analyzers::SensorClusters::SensorClusters(TDirectory* dir,
                            TDirectory* sub) {
     HistAxis axCol(area.interval(0), area.length(0), "Cluster column position");
     HistAxis axRow(area.interval(1), area.length(1), "Cluster row position");
+    HistAxis axTime(0, timeMax, "Cluster time");
     HistAxis axValue(0, valueMax, "Cluster value");
     HistAxis axSize(1, sizeMax, "Cluster size");
     HistAxis axSizeCol(1, sizeMax, "Cluster column size");
@@ -41,6 +42,7 @@ Analyzers::SensorClusters::SensorClusters(TDirectory* dir,
 
     AreaHists hs;
     hs.pos = makeH2(sub, "pos", axCol, axRow);
+    hs.time = makeH1(sub, "time", axTime);
     hs.value = makeH1(sub, "value", axValue);
     hs.size = makeH1(sub, "size", axSize);
     hs.sizeSizeCol = makeH2(sub, "size_col-size", axSize, axSizeCol);
@@ -74,6 +76,7 @@ void Analyzers::SensorClusters::analyze(const Storage::SensorEvent& sensorEvent)
   auto fill = [](const Storage::Cluster& cluster, AreaHists& hists) {
     auto pos = cluster.posPixel();
     hists.pos->Fill(pos.x(), pos.y());
+    hists.time->Fill(cluster.time());
     hists.value->Fill(cluster.value());
     hists.size->Fill(cluster.size());
     hists.sizeSizeCol->Fill(cluster.size(), cluster.sizeCol());

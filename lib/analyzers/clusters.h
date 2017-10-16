@@ -35,6 +35,7 @@ public:
 private:
   struct AreaHists {
     TH2D* pos;
+    TH1D* time;
     TH1D* value;
     TH1D* size;
     TH2D* sizeSizeCol;
