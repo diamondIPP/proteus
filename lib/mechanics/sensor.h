@@ -91,6 +91,14 @@ public:
   bool hasRegions() const { return !m_regions.empty(); }
   const std::vector<Region>& regions() const { return m_regions; }
 
+  void setMaskedPixels(const std::set<ColumnRow>& pixels);
+  const Utils::DenseMask& pixelMask() const { return m_pixelMask; }
+
+  /** Transform pixel matrix position to local coordinates. */
+  XYPoint transformPixelToLocal(const XYPoint& cr) const;
+  /** Transform local coordinates to pixel matrix position. */
+  XYPoint transformLocalToPixel(const XYPoint& uv) const;
+
   /** Sensitive area in pixel coordinates. */
   Area sensitiveAreaPixel() const;
   /** Sensitive area in local coordinates. */
@@ -100,13 +108,10 @@ public:
   /** Projected pitch in the xy-plane. */
   const Vector2& projectedPitchXY() const { return m_projPitchXY; }
 
-  /** Transform pixel matrix position to local coordinates. */
-  XYPoint transformPixelToLocal(const XYPoint& cr) const;
-  /** Transform local coordinates to pixel matrix position. */
-  XYPoint transformLocalToPixel(const XYPoint& uv) const;
-
-  void setMaskedPixels(const std::set<ColumnRow>& pixels);
-  const Utils::DenseMask& pixelMask() const { return m_pixelMask; }
+  /** Beam slope in the local coordinate system. */
+  const Vector2& beamSlope() const { return m_beamSlope; }
+  /** Beam slope divergence in the local coordinate system. */
+  const Vector2& beamDivergence() const { return m_beamDivergence; }
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
@@ -117,6 +122,8 @@ private:
   double m_pitchCol, m_pitchRow; // pitch along column and row direction
   double m_thickness;            // sensor thickness
   double m_xX0;                  // X/X0 (thickness in radiation lengths)
+  Vector2 m_beamSlope;           // beam slope as seen in the local system
+  Vector2 m_beamDivergence;      // beam divergence as seen in the local system
   Vector2 m_projPitchXY;         // pixel pitch as seen in the xy-plane
   Area m_projEnvelopeXY;         // projection of the active are into xy-plane
   Measurement m_measurement;

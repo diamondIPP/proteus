@@ -66,6 +66,8 @@ Mechanics::Sensor::Sensor(Index id,
     , m_xX0(xX0)
     // reasonable defaults for global properties that require the full geometry.
     // this should be updated later on by the device.
+    , m_beamSlope(0.0, 0.0)
+    , m_beamDivergence(0.00125, 0.00125)
     , m_projPitchXY(pitchCol, pitchRow)
     , m_projEnvelopeXY(sensitiveAreaLocal())
     , m_measurement(measurement)
@@ -94,6 +96,20 @@ Mechanics::Sensor::Sensor(Index id,
   }
 }
 
+XYPoint Mechanics::Sensor::transformPixelToLocal(const XYPoint& cr) const
+{
+  // place sensor center on a pixel edge in the middle of the sensitive area
+  return XYPoint(m_pitchCol * (cr.x() - std::round(m_numCols / 2.0)),
+                 m_pitchRow * (cr.y() - std::round(m_numRows / 2.0)));
+}
+
+XYPoint Mechanics::Sensor::transformLocalToPixel(const XYPoint& uv) const
+{
+  // place sensor center on a pixel edge in the middle of the sensitive area
+  return XYPoint((uv.x() / m_pitchCol) + std::round(m_numCols / 2.0),
+                 (uv.y() / m_pitchRow) + std::round(m_numRows / 2.0));
+}
+
 Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaPixel() const
 {
   return Area(Area::AxisInterval(0, static_cast<double>(m_numCols)),
@@ -109,26 +125,6 @@ Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaLocal() const
   return Area(Area::AxisInterval(lowerLeft.x(), upperRight.x()),
               Area::AxisInterval(lowerLeft.y(), upperRight.y()));
 }
-
-XYPoint Mechanics::Sensor::transformPixelToLocal(const XYPoint& cr) const
-{
-  // place sensor center on a pixel edge in the middle of the sensitive area
-  return XYPoint(m_pitchCol * (cr.x() - std::round(m_numCols / 2.0)),
-                 m_pitchRow * (cr.y() - std::round(m_numRows / 2.0)));
-}
-
-XYPoint Mechanics::Sensor::transformLocalToPixel(const XYPoint& uv) const
-{
-  // place sensor center on a pixel edge in the middle of the sensitive area
-  return XYPoint((uv.x() / m_pitchCol) + std::round(m_numCols / 2.0),
-                 (uv.y() / m_pitchRow) + std::round(m_numRows / 2.0));
-}
-
-//=========================================================
-//
-// noisy-pixels functions
-//
-//=========================================================
 
 void Mechanics::Sensor::setMaskedPixels(const std::set<ColumnRow>& pixels)
 {
