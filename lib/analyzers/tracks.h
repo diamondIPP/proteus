@@ -17,10 +17,19 @@ namespace Analyzers {
 
 class Tracks : public Analyzer {
 public:
-  Tracks(TDirectory* dir,const Mechanics::Device& device,
+  /** Construct a tracks analyzer.
+   *
+   * \param numTracksMax    Upper limit for tracks/event distribution
+   * \param reducedChi2Max  Upper limit for chi^2/d.o.f. distribution
+   * \param slopeRangeStd   Slope range measured in standard deviations
+   * \param bins            Number of histogram bins
+   */
+  Tracks(TDirectory* dir,
+         const Mechanics::Device& device,
          /* Histogram options */
+         const int numTracksMax = 16,
          const double reducedChi2Max = 10,
-         const double slopeMax = 0.01,
+         const double slopeStdRange = 5.0,
          const int bins = 128);
 
   std::string name() const;
@@ -32,7 +41,7 @@ public:
 
 private:
   TH1D* m_nTracks;
-  TH1D* m_size;;
+  TH1D* m_size;
   TH1D* m_reducedChi2;
   TH2D* m_offsetXY;
   TH1D* m_offsetX;
