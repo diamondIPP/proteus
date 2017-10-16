@@ -25,6 +25,9 @@ User-visible changes
     after the telescope reconstruction has been performed. The number of sensors
     in the data can not exceed the number of sensors defined in the device
     configuration.
+*   The device configuration only stores the necessary sensor information. The
+    global ``[device]`` section did not contain any useful information and will
+    not be used anymore.
 *   The geometry configuration also stores beam energy and divergence. The
     updated beam section in the geometry file looks like this:
 
