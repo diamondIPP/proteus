@@ -20,7 +20,7 @@ public:
   Events(TDirectory* dir,
          const Mechanics::Device& device,
          /* Histogram options */
-         const int binsTimestamps = 1024);
+         const int triggerMax = 32);
 
   std::string name() const;
   void analyze(const Storage::Event& event);

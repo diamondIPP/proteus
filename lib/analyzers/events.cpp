@@ -13,11 +13,9 @@
 
 Analyzers::Events::Events(TDirectory* dir,
                           const Mechanics::Device& device,
-                          const int binsTimestamps)
+                          const int triggerMax)
 {
   using namespace Utils;
-
-  int triggerMax = device.readoutWindow();
 
   TDirectory* sub = makeDir(dir, "events");
   m_triggerOffset =
