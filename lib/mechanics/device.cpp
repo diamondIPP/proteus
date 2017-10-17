@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 
-#include "tracking/propagation.h"
 #include "utils/logger.h"
 
 PT_SETUP_LOCAL_LOGGER(Device)
@@ -132,51 +131,15 @@ void Mechanics::Device::addSensor(const Sensor& sensor)
 
 void Mechanics::Device::setGeometry(const Geometry& geometry)
 {
-  using Area = Sensor::Area;
-
   m_geometry = geometry;
 
   // update geometry-dependent sensor properties
   for (auto sensorId : m_sensorIds) {
-    const auto& plane = m_geometry.getPlane(sensorId);
     auto& sensor = *getSensor(sensorId);
-
-    // pitch vector projected into the global xy-plane
-    Vector3 pitchUVW(sensor.pitchCol(), sensor.pitchRow(), 0);
-    Vector3 pitchXYZ = plane.rotation * pitchUVW;
-    // only interested in absolute values not in direction
-    for (int i : {0, 1, 2})
-      pitchXYZ[i] = std::abs(pitchXYZ[i]);
-    sensor.m_projPitchXY = pitchXYZ.Sub<Vector2>(0);
-
-    // projected envelope/bounding box of the sensor in the global xy-plane
-    Area pix = sensor.sensitiveAreaLocal();
-    // TODO 2016-08 msmk: find a smarter way to this, but its Friday
-    // transform each corner of the sensitive rectangle
-    Vector3 minMin = plane.toGlobal(Vector2(pix.min(0), pix.min(1)));
-    Vector3 minMax = plane.toGlobal(Vector2(pix.min(0), pix.max(1)));
-    Vector3 maxMin = plane.toGlobal(Vector2(pix.max(0), pix.min(1)));
-    Vector3 maxMax = plane.toGlobal(Vector2(pix.max(0), pix.max(1)));
-    std::array<double, 4> xs = {{minMin[0], minMax[0], maxMin[0], maxMax[0]}};
-    std::array<double, 4> ys = {{minMin[1], minMax[1], maxMin[1], maxMax[1]}};
-    sensor.m_projEnvelopeXY =
-        Area(Area::AxisInterval(*std::min_element(xs.begin(), xs.end()),
-                                *std::max_element(xs.begin(), xs.end())),
-             Area::AxisInterval(*std::min_element(ys.begin(), ys.end()),
-                                *std::max_element(ys.begin(), ys.end())));
-
-    // global beam parameters projected into the local plane
-    Vector3 dir = plane.rotation * m_geometry.beamDirection();
-    Vector2 std = m_geometry.beamDivergence();
-    Matrix2 jac = Tracking::jacobianSlopeSlope(m_geometry.beamDirection(),
-                                               Transpose(plane.rotation));
-    SymMatrix2 covGlobal;
-    covGlobal(0, 0) = std[0] * std[0];
-    covGlobal(1, 1) = std[1] * std[1];
-    covGlobal(0, 1) = covGlobal(1, 0) = 0;
-    SymMatrix2 covLocal = Similarity(jac, covGlobal);
-    sensor.m_beamSlope = Vector2(dir[0] / dir[2], dir[1] / dir[2]);
-    sensor.m_beamDivergence = sqrt(covLocal.Diagonal());
+    const auto& plane = m_geometry.getPlane(sensorId);
+    sensor.updateBeam(plane, m_geometry.beamDirection(),
+                      m_geometry.beamDivergence());
+    sensor.updateProjections(plane);
   }
   // TODO 2016-08-18 msmk: check number of sensors / id consistency
 }
