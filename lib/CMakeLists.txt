@@ -1,5 +1,4 @@
 set(SOURCES
-    analyzers/analyzer.cpp
     analyzers/clusters.cpp
     analyzers/correlations.cpp
     analyzers/distances.cpp
