@@ -17,7 +17,7 @@ PT_SETUP_GLOBAL_LOGGER
 
 int main(int argc, char const* argv[])
 {
-  logger().setGlobalLevel(Utils::Logger::Level::Debug);
+  logger().setGlobalLevel(Utils::Logger::Level::Info);
 
   // To avoid having unused command line options, argument parsing is
   // implemented manually here w/ a limited amount of options compared to
