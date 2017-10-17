@@ -4,10 +4,7 @@
 
 #include "cluster.h"
 
-Storage::Track::Track()
-    : m_state(0, 0, 0, 0), m_chi2(-1), m_dof(-1), m_index(-1)
-{
-}
+Storage::Track::Track() : m_chi2(-1), m_dof(-1), m_index(-1) {}
 
 Storage::Track::Track(const TrackState& global)
     : m_state(global), m_chi2(-1), m_dof(-1), m_index(-1)

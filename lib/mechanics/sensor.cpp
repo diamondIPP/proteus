@@ -56,15 +56,16 @@ Mechanics::Sensor::Sensor(Index id,
                           double thickness,
                           double xX0,
                           const std::vector<Region>& regions)
-    : m_sensitiveAreaPixel(
-          Area(Area::AxisInterval(0, static_cast<double>(numCols)),
-               Area::AxisInterval(0, static_cast<double>(numRows))))
-    // place sensor center on a pixel edge in the middle of the sensitive area
-    , m_sensitiveCenterPixel(std::round(numCols / 2), std::round(numRows / 2))
-    , m_numCols(numCols)
+    : m_numCols(numCols)
     , m_numRows(numRows)
     , m_pitchCol(pitchCol)
     , m_pitchRow(pitchRow)
+    // place sensor center on a pixel edge in the middle of the sensitive area
+    , m_sensitiveCenterPixel(std::round(numCols / 2), std::round(numRows / 2))
+    , m_sensitiveAreaPixel(
+          Area(Area::AxisInterval(0, static_cast<double>(numCols)),
+               Area::AxisInterval(0, static_cast<double>(numRows))))
+    , m_projPitchXY(pitchCol, pitchRow)
     , m_thickness(thickness)
     , m_xX0(xX0)
     , m_measurement(measurement)
@@ -93,90 +94,16 @@ Mechanics::Sensor::Sensor(Index id,
       }
     }
   }
-}
-
-Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaLocal() const
-{
-  Area pix = sensitiveAreaPixel();
-  XYPoint lowerLeft = transformPixelToLocal(XYPoint(pix.min(0), pix.min(1)));
-  XYPoint upperRight = transformPixelToLocal(XYPoint(pix.max(0), pix.max(1)));
-  return Area(Area::AxisInterval(lowerLeft.x(), upperRight.x()),
-              Area::AxisInterval(lowerLeft.y(), upperRight.y()));
-}
-
-Mechanics::Sensor::Area Mechanics::Sensor::projectedEnvelopeXY() const
-{
-  Area pix = sensitiveAreaPixel();
-  // TODO 2016-08 msmk: find a smarter way to this, but its Friday
-  // transform each corner of the sensitive rectangle
-  XYZPoint minMin = transformPixelToGlobal(XYPoint(pix.min(0), pix.min(1)));
-  XYZPoint minMax = transformPixelToGlobal(XYPoint(pix.min(0), pix.max(1)));
-  XYZPoint maxMin = transformPixelToGlobal(XYPoint(pix.max(0), pix.min(1)));
-  XYZPoint maxMax = transformPixelToGlobal(XYPoint(pix.max(0), pix.max(1)));
-
-  std::array<double, 4> xs = {{minMin.x(), minMax.x(), maxMin.x(), maxMax.x()}};
-  std::array<double, 4> ys = {{minMin.y(), minMax.y(), maxMin.y(), maxMax.y()}};
-
-  return Area(Area::AxisInterval(*std::min_element(xs.begin(), xs.end()),
-                                 *std::max_element(xs.begin(), xs.end())),
-              Area::AxisInterval(*std::min_element(ys.begin(), ys.end()),
-                                 *std::max_element(ys.begin(), ys.end())));
-}
-
-Vector2 Mechanics::Sensor::projectedPitchXY() const
-{
-  XYZVector pitchXYZ = m_l2g * XYZVector(m_pitchCol, m_pitchRow, 0);
-  return Vector2(std::abs(pitchXYZ.x()), std::abs(pitchXYZ.y()));
-}
-
-// geometry related methods
-
-XYZPoint Mechanics::Sensor::origin() const
-{
-  return XYZPoint(m_l2g.Translation().Vect());
-}
-
-XYZVector Mechanics::Sensor::normal() const
-{
-  XYZVector W, U, V;
-  m_l2g.Rotation().GetComponents(U, V, W);
-  return W;
-}
-
-Transform3D Mechanics::Sensor::constructPixelToGlobal() const
-{
-  // clang-format off
-  Translation3D shiftToCenter(-m_sensitiveCenterPixel.x(),
-                              -m_sensitiveCenterPixel.y(),
-                              0);
-  Rotation3D scalePitch(m_pitchCol, 0, 0,
-                        0, m_pitchRow, 0,
-                        0, 0, m_thickness);
-  // clang-format on
-  return m_l2g * scalePitch * shiftToCenter;
-}
-
-void Mechanics::Sensor::setLocalToGlobal(const Transform3D& l2g)
-{
-  m_l2g = l2g;
-  m_g2l = l2g.Inverse();
-}
-
-// from 2d plane point to 3d space point
-static inline XYZPoint planeToSpace(const Transform3D& transform,
-                                    const XYPoint& uv)
-{
-  XYZPoint tmp(uv.x(), uv.y(), 0);
-  tmp = transform * tmp;
-  return tmp;
-}
-
-// from 3d space point to 2d plane point. 3d point must be on the plane.
-static inline XYPoint spaceToPlane(const Transform3D& transform,
-                                   const XYZPoint& xyz)
-{
-  XYZPoint tmp(transform * xyz);
-  return XYPoint(tmp.x(), tmp.y());
+  // calculate local sensitive area
+  XYPoint lowerLeft = transformPixelToLocal(
+      XYPoint(m_sensitiveAreaPixel.min(0), m_sensitiveAreaPixel.min(1)));
+  XYPoint upperRight = transformPixelToLocal(
+      XYPoint(m_sensitiveAreaPixel.max(0), m_sensitiveAreaPixel.max(1)));
+  m_sensitiveAreaLocal =
+      Area(Area::AxisInterval(lowerLeft.x(), upperRight.x()),
+           Area::AxisInterval(lowerLeft.y(), upperRight.y()));
+  // global envelope requires geometry information; must be set by device
+  m_projEnvelopeXY = m_sensitiveAreaLocal;
 }
 
 XYPoint Mechanics::Sensor::transformPixelToLocal(const XYPoint& cr) const
@@ -189,26 +116,6 @@ XYPoint Mechanics::Sensor::transformLocalToPixel(const XYPoint& uv) const
 {
   return XYPoint((uv.x() / m_pitchCol), (uv.y() / m_pitchRow)) +
          m_sensitiveCenterPixel;
-}
-
-XYZPoint Mechanics::Sensor::transformLocalToGlobal(const XYPoint& uv) const
-{
-  return planeToSpace(m_l2g, uv);
-}
-
-XYPoint Mechanics::Sensor::transformGlobalToLocal(const XYZPoint& xyz) const
-{
-  return spaceToPlane(m_g2l, xyz);
-}
-
-XYZPoint Mechanics::Sensor::transformPixelToGlobal(const XYPoint& cr) const
-{
-  return planeToSpace(m_l2g, transformPixelToLocal(cr));
-}
-
-XYPoint Mechanics::Sensor::transformGlobalToPixel(const XYZPoint& xyz) const
-{
-  return transformLocalToPixel(spaceToPlane(m_g2l, xyz));
 }
 
 //=========================================================
@@ -230,8 +137,6 @@ void Mechanics::Sensor::print(std::ostream& os, const std::string& prefix) const
   os << prefix << "rows: " << m_numRows << '\n';
   os << prefix << "pitch_col: " << m_pitchCol << '\n';
   os << prefix << "pitch_row: " << m_pitchRow << '\n';
-  os << prefix << "thickness: " << m_thickness << '\n';
-  os << prefix << "x/X0: " << m_xX0 << '\n';
   if (!m_regions.empty()) {
     os << prefix << "regions:\n";
     for (size_t iregion = 0; iregion < m_regions.size(); ++iregion) {
@@ -242,5 +147,7 @@ void Mechanics::Sensor::print(std::ostream& os, const std::string& prefix) const
       os << prefix << "    row: " << region.areaPixel.interval(1) << '\n';
     }
   }
+  os << prefix << "thickness: " << m_thickness << '\n';
+  os << prefix << "x/X0: " << m_xX0 << '\n';
   os.flush();
 }

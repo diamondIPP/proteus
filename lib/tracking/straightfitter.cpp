@@ -8,10 +8,10 @@
 
 #include "mechanics/device.h"
 #include "storage/event.h"
-#include "tracking/tracking.h"
+#include "tracking/straighttools.h"
 
 Tracking::StraightFitter::StraightFitter(const Mechanics::Device& device)
-    : m_device(device)
+    : m_geo(device.geometry()), m_sensorIds(device.sensorIds())
 {
 }
 
@@ -23,22 +23,24 @@ void Tracking::StraightFitter::process(Storage::Event& event) const
     Storage::Track& track = event.getTrack(itrack);
 
     // global fit for common goodness-of-fit
-    fitTrackGlobal(track);
+    fitStraightTrackGlobal(m_geo, track);
 
-    for (Index isensor = 0; isensor < m_device.numSensors(); ++isensor) {
-      Storage::SensorEvent& sev = event.getSensorEvent(isensor);
+    // local fit for optimal parameters/covariance on each sensor plane
+    for (Index iref : m_sensorIds) {
+      const Mechanics::Plane& ref = m_geo.getPlane(iref);
 
-      // local fit for correct errors in the local frame
-      Storage::TrackState state =
-          fitTrackLocal(track, m_device.geometry(), isensor);
-      sev.setLocalState(itrack, std::move(state));
+      LineFitter3D fitter;
+      for (const auto& c : track.clusters())
+        fitter.addPoint(c.second, m_geo.getPlane(c.first), ref);
+      fitter.fit();
+      event.getSensorEvent(iref).setLocalState(itrack, fitter.state());
     }
   }
 }
 
 Tracking::UnbiasedStraightFitter::UnbiasedStraightFitter(
     const Mechanics::Device& device)
-    : m_device(device)
+    : m_geo(device.geometry()), m_sensorIds(device.sensorIds())
 {
 }
 
@@ -53,15 +55,20 @@ void Tracking::UnbiasedStraightFitter::process(Storage::Event& event) const
     Storage::Track& track = event.getTrack(itrack);
 
     // global fit for common goodness-of-fit
-    fitTrackGlobal(track);
+    fitStraightTrackGlobal(m_geo, track);
 
-    for (Index isensor = 0; isensor < m_device.numSensors(); ++isensor) {
-      Storage::SensorEvent& sev = event.getSensorEvent(isensor);
+    // local fit for optimal parameters/covariance on each sensor plane
+    for (Index iref : m_sensorIds) {
+      const Mechanics::Plane& ref = m_geo.getPlane(iref);
 
-      // local fit for correct errors in the local frame
-      Storage::TrackState state =
-          fitTrackLocalUnbiased(track, m_device.geometry(), isensor);
-      sev.setLocalState(itrack, std::move(state));
+      LineFitter3D fitter;
+      for (const auto& c : track.clusters()) {
+        if (c.first == iref)
+          continue;
+        fitter.addPoint(c.second, m_geo.getPlane(c.first), ref);
+      }
+      fitter.fit();
+      event.getSensorEvent(iref).setLocalState(itrack, fitter.state());
     }
   }
 }

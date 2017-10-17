@@ -7,8 +7,8 @@
 
 #include "mechanics/device.h"
 #include "storage/event.h"
-#include "tracking/tracking.h"
-#include "utils/logger.h"
+#include "tracking/propagation.h"
+#include "tracking/straighttools.h"
 
 using Storage::Cluster;
 using Storage::Event;
@@ -16,19 +16,17 @@ using Storage::SensorEvent;
 using Storage::Track;
 using Storage::TrackState;
 
-PT_SETUP_GLOBAL_LOGGER
-
 Tracking::TrackFinder::TrackFinder(const Mechanics::Device& device,
-                                   std::vector<Index> sensors,
-                                   Index numClustersMin,
-                                   double searchSigmaMax,
-                                   double redChi2Max)
-    : m_sensorIds(std::move(sensors))
+                                   const std::vector<Index>& sensors,
+                                   const Index numClustersMin,
+                                   const double searchSigmaMax,
+                                   const double redChi2Max)
+    : m_geo(device.geometry())
+    , m_sensorIds(Mechanics::sortedAlongBeam(device.geometry(), sensors))
     , m_numClustersMin(numClustersMin)
     // 2-d Mahalanobis distance peaks at 2 and not at 1
     , m_d2Max((searchSigmaMax < 0) ? -1 : (2 * searchSigmaMax * searchSigmaMax))
     , m_redChi2Max(redChi2Max)
-    , m_beamDirection(device.geometry().beamDirection())
 {
   if (m_sensorIds.size() < 2)
     throw std::runtime_error("Need at least two sensors two find tracks");
@@ -101,13 +99,26 @@ void Tracking::TrackFinder::process(Storage::Event& event) const
 void Tracking::TrackFinder::searchSensor(
     Storage::SensorEvent& sensorEvent, std::vector<TrackPtr>& candidates) const
 {
+  const Mechanics::Plane& target = m_geo.getPlane(sensorEvent.sensor());
+
   // loop only over the initial candidates and not the added ones
   Index numTracks = static_cast<Index>(candidates.size());
   for (Index itrack = 0; itrack < numTracks; ++itrack) {
     Storage::Track& track = *candidates[itrack];
-    // TODO use the cluster on the closest sensor and not on the last
-    Storage::Cluster& last = track.clusters().rbegin()->second;
+    Storage::Cluster& lastCluster = track.clusters().rbegin()->second;
+    Index lastSensor = track.clusters().rbegin()->first;
     Index matched = kInvalidIndex;
+
+    // estimated track on the source plane using last cluster and beam
+    const Mechanics::Plane& source = m_geo.getPlane(lastSensor);
+    Storage::TrackState onSource(
+        Vector2(lastCluster.posLocal().x(), lastCluster.posLocal().y()),
+        source.rotation * m_geo.beamDirection());
+    onSource.setCovOffset(lastCluster.covLocal());
+
+    // propagate track to the target plane
+    Storage::TrackState onTarget =
+        Tracking::propagate_to(onSource, source, target);
 
     for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
       Storage::Cluster& curr = sensorEvent.getCluster(icluster);
@@ -116,11 +127,10 @@ void Tracking::TrackFinder::searchSensor(
       if (curr.isInTrack())
         continue;
 
-      XYZVector delta = curr.posGlobal() - last.posGlobal();
-      delta -= delta.z() * m_beamDirection;
-      SymMatrix2 cov = last.covGlobal().Sub<SymMatrix2>(0, 0) +
-                       curr.covGlobal().Sub<SymMatrix2>(0, 0);
-      double d2 = mahalanobisSquared(cov, Vector2(delta.x(), delta.y()));
+      double deltaU = curr.posLocal().x() - onTarget.offset().x();
+      double deltaV = curr.posLocal().y() - onTarget.offset().y();
+      SymMatrix2 cov = curr.covLocal() + onTarget.covOffset();
+      double d2 = mahalanobisSquared(cov, Vector2(deltaU, deltaV));
 
       if ((0 < m_d2Max) && (m_d2Max < d2))
         continue;
@@ -160,7 +170,7 @@ void Tracking::TrackFinder::selectTracks(std::vector<TrackPtr>& candidates,
 {
   // ensure chi2 value is up-to-date
   std::for_each(candidates.begin(), candidates.end(),
-                [&](TrackPtr& t) { fitTrackGlobal(*t); });
+                [&](TrackPtr& t) { fitStraightTrackGlobal(m_geo, *t); });
   // sort good candidates first, i.e. longest track and smallest chi2
   std::sort(candidates.begin(), candidates.end(), CompareNumClusterChi2());
 
