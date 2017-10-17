@@ -99,6 +99,8 @@ Internal changes
     stores information in local coordinates. Whenever global coordinates are
     required they are calculated on-the-fly or transformations are calculated
     directly between two local coordinate systems.
+*   Add support for optional and variable arguments to the internal
+    `Arguments` parser.
 
 v1.2.0 (2017-06-28)
 ===================
