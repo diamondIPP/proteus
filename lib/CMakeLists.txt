@@ -22,7 +22,6 @@ set(SOURCES
     processors/clusterizer.cpp
     processors/hitmapper.cpp
     processors/matcher.cpp
-    processors/processor.cpp
     processors/setupsensors.cpp
     storage/cluster.cpp
     storage/event.cpp
