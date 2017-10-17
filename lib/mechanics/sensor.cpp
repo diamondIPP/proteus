@@ -126,6 +126,14 @@ Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaLocal() const
               Area::AxisInterval(lowerLeft.y(), upperRight.y()));
 }
 
+Mechanics::Sensor::Volume Mechanics::Sensor::sensitiveVolumeLocal() const
+{
+  auto area = sensitiveAreaLocal();
+  // TODO 2017-10 msmk: which way does the thickess grow, w or -w
+  return Volume(area.interval(0), area.interval(1),
+                Volume::AxisInterval(0, m_thickness));
+}
+
 void Mechanics::Sensor::setMaskedPixels(const std::set<ColumnRow>& pixels)
 {
   m_pixelMask = Utils::DenseMask(pixels);

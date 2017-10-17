@@ -103,6 +103,8 @@ public:
   Area sensitiveAreaPixel() const;
   /** Sensitive area in local coordinates. */
   Area sensitiveAreaLocal() const;
+  /** Sensitive volume in local coordinates. */
+  Volume sensitiveVolumeLocal() const;
   /** Projected envelope in the xy-plane of the sensitive area. */
   const Area& projectedEnvelopeXY() const { return m_projEnvelopeXY; }
   /** Projected pitch in the xy-plane. */
