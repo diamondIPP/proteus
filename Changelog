@@ -11,6 +11,8 @@ User-visible changes
 --------------------
 
 *   Add support for other file formats.
+*   Add ``pt-convert`` tool to convert and combine data files into the internal
+    format.
 *   Sensors with inconsistent number of events in RCE ROOT files are ignored.
 
     No data for this sensor is read, i.e. all events contain zero hits and
