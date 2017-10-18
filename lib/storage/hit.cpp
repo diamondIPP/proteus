@@ -43,5 +43,7 @@ std::ostream& Storage::operator<<(std::ostream& os, const Storage::Hit& hit)
   os << "col=" << hit.col() << " row=" << hit.row();
   os << " time=" << hit.time();
   os << " value=" << hit.value();
+  if (hit.hasRegion())
+    os << " region=" << hit.region();
   return os;
 }

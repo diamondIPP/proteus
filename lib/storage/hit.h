@@ -28,7 +28,6 @@ public:
   /** Set the cluster index. */
   void setCluster(Index cluster);
 
-  Index region() const { return m_region; }
   int digitalCol() const { return m_digitalCol; }
   int digitalRow() const { return m_digitalRow; }
   int col() const { return m_col; }
@@ -40,6 +39,9 @@ public:
 
   /** The area of the hit in pixel coordinates. */
   Area areaPixel() const;
+
+  bool hasRegion() const { return m_region != kInvalidIndex; }
+  Index region() const { return m_region; }
 
   bool isInCluster() const { return m_cluster != kInvalidIndex; }
   Index cluster() const { return m_cluster; }
