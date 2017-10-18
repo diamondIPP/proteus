@@ -83,7 +83,7 @@ void Io::MatchWriter::ClusterData::set(const Storage::Cluster& c)
   row = c.posPixel().y();
   time = c.time();
   value = c.value();
-  region = ((c.region() == kInvalidIndex) ? -1 : c.region());
+  region = (c.hasRegion() ? c.region() : -1);
   size = std::min(c.size(), size_t(MAX_CLUSTER_SIZE));
   sizeCol = c.sizeCol();
   sizeRow = c.sizeRow();
