@@ -57,7 +57,7 @@ void Analyzers::SensorHits::analyze(const Storage::SensorEvent& sensorEvent)
     m_value->Fill(hit.value());
     m_meanTimeMap->Fill(hit.col(), hit.row(), hit.time());
     m_meanValueMap->Fill(hit.col(), hit.row(), hit.value());
-    if (hit.region() != kInvalidIndex) {
+    if (hit.hasRegion()) {
       m_regions[hit.region()].time->Fill(hit.time());
       m_regions[hit.region()].value->Fill(hit.value());
     }

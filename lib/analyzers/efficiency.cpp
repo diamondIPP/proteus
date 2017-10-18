@@ -147,7 +147,7 @@ void Analyzers::Efficiency::analyze(const Storage::Event& event)
   for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
     const Storage::Cluster& cluster = sensorEvent.getCluster(icluster);
     m_sensorHists.fill(cluster);
-    if (cluster.region() != kInvalidIndex)
+    if (cluster.hasRegion())
       m_regionsHists[cluster.region()].fill(cluster);
   }
 }

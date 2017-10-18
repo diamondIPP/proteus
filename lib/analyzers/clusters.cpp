@@ -97,7 +97,7 @@ void Analyzers::SensorClusters::analyze(const Storage::SensorEvent& sensorEvent)
   for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
     const Storage::Cluster& cluster = sensorEvent.getCluster(icluster);
     fill(cluster, m_whole);
-    if (cluster.region() != kInvalidIndex)
+    if (cluster.hasRegion())
       fill(cluster, m_regions[cluster.region()]);
   }
 }
