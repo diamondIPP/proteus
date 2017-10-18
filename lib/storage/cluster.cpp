@@ -47,15 +47,20 @@ void Storage::Cluster::setLocal(const XYPoint& uv, const SymMatrix2& cov)
   m_uvCov = cov;
 }
 
-void Storage::Cluster::setTrack(Index track)
+bool Storage::Cluster::hasRegion() const
 {
-  assert((m_track == kInvalidIndex) && "cluster can only be in one track");
-  m_track = track;
+  return !m_hits.empty() && m_hits.front().get().hasRegion();
 }
 
 Index Storage::Cluster::region() const
 {
   return m_hits.empty() ? kInvalidIndex : m_hits.front().get().region();
+}
+
+void Storage::Cluster::setTrack(Index track)
+{
+  assert((m_track == kInvalidIndex) && "cluster can only be in one track");
+  m_track = track;
 }
 
 Storage::Cluster::Area Storage::Cluster::areaPixel() const
