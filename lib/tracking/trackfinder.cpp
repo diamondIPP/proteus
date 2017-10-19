@@ -113,7 +113,7 @@ void Tracking::TrackFinder::searchSensor(
     const Mechanics::Plane& source = m_geo.getPlane(lastSensor);
     Storage::TrackState onSource(
         Vector2(lastCluster.posLocal().x(), lastCluster.posLocal().y()),
-        source.rotation * m_geo.beamDirection());
+        Transpose(source.rotation) * m_geo.beamDirection());
     onSource.setCovOffset(lastCluster.covLocal());
 
     // propagate track to the target plane
