@@ -64,8 +64,8 @@ public:
 
     // always show elapsed time
     auto hrs = duration_cast<std::chrono::hours>(now - m_start).count();
-    auto min = duration_cast<std::chrono::minutes>(now - m_start).count();
-    auto scn = duration_cast<std::chrono::seconds>(now - m_start).count();
+    auto min = duration_cast<std::chrono::minutes>(now - m_start).count() % 60;
+    auto scn = duration_cast<std::chrono::seconds>(now - m_start).count() % 60;
     m_os << "elapsed ";
     m_os << std::setw(2) << std::setfill('0') << hrs << ':';
     m_os << std::setw(2) << std::setfill('0') << min << ':';
