@@ -31,6 +31,7 @@ protected:
     TTree* hits = nullptr;
     TTree* clusters = nullptr;
     TTree* intercepts = nullptr;
+    int64_t entries = 0;
   };
 
   TFile* m_file;
@@ -105,7 +106,7 @@ public:
   bool read(Storage::Event& event) override final;
 
 private:
-  void addSensor(TDirectory* dir);
+  int64_t addSensor(TDirectory* dir);
 };
 
 /** Write event in the RCE ROOT file format. */
