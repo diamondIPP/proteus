@@ -1,5 +1,5 @@
 /**
- * \brief Convert from raw data files to the internal format
+ * \brief Combine multiple raw data files into a single data stream
  * \file
  * \author Moritz Kiehn (msmk@cern.ch)
  * \date 2017-09
@@ -22,7 +22,7 @@ int main(int argc, char const* argv[])
   // To avoid having unused command line options, argument parsing is
   // implemented manually here w/ a limited amount of options compared to
   // the default Application.
-  Utils::Arguments args("convert data files to the internal format");
+  Utils::Arguments args("combine multiple data files into a single one");
   args.addOption('c', "config", "configuration file", "analysis.toml");
   args.addOption('u', "subsection", "use the given configuration sub-section");
   args.addOption('s', "skip_events", "skip the first n events", 0);
@@ -35,7 +35,7 @@ int main(int argc, char const* argv[])
     std::exit(EXIT_FAILURE);
 
   // read configuration file
-  std::string section = "convert";
+  std::string section = "combine";
   if (args.has("subsection"))
     section += std::string(".") + args.get("subsection");
   const toml::Value cfgAll = Utils::Config::readConfig(args.get("config"));
