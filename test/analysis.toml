@@ -1,5 +1,5 @@
-[convert]
+[combine]
 # convert example w/o parameters
 
-[convert.example1]
+[combine.example1]
 # another convert example w/o parameters
