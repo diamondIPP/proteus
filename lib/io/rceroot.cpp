@@ -28,14 +28,14 @@ int Io::RceRootReader::check(const std::string& path)
   if (!file)
     return 0;
 
-  // Minimal file should have the Event tree, but missing from some converters
-  TTree* event = nullptr;
-  file->GetObject("Event", event);
-  if (!event)
-    return 10;
-
-  // readable file + event tree -> probably an RCE ROOT file
-  return 100;
+  int score = 0;
+  // should have an event tree, but is sometimes missing
+  if (file->GetObjectUnchecked("Event"))
+    score += 50;
+  // should have at least one sensor directory
+  if (file->GetObjectUnchecked("Plane0"))
+    score += 50;
+  return score;
 }
 
 std::shared_ptr<Io::RceRootReader>
