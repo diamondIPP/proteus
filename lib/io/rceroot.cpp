@@ -106,25 +106,32 @@ Io::RceRootReader::RceRootReader(const std::string& path)
     m_entries = std::min(m_entries, entriesSensor);
     numSensors += 1;
   }
+  if (numSensors == 0)
+    THROW("no sensors in '", path, "'");
   if (m_entries == INT64_MAX)
     THROW("could not determine number of events in '", path, "'");
   INFO("read ", numSensors, " sensors from '", path, "'");
 
+  // NOTE 2017-10-25 msmk:
+  //
+  // having inconsistent entries between different sensors and the global
+  // trees should be a fatal error. unfortunately, this can still happen for
+  // valid data, e.g. for telescope data w/ manually synced trigger/busy-based
+  // dut data or for independent Mimosa26 streams. To be able to handle these
+  // we only report these cases as errrors here instead of failing altogether.
+
   // verify consistent number of entries between all trees
   if ((entriesEvent != INT64_MAX) && (entriesEvent != m_entries))
-    THROW("inconsistent entries in Event tree");
+    ERROR("Event tree has inconsistent entries=", entriesEvent,
+          " expected=", m_entries);
   if ((entriesTracks != INT64_MAX) && (entriesTracks != m_entries))
-    THROW("inconsistent entries in Tracks tree");
-  // inconsistent per-sensor trees are not a fatal error, but are just ignored
-  // to be able to handle Mimosa26 trees which represent independent streams.
+    ERROR("Tracks tree has inconsistent entries=", entriesTracks,
+          " expected=", m_entries);
   for (size_t isensor = 0; isensor < m_sensors.size(); ++isensor) {
-    auto& trees = m_sensors[isensor];
-    if (trees.entries != m_entries) {
-      INFO("ignore sensor ", isensor, " due to inconsistent entries");
-      trees.hits = nullptr;
-      trees.clusters = nullptr;
-      trees.intercepts = nullptr;
-    }
+    if (m_sensors[isensor].entries != m_entries)
+      ERROR("sensor ", isensor,
+            " has inconsistent entries=", m_sensors[isensor].entries,
+            " expected=", m_entries);
   }
 }
 
@@ -193,11 +200,16 @@ int64_t Io::RceRootReader::addSensor(TDirectory* dir)
   // check that all active trees have consistent entries
   trees.entries = std::min({entriesHits, entriesClusters, entriesIntercepts});
   if ((entriesHits != INT64_MAX) && (entriesHits != trees.entries))
-    THROW("inconsistent entries in ", dir->GetName(), "/Hits tree");
+    THROW("inconsistent entries in ", dir->GetName(),
+          "/Hits tree entries=", entriesHits, " expected=", trees.entries);
   if ((entriesClusters != INT64_MAX) && (entriesClusters != trees.entries))
-    THROW("inconsistent entries in ", dir->GetName(), "/Clusters tree");
+    THROW("inconsistent entries in ", dir->GetName(),
+          "/Clusters tree entries=", entriesClusters,
+          " expected=", trees.entries);
   if ((entriesIntercepts != INT64_MAX) && (entriesIntercepts != trees.entries))
-    THROW("inconsistent entries in ", dir->GetName(), "/Intercepts tree");
+    THROW("inconsistent entries in ", dir->GetName(),
+          "/Intercepts tree entries=", entriesIntercepts,
+          " expected=", trees.entries);
 
   m_sensors.push_back(trees);
   return trees.entries;
