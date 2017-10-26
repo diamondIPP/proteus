@@ -31,9 +31,11 @@ echo "=== installing to ${install_dir}"
   # construct setup script
   setup=${install_dir}/setup.sh
   cat ${source_dir}/scripts/lxplus_platform.sh > ${setup}
-  echo "\n# activate lcg release" >> ${setup}
+  echo "" >> ${setup}
+  echo "# activate lcg release" >> ${setup}
   echo "source ${lcg_view}/setup.sh" >> ${setup}
-  echo "\n# activate proteus installation" >> ${setup}
+  echo "" >> ${setup}
+  echo "# activate proteus installation" >> ${setup}
   cat ${install_dir}/activate.sh >> ${setup}
 )
 
