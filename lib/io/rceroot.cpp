@@ -173,7 +173,8 @@ int64_t Io::RceRootReader::addSensor(TDirectory* dir)
     trees.clusters->SetBranchAddress("Row", clusterRow);
     trees.clusters->SetBranchAddress("VarCol", clusterVarCol);
     trees.clusters->SetBranchAddress("VarRow", clusterVarRow);
-    trees.clusters->SetBranchAddress("CovColRow", clusterCovColRow);
+    trees.clusters->SetBranchAddress("Timing", clusterTiming);
+    trees.clusters->SetBranchAddress("Value", clusterValue);
     trees.clusters->SetBranchAddress("Track", clusterTrack);
   }
   dir->GetObject("Intercepts", trees.intercepts);
@@ -320,6 +321,8 @@ bool Io::RceRootReader::read(Storage::Event& event)
         Storage::Cluster& cluster = sensorEvent.addCluster();
         cluster.setPixel(XYPoint(clusterCol[icluster], clusterRow[icluster]),
                          cov);
+        cluster.setTime(clusterTiming[icluster]);
+        cluster.setValue(clusterValue[icluster]);
         // Fix cluster/track relationship if possible
         if (m_tracks && (0 <= clusterTrack[icluster])) {
           Storage::Track& track = event.getTrack(clusterTrack[icluster]);
@@ -406,6 +409,8 @@ void Io::RceRootWriter::addSensor(TDirectory* dir)
   trees.clusters->Branch("VarRow", clusterVarRow, "VarRow[NClusters]/D");
   trees.clusters->Branch("CovColRow", clusterCovColRow,
                          "CovColRow[NClusters]/D");
+  trees.clusters->Branch("Timing", clusterTiming, "Timing[NClusters]/D");
+  trees.clusters->Branch("Value", clusterValue, "Value[NClusters]/D");
   trees.clusters->Branch("Track", clusterTrack, "Track[NClusters]/I");
   // local track states
   trees.intercepts = new TTree("Intercepts", "Intercepts");
@@ -480,8 +485,8 @@ void Io::RceRootWriter::append(const Storage::Event& event)
         const Storage::Hit hit = sensorEvent.getHit(ihit);
         hitPixX[ihit] = hit.digitalCol();
         hitPixY[ihit] = hit.digitalRow();
-        hitValue[ihit] = hit.value();
         hitTiming[ihit] = hit.time();
+        hitValue[ihit] = hit.value();
         hitInCluster[ihit] = hit.isInCluster() ? hit.cluster() : -1;
       }
       trees.hits->Fill();
@@ -499,6 +504,8 @@ void Io::RceRootWriter::append(const Storage::Event& event)
         clusterVarCol[iclu] = cluster.covPixel()(0, 0);
         clusterVarRow[iclu] = cluster.covPixel()(1, 1);
         clusterCovColRow[iclu] = cluster.covPixel()(0, 1);
+        clusterTiming[iclu] = cluster.time();
+        clusterValue[iclu] = cluster.value();
         clusterTrack[iclu] = cluster.isInTrack() ? cluster.track() : -1;
       }
       trees.clusters->Fill();

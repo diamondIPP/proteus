@@ -74,6 +74,8 @@ protected:
   Double_t clusterVarCol[kMaxHits];
   Double_t clusterVarRow[kMaxHits];
   Double_t clusterCovColRow[kMaxHits];
+  Double_t clusterTiming[kMaxHits];
+  Double_t clusterValue[kMaxHits];
   Int_t clusterTrack[kMaxHits];
   // local track states
   Int_t numIntercepts;
