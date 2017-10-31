@@ -20,26 +20,34 @@ Io::RceRootCommon::RceRootCommon(TFile* file)
 // -----------------------------------------------------------------------------
 // reader
 
-bool Io::RceRootReader::isValid(const std::string& path)
+int Io::RceRootReader::check(const std::string& path)
 {
   std::unique_ptr<TFile> file(TFile::Open(path.c_str(), "READ"));
-  TTree* event = nullptr;
-
   if (!file)
-    return false;
-  // Minimal file must have at least the Event tree
+    return 0;
+
+  // Minimal file should have the Event tree, but missing from some converters
+  TTree* event = nullptr;
   file->GetObject("Event", event);
   if (!event)
-    return false;
+    return 10;
+
   // readable file + event tree -> probably an RCE ROOT file
-  return true;
+  return 100;
+}
+
+std::shared_ptr<Io::RceRootReader>
+Io::RceRootReader::open(const std::string& path,
+                        const toml::Value& /* unused configuration */)
+{
+  return std::make_shared<Io::RceRootReader>(path);
 }
 
 Io::RceRootReader::RceRootReader(const std::string& path)
     : RceRootCommon(TFile::Open(path.c_str(), "READ"))
 {
   if (!m_file)
-    FAIL("could not open '", path, "' to read");
+    THROW("could not open '", path, "' to read");
 
   // event tree **must** be available
   m_file->GetObject("Event", m_eventInfo);
@@ -88,18 +96,18 @@ Io::RceRootReader::RceRootReader(const std::string& path)
   // verify that all trees have consistent number of entries
   m_entries = m_eventInfo->GetEntriesFast();
   if (m_entries < 0)
-    FAIL("could not determine number of entries");
+    THROW("could not determine number of entries");
 
   auto hasConsistentEntries = [&](TTree* tree) {
     int64_t entries = tree->GetEntriesFast();
     if (entries < 0)
-      FAIL("could not determine number of entries");
+      THROW("could not determine number of entries");
     return (entries == m_entries);
   };
 
   // tracks must be consistent with events
   if (m_tracks && !hasConsistentEntries(m_tracks))
-    FAIL("inconsistent 'Tracks' entries");
+    THROW("inconsistent 'Tracks' entries");
   // per-sensor trees should be consistent, but Mimosa26 trees can have
   // an inconsistent number of entries. ignore those cases
   for (size_t isensor = 0; isensor < m_sensors.size(); ++isensor) {
@@ -171,6 +179,8 @@ uint64_t Io::RceRootReader::numEvents() const
 {
   return static_cast<uint64_t>(m_entries);
 }
+
+size_t Io::RceRootReader::numSensors() const { return m_sensors.size(); }
 
 void Io::RceRootReader::skip(uint64_t n)
 {
@@ -289,7 +299,7 @@ Io::RceRootWriter::RceRootWriter(const std::string& path, size_t numSensors)
     : RceRootCommon(TFile::Open(path.c_str(), "RECREATE"))
 {
   if (!m_file)
-    FAIL("could not open '", path, "' to write");
+    THROW("could not open '", path, "' to write");
 
   // global event tree
   m_eventInfo = new TTree("Event", "Event information");

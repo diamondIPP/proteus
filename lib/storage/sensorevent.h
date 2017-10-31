@@ -22,7 +22,7 @@ class SensorEvent {
 public:
   using TrackStates = std::map<Index, TrackState>;
 
-  SensorEvent(Index sensor);
+  explicit SensorEvent(Index sensor);
 
   void clear(uint64_t frame, uint64_t timestamp);
 
@@ -60,6 +60,8 @@ private:
   std::vector<std::unique_ptr<Hit>> m_hits;
   std::vector<std::unique_ptr<Cluster>> m_clusters;
   TrackStates m_states;
+  
+  friend class Event;
 };
 
 } // namespace Storage

@@ -10,7 +10,7 @@
 
 #include "utils/logger.h"
 
-PT_SETUP_GLOBAL_LOGGER
+PT_SETUP_LOCAL_LOGGER(Arguments)
 
 Utils::Arguments::Arguments(std::string description)
     : m_description(std::move(description))
@@ -28,7 +28,7 @@ void Utils::Arguments::addFlag(char key, std::string name, std::string help)
   m_options.emplace_back(std::move(opt));
 }
 
-void Utils::Arguments::addOptional(char key, std::string name, std::string help)
+void Utils::Arguments::addOption(char key, std::string name, std::string help)
 {
   Option opt;
   opt.abbreviation = key;
@@ -38,7 +38,9 @@ void Utils::Arguments::addOptional(char key, std::string name, std::string help)
   m_options.emplace_back(std::move(opt));
 }
 
-void Utils::Arguments::addMulti(char key, std::string name, std::string help)
+void Utils::Arguments::addOptionMulti(char key,
+                                      std::string name,
+                                      std::string help)
 {
   Option opt;
   opt.abbreviation = key;
@@ -50,10 +52,16 @@ void Utils::Arguments::addMulti(char key, std::string name, std::string help)
 
 void Utils::Arguments::addRequired(std::string name, std::string help)
 {
-  Required req;
-  req.name = std::move(name);
-  req.help = std::move(help);
-  m_requireds.emplace_back(std::move(req));
+  RequiredArgument arg;
+  arg.name = std::move(name);
+  arg.help = std::move(help);
+  m_requireds.emplace_back(std::move(arg));
+}
+
+void Utils::Arguments::addVariable(std::string name, std::string help)
+{
+  m_variable.name = std::move(name);
+  m_variable.help = std::move(help);
 }
 
 std::string Utils::Arguments::Option::description() const
@@ -76,16 +84,30 @@ void Utils::Arguments::printHelp(const std::string& arg0) const
   std::string name(arg0.substr(arg0.find_last_of('/') + 1));
 
   cerr << "usage: " << name << " [options]";
-  for (const auto& req : m_requireds) {
-    cerr << " " << req.name;
-  }
+  for (const auto& arg : m_requireds)
+    cerr << " " << arg.name;
+  for (const auto& arg : m_optionals)
+    cerr << " [" << arg.name << "]";
+  if (!m_variable.name.empty())
+    cerr << " [" << m_variable.name << " ...]";
   cerr << "\n\n";
   cerr << m_description << "\n";
   cerr << "\n";
-  cerr << "required:\n";
-  for (const auto& req : m_requireds) {
-    cerr << "  " << std::left << std::setw(17) << req.name;
-    cerr << " " << req.help << "\n";
+  if (!m_requireds.empty())
+    cerr << "required arguments:\n";
+  for (const auto& arg : m_requireds) {
+    cerr << "  " << std::left << std::setw(17) << arg.name;
+    cerr << " " << arg.help << "\n";
+  }
+  if (!m_optionals.empty())
+    cerr << "optional arguments:\n";
+  for (const auto& arg : m_optionals) {
+    cerr << "  " << std::left << std::setw(17) << arg.name;
+    cerr << " " << arg.help << " (default=" << arg.defaultValue << ")\n";
+  }
+  if (!m_variable.name.empty()) {
+    cerr << "  " << std::left << std::setw(17) << m_variable.name;
+    cerr << " " << m_variable.help << "\n";
   }
   cerr << "options:\n";
   for (const auto& opt : m_options) {
@@ -115,7 +137,7 @@ bool Utils::Arguments::parse(int argc, char const* argv[])
     std::string arg(argv[i]);
 
     if (arg.find("-") == 0) {
-      DEBUG("arg ", i, " optional ", arg);
+      DEBUG("arg ", i, " option ", arg);
 
       // search for compatible long or short option
       const Option* opt = nullptr;
@@ -154,13 +176,33 @@ bool Utils::Arguments::parse(int argc, char const* argv[])
         assert(false && "The option type uses an undefined value.");
       }
 
-    } else {
+    } else if (numArgs < m_requireds.size()) {
       DEBUG("arg ", i, " required ", arg);
 
-      if (m_requireds.size() < (numArgs + 1))
-        return args_fail("too many arguments");
+      // add required arguments
       m_values[m_requireds[numArgs].name] = arg;
       numArgs += 1;
+
+    } else if (numArgs < (m_requireds.size() + m_optionals.size())) {
+      DEBUG("arg ", i, " optional ", arg);
+
+      // add optional argument
+      m_values[m_optionals[numArgs - m_requireds.size()].name] = arg;
+      numArgs += 1;
+
+    } else if (!m_variable.name.empty()) {
+      DEBUG("arg ", i, " variable ", arg);
+
+      // add variable argument
+      // variable arguments are stored internally as komma separated string
+      if (!m_values[m_variable.name].empty()) {
+        m_values[m_variable.name] += ',';
+      }
+      m_values[m_variable.name] += arg;
+      numArgs += 1;
+
+    } else {
+      return args_fail("too many arguments");
     }
   }
 
@@ -172,11 +214,14 @@ bool Utils::Arguments::parse(int argc, char const* argv[])
   if (numArgs < m_requireds.size())
     return args_fail("not enough arguments");
 
-  // add missing default values for optional argument
+  // add missing default values for options and optional argument
   for (const auto& opt : m_options) {
-    if (!opt.defaultValue.empty() && (m_values.count(opt.name) == 0)) {
+    if (!opt.defaultValue.empty() && (m_values.count(opt.name) == 0))
       m_values[opt.name] = opt.defaultValue;
-    }
+  }
+  for (const auto& arg : m_optionals) {
+    if (!arg.defaultValue.empty() && (m_values.count(arg.name) == 0))
+      m_values[arg.name] = arg.defaultValue;
   }
   // debug list of available values
   for (const auto& val : m_values)

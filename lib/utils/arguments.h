@@ -21,17 +21,30 @@ class Arguments {
 public:
   Arguments(std::string description);
 
-  /** Add an optional boolean flag. */
+  /** Add a command line option without parameter. */
   void addFlag(char key, std::string name, std::string help);
-  /** Add an optional command line flag. */
-  void addOptional(char key, std::string name, std::string help);
-  /** Add an optional command line flag with a default value. */
+  /** Add a command line option. */
+  void addOption(char key, std::string name, std::string help);
+  /** Add a command line option with a default value. */
   template <typename T>
-  void addOptional(char key, std::string name, std::string help, T value);
-  /** Add an optional command line flag that can be given multiple times. */
-  void addMulti(char key, std::string name, std::string help);
+  void addOption(char key, std::string name, std::string help, T value);
+  /** Add a command line option that can be given multiple times. */
+  void addOptionMulti(char key, std::string name, std::string help);
   /** Add a required command line argument. */
   void addRequired(std::string name, std::string help = std::string());
+  /** Add an optional command line argument with a default value.
+   *
+   * These are always parsed after all require arguments regardless of their
+   * definition order.
+   */
+  template <typename T>
+  void addOptional(std::string name, std::string help, T value);
+  /** Allow additional command line arguments at the end.
+   *
+   * This will contain left-over arguments after the required and optional
+   * arguments have been passed. This should be called at most once.
+   */
+  void addVariable(std::string name, std::string help = std::string());
 
   /** Parse command lines and return true on error. */
   bool parse(int argc, char const* argv[]);
@@ -57,9 +70,14 @@ private:
 
     std::string description() const;
   };
-  struct Required {
+  struct RequiredArgument {
     std::string name;
     std::string help;
+  };
+  struct OptionalArgument {
+    std::string name;
+    std::string help;
+    std::string defaultValue;
   };
 
   template <typename T>
@@ -73,17 +91,19 @@ private:
 
   const std::string m_description;
   std::vector<Option> m_options;
-  std::vector<Required> m_requireds;
+  std::vector<RequiredArgument> m_requireds;
+  std::vector<OptionalArgument> m_optionals;
+  RequiredArgument m_variable;
   std::map<std::string, std::string> m_values;
 };
 
 } // namespace Utils
 
 template <typename T>
-inline void Utils::Arguments::addOptional(char key,
-                                          std::string name,
-                                          std::string help,
-                                          T value)
+inline void Utils::Arguments::addOption(char key,
+                                        std::string name,
+                                        std::string help,
+                                        T value)
 {
   // value is always stored as string
   std::ostringstream sval;
@@ -94,6 +114,20 @@ inline void Utils::Arguments::addOptional(char key,
   opt.help = std::move(help);
   opt.defaultValue = sval.str();
   m_options.push_back(std::move(opt));
+}
+
+template <typename T>
+inline void
+Utils::Arguments::addOptional(std::string name, std::string help, T value)
+{
+  // value is always stored as string
+  std::ostringstream sval;
+  sval << value;
+  OptionalArgument opt;
+  opt.name = std::move(name);
+  opt.help = std::move(help);
+  opt.defaultValue = sval.str();
+  m_optionals.push_back(std::move(opt));
 }
 
 inline bool Utils::Arguments::has(const std::string& name) const

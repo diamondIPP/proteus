@@ -26,16 +26,13 @@ Utils::Application::Application(const std::string& name,
 void Utils::Application::initialize(int argc, char const* argv[])
 {
   Utils::Arguments args(m_desc);
-  args.addOptional('d', "device", "device configuration file", "device.toml");
-  args.addOptional('g', "geometry", "use a different geometry file");
-  args.addMulti('m', "mask", "load additional pixel mask file");
-  args.addOptional('c', "config", "analysis configuration file",
-                   "analysis.toml");
-  args.addOptional('u', "subsection",
-                   "use the given configuration sub-section");
-  args.addOptional('s', "skip_events", "skip the first n events", 0);
-  args.addOptional('n', "num_events", "number of events to process",
-                   UINT64_MAX);
+  args.addOption('d', "device", "device configuration file", "device.toml");
+  args.addOption('g', "geometry", "use a different geometry file");
+  args.addOptionMulti('m', "mask", "load additional pixel mask file");
+  args.addOption('c', "config", "analysis configuration file", "analysis.toml");
+  args.addOption('u', "subsection", "use the given configuration sub-section");
+  args.addOption('s', "skip_events", "skip the first n events", 0);
+  args.addOption('n', "num_events", "number of events to process", UINT64_MAX);
   args.addFlag('q', "quiet", "print only errors");
   args.addFlag('\0', "debug", "print more information");
   args.addFlag('\0', "no-progress", "do not show a progress bar");
@@ -103,8 +100,9 @@ Utils::EventLoop Utils::Application::makeEventLoop() const
 {
   // NOTE open the file just when the event loop is created to ensure that the
   //      input reader always starts at the beginning of the file.
-  Utils::EventLoop loop(Io::openRead(m_inputPath), m_dev->numSensors(),
-                        m_skipEvents, m_numEvents, m_showProgress);
+  Utils::EventLoop loop(Io::openRead(m_inputPath, toml::Value()),
+                        m_dev->numSensors(), m_skipEvents, m_numEvents,
+                        m_showProgress);
   // full-event output in debug mode
   if (Logger::isActive(Logger::Level::Debug))
     loop.addAnalyzer(std::make_shared<Analyzers::EventPrinter>());
