@@ -55,8 +55,8 @@ bool operator<(const ScoredFormat& a, const ScoredFormat& b)
 //
 // This version requires manual registration, but just works (tm).
 static std::vector<Format> s_formats = {
-    {"rceroot", RceRootReader::check, RceRootReader::open}};
-
+    {"rceroot", RceRootReader::check, RceRootReader::open},
+    {"timepix3", Timepix3Reader::check, Timepix3Reader::open}};
 } // namespace
 } // namespace Io
 

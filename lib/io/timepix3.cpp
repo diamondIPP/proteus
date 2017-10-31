@@ -8,6 +8,35 @@
 
 PT_SETUP_LOCAL_LOGGER(Timepix3)
 
+int Io::Timepix3Reader::check(const std::string& path)
+{
+  std::ifstream file;
+  file.open(path, std::ios::binary);
+  if (!file.is_open()) {
+    FAIL("could not open '", path, "' to read.");
+  }
+
+  uint32_t headerID = 0;
+  if (!file.read(reinterpret_cast<char*>(&headerID), sizeof headerID)) {
+    return 0;
+  }
+
+  uint32_t headerSize = 0;
+  if (!file.read(reinterpret_cast<char*>(&headerSize), sizeof headerSize)) {
+    return 10;
+  }
+
+  // readable file + header ID and size readable -> probably a Timepix3 file
+  return 100;
+}
+
+std::shared_ptr<Io::Timepix3Reader>
+Io::Timepix3Reader::open(const std::string& path,
+  const toml::Value& /* unused configuration */)
+{
+  return std::make_shared<Io::Timepix3Reader>(path);
+}
+
 Io::Timepix3Reader::Timepix3Reader(const std::string& path)
     : m_file()
     , m_syncTime(0)
