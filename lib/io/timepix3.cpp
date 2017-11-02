@@ -13,7 +13,7 @@ int Io::Timepix3Reader::check(const std::string& path)
   std::ifstream file;
   file.open(path, std::ios::binary);
   if (!file.is_open()) {
-    FAIL("could not open '", path, "' to read.");
+    THROW("could not open '", path, "' to read.");
   }
 
   uint32_t headerID = 0;
@@ -48,17 +48,17 @@ Io::Timepix3Reader::Timepix3Reader(const std::string& path)
 
   m_file.open(path, std::ios::binary);
   if (!m_file.is_open()) {
-    FAIL("could not open '", path, "' to read.");
+    THROW("could not open '", path, "' to read.");
   }
 
   uint32_t headerID = 0;
   if (!m_file.read(reinterpret_cast<char*>(&headerID), sizeof headerID)) {
-    FAIL("Could not read header.");
+    THROW("Could not read header.");
   }
 
   uint32_t headerSize = 0;
   if (!m_file.read(reinterpret_cast<char*>(&headerSize), sizeof headerSize)) {
-    FAIL("Cannot read header size for device.");
+    THROW("Cannot read header size for device.");
   }
 
   // Skip the full header:
