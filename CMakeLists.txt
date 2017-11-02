@@ -18,12 +18,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 include(RequireCXX11)
 
 # Set the source files to clang-format
-FILE(GLOB_RECURSE
+file(GLOB_RECURSE
     CHECK_CXX_SOURCE_FILES
     lib/*.[tch]pp lib/*.h
     exe/*.[tch]pp exe/*.h
 )
-INCLUDE("cmake/clang-cpp-checks.cmake")
+include("cmake/clang-cpp-checks.cmake")
 
 include_directories(external/tinytoml/include)
 
