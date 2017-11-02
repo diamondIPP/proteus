@@ -2,6 +2,8 @@
 #include <sstream>
 #include <string>
 
+#include <TDataType.h>
+
 #include "storage/event.h"
 #include "storage/sensorevent.h"
 #include "utils/logger.h"
