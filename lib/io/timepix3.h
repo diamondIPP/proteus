@@ -6,12 +6,7 @@
 #include <string>
 #include <vector>
 
-#include <TDirectory.h>
-#include <TFile.h>
-#include <TTree.h>
-
 #include "io/reader.h"
-#include "io/writer.h"
 #include "storage/sensorevent.h"
 #include "utils/definitions.h"
 
