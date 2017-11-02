@@ -47,6 +47,7 @@ User-visible changes
 *   Track finding and correlations consider the sensor ordered along the beam
     an not odered by their sensor ids as before.
 *   The ``--debug`` flag on most tools also prints full event information.
+*   Add reader for Timepix3 data recorded by SPIDR DAQ boards
 
 Bugfixes
 --------
@@ -72,7 +73,7 @@ Internal changes
     formats.
 *   Add global reader registry to allow automatic file type deduction
     when opening a file.
-    
+
     To be registered, a reader implementation needs to provide a ``check`` and
     an ``open`` function. The check function must provide a score that indicates
     how likely it is that a file is of the given type, e.g. by looking at file

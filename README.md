@@ -47,6 +47,8 @@ Proteus has seen contributions from (in alphabetical order):
 *   Marco Rimoldi
 *   Branislav Ristic
 *   Sergio Gonzalez Sevilla
+*   Simon Spannagel
+*   Morag William
 
 The original Judith software was written by
 
