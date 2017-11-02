@@ -17,6 +17,14 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 # after setting CMAKE_CXX_FLAGS to be able to pick up existing -std=... flags
 include(RequireCXX11)
 
+# Set the source files to clang-format
+file(GLOB_RECURSE
+    CHECK_CXX_SOURCE_FILES
+    lib/*.[tch]pp lib/*.h
+    exe/*.[tch]pp exe/*.h
+)
+include("cmake/clang-cpp-checks.cmake")
+
 include_directories(external/tinytoml/include)
 
 if(PROTEUS_ENABLE_DOC)
