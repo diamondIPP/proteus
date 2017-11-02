@@ -34,6 +34,22 @@ void Storage::Event::setTrigger(int32_t info, int32_t offset, int32_t phase)
   m_triggerPhase = phase;
 }
 
+void Storage::Event::setSensorData(Index isensor, SensorEvent&& sensorEvent)
+{
+  assert(((0 <= isensor) && (isensor < m_sensors.size())) &&
+         "Sensor index must be valid");
+
+  m_sensors[isensor] = std::move(sensorEvent);
+  m_sensors[isensor].m_sensor = isensor;
+  m_sensors[isensor].m_states.clear();
+}
+
+void Storage::Event::setSensorData(Index first, Event&& event)
+{
+  for (Index isensor = 0, n = event.m_sensors.size(); isensor < n; ++isensor)
+    setSensorData(first + isensor, std::move(event.m_sensors[isensor]));
+}
+
 void Storage::Event::addTrack(std::unique_ptr<Track> track)
 {
   m_tracks.emplace_back(std::move(track));

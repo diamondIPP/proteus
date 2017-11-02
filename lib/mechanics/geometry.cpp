@@ -1,7 +1,5 @@
 #include "geometry.h"
 
-#include <TDecompSVD.h>
-#include <TMatrix.h>
 #include <cassert>
 #include <fstream>
 #include <iomanip>
@@ -9,6 +7,9 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+
+#include <TDecompSVD.h>
+#include <TMatrix.h>
 
 #include "utils/logger.h"
 
@@ -38,13 +39,6 @@ Mechanics::Plane Mechanics::Plane::fromDirections(const Vector3& dirU,
   return p;
 }
 
-Transform3D Mechanics::Plane::asTransform3D() const
-{
-  Rotation3D r;
-  r.SetRotationMatrix(rotation);
-  return Transform3D(r, Translation3D(offset[0], offset[1], offset[2]));
-}
-
 Vector6 Mechanics::Plane::asParams() const
 {
   Vector6 params;
@@ -59,6 +53,31 @@ Vector6 Mechanics::Plane::asParams() const
   params[4] = zyx.Theta(); // beta
   params[5] = zyx.Phi();   // gamma
   return params;
+}
+
+Vector3 Mechanics::Plane::toLocal(const Vector3& xyz) const
+{
+  return Transpose(rotation) * (xyz - offset);
+}
+
+Vector3 Mechanics::Plane::toLocal(const XYZPoint& xyz) const
+{
+  return Transpose(rotation) * (Vector3(xyz.x(), xyz.y(), xyz.z()) - offset);
+}
+
+Vector3 Mechanics::Plane::toGlobal(const Vector2& uv) const
+{
+  return offset + rotation.Sub<Matrix32>(0, 0) * uv;
+}
+
+Vector3 Mechanics::Plane::toGlobal(const XYPoint& uv) const
+{
+  return offset + rotation.Sub<Matrix32>(0, 0) * Vector2(uv.x(), uv.y());
+}
+
+Vector3 Mechanics::Plane::toGlobal(const Vector3& uvw) const
+{
+  return offset + rotation * uvw;
 }
 
 Mechanics::Geometry::Geometry() : m_beamSlopeX(0), m_beamSlopeY(0) {}
@@ -226,9 +245,9 @@ void Mechanics::Geometry::correctLocal(Index sensorId,
   DEBUG("  unit w: [", plane.unitNormal(), "]");
 }
 
-Transform3D Mechanics::Geometry::getLocalToGlobal(Index sensorId) const
+const Mechanics::Plane& Mechanics::Geometry::getPlane(Index sensorId) const
 {
-  return m_planes.at(sensorId).asTransform3D();
+  return m_planes.at(sensorId);
 }
 
 Vector6 Mechanics::Geometry::getParams(Index sensorId) const
@@ -252,9 +271,9 @@ void Mechanics::Geometry::setBeamSlope(double slopeX, double slopeY)
   m_beamSlopeY = slopeY;
 }
 
-XYZVector Mechanics::Geometry::beamDirection() const
+Vector3 Mechanics::Geometry::beamDirection() const
 {
-  return XYZVector(m_beamSlopeX, m_beamSlopeY, 1);
+  return Vector3(m_beamSlopeX, m_beamSlopeY, 1);
 }
 
 void Mechanics::Geometry::print(std::ostream& os,
@@ -271,4 +290,17 @@ void Mechanics::Geometry::print(std::ostream& os,
        << prefix << "  unit w: [" << ip.second.unitNormal() << "]\n";
   }
   os.flush();
+}
+
+std::vector<Index>
+Mechanics::sortedAlongBeam(const Mechanics::Geometry& geo,
+                           const std::vector<Index>& sensorIds)
+{
+  // TODO 2017-10 msmk: actually sort along beam direction and not just along
+  //                    z-axis as proxy.
+  std::vector<Index> sorted(std::begin(sensorIds), std::end(sensorIds));
+  std::sort(sorted.begin(), sorted.end(), [&](Index id0, Index id1) {
+    return geo.getPlane(id0).offset[2] < geo.getPlane(id1).offset[2];
+  });
+  return sorted;
 }

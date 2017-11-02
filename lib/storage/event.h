@@ -12,13 +12,29 @@
 
 namespace Storage {
 
-/** An event containing all global and local information for one trigger. */
+/** An event containing all global and local information for one trigger.
+ *
+ * The number of sensors per event is fixed at construction time.
+ */
 class Event {
 public:
-  Event(size_t sensors);
+  explicit Event(size_t sensors);
 
-  void clear(uint64_t frame, uint64_t timestamp);
+  /** Clear the event without changing the number of sensors. */
+  void clear(uint64_t frame = UINT64_MAX, uint64_t timestamp = UINT64_MAX);
   void setTrigger(int32_t info, int32_t offset, int32_t phase);
+  /** Set the data, i.e. hits and clusters, for one sensor.
+   *
+   * Reconstructed local track data is not copied.
+   */
+  void setSensorData(Index isensor, SensorEvent&& sensorEvent);
+  /** Set the data, i.e. hits and clusters, for multiple sensors.
+   *
+   * This copies the data for all sensors in the input event and places them
+   * into the sensors in this event starting at `first`. Reconstructed global
+   * and local track data is not copied.
+   */
+  void setSensorData(Index first, Event&& event);
 
   uint64_t frame() const { return m_frame; }
   uint64_t timestamp() const { return m_timestamp; }

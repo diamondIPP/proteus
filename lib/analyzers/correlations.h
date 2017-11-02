@@ -13,6 +13,7 @@ class TH2D;
 
 namespace Mechanics {
 class Device;
+class Geometry;
 class Sensor;
 } // namespace Mechanics
 
@@ -31,7 +32,14 @@ public:
                const Mechanics::Device& device,
                const std::vector<Index>& sensorIds,
                const int neighbors = 2);
-  /** Consider pair-wise correlations between all configured sensors. */
+  /** Consider pair-wise correlations between all configured sensors.
+   *
+   * \param device     The telescope device.
+   * \param neighbors  How many neighboring planes to consider; must be > 1.
+   *
+   * Correlations are calculated for all configured sensors ordered along the
+   * beam direction.
+   */
   Correlations(TDirectory* dir,
                const Mechanics::Device& device,
                const int neighbors = 2);
@@ -57,6 +65,7 @@ private:
     TH1D* diffY;
   };
 
+  const Mechanics::Geometry& m_geo;
   std::map<Indices, Hists> m_hists;
 };
 

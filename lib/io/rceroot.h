@@ -87,19 +87,22 @@ protected:
 /** Read events from a RCE ROOT file. */
 class RceRootReader : public RceRootCommon, public EventReader {
 public:
-  /** Return true if the file is a valid rce input file. */
-  static bool isValid(const std::string& path);
+  /** Return a score of how likely the given path is an RCE Root file. */
+  static int check(const std::string& path);
+  /** Open the the file. */
+  static std::shared_ptr<RceRootReader> open(const std::string& path,
+                                             const toml::Value& /* unused */);
 
   /** Open an existing file and determine the number of sensors and events. */
   RceRootReader(const std::string& path);
   ~RceRootReader();
 
-  std::string name() const;
-  uint64_t numEvents() const;
-  Index numSensors() const { return static_cast<Index>(m_sensors.size()); }
+  std::string name() const override final;
+  uint64_t numEvents() const override final;
+  size_t numSensors() const override final;
 
-  void skip(uint64_t n);
-  bool read(Storage::Event& event);
+  void skip(uint64_t n) override final;
+  bool read(Storage::Event& event) override final;
 
 private:
   void addSensor(TDirectory* dir);

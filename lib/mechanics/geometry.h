@@ -47,14 +47,23 @@ struct Plane {
                               const Vector3& dirV,
                               const Vector3& offset);
 
-  /** Compute the equivalent local-to-global Transform3D object. */
-  Transform3D asTransform3D() const;
   /** Compute geometry parameters [x0, y0, z0, a1, a2, a3]. */
   Vector6 asParams() const;
 
   Vector3 unitU() const { return rotation.SubCol<Vector3>(0); }
   Vector3 unitV() const { return rotation.SubCol<Vector3>(1); }
   Vector3 unitNormal() const { return rotation.SubCol<Vector3>(2); }
+
+  /** Transform a global position into local coordinates. */
+  Vector3 toLocal(const Vector3& xyz) const;
+  /** Transform a global position into local coordinates. */
+  Vector3 toLocal(const XYZPoint& xyz) const;
+  /** Transform a local position on the plane into global coordinates. */
+  Vector3 toGlobal(const Vector2& uv) const;
+  /** Transform a local position on the plane into global coordinates. */
+  Vector3 toGlobal(const XYPoint& uv) const;
+  /** Transform a local position into global coordinates. */
+  Vector3 toGlobal(const Vector3& uvw) const;
 };
 
 /** Store and process the geometry of the telescope setup.
@@ -82,8 +91,9 @@ public:
   /** Add small local corrections du, dv, dw, dRotU, dRotV, dRotW. */
   void
   correctLocal(Index sensorId, const Vector6& delta, const SymMatrix6& cov);
-  /** Transformation from local to global coordinates for the sensor. */
-  Transform3D getLocalToGlobal(Index sensorId) const;
+
+  /** The local sensor plane object. */
+  const Plane& getPlane(Index sensorId) const;
   /** Geometry parameters [x, y, z, alpha, beta, gamma] for a sensor. */
   Vector6 getParams(Index sensorId) const;
   /** Geometry parameters covariance matrix. */
@@ -91,7 +101,7 @@ public:
 
   void setBeamSlope(double slopeX, double slopeY);
   /** Beam direction in the global coordinate system. */
-  XYZVector beamDirection() const;
+  Vector3 beamDirection() const;
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
@@ -100,6 +110,10 @@ private:
   std::map<Index, SymMatrix6> m_covs;
   double m_beamSlopeX, m_beamSlopeY;
 };
+
+/** Sort the sensor indices by their position along the beam direction. */
+std::vector<Index> sortedAlongBeam(const Geometry& geo,
+                                   const std::vector<Index>& sensorIds);
 
 } // namespace Mechanics
 

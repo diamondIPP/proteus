@@ -157,9 +157,39 @@ void Mechanics::Device::setGeometry(const Geometry& geometry)
 {
   m_geometry = geometry;
 
+  // update geometry-dependent sensor properties
+  auto setProjectedEnvelope = [](const Plane& plane, Sensor& sensor) {
+    using Area = Sensor::Area;
+
+    Area pix = sensor.sensitiveAreaLocal();
+    // TODO 2016-08 msmk: find a smarter way to this, but its Friday
+    // transform each corner of the sensitive rectangle
+    Vector3 minMin = plane.toGlobal(Vector2(pix.min(0), pix.min(1)));
+    Vector3 minMax = plane.toGlobal(Vector2(pix.min(0), pix.max(1)));
+    Vector3 maxMin = plane.toGlobal(Vector2(pix.max(0), pix.min(1)));
+    Vector3 maxMax = plane.toGlobal(Vector2(pix.max(0), pix.max(1)));
+
+    std::array<double, 4> xs = {{minMin[0], minMax[0], maxMin[0], maxMax[0]}};
+    std::array<double, 4> ys = {{minMin[1], minMax[1], maxMin[1], maxMax[1]}};
+
+    sensor.m_projEnvelopeXY =
+        Area(Area::AxisInterval(*std::min_element(xs.begin(), xs.end()),
+                                *std::max_element(xs.begin(), xs.end())),
+             Area::AxisInterval(*std::min_element(ys.begin(), ys.end()),
+                                *std::max_element(ys.begin(), ys.end())));
+  };
+  auto setProjectedPitch = [](const Plane& plane, Sensor& sensor) {
+    Vector3 pitchUVW(sensor.pitchCol(), sensor.pitchRow(), 0);
+    Vector3 pitchXYZ = plane.rotation * pitchUVW;
+    // only interested in absolute values not in direction
+    for (int i : {0, 1, 2})
+      pitchXYZ[i] = std::abs(pitchXYZ[i]);
+    sensor.m_projPitchXY = pitchXYZ.Sub<Vector2>(0);
+  };
+
   for (Index sensorId = 0; sensorId < numSensors(); ++sensorId) {
-    Sensor* sensor = getSensor(sensorId);
-    sensor->setLocalToGlobal(m_geometry.getLocalToGlobal(sensorId));
+    setProjectedEnvelope(m_geometry.getPlane(sensorId), *getSensor(sensorId));
+    setProjectedPitch(m_geometry.getPlane(sensorId), *getSensor(sensorId));
   }
   // TODO 2016-08-18 msmk: check number of sensors / id consistency
 }
@@ -202,12 +232,4 @@ void Mechanics::Device::print(std::ostream& os, const std::string& prefix) const
   os << prefix << "noise mask:\n";
   m_pixelMasks.print(os, prefix + "  ");
   os.flush();
-}
-
-std::vector<Index> Mechanics::sortedByZ(const Device& device,
-                                        const std::vector<Index>& sensorIds)
-{
-  std::vector<Index> sorted(std::begin(sensorIds), std::end(sensorIds));
-  std::sort(sorted.begin(), sorted.end(), CompareSensorIdZ{device});
-  return sorted;
 }

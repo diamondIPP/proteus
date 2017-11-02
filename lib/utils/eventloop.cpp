@@ -13,7 +13,7 @@
 #include "io/rceroot.h"
 #include "storage/event.h"
 #include "utils/logger.h"
-#include "utils/progressbar.h"
+#include "utils/progress.h"
 #include "utils/statistics.h"
 
 PT_SETUP_LOCAL_LOGGER(EventLoop)
@@ -209,15 +209,15 @@ void Utils::EventLoop::run()
   for (const auto& writer : m_writers)
     DEBUG("  ", writer->name());
 
-  Utils::ProgressBar progress;
-  if (m_showProgress)
-    progress.update<uint64_t>(0, m_events);
+  Utils::Progress progress(m_showProgress ? m_events : 0);
+  progress.update(0);
   timing.start();
   {
     StopWatch sw(timing.reader);
     m_reader->skip(m_start);
   }
-  for (uint64_t nevents = 1; nevents <= m_events; ++nevents) {
+  uint64_t processed = 0;
+  for (; processed < m_events; ++processed) {
     {
       StopWatch sw(timing.reader);
       if (!m_reader->read(event))
@@ -236,14 +236,12 @@ void Utils::EventLoop::run()
       m_writers[i]->append(event);
     }
     stats.fill(event.getNumHits(), event.getNumClusters(), event.numTracks());
-    if (m_showProgress)
-      progress.update(nevents, m_events);
+    progress.update(processed + 1);
   }
-  if (m_showProgress)
-    progress.clear();
+  progress.clear();
   for (const auto& analyzer : m_analyzers)
     analyzer->finalize();
   timing.stop();
-  timing.summarize(m_events, m_processors, m_analyzers, m_writers);
+  timing.summarize(processed + 1, m_processors, m_analyzers, m_writers);
   stats.summarize();
 }

@@ -9,11 +9,10 @@ set(SOURCES
     analyzers/hits.cpp
     analyzers/tracks.cpp
     analyzers/residuals.cpp
-#   converters/kartelconvert.cpp
     io/match.cpp
+    io/merger.cpp
     io/rceroot.cpp
     io/reader.cpp
-    io/writer.cpp
     mechanics/device.cpp
     mechanics/geometry.cpp
     mechanics/pixelmasks.cpp
@@ -21,22 +20,19 @@ set(SOURCES
     processors/applygeometry.cpp
     processors/applyregions.cpp
     processors/clusterizer.cpp
-#   processors/eventdepictor.cpp
     processors/hitmapper.cpp
-#   processors/largesynchronizer.cpp
     processors/matcher.cpp
     processors/processor.cpp
     processors/setupsensors.cpp
-#   processors/synchronizer.cpp
     storage/cluster.cpp
     storage/event.cpp
     storage/hit.cpp
     storage/sensorevent.cpp
     storage/track.cpp
     storage/trackstate.cpp
+    tracking/propagation.cpp
     tracking/trackfinder.cpp
     tracking/straightfitter.cpp
-    tracking/tracking.cpp
     utils/application.cpp
     utils/arguments.cpp
     utils/config.cpp

@@ -12,7 +12,7 @@
 
 namespace Mechanics {
 
-/** Pixel sensor with digital and geometry information.
+/** Pixel sensor with digital and local geometry information.
  *
  * To define the sensor and its orientation in space, three different
  * coordinate systems are used:
@@ -35,6 +35,10 @@ namespace Mechanics {
  * 3.  The global coordinate system has the same units as the local coordinate
  *     system with coordinates (x,y,z);
  *
+ * This class handles only local information, i.e. the pixel and local
+ * coordinate system. The placement of sensors in the global coordinate
+ * system and the corresponding transformations are handled in the geometry
+ * module.
  */
 class Sensor {
 public:
@@ -90,55 +94,39 @@ public:
   /** Sensitive area in pixel coordinates. */
   const Area& sensitiveAreaPixel() const { return m_sensitiveAreaPixel; }
   /** Sensitive area in local coordinates. */
-  Area sensitiveAreaLocal() const;
+  const Area& sensitiveAreaLocal() const { return m_sensitiveAreaLocal; }
   /** Projected envelope in the xy-plane of the sensitive area. */
-  Area projectedEnvelopeXY() const;
-  /** Projected pitch along the global x and y axes. */
-  Vector2 projectedPitchXY() const;
+  const Area& projectedEnvelopeXY() const { return m_projEnvelopeXY; }
+  /** Projected pitch in the xy-plane. */
+  const Vector2& projectedPitchXY() const { return m_projPitchXY; }
 
-  // geometry
-  XYZPoint origin() const;
-  XYZVector normal() const;
-  const Transform3D& localToGlobal() const { return m_l2g; }
-  const Transform3D& globalToLocal() const { return m_g2l; }
-  /** Construct a transformation for pixel col/row to global xyz coordinates. */
-  Transform3D constructPixelToGlobal() const;
-  void setLocalToGlobal(const Transform3D& l2g);
-
-  //
-  // transformations between different coordinate systems
-  //
+  /** Transform pixel matrix position to local coordinates. */
   XYPoint transformPixelToLocal(const XYPoint& cr) const;
+  /** Transform local coordinates to pixel matrix position. */
   XYPoint transformLocalToPixel(const XYPoint& uv) const;
-  XYZPoint transformLocalToGlobal(const XYPoint& uv) const;
-  XYPoint transformGlobalToLocal(const XYZPoint& xyz) const;
-  XYZPoint transformPixelToGlobal(const XYPoint& cr) const;
-  XYPoint transformGlobalToPixel(const XYZPoint& xyz) const;
 
-  //
-  // noise-pixels functions
-  //
   void setMaskedPixels(const std::set<ColumnRow>& pixels);
   const Utils::DenseMask& pixelMask() const { return m_pixelMask; }
 
-  //
-  // Misc functions
-  //
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
-  Area m_sensitiveAreaPixel; // sensitive (useful) area inside the matrix
+  Index m_numCols, m_numRows;      // number of columns and rows
+  double m_pitchCol, m_pitchRow;   // pitch along column and row direction
   XYVector m_sensitiveCenterPixel; // center position of the sensitive area
-  Transform3D m_l2g, m_g2l;
-  Index m_numCols, m_numRows;    // number of columns and rows
-  double m_pitchCol, m_pitchRow; // pitch along column and row direction
-  double m_thickness;            // sensor thickness
-  double m_xX0;                  // X/X0 (thickness in radiation lengths)
+  Area m_sensitiveAreaPixel;       // sensitive (useful) area inside the matrix
+  Area m_sensitiveAreaLocal;       // sensitive (useful) area inside the matrix
+  Area m_projEnvelopeXY;           // projection of the active are into xy-plane
+  Vector2 m_projPitchXY;           // pixel pitch as seen in the xy-plane
+  double m_thickness;              // sensor thickness
+  double m_xX0;                    // X/X0 (thickness in radiation lengths)
   Measurement m_measurement;
   Index m_id;
   std::string m_name;
   std::vector<Region> m_regions;
   Utils::DenseMask m_pixelMask;
+
+  friend class Device;
 };
 
 } // namespace Mechanics

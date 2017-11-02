@@ -9,10 +9,13 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
 namespace Utils {
+namespace detail {
 
 // support << operator for std::vector
 template <typename T>
@@ -31,6 +34,21 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& things)
   os << ']';
   return os;
 }
+
+// simple printing w/o << operators
+template <typename T>
+void print(std::ostream& os, T&& thing)
+{
+  os << thing;
+}
+template <typename T0, typename... TN>
+void print(std::ostream& os, T0&& thing, TN&&... rest)
+{
+  os << thing;
+  print(os, rest...);
+}
+
+} // namespace detail
 
 /** A logger object with global log level.
  *
@@ -84,22 +102,10 @@ public:
   }
 
 private:
-  template <typename T>
-  static void print(std::ostream& os, const T& thing)
-  {
-    os << thing;
-  }
-  template <typename T0, typename... TN>
-  static void print(std::ostream& os, const T0& thing, const TN&... rest)
-  {
-    os << thing;
-    print(os, rest...);
-  }
   static std::ostream& stream(Level lvl)
   {
     return (lvl == Level::Error) ? std::cerr : std::cout;
   }
-
   std::string prefix(Level lvl) const
   {
     return kLevelPrefix[static_cast<int>(lvl)] + m_prefix;
@@ -108,7 +114,7 @@ private:
   void log(Level lvl, const Ts&... things)
   {
     if (isActive(lvl))
-      print(stream(lvl), prefix(lvl), things..., kReset);
+      detail::print(stream(lvl), prefix(lvl), things..., kReset);
   }
 
   static const char* const kLevelPrefix[3];
@@ -167,7 +173,7 @@ private:
 #else
 #define DEBUG(...)                                                             \
   do {                                                                         \
-    logger().debug(__VA_ARGS__, " (", __FUNCTION__, ':', __LINE__, ")\n");     \
+    logger().debug(__VA_ARGS__, '\n');                                         \
   } while (false)
 #endif
 
@@ -177,5 +183,15 @@ private:
     logger().error(__VA_ARGS__, '\n');                                         \
     std::exit(EXIT_FAILURE);                                                   \
   } while (false)
+
+/** Throw an exception of the given type with a custom error message. */
+#define THROWX(ExceptionType, ...)                                             \
+  do {                                                                         \
+    std::ostringstream os;                                                     \
+    Utils::detail::print(os, __VA_ARGS__);                                     \
+    throw ExceptionType(os.str());                                             \
+  } while (false)
+/** Throw a std::runtimer_error with a custom error message. */
+#define THROW(...) THROWX(std::runtime_error, __VA_ARGS__)
 
 #endif // PT_LOGGER_H

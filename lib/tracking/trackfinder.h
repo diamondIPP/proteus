@@ -9,18 +9,19 @@
 
 namespace Mechanics {
 class Device;
-}
+class Geometry;
+} // namespace Mechanics
 namespace Storage {
 class SensorEvent;
 class Track;
-}
+} // namespace Storage
 
 namespace Tracking {
 
 /** Find tracks assuming straight propagation along the beam direction.
  *
- * Matching clusters are searched for only on the selected sensors in the order
- * in which they are given. In case of ambiguities, the track bifurcates info
+ * Matching clusters are searched for only on the selected sensors ordered
+ * along the beam direction. In case of ambiguities, the track bifurcates info
  * multiple candidates. Ambiguities are resolved after all track candidates
  * have been found by associating clusters exclusively to the best candidate,
  * i.e. the one with the highest number of hits and the lowest chi2 value, to
@@ -35,28 +36,28 @@ public:
    * \param redChi2Max Selection cut on chi2/d.o.f, negative to disable
    */
   TrackFinder(const Mechanics::Device& device,
-              std::vector<Index> sensors,
-              Index numClustersMin,
-              double searchSigmaMax = -1,
-              double redChi2Max = -1);
+              const std::vector<Index>& sensors,
+              const Index numClustersMin,
+              const double searchSigmaMax = -1,
+              const double redChi2Max = -1);
 
   std::string name() const;
   /** Find tracks and add them to the event. */
   void process(Storage::Event& event) const;
 
 private:
-  typedef std::unique_ptr<Storage::Track> TrackPtr;
+  using TrackPtr = std::unique_ptr<Storage::Track>;
 
   void searchSensor(Storage::SensorEvent& sensorEvent,
                     std::vector<TrackPtr>& candidates) const;
   void selectTracks(std::vector<TrackPtr>& candidates,
                     Storage::Event& event) const;
 
+  const Mechanics::Geometry& m_geo;
   std::vector<Index> m_sensorIds;
   Index m_numClustersMin;
   double m_d2Max;
   double m_redChi2Max;
-  XYZVector m_beamDirection;
 };
 
 } // namespace Tracking
