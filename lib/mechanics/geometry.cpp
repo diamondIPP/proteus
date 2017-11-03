@@ -122,6 +122,8 @@ Mechanics::Geometry Mechanics::Geometry::fromConfig(const toml::Value& cfg)
     auto div = cfg.get<std::vector<double>>("beam.divergence");
     if (div.size() != 2)
       FAIL("beam.divergence has ", div.size(), " != 2 entries");
+    if (!(0 < div[0]) || !(0 < div[1]))
+      FAIL("beam.divergence must have non-zero, positive values");
     geo.setBeamDivergence(div[0], div[1]);
   }
   if (cfg.has("beam.energy")) {
