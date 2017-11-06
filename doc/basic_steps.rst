@@ -7,24 +7,28 @@ from the raw hit data, the reconstruction finds and fits tracks using the
 telescope planes and estimates the expected track position on one of more
 devices-under-test for further analysis.
 
-Setup
------
+Setup on lxplus
+---------------
 
-Proteus requires `ROOT <https://root.cern.ch>`_ and a compiler that supports
-C++11. On Fedora 24 and higher the system compiler and ROOT available via the
-package manager are sufficient. The system compiler GCC 4.4 on LXPLUS/Scientific
-Linux 6 does not work. A recent C++ compiler and matching ROOT version can be
-activated via:
+Proteus requires `ROOT <https://root.cern.ch>`_ and a C++11 compiler. These
+are not available by default on all lxplus machines. Appropriate version are
+made available through the LCG releases. LCG releases *LCG_88* or higher
+are recent enough.
+
+On lxplus6 (Scientific Linux CERN 6) use
 
 .. code-block:: console
 
-    $ . /cvmfs/sft.cern.ch/lcg/releases/gcc/4.9.3/x86_64-slc6/setup.sh
-    $ pushd /cvmfs/sft.cern.ch/lcg/app/releases/ROOT/5.34.36/x86_64-slc6-gcc49-opt/root
-    $ . bin/thisroot.sh
-    $ popd
+    $ source /cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-slc6-gcc62-opt/setup.sh
 
-After downloading the software the following commands are used to build the
-software using `CMake <https://cmake.org/>`_ in a separate build directory:
+and on lxplus7 (CentOS Linux 7) use
+
+.. code-block:: console
+
+    $ source /cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-centos7-gcc62-opt/setup.sh
+
+to activate the required software. The following commands are then used to build
+the software using `CMake <https://cmake.org/>`_ in a separate build directory:
 
 .. code-block:: console
 
@@ -43,6 +47,25 @@ After sourcing it via
 
 all binaries can be called directly without the need to specify their location
 explicitly.
+
+For a permanent installation on lxplus you can use the following installation
+helper script:
+
+.. code-block:: console
+
+    $ ./scripts/lxplus_versioned_install.sh <INSTALL_BASE_DIR>
+
+This builds proteus in a temporary directory and installs it into the
+``<INSTALL_BASE_DIR>/<version>/<platform>`` directory together with a combined
+``setup.sh`` script that activates both the appropriated LCG release and the
+software itself.
+
+Setup on a local machine
+------------------------
+
+On your local machine your are responsible for providing a C++11 compiler and a
+ROOT installation. On most recent Linux distributions both are available via the
+system package manager. The build commands should be identical.
 
 Configuration
 -------------
