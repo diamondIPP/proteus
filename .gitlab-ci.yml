@@ -1,4 +1,4 @@
-image: gitlab-registry.cern.ch/unige-fei4tel/proteus:slc6
+image: gitlab-registry.cern.ch/ci-tools/ci-worker:slc6
 
 stages:
   - build
@@ -13,71 +13,76 @@ cache:
 # setup default build environment w/ minimal version requirements
 # run debug build by default
 before_script:
-  - source /cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-slc6-gcc62-opt/setup.sh
-  - export "PATH=${PWD}/slc6-debug/bin:${PATH}"
+  - source /cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-slc6-gcc49-opt/setup.sh
+  - export "PATH=${PWD}/install-slc6-dbg/bin${PATH:+:}${PATH}"
+  - export "LD_LIBRARY_PATH=${PWD}/install-slc6-dbg/lib${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
 
-build-slc6-release:
+build-slc6-dbg:
   stage: build
   tags:
     - cvmfs
-  script:
-    - mkdir slc6-release
-    - cd slc6-release
-    - cmake -DCMAKE_BUILD_TYPE=Release ..
-    - cmake --build .
-  artifacts:
-    paths:
-      - slc6-release/bin
-
-build-slc6-debug:
-  stage: build
-  tags:
-    - cvmfs
-  script:
-    - mkdir slc6-debug
-    - cd slc6-debug
+  variables:
     # Build type=Debug: activates compilation of asserts and
     # includes debug symbols (See issue #43)
-    - cmake -DCMAKE_BUILD_TYPE=Debug ..
+    CMAKE_ARGS: -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${CI_PROJECT_DIR}/install-slc6-dbg
+  script:
+    - mkdir build_external && cd build_external
+    - cmake ${CMAKE_ARGS} ../ci/external
+    # external tools are installed already during build step
     - cmake --build .
+    - mkdir ../build && cd ../build
+    - cmake ${CMAKE_ARGS} -DPROTEUS_USE_EUDAQ=on ..
+    - cmake --build . -- install
   artifacts:
     paths:
-      - slc6-debug/bin
+      - install-slc6-dbg
 
-build-cc7-gcc:
-  image: gitlab-registry.cern.ch/unige-fei4tel/proteus:cc7
+build-slc6-opt:
   stage: build
+  tags:
+    - cvmfs
+  variables:
+    CMAKE_ARGS: -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${CI_PROJECT_DIR}/install-slc6-opt
+  script:
+    - mkdir build-external && cd build-external
+    - cmake ${CMAKE_ARGS} ../ci/external
+    # external tools are installed already during build step
+    - cmake --build .
+    - mkdir ../build && cd ../build
+    - cmake ${CMAKE_ARGS} -DPROTEUS_USE_EUDAQ=on ..
+    - cmake --build .
+
+build-cc7-dbg:
+  image: gitlab-registry.cern.ch/ci-tools/ci-worker:cc7
+  stage: build
+  tags:
+    - cvmfs
   before_script: []
   script:
-    - mkdir cc7-gcc
-    - cd cc7-gcc
-    - cmake -GNinja -DCMAKE_CXX_COMPILER=g++ ..
+    - source /cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-centos7-gcc62-opt/setup.sh
+    - mkdir build && cd build
+    - cmake -GNinja -DCMAKE_BUILD_TYPE=Debug ..
     - cmake --build .
-  artifacts:
-    paths:
-      - cc7-gcc/bin
 
-build-cc7-clang:
-  image: gitlab-registry.cern.ch/unige-fei4tel/proteus:cc7
+build-cc7-opt:
+  image: gitlab-registry.cern.ch/ci-tools/ci-worker:cc7
   stage: build
+  tags:
+    - cvmfs
   before_script: []
   script:
-    - mkdir cc7-clang
-    - cd cc7-clang
-    - cmake -GNinja -DCMAKE_CXX_COMPILER=clang++  ..
+    - source /cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-centos7-gcc62-opt/setup.sh
+    - mkdir build && cd build
+    - cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
     - cmake --build .
-  artifacts:
-    paths:
-      - cc7-clang/bin
 
 doc:
   image: gitlab-registry.cern.ch/unige-fei4tel/proteus:cc7
   stage: build
   before_script: []
   script:
-    - mkdir build
-    - cd build
-    - cmake -GNinja -DPROTEUS_ENABLE_DOC=on ..
+    - mkdir build && cd build
+    - cmake -DPROTEUS_ENABLE_DOC=on ..
     - cmake --build . -- doc
   artifacts:
     paths:
