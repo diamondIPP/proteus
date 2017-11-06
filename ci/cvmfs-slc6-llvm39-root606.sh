@@ -1,9 +1,0 @@
-# setup CVMFS-based environment w/ clang 3.9 and ROOT 6.06
-
-source /cvmfs/sft.cern.ch/lcg/contrib/gcc/4.9.3/x86_64-slc6/setup.sh
-source /cvmfs/sft.cern.ch/lcg/contrib/llvm/3.9.0/x86_64-slc6-gcc49-opt/setup.sh
-pushd .
-cd  /cvmfs/sft.cern.ch/lcg/app/releases/ROOT/6.06.08/x86_64-slc6-gcc49-opt/root
-source bin/thisroot.sh
-popd
-export PATH="/cvmfs/sft.cern.ch/lcg/contrib/CMake/3.2.3/Linux-x86_64/bin:${PATH}"

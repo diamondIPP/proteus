@@ -13,7 +13,7 @@ cache:
 # setup default build environment w/ minimal version requirements
 # run debug build by default
 before_script:
-  - source ci/cvmfs-slc6-gcc48-root534.sh
+  - source /cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-slc6-gcc62-opt/setup.sh
   - export "PATH=${PWD}/slc6-debug/bin:${PATH}"
 
 build-slc6-release:
