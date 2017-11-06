@@ -35,6 +35,7 @@ public:
 private:
   struct AreaHists {
     TH2D* pos;
+    TH1D* time;
     TH1D* value;
     TH1D* size;
     TH2D* sizeSizeCol;
@@ -62,7 +63,7 @@ public:
            const Mechanics::Device& device,
            /* Histogram options */
            const int sizeMax = 8,
-           const int timeMax = 32,
+           const int timeMax = 16,
            const int valueMax = 32,
            const int binsUncertainty = 32);
 

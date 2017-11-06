@@ -38,8 +38,7 @@ struct SensorResidualHists {
   SensorResidualHists() = default;
   SensorResidualHists(TDirectory* dir,
                       const Mechanics::Sensor& sensor,
-                      const double pixelRange,
-                      const double slopeRange,
+                      const double rangeStd,
                       const int bins,
                       const std::string& name);
 
@@ -50,18 +49,19 @@ struct SensorResidualHists {
 
 class Residuals : public Analyzer {
 public:
-  /**
-   * \param subdir Name of the output subdirectory
-   * \param pixelRange Residual histogram range in number of pixels
-   * \param slopeRange Track slope histogram range in radian
-   * \param bins Number of histogram bins
+  /** Construct a residual analyzer for the full device.
+   *
+   * \param dir       Where to create the output subdirectory
+   * \param device    The device object
+   * \param subdir    Name of the output subdirectory
+   * \param rangeStd  Residual/ slope range in expected standard deviations
+   * \param bins      Number of histogram bins
    */
   Residuals(TDirectory* dir,
             const Mechanics::Device& device,
             const std::string& subdir = std::string("residuals"),
             /* Histogram options */
-            const double pixelRange = 2.0,
-            const double slopeRange = 0.001,
+            const double rangeStd = 5.0,
             const int bins = 128);
 
   std::string name() const;

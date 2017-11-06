@@ -11,28 +11,22 @@ also be found in the ``test`` directory.
 Basic introduction to TOML
 --------------------------
 
-Using TOML you can save parameters in the format ``key = value`` where
-value can be a number, a string or an array (of numbers, strings or
-arrays).
-
-The parameters can be grouped into tables, which are defined by
-``[table_name]``.
+TOML stores parameters in the format ``key = value`` where value can be a
+number, a string or an array (of numbers, strings or arrays). Parameters can be
+grouped into tables, which are defined by ``[table_name]``. Tables are similar
+to objects in the `JSON <http://json.org>`_ notation.
 
 .. code::
     
     geometry = "geometry/aligned.toml"
     pixel_mask = ["masks/tel_mask_empty.toml",
                   "masks/duts_mask_empty.toml"]
-    
-    [device]
-    name = "FEI4Tel"
-    clock = 40.0
-    window = 16
-    space_unit = "um"
-    time_unit = "ns"
 
-Here we see two parameters that don't belong to any table (``geometry``
-and ``noise_mask``) and then the table ``[device]`` with its parameters.
+    [example]
+    keyname = 0.123
+
+Here we see two global parameters that don't belong to any table (``geometry``
+and ``noise_mask``) and then the table ``[example]`` with its parameters.
 
 You can also define sub-tables.
 
@@ -56,10 +50,10 @@ You can also define sub-tables.
     thickness = 250.
     x_x0 = 0.005443
 
-Here ``fei4-si`` and ``ccpdv4`` are both subtables of
-``[sensor_types]``.
+Here ``fei4-si`` and ``ccpdv4`` are both subtables of ``[sensor_types]``.
 
-You can define arrays of tables too.
+You can define arrays of tables too. Again, these would correspond to
+lists of objects in `JSON <http://json.org>`_ notation.
 
 .. code::
 
@@ -84,23 +78,24 @@ You can define arrays of tables too.
     row_min = 138
     row_max = 181
 
-Here we see an array of subtables. The tables in the array are added in
+This corresponds to an array of three tables available under the
+``noisescan.tel.sensor`` key. The tables in the array are added in
 the order in which they are written in the file.
 
 Device configuration (``device.toml``)
 --------------------------------------
 
-This configuration file describes the telescope globally, the sensors
+This configuration file describes the setup, the sensors
 types used and lists all the sensors used for the measurements (both the
-telescope ones and the DUTs). Furthermore, it contains the path to the
+telescope ones and the DUTs). Furthermore, it can contain the path to an
 geometry configuration files (which contains the positions of the
 sensors) and to the noise masks, i.e. a list of the noisy pixels for
 each sensor.
 
-The paths in this file can be either absolute or relative (wrt the
-directory of the configuration file).
+The paths in this file can be either absolute or relative path. Relative paths
+are interpreted with respect to the directory containing the file.
 
-This file is assumed to remain static over a measurement campaign.
+The device file is assumed to remain static over a measurement campaign.
 
 Global settings
 ~~~~~~~~~~~~~~~
@@ -114,38 +109,12 @@ look like this:
     # global settings **must** appear before any [section] command
 
     geometry = "geometry/aligned.toml"
+    pixel_masks = ["masks/tel_mask_empty.toml",
+                   "masks/duts_mask_empty.toml"]
 
-    # only to demonstrate the setting.
-    # leaving out the `noise_mask` setting altogether has the same effect
-    # as adding empty masks.
-    noise_mask = ["masks/tel_mask_empty.toml",
-                  "masks/duts_mask_empty.toml"]
-
-while ``geometry`` is mandatory, one can omit ``pixel_masks``: in this
-case it will be considered empty. The ``pixel_masks`` must be an array
-of paths.
-
-Device settings
-~~~~~~~~~~~~~~~
-
-After the global settings, there is the definition of some parameters of
-the telescope:
-
-.. code::
-
-    # common global device settings
-    [device]
-    name = "FEI4Tel"
-    clock = 40.0
-    window = 16
-    space_unit = "um"
-    time_unit = "ns"
-
-Here you define the name of your telescope, the clock speed is used to
-convert from timestamp int real time, windows is the integration time
-measured in timestamps. The space and time units are used just to create
-histogram labels. The units are not defined anywhere, they just have to
-be consistent.
+Both ``geometry`` and ``pixel_masks`` are optional. If ``geometry`` is not
+defined in the device file it must be supplied on the command line.
+``pixel_masks`` must be a list of paths, but can be empty.
 
 Sensor types
 ~~~~~~~~~~~~
@@ -186,13 +155,13 @@ radiation lengths).
 
 The ``measurement`` option tells proteus how the physical pixel are
 mapped to the digital pixel of the front end and if it should consider
-TOT (time over threshold) information or just binary hits (hit/not-hit).
+time-over-threshold (tot) information or binary hits.
 It can have 3 different values:
 
 -  ``pixel_tot`` if physical and digital pixels are mapped one-to-one
    and you consider TOT information
--  ``pixel_binary``\ same mapping, but with binary information
--  ``ccpdv4_binary``\ mapping for the CCPDv4 chip, binary information
+-  ``pixel_binary`` same mapping, but with binary information
+-  ``ccpdv4_binary`` mapping for the CCPDv4 chip, binary information
 
 Sensors
 ~~~~~~~
@@ -245,110 +214,55 @@ configuration files.** The ids begin with 0.
 Geometry (``geometry.toml``)
 ----------------------------
 
-This file contains the description of the telescope setup, i.e. the
-positions and rotations of each sensor and the slopes of the beam. The
+This file contains the description of the setup geometry, i.e. the
+positions and rotations of each sensor and the beam parameters. The
 length units must be consistent with the other configuration files, the
 angle units are radians.
 
-[beam]
-~~~~~~
+Beam parameters
+~~~~~~~~~~~~~~~
 
-It just describes the x and y slope of the beam.
+The beam is described by its mean slope along the z-axis, the divergence/
+standard deviation for the slope, and its energy.
 
 .. code::
 
     [beam]
-    slope_x = 2.2589004909162290e-05
-    slope_y = -2.3725615037855144e-07
+    slope = [0.0012, -0.002]
+    divergence = [0.002, 0.0025]
+    energy = 180.0
 
-[`sensors <#sensors>`__]
-~~~~~~~~~~~~~~~~~~~~~~~~
+Sensor geometry
+~~~~~~~~~~~~~~~
 
-This array of tables contains the id, position and rotation of every
-sensor. The position is wrt a global reference frame: z is along the
-beam, y points towards the sky and x points right, looking into the beam
-(I don't suggest to look into the beam, though).
+This array of tables contains the id, position, and orientation of every
+sensor. The planar surface of each geometry is defined by two unit vectors
+that point along the two internal axes of the sensor, i.e. the direction along
+increasing columns and rows, and the offset of its origin. All three vectors
+are defined in the global reference frame. This is a right-handed coordinate
+system with z along the beam and y pointing towards the sky and x pointing
+horizontally.
 
 The origin can be placed anywhere and for convenience it is usually
 placed in the origin of the first sensor of the telescope.
 
-The rotations are in radians and wrt the **local** coordinates of the
-sensor, and are applied in the order z, y and x. This is the 3-2-1 Euler
-angle convention implemented in ``ROOT::Math::RotationZYX`` .
+The units must be consistent with values in other coordinate systems, but are
+otherwise undefined. Only the direction of the unit vectors is taken into
+account the length of the unit vectors is ignored.
 
 .. code::
 
     [[sensors]]
     id = 0
-    offset_x = 0.0000000000000000
-    offset_y = 0.0000000000000000
-    offset_z = 0.0000000000000000
-    rotation_x = 0.0000000000000000
-    rotation_y = 0.0000000000000000
-    rotation_z = 3.1415926535896999
+    offset = [0.0, 0.0, 0.0]
+    unit_u = [1.0, 0.0, 0.0]
+    unit_v = [0.0, 1.0, 0.0]
 
     [[sensors]]
     id = 1
-    offset_x = 576.96988923689821
-    offset_y = -118.80586318697972
-    offset_z = 158000.00000000000
-    rotation_x = 0.0000000000000000
-    rotation_y = 0.0000000000000000
-    rotation_z = 1.5710308251919820
-
-    [[sensors]]
-    id = 2
-    offset_x = 390.14416778667271
-    offset_y = -364.16817448303863
-    offset_z = 208000.00000000000
-    rotation_x = 0.0000000000000000
-    rotation_y = 0.0000000000000000
-    rotation_z = 3.1372384758096055
-
-    [[sensors]]
-    id = 3
-    offset_x = -367.12785459733891
-    offset_y = -142.55276460807866
-    offset_z = 678000.00000000000
-    rotation_x = 3.1415926535896999
-    rotation_y = 0.0000000000000000
-    rotation_z = 0.0016241692564387122
-
-    [[sensors]]
-    id = 4
-    offset_x = -301.30437112478540
-    offset_y = 464.12176059680814
-    offset_z = 728000.00000000000
-    rotation_x = 3.1415926535897931
-    rotation_y = 9.3258734068513149e-14
-    rotation_z = -1.5685967823000699
-
-    [[sensors]]
-    id = 5
-    offset_x = 246.40469635452345
-    offset_y = 524.26153344411364
-    offset_z = 862000.00000000000
-    rotation_x = 3.1415926535896999
-    rotation_y = 0.0000000000000000
-    rotation_z = 0.0033826323299548378
-
-    [[sensors]]
-    id = 6
-    offset_x = 181.15032324936138
-    offset_y = 9290.4575599981417
-    offset_z = 501000.00000000000
-    rotation_x = 0.0000000000000000
-    rotation_y = 0.0000000000000000
-    rotation_z = 1.5696899267190794
-
-    [[sensors]]
-    id = 7
-    offset_x = 639.46594585813284
-    offset_y = 9305.3693033210529
-    offset_z = 518000.00000000000
-    rotation_x = 0.0000000000000000
-    rotation_y = 0.0000000000000000
-    rotation_z = 1.5940703309149813
+    offset = [-100.0, 250.0, -158000]
+    unit_u = [0.0, -1.0, 0.0]
+    unit_v = [-1.0, 0.0, 0.0]
 
 Pixel masks
 -----------

@@ -9,6 +9,8 @@
 #include <stdexcept>
 #include <string>
 
+#include "mechanics/geometry.h"
+#include "tracking/propagation.h"
 #include "utils/logger.h"
 
 PT_SETUP_LOCAL_LOGGER(Sensor)
@@ -56,21 +58,21 @@ Mechanics::Sensor::Sensor(Index id,
                           double thickness,
                           double xX0,
                           const std::vector<Region>& regions)
-    : m_numCols(numCols)
+    : m_id(id)
+    , m_name(name)
+    , m_numCols(numCols)
     , m_numRows(numRows)
     , m_pitchCol(pitchCol)
     , m_pitchRow(pitchRow)
-    // place sensor center on a pixel edge in the middle of the sensitive area
-    , m_sensitiveCenterPixel(std::round(numCols / 2), std::round(numRows / 2))
-    , m_sensitiveAreaPixel(
-          Area(Area::AxisInterval(0, static_cast<double>(numCols)),
-               Area::AxisInterval(0, static_cast<double>(numRows))))
-    , m_projPitchXY(pitchCol, pitchRow)
     , m_thickness(thickness)
     , m_xX0(xX0)
+    // reasonable defaults for global properties that require the full geometry.
+    // this should be updated later on by the device.
+    , m_beamSlope(0.0, 0.0)
+    , m_beamDivergence(0.00125, 0.00125)
+    , m_projPitch(pitchCol, pitchRow, 0)
+    , m_projEnvelope(sensitiveVolumeLocal())
     , m_measurement(measurement)
-    , m_id(id)
-    , m_name(name)
     , m_regions(regions)
 {
   // ensure that all regions are bounded by the sensor size
@@ -94,39 +96,105 @@ Mechanics::Sensor::Sensor(Index id,
       }
     }
   }
-  // calculate local sensitive area
-  XYPoint lowerLeft = transformPixelToLocal(
-      XYPoint(m_sensitiveAreaPixel.min(0), m_sensitiveAreaPixel.min(1)));
-  XYPoint upperRight = transformPixelToLocal(
-      XYPoint(m_sensitiveAreaPixel.max(0), m_sensitiveAreaPixel.max(1)));
-  m_sensitiveAreaLocal =
-      Area(Area::AxisInterval(lowerLeft.x(), upperRight.x()),
-           Area::AxisInterval(lowerLeft.y(), upperRight.y()));
-  // global envelope requires geometry information; must be set by device
-  m_projEnvelopeXY = m_sensitiveAreaLocal;
 }
 
 XYPoint Mechanics::Sensor::transformPixelToLocal(const XYPoint& cr) const
 {
-  return XYPoint(m_pitchCol * (cr.x() - m_sensitiveCenterPixel.x()),
-                 m_pitchRow * (cr.y() - m_sensitiveCenterPixel.y()));
+  // place sensor center on a pixel edge in the middle of the sensitive area
+  return XYPoint(m_pitchCol * (cr.x() - std::round(m_numCols / 2.0)),
+                 m_pitchRow * (cr.y() - std::round(m_numRows / 2.0)));
 }
 
 XYPoint Mechanics::Sensor::transformLocalToPixel(const XYPoint& uv) const
 {
-  return XYPoint((uv.x() / m_pitchCol), (uv.y() / m_pitchRow)) +
-         m_sensitiveCenterPixel;
+  // place sensor center on a pixel edge in the middle of the sensitive area
+  return XYPoint((uv.x() / m_pitchCol) + std::round(m_numCols / 2.0),
+                 (uv.y() / m_pitchRow) + std::round(m_numRows / 2.0));
 }
 
-//=========================================================
-//
-// noisy-pixels functions
-//
-//=========================================================
+Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaPixel() const
+{
+  return Area(Area::AxisInterval(0, static_cast<double>(m_numCols)),
+              Area::AxisInterval(0, static_cast<double>(m_numRows)));
+}
+
+Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaLocal() const
+{
+  auto pix = sensitiveAreaPixel();
+  // calculate local sensitive area
+  XYPoint lowerLeft = transformPixelToLocal({pix.min(0), pix.min(1)});
+  XYPoint upperRight = transformPixelToLocal({pix.max(0), pix.max(1)});
+  return Area(Area::AxisInterval(lowerLeft.x(), upperRight.x()),
+              Area::AxisInterval(lowerLeft.y(), upperRight.y()));
+}
+
+Mechanics::Sensor::Volume Mechanics::Sensor::sensitiveVolumeLocal() const
+{
+  auto area = sensitiveAreaLocal();
+  // TODO 2017-10 msmk: which way does the thickess grow, w or -w
+  return Volume(area.interval(0), area.interval(1),
+                Volume::AxisInterval(0, m_thickness));
+}
 
 void Mechanics::Sensor::setMaskedPixels(const std::set<ColumnRow>& pixels)
 {
   m_pixelMask = Utils::DenseMask(pixels);
+}
+
+void Mechanics::Sensor::updateBeam(const Plane& plane,
+                                   const Vector3& directionXYZ,
+                                   const Vector2& stdevXY)
+{
+  // project global beam parameters into the local plane
+  Vector3 dir = Transpose(plane.rotation) * directionXYZ;
+  Matrix2 jac =
+      Tracking::jacobianSlopeSlope(directionXYZ, Transpose(plane.rotation));
+  SymMatrix2 covGlobal;
+  covGlobal(0, 0) = stdevXY[0] * stdevXY[0];
+  covGlobal(1, 1) = stdevXY[1] * stdevXY[1];
+  covGlobal(0, 1) = covGlobal(1, 0) = 0;
+  SymMatrix2 covLocal = Similarity(jac, covGlobal);
+  m_beamSlope = Vector2(dir[0] / dir[2], dir[1] / dir[2]);
+  m_beamDivergence = sqrt(covLocal.Diagonal());
+}
+
+void Mechanics::Sensor::updateProjections(const Plane& plane)
+{
+  // project pitch vector into the global system
+  m_projPitch = plane.rotation * Vector3(m_pitchCol, m_pitchRow, 0);
+  // only interested in absolute values not in direction
+  m_projPitch[0] = std::abs(m_projPitch[0]);
+  m_projPitch[1] = std::abs(m_projPitch[1]);
+  m_projPitch[2] = std::abs(m_projPitch[2]);
+
+  // project sensor envelope into the global xyz system
+  Area pix = sensitiveAreaLocal();
+  // TODO 2016-08 msmk: find a smarter way to this, but its Friday
+  // TODO 2017-10 msmk: which way does the thickess grow, z or -z
+  // transform each corner of the sensitive box,
+  Vector3 iii = plane.toGlobal(Vector3(pix.min(0), pix.min(1), 0));
+  Vector3 iia = plane.toGlobal(Vector3(pix.min(0), pix.min(1), m_thickness));
+  Vector3 iai = plane.toGlobal(Vector3(pix.min(0), pix.max(1), 0));
+  Vector3 iaa = plane.toGlobal(Vector3(pix.min(0), pix.max(1), m_thickness));
+  Vector3 aii = plane.toGlobal(Vector3(pix.max(0), pix.min(1), 0));
+  Vector3 aia = plane.toGlobal(Vector3(pix.max(0), pix.min(1), m_thickness));
+  Vector3 aai = plane.toGlobal(Vector3(pix.max(0), pix.max(1), 0));
+  Vector3 aaa = plane.toGlobal(Vector3(pix.max(0), pix.max(1), m_thickness));
+  double xmin = std::min(
+      {iii[0], iia[0], iai[0], iaa[0], aii[0], aia[0], aai[0], aaa[0]});
+  double xmax = std::max(
+      {iii[0], iia[0], iai[0], iaa[0], aii[0], aia[0], aai[0], aaa[0]});
+  double ymin = std::min(
+      {iii[1], iia[1], iai[1], iaa[1], aii[1], aia[1], aai[1], aaa[1]});
+  double ymax = std::max(
+      {iii[1], iia[1], iai[1], iaa[1], aii[1], aia[1], aai[1], aaa[1]});
+  double zmin = std::min(
+      {iii[2], iia[2], iai[2], iaa[2], aii[2], aia[2], aai[2], aaa[2]});
+  double zmax = std::max(
+      {iii[2], iia[2], iai[2], iaa[2], aii[2], aia[2], aai[2], aaa[2]});
+  m_projEnvelope =
+      Volume(Volume::AxisInterval(xmin, xmax), Volume::AxisInterval(ymin, ymax),
+             Volume::AxisInterval(zmin, zmax));
 }
 
 void Mechanics::Sensor::print(std::ostream& os, const std::string& prefix) const

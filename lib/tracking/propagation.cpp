@@ -7,6 +7,41 @@
 #include "propagation.h"
 
 #include "utils/definitions.h"
+#include "utils/logger.h"
+
+PT_SETUP_LOCAL_LOGGER(Propagation)
+
+Matrix2 Tracking::jacobianSlopeSlope(const Vector3& direction,
+                                     const Matrix3& rotation)
+{
+  // local and global tangent unit vector
+  Vector3 tl = Unit(direction);
+  Vector3 tg = rotation * tl;
+  DEBUG("tangent source: [", tl, "]");
+  DEBUG("tangent target: [", tg, "]");
+  // local slope to local tangent: [u', v'] to [tw * u', tw * v', tw]
+  Matrix32 a;
+  a(0, 0) = (1 - tl[0] * tl[0]) * tl[2];
+  a(0, 1) = -tl[0] * tl[1] * tl[2];
+  a(0, 2) = -tl[0] * tl[2] * tl[2];
+  a(1, 0) = -tl[0] * tl[1] * tl[2];
+  a(1, 1) = (1 - tl[1] * tl[1]) * tl[2];
+  a(1, 2) = -tl[1] * tl[2] * tl[2];
+  DEBUG("matrix a:\n", a);
+  // global tangent to global slope: [tx, ty, tz] to [tx/tz, ty/tz]
+  Matrix23 d;
+  d(0, 0) = 1 / tg[2];
+  d(0, 1) = 0;
+  d(0, 2) = -tg[0] / (tg[2] * tg[2]);
+  d(1, 0) = 0;
+  d(1, 1) = 1 / tg[2];
+  d(1, 2) = -tg[1] / (tg[2] * tg[2]);
+  DEBUG("matrix d:\n", d);
+  // jacobian: local slope -> local tangent -> global tangent -> global slope
+  Matrix2 jac = d * rotation * a;
+  DEBUG("jacobian:\n", jac);
+  return jac;
+}
 
 Storage::TrackState Tracking::propagate_to(const Storage::TrackState& state,
                                            const Mechanics::Plane& source,

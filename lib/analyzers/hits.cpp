@@ -26,8 +26,8 @@ Analyzers::SensorHits::SensorHits(TDirectory* dir,
 
   HistAxis axCol(area.interval(0), area.length(0), "Hit column");
   HistAxis axRow(area.interval(1), area.length(1), "Hit row");
-  HistAxis axTime(0, timeMax, "Hit value");
-  HistAxis axValue(0, valueMax, "Hit time");
+  HistAxis axTime(0, timeMax, "Hit time");
+  HistAxis axValue(0, valueMax, "Hit value");
 
   m_nHits = makeH1(sub, "nhits", HistAxis{0, 64, "Hits / event"});
   m_rate = makeH1(sub, "rate", HistAxis{0.0, 1.0, 128, "Hits / pixel / event"});
@@ -57,7 +57,7 @@ void Analyzers::SensorHits::analyze(const Storage::SensorEvent& sensorEvent)
     m_value->Fill(hit.value());
     m_meanTimeMap->Fill(hit.col(), hit.row(), hit.time());
     m_meanValueMap->Fill(hit.col(), hit.row(), hit.value());
-    if (hit.region() != kInvalidIndex) {
+    if (hit.hasRegion()) {
       m_regions[hit.region()].time->Fill(hit.time());
       m_regions[hit.region()].value->Fill(hit.value());
     }
@@ -88,7 +88,7 @@ Analyzers::Hits::Hits(TDirectory* dir,
                       const int timeMax,
                       const int valueMax)
 {
-  for (Index isensor = 0; isensor < device.numSensors(); ++isensor)
+  for (auto isensor : device.sensorIds())
     m_sensors.emplace_back(dir, *device.getSensor(isensor), timeMax, valueMax);
 }
 

@@ -43,7 +43,7 @@ void Processors::ApplyRegions::process(Storage::Event& event) const
 void Processors::setupRegions(const Mechanics::Device& device,
                               Utils::EventLoop& loop)
 {
-  for (Index isensor = 0; isensor < device.numSensors(); ++isensor) {
+  for (auto isensor : device.sensorIds()) {
     const Mechanics::Sensor& sensor = *device.getSensor(isensor);
     if (sensor.hasRegions()) {
       loop.addProcessor(std::make_shared<ApplyRegions>(sensor));

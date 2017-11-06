@@ -12,31 +12,35 @@
 #include "storage/event.h"
 #include "utils/root.h"
 
-Analyzers::Tracks::Tracks(TDirectory* dir,const Mechanics::Device& device,
+Analyzers::Tracks::Tracks(TDirectory* dir,
+                          const Mechanics::Device& device,
+                          const int numTracksMax,
                           const double reducedChi2Max,
-                          const double slopeMax,
+                          const double slopeRangeStd,
                           const int bins)
 {
   using namespace Utils;
 
-  // Makes or gets a directory called from inside _dir with this name
-  TDirectory* sub = makeDir(dir, "tracks");
-
   // estimate bounding box of all sensor projections into the xy-plane
-  auto active = device.getSensor(0)->projectedEnvelopeXY();
-  for (Index isensor = 1; isensor < device.numSensors(); ++isensor) {
-    active = Utils::boundingBox(
-        active, device.getSensor(isensor)->projectedEnvelopeXY());
-  }
+  auto active = device.getSensor(0)->projectedEnvelope();
+  for (auto isensor : device.sensorIds())
+    active = Utils::boundingBox(active,
+                                device.getSensor(isensor)->projectedEnvelope());
 
-  HistAxis axNTracks(0, 16, "Tracks / event");
-  HistAxis axSize(0, device.numSensors(), "Clusters on track");
+  Vector3 direction = device.geometry().beamDirection();
+  Vector2 slope(direction[0] / direction[2], direction[1] / direction[2]);
+  Vector2 slopeMin = slope - slopeRangeStd * device.geometry().beamDivergence();
+  Vector2 slopeMax = slope + slopeRangeStd * device.geometry().beamDivergence();
+
+  HistAxis axNTracks(0, numTracksMax, "Tracks / event");
+  HistAxis axSize(0, device.numSensors() + 1, "Clusters on track");
   HistAxis axChi2(0, reducedChi2Max, bins, "#chi^2 / degrees of freedom");
   HistAxis axOffX(active.interval(0), bins, "Track offset x");
   HistAxis axOffY(active.interval(1), bins, "Track offset y");
-  HistAxis axSlopeX(-slopeMax, slopeMax, bins, "Track slope x");
-  HistAxis axSlopeY(-slopeMax, slopeMax, bins, "Track slope y");
+  HistAxis axSlopeX(slopeMin[0], slopeMax[0], bins, "Track slope x");
+  HistAxis axSlopeY(slopeMin[1], slopeMax[1], bins, "Track slope y");
 
+  TDirectory* sub = makeDir(dir, "tracks");
   m_nTracks = makeH1(sub, "ntracks", axNTracks);
   m_size = makeH1(sub, "size", axSize);
   m_reducedChi2 = makeH1(sub, "reduced_chi2", axChi2);

@@ -80,7 +80,7 @@ void Storage::Event::print(std::ostream& os, const std::string& prefix) const
   for (size_t isensor = 0; isensor < m_sensors.size(); ++isensor) {
     const auto& sensorEvent = m_sensors[isensor];
     // only print non-empty sensor events
-    if ((0 < sensorEvent.numHits()) && (0 < sensorEvent.numClusters())) {
+    if ((0 < sensorEvent.numHits()) || (0 < sensorEvent.numClusters())) {
       os << prefix << "sensor " << isensor << ":\n";
       sensorEvent.print(os, prefix + "  ");
     }

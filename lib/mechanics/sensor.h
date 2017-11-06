@@ -12,6 +12,8 @@
 
 namespace Mechanics {
 
+struct Plane;
+
 /** Pixel sensor with digital and local geometry information.
  *
  * To define the sensor and its orientation in space, three different
@@ -53,6 +55,8 @@ public:
 
   /** Two-dimensional area type, e.g. for size and region-of-interest. */
   using Area = Utils::Box<2, double>;
+  /** Three-dimensional bounding box type for projected volume. */
+  using Volume = Utils::Box<3, double>;
   /** A named region on the sensor. */
   struct Region {
     std::string name;
@@ -91,38 +95,49 @@ public:
   bool hasRegions() const { return !m_regions.empty(); }
   const std::vector<Region>& regions() const { return m_regions; }
 
-  /** Sensitive area in pixel coordinates. */
-  const Area& sensitiveAreaPixel() const { return m_sensitiveAreaPixel; }
-  /** Sensitive area in local coordinates. */
-  const Area& sensitiveAreaLocal() const { return m_sensitiveAreaLocal; }
-  /** Projected envelope in the xy-plane of the sensitive area. */
-  const Area& projectedEnvelopeXY() const { return m_projEnvelopeXY; }
-  /** Projected pitch in the xy-plane. */
-  const Vector2& projectedPitchXY() const { return m_projPitchXY; }
+  void setMaskedPixels(const std::set<ColumnRow>& pixels);
+  const Utils::DenseMask& pixelMask() const { return m_pixelMask; }
 
   /** Transform pixel matrix position to local coordinates. */
   XYPoint transformPixelToLocal(const XYPoint& cr) const;
   /** Transform local coordinates to pixel matrix position. */
   XYPoint transformLocalToPixel(const XYPoint& uv) const;
 
-  void setMaskedPixels(const std::set<ColumnRow>& pixels);
-  const Utils::DenseMask& pixelMask() const { return m_pixelMask; }
+  /** Sensitive area in pixel coordinates. */
+  Area sensitiveAreaPixel() const;
+  /** Sensitive area in local coordinates. */
+  Area sensitiveAreaLocal() const;
+  /** Sensitive volume in local coordinates. */
+  Volume sensitiveVolumeLocal() const;
+  /** Beam slope in the local coordinate system. */
+  const Vector2& beamSlope() const { return m_beamSlope; }
+  /** Beam slope divergence in the local coordinate system. */
+  const Vector2& beamDivergence() const { return m_beamDivergence; }
+
+  /** Bounding box volume of the detector in the global system. */
+  const Volume& projectedEnvelope() const { return m_projEnvelope; }
+  /** Projected pitch in the global system. */
+  const Vector3& projectedPitch() const { return m_projPitch; }
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
-  Index m_numCols, m_numRows;      // number of columns and rows
-  double m_pitchCol, m_pitchRow;   // pitch along column and row direction
-  XYVector m_sensitiveCenterPixel; // center position of the sensitive area
-  Area m_sensitiveAreaPixel;       // sensitive (useful) area inside the matrix
-  Area m_sensitiveAreaLocal;       // sensitive (useful) area inside the matrix
-  Area m_projEnvelopeXY;           // projection of the active are into xy-plane
-  Vector2 m_projPitchXY;           // pixel pitch as seen in the xy-plane
-  double m_thickness;              // sensor thickness
-  double m_xX0;                    // X/X0 (thickness in radiation lengths)
-  Measurement m_measurement;
+  void updateBeam(const Plane& plane,
+                  const Vector3& directionXYZ,
+                  const Vector2& stdevXY);
+  void updateProjections(const Plane& plane);
+
   Index m_id;
   std::string m_name;
+  Index m_numCols, m_numRows;    // number of columns and rows
+  double m_pitchCol, m_pitchRow; // pitch along column and row direction
+  double m_thickness;            // sensor thickness
+  double m_xX0;                  // X/X0 (thickness in radiation lengths)
+  Vector2 m_beamSlope;           // beam slope as seen in the local system
+  Vector2 m_beamDivergence;      // beam divergence as seen in the local system
+  Vector3 m_projPitch;
+  Volume m_projEnvelope;
+  Measurement m_measurement;
   std::vector<Region> m_regions;
   Utils::DenseMask m_pixelMask;
 

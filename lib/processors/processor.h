@@ -18,7 +18,7 @@ namespace Processors {
 /** Interface for algorithms to process and modify events. */
 class Processor {
 public:
-  virtual ~Processor();
+  virtual ~Processor() = default;
   virtual std::string name() const = 0;
   virtual void process(Storage::Event& event) const = 0;
 };

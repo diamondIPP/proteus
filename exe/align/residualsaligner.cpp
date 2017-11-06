@@ -108,6 +108,7 @@ Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
   double slopeY = m_tracks->histSlopeY()->GetMean();
   double slopeYStd = m_tracks->histSlopeY()->GetStdDev();
   geo.setBeamSlope(slopeX, slopeY);
+  geo.setBeamDivergence(slopeXStd, slopeYStd);
 
   INFO("mean track slope:");
   INFO("  slope x: ", slopeX, " +- ", slopeXStd);

@@ -99,9 +99,16 @@ public:
   /** Geometry parameters covariance matrix. */
   SymMatrix6 getParamsCov(Index sensorId) const;
 
+  /** Set the beam slope along the z axis. */
   void setBeamSlope(double slopeX, double slopeY);
+  /** Set the beam divergence/ standard deviation along the z axis. */
+  void setBeamDivergence(double divergenceX, double divergenceY);
+  /** Beam energy. */
+  double beamEnergy() const;
   /** Beam direction in the global coordinate system. */
   Vector3 beamDirection() const;
+  /** Beam divergence along the z axis in global x and y coordinates. */
+  Vector2 beamDivergence() const;
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
@@ -109,6 +116,8 @@ private:
   std::map<Index, Plane> m_planes;
   std::map<Index, SymMatrix6> m_covs;
   double m_beamSlopeX, m_beamSlopeY;
+  double m_beamDivergenceX, m_beamDivergenceY;
+  double m_beamEnergy;
 };
 
 /** Sort the sensor indices by their position along the beam direction. */

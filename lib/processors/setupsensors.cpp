@@ -16,7 +16,7 @@ void Processors::setupHitPreprocessing(const Mechanics::Device& device,
 {
   using namespace Mechanics;
 
-  for (Index isensor = 0; isensor < device.numSensors(); ++isensor) {
+  for (auto isensor : device.sensorIds()) {
     const Sensor& sensor = *device.getSensor(isensor);
 
     // hit mapper
@@ -35,7 +35,7 @@ void Processors::setupClusterizers(const Mechanics::Device& device,
 {
   using namespace Mechanics;
 
-  for (Index isensor = 0; isensor < device.numSensors(); ++isensor) {
+  for (auto isensor : device.sensorIds()) {
     const Sensor& sensor = *device.getSensor(isensor);
     switch (sensor.measurement()) {
     case Sensor::Measurement::PixelBinary:
@@ -43,8 +43,7 @@ void Processors::setupClusterizers(const Mechanics::Device& device,
       loop.addProcessor(std::make_shared<BinaryClusterizer>(sensor));
       break;
     case Sensor::Measurement::PixelTot:
-      loop.addProcessor(
-          std::make_shared<ValueWeightedClusterizer>(sensor));
+      loop.addProcessor(std::make_shared<ValueWeightedClusterizer>(sensor));
       break;
     }
   }

@@ -14,6 +14,14 @@
 
 namespace Tracking {
 
+/** Slope jacobian from one coordinate to another.
+ *
+ * \param direction  Direction vector in the initial system
+ * \param rotation   Rotation matrix from the intial to the target system
+ */
+Matrix2 jacobianSlopeSlope(const Vector3& direction,
+                           const Matrix3& rotation);
+
 /** Propagate to the target plane and return the propagated state.
  *
  * \param state   Track state on the source plane

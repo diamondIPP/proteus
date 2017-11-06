@@ -3,13 +3,6 @@
 geometry = "geometry/tel_aligned.toml"
 pixel_masks = [] # no masked pixels
 
-[device]
-name = "FEI4Tel"
-clock = 40.0
-window = 16
-space_unit = "um"
-time_unit = "ns"
-
 # pitch and thickness in um
 
 [sensor_types.fei4-si]

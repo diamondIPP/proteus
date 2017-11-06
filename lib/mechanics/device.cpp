@@ -11,23 +11,6 @@
 
 PT_SETUP_LOCAL_LOGGER(Device)
 
-Mechanics::Device::Device(const std::string& name,
-                          double clockRate,
-                          unsigned int readoutWindow,
-                          const std::string& spaceUnit,
-                          const std::string& timeUnit)
-    : m_name(name)
-    , m_clockRate(clockRate)
-    , m_readoutWindow(readoutWindow)
-    , m_timestamp0(0)
-    , m_timestamp1(0)
-    , m_spaceUnit(spaceUnit)
-    , m_timeUnit(timeUnit)
-{
-  std::replace(m_timeUnit.begin(), m_timeUnit.end(), '\\', '#');
-  std::replace(m_spaceUnit.begin(), m_spaceUnit.end(), '\\', '#');
-}
-
 Mechanics::Device Mechanics::Device::fromFile(const std::string& path,
                                               const std::string& pathGeometry)
 {
@@ -78,22 +61,18 @@ Mechanics::Device Mechanics::Device::fromFile(const std::string& path,
 
 Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
 {
-  Device device(cfg.get<std::string>("device.name"),
-                cfg.get<double>("device.clock"), cfg.get<int>("device.window"),
-                cfg.get<std::string>("device.space_unit"),
-                cfg.get<std::string>("device.time_unit"));
+  Device device;
+
+  if (cfg.has("device"))
+    ERROR("device configuration is deprecated and will not be used");
 
   auto cfgTypes = cfg.get<toml::Table>("sensor_types");
   auto cfgSensors = cfg.get<toml::Array>("sensors");
   for (size_t isensor = 0; isensor < cfgSensors.size(); ++isensor) {
-    toml::Value defaults = toml::Table{
-        {"name", "sensor" + std::to_string(isensor)}, {"is_masked", false}};
+    toml::Value defaults =
+        toml::Table{{"name", "sensor" + std::to_string(isensor)}};
     toml::Value cfgSensor =
         Utils::Config::withDefaults(cfgSensors[isensor], defaults);
-    if (cfgSensor.get<bool>("is_masked")) {
-      device.addMaskedSensor();
-      continue;
-    }
 
     auto name = cfgSensor.get<std::string>("name");
     auto typeName = cfgSensor.get<std::string>("type");
@@ -148,48 +127,19 @@ void Mechanics::Device::addSensor(const Sensor& sensor)
   // TODO 2017-02-07 msmk: assumes ids are indices from 0 to n_sensors w/o gaps
   m_sensorIds.emplace_back(sensor.id());
   m_sensors.emplace_back(sensor);
-  m_sensorMask.push_back(false);
 }
-
-void Mechanics::Device::addMaskedSensor() { m_sensorMask.push_back(true); }
 
 void Mechanics::Device::setGeometry(const Geometry& geometry)
 {
   m_geometry = geometry;
 
   // update geometry-dependent sensor properties
-  auto setProjectedEnvelope = [](const Plane& plane, Sensor& sensor) {
-    using Area = Sensor::Area;
-
-    Area pix = sensor.sensitiveAreaLocal();
-    // TODO 2016-08 msmk: find a smarter way to this, but its Friday
-    // transform each corner of the sensitive rectangle
-    Vector3 minMin = plane.toGlobal(Vector2(pix.min(0), pix.min(1)));
-    Vector3 minMax = plane.toGlobal(Vector2(pix.min(0), pix.max(1)));
-    Vector3 maxMin = plane.toGlobal(Vector2(pix.max(0), pix.min(1)));
-    Vector3 maxMax = plane.toGlobal(Vector2(pix.max(0), pix.max(1)));
-
-    std::array<double, 4> xs = {{minMin[0], minMax[0], maxMin[0], maxMax[0]}};
-    std::array<double, 4> ys = {{minMin[1], minMax[1], maxMin[1], maxMax[1]}};
-
-    sensor.m_projEnvelopeXY =
-        Area(Area::AxisInterval(*std::min_element(xs.begin(), xs.end()),
-                                *std::max_element(xs.begin(), xs.end())),
-             Area::AxisInterval(*std::min_element(ys.begin(), ys.end()),
-                                *std::max_element(ys.begin(), ys.end())));
-  };
-  auto setProjectedPitch = [](const Plane& plane, Sensor& sensor) {
-    Vector3 pitchUVW(sensor.pitchCol(), sensor.pitchRow(), 0);
-    Vector3 pitchXYZ = plane.rotation * pitchUVW;
-    // only interested in absolute values not in direction
-    for (int i : {0, 1, 2})
-      pitchXYZ[i] = std::abs(pitchXYZ[i]);
-    sensor.m_projPitchXY = pitchXYZ.Sub<Vector2>(0);
-  };
-
-  for (Index sensorId = 0; sensorId < numSensors(); ++sensorId) {
-    setProjectedEnvelope(m_geometry.getPlane(sensorId), *getSensor(sensorId));
-    setProjectedPitch(m_geometry.getPlane(sensorId), *getSensor(sensorId));
+  for (auto sensorId : m_sensorIds) {
+    auto& sensor = *getSensor(sensorId);
+    const auto& plane = m_geometry.getPlane(sensorId);
+    sensor.updateBeam(plane, m_geometry.beamDirection(),
+                      m_geometry.beamDivergence());
+    sensor.updateProjections(plane);
   }
   // TODO 2016-08-18 msmk: check number of sensors / id consistency
 }
@@ -198,32 +148,16 @@ void Mechanics::Device::applyPixelMasks(const PixelMasks& pixelMasks)
 {
   m_pixelMasks = pixelMasks;
 
-  for (Index sensorId = 0; sensorId < numSensors(); ++sensorId) {
+  for (auto sensorId : m_sensorIds) {
     Sensor* sensor = getSensor(sensorId);
     sensor->setMaskedPixels(m_pixelMasks.getMaskedPixels(sensorId));
   }
   // TODO 2016-08-18 msmk: check number of sensors / id consistency
 }
 
-double Mechanics::Device::tsToTime(uint64_t timestamp) const
-{
-  return (double)((timestamp - timestampStart()) / (double)clockRate());
-}
-
-void Mechanics::Device::setTimestampRange(uint64_t ts0, uint64_t ts1)
-{
-  if (ts1 < ts0)
-    throw std::runtime_error("start timestamp must come before end");
-  m_timestamp0 = ts0;
-  m_timestamp1 = ts1;
-}
-
 void Mechanics::Device::print(std::ostream& os, const std::string& prefix) const
 {
-  os << prefix << "name: " << m_name << '\n';
-  os << prefix << "clock rate: " << m_clockRate << '\n';
-  os << prefix << "readout window: " << m_readoutWindow << '\n';
-  for (Index sensorId = 0; sensorId < numSensors(); ++sensorId) {
+  for (auto sensorId : m_sensorIds) {
     os << prefix << "sensor " << sensorId << ":\n";
     getSensor(sensorId)->print(os, prefix + "  ");
   }

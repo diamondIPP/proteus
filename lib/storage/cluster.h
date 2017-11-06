@@ -27,7 +27,6 @@ public:
   void setValue(float value_) { m_value = value_; }
   void setTrack(Index track);
 
-  Index region() const;
   const XYPoint& posPixel() const { return m_cr; }
   const XYPoint& posLocal() const { return m_uv; }
   const SymMatrix2& covPixel() const { return m_crCov; }
@@ -41,6 +40,9 @@ public:
   Area areaPixel() const;
   int sizeCol() const;
   int sizeRow() const;
+
+  bool hasRegion() const;
+  Index region() const;
 
   void addHit(Hit& hit);
   size_t size() const { return m_hits.size(); }

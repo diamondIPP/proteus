@@ -65,10 +65,10 @@ void Analyzers::Correlations::addHist(const Mechanics::Sensor& sensor0,
     std::string histName = "correlation_" + axisName;
     std::string xlabel = sensor0.name() + " cluster " + axisName;
     std::string ylabel = sensor1.name() + " cluster " + axisName;
-    auto range0 = sensor0.projectedEnvelopeXY().interval(axis);
-    auto range1 = sensor1.projectedEnvelopeXY().interval(axis);
-    int bins0 = range0.length() / sensor0.projectedPitchXY()[axis];
-    int bins1 = range1.length() / sensor1.projectedPitchXY()[axis];
+    auto range0 = sensor0.projectedEnvelope().interval(axis);
+    auto range1 = sensor1.projectedEnvelope().interval(axis);
+    int bins0 = range0.length() / sensor0.projectedPitch()[axis];
+    int bins1 = range1.length() / sensor1.projectedPitch()[axis];
     return makeH2(sub, histName, {range0, bins0, xlabel},
                   {range1, bins1, ylabel});
   };
@@ -77,11 +77,11 @@ void Analyzers::Correlations::addHist(const Mechanics::Sensor& sensor0,
     std::string histName = "diff_" + axisName;
     std::string xlabel =
         sensor0.name() + " - " + sensor1.name() + " cluster " + axisName;
-    double length0 = sensor0.projectedEnvelopeXY().length(axis);
-    double length1 = sensor1.projectedEnvelopeXY().length(axis);
+    double length0 = sensor0.projectedEnvelope().length(axis);
+    double length1 = sensor1.projectedEnvelope().length(axis);
     double maxDist = (length0 + length1) / 4;
-    double pitch0 = sensor0.projectedPitchXY()[axis];
-    double pitch1 = sensor1.projectedPitchXY()[axis];
+    double pitch0 = sensor0.projectedPitch()[axis];
+    double pitch1 = sensor1.projectedPitch()[axis];
     int bins = 2 * maxDist / std::min(pitch0, pitch1);
     return makeH1(sub, histName, {-maxDist, maxDist, bins, xlabel});
   };
