@@ -6,6 +6,7 @@
 #ifndef PT_EUDAQ_H
 #define PT_EUDAQ_H
 
+#include <functional>
 #include <map>
 #include <memory>
 
@@ -13,6 +14,7 @@
 #include "utils/definitions.h"
 
 namespace eudaq {
+class Event;
 class FileReader;
 } // namespace eudaq
 
@@ -36,9 +38,10 @@ public:
   bool read(Storage::Event& event) override final;
 
 private:
-  std::unique_ptr<eudaq::FileReader> m_reader;
+  std::unique_ptr<eudaq::FileReader, std::function<void(eudaq::FileReader*)>>
+      m_reader;
+  std::shared_ptr<const eudaq::Event> m_event;
   std::map<unsigned, Index> m_mapIdIndex;
-  bool m_thatsIt;
 };
 
 } // namespace Io
