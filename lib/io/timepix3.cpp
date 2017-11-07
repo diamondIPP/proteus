@@ -19,22 +19,22 @@ int Io::Timepix3Reader::check(const std::string& path)
   }
 
   uint32_t headerID = 0;
-  if (!file.read(reinterpret_cast<char*>(&headerID), sizeof headerID)) {
+  if (!file.read(reinterpret_cast<char*>(&headerID), sizeof(headerID))) {
     return 0;
   }
 
   uint32_t headerSize = 0;
-  if (!file.read(reinterpret_cast<char*>(&headerSize), sizeof headerSize)) {
+  if (!file.read(reinterpret_cast<char*>(&headerSize), sizeof(headerSize))) {
     return 10;
   }
 
   // readable file + header ID and size readable -> probably a Timepix3 file
-  return 100;
+  return 20;
 }
 
 std::shared_ptr<Io::Timepix3Reader>
 Io::Timepix3Reader::open(const std::string& path,
-  const toml::Value& /* unused configuration */)
+                         const toml::Value& /* unused configuration */)
 {
   return std::make_shared<Io::Timepix3Reader>(path);
 }
@@ -238,7 +238,8 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent)
 
   // Clear the event if we have more than 10% chip occupancy
   if (sensorEvent.numHits() > 6553) {
-    ERROR("Frame ", m_eventNumber, " has ", sensorEvent.numHits(), " hits. Cleared.");
+    ERROR("Frame ", m_eventNumber, " has ", sensorEvent.numHits(),
+          " hits. Cleared.");
     sensorEvent.clear(m_eventNumber, m_nextEventTimestamp);
   }
 
