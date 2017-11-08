@@ -8,6 +8,7 @@
 #include <TTree.h>
 
 #include "alignment/correlationsaligner.h"
+#include "alignment/localchi2aligner.h"
 #include "alignment/residualsaligner.h"
 #include "analyzers/correlations.h"
 #include "analyzers/globaloccupancy.h"
@@ -203,7 +204,7 @@ int main(int argc, char const* argv[])
           stepDir, dev, fixedSensorIds.front(), alignIds);
 
     } else if (method == "residuals") {
-      // use (unbiased) track residuals to align
+      // use unbiased track residuals to align
       loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
           dev, sensorIds, sensorIds.size(), searchSigmaMax, redChi2Max));
       loop.addProcessor(
@@ -214,8 +215,19 @@ int main(int argc, char const* argv[])
       aligner =
           std::make_shared<ResidualsAligner>(stepDir, dev, alignIds, damping);
 
+    } else if (method == "localchi2") {
+      // use unbiased track residuals to align
+      loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
+          dev, sensorIds, sensorIds.size(), searchSigmaMax, redChi2Max));
+      loop.addProcessor(
+          std::make_shared<Tracking::UnbiasedStraightFitter>(dev));
+      loop.addAnalyzer(std::make_shared<Residuals>(stepDir, dev, sensorIds,
+                                                   "unbiased_residuals"));
+      tracks = std::make_shared<Tracks>(stepDir, dev);
+      aligner = std::make_shared<LocalChi2Aligner>(dev, alignIds, damping);
+
     } else {
-      FAIL("unknown alignment method '", method, "''");
+      FAIL("unknown alignment method '", method, "'");
     }
     if (tracks) {
       loop.addAnalyzer(tracks);
