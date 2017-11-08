@@ -1,5 +1,7 @@
 #include "rceroot.h"
 
+#include <cassert>
+
 #include "storage/event.h"
 #include "utils/logger.h"
 
@@ -26,14 +28,14 @@ int Io::RceRootReader::check(const std::string& path)
   if (!file)
     return 0;
 
-  // Minimal file should have the Event tree, but missing from some converters
-  TTree* event = nullptr;
-  file->GetObject("Event", event);
-  if (!event)
-    return 10;
-
-  // readable file + event tree -> probably an RCE ROOT file
-  return 100;
+  int score = 0;
+  // should have an event tree, but is sometimes missing
+  if (file->GetObjectUnchecked("Event"))
+    score += 50;
+  // should have at least one sensor directory
+  if (file->GetObjectUnchecked("Plane0"))
+    score += 50;
+  return score;
 }
 
 std::shared_ptr<Io::RceRootReader>
@@ -46,30 +48,39 @@ Io::RceRootReader::open(const std::string& path,
 Io::RceRootReader::RceRootReader(const std::string& path)
     : RceRootCommon(TFile::Open(path.c_str(), "READ"))
 {
+  int64_t entriesEvent = INT64_MAX;
+  int64_t entriesTracks = INT64_MAX;
+
   if (!m_file)
     THROW("could not open '", path, "' to read");
 
-  // event tree **must** be available
+  // event tree is optional
   m_file->GetObject("Event", m_eventInfo);
-  if (!m_eventInfo)
-    FAIL("could not setup 'Event' tree from '", path, "'");
-  m_eventInfo->SetBranchAddress("FrameNumber", &frameNumber);
-  m_eventInfo->SetBranchAddress("TimeStamp", &timestamp);
-  m_eventInfo->SetBranchAddress("TriggerTime", &triggerTime);
-  m_eventInfo->SetBranchAddress("TriggerInfo", &triggerInfo);
-  m_eventInfo->SetBranchAddress("TriggerOffset", &triggerOffset);
-  // trigger phase is a custom addition for the trigger phase busy and
-  // might not be available
-  if (m_eventInfo->FindBranch("TriggerPhase")) {
-    m_eventInfo->SetBranchAddress("TriggerPhase", &triggerPhase);
-  } else {
-    triggerPhase = -1;
+  if (m_eventInfo) {
+    entriesEvent = m_eventInfo->GetEntriesFast();
+    if (entriesEvent < 0)
+      THROW("could not determine number of entries of Event tree");
+    m_eventInfo->SetBranchAddress("FrameNumber", &frameNumber);
+    m_eventInfo->SetBranchAddress("TimeStamp", &timestamp);
+    m_eventInfo->SetBranchAddress("TriggerTime", &triggerTime);
+    m_eventInfo->SetBranchAddress("TriggerInfo", &triggerInfo);
+    m_eventInfo->SetBranchAddress("TriggerOffset", &triggerOffset);
+    // trigger phase is a custom addition for the trigger phase busy and
+    // might not be available
+    if (m_eventInfo->FindBranch("TriggerPhase")) {
+      m_eventInfo->SetBranchAddress("TriggerPhase", &triggerPhase);
+    } else {
+      triggerPhase = -1;
+    }
+    m_eventInfo->SetBranchAddress("Invalid", &invalid);
   }
-  m_eventInfo->SetBranchAddress("Invalid", &invalid);
 
   // tracks tree is optional
   m_file->GetObject("Tracks", m_tracks);
   if (m_tracks) {
+    entriesTracks = m_tracks->GetEntriesFast();
+    if (entriesTracks < 0)
+      THROW("could not determine number of entries in Tracks tree");
     m_tracks->SetBranchAddress("NTracks", &numTracks);
     m_tracks->SetBranchAddress("Chi2", trackChi2);
     m_tracks->SetBranchAddress("Dof", trackDof);
@@ -80,7 +91,10 @@ Io::RceRootReader::RceRootReader(const std::string& path)
     m_tracks->SetBranchAddress("Cov", trackCov);
   }
 
-  // per-sensor trees
+  // entries from Events and Tracks. might still be undefined here
+  m_entries = std::min(entriesEvent, entriesTracks);
+
+  // per-sensor trees and finalize number of entries
   size_t numSensors = 0;
   while (true) {
     std::string name("Plane" + std::to_string(numSensors));
@@ -88,53 +102,59 @@ Io::RceRootReader::RceRootReader(const std::string& path)
     m_file->GetObject(name.c_str(), sensorDir);
     if (!sensorDir)
       break;
-    addSensor(sensorDir);
+    int64_t entriesSensor = addSensor(sensorDir);
+    m_entries = std::min(m_entries, entriesSensor);
     numSensors += 1;
   }
+  if (numSensors == 0)
+    THROW("no sensors in '", path, "'");
+  if (m_entries == INT64_MAX)
+    THROW("could not determine number of events in '", path, "'");
   INFO("read ", numSensors, " sensors from '", path, "'");
 
-  // verify that all trees have consistent number of entries
-  m_entries = m_eventInfo->GetEntriesFast();
-  if (m_entries < 0)
-    THROW("could not determine number of entries");
+  // NOTE 2017-10-25 msmk:
+  //
+  // having inconsistent entries between different sensors and the global
+  // trees should be a fatal error. unfortunately, this can still happen for
+  // valid data, e.g. for telescope data w/ manually synced trigger/busy-based
+  // dut data or for independent Mimosa26 streams. To be able to handle these
+  // we only report these cases as errrors here instead of failing altogether.
 
-  auto hasConsistentEntries = [&](TTree* tree) {
-    int64_t entries = tree->GetEntriesFast();
-    if (entries < 0)
-      THROW("could not determine number of entries");
-    return (entries == m_entries);
-  };
-
-  // tracks must be consistent with events
-  if (m_tracks && !hasConsistentEntries(m_tracks))
-    THROW("inconsistent 'Tracks' entries");
-  // per-sensor trees should be consistent, but Mimosa26 trees can have
-  // an inconsistent number of entries. ignore those cases
+  // verify consistent number of entries between all trees
+  if ((entriesEvent != INT64_MAX) && (entriesEvent != m_entries))
+    ERROR("Event tree has inconsistent entries=", entriesEvent,
+          " expected=", m_entries);
+  if ((entriesTracks != INT64_MAX) && (entriesTracks != m_entries))
+    ERROR("Tracks tree has inconsistent entries=", entriesTracks,
+          " expected=", m_entries);
   for (size_t isensor = 0; isensor < m_sensors.size(); ++isensor) {
-    auto& trees = m_sensors[isensor];
-    if (trees.hits && !hasConsistentEntries(trees.hits)) {
-      INFO("ignore sensor ", isensor, " 'Hits' due to inconsistent entries");
-      trees.hits = nullptr;
-    }
-    if (trees.clusters && !hasConsistentEntries(trees.clusters)) {
-      INFO("ignore sensor ", isensor,
-           " 'Clusters' due to inconsistent entries");
-      trees.clusters = nullptr;
-    }
-    if (trees.intercepts && !hasConsistentEntries(trees.intercepts)) {
-      INFO("ignore sensor ", isensor,
-           " 'Intercepts' due to inconsistent entries");
-      trees.intercepts = nullptr;
-    }
+    if (m_sensors[isensor].entries != m_entries)
+      ERROR("sensor ", isensor,
+            " has inconsistent entries=", m_sensors[isensor].entries,
+            " expected=", m_entries);
   }
 }
 
-void Io::RceRootReader::addSensor(TDirectory* dir)
+/** Setup trees for a new sensor and return the number of entries.
+ *
+ * Throws on inconsistent number of entries.
+ */
+int64_t Io::RceRootReader::addSensor(TDirectory* dir)
 {
+  assert(dir && "Directory must be non-null");
+
   SensorTrees trees;
+  // use INT64_MAX to mark uninitialized/ missing values that can be used
+  // directly in std::min to find the number of entries
+  int64_t entriesHits = INT64_MAX;
+  int64_t entriesClusters = INT64_MAX;
+  int64_t entriesIntercepts = INT64_MAX;
 
   dir->GetObject("Hits", trees.hits);
   if (trees.hits) {
+    entriesHits = trees.hits->GetEntriesFast();
+    if (entriesHits < 0)
+      THROW("could not determine entries in ", dir->GetName(), "/Hits tree");
     trees.hits->SetBranchAddress("NHits", &numHits);
     trees.hits->SetBranchAddress("PixX", hitPixX);
     trees.hits->SetBranchAddress("PixY", hitPixY);
@@ -144,16 +164,25 @@ void Io::RceRootReader::addSensor(TDirectory* dir)
   }
   dir->GetObject("Clusters", trees.clusters);
   if (trees.clusters) {
+    entriesClusters = trees.clusters->GetEntriesFast();
+    if (entriesClusters < 0)
+      THROW("could not determine entries in ", dir->GetName(),
+            "/Clusters tree");
     trees.clusters->SetBranchAddress("NClusters", &numClusters);
     trees.clusters->SetBranchAddress("Col", clusterCol);
     trees.clusters->SetBranchAddress("Row", clusterRow);
     trees.clusters->SetBranchAddress("VarCol", clusterVarCol);
     trees.clusters->SetBranchAddress("VarRow", clusterVarRow);
-    trees.clusters->SetBranchAddress("CovColRow", clusterCovColRow);
+    trees.clusters->SetBranchAddress("Timing", clusterTiming);
+    trees.clusters->SetBranchAddress("Value", clusterValue);
     trees.clusters->SetBranchAddress("Track", clusterTrack);
   }
   dir->GetObject("Intercepts", trees.intercepts);
   if (trees.intercepts) {
+    entriesIntercepts = trees.hits->GetEntriesFast();
+    if (entriesIntercepts < 0)
+      THROW("could not determine entries in ", dir->GetName(),
+            "Intercepts tree");
     trees.intercepts->SetBranchAddress("NIntercepts", &numIntercepts);
     trees.intercepts->SetBranchAddress("U", interceptU);
     trees.intercepts->SetBranchAddress("V", interceptV);
@@ -162,7 +191,29 @@ void Io::RceRootReader::addSensor(TDirectory* dir)
     trees.intercepts->SetBranchAddress("Cov", interceptCov);
     trees.intercepts->SetBranchAddress("Track", interceptTrack);
   }
+
+  // this directory does not contain any valid data
+  if ((entriesHits == INT64_MAX) && (entriesClusters == INT64_MAX) &&
+      (entriesIntercepts == INT64_MAX))
+    THROW("could not find any of ", dir->GetName(),
+          "/{Hits,Clusters,Intercepts}");
+
+  // check that all active trees have consistent entries
+  trees.entries = std::min({entriesHits, entriesClusters, entriesIntercepts});
+  if ((entriesHits != INT64_MAX) && (entriesHits != trees.entries))
+    THROW("inconsistent entries in ", dir->GetName(),
+          "/Hits tree entries=", entriesHits, " expected=", trees.entries);
+  if ((entriesClusters != INT64_MAX) && (entriesClusters != trees.entries))
+    THROW("inconsistent entries in ", dir->GetName(),
+          "/Clusters tree entries=", entriesClusters,
+          " expected=", trees.entries);
+  if ((entriesIntercepts != INT64_MAX) && (entriesIntercepts != trees.entries))
+    THROW("inconsistent entries in ", dir->GetName(),
+          "/Intercepts tree entries=", entriesIntercepts,
+          " expected=", trees.entries);
+
   m_sensors.push_back(trees);
+  return trees.entries;
 }
 
 Io::RceRootReader::~RceRootReader()
@@ -192,7 +243,6 @@ void Io::RceRootReader::skip(uint64_t n)
   }
 }
 
-//=========================================================
 bool Io::RceRootReader::read(Storage::Event& event)
 {
   /* Note: fill in reversed order: tracks first, hits last. This is so that
@@ -205,20 +255,25 @@ bool Io::RceRootReader::read(Storage::Event& event)
   int64_t ievent = m_next++;
 
   // global event data
-  if (m_eventInfo->GetEntry(ievent) <= 0)
-    FAIL("could not read 'Events' entry ", ievent);
-  // listen chap, here's the deal:
-  // we want a timestamp, i.e. a simple counter of clockcycles or bunch
-  // crossings, for each event that defines the trigger/ readout time with
-  // the highest possible precision. Unfortunately, the RCE ROOT output format
-  // has stupid names. The `TimeStamp` branch stores the Unix-`timestamp`
-  // (number of seconds since 01.01.1970) of the point in time when the event
-  // was written to disk. This might or might not have a constant correlation
-  // to the actual trigger time and has only a 1s resolution, i.e. it is
-  // completely useless. The `TriggerTime` actually stores the internal
-  // FPGA timestamp/ clock cyles and is what we need to use.
-  event.clear(frameNumber, triggerTime);
-  event.setTrigger(triggerInfo, triggerOffset, triggerPhase);
+  if (m_eventInfo) {
+    if (m_eventInfo->GetEntry(ievent) <= 0)
+      FAIL("could not read 'Events' entry ", ievent);
+    // listen chap, here's the deal:
+    // we want a timestamp, i.e. a simple counter of clockcycles or bunch
+    // crossings, for each event that defines the trigger/ readout time with
+    // the highest possible precision. Unfortunately, the RCE ROOT output format
+    // has stupid names. The `TimeStamp` branch stores the Unix-`timestamp`
+    // (number of seconds since 01.01.1970) of the point in time when the event
+    // was written to disk. This might or might not have a constant correlation
+    // to the actual trigger time and has only a 1s resolution, i.e. it is
+    // completely useless. The `TriggerTime` actually stores the internal
+    // FPGA timestamp/ clock cyles and is what we need to use.
+    event.clear(frameNumber, triggerTime);
+    event.setTrigger(triggerInfo, triggerOffset, triggerPhase);
+  } else {
+    event.clear(ievent);
+    // no trigger information available
+  }
 
   // global tracks info
   if (m_tracks) {
@@ -266,6 +321,8 @@ bool Io::RceRootReader::read(Storage::Event& event)
         Storage::Cluster& cluster = sensorEvent.addCluster();
         cluster.setPixel(XYPoint(clusterCol[icluster], clusterRow[icluster]),
                          cov);
+        cluster.setTime(clusterTiming[icluster]);
+        cluster.setValue(clusterValue[icluster]);
         // Fix cluster/track relationship if possible
         if (m_tracks && (0 <= clusterTrack[icluster])) {
           Storage::Track& track = event.getTrack(clusterTrack[icluster]);
@@ -352,6 +409,8 @@ void Io::RceRootWriter::addSensor(TDirectory* dir)
   trees.clusters->Branch("VarRow", clusterVarRow, "VarRow[NClusters]/D");
   trees.clusters->Branch("CovColRow", clusterCovColRow,
                          "CovColRow[NClusters]/D");
+  trees.clusters->Branch("Timing", clusterTiming, "Timing[NClusters]/D");
+  trees.clusters->Branch("Value", clusterValue, "Value[NClusters]/D");
   trees.clusters->Branch("Track", clusterTrack, "Track[NClusters]/I");
   // local track states
   trees.intercepts = new TTree("Intercepts", "Intercepts");
@@ -426,8 +485,8 @@ void Io::RceRootWriter::append(const Storage::Event& event)
         const Storage::Hit hit = sensorEvent.getHit(ihit);
         hitPixX[ihit] = hit.digitalCol();
         hitPixY[ihit] = hit.digitalRow();
-        hitValue[ihit] = hit.value();
         hitTiming[ihit] = hit.time();
+        hitValue[ihit] = hit.value();
         hitInCluster[ihit] = hit.isInCluster() ? hit.cluster() : -1;
       }
       trees.hits->Fill();
@@ -445,6 +504,8 @@ void Io::RceRootWriter::append(const Storage::Event& event)
         clusterVarCol[iclu] = cluster.covPixel()(0, 0);
         clusterVarRow[iclu] = cluster.covPixel()(1, 1);
         clusterCovColRow[iclu] = cluster.covPixel()(0, 1);
+        clusterTiming[iclu] = cluster.time();
+        clusterValue[iclu] = cluster.value();
         clusterTrack[iclu] = cluster.isInTrack() ? cluster.track() : -1;
       }
       trees.clusters->Fill();

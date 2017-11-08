@@ -1,8 +1,7 @@
 #include "timepix3.h"
+
 #include <sstream>
 #include <string>
-
-#include <TDataType.h>
 
 #include "storage/event.h"
 #include "storage/sensorevent.h"
@@ -19,22 +18,22 @@ int Io::Timepix3Reader::check(const std::string& path)
   }
 
   uint32_t headerID = 0;
-  if (!file.read(reinterpret_cast<char*>(&headerID), sizeof headerID)) {
+  if (!file.read(reinterpret_cast<char*>(&headerID), sizeof(headerID))) {
     return 0;
   }
 
   uint32_t headerSize = 0;
-  if (!file.read(reinterpret_cast<char*>(&headerSize), sizeof headerSize)) {
+  if (!file.read(reinterpret_cast<char*>(&headerSize), sizeof(headerSize))) {
     return 10;
   }
 
   // readable file + header ID and size readable -> probably a Timepix3 file
-  return 100;
+  return 20;
 }
 
 std::shared_ptr<Io::Timepix3Reader>
 Io::Timepix3Reader::open(const std::string& path,
-  const toml::Value& /* unused configuration */)
+                         const toml::Value& /* unused configuration */)
 {
   return std::make_shared<Io::Timepix3Reader>(path);
 }
@@ -105,8 +104,8 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent)
   int npixels = 0;
 
   // Read 64-bit chunks of data
-  ULong64_t pixdata = 0;
-  while (m_file.read(reinterpret_cast<char*>(&pixdata), sizeof pixdata)) {
+  uint64_t pixdata = 0;
+  while (m_file.read(reinterpret_cast<char*>(&pixdata), sizeof(pixdata))) {
 
     std::stringstream s;
     s << std::hex << pixdata << std::dec;
@@ -114,7 +113,7 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent)
 
     // Get the header (first 4 bits) and do things depending on what it is
     // 0x4 is the "heartbeat" signal, 0xA and 0xB are pixel data
-    const UChar_t header = ((pixdata & 0xF000000000000000) >> 60) & 0xF;
+    const uint8_t header = ((pixdata & 0xF000000000000000) >> 60) & 0xF;
 
     if (header == 0x7) {
       DEBUG("Header 0x7: 'Config Acknowledge'");
@@ -125,13 +124,13 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent)
       // The 0x4 header tells us that it is part of the timestamp
       // There is a second 4-bit header that says if it is the most or least
       // significant part of the timestamp
-      const UChar_t header2 = ((pixdata & 0x0F00000000000000) >> 56) & 0xF;
+      const uint8_t header2 = ((pixdata & 0x0F00000000000000) >> 56) & 0xF;
 
       // This is a bug fix. There appear to be errant packets with garbage data
       // - source to be tracked down.
       // Between the data and the header the intervening bits should all be 0,
       // check if this is the case
-      const UChar_t intermediateBits =
+      const uint8_t intermediateBits =
           ((pixdata & 0x00FF000000000000) >> 48) & 0xFF;
       if (intermediateBits != 0x00)
         continue;
@@ -176,14 +175,14 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent)
     if (header == 0xA || header == 0xB) {
       DEBUG("Header 0xA | 0xB: 'Pixel Data'");
       // Decode the pixel information from the relevant bits
-      const UShort_t dcol = ((pixdata & 0x0FE0000000000000) >> 52);
-      const UShort_t spix = ((pixdata & 0x001F800000000000) >> 45);
-      const UShort_t pix = ((pixdata & 0x0000700000000000) >> 44);
-      const UShort_t col = (dcol + pix / 4);
-      const UShort_t row = (spix + (pix & 0x3));
+      const uint16_t dcol = ((pixdata & 0x0FE0000000000000) >> 52);
+      const uint16_t spix = ((pixdata & 0x001F800000000000) >> 45);
+      const uint16_t pix = ((pixdata & 0x0000700000000000) >> 44);
+      const uint16_t col = (dcol + pix / 4);
+      const uint16_t row = (spix + (pix & 0x3));
 
       // Get the rest of the data from the pixel
-      const UInt_t data = ((pixdata & 0x00000FFFFFFF0000) >> 16);
+      const uint32_t data = ((pixdata & 0x00000FFFFFFF0000) >> 16);
       const unsigned int tot = (data & 0x00003FF0) >> 4;
       const uint64_t spidrTime(pixdata & 0x000000000000FFFF);
       const uint64_t ftoa(data & 0x0000000F);
@@ -238,7 +237,8 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent)
 
   // Clear the event if we have more than 10% chip occupancy
   if (sensorEvent.numHits() > 6553) {
-    ERROR("Frame ", m_eventNumber, " has ", sensorEvent.numHits(), " hits. Cleared.");
+    ERROR("Frame ", m_eventNumber, " has ", sensorEvent.numHits(),
+          " hits. Cleared.");
     sensorEvent.clear(m_eventNumber, m_nextEventTimestamp);
   }
 
