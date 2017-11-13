@@ -15,11 +15,12 @@ namespace Io {
 /** Read events from a Timepix3 raw data file. */
 class Timepix3Reader : public EventReader {
 public:
-    /** Return a score of how likely the given path is an RCE Root file. */
-    static int check(const std::string& path);
-    /** Open the the file. */
-    static std::shared_ptr<Timepix3Reader> open(const std::string& path,
-                                               const toml::Value& /* unused */);
+  /** Return a score of how likely the given path is an Timepix3 SPDR data file.
+   */
+  static int check(const std::string& path);
+  /** Open the the file. */
+  static std::shared_ptr<Timepix3Reader> open(const std::string& path,
+                                              const toml::Value& /* unused */);
 
   Timepix3Reader(const std::string& path);
   ~Timepix3Reader(){};
