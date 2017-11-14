@@ -18,8 +18,11 @@ int Io::Timepix3Reader::check(const std::string& path)
   }
 
   uint32_t headerID = 0;
-  if (!file.read(reinterpret_cast<char*>(&headerID), sizeof(headerID))) {
-    return 0;
+  if(!file.read(reinterpret_cast<char*>(&headerID), sizeof headerID)) {
+      return 0;
+  }
+  if(headerID != 1380208723) {
+      return 0;
   }
 
   uint32_t headerSize = 0;
@@ -53,8 +56,11 @@ Io::Timepix3Reader::Timepix3Reader(const std::string& path)
   }
 
   uint32_t headerID = 0;
-  if (!m_file.read(reinterpret_cast<char*>(&headerID), sizeof headerID)) {
-    THROW("Could not read header.");
+  if(!m_file.read(reinterpret_cast<char*>(&headerID), sizeof headerID)) {
+      THROW("Could not read header.");
+  }
+  if(headerID != 1380208723) {
+    THROW("Could not find header magic word.");
   }
 
   uint32_t headerSize = 0;
