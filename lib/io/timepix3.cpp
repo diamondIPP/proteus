@@ -17,13 +17,12 @@ int Io::Timepix3Reader::check(const std::string& path)
     THROW("could not open '", path, "' to read.");
   }
 
-  char buffer[4];
-  if (!file.read(reinterpret_cast<char*>(&buffer), sizeof 4)) {
-    return 0;
+  uint32_t headerID = 0;
+  if(!file.read(reinterpret_cast<char*>(&headerID), sizeof headerID)) {
+      return 0;
   }
-  std::string headerID(buffer);
-  if (headerID != "SPDR") {
-    return 0;
+  if(headerID != 1380208723) {
+      return 0;
   }
 
   uint32_t headerSize = 0;
@@ -56,12 +55,11 @@ Io::Timepix3Reader::Timepix3Reader(const std::string& path)
     THROW("could not open '", path, "' to read.");
   }
 
-  char buffer[4];
-  if (!m_file.read(reinterpret_cast<char*>(&buffer), sizeof 4)) {
-    THROW("Could not read header.");
+  uint32_t headerID = 0;
+  if(!m_file.read(reinterpret_cast<char*>(&headerID), sizeof headerID)) {
+      THROW("Could not read header.");
   }
-  std::string headerID(buffer);
-  if (headerID != "SPDR") {
+  if(headerID != 1380208723) {
     THROW("Could not find header magic word.");
   }
 
