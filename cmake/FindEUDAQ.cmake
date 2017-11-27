@@ -22,46 +22,58 @@
 # FindEUDAQ
 # ---------
 #
-# Finds a EUDAQ 2.0 installation.
-# Searches common system directories by default. This can be changed by
-# setting the ``EUDAQ_DIR`` environment variable to the root directory of the
-# installation.
+# Find a EUDAQ installation. Searches common system directories by default.
+# This can be changed by setting the ``EUDAQ_DIR`` environment variable to
+# point to the EUDAQ root directory. For EUDAQ 1 this should be the path to
+# the source directory and for EUDAQ 2 the path to the installation prefix.
 #
-# This will define the following variables::
+# The following variables will be defined::
 #
-#   EUDAQ_FOUND   - True if the EUDAQ installation was found
+#   EUDAQ_FOUND     - True if the EUDAQ installation was found
+#   EUDAQ_VERSION   - The EUDAQ version, at the moment either 1 or 2
+#   EUDAQ_LIBRARIES - The EUDAQ library target
 #
-# and the following imported targets::
-#
-#   EUDAQ::Core  - The EUDAQ core library
-#
+# Include directories are handled automatically via target properties.
 
 find_path(
   EUDAQ_INCLUDE_DIR
-  NAMES eudaq/Platform.hh
-  PATH_SUFFIXES include
+  NAMES eudaq/Config.hh eudaq/Platform.hh
+  PATH_SUFFIXES include main/include
   PATHS ENV EUDAQ_DIR)
 find_library(
-  EUDAQ_CORE_LIBRARY
-  NAMES eudaq_core
+  EUDAQ_LIBRARY
+  NAMES EUDAQ eudaq_core
   PATH_SUFFIXES lib
   PATHS ENV EUDAQ_DIR)
+
+if(EXISTS "${EUDAQ_INCLUDE_DIR}/eudaq/Config.hh")
+  file(
+    STRINGS "${EUDAQ_INCLUDE_DIR}/eudaq/Config.hh" _eudaq_version_raw
+    REGEX "^#define[ \t]PACKAGE_VERSION[ \t].*$"
+    LIMIT_COUNT 1)
+  string(
+    REGEX REPLACE "^#define[ \t]PACKAGE_VERSION[ \t]+\"v(.*)\"$" "\\1"
+    EUDAQ_VERSION "${_eudaq_version_raw}")
+else()
+  set(EUDAQ_VERSION "1")
+endif()
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(
   EUDAQ
   FOUND_VAR EUDAQ_FOUND
-  REQUIRED_VARS
-    EUDAQ_CORE_LIBRARY
-    EUDAQ_INCLUDE_DIR)
+  REQUIRED_VARS EUDAQ_LIBRARY EUDAQ_INCLUDE_DIR
+  VERSION_VAR EUDAQ_VERSION)
 
-if(EUDAQ_FOUND AND NOT TARGET EUDAQ::Core)
-  add_library(EUDAQ::Core UNKNOWN IMPORTED)
-  set_target_properties(EUDAQ::Core PROPERTIES
-    IMPORTED_LOCATION "${EUDAQ_CORE_LIBRARY}"
-    INTERFACE_INCLUDE_DIRECTORIES "${EUDAQ_INCLUDE_DIR}")
+if(EUDAQ_FOUND)
+  if(NOT TARGET EUDAQ::EUDAQ)
+    add_library(EUDAQ::EUDAQ UNKNOWN IMPORTED)
+    set_target_properties(
+      EUDAQ::EUDAQ PROPERTIES
+      IMPORTED_LOCATION "${EUDAQ_LIBRARY}"
+      INTERFACE_INCLUDE_DIRECTORIES "${EUDAQ_INCLUDE_DIR}")
+  endif()
+  set(EUDAQ_LIBRARIES "EUDAQ::EUDAQ")
 endif()
 
-mark_as_advanced(
-  EUDAQ_INCLUDE_DIR
-  EUDAQ_CORE_LIBRARY)
+mark_as_advanced(EUDAQ_INCLUDE_DIR EUDAQ_LIBRARY)
