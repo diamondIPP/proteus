@@ -14,7 +14,7 @@ list of dependencies and the minimum version required is listed below.
 
 *   A C++11 compiler, gcc 4.9 or clang 3.9
 *   [ROOT][root] 5.34/36
-*   [EUDAQ][eudaq] 2.0 (optional, for the EUDAQ reader)
+*   [EUDAQ][eudaq] 1.7 (optional, for the EUDAQ reader)
 *   Doxygen 1.6 (optional, for the documentation generation)
 *   Sphinx (optional, for the documentation generation)
 *   Breathe (optional, for the documentation generation)
@@ -60,7 +60,7 @@ options are deactivated.
 | Option             | Comment |
 | :----------------- | :------ |
 | PROTEUS_ENABLE_DOC | Enable documentation build target `doc`
-| PROTEUS_USE_EUDAQ  | Build EUDAQ readers; set `EUDAQ_DIR` env variable EUDAQ installation
+| PROTEUS_USE_EUDAQ  | Build EUDAQ reader; set `EUDAQ_DIR` env variable to EUDAQ installation
 
 Documentation
 -------------
