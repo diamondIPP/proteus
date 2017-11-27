@@ -4,7 +4,10 @@
 #include <set>
 #include <vector>
 
-#ifdef PT_EUDAQ
+#ifdef PT_USE_EUDAQ1
+#include "io/eudaq1.h"
+#endif
+#ifdef PT_USE_EUDAQ2
 #include "io/eudaq2.h"
 #endif
 #include "io/rceroot.h"
@@ -58,7 +61,10 @@ bool operator<(const ScoredFormat& a, const ScoredFormat& b)
 //
 // This version requires manual registration, but just works (tm).
 static std::vector<Format> s_formats = {
-#ifdef PT_EUDAQ
+#ifdef PT_USE_EUDAQ1
+    {"eudaq1", Eudaq1Reader::check, Eudaq1Reader::open},
+#endif
+#ifdef PT_USE_EUDAQ2
     {"eudaq2", Eudaq2Reader::check, Eudaq2Reader::open},
 #endif
     {"rceroot", RceRootReader::check, RceRootReader::open},
