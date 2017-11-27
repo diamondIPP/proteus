@@ -3,8 +3,8 @@
  * \date    2017-10
  */
 
-#ifndef PT_EUDAQ_H
-#define PT_EUDAQ_H
+#ifndef PT_EUDAQ2_H
+#define PT_EUDAQ2_H
 
 #include <functional>
 #include <map>
@@ -20,15 +20,15 @@ class FileReader;
 
 namespace Io {
 
-/** Read Eudaq native raw files. */
-class EudaqReader : public EventReader {
+/** Read Eudaq2 native raw files. */
+class Eudaq2Reader : public EventReader {
 public:
   static int check(const std::string& path);
-  static std::shared_ptr<EudaqReader> open(const std::string& path,
-                                           const toml::Value& cfg);
+  static std::shared_ptr<Eudaq2Reader> open(const std::string& path,
+                                            const toml::Value& cfg);
 
-  EudaqReader(const std::string& path);
-  ~EudaqReader();
+  Eudaq2Reader(const std::string& path);
+  ~Eudaq2Reader();
 
   std::string name() const override final;
   uint64_t numEvents() const override final;
@@ -46,4 +46,4 @@ private:
 
 } // namespace Io
 
-#endif // PT_EUDAQ_H
+#endif // PT_EUDAQ2_H

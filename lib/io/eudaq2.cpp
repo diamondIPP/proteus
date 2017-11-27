@@ -3,7 +3,7 @@
  * \date    2017-10
  */
 
-#include "eudaq.h"
+#include "eudaq2.h"
 
 #include <cassert>
 #include <vector>
@@ -15,7 +15,7 @@
 #include "utils/config.h"
 #include "utils/logger.h"
 
-PT_SETUP_LOCAL_LOGGER(EudaqReader);
+PT_SETUP_LOCAL_LOGGER(Eudaq2Reader);
 
 // local helper functions
 
@@ -63,8 +63,6 @@ static void convert(std::shared_ptr<const eudaq::StandardEvent> sevent,
       FAIL("unknown EUDAQ sensor id ", spl.ID());
 
     Storage::SensorEvent& sensorEvent = event.getSensorEvent(it->second);
-    // StandardPlane has no event number or timestamp on its own
-    sensorEvent.clear(frame, timestamp);
     // fill hits into the sensor event
     for (unsigned i = 0; i < spl.HitPixels(); ++i) {
       auto col = spl.GetX(i);
@@ -78,23 +76,23 @@ static void convert(std::shared_ptr<const eudaq::StandardEvent> sevent,
 
 // automatic filetype deduction/ global registry
 
-int Io::EudaqReader::check(const std::string& path)
+int Io::Eudaq2Reader::check(const std::string& path)
 {
   if (Utils::Config::pathExtension(path) == "raw")
     return 10;
   return 0;
 }
 
-std::shared_ptr<Io::EudaqReader>
-Io::EudaqReader::open(const std::string& path,
-                      const toml::Value& /* unused configuration */)
+std::shared_ptr<Io::Eudaq2Reader>
+Io::Eudaq2Reader::open(const std::string& path,
+                       const toml::Value& /* unused configuration */)
 {
-  return std::make_shared<EudaqReader>(path);
+  return std::make_shared<Eudaq2Reader>(path);
 }
 
 // FileReader proper
 
-Io::EudaqReader::EudaqReader(const std::string& path)
+Io::Eudaq2Reader::Eudaq2Reader(const std::string& path)
     : m_reader(eudaq::Factory<eudaq::FileReader>::MakeUnique(
           eudaq::str2hash("native"), path))
 {
@@ -127,14 +125,14 @@ Io::EudaqReader::EudaqReader(const std::string& path)
 }
 
 // required for std::unique_ptr<...> w/ forward-defined classes to work
-Io::EudaqReader::~EudaqReader() {}
+Io::Eudaq2Reader::~Eudaq2Reader() {}
 
-std::string Io::EudaqReader::name() const { return "EudaqReader"; }
+std::string Io::Eudaq2Reader::name() const { return "Eudaq2Reader"; }
 
-uint64_t Io::EudaqReader::numEvents() const { return UINT64_MAX; }
-size_t Io::EudaqReader::numSensors() const { return m_mapIdIndex.size(); }
+uint64_t Io::Eudaq2Reader::numEvents() const { return UINT64_MAX; }
+size_t Io::Eudaq2Reader::numSensors() const { return m_mapIdIndex.size(); }
 
-void Io::EudaqReader::skip(uint64_t n)
+void Io::Eudaq2Reader::skip(uint64_t n)
 {
   for (; 0 < n; --n) {
     m_event = m_reader->GetNextEvent();
@@ -143,7 +141,7 @@ void Io::EudaqReader::skip(uint64_t n)
   }
 }
 
-bool Io::EudaqReader::read(Storage::Event& event)
+bool Io::Eudaq2Reader::read(Storage::Event& event)
 {
   // due to BORE handling and id number determination, the first event must
   // be read already in the constructor. The internal event reading is

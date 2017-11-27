@@ -45,8 +45,8 @@ set(proteus_LIBRARIES ${ROOT_LIBRARIES})
 
 if(PROTEUS_USE_EUDAQ)
   list(APPEND proteus_DEFINITIONS -DPT_EUDAQ)
-  list(APPEND proteus_LIBRARIES EUDAQ::Core)
-  list(APPEND proteus_SOURCES io/eudaq.cpp)
+  list(APPEND proteus_LIBRARIES ${EUDAQ_LIBRARIES})
+  list(APPEND proteus_SOURCES io/eudaq2.cpp)
 endif()
 
 add_library(proteus STATIC ${proteus_SOURCES} ${proteus_HEADERS})
