@@ -22,7 +22,7 @@ Analyzers::SensorHits::SensorHits(TDirectory* dir,
 
   const auto& area = sensor.sensitiveAreaPixel();
 
-  TDirectory* sub = Utils::makeDir(dir, sensor.name() + "/hits");
+  TDirectory* sub = Utils::makeDir(dir, "sensors/" + sensor.name() + "/hits");
 
   HistAxis axCol(area.interval(0), area.length(0), "Hit column");
   HistAxis axRow(area.interval(1), area.length(1), "Hit row");

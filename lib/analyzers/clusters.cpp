@@ -59,7 +59,7 @@ Analyzers::SensorClusters::SensorClusters(TDirectory* dir,
     return hs;
   };
 
-  TDirectory* sub = makeDir(dir, sensor.name() + "/clusters");
+  TDirectory* sub = makeDir(dir, "sensors/" + sensor.name() + "/clusters");
 
   m_nClusters = makeH1(sub, "nclusters", HistAxis{0, 64, "Clusters / event"});
   m_rate =

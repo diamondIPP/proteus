@@ -32,7 +32,7 @@ Alignment::ResidualsAligner::ResidualsAligner(
     double offsetRange =
         pixelRange * std::hypot(sensor.pitchCol(), sensor.pitchRow());
 
-    TDirectory* sub = makeDir(dir, sensor.name() + "/aligner_residuals");
+    TDirectory* sub = makeDir(dir, "sensors/" + sensor.name() + "/aligner_residuals");
 
     HistAxis axU(-offsetRange, offsetRange, bins, "Local offset u correction");
     HistAxis axV(-offsetRange, offsetRange, bins, "Local offset v correction");
