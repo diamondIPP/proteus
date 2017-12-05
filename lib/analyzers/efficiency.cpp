@@ -41,7 +41,7 @@ Analyzers::Efficiency::Efficiency(TDirectory* dir,
     m_mask = sensor.pixelMask().protruded(maskedPixelRange - 1);
   }
 
-  TDirectory* sub = Utils::makeDir(dir, sensor.name() + "/efficiency");
+  TDirectory* sub = Utils::makeDir(dir, "sensors/" + sensor.name() + "/efficiency");
 
   // one set of histograms for the whole sensor
   m_sensorHists = Hists(sub, sensor, sensor.sensitiveAreaPixel(), increaseArea,

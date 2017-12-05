@@ -39,7 +39,7 @@ Analyzers::detail::SensorResidualHists::SensorResidualHists(
   HistAxis axSlopeU(slopeMin[0], slopeMax[0], bins, "Local track slope u");
   HistAxis axSlopeV(slopeMin[1], slopeMax[1], bins, "Local track slope v");
 
-  TDirectory* sub = makeDir(dir, sensor.name() + "/" + name);
+  TDirectory* sub = makeDir(dir, "sensors/" + sensor.name() + "/" + name);
   resU = makeH1(sub, "res_u", axResU);
   trackUResU = makeH2(sub, "res_u-pos_u", axPosU, axResU);
   trackVResU = makeH2(sub, "res_u-pos_v", axPosV, axResU);
