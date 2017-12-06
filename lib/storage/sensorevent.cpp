@@ -44,8 +44,9 @@ void Storage::SensorEvent::print(std::ostream& os,
   }
   if (!m_clusters.empty()) {
     os << prefix << "clusters:\n";
-    for (size_t iclu = 0; iclu < m_clusters.size(); ++iclu){
-      os << prefix << "  cluster " << iclu << ": " << *m_clusters[iclu] << '\n';}
+    for (size_t iclu = 0; iclu < m_clusters.size(); ++iclu) {
+      os << prefix << "  cluster " << iclu << ": " << *m_clusters[iclu] << '\n';
+    }
   }
   if (!m_states.empty()) {
     os << prefix << "states:\n";

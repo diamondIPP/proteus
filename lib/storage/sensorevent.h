@@ -2,8 +2,8 @@
 #define PT_SENSOREVENT_H
 
 #include <iosfwd>
-#include <memory>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -60,7 +60,7 @@ private:
   std::vector<std::unique_ptr<Hit>> m_hits;
   std::vector<std::unique_ptr<Cluster>> m_clusters;
   TrackStates m_states;
-  
+
   friend class Event;
 };
 

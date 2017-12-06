@@ -12,7 +12,7 @@
 namespace Mechanics {
 class Device;
 class Sensor;
-}
+} // namespace Mechanics
 
 namespace Utils {
 class EventLoop;
@@ -35,6 +35,5 @@ private:
 void setupRegions(const Mechanics::Device& device, Utils::EventLoop& loop);
 
 } // namespace Processors
-
 
 #endif // PT_APPLYREGIONS_H

@@ -55,7 +55,8 @@ NoiseScan::NoiseScan(TDirectory* dir,
   HistAxis axOcc(0, 1, binsOccupancy, "Pixel occupancy / hits/pixel/event");
   HistAxis axSig(0, 1, binsOccupancy, "Local significance");
 
-  TDirectory* sub = Utils::makeDir(dir, "sensors/" + sensor.name() + "/noisescan");
+  TDirectory* sub =
+      Utils::makeDir(dir, "sensors/" + sensor.name() + "/noisescan");
   m_occupancy = makeH2(sub, "occupancy", axCol, axRow);
   m_occupancyDist = makeH1(sub, "occupancy_dist", axOcc);
   m_density = makeH2(sub, "density", axCol, axRow);

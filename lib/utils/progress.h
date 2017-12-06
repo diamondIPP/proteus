@@ -50,9 +50,9 @@ public:
    */
   void update(Size processed)
   {
-    using std::chrono::steady_clock;
     using std::chrono::duration_cast;
     using std::chrono::milliseconds;
+    using std::chrono::steady_clock;
 
     // only continue if enabled
     if (m_total == std::numeric_limits<Size>::min())

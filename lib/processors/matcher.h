@@ -10,11 +10,11 @@ namespace Storage {
 class Plane;
 class Cluster;
 class Track;
-}
+} // namespace Storage
 namespace Mechanics {
 class Device;
 class Sensor;
-}
+} // namespace Mechanics
 
 namespace Processors {
 

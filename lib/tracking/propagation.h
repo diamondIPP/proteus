@@ -19,8 +19,7 @@ namespace Tracking {
  * \param direction  Direction vector in the initial system
  * \param rotation   Rotation matrix from the intial to the target system
  */
-Matrix2 jacobianSlopeSlope(const Vector3& direction,
-                           const Matrix3& rotation);
+Matrix2 jacobianSlopeSlope(const Vector3& direction, const Matrix3& rotation);
 
 /** Propagate to the target plane and return the propagated state.
  *
