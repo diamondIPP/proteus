@@ -1,16 +1,28 @@
 Proteus --- Pixel telescope reconstruction
 ==========================================
 
-Proteus is a software to reconstruct and analyze beam telescope
-measurements. It started as a fork of the [Judith][judith] software but
-has since then evolved into an independent package. It requires a C++11
-compatible compiler and [ROOT 5.34/36][root] or higher. The software is
-tested with gcc 4.8.4, ROOT 5.34/36 on Scientific Linux CERN 6 and gcc
-4.8.5, ROOT 6.08/04 and clang 3.4.2, ROOT 6.08/04 on CERN CentOS 7.
+Proteus is a software to reconstruct and analyze data from beam telescopes. It
+started as a fork of the [Judith][judith] software but has evolved into an
+independent package.
 
-An introduction guide and additional information including the contribution
-guide can be found in the `doc` directory. Example configurations can be found
-in the `test` directory.
+Dependencies
+------------
+
+Proteus requires only a C++11 compatible compiler and [ROOT][root] for its core
+functionality. Optional components might require additional software. A full
+list of dependencies and the minimum version required is listed below.
+
+*   A C++11 compiler, gcc 4.9 or clang 3.9
+*   [ROOT][root] 5.34/36
+*   [EUDAQ][eudaq] 1.7 (optional, for the EUDAQ reader)
+*   Doxygen 1.6 (optional, for the documentation generation)
+*   Sphinx (optional, for the documentation generation)
+*   Breathe (optional, for the documentation generation)
+
+On CERN lxplus machines you can setup an LCG release to provide a recent
+compiler and a [ROOT][root] version via the following command
+
+    source /cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-slc6-gcc49-opt/setup.sh
 
 Building
 --------
@@ -34,16 +46,30 @@ environment. By sourcing it via
 the `pt-...` binaries can be called directly without specifying its location
 explicitly.
 
+Build options
+-------------
+
+The following options can be set during the cmake configuration to activate
+optional components, e.g.
+
+    cmake -DPROTEUS_ENABLE_DOC=on ..
+
+to enable building the documentation via the `doc` target. By default all
+options are deactivated.
+
+| Option             | Comment |
+| :----------------- | :------ |
+| PROTEUS_ENABLE_DOC | Enable documentation build target `doc`
+| PROTEUS_USE_EUDAQ  | Build EUDAQ reader; set `EUDAQ_DIR` env variable to EUDAQ installation
+
 Documentation
 -------------
 
-The documentation for Proteus is provided in the `rst` file format and can either be read directly on the repository website or translated to HTMl documents using the
+The documentation for Proteus is provided in the `rst` file format and can
+either be read directly on the repository website or translated to HTMl
+documents using the following command inside the build directory:
 
     make doc
-
-command. The following dependencies are required to build the Proteus HTML documentation (package names provided for Debian):
-
-> sphinx-common python-breathe python-pygments
 
 Authors
 -------
@@ -90,6 +116,7 @@ distributed under the simplified BSD License.
 
 [ccby4]: https://creativecommons.org/licenses/by/4.0/
 [cmake]: http://www.cmake.org
+[eudaq]: http://eudaq.github.io
 [judith]: https://github.com/gmcgoldr/judith
 [paper2014]: http://dx.doi.org/10.1016/j.nima.2014.05.033
 [root]: https://root.cern.ch

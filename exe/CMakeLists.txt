@@ -1,7 +1,7 @@
 function(add_tool name)
   set(_exe "pt-${name}")
   add_executable(${_exe} ${ARGN})
-  target_link_libraries(${_exe} pt-lib)
+  target_link_libraries(${_exe} proteus)
   install(TARGETS ${_exe} RUNTIME DESTINATION bin)
 endfunction()
 

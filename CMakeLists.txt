@@ -5,6 +5,7 @@ project(Proteus CXX)
 set(Proteus_VERSION v1.2.0)
 
 option(PROTEUS_ENABLE_DOC "Enable the documentation build" OFF)
+option(PROTEUS_USE_EUDAQ "Build EUDAQ file reader" OFF)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
@@ -14,6 +15,9 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 find_package(ROOT REQUIRED COMPONENT GenVector)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXX_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+if(PROTEUS_USE_EUDAQ)
+  find_package(EUDAQ REQUIRED)
+endif()
 # after setting CMAKE_CXX_FLAGS to be able to pick up existing -std=... flags
 include(RequireCXX11)
 

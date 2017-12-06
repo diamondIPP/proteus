@@ -12,8 +12,9 @@ User-visible changes
 
 *   Macros folder (legacy from ccpdv4 analysis w/ Judith) removed.
 *   Add support for other file formats.
-*   Add ``pt-combine`` tool to combine multiple data streams into a single
-    stream using the internal format.
+*   Add ``pt-combine`` tool to combine multiple data files in any supported
+    format into a single data file the internal format.
+*   Add reader for EUDAQ raw data files.
 *   Add reader for Timepix3 data recorded by SPIDR DAQ boards.
 *   Allow missing sensors in the data.
 
