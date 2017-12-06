@@ -17,6 +17,18 @@ before_script:
   - export "PATH=${PWD}/install-slc6-dbg/bin${PATH:+:}${PATH}"
   - export "LD_LIBRARY_PATH=${PWD}/install-slc6-dbg/lib${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
 
+check-format:
+  # clang-format on ci yields different output from local installation
+  allow_failure: true
+  stage: build
+  tags:
+    - cvmfs
+  script:
+    - mkdir build
+    - cd build
+    - cmake ..
+    - cmake --build . -- check-format
+
 build-slc6-dbg:
   stage: build
   tags:
