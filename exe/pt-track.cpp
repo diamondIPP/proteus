@@ -10,6 +10,7 @@
 #include "analyzers/correlations.h"
 #include "analyzers/events.h"
 #include "analyzers/hits.h"
+#include "analyzers/globaloccupancy.h"
 #include "analyzers/residuals.h"
 #include "analyzers/tracks.h"
 #include "io/rceroot.h"
@@ -52,6 +53,7 @@ int main(int argc, char const* argv[])
   loop.addAnalyzer(std::make_shared<Events>(&hists, app.device()));
   loop.addAnalyzer(std::make_shared<Hits>(&hists, app.device()));
   loop.addAnalyzer(std::make_shared<Clusters>(&hists, app.device()));
+  loop.addAnalyzer(std::make_shared<GlobalOccupancy>(&hists, app.device()));
   loop.addAnalyzer(std::make_shared<Correlations>(&hists, app.device()));
   loop.addAnalyzer(std::make_shared<Tracks>(&hists, app.device()));
   loop.addAnalyzer(std::make_shared<Residuals>(&hists, app.device()));
