@@ -5,6 +5,7 @@ set(proteus_SOURCES
     analyzers/efficiency.cpp
     analyzers/events.cpp
     analyzers/eventprinter.cpp
+    analyzers/globaloccupancy.cpp
     analyzers/hits.cpp
     analyzers/tracks.cpp
     analyzers/residuals.cpp
