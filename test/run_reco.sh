@@ -1,17 +1,17 @@
-#!/bin/sh -ex
+#!/bin/sh
 #
-# run telescope tracking
+# run tracking and dut matching with correct geometry
 
-RUN=$1; shift
-FLAGS=$@ # e.g. -n 10000, to process only the first 10k events
+set -ex
 
-rundir=$(printf "run%06d" $RUN)
-rawfile=$(printf "raw/run%06d.root" $RUN)
-prefix=$(printf "output/run%06d-" $RUN)
+dataset=$1; shift
+flags=$@ # e.g. -n 10000, to process only the first 10k events
 
-echo "using $(which pt-track)"
+geo="geo-${dataset}.toml"
 
-pt-track $FLAGS \
-  -d ${rundir}/device.toml \
-  -c ${rundir}/analysis.toml \
-  ${rawfile} ${prefix}track
+echo "=== using $(which pt-track)"
+echo "=== using $(which pt-match)"
+
+mkdir -p output
+pt-track -g ${geo} ${flags} data/${dataset}.root output/${dataset}-track
+pt-match -g ${geo} ${flags} output/${dataset}-track-data.root output/${dataset}-match
