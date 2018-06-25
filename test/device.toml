@@ -1,4 +1,5 @@
 geometry = "geometry/unigetel_nominal.toml"
+pixel_masks = ["masks/telescope_empty.toml", "masks/dut_empty.toml"]
 
 [sensor_types.ibl_planar]
 measurement = "pixel_tot"

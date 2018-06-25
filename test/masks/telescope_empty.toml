@@ -1,0 +1,25 @@
+# empty pixel masks for all telescope planes
+
+[[sensors]]
+id = 1
+masked_pixels = []
+
+[[sensors]]
+id = 2
+masked_pixels = []
+
+[[sensors]]
+id = 3
+masked_pixels = []
+
+[[sensors]]
+id = 4
+masked_pixels = []
+
+[[sensors]]
+id = 5
+masked_pixels = []
+
+[[sensors]]
+id = 6
+masked_pixels = []
