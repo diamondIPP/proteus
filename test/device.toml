@@ -1,4 +1,4 @@
-geometry = "geo-unigetel_nominal.toml"
+geometry = "geometry/unigetel_nominal.toml"
 
 [sensor_types.ibl_planar]
 measurement = "pixel_tot"

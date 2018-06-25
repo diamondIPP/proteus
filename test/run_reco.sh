@@ -7,7 +7,7 @@ set -ex
 dataset=$1; shift
 flags=$@ # e.g. -n 10000, to process only the first 10k events
 
-geo="geo-${dataset}.toml"
+geo="geometry/${dataset}.toml"
 
 echo "=== using $(which pt-track)"
 echo "=== using $(which pt-match)"

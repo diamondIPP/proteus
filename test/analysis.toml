@@ -31,3 +31,31 @@ num_points_min = 5
 
 [match]
 sensor_ids = [0]
+
+[align.tel_coarse]
+method = "correlations" # use method based on cluster correlations
+sensor_ids = [1,2,3,4,5,6] # sensors to calculate correlations for
+align_ids = [2,3,4,5,6] # sensors to align
+
+# fine alignment of only the telescope planes using track residuals
+[align.tel_fine]
+method = "residuals" # use method based on track residuals
+sensor_ids = [1,2,3,4,5,6] # sensors to build tracks
+align_ids = [2,3,4,5,6] # sensors to align
+num_steps = 20 # number of iterative steps
+search_sigma_max = 10.0 # distance search window for track finding
+reduced_chi2_max = 10.0 # chi2 cut for track finding
+
+[align.dut_coarse]
+method = "correlations" # use method based on cluster correlations
+sensor_ids = [0,1,2,3,4,5,6] # sensors to calculate correlations for
+align_ids = [0] # sensors to align
+
+# fine alignment of only the telescope planes using track residuals
+[align.dut_fine]
+method = "residuals" # use method based on track residuals
+sensor_ids = [0,1,2,3,4,5,6] # sensors to build tracks
+align_ids = [0] # sensors to align
+num_steps = 20 # number of iterative steps
+search_sigma_max = 10.0 # distance search window for track finding
+reduced_chi2_max = 10.0 # chi2 cut for track finding
