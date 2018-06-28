@@ -3,7 +3,6 @@ set(proteus_SOURCES
     analyzers/correlations.cpp
     analyzers/distances.cpp
     analyzers/efficiency.cpp
-    analyzers/events.cpp
     analyzers/eventprinter.cpp
     analyzers/globaloccupancy.cpp
     analyzers/hits.cpp
