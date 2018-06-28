@@ -47,9 +47,6 @@ protected:
   ULong64_t timestamp;
   ULong64_t frameNumber;
   ULong64_t triggerTime;
-  Int_t triggerOffset;
-  Int_t triggerInfo;
-  Int_t triggerPhase;
   Bool_t invalid;
   // global track state and info
   Int_t numTracks;
