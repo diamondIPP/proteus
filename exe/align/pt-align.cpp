@@ -190,8 +190,8 @@ int main(int argc, char const* argv[])
           dev, sensorIds, sensorIds.size(), searchSigmaMax, redChi2Max));
       loop.addProcessor(
           std::make_shared<Tracking::UnbiasedStraightFitter>(dev));
-      loop.addAnalyzer(
-          std::make_shared<Residuals>(stepDir, dev, "unbiased_residuals"));
+      loop.addAnalyzer(std::make_shared<Residuals>(stepDir, dev, sensorIds,
+                                                   "unbiased_residuals"));
       aligner =
           std::make_shared<ResidualsAligner>(stepDir, dev, alignIds, damping);
     }
