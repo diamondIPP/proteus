@@ -72,11 +72,12 @@ void Analyzers::detail::SensorResidualHists::fill(
 
 Analyzers::Residuals::Residuals(TDirectory* dir,
                                 const Mechanics::Device& device,
+                                const std::vector<Index>& sensorIds,
                                 const std::string& subdir,
                                 const double rangeStd,
                                 const int bins)
 {
-  for (auto isensor : device.sensorIds())
+  for (auto isensor : sensorIds)
     m_hists.emplace_back(dir, *device.getSensor(isensor), rangeStd, bins,
                          subdir);
 }

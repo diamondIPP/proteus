@@ -49,16 +49,18 @@ struct SensorResidualHists {
 
 class Residuals : public Analyzer {
 public:
-  /** Construct a residual analyzer for the full device.
+  /** Construct a residual analyzer.
    *
    * \param dir       Where to create the output subdirectory
    * \param device    The device object
+   * \param sensorIds Sensors for which residuals should be calculated
    * \param subdir    Name of the output subdirectory
    * \param rangeStd  Residual/ slope range in expected standard deviations
    * \param bins      Number of histogram bins
    */
   Residuals(TDirectory* dir,
             const Mechanics::Device& device,
+            const std::vector<Index>& sensorIds,
             const std::string& subdir = std::string("residuals"),
             /* Histogram options */
             const double rangeStd = 5.0,
