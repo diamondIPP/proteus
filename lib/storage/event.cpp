@@ -6,9 +6,6 @@
 Storage::Event::Event(size_t sensors)
     : m_frame(UINT64_MAX)
     , m_timestamp(UINT64_MAX)
-    , m_triggerInfo(-1)
-    , m_triggerOffset(-1)
-    , m_triggerPhase(-1)
 {
   m_sensors.reserve(sensors);
   for (size_t isensor = 0; isensor < sensors; ++isensor)
@@ -19,19 +16,9 @@ void Storage::Event::clear(uint64_t frame, uint64_t timestamp)
 {
   m_frame = frame;
   m_timestamp = timestamp;
-  m_triggerInfo = -1;
-  m_triggerOffset = -1;
-  m_triggerPhase = -1;
   for (auto& sensorEvent : m_sensors)
     sensorEvent.clear(frame, timestamp);
   m_tracks.clear();
-}
-
-void Storage::Event::setTrigger(int32_t info, int32_t offset, int32_t phase)
-{
-  m_triggerInfo = info;
-  m_triggerOffset = offset;
-  m_triggerPhase = phase;
 }
 
 void Storage::Event::setSensorData(Index isensor, SensorEvent&& sensorEvent)

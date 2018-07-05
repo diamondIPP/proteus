@@ -8,7 +8,6 @@
 
 #include "analyzers/clusters.h"
 #include "analyzers/correlations.h"
-#include "analyzers/events.h"
 #include "analyzers/hits.h"
 #include "analyzers/globaloccupancy.h"
 #include "analyzers/residuals.h"
@@ -50,7 +49,6 @@ int main(int argc, char const* argv[])
   loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
       app.device(), sensorIds, numPointsMin, searchSigmaMax, redChi2Max));
   loop.addProcessor(std::make_shared<Tracking::StraightFitter>(app.device()));
-  loop.addAnalyzer(std::make_shared<Events>(&hists, app.device()));
   loop.addAnalyzer(std::make_shared<Hits>(&hists, app.device()));
   loop.addAnalyzer(std::make_shared<Clusters>(&hists, app.device()));
   loop.addAnalyzer(std::make_shared<GlobalOccupancy>(&hists, app.device()));
