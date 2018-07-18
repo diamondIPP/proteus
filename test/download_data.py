@@ -9,9 +9,20 @@ import os
 import os.path
 import urllib
 import sys
+try:
+    from urllib.request import urlretrieve
+except ImportError:
+    from urllib import urlretrieve
 
-BASE_SOURCE = 'https://unigetb.web.cern.ch/unigetb/tbdata/raw/'
-BASE_TARGET = 'raw/'
+BASE_SOURCE = 'https://test-project-proteus.web.cern.ch/test-project-proteus/data/'
+BASE_TARGET = 'data/'
+# dataset names and corresponding checksum
+DATASETS = {
+    'unigetel_ebeam012_nparticles01': '86f2c1188378a525299f442daa656990cab1060abade573a4a963222510ee800',
+    'unigetel_ebeam120_nparticles01_misalignxyrotz': '8420cff3532838292f5f2109c830112a3d86d53c6a5e575105d72fead61d90c7',
+    'unigetel_ebeam120_nparticles01': '4dfbb74cfcd7b94041c25f366cbb28eebe622b9dd0f0b2b4cb4b4e94d062ae20',
+    'unigetel_ebeam120_nparticles02': '51efd25f147e47f4faafa09006bf98e91a65d949bc15ef240a439229959527e4',
+}
 
 def sha256(path):
     """calculate sha256 checksum for the file and return in hex"""
@@ -31,21 +42,20 @@ def check(path, checksum):
     print('\'%s\' checksum ok' % path)
     return True
 
-def download(name, output, checksum):
-    source = BASE_SOURCE + name
-    target = BASE_TARGET + output
+def download(name, checksum):
+    # not sure if path.join works for urls
+    source = BASE_SOURCE + name + '.root'
+    target = os.path.join(BASE_TARGET, name + '.root')
     if not check(target, checksum):
         print('downloading \'%s\' to \'%s\'' % (source, target))
-        urllib.urlretrieve(source, target)
+        urlretrieve(source, target)
         if not check(target, checksum):
             sys.exit('\'%s\' checksum failed' % target)
 
 if __name__ == '__main__':
-    download(
-        name='cosmic_85_0875.root',
-        output='run000875.root',
-        checksum='fc47d42f59f2def6674ab010b1a4c1d6abe99a70d1119ad3127fd8d30f800784')
-    download(
-        name='cosmic_001066.root',
-        output='run001066.root',
-        checksum='84124bc7f7acc05251af77ebc33f7a17a75edd055d3549170cc785fbaf96ce19')
+    if len(sys.argv) < 2:
+        datasets = DATASETS
+    else:
+        datasets = {_: DATASETS[_] for _ in sys.argv[1:]}
+    for name, checksum in datasets.items():
+        download(name=name, checksum=checksum)
