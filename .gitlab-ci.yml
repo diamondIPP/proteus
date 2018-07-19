@@ -8,7 +8,7 @@ stages:
 cache:
   key: data
   paths:
-    - test/raw/
+    - test/data/
 
 # setup default build environment w/ minimal version requirements
 # run debug build by default
@@ -36,7 +36,7 @@ build-slc6-dbg:
   variables:
     # Build type=Debug: activates compilation of asserts and
     # includes debug symbols (See issue #43)
-    CMAKE_ARGS: -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${CI_PROJECT_DIR}/install-slc6-dbg
+    CMAKE_ARGS: -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${CI_PROJECT_DIR}/install
   script:
     - mkdir build_external && cd build_external
     - cmake ${CMAKE_ARGS} ../ci/external
@@ -47,7 +47,7 @@ build-slc6-dbg:
     - cmake --build . -- install
   artifacts:
     paths:
-      - install-slc6-dbg
+      - install
 
 build-slc6-opt:
   stage: build
@@ -100,78 +100,85 @@ doc:
     paths:
       - build/doc/html
 
-check_configs:
+test-configs:
   stage: test
   tags:
     - cvmfs
   script:
+    - source install/activate.sh
     - cd test
     - ./check_configs.sh
 
-combine:
+test-combine:
   stage: test
   tags:
     - cvmfs
   script:
+    - source install/activate.sh
     - cd test
-    - ./download_data.py
-    - ./run_combine.sh
+    - ./download_data.py unigetel_ebeam012_nparticles01 unigetel_ebeam120_nparticles02
+    - ./check_combine.sh --no-progress
 
-run000875_noisescan:
-  stage: test
-  tags:
-    - cvmfs
-  script:
-    - cd test
-    - ./download_data.py
-    - ./run_tel_noisescan.sh 875 -n 100000 --no-progress
-    - ./run_dut0_noisescan.sh 875 -n 100000 --no-progress
+# templates for dataset tests
 
-run000875_align:
+.align_dut: &template_align_dut
   stage: test
   tags:
     - cvmfs
   script:
+    - source install/activate.sh
     - cd test
-    - ./download_data.py
-    - ./run_tel_align.sh 875 -n 20000 --no-progress
+    - ./download_data.py ${DATASET}
+    - ./run_align_dut.sh ${DATASET} --no-progress
 
-run000875_analysis:
+.align_tel: &template_align_tel
   stage: test
   tags:
     - cvmfs
   script:
+    - source install/activate.sh
     - cd test
-    - ./download_data.py
-    - ./run_track.sh 875 -n 100000 --no-progress
-    - ./run_match.sh 875 --no-progress
+    - ./download_data.py ${DATASET}
+    - ./run_align_tel.sh ${DATASET} --no-progress
 
-run001066_noisescan:
+.noisescan: &template_noisescan
   stage: test
   tags:
     - cvmfs
   script:
+    - source install/activate.sh
     - cd test
-    - ./download_data.py
-    - ./run_tel_noisescan.sh 1066 -n 100000 --no-progress
-    - ./run_dut0_noisescan.sh 1066 -n 100000 --no-progress
+    - ./download_data.py ${DATASET}
+    - ./run_noisescan.sh ${DATASET} --no-progress
 
-run001066_align:
+.reco: &template_reco
   stage: test
   tags:
     - cvmfs
   script:
+    - source install/activate.sh
     - cd test
-    - ./download_data.py
-    - ./run_tel_align.sh 1066 -n 20000 --no-progress
-    - ./run_dut_align.sh 1066 -n 20000 --no-progress
+    - ./download_data.py ${DATASET}
+    - ./run_reco.sh ${DATASET} --no-progress
 
-run001066_analysis:
-  stage: test
-  tags:
-    - cvmfs
-  script:
-    - cd test
-    - ./download_data.py
-    - ./run_track.sh 1066 -n 100000 --no-progress
-    - ./run_match.sh 1066 --no-progress
+# instantiate tests for specific datasets
+
+test-unigetel_ebeam120_nparticles01-align_dut:
+  <<: *template_align_dut
+  variables:
+    DATASET: unigetel_ebeam120_nparticles01
+
+test-unigetel_ebeam120_nparticles01-align_tel:
+  <<: *template_align_tel
+  variables:
+    DATASET: unigetel_ebeam120_nparticles01
+
+test-unigetel_ebeam120_nparticles01-noisescan:
+  <<: *template_noisescan
+  variables:
+    DATASET: unigetel_ebeam120_nparticles01
+
+test-unigetel_ebeam120_nparticles01-reco:
+  <<: *template_reco
+  variables:
+    DATASET: unigetel_ebeam120_nparticles01
