@@ -22,7 +22,6 @@ public:
 
   /** Clear the event without changing the number of sensors. */
   void clear(uint64_t frame = UINT64_MAX, uint64_t timestamp = UINT64_MAX);
-  void setTrigger(int32_t info, int32_t offset, int32_t phase);
   /** Set the data, i.e. hits and clusters, for one sensor.
    *
    * Reconstructed local track data is not copied.
@@ -38,9 +37,6 @@ public:
 
   uint64_t frame() const { return m_frame; }
   uint64_t timestamp() const { return m_timestamp; }
-  int32_t triggerInfo() const { return m_triggerInfo; }
-  int32_t triggerOffset() const { return m_triggerOffset; }
-  int32_t triggerPhase() const { return m_triggerPhase; }
 
   Index numSensorEvents() const { return static_cast<Index>(m_sensors.size()); }
   SensorEvent& getSensorEvent(Index i) { return m_sensors.at(i); }
@@ -60,9 +56,6 @@ public:
 private:
   uint64_t m_frame;
   uint64_t m_timestamp;
-  int32_t m_triggerInfo; // Dammit Andrej!
-  int32_t m_triggerOffset;
-  int32_t m_triggerPhase;
 
   std::vector<SensorEvent> m_sensors;
   std::vector<std::unique_ptr<Track>> m_tracks;

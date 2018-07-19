@@ -12,6 +12,21 @@ User-visible changes
 
 *   Add occupancy histograms in the global coordinate system. They can be
     found in the ``global/<sensor>/...`` directories.
+*   Remove support for event-level ``Trigger{Info,Offset,Phase}`` variables
+    in RCE ROOT.
+
+    The RCE ROOT reader will ignore these variables when they are
+    present and the RCE ROOT writer will not create them. These
+    variables were unused anywhere in the code base and their content
+    was unclear.
+*   Remove ``event/...`` histograms that showed the
+    ``Trigger{Offset,Phase}`` variables.
+
+Internal changes
+----------------
+
+*   Remove ``Trigger{Info,Offset,Phase}`` variables from ``Storage::Event``.
+*   Remove ``Analyzers::Events`` analyzer.
 
 v1.3.0 (2017-12-06)
 ===================

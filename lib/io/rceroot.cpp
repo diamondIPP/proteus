@@ -63,15 +63,6 @@ Io::RceRootReader::RceRootReader(const std::string& path)
     m_eventInfo->SetBranchAddress("FrameNumber", &frameNumber);
     m_eventInfo->SetBranchAddress("TimeStamp", &timestamp);
     m_eventInfo->SetBranchAddress("TriggerTime", &triggerTime);
-    m_eventInfo->SetBranchAddress("TriggerInfo", &triggerInfo);
-    m_eventInfo->SetBranchAddress("TriggerOffset", &triggerOffset);
-    // trigger phase is a custom addition for the trigger phase busy and
-    // might not be available
-    if (m_eventInfo->FindBranch("TriggerPhase")) {
-      m_eventInfo->SetBranchAddress("TriggerPhase", &triggerPhase);
-    } else {
-      triggerPhase = -1;
-    }
     m_eventInfo->SetBranchAddress("Invalid", &invalid);
   }
 
@@ -269,10 +260,8 @@ bool Io::RceRootReader::read(Storage::Event& event)
     // completely useless. The `TriggerTime` actually stores the internal
     // FPGA timestamp/ clock cyles and is what we need to use.
     event.clear(frameNumber, triggerTime);
-    event.setTrigger(triggerInfo, triggerOffset, triggerPhase);
   } else {
     event.clear(ievent);
-    // no trigger information available
   }
 
   // global tracks info
@@ -363,9 +352,6 @@ Io::RceRootWriter::RceRootWriter(const std::string& path, size_t numSensors)
   m_eventInfo->Branch("FrameNumber", &frameNumber, "FrameNumber/l");
   m_eventInfo->Branch("TimeStamp", &timestamp, "TimeStamp/l");
   m_eventInfo->Branch("TriggerTime", &triggerTime, "TriggerTime/l");
-  m_eventInfo->Branch("TriggerInfo", &triggerInfo, "TriggerInfo/I");
-  m_eventInfo->Branch("TriggerOffset", &triggerOffset, "TriggerOffset/I");
-  m_eventInfo->Branch("TriggerPhase", &triggerPhase, "TriggerPhase/I");
   m_eventInfo->Branch("Invalid", &invalid, "Invalid/O");
 
   // global track tree
@@ -446,9 +432,6 @@ void Io::RceRootWriter::append(const Storage::Event& event)
   frameNumber = event.frame();
   timestamp = 0;
   triggerTime = event.timestamp();
-  triggerInfo = event.triggerInfo();
-  triggerOffset = event.triggerOffset();
-  triggerPhase = event.triggerPhase();
   invalid = false;
   m_eventInfo->Fill();
 
