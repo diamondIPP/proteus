@@ -161,7 +161,29 @@ test-combine:
     - ./download_data.py ${DATASET}
     - ./run_reco.sh ${DATASET} --no-progress
 
-# instantiate tests for specific datasets
+# tests for UNIGEtel ebeam=12GeV nparticles=1
+
+test-unigetel_ebeam012_nparticles01-align_dut:
+  <<: *template_align_dut
+  variables:
+    DATASET: unigetel_ebeam012_nparticles01
+
+test-unigetel_ebeam012_nparticles01-align_tel:
+  <<: *template_align_tel
+  variables:
+    DATASET: unigetel_ebeam012_nparticles01
+
+test-unigetel_ebeam012_nparticles01-noisescan:
+  <<: *template_noisescan
+  variables:
+    DATASET: unigetel_ebeam012_nparticles01
+
+test-unigetel_ebeam012_nparticles01-reco:
+  <<: *template_reco
+  variables:
+    DATASET: unigetel_ebeam012_nparticles01
+
+# tests for UNIGEtel ebeam=120GeV nparticles=1
 
 test-unigetel_ebeam120_nparticles01-align_dut:
   <<: *template_align_dut
