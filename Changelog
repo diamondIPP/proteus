@@ -27,6 +27,8 @@ Internal changes
 
 *   Remove ``Trigger{Info,Offset,Phase}`` variables from ``Storage::Event``.
 *   Remove ``Analyzers::Events`` analyzer.
+*   Replace test data with simulated datasets based on Allpix² and update the
+    configurations and scripts accordingly.
 
 v1.3.0 (2017-12-06)
 ===================
