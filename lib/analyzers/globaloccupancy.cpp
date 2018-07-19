@@ -9,8 +9,9 @@
 #include "storage/event.h"
 #include "utils/root.h"
 
-Analyzers::GlobalOccupancy::GlobalOccupancy(TDirectory *dir,
-                                            const Mechanics::Device &device) {
+Analyzers::GlobalOccupancy::GlobalOccupancy(TDirectory* dir,
+                                            const Mechanics::Device& device)
+{
   // estimate bounding box of all sensor projections into the xy-plane
   auto active = Mechanics::Sensor::Volume::Empty();
   for (auto isensor : device.sensorIds()) {
@@ -20,7 +21,7 @@ Analyzers::GlobalOccupancy::GlobalOccupancy(TDirectory *dir,
 
   // create per-sensor histograms
   for (auto isensor : device.sensorIds()) {
-    const auto &sensor = *device.getSensor(isensor);
+    const auto& sensor = *device.getSensor(isensor);
     auto pitch = sensor.projectedPitch();
 
     Utils::HistAxis ax(active.min(0), active.max(0),
@@ -28,7 +29,7 @@ Analyzers::GlobalOccupancy::GlobalOccupancy(TDirectory *dir,
     Utils::HistAxis ay(active.min(1), active.max(1),
                        active.length(1) / pitch[1], "Global y position");
 
-    TDirectory *sub = Utils::makeDir(dir, "global/" + sensor.name());
+    TDirectory* sub = Utils::makeDir(dir, "global/" + sensor.name());
     SensorHists h;
     h.plane = device.geometry().getPlane(isensor);
     h.id = isensor;
@@ -37,13 +38,15 @@ Analyzers::GlobalOccupancy::GlobalOccupancy(TDirectory *dir,
   }
 }
 
-std::string Analyzers::GlobalOccupancy::name() const {
+std::string Analyzers::GlobalOccupancy::name() const
+{
   return "GlobalOccupancy";
 }
 
-void Analyzers::GlobalOccupancy::analyze(const Storage::Event &event) {
-  for (auto &hists : m_sensorHists) {
-    const Storage::SensorEvent &se = event.getSensorEvent(hists.id);
+void Analyzers::GlobalOccupancy::analyze(const Storage::Event& event)
+{
+  for (auto& hists : m_sensorHists) {
+    const Storage::SensorEvent& se = event.getSensorEvent(hists.id);
 
     for (Index ic = 0; ic < se.numClusters(); ++ic) {
       Vector3 xyz = hists.plane.toGlobal(se.getCluster(ic).posLocal());

@@ -18,17 +18,17 @@ namespace Analyzers {
 /** Global occupancy histograms for all sensors in the device. */
 class GlobalOccupancy : public Analyzer {
 public:
-  GlobalOccupancy(TDirectory *dir, const Mechanics::Device &device);
+  GlobalOccupancy(TDirectory* dir, const Mechanics::Device& device);
 
   std::string name() const;
-  void analyze(const Storage::Event &event);
+  void analyze(const Storage::Event& event);
   void finalize();
 
 private:
   struct SensorHists {
     Mechanics::Plane plane;
     Index id = kInvalidIndex;
-    TH2D *clusters_xy = nullptr;
+    TH2D* clusters_xy = nullptr;
   };
 
   std::vector<SensorHists> m_sensorHists;
