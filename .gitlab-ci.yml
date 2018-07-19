@@ -13,7 +13,7 @@ cache:
 # setup default build environment w/ minimal version requirements
 # run debug build by default
 before_script:
-  - source /cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-slc6-gcc49-opt/setup.sh
+  - source /cvmfs/sft.cern.ch/lcg/views/LCG_92/x86_64-slc6-gcc62-opt/setup.sh
   - export "PATH=${PWD}/install-slc6-dbg/bin${PATH:+:}${PATH}"
   - export "LD_LIBRARY_PATH=${PWD}/install-slc6-dbg/lib${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
 
@@ -71,7 +71,7 @@ build-cc7-dbg:
     - cvmfs
   before_script: []
   script:
-    - source /cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-centos7-gcc62-opt/setup.sh
+    - source /cvmfs/sft.cern.ch/lcg/views/LCG_92/x86_64-centos7-gcc62-opt/setup.sh
     - mkdir build && cd build
     - cmake -GNinja -DCMAKE_BUILD_TYPE=Debug ..
     - cmake --build .
