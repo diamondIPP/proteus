@@ -15,7 +15,7 @@ parts of a typical analysis chain:
     ./run_reco.sh ${dataset}
 
 To simplify tests, each script is independent from previous steps and
-can be run on its one. E.g. the dut alignment will start from an initial
+can be run on its own. E.g. the dut alignment will start from an initial
 geometry where the telescope planes are already in the correct
 correction; the reconstruction code will use the true simulated
 geometry.
@@ -33,7 +33,7 @@ planar modules as telescope planes and a seventh IBL planar module to
 act as the device-under-test. The telescope planes are simulated with
 FE-I4-like digitization and a threshold of 3000e; the device-under-test
 uses a threshold of 2000e and stores the simulated charge without
-digitization.
+digitization. The timing information is currently unavailable in the simulated datasets.
 
 The simulated geometry is misaligned by random offsets and rotations
 with respect to the nominal geometry.
