@@ -41,9 +41,9 @@ with respect to the nominal geometry.
 Datasets
 --------
 
-| Name | Beam | Particles/event | Comment |
-| ---- | ---- | --------------- | ------- |
-| unigetel_ebeam012_nparticles01 | 12 GeV pi+ | 1 | |
-| unigetel_ebeam120_nparticles01_misalignxyrotz | 120 GeV pi+ | 1 | Only misalignment in x, y, z-rotation |
-| unigetel_ebeam120_nparticles01 | 120 GeV pi+ | 1 | |
-| unigetel_ebeam120_nparticles02 | 120 GeV pi+ | 2 | |
+| Name | Beam | Particles/event | Events | Comment |
+| ---- | ---- | --------------- | ------ | ------- |
+| unigetel_ebeam012_nparticles01 | 12 GeV pi+ | 1 | 100k | |
+| unigetel_ebeam120_nparticles01_misalignxyrotz | 120 GeV pi+ | 1 | 100k | Only misalignment in x, y, z-rotation |
+| unigetel_ebeam120_nparticles01 | 120 GeV pi+ | 1 | 100k | |
+| unigetel_ebeam120_nparticles02 | 120 GeV pi+ | 2 | 100k | |
