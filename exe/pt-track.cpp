@@ -8,8 +8,8 @@
 
 #include "analyzers/clusters.h"
 #include "analyzers/correlations.h"
-#include "analyzers/hits.h"
 #include "analyzers/globaloccupancy.h"
+#include "analyzers/hits.h"
 #include "analyzers/residuals.h"
 #include "analyzers/tracks.h"
 #include "io/rceroot.h"

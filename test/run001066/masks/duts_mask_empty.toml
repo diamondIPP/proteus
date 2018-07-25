@@ -1,9 +1,0 @@
-# empty noise mask for both duts
-
-[[sensors]]
-id = 6
-masked_pixels = []
-
-[[sensors]]
-id = 7
-masked_pixels = []

@@ -3,3 +3,57 @@
 
 [combine.example1]
 # another convert example w/o parameters
+
+[noisescan]
+sigma_above_avg_max = 10.0
+rate_max = 0.1
+density_bandwidth = 5.0
+
+[[noisescan.sensors]]
+id = 0
+[[noisescan.sensors]]
+id = 1
+[[noisescan.sensors]]
+id = 2
+[[noisescan.sensors]]
+id = 3
+[[noisescan.sensors]]
+id = 4
+[[noisescan.sensors]]
+id = 5
+[[noisescan.sensors]]
+id = 6
+
+[track]
+sensor_ids = [1,2,3,4,5,6]
+search_sigma_max = 10.0
+num_points_min = 5
+
+[match]
+sensor_ids = [0]
+
+[align.tel_coarse]
+method = "correlations" # use method based on cluster correlations
+sensor_ids = [1,2,3,4,5,6] # sensors to calculate correlations for
+align_ids = [2,3,4,5,6] # sensors to align
+
+[align.tel_fine]
+method = "residuals" # use method based on track residuals
+sensor_ids = [1,2,3,4,5,6] # sensors to build tracks
+align_ids = [2,3,4,5,6] # sensors to align
+num_steps = 20 # number of iterative steps
+search_sigma_max = 10.0 # distance search window for track finding
+reduced_chi2_max = 10.0 # chi2 cut for track finding
+
+[align.dut_coarse]
+method = "correlations" # use method based on cluster correlations
+sensor_ids = [0,1,2,3,4,5,6] # sensors to calculate correlations for
+align_ids = [0] # align dut plane
+
+[align.dut_fine]
+method = "residuals" # use method based on track residuals
+sensor_ids = [0,1,2,3,4,5,6] # sensors to build tracks
+align_ids = [0] # align dut plane
+num_steps = 20 # number of iterative steps
+search_sigma_max = 10.0 # distance search window for track finding
+reduced_chi2_max = 10.0 # chi2 cut for track finding

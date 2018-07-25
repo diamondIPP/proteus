@@ -1,0 +1,5 @@
+# empty pixel mask for the device-under-test
+
+[[sensors]]
+id = 0
+masked_pixels = []

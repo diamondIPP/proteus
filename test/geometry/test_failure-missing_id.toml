@@ -1,6 +1,5 @@
 [beam]
-slope_x = 0.0
-slope_y = 0.0
+slope = [0.0, 0.0]
 
 [[sensors]]
 id = 1

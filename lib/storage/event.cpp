@@ -4,8 +4,7 @@
 #include <iostream>
 
 Storage::Event::Event(size_t sensors)
-    : m_frame(UINT64_MAX)
-    , m_timestamp(UINT64_MAX)
+    : m_frame(UINT64_MAX), m_timestamp(UINT64_MAX)
 {
   m_sensors.reserve(sensors);
   for (size_t isensor = 0; isensor < sensors; ++isensor)
