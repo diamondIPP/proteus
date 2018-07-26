@@ -28,6 +28,8 @@ Analyzers::detail::SensorResidualHists::SensorResidualHists(
   auto resMaxV = rangeStd * sensor.pitchRow() / std::sqrt(12.0);
   auto posRangeU = sensor.sensitiveAreaLocal().interval(0);
   auto posRangeV = sensor.sensitiveAreaLocal().interval(1);
+  auto distRange = std::sqrt(resMaxU*resMaxU + resMaxV*resMaxV);
+
   Vector2 slope = sensor.beamSlope();
   Vector2 slopeMin = slope - rangeStd * sensor.beamDivergence();
   Vector2 slopeMax = slope + rangeStd * sensor.beamDivergence();
@@ -38,6 +40,8 @@ Analyzers::detail::SensorResidualHists::SensorResidualHists(
   HistAxis axPosV(posRangeV, bins, "Local track position v");
   HistAxis axSlopeU(slopeMin[0], slopeMax[0], bins, "Local track slope u");
   HistAxis axSlopeV(slopeMin[1], slopeMax[1], bins, "Local track slope v");
+  HistAxis axResDist(0, distRange, bins, "Cluster - track distance");
+  HistAxis axResD2(0, 10., bins, "Cluster - track distance");
 
   TDirectory* sub = makeDir(dir, "sensors/" + sensor.name() + "/" + name);
   resU = makeH1(sub, "res_u", axResU);
@@ -45,20 +49,29 @@ Analyzers::detail::SensorResidualHists::SensorResidualHists(
   trackVResU = makeH2(sub, "res_u-pos_v", axPosV, axResU);
   slopeUResU = makeH2(sub, "res_u-slope_u", axSlopeU, axResU);
   slopeVResU = makeH2(sub, "res_u-slope_v", axSlopeV, axResU);
+
   resV = makeH1(sub, "res_v", axResV);
   trackUResV = makeH2(sub, "res_v-pos_u", axPosU, axResV);
   trackVResV = makeH2(sub, "res_v-pos_v", axPosV, axResV);
   slopeUResV = makeH2(sub, "res_v-slope_u", axSlopeU, axResV);
   slopeVResV = makeH2(sub, "res_v-slope_v", axSlopeV, axResV);
+
   resUV = makeH2(sub, "res_uv", axResU, axResV);
+
+  resDist = makeH1(sub, "res_dist", axResDist);
+  resD2 = makeH1(sub, "res_d2", axResD2);
 }
 
 void Analyzers::detail::SensorResidualHists::fill(
     const Storage::TrackState& state, const Storage::Cluster& cluster)
 {
   XYVector res = cluster.posLocal() - state.offset();
+  SymMatrix2 cov = cluster.covLocal() + state.covOffset();
+
   resU->Fill(res.x());
   resV->Fill(res.y());
+  resDist->Fill(res.r());
+  resD2->Fill(mahalanobisSquared(cov, res));
   resUV->Fill(res.x(), res.y());
   trackUResU->Fill(state.offset().x(), res.x());
   trackUResV->Fill(state.offset().x(), res.y());
@@ -81,7 +94,6 @@ Analyzers::Residuals::Residuals(TDirectory* dir,
     m_hists_map.emplace(isensor, detail::SensorResidualHists(dir, *device.getSensor(isensor), rangeStd, bins,
                                                              subdir));
   }
-
 
 }
 
@@ -109,3 +121,65 @@ void Analyzers::Residuals::analyze(const Storage::Event& event)
 }
 
 void Analyzers::Residuals::finalize() {}
+
+
+Analyzers::Matching::Matching(TDirectory* dir,
+                                const Mechanics::Device& device,
+                                const std::vector<Index>& sensorIds,
+                                const std::string& subdir,
+                                const double rangeStd,
+                                const int bins)
+{
+  for (auto isensor : sensorIds) {
+    m_hists_map.emplace(isensor, detail::SensorResidualHists(dir, *device.getSensor(isensor), rangeStd, bins,
+                                                             subdir));
+  }
+
+
+}
+
+
+std::string Analyzers::Matching::name() const { return "Matching"; }
+
+void Analyzers::Matching::analyze(const Storage::Event& event)
+{
+  for (Index isensor = 0; isensor < event.numSensorEvents(); ++isensor) {
+    const Storage::SensorEvent &sensorEvent = event.getSensorEvent(isensor);
+
+    if (!m_hists_map.count(sensorEvent.sensor()))
+      continue;
+
+    auto &hists = m_hists_map[sensorEvent.sensor()];
+
+    // combinatorics: all tracks to all other tracks
+    /*for (const auto& s0 : sensorEvent.localStates()) {
+      for (const auto& s1 : sensorEvent.localStates()) {
+        if (s0.first == s1.first)
+          continue;
+        m_trackTrack.fill(s1.second.offset() - s0.second.offset());
+      }
+    }*/
+    // combinatorics: all clusters to all tracks
+    /*for (const auto& s : sensorEvent.localStates()) {
+      const Storage::TrackState& state = s.second;
+
+      for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
+        const Storage::Cluster& cluster = sensorEvent.getCluster(icluster);
+
+        m_trackCluster.fill(cluster.posLocal() - state.offset(),
+                            cluster.covLocal() + state.covOffset());
+      }
+    }*/
+    // matched pairs
+    for (const auto &s : sensorEvent.localStates()) {
+      const Storage::TrackState &state = s.second;
+
+      if (state.isMatched()) {
+        const Storage::Cluster &cluster = sensorEvent.getCluster(state.matchedCluster());
+        hists.fill(state, cluster);
+      }
+    }
+  }
+}
+
+void Analyzers::Matching::finalize() {}

@@ -26,13 +26,20 @@ namespace detail {
 struct SensorResidualHists {
   TH1D* resU;
   TH1D* resV;
+  TH1D* resDist;
+  TH1D* resD2;
+
   TH2D* resUV;
+
   TH2D* trackUResU;
   TH2D* trackUResV;
+
   TH2D* trackVResU;
   TH2D* trackVResV;
+
   TH2D* slopeUResU;
   TH2D* slopeUResV;
+
   TH2D* slopeVResU;
   TH2D* slopeVResV;
 
@@ -72,7 +79,35 @@ public:
   void finalize();
 
 private:
-	std::unordered_map<Index, detail::SensorResidualHists> m_hists_map;
+  std::unordered_map<Index, detail::SensorResidualHists> m_hists_map;
+}; // class Residuals
+
+
+class Matching : public Analyzer {
+public:
+  /** Construct a residual analyzer.
+   *
+   * \param dir       Where to create the output subdirectory
+   * \param device    The device object
+   * \param sensorIds Sensors for which residuals should be calculated
+   * \param subdir    Name of the output subdirectory
+   * \param rangeStd  Residual/ slope range in expected standard deviations
+   * \param bins      Number of histogram bins
+   */
+  Matching(TDirectory* dir,
+            const Mechanics::Device& device,
+            const std::vector<Index>& sensorIds,
+            const std::string& subdir = std::string("matching"),
+            /* Histogram options */
+            const double rangeStd = 5.0,
+            const int bins = 128);
+
+  std::string name() const;
+  void analyze(const Storage::Event& refEvent);
+  void finalize();
+
+private:
+  std::unordered_map<Index, detail::SensorResidualHists> m_hists_map;
 };
 
 } // namespace Analyzers
