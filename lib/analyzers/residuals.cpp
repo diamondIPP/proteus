@@ -77,9 +77,12 @@ Analyzers::Residuals::Residuals(TDirectory* dir,
                                 const double rangeStd,
                                 const int bins)
 {
-  for (auto isensor : sensorIds)
-    m_hists.emplace_back(dir, *device.getSensor(isensor), rangeStd, bins,
-                         subdir);
+  for (auto isensor : sensorIds) {
+    m_hists_map.emplace(isensor, detail::SensorResidualHists(dir, *device.getSensor(isensor), rangeStd, bins,
+                                                             subdir));
+  }
+
+
 }
 
 std::string Analyzers::Residuals::name() const { return "Residuals"; }
@@ -88,7 +91,11 @@ void Analyzers::Residuals::analyze(const Storage::Event& event)
 {
   for (Index isensor = 0; isensor < event.numSensorEvents(); ++isensor) {
     const Storage::SensorEvent& sev = event.getSensorEvent(isensor);
-    auto& hists = m_hists[isensor];
+
+    if(!m_hists_map.count(sev.sensor()))
+      continue;
+
+    auto& hists = m_hists_map[sev.sensor()];
 
     for (Index icluster = 0; icluster < sev.numClusters(); ++icluster) {
       const Storage::Cluster& cluster = sev.getCluster(icluster);

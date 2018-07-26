@@ -2,6 +2,7 @@
 #define PT_RESIDUALS_H
 
 #include <vector>
+#include <unordered_map>
 
 #include "analyzers/analyzer.h"
 #include "utils/definitions.h"
@@ -71,7 +72,7 @@ public:
   void finalize();
 
 private:
-  std::vector<detail::SensorResidualHists> m_hists;
+	std::unordered_map<Index, detail::SensorResidualHists> m_hists_map;
 };
 
 } // namespace Analyzers
