@@ -58,11 +58,13 @@ Analyzers::Distances::Distances(TDirectory* dir,
   double trackMax = std::hypot(area.length(0), area.length(1));
   double matchMax = pixelRange * pitch;
 
-  TDirectory* sub =
+  TDirectory* subDist =
       Utils::makeDir(dir, "sensors/" + sensor.name() + "/distances");
-  m_trackTrack = Hists(sub, "track_track-", trackMax, -1, bins);
-  m_trackCluster = Hists(sub, "track_cluster-", trackMax, d2Max, bins);
-  m_match = Hists(sub, "match-", matchMax, d2Max, bins);
+  TDirectory* subMatch =
+      Utils::makeDir(dir, "sensors/" + sensor.name() + "/matching");
+  m_trackTrack = Hists(subDist, "track_track-", trackMax, -1, bins);
+  m_trackCluster = Hists(subDist, "track_cluster-", trackMax, d2Max, bins);
+  m_match = Hists(subMatch, "match-", matchMax, d2Max, bins);
 }
 
 std::string Analyzers::Distances::name() const
