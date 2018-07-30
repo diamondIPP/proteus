@@ -10,7 +10,7 @@
 namespace Mechanics {
 class Device;
 }
-namespace Utils {
+namespace Loop {
 class EventLoop;
 }
 
@@ -18,10 +18,10 @@ namespace Processors {
 
 /** Add hit mapper and region selection processors to the event loop. */
 void setupHitPreprocessing(const Mechanics::Device& device,
-                           Utils::EventLoop& loop);
+                           Loop::EventLoop& loop);
 
 /** Select and add clusterizer for all configured sensors. */
-void setupClusterizers(const Mechanics::Device& device, Utils::EventLoop& loop);
+void setupClusterizers(const Mechanics::Device& device, Loop::EventLoop& loop);
 
 } // namespace Processors
 

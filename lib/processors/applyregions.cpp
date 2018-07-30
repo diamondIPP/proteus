@@ -6,9 +6,9 @@
 
 #include "applyregions.h"
 
+#include "loop/eventloop.h"
 #include "mechanics/device.h"
 #include "storage/event.h"
-#include "utils/eventloop.h"
 
 Processors::ApplyRegions::ApplyRegions(const Mechanics::Sensor& sensor)
     : m_sensor(sensor)
@@ -41,7 +41,7 @@ void Processors::ApplyRegions::process(Storage::Event& event) const
 }
 
 void Processors::setupRegions(const Mechanics::Device& device,
-                              Utils::EventLoop& loop)
+                              Loop::EventLoop& loop)
 {
   for (auto isensor : device.sensorIds()) {
     const Mechanics::Sensor& sensor = *device.getSensor(isensor);

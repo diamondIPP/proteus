@@ -14,7 +14,7 @@ class Device;
 class Sensor;
 } // namespace Mechanics
 
-namespace Utils {
+namespace Loop {
 class EventLoop;
 }
 
@@ -32,7 +32,7 @@ private:
   const Mechanics::Sensor& m_sensor;
 };
 
-void setupRegions(const Mechanics::Device& device, Utils::EventLoop& loop);
+void setupRegions(const Mechanics::Device& device, Loop::EventLoop& loop);
 
 } // namespace Processors
 

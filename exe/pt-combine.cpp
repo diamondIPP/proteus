@@ -8,9 +8,9 @@
 #include "io/merger.h"
 #include "io/rceroot.h"
 #include "io/reader.h"
+#include "loop/eventloop.h"
 #include "utils/arguments.h"
 #include "utils/config.h"
-#include "utils/eventloop.h"
 #include "utils/logger.h"
 
 PT_SETUP_GLOBAL_LOGGER
@@ -52,9 +52,9 @@ int main(int argc, char const* argv[])
   auto writer = std::make_shared<Io::RceRootWriter>(args.get("output"),
                                                     merger->numSensors());
 
-  Utils::EventLoop loop(merger, merger->numSensors(),
-                        args.get<uint64_t>("skip_events"),
-                        args.get<uint64_t>("num_events"));
+  Loop::EventLoop loop(merger, merger->numSensors(),
+                       args.get<uint64_t>("skip_events"),
+                       args.get<uint64_t>("num_events"));
   loop.addWriter(writer);
   loop.run();
 

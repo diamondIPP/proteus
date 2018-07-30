@@ -13,6 +13,7 @@ set(proteus_SOURCES
     io/rceroot.cpp
     io/timepix3.cpp
     io/reader.cpp
+    loop/eventloop.cpp
     mechanics/device.cpp
     mechanics/geometry.cpp
     mechanics/pixelmasks.cpp
@@ -36,7 +37,6 @@ set(proteus_SOURCES
     utils/arguments.cpp
     utils/config.cpp
     utils/densemask.cpp
-    utils/eventloop.cpp
     utils/logger.cpp)
 file(GLOB_RECURSE proteus_HEADERS LIST_DIRECTORIES false *.h)
 set(proteus_DEFINITIONS)

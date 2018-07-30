@@ -96,13 +96,13 @@ std::string Utils::Application::outputPath(const std::string& name) const
   return m_outputPrefix + '-' + name;
 }
 
-Utils::EventLoop Utils::Application::makeEventLoop() const
+Loop::EventLoop Utils::Application::makeEventLoop() const
 {
   // NOTE open the file just when the event loop is created to ensure that the
   //      input reader always starts at the beginning of the file.
-  Utils::EventLoop loop(Io::openRead(m_inputPath, toml::Value()),
-                        m_dev->numSensors(), m_skipEvents, m_numEvents,
-                        m_showProgress);
+  Loop::EventLoop loop(Io::openRead(m_inputPath, toml::Value()),
+                       m_dev->numSensors(), m_skipEvents, m_numEvents,
+                       m_showProgress);
   // full-event output in debug mode
   if (Logger::isActive(Logger::Level::Debug))
     loop.addAnalyzer(std::make_shared<Analyzers::EventPrinter>());

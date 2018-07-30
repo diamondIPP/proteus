@@ -7,6 +7,7 @@
 #include <TTree.h>
 
 #include "analyzers/residuals.h"
+#include "loop/eventloop.h"
 #include "mechanics/device.h"
 #include "processors/applygeometry.h"
 #include "processors/setupsensors.h"
@@ -14,7 +15,6 @@
 #include "tracking/straightfitter.h"
 #include "tracking/trackfinder.h"
 #include "utils/application.h"
-#include "utils/eventloop.h"
 #include "utils/logger.h"
 #include "utils/root.h"
 

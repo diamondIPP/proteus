@@ -10,9 +10,9 @@
 #include <functional>
 #include <limits>
 
+#include "loop/eventloop.h"
 #include "mechanics/device.h"
 #include "storage/event.h"
-#include "utils/eventloop.h"
 #include "utils/logger.h"
 
 PT_SETUP_GLOBAL_LOGGER

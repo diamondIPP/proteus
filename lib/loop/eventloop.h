@@ -16,17 +16,17 @@
 #include "io/writer.h"
 #include "processors/processor.h"
 
-namespace Utils {
+namespace Loop {
 
-/** A generic event loop.
+/** A generic event processing loop.
  *
  * Implements only the loop logic but not the actual event processing. Specific
  * processing logic must be provided by implementing processors and analyzers
  * and adding them via `addProcessor(...)` and `addAnalyzer(...)`. These will
  * be called for each event in the order in which they were added.
  *
- * The event loop gets its events from a single `EventReader` and can output
- * data to an arbitrary number of `EventWriter`s.
+ * The event loop gets its events from a single `Reader` and can output
+ * data to an arbitrary number of `Writer`s.
  */
 class EventLoop {
 public:
@@ -52,6 +52,6 @@ private:
   bool m_showProgress;
 };
 
-} // namespace Utils
+} // namespace Loop
 
 #endif // PT_EVENTLOOP_H
