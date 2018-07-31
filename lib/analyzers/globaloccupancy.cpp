@@ -54,5 +54,3 @@ void Analyzers::GlobalOccupancy::analyze(const Storage::Event& event)
     }
   }
 }
-
-void Analyzers::GlobalOccupancy::finalize() {}

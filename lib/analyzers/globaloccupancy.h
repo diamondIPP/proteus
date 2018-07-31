@@ -22,7 +22,6 @@ public:
 
   std::string name() const;
   void analyze(const Storage::Event& event);
-  void finalize();
 
 private:
   struct SensorHists {

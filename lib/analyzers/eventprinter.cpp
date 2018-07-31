@@ -14,5 +14,3 @@ void Analyzers::EventPrinter::analyze(const Storage::Event& event)
   logger().debug("event:\n");
   logger().debugp(event, "  ");
 }
-
-void Analyzers::EventPrinter::finalize() {}

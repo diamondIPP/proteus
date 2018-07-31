@@ -72,5 +72,3 @@ void Analyzers::Tracks::analyze(const Storage::Event& event)
     m_slopeY->Fill(state.slope().y());
   }
 }
-
-void Analyzers::Tracks::finalize() {}

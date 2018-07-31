@@ -121,8 +121,6 @@ void Analyzers::Residuals::analyze(const Storage::Event& event)
   }
 }
 
-void Analyzers::Residuals::finalize() {}
-
 Analyzers::Matching::Matching(TDirectory* dir,
                               const Mechanics::Device& device,
                               const std::vector<Index>& sensorIds,
@@ -160,5 +158,3 @@ void Analyzers::Matching::analyze(const Storage::Event& event)
     }
   }
 }
-
-void Analyzers::Matching::finalize() {}

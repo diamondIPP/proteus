@@ -120,8 +120,6 @@ void Analyzers::Correlations::analyze(const Storage::Event& event)
   }
 }
 
-void Analyzers::Correlations::finalize() {}
-
 const TH1D* Analyzers::Correlations::getHistDiffX(Index sensorId0,
                                                   Index sensorId1) const
 {

@@ -112,8 +112,3 @@ void Analyzers::Distances::analyze(const Storage::Event& event)
     }
   }
 }
-
-void Analyzers::Distances::finalize()
-{
-  // nothing to do
-}

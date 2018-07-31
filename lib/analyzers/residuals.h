@@ -76,13 +76,12 @@ public:
 
   std::string name() const;
   void analyze(const Storage::Event& refEvent);
-  void finalize();
 
 private:
   std::unordered_map<Index, detail::SensorResidualHists> m_hists_map;
 };
 
-class Matching : public Analyzer {
+class Matching : public Loop::Analyzer {
 public:
   /** Construct a matching analyzer.
    *
@@ -101,7 +100,6 @@ public:
 
   std::string name() const;
   void analyze(const Storage::Event& refEvent);
-  void finalize();
 
 private:
   std::unordered_map<Index, detail::SensorResidualHists> m_hists_map;
