@@ -11,7 +11,7 @@
 #include <memory>
 #include <vector>
 
-#include "analyzers/analyzer.h"
+#include "analyzer.h"
 #include "io/reader.h"
 #include "io/writer.h"
 #include "processors/processor.h"
@@ -38,14 +38,14 @@ public:
   ~EventLoop();
 
   void addProcessor(std::shared_ptr<Processors::Processor> processor);
-  void addAnalyzer(std::shared_ptr<Analyzers::Analyzer> analyzer);
+  void addAnalyzer(std::shared_ptr<Analyzer> analyzer);
   void addWriter(std::shared_ptr<Io::EventWriter> writer);
   void run();
 
 private:
   std::shared_ptr<Io::EventReader> m_reader;
   std::vector<std::shared_ptr<Processors::Processor>> m_processors;
-  std::vector<std::shared_ptr<Analyzers::Analyzer>> m_analyzers;
+  std::vector<std::shared_ptr<Analyzer>> m_analyzers;
   std::vector<std::shared_ptr<Io::EventWriter>> m_writers;
   uint64_t m_start, m_events;
   size_t m_sensors;

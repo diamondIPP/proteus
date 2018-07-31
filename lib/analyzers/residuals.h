@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "analyzers/analyzer.h"
+#include "loop/analyzer.h"
 #include "utils/definitions.h"
 
 class TDirectory;
@@ -55,7 +55,7 @@ struct SensorResidualHists {
 
 } // namespace detail
 
-class Residuals : public Analyzer {
+class Residuals : public Loop::Analyzer {
 public:
   /** Construct a residual analyzer.
    *

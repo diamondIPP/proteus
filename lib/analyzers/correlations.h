@@ -5,7 +5,7 @@
 
 #include <TH1D.h>
 
-#include "analyzers/analyzer.h"
+#include "loop/analyzer.h"
 #include "utils/definitions.h"
 
 class TDirectory;
@@ -19,7 +19,7 @@ class Sensor;
 
 namespace Analyzers {
 
-class Correlations : public Analyzer {
+class Correlations : public Loop::Analyzer {
 public:
   /** Consider pair-wise correlations between neighboring sensors.
    *

@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "analyzer.h"
+#include "loop/analyzer.h"
 
 class TDirectory;
 class TH1D;
@@ -47,7 +47,7 @@ private:
 };
 
 /** Hit histograms for all sensors in the device. */
-class Hits : public Analyzer {
+class Hits : public Loop::Analyzer {
 public:
   Hits(TDirectory* dir,
        const Mechanics::Device& device,

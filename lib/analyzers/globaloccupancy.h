@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "analyzers/analyzer.h"
+#include "loop/analyzer.h"
 #include "mechanics/geometry.h"
 #include "utils/definitions.h"
 
@@ -16,7 +16,7 @@ class Device;
 namespace Analyzers {
 
 /** Global occupancy histograms for all sensors in the device. */
-class GlobalOccupancy : public Analyzer {
+class GlobalOccupancy : public Loop::Analyzer {
 public:
   GlobalOccupancy(TDirectory* dir, const Mechanics::Device& device);
 

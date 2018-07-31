@@ -9,7 +9,7 @@
 
 #include <string>
 
-#include "analyzers/analyzer.h"
+#include "loop/analyzer.h"
 #include "utils/definitions.h"
 
 class TDirectory;
@@ -21,7 +21,7 @@ class Sensor;
 
 namespace Analyzers {
 
-class Distances : public Analyzer {
+class Distances : public Loop::Analyzer {
 public:
   /**
    * \param pixelRange Distance histogram range in number of pixels

@@ -180,7 +180,7 @@ void Loop::EventLoop::addProcessor(
   m_processors.emplace_back(std::move(processor));
 }
 
-void Loop::EventLoop::addAnalyzer(std::shared_ptr<Analyzers::Analyzer> analyzer)
+void Loop::EventLoop::addAnalyzer(std::shared_ptr<Loop::Analyzer> analyzer)
 {
   m_analyzers.emplace_back(std::move(analyzer));
 }

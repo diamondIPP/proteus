@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "analyzer.h"
+#include "loop/analyzer.h"
 
 class TDirectory;
 class TH1D;
@@ -57,7 +57,7 @@ private:
 };
 
 /** Cluster histograms for all sensors in the device. */
-class Clusters : public Analyzer {
+class Clusters : public Loop::Analyzer {
 public:
   Clusters(TDirectory* dir,
            const Mechanics::Device& device,

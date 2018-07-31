@@ -1,12 +1,12 @@
 #ifndef PT_EVENTPRINTER_H
 #define PT_EVENTPRINTER_H
 
-#include "analyzer.h"
+#include "loop/analyzer.h"
 
 namespace Analyzers {
 
 /** Print detailed information for each event. */
-class EventPrinter : public Analyzer {
+class EventPrinter : public Loop::Analyzer {
 public:
   std::string name() const;
   void analyze(const Storage::Event& event);

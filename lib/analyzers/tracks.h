@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "analyzer.h"
+#include "loop/analyzer.h"
 
 class TDirectory;
 class TH1D;
@@ -15,7 +15,7 @@ class Device;
 
 namespace Analyzers {
 
-class Tracks : public Analyzer {
+class Tracks : public Loop::Analyzer {
 public:
   /** Construct a tracks analyzer.
    *
