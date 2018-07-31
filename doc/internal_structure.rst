@@ -5,7 +5,6 @@ The reconstruction is organized around a few major components:
 
 *   `Device description`_
 *   `Event data model`_
-*   `Event reader and writer`_
 *   `Event loop`_
 
 Device description
@@ -47,7 +46,7 @@ properties.
 .. doxygenclass:: Storage::Event
     :outline:
     :members:
-.. doxygenclass:: Storage::Plane
+.. doxygenclass:: Storage::SensorEvent
     :outline:
     :members:
 .. doxygenclass:: Storage::Hit
@@ -63,39 +62,36 @@ properties.
     :outline:
     :members:
 
-Event reader and writer
------------------------
-
-Event data is read from a file using an event reader. The reader is responsible
-for converting the data into the internal event data model. Implementations for
-different file formats must implement the event reader interface to be
-used in the event loop.
-
-Processed events are written back to disk with an event writer that implements
-the event interface.
-
-.. doxygenclass:: Io::EventReader
-    :members:
-.. doxygenclass:: Io::EventWriter
-    :members:
-
 Event loop
 ----------
 
-The event loop reads in the data from a single reader, processes each event
-using a configurable set of algorithms, and optionally writes output files using
-an arbitrary number of writers. Algorithm are independent from each other and
-can only communicate through the data stored in the event data model. Two
-different type of algorithms can be implemented: processors and analyzers.
+The event loop is responsible for reading data, processing it, and writing it
+back to disk.
 
-A processor modifies an event, e.g. by generating clusters from hits and adding
-them, but calling them does not modify their internal state.
+Data is read from a single reader that is responsible from converting a specific
+file format into the internal data format. Implementations for different file
+formats must implement the reader interface to be used in the event loop.
 
-An analyzer can not modify the event. It can only read the event given, but is
-allowed to modify its internal state. Most analyzers store some histograms that
-are written to disk after all events have been processed.
+All data processing is performed using a configurable set of algorithms.
+Algorithms are independent from each other and can only communicate through the
+data stored in the data model. Two different type of algorithms can be
+implemented: processors and analyzers. A processor can modify an event, e.g. by
+generating clusters from hits and adding them, but can not modify its internal
+state. They must act as pure functions. Analyzers can not modify the event. It
+can only read the given event, but is allowed to modify its internal state. Most
+analyzers store some histograms that are written to disk after all events have
+been processed. Algorithms are executed sequentially: processors are executed
+first in the order in which they were added. Afterwards the analyzers are
+executed.
 
-.. doxygenclass:: Processors::Processor
+The processed event data can be written to disk using an arbitrary number of
+writers.
+
+.. doxygenclass:: Loop::Reader
     :members:
-.. doxygenclass:: Analyzers::Analyzer
+.. doxygenclass:: Loop::Writer
+    :members:
+.. doxygenclass:: Loop::Processor
+    :members:
+.. doxygenclass:: Loop::Analyzer
     :members:
