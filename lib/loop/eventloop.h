@@ -12,9 +12,9 @@
 #include <vector>
 
 #include "analyzer.h"
-#include "io/writer.h"
 #include "processor.h"
 #include "reader.h"
+#include "writer.h"
 
 namespace Loop {
 
@@ -37,16 +37,16 @@ public:
             bool showProgress = false);
   ~EventLoop();
 
+  void addWriter(std::shared_ptr<Writer> writer);
   void addProcessor(std::shared_ptr<Processor> processor);
   void addAnalyzer(std::shared_ptr<Analyzer> analyzer);
-  void addWriter(std::shared_ptr<Io::EventWriter> writer);
   void run();
 
 private:
   std::shared_ptr<Reader> m_reader;
+  std::vector<std::shared_ptr<Writer>> m_writers;
   std::vector<std::shared_ptr<Processor>> m_processors;
   std::vector<std::shared_ptr<Analyzer>> m_analyzers;
-  std::vector<std::shared_ptr<Io::EventWriter>> m_writers;
   uint64_t m_start, m_events;
   size_t m_sensors;
   bool m_showProgress;

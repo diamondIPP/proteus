@@ -174,6 +174,11 @@ Loop::EventLoop::EventLoop(std::shared_ptr<Loop::Reader> reader,
 
 Loop::EventLoop::~EventLoop() {}
 
+void Loop::EventLoop::addWriter(std::shared_ptr<Loop::Writer> writer)
+{
+  m_writers.emplace_back(std::move(writer));
+}
+
 void Loop::EventLoop::addProcessor(std::shared_ptr<Loop::Processor> processor)
 {
   m_processors.emplace_back(std::move(processor));
@@ -182,11 +187,6 @@ void Loop::EventLoop::addProcessor(std::shared_ptr<Loop::Processor> processor)
 void Loop::EventLoop::addAnalyzer(std::shared_ptr<Loop::Analyzer> analyzer)
 {
   m_analyzers.emplace_back(std::move(analyzer));
-}
-
-void Loop::EventLoop::addWriter(std::shared_ptr<Io::EventWriter> writer)
-{
-  m_writers.emplace_back(std::move(writer));
 }
 
 void Loop::EventLoop::run()

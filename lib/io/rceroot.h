@@ -9,8 +9,8 @@
 #include <TFile.h>
 #include <TTree.h>
 
-#include "io/writer.h"
 #include "loop/reader.h"
+#include "loop/writer.h"
 #include "utils/definitions.h"
 
 namespace toml {
@@ -112,7 +112,7 @@ private:
 };
 
 /** Write event in the RCE ROOT file format. */
-class RceRootWriter : public RceRootCommon, public EventWriter {
+class RceRootWriter : public RceRootCommon, public Loop::Writer {
 public:
   /** Open a new file and truncate existing content. */
   RceRootWriter(const std::string& path, size_t numSensors);
