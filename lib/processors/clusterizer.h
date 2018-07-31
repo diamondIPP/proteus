@@ -23,7 +23,7 @@ namespace Processors {
 class BaseClusterizer : public Loop::Processor {
 public:
   std::string name() const;
-  void process(Storage::Event& event) const;
+  void execute(Storage::Event& event) const;
 
 protected:
   BaseClusterizer(const std::string& namePrefix,

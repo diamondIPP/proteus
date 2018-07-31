@@ -19,7 +19,7 @@ public:
   ApplyGeometry(const Mechanics::Device& device);
 
   std::string name() const;
-  void process(Storage::Event& event) const;
+  void execute(Storage::Event& event) const;
 
 private:
   const Mechanics::Device& m_device;

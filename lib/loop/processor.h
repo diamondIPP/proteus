@@ -18,7 +18,7 @@ class Processor {
 public:
   virtual ~Processor() = default;
   virtual std::string name() const = 0;
-  virtual void process(Storage::Event&) const = 0;
+  virtual void execute(Storage::Event&) const = 0;
 };
 
 } // namespace Loop

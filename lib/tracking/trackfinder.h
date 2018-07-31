@@ -43,7 +43,7 @@ public:
 
   std::string name() const;
   /** Find tracks and add them to the event. */
-  void process(Storage::Event& event) const;
+  void execute(Storage::Event& event) const;
 
 private:
   using TrackPtr = std::unique_ptr<Storage::Track>;

@@ -223,7 +223,7 @@ void Loop::EventLoop::run()
     }
     for (size_t i = 0; i < m_processors.size(); ++i) {
       StopWatch sw(timing.processors[i]);
-      m_processors[i]->process(event);
+      m_processors[i]->execute(event);
     }
     for (size_t i = 0; i < m_analyzers.size(); ++i) {
       StopWatch sw(timing.analyzers[i]);

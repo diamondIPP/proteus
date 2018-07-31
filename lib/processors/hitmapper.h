@@ -18,7 +18,7 @@ public:
   CCPDv4HitMapper(Index sensorId);
 
   std::string name() const;
-  void process(Storage::Event& event) const;
+  void execute(Storage::Event& event) const;
 
 private:
   Index m_sensorId;

@@ -17,7 +17,7 @@ Tracking::StraightFitter::StraightFitter(const Mechanics::Device& device)
 
 std::string Tracking::StraightFitter::name() const { return "StraightFitter"; }
 
-void Tracking::StraightFitter::process(Storage::Event& event) const
+void Tracking::StraightFitter::execute(Storage::Event& event) const
 {
   for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
     Storage::Track& track = event.getTrack(itrack);
@@ -49,7 +49,7 @@ std::string Tracking::UnbiasedStraightFitter::name() const
   return "UnbiasedStraightFitter";
 }
 
-void Tracking::UnbiasedStraightFitter::process(Storage::Event& event) const
+void Tracking::UnbiasedStraightFitter::execute(Storage::Event& event) const
 {
   for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
     Storage::Track& track = event.getTrack(itrack);

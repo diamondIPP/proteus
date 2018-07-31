@@ -28,7 +28,7 @@ struct PossibleMatch {
 };
 } // namespace
 
-void Processors::Matcher::process(Storage::Event& event) const
+void Processors::Matcher::execute(Storage::Event& event) const
 {
   Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
 

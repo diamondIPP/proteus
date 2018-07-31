@@ -22,7 +22,7 @@ std::string Processors::CCPDv4HitMapper::name() const
   return "CCPDv4HitMapper(sensorId=" + std::to_string(m_sensorId) + ")";
 }
 
-void Processors::CCPDv4HitMapper::process(Storage::Event& event) const
+void Processors::CCPDv4HitMapper::execute(Storage::Event& event) const
 {
   Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
   for (Index ihit = 0; ihit < sensorEvent.numHits(); ++ihit) {
