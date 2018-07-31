@@ -29,7 +29,7 @@ public:
                  const int sizeMax,
                  const int binsUncertainty);
 
-  void analyze(const Storage::SensorEvent& sensorEvent);
+  void execute(const Storage::SensorEvent& sensorEvent);
   void finalize();
 
 private:
@@ -68,7 +68,7 @@ public:
            const int binsUncertainty = 32);
 
   std::string name() const;
-  void analyze(const Storage::Event& event);
+  void execute(const Storage::Event& event);
   void finalize();
 
 private:

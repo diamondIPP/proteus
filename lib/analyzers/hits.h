@@ -27,7 +27,7 @@ public:
              const int timeMax,
              const int valueMax);
 
-  void analyze(const Storage::SensorEvent& sensorEvent);
+  void execute(const Storage::SensorEvent& sensorEvent);
   void finalize();
 
 private:
@@ -56,7 +56,7 @@ public:
        const int valueMax = 16);
 
   std::string name() const;
-  void analyze(const Storage::Event& event);
+  void execute(const Storage::Event& event);
   void finalize();
 
 private:

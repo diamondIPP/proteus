@@ -70,7 +70,7 @@ std::string Analyzers::Distances::name() const
   return "Distances(" + std::to_string(m_sensorId) + ')';
 }
 
-void Analyzers::Distances::analyze(const Storage::Event& event)
+void Analyzers::Distances::execute(const Storage::Event& event)
 {
   const Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
 

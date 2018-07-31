@@ -43,7 +43,7 @@ std::string Analyzers::GlobalOccupancy::name() const
   return "GlobalOccupancy";
 }
 
-void Analyzers::GlobalOccupancy::analyze(const Storage::Event& event)
+void Analyzers::GlobalOccupancy::execute(const Storage::Event& event)
 {
   for (auto& hists : m_sensorHists) {
     const Storage::SensorEvent& se = event.getSensorEvent(hists.id);

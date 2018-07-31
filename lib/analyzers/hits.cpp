@@ -45,7 +45,7 @@ Analyzers::SensorHits::SensorHits(TDirectory* dir,
   }
 }
 
-void Analyzers::SensorHits::analyze(const Storage::SensorEvent& sensorEvent)
+void Analyzers::SensorHits::execute(const Storage::SensorEvent& sensorEvent)
 {
   m_nHits->Fill(sensorEvent.numHits());
 
@@ -94,10 +94,10 @@ Analyzers::Hits::Hits(TDirectory* dir,
 
 std::string Analyzers::Hits::name() const { return "Hits"; }
 
-void Analyzers::Hits::analyze(const Storage::Event& event)
+void Analyzers::Hits::execute(const Storage::Event& event)
 {
   for (Index isensor = 0; isensor < event.numSensorEvents(); ++isensor) {
-    m_sensors[isensor].analyze(event.getSensorEvent(isensor));
+    m_sensors[isensor].execute(event.getSensorEvent(isensor));
   }
 }
 

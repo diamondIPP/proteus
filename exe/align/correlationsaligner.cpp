@@ -34,9 +34,9 @@ std::string Alignment::CorrelationsAligner::name() const
   return "CorrelationsAligner";
 }
 
-void Alignment::CorrelationsAligner::analyze(const Storage::Event& event)
+void Alignment::CorrelationsAligner::execute(const Storage::Event& event)
 {
-  m_corr->analyze(event);
+  m_corr->execute(event);
 }
 
 void Alignment::CorrelationsAligner::finalize() { m_corr->finalize(); }

@@ -10,7 +10,7 @@ namespace Alignment {
 class Aligner : public Loop::Analyzer {
 public:
   virtual std::string name() const = 0;
-  virtual void analyze(const Storage::Event& event) = 0;
+  virtual void execute(const Storage::Event& event) = 0;
   virtual void finalize() = 0;
 
   virtual Mechanics::Geometry updatedGeometry() const = 0;

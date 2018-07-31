@@ -21,7 +21,7 @@ public:
   GlobalOccupancy(TDirectory* dir, const Mechanics::Device& device);
 
   std::string name() const;
-  void analyze(const Storage::Event& event);
+  void execute(const Storage::Event& event);
 
 private:
   struct SensorHists {

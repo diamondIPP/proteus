@@ -45,7 +45,7 @@ public:
                const int neighbors = 2);
 
   std::string name() const;
-  void analyze(const Storage::Event& event);
+  void execute(const Storage::Event& event);
 
   const TH1D* getHistDiffX(Index sensorId0, Index sensorId1) const;
   const TH1D* getHistDiffY(Index sensorId0, Index sensorId1) const;

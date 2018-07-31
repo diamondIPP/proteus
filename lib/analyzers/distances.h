@@ -35,7 +35,7 @@ public:
             const int bins = 256);
 
   std::string name() const;
-  void analyze(const Storage::Event& event);
+  void execute(const Storage::Event& event);
 
 private:
   struct Hists {

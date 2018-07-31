@@ -33,7 +33,7 @@ public:
          const int bins = 128);
 
   std::string name() const;
-  void analyze(const Storage::Event& event);
+  void execute(const Storage::Event& event);
 
   const TH1D* histSlopeX() const { return m_slopeX; }
   const TH1D* histSlopeY() const { return m_slopeY; }

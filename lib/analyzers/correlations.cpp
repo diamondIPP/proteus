@@ -94,7 +94,7 @@ void Analyzers::Correlations::addHist(const Mechanics::Sensor& sensor0,
   m_hists[std::make_pair(sensor0.id(), sensor1.id())] = hist;
 }
 
-void Analyzers::Correlations::analyze(const Storage::Event& event)
+void Analyzers::Correlations::execute(const Storage::Event& event)
 {
   for (auto& entry : m_hists) {
     Index id0 = entry.first.first;

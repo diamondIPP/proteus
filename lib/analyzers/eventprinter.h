@@ -9,7 +9,7 @@ namespace Analyzers {
 class EventPrinter : public Loop::Analyzer {
 public:
   std::string name() const;
-  void analyze(const Storage::Event& event);
+  void execute(const Storage::Event& event);
 };
 
 } // namespace Analyzers

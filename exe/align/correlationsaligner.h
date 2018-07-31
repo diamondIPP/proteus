@@ -39,7 +39,7 @@ public:
   ~CorrelationsAligner();
 
   std::string name() const;
-  void analyze(const Storage::Event& event);
+  void execute(const Storage::Event& event);
   void finalize();
 
   Mechanics::Geometry updatedGeometry() const;

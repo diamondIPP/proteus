@@ -75,7 +75,7 @@ public:
             const int bins = 128);
 
   std::string name() const;
-  void analyze(const Storage::Event& refEvent);
+  void execute(const Storage::Event& refEvent);
 
 private:
   std::unordered_map<Index, detail::SensorResidualHists> m_hists_map;
@@ -99,7 +99,7 @@ public:
            const int bins = 128);
 
   std::string name() const;
-  void analyze(const Storage::Event& refEvent);
+  void execute(const Storage::Event& refEvent);
 
 private:
   std::unordered_map<Index, detail::SensorResidualHists> m_hists_map;

@@ -43,7 +43,7 @@ public:
             const int binsOccupancy = 128);
 
   std::string name() const;
-  void analyze(const Storage::Event& event);
+  void execute(const Storage::Event& event);
   void finalize();
 
   Mechanics::PixelMasks constructMasks() const;

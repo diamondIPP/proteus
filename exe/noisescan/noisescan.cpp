@@ -70,7 +70,7 @@ std::string NoiseScan::name() const
   return "NoiseScan(sensorId=" + std::to_string(m_sensorId) + ')';
 }
 
-void NoiseScan::analyze(const Storage::Event& event)
+void NoiseScan::execute(const Storage::Event& event)
 {
   const Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
 
