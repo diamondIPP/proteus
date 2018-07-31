@@ -13,6 +13,10 @@
 #include "io/writer.h"
 #include "utils/definitions.h"
 
+namespace toml {
+class Value;
+}
+
 namespace Io {
 
 /** Common data for RceRoot{Reader,Writer}. */

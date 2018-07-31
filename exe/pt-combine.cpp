@@ -6,8 +6,8 @@
  */
 
 #include "io/merger.h"
+#include "io/open.h"
 #include "io/rceroot.h"
-#include "io/reader.h"
 #include "loop/eventloop.h"
 #include "utils/arguments.h"
 #include "utils/config.h"

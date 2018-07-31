@@ -10,6 +10,10 @@
 #include "storage/sensorevent.h"
 #include "utils/definitions.h"
 
+namespace toml {
+class Value;
+}
+
 namespace Io {
 
 /** Read events from a Timepix3 raw data file. */

@@ -10,9 +10,9 @@ set(proteus_SOURCES
     analyzers/residuals.cpp
     io/match.cpp
     io/merger.cpp
+    io/open.cpp
     io/rceroot.cpp
     io/timepix3.cpp
-    io/reader.cpp
     loop/eventloop.cpp
     mechanics/device.cpp
     mechanics/geometry.cpp
