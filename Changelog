@@ -31,6 +31,13 @@ User-visible changes
 Internal changes
 ----------------
 
+*   Move event loop related classes and interfaces into a separate
+    ``Loop`` namespace to better separate the event loop logic from
+    concrete implementations.
+*   Rename algorithm interface methods ``Loop::Analyzer::{analyze -> execute}``
+    and ``Loop::Processor::{analyze -> execute}`` for consistency and to
+    allow common handling later on.
+*   Make ``Loop::Analyzer::finalize`` optional.
 *   Add a new ``Matching`` analyzer, similar to the residuals one.
 *   The ``Residual`` analyzer needs the sensor ids of the relevant
     sensors and saves the histogram in an unordered map.
