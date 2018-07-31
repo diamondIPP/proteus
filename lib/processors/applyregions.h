@@ -7,7 +7,7 @@
 #ifndef PT_APPLYREGIONS_H
 #define PT_APPLYREGIONS_H
 
-#include "processors/processor.h"
+#include "loop/processor.h"
 
 namespace Mechanics {
 class Device;
@@ -21,7 +21,7 @@ class EventLoop;
 namespace Processors {
 
 /** Assign region ids to hits using the sensor region information. */
-class ApplyRegions : public Processor {
+class ApplyRegions : public Loop::Processor {
 public:
   ApplyRegions(const Mechanics::Sensor& sensor);
 

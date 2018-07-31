@@ -6,23 +6,21 @@
 #ifndef PT_PROCESSOR_H
 #define PT_PROCESSOR_H
 
-#include <cstdint>
 #include <string>
 
 namespace Storage {
 class Event;
 }
-
-namespace Processors {
+namespace Loop {
 
 /** Interface for algorithms to process and modify events. */
 class Processor {
 public:
   virtual ~Processor() = default;
   virtual std::string name() const = 0;
-  virtual void process(Storage::Event& event) const = 0;
+  virtual void process(Storage::Event&) const = 0;
 };
 
-} // namespace Processors
+} // namespace Loop
 
-#endif // PT_PROCESSOR_HO
+#endif // PT_PROCESSOR_H

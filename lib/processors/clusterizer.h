@@ -7,7 +7,7 @@
 #ifndef PT_CLUSTERIZER_H
 #define PT_CLUSTERIZER_H
 
-#include "processors/processor.h"
+#include "loop/processor.h"
 #include "utils/definitions.h"
 
 namespace Mechanics {
@@ -20,7 +20,7 @@ class Cluster;
 namespace Processors {
 
 /** Cluster neighboring hits and calculate cluster properties. */
-class BaseClusterizer : public Processor {
+class BaseClusterizer : public Loop::Processor {
 public:
   std::string name() const;
   void process(Storage::Event& event) const;

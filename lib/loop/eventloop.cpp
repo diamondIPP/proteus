@@ -174,8 +174,7 @@ Loop::EventLoop::EventLoop(std::shared_ptr<Io::EventReader> reader,
 
 Loop::EventLoop::~EventLoop() {}
 
-void Loop::EventLoop::addProcessor(
-    std::shared_ptr<Processors::Processor> processor)
+void Loop::EventLoop::addProcessor(std::shared_ptr<Loop::Processor> processor)
 {
   m_processors.emplace_back(std::move(processor));
 }

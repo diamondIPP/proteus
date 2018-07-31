@@ -1,7 +1,7 @@
 #ifndef PT_APPLYGEOMETRY_H
 #define PT_APPLYGEOMETRY_H
 
-#include "processors/processor.h"
+#include "loop/processor.h"
 
 namespace Mechanics {
 class Device;
@@ -14,7 +14,7 @@ namespace Processors {
  * \warning This does **not** update existing track parameters. This must be
  *          updated by refitting the track.
  */
-class ApplyGeometry : public Processor {
+class ApplyGeometry : public Loop::Processor {
 public:
   ApplyGeometry(const Mechanics::Device& device);
 

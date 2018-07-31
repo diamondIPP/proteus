@@ -7,13 +7,13 @@
 #ifndef PT_HITMAPPER_H
 #define PT_HITMAPPER_H
 
-#include "processors/processor.h"
+#include "loop/processor.h"
 #include "utils/definitions.h"
 
 namespace Processors {
 
 /** Map FE-I4 digital address to correct CCPDv4 sensor pixel address. */
-class CCPDv4HitMapper : public Processor {
+class CCPDv4HitMapper : public Loop::Processor {
 public:
   CCPDv4HitMapper(Index sensorId);
 
