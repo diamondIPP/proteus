@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-#include "io/reader.h"
+#include "loop/reader.h"
 
 namespace Io {
 
@@ -26,9 +26,9 @@ namespace Io {
  * Only sensor data, i.e. hits and clusters, are merged. Reconstructed data
  * is dropped.
  */
-class EventMerger : public EventReader {
+class EventMerger : public Loop::Reader {
 public:
-  EventMerger(std::vector<std::shared_ptr<EventReader>> readers);
+  EventMerger(std::vector<std::shared_ptr<Loop::Reader>> readers);
 
   std::string name() const override final;
   uint64_t numEvents() const override final { return m_events; }
@@ -37,7 +37,7 @@ public:
   bool read(Storage::Event& event) override final;
 
 private:
-  std::vector<std::shared_ptr<EventReader>> m_readers;
+  std::vector<std::shared_ptr<Loop::Reader>> m_readers;
   uint64_t m_events;
   size_t m_sensors;
 };

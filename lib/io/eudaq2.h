@@ -10,7 +10,7 @@
 #include <map>
 #include <memory>
 
-#include "io/reader.h"
+#include "loop/reader.h"
 #include "utils/definitions.h"
 
 namespace eudaq {
@@ -21,7 +21,7 @@ class FileReader;
 namespace Io {
 
 /** Read Eudaq2 native raw files. */
-class Eudaq2Reader : public EventReader {
+class Eudaq2Reader : public Loop::Reader {
 public:
   static int check(const std::string& path);
   static std::shared_ptr<Eudaq2Reader> open(const std::string& path,

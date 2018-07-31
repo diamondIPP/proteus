@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "io/reader.h"
+#include "loop/reader.h"
 #include "storage/sensorevent.h"
 #include "utils/definitions.h"
 
@@ -17,7 +17,7 @@ class Value;
 namespace Io {
 
 /** Read events from a Timepix3 raw data file. */
-class Timepix3Reader : public EventReader {
+class Timepix3Reader : public Loop::Reader {
 public:
   /** Return a score of how likely the given path is an Timepix3 SPDR data file.
    */

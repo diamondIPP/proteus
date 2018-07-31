@@ -33,7 +33,8 @@ namespace Io {
 namespace {
 
 struct Format {
-  using EventReaderPtr = std::shared_ptr<Io::EventReader>;
+  using EventReaderPtr = std::shared_ptr<Loop::Reader>;
+
   std::string name;
   std::function<int(const std::string&)> check;
   std::function<EventReaderPtr(const std::string&, const toml::Value&)> open;
@@ -73,8 +74,8 @@ static std::vector<Format> s_formats = {
 } // namespace
 } // namespace Io
 
-std::shared_ptr<Io::EventReader> Io::openRead(const std::string& path,
-                                              const toml::Value& cfg)
+std::shared_ptr<Loop::Reader> Io::openRead(const std::string& path,
+                                           const toml::Value& cfg)
 {
   std::set<ScoredFormat> scoredFormats;
 

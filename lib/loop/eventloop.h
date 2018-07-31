@@ -12,9 +12,9 @@
 #include <vector>
 
 #include "analyzer.h"
-#include "io/reader.h"
 #include "io/writer.h"
 #include "processor.h"
+#include "reader.h"
 
 namespace Loop {
 
@@ -30,7 +30,7 @@ namespace Loop {
  */
 class EventLoop {
 public:
-  EventLoop(std::shared_ptr<Io::EventReader> reader,
+  EventLoop(std::shared_ptr<Reader> reader,
             size_t sensors,
             uint64_t start = 0,
             uint64_t events = UINT64_MAX,
@@ -43,7 +43,7 @@ public:
   void run();
 
 private:
-  std::shared_ptr<Io::EventReader> m_reader;
+  std::shared_ptr<Reader> m_reader;
   std::vector<std::shared_ptr<Processor>> m_processors;
   std::vector<std::shared_ptr<Analyzer>> m_analyzers;
   std::vector<std::shared_ptr<Io::EventWriter>> m_writers;

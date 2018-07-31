@@ -12,19 +12,18 @@
 namespace Storage {
 class Event;
 }
-
-namespace Io {
+namespace Loop {
 
 /** Event reader interface. */
-class EventReader {
+class Reader {
 public:
-  virtual ~EventReader() = default;
+  virtual ~Reader() = default;
   virtual std::string name() const = 0;
   /** Return the (minimum) number of available events.
    *
    * \returns UINT64_MAX if the number of events is unknown.
    *
-   * Calling `readNext` the given number of times must succeed. Additional
+   * Calling `read` the given number of times must succeed. Additional
    * calls could still succeed.
    */
   virtual uint64_t numEvents() const = 0;
@@ -49,6 +48,6 @@ public:
   virtual bool read(Storage::Event& event) = 0;
 };
 
-} // namespace Io
+} // namespace Loop
 
 #endif // PT_READER_H

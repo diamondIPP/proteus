@@ -5,8 +5,7 @@
 
 PT_SETUP_LOCAL_LOGGER(EventMerger)
 
-Io::EventMerger::EventMerger(
-    std::vector<std::shared_ptr<Io::EventReader>> readers)
+Io::EventMerger::EventMerger(std::vector<std::shared_ptr<Loop::Reader>> readers)
     : m_readers(std::move(readers)), m_events(UINT64_MAX), m_sensors(0)
 {
   // define available events and count sensors

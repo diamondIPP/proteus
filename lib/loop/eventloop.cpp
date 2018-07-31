@@ -130,7 +130,7 @@ struct Statistics {
 };
 } // namespace
 
-Loop::EventLoop::EventLoop(std::shared_ptr<Io::EventReader> reader,
+Loop::EventLoop::EventLoop(std::shared_ptr<Loop::Reader> reader,
                            size_t sensors,
                            uint64_t start,
                            uint64_t events,

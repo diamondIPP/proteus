@@ -9,14 +9,13 @@
 #include <TFile.h>
 #include <TTree.h>
 
-#include "io/reader.h"
 #include "io/writer.h"
+#include "loop/reader.h"
 #include "utils/definitions.h"
 
 namespace toml {
 class Value;
 }
-
 namespace Io {
 
 /** Common data for RceRoot{Reader,Writer}. */
@@ -89,7 +88,7 @@ protected:
 };
 
 /** Read events from a RCE ROOT file. */
-class RceRootReader : public RceRootCommon, public EventReader {
+class RceRootReader : public RceRootCommon, public Loop::Reader {
 public:
   /** Return a score of how likely the given path is an RCE Root file. */
   static int check(const std::string& path);

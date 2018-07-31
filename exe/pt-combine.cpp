@@ -45,7 +45,7 @@ int main(int argc, char const* argv[])
   INFO("read configuration '", section, "' from '", args.get("config"), "'");
 
   // open reader and writer
-  std::vector<std::shared_ptr<Io::EventReader>> readers;
+  std::vector<std::shared_ptr<Loop::Reader>> readers;
   for (const auto& path : args.get<std::vector<std::string>>("input"))
     readers.push_back(Io::openRead(path, *cfg));
   auto merger = std::make_shared<Io::EventMerger>(readers);
