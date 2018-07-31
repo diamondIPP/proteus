@@ -18,8 +18,9 @@ class Analyzer {
 public:
   virtual ~Analyzer() = default;
   virtual std::string name() const = 0;
-  virtual void analyze(const Storage::Event& event) = 0;
-  virtual void finalize() = 0;
+  virtual void analyze(const Storage::Event&) = 0;
+  /** The finalize method is optional. */
+  virtual void finalize(){};
 };
 
 } // namespace Loop
