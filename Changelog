@@ -9,7 +9,8 @@ v1.4.0 (to be released)
 
 User-visible changes
 --------------------
-
+*   Add histograms of matching parameters vs track parameters in a new ``sensors/<sensors>/matching`` folder
+*   Residual plots are produced for the relevant sensors only
 *   Add occupancy histograms in the global coordinate system. They can be
     found in the ``global/<sensor>/...`` directories.
 *   Remove support for event-level ``Trigger{Info,Offset,Phase}`` variables
@@ -25,6 +26,8 @@ User-visible changes
 Internal changes
 ----------------
 
+*   Add the new ``Matching`` analyzer, similar to the residuals one.
+*   The ``Residual`` analyzer needs the sensor ids of the relevant sensors and saves the histogram in an unordered map
 *   Remove ``Trigger{Info,Offset,Phase}`` variables from ``Storage::Event``.
 *   Remove ``Analyzers::Events`` analyzer.
 *   Replace test data with simulated datasets based on Allpix² and update the
