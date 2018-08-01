@@ -85,7 +85,7 @@ private:
 
 class Matching : public Analyzer {
 public:
-  /** Construct a residual analyzer.
+  /** Construct a matching analyzer.
    *
    * \param dir       Where to create the output subdirectory
    * \param device    The device object
@@ -97,7 +97,6 @@ public:
   Matching(TDirectory* dir,
             const Mechanics::Device& device,
             const std::vector<Index>& sensorIds,
-            const std::string& subdir = std::string("matching"),
             /* Histogram options */
             const double rangeStd = 5.0,
             const int bins = 128);

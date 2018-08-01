@@ -60,11 +60,8 @@ Analyzers::Distances::Distances(TDirectory* dir,
 
   TDirectory* subDist =
       Utils::makeDir(dir, "sensors/" + sensor.name() + "/distances");
-  TDirectory* subMatch =
-      Utils::makeDir(dir, "sensors/" + sensor.name() + "/matching");
   m_trackTrack = Hists(subDist, "track_track-", trackMax, -1, bins);
   m_trackCluster = Hists(subDist, "track_cluster-", trackMax, d2Max, bins);
-  m_match = Hists(subMatch, "match-", matchMax, d2Max, bins);
 }
 
 std::string Analyzers::Distances::name() const
@@ -93,17 +90,6 @@ void Analyzers::Distances::analyze(const Storage::Event& event)
 
       m_trackCluster.fill(cluster.posLocal() - state.offset(),
                           cluster.covLocal() + state.covOffset());
-    }
-  }
-  // matched pairs
-  for (const auto& s : sensorEvent.localStates()) {
-    const Storage::TrackState& state = s.second;
-
-    if (state.isMatched()) {
-      const Storage::Cluster& cluster =
-          sensorEvent.getCluster(state.matchedCluster());
-      m_match.fill(cluster.posLocal() - state.offset(),
-                   cluster.covLocal() + state.covOffset());
     }
   }
 }
