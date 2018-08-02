@@ -80,7 +80,7 @@ public:
 
 private:
   std::unordered_map<Index, detail::SensorResidualHists> m_hists_map;
-}; // class Residuals
+};
 
 class Matching : public Analyzer {
 public:
@@ -89,7 +89,6 @@ public:
    * \param dir       Where to create the output subdirectory
    * \param device    The device object
    * \param sensorIds Sensors for which residuals should be calculated
-   * \param subdir    Name of the output subdirectory
    * \param rangeStd  Residual/ slope range in expected standard deviations
    * \param bins      Number of histogram bins
    */
