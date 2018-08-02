@@ -58,7 +58,7 @@ private:
   Index m_sensorId;
   Hists m_trackTrack;
   Hists m_trackCluster;
-  Hists m_match;
+  Hists m_clusterCluster;
 };
 
 } // namespace Analyzers

@@ -43,7 +43,9 @@ void Analyzers::Distances::Hists::fill(const XYVector& delta,
                                        const SymMatrix2& cov)
 {
   fill(delta);
-  d2->Fill(mahalanobisSquared(cov, delta));
+  if (d2) {
+    d2->Fill(mahalanobisSquared(cov, delta));
+  }
 }
 
 Analyzers::Distances::Distances(TDirectory* dir,
@@ -54,15 +56,13 @@ Analyzers::Distances::Distances(TDirectory* dir,
     : m_sensorId(sensor.id())
 {
   auto area = sensor.sensitiveAreaLocal();
-  double pitch = std::hypot(sensor.pitchCol(), sensor.pitchRow());
-  double trackMax = std::hypot(area.length(0), area.length(1));
-  double matchMax = pixelRange * pitch;
+  double distMax = std::hypot(area.length(0), area.length(1));
 
-  TDirectory* sub =
+  TDirectory* subDist =
       Utils::makeDir(dir, "sensors/" + sensor.name() + "/distances");
-  m_trackTrack = Hists(sub, "track_track-", trackMax, -1, bins);
-  m_trackCluster = Hists(sub, "track_cluster-", trackMax, d2Max, bins);
-  m_match = Hists(sub, "match-", matchMax, d2Max, bins);
+  m_trackTrack = Hists(subDist, "track_track-", distMax, -1, bins);
+  m_trackCluster = Hists(subDist, "track_cluster-", distMax, d2Max, bins);
+  m_clusterCluster = Hists(subDist, "cluster_cluster-", distMax, -1, bins);
 }
 
 std::string Analyzers::Distances::name() const
@@ -74,11 +74,16 @@ void Analyzers::Distances::analyze(const Storage::Event& event)
 {
   const Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
 
+  // track-track and cluster-cluster distances are double-counted on purpose
+  // to avoid biasing the resulting distributions due to position-dependent
+  // ordering of the input container, e.g. clusters sorted by col-index
+
   // combinatorics: all tracks to all other tracks
   for (const auto& s0 : sensorEvent.localStates()) {
     for (const auto& s1 : sensorEvent.localStates()) {
-      if (s0.first == s1.first)
+      if (s0.first == s1.first) {
         continue;
+      }
       m_trackTrack.fill(s1.second.offset() - s0.second.offset());
     }
   }
@@ -93,15 +98,17 @@ void Analyzers::Distances::analyze(const Storage::Event& event)
                           cluster.covLocal() + state.covOffset());
     }
   }
-  // matched pairs
-  for (const auto& s : sensorEvent.localStates()) {
-    const Storage::TrackState& state = s.second;
+  // combinatorics: all clusters to all other clusters
+  for (Index i0 = 0; i0 < sensorEvent.numClusters(); ++i0) {
+    const auto& c0 = sensorEvent.getCluster(i0);
 
-    if (state.isMatched()) {
-      const Storage::Cluster& cluster =
-          sensorEvent.getCluster(state.matchedCluster());
-      m_match.fill(cluster.posLocal() - state.offset(),
-                   cluster.covLocal() + state.covOffset());
+    for (Index i1 = 0; i1 < sensorEvent.numClusters(); ++i1) {
+      if (i0 == i1) {
+        continue;
+      }
+      const auto& c1 = sensorEvent.getCluster(i1);
+
+      m_clusterCluster.fill(c1.posLocal() - c0.posLocal());
     }
   }
 }

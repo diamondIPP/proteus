@@ -38,7 +38,7 @@ int main(int argc, char const* argv[])
   for (auto sensorId : sensorIds)
     loop.addProcessor(std::make_shared<Matcher>(app.device(), sensorId));
   loop.addAnalyzer(std::make_shared<Tracks>(&hists, app.device()));
-  loop.addAnalyzer(std::make_shared<Residuals>(&hists, app.device()));
+  loop.addAnalyzer(std::make_shared<Matching>(&hists, app.device(), sensorIds));
   for (auto sensorId : sensorIds) {
     const auto& sensor = *app.device().getSensor(sensorId);
     loop.addAnalyzer(std::make_shared<Distances>(&hists, sensor));

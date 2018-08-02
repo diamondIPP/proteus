@@ -45,3 +45,6 @@ Makefile
 
 # Editor backup files
 *~
+
+# CLion folder
+.idea
