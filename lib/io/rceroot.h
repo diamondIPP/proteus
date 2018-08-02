@@ -2,6 +2,7 @@
 #define PT_RCEROOT_H
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
