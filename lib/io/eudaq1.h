@@ -15,7 +15,9 @@
 namespace eudaq {
 class FileReader;
 } // namespace eudaq
-
+namespace toml {
+class Value;
+}
 namespace Io {
 
 /** Read Eudaq1 native raw files. */
