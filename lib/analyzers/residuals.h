@@ -1,8 +1,8 @@
 #ifndef PT_RESIDUALS_H
 #define PT_RESIDUALS_H
 
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 #include "analyzers/analyzer.h"
 #include "utils/definitions.h"
@@ -82,7 +82,6 @@ private:
   std::unordered_map<Index, detail::SensorResidualHists> m_hists_map;
 }; // class Residuals
 
-
 class Matching : public Analyzer {
 public:
   /** Construct a matching analyzer.
@@ -95,11 +94,11 @@ public:
    * \param bins      Number of histogram bins
    */
   Matching(TDirectory* dir,
-            const Mechanics::Device& device,
-            const std::vector<Index>& sensorIds,
-            /* Histogram options */
-            const double rangeStd = 5.0,
-            const int bins = 128);
+           const Mechanics::Device& device,
+           const std::vector<Index>& sensorIds,
+           /* Histogram options */
+           const double rangeStd = 5.0,
+           const int bins = 128);
 
   std::string name() const;
   void analyze(const Storage::Event& refEvent);

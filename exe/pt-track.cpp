@@ -54,7 +54,8 @@ int main(int argc, char const* argv[])
   loop.addAnalyzer(std::make_shared<GlobalOccupancy>(&hists, app.device()));
   loop.addAnalyzer(std::make_shared<Correlations>(&hists, app.device()));
   loop.addAnalyzer(std::make_shared<Tracks>(&hists, app.device()));
-  loop.addAnalyzer(std::make_shared<Residuals>(&hists, app.device(), sensorIds));
+  loop.addAnalyzer(
+      std::make_shared<Residuals>(&hists, app.device(), sensorIds));
   loop.addWriter(std::make_shared<Io::RceRootWriter>(
       app.outputPath("data.root"), app.device().numSensors()));
   loop.run();

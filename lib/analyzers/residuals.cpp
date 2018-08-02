@@ -28,7 +28,7 @@ Analyzers::detail::SensorResidualHists::SensorResidualHists(
   auto resMaxV = rangeStd * sensor.pitchRow() / std::sqrt(12.0);
   auto posRangeU = sensor.sensitiveAreaLocal().interval(0);
   auto posRangeV = sensor.sensitiveAreaLocal().interval(1);
-  auto distRange = std::sqrt(resMaxU*resMaxU + resMaxV*resMaxV);
+  auto distRange = std::sqrt(resMaxU * resMaxU + resMaxV * resMaxV);
 
   Vector2 slope = sensor.beamSlope();
   Vector2 slopeMin = slope - rangeStd * sensor.beamDivergence();
@@ -41,7 +41,8 @@ Analyzers::detail::SensorResidualHists::SensorResidualHists(
   HistAxis axSlopeU(slopeMin[0], slopeMax[0], bins, "Local track slope u");
   HistAxis axSlopeV(slopeMin[1], slopeMax[1], bins, "Local track slope v");
   HistAxis axResDist(0, distRange, bins, "Cluster - track distance");
-  HistAxis axResD2(0, 2*rangeStd, bins, "Cluster - track weighted squared distance");
+  HistAxis axResD2(0, 2 * rangeStd, bins,
+                   "Cluster - track weighted squared distance");
 
   TDirectory* sub = makeDir(dir, "sensors/" + sensor.name() + "/" + name);
   resU = makeH1(sub, "res_u", axResU);
@@ -91,10 +92,10 @@ Analyzers::Residuals::Residuals(TDirectory* dir,
                                 const int bins)
 {
   for (auto isensor : sensorIds) {
-    m_hists_map.emplace(isensor, detail::SensorResidualHists(dir, *device.getSensor(isensor), rangeStd, bins,
-                                                             subdir));
+    m_hists_map.emplace(
+        isensor, detail::SensorResidualHists(dir, *device.getSensor(isensor),
+                                             rangeStd, bins, subdir));
   }
-
 }
 
 std::string Analyzers::Residuals::name() const { return "Residuals"; }
@@ -104,7 +105,7 @@ void Analyzers::Residuals::analyze(const Storage::Event& event)
   for (Index isensor = 0; isensor < event.numSensorEvents(); ++isensor) {
     const Storage::SensorEvent& sev = event.getSensorEvent(isensor);
 
-    if(!m_hists_map.count(sev.sensor()))
+    if (!m_hists_map.count(sev.sensor()))
       continue;
 
     auto& hists = m_hists_map[sev.sensor()];
@@ -122,40 +123,38 @@ void Analyzers::Residuals::analyze(const Storage::Event& event)
 
 void Analyzers::Residuals::finalize() {}
 
-
 Analyzers::Matching::Matching(TDirectory* dir,
-                                const Mechanics::Device& device,
-                                const std::vector<Index>& sensorIds,
-                                const double rangeStd,
-                                const int bins)
+                              const Mechanics::Device& device,
+                              const std::vector<Index>& sensorIds,
+                              const double rangeStd,
+                              const int bins)
 {
   for (auto isensor : sensorIds) {
-    m_hists_map.emplace(isensor, detail::SensorResidualHists(dir, *device.getSensor(isensor), rangeStd, bins,
-                                                             "matching"));
+    m_hists_map.emplace(
+        isensor, detail::SensorResidualHists(dir, *device.getSensor(isensor),
+                                             rangeStd, bins, "matching"));
   }
-
-
 }
-
 
 std::string Analyzers::Matching::name() const { return "Matching"; }
 
 void Analyzers::Matching::analyze(const Storage::Event& event)
 {
   for (Index isensor = 0; isensor < event.numSensorEvents(); ++isensor) {
-    const Storage::SensorEvent &sensorEvent = event.getSensorEvent(isensor);
+    const Storage::SensorEvent& sensorEvent = event.getSensorEvent(isensor);
 
     if (!m_hists_map.count(sensorEvent.sensor()))
       continue;
 
-    auto &hists = m_hists_map[sensorEvent.sensor()];
+    auto& hists = m_hists_map[sensorEvent.sensor()];
 
     // matched pairs
-    for (const auto &s : sensorEvent.localStates()) {
-      const Storage::TrackState &state = s.second;
+    for (const auto& s : sensorEvent.localStates()) {
+      const Storage::TrackState& state = s.second;
 
       if (state.isMatched()) {
-        const Storage::Cluster &cluster = sensorEvent.getCluster(state.matchedCluster());
+        const Storage::Cluster& cluster =
+            sensorEvent.getCluster(state.matchedCluster());
         hists.fill(state, cluster);
       }
     }
