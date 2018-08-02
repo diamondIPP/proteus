@@ -43,7 +43,9 @@ void Analyzers::Distances::Hists::fill(const XYVector& delta,
                                        const SymMatrix2& cov)
 {
   fill(delta);
-  d2->Fill(mahalanobisSquared(cov, delta));
+  if (d2) {
+    d2->Fill(mahalanobisSquared(cov, delta));
+  }
 }
 
 Analyzers::Distances::Distances(TDirectory* dir,
