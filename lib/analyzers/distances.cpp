@@ -54,9 +54,7 @@ Analyzers::Distances::Distances(TDirectory* dir,
     : m_sensorId(sensor.id())
 {
   auto area = sensor.sensitiveAreaLocal();
-  double pitch = std::hypot(sensor.pitchCol(), sensor.pitchRow());
   double trackMax = std::hypot(area.length(0), area.length(1));
-  double matchMax = pixelRange * pitch;
 
   TDirectory* subDist =
       Utils::makeDir(dir, "sensors/" + sensor.name() + "/distances");
