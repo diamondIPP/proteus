@@ -28,6 +28,17 @@ User-visible changes
     variables were unused anywhere in the code base and their content
     was unclear.
 
+Bugfixes
+--------
+
+*   Set event number and timestamp when using with ``pt-combine``.
+
+    Previously ``pt-combine`` would not set the event number and
+    timestamp for the merged event. Now the values from the first
+    input stream are copied to the merged event and written to
+    disk. The event number and timestamp off the other data streams is
+    discarded.
+
 Internal changes
 ----------------
 
