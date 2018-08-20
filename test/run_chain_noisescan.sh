@@ -8,8 +8,8 @@ datadir=${DATADIR:-data}
 dataset=$1; shift
 flags=$@ # e.g. -n 10000, to process only the first 10k events
 
-mkdir -p output/${dataset}
+mkdir -p output/${dataset}-chain
 
 echo "=== using $(which pt-noisescan)"
 
-pt-noisescan ${flags} ${datadir}/${dataset}.root output/${dataset}/noisescan
+pt-noisescan ${flags} ${datadir}/${dataset}.root output/${dataset}-chain/noisescan
