@@ -12,4 +12,4 @@ mkdir -p output/${dataset}
 
 echo "=== using $(which pt-noisescan)"
 
-pt-noisescan ${flags} ${datadir}/${dataset}.root output/${dataset}/${dataset}-noisescan
+pt-noisescan ${flags} ${datadir}/${dataset}.root output/${dataset}/noisescan

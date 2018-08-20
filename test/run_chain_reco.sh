@@ -11,16 +11,16 @@ nalign=10000
 
 #geo="geometry/${dataset}.toml"
 
-mkdir -p output/${dataset}-2
+mkdir -p output/${dataset}-chain
 
 echo "=== using $(which pt-track)"
 echo "=== using $(which pt-match)"
 
-pt-track -g output/${dataset}-2/${dataset}-align_dut_fine-geo.toml \
+pt-track -g output/${dataset}-chain/align_dut_fine-geo.toml \
   -s ${nalign} ${flags} \
-  ${datadir}/${dataset}.root output/${dataset}-2/${dataset}-track
+  ${datadir}/${dataset}.root output/${dataset}-chain/track
 
-pt-match -g output/${dataset}-2/${dataset}-align_dut_fine-geo.toml \
+pt-match -g output/${dataset}-chain/align_dut_fine-geo.toml \
   -s ${nalign} ${flags} \
-  output/${dataset}-2/${dataset}-track-data.root \
-  output/${dataset}-2/${dataset}-match
+  output/${dataset}-chain/track-data.root \
+  output/${dataset}-chain/match

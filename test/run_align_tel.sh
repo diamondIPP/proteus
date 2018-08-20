@@ -13,6 +13,6 @@ mkdir -p output/${dataset}
 echo "=== using $(which pt-align)"
 
 pt-align ${flags} -u tel_coarse \
-  ${datadir}/${dataset}.root output/${dataset}/${dataset}-align_tel_coarse
-pt-align ${flags} -u tel_fine -g output/${dataset}/${dataset}-align_tel_coarse-geo.toml \
-  ${datadir}/${dataset}.root output/${dataset}/${dataset}-align_tel_fine
+  ${datadir}/${dataset}.root output/${dataset}/align_tel_coarse
+pt-align ${flags} -u tel_fine -g output/${dataset}/align_tel_coarse-geo.toml \
+  ${datadir}/${dataset}.root output/${dataset}/align_tel_fine
