@@ -33,17 +33,24 @@ void Io::EventMerger::skip(uint64_t n)
 
 bool Io::EventMerger::read(Storage::Event& event)
 {
+  size_t ireader = 0;
   Index isensor = 0;
+
   for (auto& reader : m_readers) {
     Index nsensors = reader->numSensors();
     // read sub-event
     Storage::Event sub(nsensors);
     if (!reader->read(sub))
       return false;
+    // use first reader to define event number and timestamp
+    if (ireader == 0) {
+      event.clear(sub.frame(), sub.timestamp());
+    }
     // merge into full event
     event.setSensorData(isensor, std::move(sub));
     // where to store the next sensors
     isensor += nsensors;
+    ireader += 1;
   }
   // no more events to read if we have no readers to begin with
   return !m_readers.empty();

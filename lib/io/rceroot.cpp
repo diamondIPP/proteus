@@ -414,7 +414,7 @@ Io::RceRootWriter::~RceRootWriter()
 {
   if (m_file) {
     INFO("wrote ", m_sensors.size(), " sensors to '", m_file->GetPath(), "'");
-    m_file->Write();
+    m_file->Write(nullptr, TObject::kOverwrite);
     m_file->Close();
     delete m_file;
   }
