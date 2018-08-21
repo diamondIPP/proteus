@@ -7,32 +7,32 @@
 #ifndef PT_APPLYREGIONS_H
 #define PT_APPLYREGIONS_H
 
-#include "processors/processor.h"
+#include "loop/processor.h"
 
 namespace Mechanics {
 class Device;
 class Sensor;
 } // namespace Mechanics
 
-namespace Utils {
+namespace Loop {
 class EventLoop;
 }
 
 namespace Processors {
 
 /** Assign region ids to hits using the sensor region information. */
-class ApplyRegions : public Processor {
+class ApplyRegions : public Loop::Processor {
 public:
   ApplyRegions(const Mechanics::Sensor& sensor);
 
   std::string name() const;
-  void process(Storage::Event& event) const;
+  void execute(Storage::Event& event) const;
 
 private:
   const Mechanics::Sensor& m_sensor;
 };
 
-void setupRegions(const Mechanics::Device& device, Utils::EventLoop& loop);
+void setupRegions(const Mechanics::Device& device, Loop::EventLoop& loop);
 
 } // namespace Processors
 

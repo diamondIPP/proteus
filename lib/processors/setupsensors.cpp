@@ -5,14 +5,14 @@
 
 #include "setupsensors.h"
 
+#include "loop/eventloop.h"
 #include "mechanics/device.h"
 #include "processors/applyregions.h"
 #include "processors/clusterizer.h"
 #include "processors/hitmapper.h"
-#include "utils/eventloop.h"
 
 void Processors::setupHitPreprocessing(const Mechanics::Device& device,
-                                       Utils::EventLoop& loop)
+                                       Loop::EventLoop& loop)
 {
   using namespace Mechanics;
 
@@ -31,7 +31,7 @@ void Processors::setupHitPreprocessing(const Mechanics::Device& device,
 }
 
 void Processors::setupClusterizers(const Mechanics::Device& device,
-                                   Utils::EventLoop& loop)
+                                   Loop::EventLoop& loop)
 {
   using namespace Mechanics;
 

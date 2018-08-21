@@ -38,7 +38,7 @@ Tracking::TrackFinder::TrackFinder(const Mechanics::Device& device,
 
 std::string Tracking::TrackFinder::name() const { return "TrackFinder"; }
 
-void Tracking::TrackFinder::process(Storage::Event& event) const
+void Tracking::TrackFinder::execute(Storage::Event& event) const
 {
   std::vector<TrackPtr> candidates;
 

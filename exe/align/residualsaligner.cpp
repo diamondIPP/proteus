@@ -56,7 +56,7 @@ std::string Alignment::ResidualsAligner::name() const
   return "ResidualsAligner";
 }
 
-void Alignment::ResidualsAligner::analyze(const Storage::Event& event)
+void Alignment::ResidualsAligner::execute(const Storage::Event& event)
 {
   for (const auto& hists : m_hists) {
     Index isensor = hists.sensorId;
@@ -95,7 +95,7 @@ void Alignment::ResidualsAligner::analyze(const Storage::Event& event)
       hists.corrGamma->Fill(dgamma);
     }
   }
-  m_tracks->analyze(event);
+  m_tracks->execute(event);
 }
 
 void Alignment::ResidualsAligner::finalize() { m_tracks->finalize(); }

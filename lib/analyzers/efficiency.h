@@ -8,7 +8,7 @@
 
 #include <vector>
 
-#include "analyzers/analyzer.h"
+#include "loop/analyzer.h"
 #include "utils/definitions.h"
 #include "utils/densemask.h"
 #include "utils/interval.h"
@@ -43,7 +43,7 @@ namespace Analyzers {
  * The in-pixel efficiencies are only calculated for tracks fully within the
  * region-of-interest excluding the additional edges.
  */
-class Efficiency : public Analyzer {
+class Efficiency : public Loop::Analyzer {
 public:
   /**
    * \param sensor Sensor for which efficiencies should be calculated
@@ -63,7 +63,7 @@ public:
              const int efficiencyDistBins = 128);
 
   std::string name() const;
-  void analyze(const Storage::Event& event);
+  void execute(const Storage::Event& event);
   void finalize();
 
 private:

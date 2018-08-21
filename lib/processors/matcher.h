@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "processors/processor.h"
+#include "loop/processor.h"
 #include "utils/definitions.h"
 
 namespace Storage {
@@ -25,7 +25,7 @@ namespace Processors {
  * matching is unique, i.e. every track and every cluster is matched at most
  * once.
  */
-class Matcher : public Processor {
+class Matcher : public Loop::Processor {
 public:
   /**
    * \param device The device setup.
@@ -37,7 +37,7 @@ public:
           double distanceSigmaMax = -1);
 
   std::string name() const;
-  void process(Storage::Event& event) const;
+  void execute(Storage::Event& event) const;
 
 private:
   Index m_sensorId;

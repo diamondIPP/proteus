@@ -130,11 +130,11 @@ struct Statistics {
 };
 } // namespace
 
-Utils::EventLoop::EventLoop(std::shared_ptr<Io::EventReader> reader,
-                            size_t sensors,
-                            uint64_t start,
-                            uint64_t events,
-                            bool showProgress)
+Loop::EventLoop::EventLoop(std::shared_ptr<Loop::Reader> reader,
+                           size_t sensors,
+                           uint64_t start,
+                           uint64_t events,
+                           bool showProgress)
     : m_reader(std::move(reader))
     , m_start(start)
     , m_events(0)
@@ -172,26 +172,24 @@ Utils::EventLoop::EventLoop(std::shared_ptr<Io::EventReader> reader,
   }
 }
 
-Utils::EventLoop::~EventLoop() {}
+Loop::EventLoop::~EventLoop() {}
 
-void Utils::EventLoop::addProcessor(
-    std::shared_ptr<Processors::Processor> processor)
-{
-  m_processors.emplace_back(std::move(processor));
-}
-
-void Utils::EventLoop::addAnalyzer(
-    std::shared_ptr<Analyzers::Analyzer> analyzer)
-{
-  m_analyzers.emplace_back(std::move(analyzer));
-}
-
-void Utils::EventLoop::addWriter(std::shared_ptr<Io::EventWriter> writer)
+void Loop::EventLoop::addWriter(std::shared_ptr<Loop::Writer> writer)
 {
   m_writers.emplace_back(std::move(writer));
 }
 
-void Utils::EventLoop::run()
+void Loop::EventLoop::addProcessor(std::shared_ptr<Loop::Processor> processor)
+{
+  m_processors.emplace_back(std::move(processor));
+}
+
+void Loop::EventLoop::addAnalyzer(std::shared_ptr<Loop::Analyzer> analyzer)
+{
+  m_analyzers.emplace_back(std::move(analyzer));
+}
+
+void Loop::EventLoop::run()
 {
   Timing timing(m_processors.size(), m_analyzers.size(), m_writers.size());
   Statistics stats;
@@ -225,11 +223,11 @@ void Utils::EventLoop::run()
     }
     for (size_t i = 0; i < m_processors.size(); ++i) {
       StopWatch sw(timing.processors[i]);
-      m_processors[i]->process(event);
+      m_processors[i]->execute(event);
     }
     for (size_t i = 0; i < m_analyzers.size(); ++i) {
       StopWatch sw(timing.analyzers[i]);
-      m_analyzers[i]->analyze(event);
+      m_analyzers[i]->execute(event);
     }
     for (size_t i = 0; i < m_writers.size(); ++i) {
       StopWatch sw(timing.writers[i]);

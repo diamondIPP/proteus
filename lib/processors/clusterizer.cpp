@@ -10,9 +10,9 @@
 #include <functional>
 #include <limits>
 
+#include "loop/eventloop.h"
 #include "mechanics/device.h"
 #include "storage/event.h"
-#include "utils/eventloop.h"
 #include "utils/logger.h"
 
 PT_SETUP_GLOBAL_LOGGER
@@ -70,7 +70,7 @@ Processors::BaseClusterizer::BaseClusterizer(const std::string& namePrefix,
 
 std::string Processors::BaseClusterizer::name() const { return m_name; }
 
-void Processors::BaseClusterizer::process(Storage::Event& event) const
+void Processors::BaseClusterizer::execute(Storage::Event& event) const
 {
   auto& sensorEvent = event.getSensorEvent(m_sensor.id());
   std::vector<std::reference_wrapper<Storage::Hit>> hits;

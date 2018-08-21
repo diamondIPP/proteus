@@ -5,7 +5,7 @@
 
 #include <TH1D.h>
 
-#include "analyzers/analyzer.h"
+#include "loop/analyzer.h"
 #include "utils/definitions.h"
 
 class TDirectory;
@@ -19,7 +19,7 @@ class Sensor;
 
 namespace Analyzers {
 
-class Correlations : public Analyzer {
+class Correlations : public Loop::Analyzer {
 public:
   /** Consider pair-wise correlations between neighboring sensors.
    *
@@ -45,8 +45,7 @@ public:
                const int neighbors = 2);
 
   std::string name() const;
-  void analyze(const Storage::Event& event);
-  void finalize();
+  void execute(const Storage::Event& event);
 
   const TH1D* getHistDiffX(Index sensorId0, Index sensorId1) const;
   const TH1D* getHistDiffY(Index sensorId0, Index sensorId1) const;

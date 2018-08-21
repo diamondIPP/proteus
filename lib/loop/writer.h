@@ -11,13 +11,12 @@
 namespace Storage {
 class Event;
 }
-
-namespace Io {
+namespace Loop {
 
 /** Event writer interface. */
-class EventWriter {
+class Writer {
 public:
-  virtual ~EventWriter() = default;
+  virtual ~Writer() = default;
   virtual std::string name() const = 0;
   /** Add the event to the underlying device.
    *
@@ -27,6 +26,6 @@ public:
   virtual void append(const Storage::Event& event) = 0;
 };
 
-} // namespace Io
+} // namespace Loop
 
 #endif // PT_WRITER_H

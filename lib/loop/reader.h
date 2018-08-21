@@ -7,28 +7,23 @@
 #define PT_READER_H
 
 #include <cstdint>
-#include <memory>
 #include <string>
 
-namespace toml {
-class Value;
-}
 namespace Storage {
 class Event;
 }
-
-namespace Io {
+namespace Loop {
 
 /** Event reader interface. */
-class EventReader {
+class Reader {
 public:
-  virtual ~EventReader() = default;
+  virtual ~Reader() = default;
   virtual std::string name() const = 0;
   /** Return the (minimum) number of available events.
    *
    * \returns UINT64_MAX if the number of events is unknown.
    *
-   * Calling `readNext` the given number of times must succeed. Additional
+   * Calling `read` the given number of times must succeed. Additional
    * calls could still succeed.
    */
   virtual uint64_t numEvents() const = 0;
@@ -53,14 +48,6 @@ public:
   virtual bool read(Storage::Event& event) = 0;
 };
 
-/** Open an event file with automatic determination of the file type.
- *
- * \param path  Path to the file to be opened
- * \param cfg   Configuration that will be passed to the reader
- */
-std::shared_ptr<EventReader> openRead(const std::string& path,
-                                      const toml::Value& cfg);
-
-} // namespace Io
+} // namespace Loop
 
 #endif // PT_READER_H

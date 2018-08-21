@@ -13,6 +13,7 @@
 #include "analyzers/residuals.h"
 #include "analyzers/tracks.h"
 #include "io/rceroot.h"
+#include "loop/eventloop.h"
 #include "mechanics/device.h"
 #include "processors/applygeometry.h"
 #include "processors/setupsensors.h"
@@ -20,7 +21,6 @@
 #include "tracking/straightfitter.h"
 #include "tracking/trackfinder.h"
 #include "utils/application.h"
-#include "utils/eventloop.h"
 
 int main(int argc, char const* argv[])
 {

@@ -118,7 +118,7 @@ std::string Analyzers::Efficiency::name() const
   return "Efficiency(" + std::to_string(m_sensor.id()) + ')';
 }
 
-void Analyzers::Efficiency::analyze(const Storage::Event& event)
+void Analyzers::Efficiency::execute(const Storage::Event& event)
 {
   const Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensor.id());
 

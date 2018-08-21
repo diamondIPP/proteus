@@ -10,7 +10,7 @@
 #include <cstdint>
 #include <string>
 
-#include "io/writer.h"
+#include "loop/writer.h"
 #include "utils/definitions.h"
 
 class TDirectory;
@@ -30,7 +30,7 @@ class SensorEvent;
 namespace Io {
 
 /** Export matched (and unmatched) tracks and clusters to a TTree. */
-class MatchWriter : public EventWriter {
+class MatchWriter : public Loop::Writer {
 public:
   MatchWriter(TDirectory* dir, const Mechanics::Sensor& sensor);
 

@@ -10,7 +10,7 @@ Processors::ApplyGeometry::ApplyGeometry(const Mechanics::Device& device)
 
 std::string Processors::ApplyGeometry::name() const { return "ApplyGeometry"; }
 
-void Processors::ApplyGeometry::process(Storage::Event& event) const
+void Processors::ApplyGeometry::execute(Storage::Event& event) const
 {
   assert(event.numSensorEvents() == m_device.numSensors() &&
          "Processors: plane / sensor mismatch");
@@ -43,5 +43,5 @@ void Processors::applyAlignment(Storage::Event* event,
   assert(event && device &&
          "Processors: can't apply alignment with null event and/or device");
 
-  ApplyGeometry(*device).process(*event);
+  ApplyGeometry(*device).execute(*event);
 }

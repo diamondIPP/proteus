@@ -54,7 +54,7 @@ Analyzers::Tracks::Tracks(TDirectory* dir,
 
 std::string Analyzers::Tracks::name() const { return "Tracks"; }
 
-void Analyzers::Tracks::analyze(const Storage::Event& event)
+void Analyzers::Tracks::execute(const Storage::Event& event)
 {
   m_nTracks->Fill(event.numTracks());
 
@@ -72,5 +72,3 @@ void Analyzers::Tracks::analyze(const Storage::Event& event)
     m_slopeY->Fill(state.slope().y());
   }
 }
-
-void Analyzers::Tracks::finalize() {}

@@ -70,7 +70,7 @@ std::string Analyzers::Distances::name() const
   return "Distances(" + std::to_string(m_sensorId) + ')';
 }
 
-void Analyzers::Distances::analyze(const Storage::Event& event)
+void Analyzers::Distances::execute(const Storage::Event& event)
 {
   const Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
 
@@ -111,9 +111,4 @@ void Analyzers::Distances::analyze(const Storage::Event& event)
       m_clusterCluster.fill(c1.posLocal() - c0.posLocal());
     }
   }
-}
-
-void Analyzers::Distances::finalize()
-{
-  // nothing to do
 }

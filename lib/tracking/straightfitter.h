@@ -9,7 +9,7 @@
 
 #include <vector>
 
-#include "processors/processor.h"
+#include "loop/processor.h"
 #include "utils/definitions.h"
 
 namespace Mechanics {
@@ -24,12 +24,12 @@ namespace Tracking {
  * This calculates new global track parameters and goodness-of-fit and
  * calculates the local track parameters on the all sensor planes.
  */
-class StraightFitter : public Processors::Processor {
+class StraightFitter : public Loop::Processor {
 public:
   StraightFitter(const Mechanics::Device& device);
 
   std::string name() const;
-  void process(Storage::Event& event) const;
+  void execute(Storage::Event& event) const;
 
 private:
   const Mechanics::Geometry& m_geo;
@@ -43,12 +43,12 @@ private:
  * If the track has cluster information on the local sensor, it is ignored
  * only for calculating the track parameters on that sensor.
  */
-class UnbiasedStraightFitter : public Processors::Processor {
+class UnbiasedStraightFitter : public Loop::Processor {
 public:
   UnbiasedStraightFitter(const Mechanics::Device& device);
 
   std::string name() const;
-  void process(Storage::Event& event) const;
+  void execute(Storage::Event& event) const;
 
 private:
   const Mechanics::Geometry& m_geo;

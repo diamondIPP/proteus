@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "analyzer.h"
+#include "loop/analyzer.h"
 
 class TDirectory;
 class TH1D;
@@ -29,7 +29,7 @@ public:
                  const int sizeMax,
                  const int binsUncertainty);
 
-  void analyze(const Storage::SensorEvent& sensorEvent);
+  void execute(const Storage::SensorEvent& sensorEvent);
   void finalize();
 
 private:
@@ -57,7 +57,7 @@ private:
 };
 
 /** Cluster histograms for all sensors in the device. */
-class Clusters : public Analyzer {
+class Clusters : public Loop::Analyzer {
 public:
   Clusters(TDirectory* dir,
            const Mechanics::Device& device,
@@ -68,7 +68,7 @@ public:
            const int binsUncertainty = 32);
 
   std::string name() const;
-  void analyze(const Storage::Event& event);
+  void execute(const Storage::Event& event);
   void finalize();
 
 private:

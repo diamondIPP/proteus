@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-#include "processors/processor.h"
+#include "loop/processor.h"
 #include "utils/definitions.h"
 
 namespace Mechanics {
@@ -28,7 +28,7 @@ namespace Tracking {
  * form a track. Successive candidates that contain clusters that are already
  * used are dropped.
  */
-class TrackFinder : public Processors::Processor {
+class TrackFinder : public Loop::Processor {
 public:
   /**
    * \param numClustersMin Selection cut on number of required clusters
@@ -43,7 +43,7 @@ public:
 
   std::string name() const;
   /** Find tracks and add them to the event. */
-  void process(Storage::Event& event) const;
+  void execute(Storage::Event& event) const;
 
 private:
   using TrackPtr = std::unique_ptr<Storage::Track>;

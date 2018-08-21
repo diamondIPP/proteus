@@ -11,8 +11,8 @@
 #include <memory>
 #include <string>
 
+#include "loop/eventloop.h"
 #include "utils/config.h"
-#include "utils/eventloop.h"
 
 namespace Mechanics {
 class Device;
@@ -50,7 +50,7 @@ public:
    *
    * Automatically opens the input file and adds it to the event loop.
    */
-  Utils::EventLoop makeEventLoop() const;
+  Loop::EventLoop makeEventLoop() const;
 
 private:
   std::string m_name;

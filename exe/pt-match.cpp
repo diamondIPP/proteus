@@ -7,6 +7,7 @@
 #include "analyzers/tracks.h"
 #include "io/match.h"
 #include "io/rceroot.h"
+#include "loop/eventloop.h"
 #include "mechanics/device.h"
 #include "processors/applygeometry.h"
 #include "processors/matcher.h"
@@ -14,7 +15,6 @@
 #include "storage/event.h"
 #include "tracking/straightfitter.h"
 #include "utils/application.h"
-#include "utils/eventloop.h"
 
 int main(int argc, char const* argv[])
 {

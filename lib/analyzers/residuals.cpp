@@ -100,7 +100,7 @@ Analyzers::Residuals::Residuals(TDirectory* dir,
 
 std::string Analyzers::Residuals::name() const { return "Residuals"; }
 
-void Analyzers::Residuals::analyze(const Storage::Event& event)
+void Analyzers::Residuals::execute(const Storage::Event& event)
 {
   for (Index isensor = 0; isensor < event.numSensorEvents(); ++isensor) {
     const Storage::SensorEvent& sev = event.getSensorEvent(isensor);
@@ -121,8 +121,6 @@ void Analyzers::Residuals::analyze(const Storage::Event& event)
   }
 }
 
-void Analyzers::Residuals::finalize() {}
-
 Analyzers::Matching::Matching(TDirectory* dir,
                               const Mechanics::Device& device,
                               const std::vector<Index>& sensorIds,
@@ -138,7 +136,7 @@ Analyzers::Matching::Matching(TDirectory* dir,
 
 std::string Analyzers::Matching::name() const { return "Matching"; }
 
-void Analyzers::Matching::analyze(const Storage::Event& event)
+void Analyzers::Matching::execute(const Storage::Event& event)
 {
   for (Index isensor = 0; isensor < event.numSensorEvents(); ++isensor) {
     const Storage::SensorEvent& sensorEvent = event.getSensorEvent(isensor);
@@ -160,5 +158,3 @@ void Analyzers::Matching::analyze(const Storage::Event& event)
     }
   }
 }
-
-void Analyzers::Matching::finalize() {}

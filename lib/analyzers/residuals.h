@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "analyzers/analyzer.h"
+#include "loop/analyzer.h"
 #include "utils/definitions.h"
 
 class TDirectory;
@@ -55,7 +55,7 @@ struct SensorResidualHists {
 
 } // namespace detail
 
-class Residuals : public Analyzer {
+class Residuals : public Loop::Analyzer {
 public:
   /** Construct a residual analyzer.
    *
@@ -75,14 +75,13 @@ public:
             const int bins = 128);
 
   std::string name() const;
-  void analyze(const Storage::Event& refEvent);
-  void finalize();
+  void execute(const Storage::Event& refEvent);
 
 private:
   std::unordered_map<Index, detail::SensorResidualHists> m_hists_map;
 };
 
-class Matching : public Analyzer {
+class Matching : public Loop::Analyzer {
 public:
   /** Construct a matching analyzer.
    *
@@ -100,8 +99,7 @@ public:
            const int bins = 128);
 
   std::string name() const;
-  void analyze(const Storage::Event& refEvent);
-  void finalize();
+  void execute(const Storage::Event& refEvent);
 
 private:
   std::unordered_map<Index, detail::SensorResidualHists> m_hists_map;

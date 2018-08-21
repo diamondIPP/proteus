@@ -6,23 +6,23 @@
 #ifndef PT_ANALYZER_H
 #define PT_ANALYZER_H
 
-#include <cstdint>
 #include <string>
 
 namespace Storage {
 class Event;
 }
+namespace Loop {
 
-namespace Analyzers {
-
+/** Interface for algorithms to analyze events. */
 class Analyzer {
 public:
   virtual ~Analyzer() = default;
   virtual std::string name() const = 0;
-  virtual void analyze(const Storage::Event& event) = 0;
-  virtual void finalize() = 0;
+  virtual void execute(const Storage::Event&) = 0;
+  /** The finalize method is optional. */
+  virtual void finalize(){};
 };
 
-} // namespace Analyzers
+} // namespace Loop
 
 #endif // PT_ANALYZER_H

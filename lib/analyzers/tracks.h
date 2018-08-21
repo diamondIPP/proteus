@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "analyzer.h"
+#include "loop/analyzer.h"
 
 class TDirectory;
 class TH1D;
@@ -15,7 +15,7 @@ class Device;
 
 namespace Analyzers {
 
-class Tracks : public Analyzer {
+class Tracks : public Loop::Analyzer {
 public:
   /** Construct a tracks analyzer.
    *
@@ -33,8 +33,7 @@ public:
          const int bins = 128);
 
   std::string name() const;
-  void analyze(const Storage::Event& event);
-  void finalize();
+  void execute(const Storage::Event& event);
 
   const TH1D* histSlopeX() const { return m_slopeX; }
   const TH1D* histSlopeY() const { return m_slopeY; }

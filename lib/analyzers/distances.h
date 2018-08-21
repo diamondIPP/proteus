@@ -9,7 +9,7 @@
 
 #include <string>
 
-#include "analyzers/analyzer.h"
+#include "loop/analyzer.h"
 #include "utils/definitions.h"
 
 class TDirectory;
@@ -21,7 +21,7 @@ class Sensor;
 
 namespace Analyzers {
 
-class Distances : public Analyzer {
+class Distances : public Loop::Analyzer {
 public:
   /**
    * \param pixelRange Distance histogram range in number of pixels
@@ -35,8 +35,7 @@ public:
             const int bins = 256);
 
   std::string name() const;
-  void analyze(const Storage::Event& event);
-  void finalize();
+  void execute(const Storage::Event& event);
 
 private:
   struct Hists {

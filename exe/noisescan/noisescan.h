@@ -11,7 +11,7 @@
 
 #include <vector>
 
-#include "analyzers/analyzer.h"
+#include "loop/analyzer.h"
 #include "mechanics/pixelmasks.h"
 #include "utils/definitions.h"
 #include "utils/interval.h"
@@ -30,7 +30,7 @@ class Sensor;
  * find pixels that are a certain number of standard deviations away from
  * this estimate.
  */
-class NoiseScan : public Analyzers::Analyzer {
+class NoiseScan : public Loop::Analyzer {
 public:
   typedef Utils::Box<2, int> Area;
 
@@ -43,7 +43,7 @@ public:
             const int binsOccupancy = 128);
 
   std::string name() const;
-  void analyze(const Storage::Event& event);
+  void execute(const Storage::Event& event);
   void finalize();
 
   Mechanics::PixelMasks constructMasks() const;

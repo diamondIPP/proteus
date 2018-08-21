@@ -16,10 +16,10 @@
 #include <TFile.h>
 
 #include "analyzers/hits.h"
+#include "loop/eventloop.h"
 #include "mechanics/device.h"
 #include "noisescan.h"
 #include "utils/application.h"
-#include "utils/eventloop.h"
 #include "utils/logger.h"
 
 #include "noisescan.h"
@@ -65,7 +65,7 @@ int main(int argc, char const* argv[])
         hists, *app.device().getSensor(id), bandwidth, sigmaMax, rateMax, roi));
   }
 
-  Utils::EventLoop loop = app.makeEventLoop();
+  Loop::EventLoop loop = app.makeEventLoop();
   loop.addAnalyzer(std::make_shared<Analyzers::Hits>(hists, app.device()));
   for (auto noise = noiseScans.begin(); noise != noiseScans.end(); ++noise)
     loop.addAnalyzer(*noise);
