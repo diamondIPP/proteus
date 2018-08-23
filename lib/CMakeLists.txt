@@ -8,6 +8,7 @@ set(proteus_SOURCES
     analyzers/eventprinter.cpp
     analyzers/globaloccupancy.cpp
     analyzers/hits.cpp
+    analyzers/noisescan.cpp
     analyzers/tracks.cpp
     analyzers/residuals.cpp
     io/match.cpp

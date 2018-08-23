@@ -57,6 +57,7 @@ Internal changes
 *   Replace test data with simulated datasets based on Allpix² and update the
     configurations and scripts accordingly.
 *   Move alignment analyzers and tools to the library.
+*   Move ``NoiseScan`` analyzer to the library.
 
 v1.3.0 (2017-12-06)
 ===================
