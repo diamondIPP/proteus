@@ -33,7 +33,6 @@ public:
 
   std::string name() const;
   void execute(const Storage::Event& event);
-  void finalize();
 
   Mechanics::Geometry updatedGeometry() const;
 
