@@ -1,4 +1,6 @@
 set(proteus_SOURCES
+    alignment/correlationsaligner.cpp
+    alignment/residualsaligner.cpp
     analyzers/clusters.cpp
     analyzers/correlations.cpp
     analyzers/distances.cpp

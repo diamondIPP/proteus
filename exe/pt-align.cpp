@@ -6,6 +6,8 @@
 #include <TGraphErrors.h>
 #include <TTree.h>
 
+#include "alignment/correlationsaligner.h"
+#include "alignment/residualsaligner.h"
 #include "analyzers/residuals.h"
 #include "analyzers/tracks.h"
 #include "loop/eventloop.h"
@@ -18,9 +20,6 @@
 #include "utils/application.h"
 #include "utils/logger.h"
 #include "utils/root.h"
-
-#include "correlationsaligner.h"
-#include "residualsaligner.h"
 
 PT_SETUP_LOCAL_LOGGER(align)
 
@@ -196,8 +195,8 @@ int main(int argc, char const* argv[])
       // add tracks analyzer for beam slope and divergence
       tracks = std::make_shared<Tracks>(stepDir, dev);
       loop.addAnalyzer(tracks);
-      loop.addAnalyzer(
-          std::make_shared<Residuals>(stepDir, dev, "unbiased_residuals"));
+      loop.addAnalyzer(std::make_shared<Residuals>(stepDir, dev, sensorIds,
+                                                   "unbiased_residuals"));
       aligner =
           std::make_shared<ResidualsAligner>(stepDir, dev, alignIds, damping);
     }

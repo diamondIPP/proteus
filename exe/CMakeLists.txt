@@ -5,7 +5,7 @@ function(add_tool name)
   install(TARGETS ${_exe} RUNTIME DESTINATION bin)
 endfunction()
 
-add_subdirectory(align)
+add_tool(align pt-align.cpp)
 add_tool(cfg pt-cfg.cpp)
 add_tool(combine pt-combine.cpp)
 add_tool(match pt-match.cpp)
