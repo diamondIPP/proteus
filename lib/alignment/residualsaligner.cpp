@@ -114,9 +114,10 @@ Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
     // output w/ angles in degrees
     constexpr double toDeg = 180.0 / M_PI;
     INFO(sensor.name(), " alignment corrections:");
-    INFO("  u0: ", delta[0], " +- ", stdU);
-    INFO("  v0: ", delta[1], " +- ", stdV);
-    INFO("  gamma: ", delta[5] * toDeg, " +- ", stdGamma * toDeg, " degree");
+    INFO("  du: ", delta[0], " +- ", stdDU);
+    INFO("  dv: ", delta[1], " +- ", stdDV);
+    INFO("  dw: ", delta[2], " (enforces dz=0)");
+    INFO("  dgamma: ", delta[5] * toDeg, " +- ", stdDGamma * toDeg, " degree");
   }
   return geo;
 }
