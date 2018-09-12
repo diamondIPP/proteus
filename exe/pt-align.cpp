@@ -100,19 +100,6 @@ struct StepsGraphs {
   }
 };
 
-enum class Method { Correlations, Residuals };
-
-Method stringToMethod(const std::string& name)
-{
-  if (name == "correlations") {
-    return Method::Correlations;
-  } else if (name == "residuals") {
-    return Method::Residuals;
-  } else {
-    throw std::runtime_error("unknown alignment method '" + name + '\'');
-  }
-}
-
 int main(int argc, char const* argv[])
 {
   using namespace Alignment;
@@ -130,7 +117,7 @@ int main(int argc, char const* argv[])
   // configuration
   auto sensorIds = app.config().get<std::vector<Index>>("sensor_ids");
   auto alignIds = app.config().get<std::vector<Index>>("align_ids");
-  auto method = stringToMethod(app.config().get<std::string>("method"));
+  auto method = app.config().get<std::string>("method");
   auto numSteps = app.config().get<int>("num_steps");
   auto searchSigmaMax = app.config().get<double>("search_sigma_max");
   auto redChi2Max = app.config().get<double>("reduced_chi2_max");
@@ -180,13 +167,13 @@ int main(int argc, char const* argv[])
     // setup aligment method specific loop logic
     std::shared_ptr<Tracks> tracks;
     std::shared_ptr<Aligner> aligner;
-    if (method == Method::Correlations) {
+    if (method == "correlations") {
       // coarse method w/o tracks using only cluster correlations
       // use the first sensor that is not in the align set as reference
       aligner = std::make_shared<CorrelationsAligner>(
           stepDir, dev, fixedSensorIds.front(), alignIds);
 
-    } else if (method == Method::Residuals) {
+    } else if (method == "residuals") {
       // use (unbiased) track residuals to align
       loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
           dev, sensorIds, sensorIds.size(), searchSigmaMax, redChi2Max));
@@ -199,6 +186,8 @@ int main(int argc, char const* argv[])
                                                    "unbiased_residuals"));
       aligner =
           std::make_shared<ResidualsAligner>(stepDir, dev, alignIds, damping);
+    } else {
+      FAIL("unknown alignment method '", method, "''");
     }
     loop.addAnalyzer(aligner);
     loop.run();
