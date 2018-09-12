@@ -29,6 +29,7 @@ int main(int argc, char const* argv[])
   args.addOption('n', "num_events", "number of events to process", UINT64_MAX);
   args.addFlag('q', "quiet", "print only errors");
   args.addFlag('\0', "debug", "print more information");
+  args.addFlag('\0', "no-progress", "do not show a progress bar");
   args.addRequired("output", "path to the output file");
   args.addVariable("input", "path to the input file(s)");
 
@@ -63,9 +64,9 @@ int main(int argc, char const* argv[])
   auto writer = std::make_shared<Io::RceRootWriter>(args.get("output"),
                                                     merger->numSensors());
 
-  Loop::EventLoop loop(merger, merger->numSensors(),
-                       args.get<uint64_t>("skip_events"),
-                       args.get<uint64_t>("num_events"));
+  Loop::EventLoop loop(
+      merger, merger->numSensors(), args.get<uint64_t>("skip_events"),
+      args.get<uint64_t>("num_events"), !args.has("no-progress"));
   loop.addWriter(writer);
   loop.run();
 
