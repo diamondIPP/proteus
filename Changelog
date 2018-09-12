@@ -38,6 +38,11 @@ Bugfixes
     input stream are copied to the merged event and written to
     disk. The event number and timestamp off the other data streams is
     discarded.
+*   Add progress bar to ``pt-combine``.
+
+    The progress bar is shown by default and can be deactivated using the
+    ``--no-progress`` option. This is the same behaviour as for all other
+    tools.
 
 Internal changes
 ----------------
