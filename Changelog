@@ -27,6 +27,7 @@ User-visible changes
     present and the RCE ROOT writer will not create them. These
     variables were unused anywhere in the code base and their content
     was unclear.
+*   Alignment using the ``residuals`` method enforces a fixed z-position.
 
 Bugfixes
 --------
@@ -63,6 +64,9 @@ Internal changes
     configurations and scripts accordingly.
 *   Move alignment analyzers and tools to the library.
 *   Move ``NoiseScan`` analyzer to the library.
+*   The alignment corrections to the rotation matrix are calculated using
+    the full rotation matrix instead of a linearized matrix followed by
+    a manual orthogonalization of the combined matrix.
 
 v1.3.0 (2017-12-06)
 ===================
