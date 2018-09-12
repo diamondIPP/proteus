@@ -46,8 +46,10 @@ public:
 
 private:
   const Mechanics::Device& m_device;
-  std::vector<Index> m_sensorIds;
   std::unique_ptr<Analyzers::Correlations> m_corr;
+  std::vector<Index> m_backwardIds;
+  std::vector<Index> m_forwardIds;
+  Index m_fixedId;
 };
 
 } // namespace Alignment
