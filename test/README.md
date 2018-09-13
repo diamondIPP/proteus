@@ -38,6 +38,12 @@ digitization. The timing information is currently unavailable in the simulated d
 The simulated geometry is misaligned by random offsets and rotations
 with respect to the nominal geometry.
 
+The available geometry files are located in the `geometry` folder. The following files are available:
+
+* `unigetel_nomilan.toml` is the nominal geometry file, so the one that one would write when setting up the telescope. It needs alignment.
+* `<dataset>.toml` is the real geometry of the telescope. The geometry file obtained after alignment should be very similar to this, if the alignmnet is working fine.
+* `<dataset>-telescope.tel` contain the true telescope geometry and the nominal DUT geometry. Just the DUT needs to be aligned. A file similar to this should be obtained after the telescope alignemnt.
+
 Datasets
 --------
 
