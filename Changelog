@@ -59,6 +59,12 @@ User-visible changes
 *   Add ``--print-events`` flag to most tools that enables the printing of
     event information independent of the verbosity settings.
 *   Rename ``--debug`` flag to ``--verbose`` and add a ``-v`` short flag.
+*   ``pt-align`` runs an additional verification step after all alignment
+    steps have been performed.
+
+    The verification step computes correlations, finds tracks, and calculates
+    residuals to allow a simpler crosscheck of the final geometry. It also
+    computes the beam parameters using the final geometry.
 
 Bugfixes
 --------
@@ -81,6 +87,10 @@ Bugfixes
     tools.
 *   Ensure the histogram files only contain a single version of each histogram
     and existing objects are correctly overwritten.
+*   Beam direction and divergence is calculated using the final geometry.
+
+    Previously, this was calculated during the last alignment step and was
+    therefore using the second-to-last geometry and not the final one.
 
 Internal changes
 ----------------

@@ -2,13 +2,15 @@
 #include <iterator>
 #include <numeric>
 
+#include <Compression.h>
 #include <TFile.h>
 #include <TGraphErrors.h>
 #include <TTree.h>
-#include <Compression.h>
 
 #include "alignment/correlationsaligner.h"
 #include "alignment/residualsaligner.h"
+#include "analyzers/correlations.h"
+#include "analyzers/globaloccupancy.h"
 #include "analyzers/residuals.h"
 #include "analyzers/tracks.h"
 #include "loop/eventloop.h"
@@ -56,7 +58,7 @@ struct SensorStepsGraphs {
     errRotY.push_back(std::sqrt(cov(4, 4)));
     errRotZ.push_back(std::sqrt(cov(5, 5)));
   }
-  void writeGraphs(const std::string& sensorName, TDirectory* dir) const
+  void write(const std::string& sensorName, TDirectory* dir) const
   {
     TDirectory* sub = Utils::makeDir(dir, sensorName);
     auto makeGraph = [&](const std::string& name, const std::string& ylabel,
@@ -72,7 +74,7 @@ struct SensorStepsGraphs {
       g->SetTitle("");
       g->GetXaxis()->SetTitle("Alignment step");
       g->GetYaxis()->SetTitle((sensorName + ' ' + ylabel).c_str());
-      sub->WriteTObject(g);
+      sub->WriteTObject(g, nullptr, "Overwrite");
     };
     makeGraph("offset_x", "offset x", offX, errOffX);
     makeGraph("offset_y", "offset y", offY, errOffY);
@@ -85,19 +87,54 @@ struct SensorStepsGraphs {
   }
 };
 
+struct BeamStepsGraphs {
+  std::vector<double> slope;
+  std::vector<double> divergence;
+
+  void addStep(double slope_, double divergence_)
+  {
+    slope.push_back(slope_);
+    divergence.push_back(divergence_);
+  }
+  void write(const std::string& axis, TDirectory* dir) const
+  {
+    TGraphErrors* g =
+        new TGraphErrors(std::min(slope.size(), divergence.size()));
+    for (int i = 0; i < g->GetN(); ++i) {
+      g->SetPoint(i, i, slope[i]);
+      g->SetPointError(i, 0.0, divergence[i]);
+    }
+    g->SetName(("beam_slope_" + axis).c_str());
+    g->SetTitle("");
+    g->GetXaxis()->SetTitle("Alignment step");
+    g->GetYaxis()->SetTitle(("Beam slope " + axis).c_str());
+    dir->WriteTObject(g, nullptr, "Overwrite");
+  }
+};
+
 struct StepsGraphs {
-  std::map<Index, SensorStepsGraphs> graphs;
+  std::map<Index, SensorStepsGraphs> sensors;
+  BeamStepsGraphs beamX;
+  BeamStepsGraphs beamY;
 
   void addStep(const std::vector<Index>& sensorIds,
                const Mechanics::Geometry& geo)
   {
-    for (auto id : sensorIds)
-      graphs[id].addStep(geo.getParams(id), geo.getParamsCov(id));
+    for (auto id : sensorIds) {
+      sensors[id].addStep(geo.getParams(id), geo.getParamsCov(id));
+    }
+    auto dir = geo.beamDirection();
+    auto div = geo.beamDivergence();
+    beamX.addStep(dir[0] / dir[2], div[0]);
+    beamY.addStep(dir[1] / dir[2], div[1]);
   }
-  void writeGraphs(const Mechanics::Device& device, TDirectory* dir) const
+  void write(const Mechanics::Device& device, TDirectory* dir) const
   {
-    for (const auto& g : graphs)
-      g.second.writeGraphs(device.getSensor(g.first).name(), dir);
+    for (const auto& g : sensors) {
+      g.second.write(device.getSensor(g.first).name(), dir);
+    }
+    beamX.write("x", dir);
+    beamY.write("y", dir);
   }
 };
 
@@ -108,10 +145,8 @@ void updateBeamParameters(const Analyzers::Tracks& tracks,
   auto beamDivergence = tracks.beamDivergence();
 
   INFO("beam:");
-  INFO("  slope x: ", beamSlope[0]);
-  INFO("  slope y: ", beamSlope[1]);
-  INFO("  divergence x: ", beamDivergence[0]);
-  INFO("  divergence y: ", beamDivergence[1]);
+  INFO("  slope x: ", beamSlope[0], " ± ", beamDivergence[0]);
+  INFO("  slope y: ", beamSlope[1], " ± ", beamDivergence[1]);
 
   geo.setBeamSlope(beamSlope[0], beamSlope[1]);
   geo.setBeamDivergence(beamDivergence[0], beamDivergence[1]);
@@ -164,12 +199,14 @@ int main(int argc, char const* argv[])
   }
 
   // output
-  TFile hists(app.outputPath("hists.root").c_str(), "RECREATE", "", ROOT::CompressionSettings(ROOT::kLZMA, 1));
+  TFile hists(app.outputPath("hists.root").c_str(), "RECREATE", "",
+              ROOT::CompressionSettings(ROOT::kLZMA, 1));
 
   // alignment steps monitoring starting w/ the initial geometry
   StepsGraphs steps;
   steps.addStep(alignIds, dev.geometry());
 
+  // iterative alignment steps
   for (int step = 1; step <= numSteps; ++step) {
     TDirectory* stepDir = Utils::makeDir(&hists, "step" + std::to_string(step));
 
@@ -196,34 +233,73 @@ int main(int argc, char const* argv[])
           dev, sensorIds, sensorIds.size(), searchSigmaMax, redChi2Max));
       loop.addProcessor(
           std::make_shared<Tracking::UnbiasedStraightFitter>(dev));
-      // add tracks analyzer for beam slope and divergence
-      tracks = std::make_shared<Tracks>(stepDir, dev);
-      loop.addAnalyzer(tracks);
       loop.addAnalyzer(std::make_shared<Residuals>(stepDir, dev, sensorIds,
                                                    "unbiased_residuals"));
+      tracks = std::make_shared<Tracks>(stepDir, dev);
       aligner =
           std::make_shared<ResidualsAligner>(stepDir, dev, alignIds, damping);
+
     } else {
       FAIL("unknown alignment method '", method, "''");
+    }
+    if (tracks) {
+      loop.addAnalyzer(tracks);
     }
     loop.addAnalyzer(aligner);
     loop.run();
 
-    // updated geometry from the specified aligner
-    Mechanics::Geometry newGeo = aligner->updatedGeometry();
-    // update beam slope and divergence if available
+    // new geometry w/ updated sensor placement and beam parameters
+    auto geo = aligner->updatedGeometry();
     if (tracks) {
-      updateBeamParameters(*tracks, newGeo);
+      updateBeamParameters(*tracks, geo);
     }
     // update device for next iteration and write to prevent information loss
-    dev.setGeometry(newGeo);
+    dev.setGeometry(geo);
     dev.geometry().writeFile(app.outputPath("geo.toml"));
 
     // register updated geometry in alignment monitoring
     steps.addStep(alignIds, dev.geometry());
   }
 
-  steps.writeGraphs(dev, Utils::makeDir(&hists, "results"));
+  // validation step w/o geometry changes but final beam parameter updates
+  {
+    INFO("validation step ");
+
+    TDirectory* subDir = Utils::makeDir(&hists, "validation");
+
+    auto loop = app.makeEventLoop();
+
+    // minimal processors for tracking
+    setupHitPreprocessing(dev, loop);
+    setupClusterizers(dev, loop);
+    loop.addProcessor(std::make_shared<ApplyGeometry>(dev));
+    loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
+        dev, sensorIds, sensorIds.size(), searchSigmaMax, redChi2Max));
+    loop.addProcessor(std::make_shared<Tracking::StraightFitter>(dev));
+
+    // minimal set of analyzers
+    loop.addAnalyzer(std::make_shared<GlobalOccupancy>(subDir, dev));
+    // correlations analyzer does **not** sort an explicit list of sensors
+    loop.addAnalyzer(std::make_shared<Correlations>(
+        subDir, dev, Mechanics::sortedAlongBeam(dev.geometry(), sensorIds)));
+    auto tracks = std::make_shared<Tracks>(subDir, dev);
+    loop.addAnalyzer(tracks);
+    loop.addAnalyzer(
+        std::make_shared<Residuals>(subDir, dev, sensorIds, "residuals"));
+
+    loop.run();
+
+    // update beam parameters one more time using the final geometry
+    auto geo = dev.geometry();
+    updateBeamParameters(*tracks, geo);
+    geo.writeFile(app.outputPath("geo.toml"));
+    // no need to update the device; it will not be used again
+
+    // register validation step in alignment monitoring
+    steps.addStep(alignIds, geo);
+  }
+
+  steps.write(dev, Utils::makeDir(&hists, "summary"));
   hists.Write(nullptr, TFile::kOverwrite);
   hists.Close();
 
