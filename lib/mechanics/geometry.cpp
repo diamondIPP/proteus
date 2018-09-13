@@ -4,6 +4,9 @@
 #include <stdexcept>
 #include <string>
 
+#include <Math/GenVector/Rotation3D.h>
+#include <Math/GenVector/RotationZYX.h>
+
 #include "utils/logger.h"
 
 PT_SETUP_LOCAL_LOGGER(Geometry)
@@ -70,9 +73,9 @@ static Angles321 extractAngles321(const Matrix3& rotation)
 {
   // TODO remove ROOT dependency and implement matrix to angles directly. See:
   // https://project-mathlibs.web.cern.ch/project-mathlibs/documents/eulerAngleComputation.pdf
-  Rotation3D rot;
+  ROOT::Math::Rotation3D rot;
   rot.SetRotationMatrix(rotation);
-  RotationZYX zyx(rot);
+  ROOT::Math::RotationZYX zyx(rot);
 
   Angles321 angles;
   angles.alpha = zyx.Psi();

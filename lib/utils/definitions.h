@@ -11,10 +11,6 @@
 #include <cassert>
 #include <utility>
 
-#include <Math/GenVector/Rotation3D.h>
-#include <Math/GenVector/RotationZYX.h>
-#include <Math/GenVector/Transform3D.h>
-#include <Math/GenVector/Translation3D.h>
 #include <Math/Point2D.h>
 #include <Math/Point3D.h>
 #include <Math/SMatrix.h>
@@ -34,10 +30,6 @@ typedef ROOT::Math::XYPoint XYPoint;
 typedef ROOT::Math::XYZPoint XYZPoint;
 typedef ROOT::Math::XYVector XYVector;
 typedef ROOT::Math::XYZVector XYZVector;
-typedef ROOT::Math::Translation3D Translation3D;
-typedef ROOT::Math::Rotation3D Rotation3D;
-typedef ROOT::Math::RotationZYX RotationZYX;
-typedef ROOT::Math::Transform3D Transform3D;
 
 // commonly used vector and matrix types
 typedef ROOT::Math::SMatrix<double, 2, 2> Matrix2;
