@@ -101,6 +101,22 @@ struct StepsGraphs {
   }
 };
 
+void updateBeamParameters(const Analyzers::Tracks& tracks,
+                          Mechanics::Geometry& geo)
+{
+  auto beamSlope = tracks.beamSlope();
+  auto beamDivergence = tracks.beamDivergence();
+
+  INFO("beam:");
+  INFO("  slope x: ", beamSlope[0]);
+  INFO("  slope y: ", beamSlope[1]);
+  INFO("  divergence x: ", beamDivergence[0]);
+  INFO("  divergence y: ", beamDivergence[1]);
+
+  geo.setBeamSlope(beamSlope[0], beamSlope[1]);
+  geo.setBeamDivergence(beamDivergence[0], beamDivergence[1]);
+}
+
 int main(int argc, char const* argv[])
 {
   using namespace Alignment;
@@ -197,17 +213,7 @@ int main(int argc, char const* argv[])
     Mechanics::Geometry newGeo = aligner->updatedGeometry();
     // update beam slope and divergence if available
     if (tracks) {
-      auto beamSlope = tracks->beamSlope();
-      auto beamDivergence = tracks->beamDivergence();
-
-      INFO("beam:");
-      INFO("  slope x: ", beamSlope[0]);
-      INFO("  slope y: ", beamSlope[1]);
-      INFO("  divergence x: ", beamDivergence[0]);
-      INFO("  divergence y: ", beamDivergence[1]);
-
-      newGeo.setBeamSlope(beamSlope[0], beamSlope[1]);
-      newGeo.setBeamDivergence(beamDivergence[0], beamDivergence[1]);
+      updateBeamParameters(*tracks, newGeo);
     }
     // update device for next iteration and write to prevent information loss
     dev.setGeometry(newGeo);
