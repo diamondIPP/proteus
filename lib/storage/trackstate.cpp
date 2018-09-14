@@ -59,10 +59,9 @@ void Storage::TrackState::setCovOffset(const SymMatrix2& covOffset)
 
 std::ostream& Storage::operator<<(std::ostream& os, const TrackState& state)
 {
-  auto u = state.offset().x();
-  auto v = state.offset().y();
-  auto du = state.slope().x();
-  auto dv = state.slope().y();
-  os << "offset=[" << u << "," << v << "] slope=[" << du << "," << dv << "]";
+  auto o = state.offset();
+  auto s = state.slope();
+  os << "offset=[" << o[0] << "," << o[1] << "]";
+  os << " slope=[" << s[0] << "," << s[1] << "]";
   return os;
 }

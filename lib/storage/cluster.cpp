@@ -24,7 +24,7 @@ Storage::Cluster::Cluster()
 {
 }
 
-void Storage::Cluster::setPixel(const XYPoint& cr, const SymMatrix2& cov)
+void Storage::Cluster::setPixel(const Vector2& cr, const SymMatrix2& cov)
 {
   m_cr = cr;
   m_crCov = cov;
@@ -35,13 +35,14 @@ void Storage::Cluster::setPixel(float col,
                                 float stdCol,
                                 float stdRow)
 {
-  m_cr.SetXY(col, row);
+  m_cr[0] = col;
+  m_cr[1] = row;
   m_crCov(0, 0) = stdCol * stdCol;
   m_crCov(1, 1) = stdRow * stdRow;
   m_crCov(0, 1) = m_crCov(1, 0) = 0;
 }
 
-void Storage::Cluster::setLocal(const XYPoint& uv, const SymMatrix2& cov)
+void Storage::Cluster::setLocal(const Vector2& uv, const SymMatrix2& cov)
 {
   m_uv = uv;
   m_uvCov = cov;
@@ -96,13 +97,11 @@ void Storage::Cluster::print(std::ostream& os, const std::string& prefix) const
 
 std::ostream& Storage::operator<<(std::ostream& os, const Cluster& cluster)
 {
-  auto c = cluster.posPixel().x();
-  auto r = cluster.posPixel().y();
-  auto u = cluster.posLocal().x();
-  auto v = cluster.posLocal().y();
+  auto cr = cluster.posPixel();
+  auto uv = cluster.posLocal();
   os << "size=" << cluster.size();
-  os << " pixel=[" << c << "," << r << "]";
-  os << " local=[" << u << "," << v << "]";
+  os << " pixel=[" << cr[0] << "," << cr[1] << "]";
+  os << " local=[" << uv[0] << "," << uv[1] << "]";
   if (cluster.isInTrack())
     os << " track=" << cluster.track();
   if (cluster.isMatched())
