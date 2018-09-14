@@ -26,7 +26,8 @@ Alignment::CorrelationsAligner::CorrelationsAligner(
   // split sensors into two groups: before and after the fixed sensor
   auto itFixed = std::find(sortedIds.begin(), sortedIds.end(), fixedId);
   // order must always go away from the fixed sensor to either end
-  std::reverse_copy(sortedIds.begin(), itFixed, std::back_inserter(m_backwardIds));
+  std::reverse_copy(sortedIds.begin(), itFixed,
+                    std::back_inserter(m_backwardIds));
   std::copy(++itFixed, sortedIds.end(), std::back_inserter(m_forwardIds));
 }
 
