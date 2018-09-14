@@ -50,8 +50,8 @@ private:
           const double distMax,
           const double d2Max,
           const int bins);
-    void fill(const XYVector& delta);
-    void fill(const XYVector& delta, const SymMatrix2& cov);
+    void fill(const Vector2& delta);
+    void fill(const Vector2& delta, const SymMatrix2& cov);
   };
 
   Index m_sensorId;

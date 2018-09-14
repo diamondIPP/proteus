@@ -64,12 +64,12 @@ void Analyzers::Tracks::execute(const Storage::Event& event)
 
     m_size->Fill(track.size());
     m_reducedChi2->Fill(track.reducedChi2());
-    m_offsetXY->Fill(state.offset().x(), state.offset().y());
-    m_offsetX->Fill(state.offset().x());
-    m_offsetY->Fill(state.offset().y());
-    m_slopeXY->Fill(state.slope().x(), state.slope().y());
-    m_slopeX->Fill(state.slope().x());
-    m_slopeY->Fill(state.slope().y());
+    m_offsetXY->Fill(state.offset()[0], state.offset()[1]);
+    m_offsetX->Fill(state.offset()[0]);
+    m_offsetY->Fill(state.offset()[1]);
+    m_slopeXY->Fill(state.slope()[0], state.slope()[1]);
+    m_slopeX->Fill(state.slope()[0]);
+    m_slopeY->Fill(state.slope()[1]);
   }
 }
 

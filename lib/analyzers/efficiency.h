@@ -101,7 +101,7 @@ private:
           const int inPixelPeriod,
           const int inPixelBinsMin,
           const int efficiencyDistBins);
-    void fill(const Storage::TrackState& state, const XYPoint& posPixel);
+    void fill(const Storage::TrackState& state, const Vector2& posPixel);
     void fill(const Storage::Cluster& cluster);
     void finalize();
   };

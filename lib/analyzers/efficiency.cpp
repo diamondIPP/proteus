@@ -70,12 +70,12 @@ Analyzers::Efficiency::Hists::Hists(TDirectory* dir,
   using namespace Utils;
 
   // define in-pixel submatrix where positions will be folded back to
-  XYPoint anchorPix(roi.min(0), roi.min(1));
-  XYPoint anchorLoc = sensor.transformPixelToLocal(anchorPix);
-  double uMin = anchorLoc.x();
-  double uMax = anchorLoc.x() + inPixelPeriod * sensor.pitchCol();
-  double vMin = anchorLoc.y();
-  double vMax = anchorLoc.y() + inPixelPeriod * sensor.pitchRow();
+  Vector2 anchorPix(roi.min(0), roi.min(1));
+  Vector2 anchorLoc = sensor.transformPixelToLocal(anchorPix);
+  double uMin = anchorLoc[0];
+  double uMax = anchorLoc[0] + inPixelPeriod * sensor.pitchCol();
+  double vMin = anchorLoc[1];
+  double vMax = anchorLoc[1] + inPixelPeriod * sensor.pitchRow();
   inPixelAreaLocal =
       Area(Area::AxisInterval(uMin, uMax), Area::AxisInterval(vMin, vMax));
   // use approximately quadratic bins in local coords for in-pixel histograms
@@ -136,7 +136,7 @@ void Analyzers::Efficiency::execute(const Storage::Event& event)
     for (Index iregion = 0; iregion < m_regionsHists.size(); ++iregion) {
       Hists& regionHists = m_regionsHists[iregion];
       // insides region-of-interest + extra edges
-      if (!regionHists.areaPixel.isInside(posPixel.x(), posPixel.y()))
+      if (!regionHists.areaPixel.isInside(posPixel[0], posPixel[1]))
         continue;
       // ignore tracks that are matched to a cluster in a different region
       if ((state.isMatched()) &&
@@ -154,29 +154,29 @@ void Analyzers::Efficiency::execute(const Storage::Event& event)
 }
 
 void Analyzers::Efficiency::Hists::fill(const Storage::TrackState& state,
-                                        const XYPoint& posPixel)
+                                        const Vector2& posPixel)
 {
   bool isMatched = state.isMatched();
 
-  total->Fill(posPixel.x(), posPixel.y());
+  total->Fill(posPixel[0], posPixel[1]);
   if (isMatched)
-    pass->Fill(posPixel.x(), posPixel.y());
+    pass->Fill(posPixel[0], posPixel[1]);
 
-  if (roiPixel.interval(1).isInside(posPixel.y())) {
-    colTotal->Fill(posPixel.x());
+  if (roiPixel.interval(1).isInside(posPixel[1])) {
+    colTotal->Fill(posPixel[0]);
     if (isMatched)
-      colPass->Fill(posPixel.x());
+      colPass->Fill(posPixel[0]);
   }
-  if (roiPixel.interval(0).isInside(posPixel.x())) {
-    rowTotal->Fill(posPixel.y());
+  if (roiPixel.interval(0).isInside(posPixel[0])) {
+    rowTotal->Fill(posPixel[1]);
     if (isMatched)
-      rowPass->Fill(posPixel.y());
+      rowPass->Fill(posPixel[1]);
   }
-  if (roiPixel.isInside(posPixel.x(), posPixel.y())) {
+  if (roiPixel.isInside(posPixel[0], posPixel[1])) {
     // calculate folded position
     // TODO 2017-02-17 msmk: can this be done w/ std::remainder or std::fmod?
-    double foldedU = state.offset().x() - inPixelAreaLocal.min(0);
-    double foldedV = state.offset().y() - inPixelAreaLocal.min(1);
+    double foldedU = state.offset()[0] - inPixelAreaLocal.min(0);
+    double foldedV = state.offset()[1] - inPixelAreaLocal.min(1);
     foldedU -= inPixelAreaLocal.length(0) *
                std::floor(foldedU / inPixelAreaLocal.length(0));
     foldedV -= inPixelAreaLocal.length(1) *
@@ -191,9 +191,9 @@ void Analyzers::Efficiency::Hists::fill(const Storage::TrackState& state,
 void Analyzers::Efficiency::Hists::fill(const Storage::Cluster& cluster)
 {
   if (cluster.isMatched()) {
-    clustersPass->Fill(cluster.posPixel().x(), cluster.posPixel().y());
+    clustersPass->Fill(cluster.posPixel()[0], cluster.posPixel()[1]);
   } else {
-    clustersFail->Fill(cluster.posPixel().x(), cluster.posPixel().y());
+    clustersFail->Fill(cluster.posPixel()[0], cluster.posPixel()[1]);
   }
 }
 

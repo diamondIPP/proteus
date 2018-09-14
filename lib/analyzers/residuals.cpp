@@ -66,22 +66,22 @@ Analyzers::detail::SensorResidualHists::SensorResidualHists(
 void Analyzers::detail::SensorResidualHists::fill(
     const Storage::TrackState& state, const Storage::Cluster& cluster)
 {
-  XYVector res = cluster.posLocal() - state.offset();
+  Vector2 res = cluster.posLocal() - state.offset();
   SymMatrix2 cov = cluster.covLocal() + state.covOffset();
 
-  resU->Fill(res.x());
-  resV->Fill(res.y());
-  resDist->Fill(res.r());
+  resU->Fill(res[0]);
+  resV->Fill(res[1]);
+  resDist->Fill(std::hypot(res[0], res[1]));
   resD2->Fill(mahalanobisSquared(cov, res));
-  resUV->Fill(res.x(), res.y());
-  trackUResU->Fill(state.offset().x(), res.x());
-  trackUResV->Fill(state.offset().x(), res.y());
-  trackVResU->Fill(state.offset().y(), res.x());
-  trackVResV->Fill(state.offset().y(), res.y());
-  slopeUResU->Fill(state.slope().x(), res.x());
-  slopeUResV->Fill(state.slope().x(), res.y());
-  slopeVResU->Fill(state.slope().y(), res.x());
-  slopeVResV->Fill(state.slope().y(), res.y());
+  resUV->Fill(res[0], res[1]);
+  trackUResU->Fill(state.offset()[0], res[0]);
+  trackUResV->Fill(state.offset()[0], res[1]);
+  trackVResU->Fill(state.offset()[1], res[0]);
+  trackVResV->Fill(state.offset()[1], res[1]);
+  slopeUResU->Fill(state.slope()[0], res[0]);
+  slopeUResV->Fill(state.slope()[0], res[1]);
+  slopeVResU->Fill(state.slope()[1], res[0]);
+  slopeVResV->Fill(state.slope()[1], res[1]);
 }
 
 Analyzers::Residuals::Residuals(TDirectory* dir,
