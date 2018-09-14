@@ -11,12 +11,8 @@
 #include <cassert>
 #include <utility>
 
-#include <Math/Point2D.h>
-#include <Math/Point3D.h>
 #include <Math/SMatrix.h>
 #include <Math/SVector.h>
-#include <Math/Vector2D.h>
-#include <Math/Vector3D.h>
 
 // Use to number and identify things, e.g. hits, sensors
 typedef unsigned int Index;
@@ -24,12 +20,6 @@ constexpr Index kInvalidIndex = static_cast<Index>(-1);
 
 // Digital matrix position defined by column and row index
 typedef std::pair<Index, Index> ColumnRow;
-
-// commonly used geometry types
-typedef ROOT::Math::XYPoint XYPoint;
-typedef ROOT::Math::XYZPoint XYZPoint;
-typedef ROOT::Math::XYVector XYVector;
-typedef ROOT::Math::XYZVector XYZVector;
 
 // commonly used vector and matrix types
 typedef ROOT::Math::SMatrix<double, 2, 2> Matrix2;
@@ -70,14 +60,6 @@ inline double mahalanobisSquared(
   return ROOT::Math::Similarity(weight, x);
 }
 
-template <typename T>
-inline double mahalanobisSquared(
-    const ROOT::Math::SMatrix<T, 2, 2, ROOT::Math::MatRepSym<T, 2>>& cov,
-    const XYVector& x)
-{
-  return mahalanobisSquared(cov, ROOT::Math::SVector<T, 2>(x.x(), x.y()));
-}
-
 /** Mahalanobis distance / norm of a vector. */
 template <typename T, unsigned int kD1>
 inline double mahalanobis(
@@ -85,14 +67,6 @@ inline double mahalanobis(
     const ROOT::Math::SVector<T, kD1>& x)
 {
   return std::sqrt(mahalanobisSquared(cov, x));
-}
-
-template <typename T>
-inline double mahalanobis(
-    const ROOT::Math::SMatrix<T, 2, 2, ROOT::Math::MatRepSym<T, 2>>& cov,
-    const XYVector& x)
-{
-  return mahalanobis(cov, ROOT::Math::SVector<T, 2>(x.x(), x.y()));
 }
 
 #endif // PT_DEFINITIONS_H
