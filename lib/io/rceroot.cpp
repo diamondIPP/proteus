@@ -303,13 +303,13 @@ bool Io::RceRootReader::read(Storage::Event& event)
         FAIL("could not read 'Clusters' entry ", ievent);
 
       for (Int_t icluster = 0; icluster < numClusters; ++icluster) {
+        Vector2 pos(clusterCol[icluster], clusterRow[icluster]);
         SymMatrix2 cov;
         cov(0, 0) = clusterVarCol[icluster];
         cov(1, 1) = clusterVarRow[icluster];
         cov(0, 1) = clusterCovColRow[icluster];
         Storage::Cluster& cluster = sensorEvent.addCluster();
-        cluster.setPixel(XYPoint(clusterCol[icluster], clusterRow[icluster]),
-                         cov);
+        cluster.setPixel(pos, cov);
         cluster.setTime(clusterTiming[icluster]);
         cluster.setValue(clusterValue[icluster]);
         // Fix cluster/track relationship if possible
@@ -445,10 +445,10 @@ void Io::RceRootWriter::append(const Storage::Event& event)
       trackChi2[itrack] = track.chi2();
       trackDof[itrack] = track.degreesOfFreedom();
       const Storage::TrackState& state = track.globalState();
-      trackX[itrack] = state.offset().x();
-      trackY[itrack] = state.offset().y();
-      trackSlopeX[itrack] = state.slope().x();
-      trackSlopeY[itrack] = state.slope().y();
+      trackX[itrack] = state.offset()[0];
+      trackY[itrack] = state.offset()[1];
+      trackSlopeX[itrack] = state.slope()[0];
+      trackSlopeY[itrack] = state.slope()[1];
       std::copy(state.cov().begin(), state.cov().end(), trackCov[itrack]);
     }
     m_tracks->Fill();
@@ -482,8 +482,8 @@ void Io::RceRootWriter::append(const Storage::Event& event)
       numClusters = sensorEvent.numClusters();
       for (Index iclu = 0; iclu < sensorEvent.numClusters(); ++iclu) {
         const Storage::Cluster& cluster = sensorEvent.getCluster(iclu);
-        clusterCol[iclu] = cluster.posPixel().x();
-        clusterRow[iclu] = cluster.posPixel().y();
+        clusterCol[iclu] = cluster.posPixel()[0];
+        clusterRow[iclu] = cluster.posPixel()[1];
         clusterVarCol[iclu] = cluster.covPixel()(0, 0);
         clusterVarRow[iclu] = cluster.covPixel()(1, 1);
         clusterCovColRow[iclu] = cluster.covPixel()(0, 1);
@@ -501,10 +501,10 @@ void Io::RceRootWriter::append(const Storage::Event& event)
         if (kMaxTracks < static_cast<Index>(numIntercepts + 1))
           FAIL("intercepts exceed MAX_TRACKS");
         const Storage::TrackState& local = s.second;
-        interceptU[numIntercepts] = local.offset().x();
-        interceptV[numIntercepts] = local.offset().y();
-        interceptSlopeU[numIntercepts] = local.slope().x();
-        interceptSlopeV[numIntercepts] = local.slope().y();
+        interceptU[numIntercepts] = local.offset()[0];
+        interceptV[numIntercepts] = local.offset()[1];
+        interceptSlopeU[numIntercepts] = local.slope()[0];
+        interceptSlopeV[numIntercepts] = local.slope()[1];
         std::copy(local.cov().begin(), local.cov().end(),
                   interceptCov[numIntercepts]);
         interceptTrack[numIntercepts] = s.first;
