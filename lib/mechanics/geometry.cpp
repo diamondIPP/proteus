@@ -111,7 +111,7 @@ Mechanics::Plane Mechanics::Plane::correctedGlobal(const Vector6& delta) const
 {
   Plane corrected;
   corrected.rotation = rotation * makeRotation321(delta[5], delta[4], delta[3]);
-  corrected.offset = offset + Vector3(delta[0], delta[1], delta[2]);
+  corrected.offset = offset + delta.Sub<Vector3>(0);
 
   DEBUG("corrected rotation:");
   DEBUG("  dot(u,v): ", Dot(corrected.unitU(), corrected.unitV()));
@@ -124,7 +124,7 @@ Mechanics::Plane Mechanics::Plane::correctedLocal(const Vector6& delta) const
 {
   Plane corrected;
   corrected.rotation = rotation * makeRotation321(delta[5], delta[4], delta[3]);
-  corrected.offset = offset + rotation * Vector3(delta[0], delta[1], delta[2]);
+  corrected.offset = offset + rotation * delta.Sub<Vector3>(0);
 
   DEBUG("corrected rotation:");
   DEBUG("  dot(u,v): ", Dot(corrected.unitU(), corrected.unitV()));
@@ -151,19 +151,9 @@ Vector3 Mechanics::Plane::toLocal(const Vector3& xyz) const
   return Transpose(rotation) * (xyz - offset);
 }
 
-Vector3 Mechanics::Plane::toLocal(const XYZPoint& xyz) const
-{
-  return Transpose(rotation) * (Vector3(xyz.x(), xyz.y(), xyz.z()) - offset);
-}
-
 Vector3 Mechanics::Plane::toGlobal(const Vector2& uv) const
 {
   return offset + rotation.Sub<Matrix32>(0, 0) * uv;
-}
-
-Vector3 Mechanics::Plane::toGlobal(const XYPoint& uv) const
-{
-  return offset + rotation.Sub<Matrix32>(0, 0) * Vector2(uv.x(), uv.y());
 }
 
 Vector3 Mechanics::Plane::toGlobal(const Vector3& uvw) const
