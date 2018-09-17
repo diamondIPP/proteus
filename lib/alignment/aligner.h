@@ -3,16 +3,17 @@
 
 #include "loop/analyzer.h"
 #include "mechanics/geometry.h"
-#include "utils/definitions.h"
 
 namespace Alignment {
 
+/** Interface for alignment implementations.
+ *
+ * This extends the `Loop::Analyzer` interface with a single method that
+ * must provide a new updated geometry object. Any alignment implementation
+ * should implement this interface so they can be easily interchanged.
+ */
 class Aligner : public Loop::Analyzer {
 public:
-  virtual std::string name() const = 0;
-  virtual void execute(const Storage::Event& event) = 0;
-  virtual void finalize() = 0;
-
   virtual Mechanics::Geometry updatedGeometry() const = 0;
 };
 

@@ -42,6 +42,7 @@ typedef ROOT::Math::Transform3D Transform3D;
 // commonly used vector and matrix types
 typedef ROOT::Math::SMatrix<double, 2, 2> Matrix2;
 typedef ROOT::Math::SMatrix<double, 2, 3> Matrix23;
+typedef ROOT::Math::SMatrix<double, 2, 6> Matrix26;
 typedef ROOT::Math::SMatrix<double, 3, 3> Matrix3;
 typedef ROOT::Math::SMatrix<double, 4, 4> Matrix4;
 typedef ROOT::Math::SMatrix<double, 3, 2> Matrix32;

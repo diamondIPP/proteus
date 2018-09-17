@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "loop/analyzer.h"
+#include "utils/definitions.h"
 
 class TDirectory;
 class TH1D;
@@ -35,8 +36,10 @@ public:
   std::string name() const;
   void execute(const Storage::Event& event);
 
-  const TH1D* histSlopeX() const { return m_slopeX; }
-  const TH1D* histSlopeY() const { return m_slopeY; }
+  /** The beam slope (mean track slope) in global coordinates. */
+  Vector2 beamSlope() const;
+  /** The beam divergence (track slope standard dev) in global coordinates. */
+  Vector2 beamDivergence() const;
 
 private:
   TH1D* m_nTracks;

@@ -16,13 +16,13 @@
 
 PT_SETUP_LOCAL_LOGGER(NoiseScan)
 
-NoiseScan::NoiseScan(TDirectory* dir,
-                     const Mechanics::Sensor& sensor,
-                     const double bandwidth,
-                     const double sigmaMax,
-                     const double rateMax,
-                     const Area& regionOfInterest,
-                     const int binsOccupancy)
+Analyzers::NoiseScan::NoiseScan(TDirectory* dir,
+                                const Mechanics::Sensor& sensor,
+                                const double bandwidth,
+                                const double sigmaMax,
+                                const double rateMax,
+                                const Area& regionOfInterest,
+                                const int binsOccupancy)
     : m_sensorId(sensor.id())
     , m_sigmaMax(sigmaMax)
     , m_rateMax(rateMax)
@@ -65,12 +65,12 @@ NoiseScan::NoiseScan(TDirectory* dir,
   m_mask = makeH2(sub, "mask", axCol, axRow);
 }
 
-std::string NoiseScan::name() const
+std::string Analyzers::NoiseScan::name() const
 {
   return "NoiseScan(sensorId=" + std::to_string(m_sensorId) + ')';
 }
 
-void NoiseScan::execute(const Storage::Event& event)
+void Analyzers::NoiseScan::execute(const Storage::Event& event)
 {
   const Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
 
@@ -145,7 +145,7 @@ static void estimateDensity(const TH2D* values,
   density->SetEntries(values->GetEntries());
 }
 
-void NoiseScan::finalize()
+void Analyzers::NoiseScan::finalize()
 {
   estimateDensity(m_occupancy, m_bandwidthCol, m_bandwidthRow, m_density);
   // calculate local signifance, i.e. (hits - density) / sqrt(density)
@@ -189,7 +189,7 @@ void NoiseScan::finalize()
   INFO("  noisy pixels: ", m_mask->GetEntries());
 }
 
-Mechanics::PixelMasks NoiseScan::constructMasks() const
+Mechanics::PixelMasks Analyzers::NoiseScan::constructMasks() const
 {
   Mechanics::PixelMasks newMask;
 

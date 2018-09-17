@@ -21,38 +21,95 @@ namespace Mechanics {
  * from local coordinates q=(u,v,w) to global coordinates r=(x,y,z) follows
  * as
  *
- *     r = r_0 + Q * q ,
+ *     r = r0 + Q * q ,
  *
- * with r_0 being the plane offset. Representing the plane orientation with
+ * and the reverse transformation as
+ *
+ *     q = R * (r - r0) = Q^T * (r - r0)  ,
+ *
+ * with r0 being the plane offset. Representing the plane orientation with
  * a rotation matrix allows for easy, direct calculations, but is not a
  * minimal set of parameters. The minimal set of six parameters contains only
  * three offsets and three rotation angles that define the rotation matrix.
  * Multiple conventions exists to define the three rotations. Here, the
  * 3-2-1 convention is used to build the rotation matrix as a product of
+ * three elementary right-handed rotations
+ *
+ *     Q = R1(alpha) * R2(beta) * R3(gamma)  ,
+ *
+ * i.e. first a rotation by gamma around the local third axis
+ * (normal axis), then a rotation by beta around the updated second
+ * axis, followed with a rotation by alpha around the first axis.
+ *
+ * Alignment of a plane corresponds to the multiplication of an additional
+ * rotation matrix and a change of the plane offset. This can be defined
+ * either with respect to the local coordinate system
+ *
+ *     r  -> r' = r0 + Q * (dq + dQ * q) = r0' + Q' * q  ,
+ *
+ * or
+ *
+ *     q  -> q' = dR * R * (r - r0 - dr) = R' * (r - r0')  ,
+ *
+ * where the offset corrections dq0/dr0 and rotation corrections dQ/dR are
+ * equivalent descriptions of the same change and can be converted into each
+ * other as
+ *
+ *     r0 -> r0' = r0 + dr = r0 + Q * dq
+ *     Q  ->  Q' = Q  * dQ =  Q   * dR^T
+ *     R  ->  R' = dR * R  = dQ^T * Q^T  = (Q * dQ)^T = Q'^T  .
+ *
+ * The rotation correction matrix can again be expressed as composition of
  * three elementary rotations
  *
- *     Q = R_1(a1) * R_2(a2) * R_3(a3) ,
+ *     dQ = R1(dalpha) * R2(dbeta) * R3(dgamma)  ,
  *
- * i.e. first a rotation by a3 around the local third axis
- * (normal axis), then a rotation by a2 around the updated second
- * axis, followed with a rotation by a1 around the first axis.
+ * with small alignment angles (dalpha,dbeta,dgamma). Usually the alignment
+ * angles are small enough to warant a linear approximation with results
+ * in the following approximate correction matrix
+ *
+ *          |       1  -dgamma    dbeta |
+ *     dQ = |  dgamma        1  -dalpha |  ,
+ *          |  -dbeta   dalpha        1 |
+ *
+ * where the positive angles represent right-handed rotations around
+ * the current local axes. By construction the equivalent correction matrix dR
+ * in the global system can be described by the same rotation angles, but with
+ * opposite signs due to the tranpose, i.e.
+ *
+ *          |      1    dgamma   -dbeta |
+ *     dR = | -dgamma        1   dalpha | = dQ^T  .
+ *          |   dbeta  -dalpha        1 |
+ *
+ * A fixed position r in global coordinates changes its local coordinates
+ * after alignment as follows
+ *
+ *     q' = Q'^T * (r - r0')
+ *        = dQ^T * Q^T * (r - r0 - dr)
+ *        = dQ^T * Q^T * (r - r0) - dQ^T * Q^T * dr
+ *        = dQ^T q - dq  .
+ *
  */
 struct Plane {
   Matrix3 rotation; // from local to global coordinates
   Vector3 offset;   // position of the origin in global coordinates
 
   static Plane
-  fromAnglesZYX(double rotZ, double rotY, double rotX, const Vector3& offset);
+  fromAnglesZYX(double gamma, double beta, double alpha, const Vector3& offset);
   static Plane fromDirections(const Vector3& dirU,
                               const Vector3& dirV,
                               const Vector3& offset);
 
-  /** Compute geometry parameters [x0, y0, z0, a1, a2, a3]. */
-  Vector6 asParams() const;
+  /** Corrected plane from [dx, dy, dz, dalpha, dbeta, dgamma]. */
+  Plane correctedGlobal(const Vector6& delta) const;
+  /** Corrected plane from [du, dv, dw, dalpha, dbeta, dgamma]. */
+  Plane correctedLocal(const Vector6& delta) const;
 
   Vector3 unitU() const { return rotation.SubCol<Vector3>(0); }
   Vector3 unitV() const { return rotation.SubCol<Vector3>(1); }
   Vector3 unitNormal() const { return rotation.SubCol<Vector3>(2); }
+  /** Compute minimal parameters [x0, y0, z0, alpha, beta, gamma]. */
+  Vector6 asParams() const;
 
   /** Transform a global position into local coordinates. */
   Vector3 toLocal(const Vector3& xyz) const;
@@ -86,9 +143,15 @@ public:
   /** Convert geometry into a configuration object. */
   toml::Value toConfig() const;
 
-  /** Change the global offset by small values. */
+  /** Change the global offset by small values.
+   *
+   * \warning Does not update the associated covariance matrix.
+   */
   void correctGlobalOffset(Index sensorId, double dx, double dy, double dz);
-  /** Add small local corrections du, dv, dw, dRotU, dRotV, dRotW. */
+  /** Add small global corrections [dx, dy, dz, dalpha, dbeta, dgamma]. */
+  void
+  correctGlobal(Index sensorId, const Vector6& delta, const SymMatrix6& cov);
+  /** Add small local corrections [du, dv, dw, dalpha, dbeta, dgamma]. */
   void
   correctLocal(Index sensorId, const Vector6& delta, const SymMatrix6& cov);
 

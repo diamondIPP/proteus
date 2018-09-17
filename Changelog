@@ -27,6 +27,7 @@ User-visible changes
     present and the RCE ROOT writer will not create them. These
     variables were unused anywhere in the code base and their content
     was unclear.
+*   Alignment using the ``residuals`` method enforces a fixed z-position.
 
 Bugfixes
 --------
@@ -38,6 +39,11 @@ Bugfixes
     input stream are copied to the merged event and written to
     disk. The event number and timestamp off the other data streams is
     discarded.
+*   Add progress bar to ``pt-combine``.
+
+    The progress bar is shown by default and can be deactivated using the
+    ``--no-progress`` option. This is the same behaviour as for all other
+    tools.
 
 Internal changes
 ----------------
@@ -56,6 +62,11 @@ Internal changes
 *   Remove ``Analyzers::Events`` analyzer.
 *   Replace test data with simulated datasets based on Allpix² and update the
     configurations and scripts accordingly.
+*   Move alignment analyzers and tools to the library.
+*   Move ``NoiseScan`` analyzer to the library.
+*   The alignment corrections to the rotation matrix are calculated using
+    the full rotation matrix instead of a linearized matrix followed by
+    a manual orthogonalization of the combined matrix.
 
 v1.3.0 (2017-12-06)
 ===================
