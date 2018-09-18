@@ -64,7 +64,7 @@ inline double mahalanobisSquared(
   if (!weight.InvertChol())
     throw std::runtime_error(
         "Covariance inversion failed for Mahalanobis distance");
-  return ROOT::Math::Similarity(weight, x);
+  return ROOT::Math::Dot(x, weight * x);
 }
 
 /** Mahalanobis distance / norm of a vector. */
