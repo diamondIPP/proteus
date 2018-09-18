@@ -29,53 +29,26 @@ static Matrix3 orthogonalize(const Matrix3& m, size_t iterations = 2)
   return q;
 }
 
-// see also: https://en.wikipedia.org/wiki/Rotation_matrix#Basic_rotations
+// Construct Q321 = R1(alpha)*R2(beta)*R3(gamma) rotation matrix from angles.
 static Matrix3 makeRotation321(double gamma, double beta, double alpha)
 {
-  Matrix3 rot;
-  Matrix3 tmp;
-  // R1(alpha), elementary right-handed rotation around first axis
+  using std::cos;
+  using std::sin;
+
+  Matrix3 q;
   // column 0
-  rot(0, 0) = 1;
-  rot(1, 0) = 0;
-  rot(2, 0) = 0;
+  q(0, 0) = cos(beta) * cos(gamma);
+  q(1, 0) = sin(alpha) * sin(beta) * cos(gamma) + cos(alpha) * sin(gamma);
+  q(2, 0) = sin(alpha) * sin(gamma) - cos(alpha) * sin(beta) * cos(gamma);
   // column 1
-  rot(0, 1) = 0;
-  rot(1, 1) = std::cos(alpha);
-  rot(2, 1) = std::sin(alpha);
+  q(0, 1) = -cos(beta) * sin(gamma);
+  q(1, 1) = -sin(alpha) * sin(beta) * sin(gamma) + cos(alpha) * cos(gamma);
+  q(2, 1) = sin(alpha) * cos(gamma) + cos(alpha) * sin(beta) * sin(gamma);
   // column 2
-  rot(0, 2) = 0;
-  rot(1, 2) = -std::sin(alpha);
-  rot(2, 2) = std::cos(alpha);
-  // R2(beta), elementary right-handed rotation around second axis
-  // column 0
-  tmp(0, 0) = std::cos(beta);
-  tmp(1, 0) = 0;
-  tmp(2, 0) = -std::sin(beta);
-  // column 1
-  tmp(0, 1) = 0;
-  tmp(1, 1) = 1;
-  tmp(2, 1) = 0;
-  // column 2
-  tmp(0, 2) = std::sin(alpha);
-  tmp(1, 2) = 0;
-  tmp(2, 2) = std::cos(alpha);
-  rot *= tmp;
-  // R3(gamma), elementary right-handed rotation around third axis
-  // column 0
-  tmp(0, 0) = std::cos(gamma);
-  tmp(1, 0) = std::sin(gamma);
-  tmp(2, 0) = 0;
-  // column 1
-  tmp(0, 1) = -std::sin(gamma);
-  tmp(1, 1) = std::cos(gamma);
-  tmp(2, 1) = 0;
-  // column 2
-  tmp(0, 2) = 0;
-  tmp(1, 2) = 0;
-  tmp(2, 2) = 1;
-  rot *= tmp;
-  return rot;
+  q(0, 2) = sin(beta);
+  q(1, 2) = -sin(alpha) * cos(beta);
+  q(2, 2) = cos(alpha) * cos(beta);
+  return q;
 };
 
 struct Angles321 {
