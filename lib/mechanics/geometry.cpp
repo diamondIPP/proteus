@@ -11,8 +11,24 @@
 
 PT_SETUP_LOCAL_LOGGER(Geometry)
 
-// Construct R1(alpha) * R2(beta) * R3(gamma) rotation matrix.
+// compute the nearest orthogonal matrix.
 //
+// assumes the matrix already is or is close to an orthogonal matrix and uses
+// the interative algorithm outlined at
+// https://en.wikipedia.org/wiki/Orthogonal_matrix to orthogonalize it.
+static Matrix3 orthogonalize(const Matrix3& m, size_t iterations = 2)
+{
+  Matrix3 q = m;
+  for (size_t i = 0; i < iterations; ++i) {
+    Matrix3 n = Transpose(q) * q;
+    Matrix3 p = 0.5 * q * n;
+    Matrix3 qi = 2 * q + p * n - 3 * p;
+    DEBUG("orthogonal correction ", i, ":\n", q - qi);
+    q = qi;
+  }
+  return q;
+}
+
 // see also: https://en.wikipedia.org/wiki/Rotation_matrix#Basic_rotations
 static Matrix3 makeRotation321(double gamma, double beta, double alpha)
 {
@@ -103,6 +119,7 @@ Mechanics::Plane Mechanics::Plane::fromDirections(const Vector3& dirU,
   p.rotation.Place_in_col(Unit(dirU), 0, 0);
   p.rotation.Place_in_col(Unit(dirV), 0, 1);
   p.rotation.Place_in_col(Unit(Cross(dirU, dirV)), 0, 2);
+  p.rotation = orthogonalize(p.rotation);
   p.offset = offset;
   return p;
 }
@@ -111,12 +128,8 @@ Mechanics::Plane Mechanics::Plane::correctedGlobal(const Vector6& delta) const
 {
   Plane corrected;
   corrected.rotation = rotation * makeRotation321(delta[5], delta[4], delta[3]);
+  corrected.rotation = orthogonalize(corrected.rotation);
   corrected.offset = offset + delta.Sub<Vector3>(0);
-
-  DEBUG("corrected rotation:");
-  DEBUG("  dot(u,v): ", Dot(corrected.unitU(), corrected.unitV()));
-  DEBUG("  dot(u,w): ", Dot(corrected.unitU(), corrected.unitNormal()));
-  DEBUG("  dot(v,w): ", Dot(corrected.unitV(), corrected.unitNormal()));
   return corrected;
 }
 
@@ -124,12 +137,9 @@ Mechanics::Plane Mechanics::Plane::correctedLocal(const Vector6& delta) const
 {
   Plane corrected;
   corrected.rotation = rotation * makeRotation321(delta[5], delta[4], delta[3]);
+  corrected.rotation = orthogonalize(corrected.rotation);
+  // local offset is defined in the old system
   corrected.offset = offset + rotation * delta.Sub<Vector3>(0);
-
-  DEBUG("corrected rotation:");
-  DEBUG("  dot(u,v): ", Dot(corrected.unitU(), corrected.unitV()));
-  DEBUG("  dot(u,w): ", Dot(corrected.unitU(), corrected.unitNormal()));
-  DEBUG("  dot(v,w): ", Dot(corrected.unitV(), corrected.unitNormal()));
   return corrected;
 }
 
