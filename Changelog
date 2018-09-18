@@ -67,6 +67,7 @@ Internal changes
 *   The alignment corrections to the rotation matrix are calculated using
     the full rotation matrix instead of a linearized matrix followed by
     a manual orthogonalization of the combined matrix.
+*   Remove ``ROOT::GenVector`` dependency.
 
 v1.3.0 (2017-12-06)
 ===================
