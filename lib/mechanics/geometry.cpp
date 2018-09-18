@@ -1,11 +1,9 @@
 #include "geometry.h"
 
 #include <cassert>
+#include <limits>
 #include <stdexcept>
 #include <string>
-
-#include <Math/GenVector/Rotation3D.h>
-#include <Math/GenVector/RotationZYX.h>
 
 #include "utils/logger.h"
 
@@ -29,7 +27,29 @@ static Matrix3 orthogonalize(const Matrix3& m, size_t iterations = 2)
   return q;
 }
 
-// Construct Q321 = R1(alpha)*R2(beta)*R3(gamma) rotation matrix from angles.
+// Most of the code uses the rotation matrix for all geometric computations.
+// For cases where the minimal set of three angles is needed the
+// 3-2-1 convention is used to compute the rotation matrix.
+//
+//            | Q00  Q01  Q02 |
+//     Q321 = | Q10  Q11  Q12 | = R1(𝛼) * R2(𝛽) * R3(𝛾)
+//            | Q20  Q21  Q22 |
+//
+// The three angles 𝛾, 𝛽, 𝛼 are right-handed angles around the third, second,
+// and first current axis. The resulting matrix can be written as:
+//
+//     Q00 =          cos(𝛽) cos(𝛾)
+//     Q10 =  sin(𝛼) sin(𝛽) cos(𝛾) + cos(𝛼)        sin(𝛾)
+//     Q20 =  sin(𝛼)        sin(𝛾) - cos(𝛼) sin(𝛽) cos(𝛾)
+//     Q01 =         -cos(𝛽) sin(𝛾)
+//     Q11 = -sin(𝛼) sin(𝛽) sin(𝛾) + cos(𝛼)        cos(𝛾)
+//     Q21 =  sin(𝛼)        cos(𝛾) + cos(𝛼) sin(𝛽) sin(𝛾)
+//     Q02 =  sin(𝛽)
+//     Q12 = -sin(𝛼) cos(𝛽)
+//     Q22 =  cos(𝛼) cos(𝛽)
+//
+
+// Construct R321 = R1(alpha)*R2(beta)*R3(gamma) rotation matrix from angles.
 static Matrix3 makeRotation321(double gamma, double beta, double alpha)
 {
   using std::cos;
@@ -58,18 +78,45 @@ struct Angles321 {
 };
 
 // Extract rotation angles in 321 convention from rotation matrix.
-static Angles321 extractAngles321(const Matrix3& rotation)
+static Angles321 extractAngles321(const Matrix3& q)
 {
-  // TODO remove ROOT dependency and implement matrix to angles directly. See:
-  // https://project-mathlibs.web.cern.ch/project-mathlibs/documents/eulerAngleComputation.pdf
-  ROOT::Math::Rotation3D rot;
-  rot.SetRotationMatrix(rotation);
-  ROOT::Math::RotationZYX zyx(rot);
-
+  // WARNING
+  // this is not a stable algorithm and will break down for the case of
+  // 𝛽 = ±π, cos(𝛽) = 0, sin(𝛽) = ±1. It should be replaced by a better
+  // algorithm. in this code base, the rotation matrix is used and stored
+  // and the angles are only used for reporting. we should be fine.
   Angles321 angles;
-  angles.alpha = zyx.Psi();
-  angles.beta = zyx.Theta();
-  angles.gamma = zyx.Phi();
+  angles.alpha = std::atan2(-q(1, 2), q(2, 2));
+  angles.beta = std::asin(q(0, 2));
+  angles.gamma = std::atan2(-q(0, 1), q(0, 0));
+
+  // cross-check that we get the same matrix back
+  Matrix3 qFromAngles =
+      makeRotation321(angles.gamma, angles.beta, angles.alpha);
+  Matrix3 test = ROOT::Math::SMatrixIdentity();
+  test -= Transpose(qFromAngles) * q;
+  // compute the Frobenius norm of the test matrix
+  double norm = 0.0;
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 3; ++j) {
+      norm += test(i, j) * test(i, j);
+    }
+  }
+  norm = std::sqrt(norm);
+  // norm should vanish for correct angle extraction
+  // single epsilon results in too many false-positives.
+  if (4 * std::numeric_limits<double>::epsilon() < norm) {
+    constexpr double toDeg = 180.0 / M_PI;
+    ERROR("detected inconsistent matrix to angles conversion");
+    INFO("angles:");
+    INFO("  alpha: ", angles.alpha * toDeg, " degree");
+    INFO("  beta: ", angles.beta * toDeg, " degree");
+    INFO("  gamma: ", angles.gamma * toDeg, " degree");
+    INFO("rotation matrix:\n", q);
+    INFO("rotation matrix from angles:\n", qFromAngles);
+    INFO("forward-backward distance to identity: ", norm);
+  }
+
   return angles;
 }
 
