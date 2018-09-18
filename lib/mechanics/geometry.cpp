@@ -120,6 +120,38 @@ static Angles321 extractAngles321(const Matrix3& q)
   return angles;
 }
 
+// Jacobian from correction angles to global
+//
+// Maps small changes [dalpha, dbeta, dgamma] to resulting changes in
+// global angles [alpha, beta, gamma]. This is computed by assuming the
+// input rotation matrix to the angles extraction to be
+//
+//     Q' = Q * dQ
+//
+// where dQ is the small angle rotation matrix using the correction angles.
+// Using the angles extraction defined above the global angles are expressed
+// as a function of the corrections and the Jacobian can be calculated.
+static Matrix3 jacobianCorrectionsToAngles(const Matrix3 q)
+{
+  Matrix3 jac;
+  // d alpha / d [dalpha, dbeta, dgamma]
+  double f0 = q(1, 2) * q(1, 2) + q(2, 2) * q(2, 2);
+  jac(0, 0) = (q(1, 1) * q(2, 2) - q(1, 2) * q(2, 1)) / f0;
+  jac(1, 0) = (q(1, 2) * q(2, 0) - q(1, 0) * q(2, 2)) / f0;
+  jac(2, 0) = 0;
+  // d beta / d [dalpha, dbeta, dgamma]
+  double f1 = std::sqrt(1.0 - q(0, 2) * q(0, 2));
+  jac(0, 1) = -q(0, 1) / f1;
+  jac(1, 1) = q(0, 0) / f1;
+  jac(2, 1) = 0;
+  // d gamma / d [dalpha, dbeta, dgamma];
+  double f2 = q(0, 0) * q(0, 0) + q(0, 1) * q(0, 1);
+  jac(0, 2) = -q(0, 0) * q(0, 2) / f2;
+  jac(1, 2) = -q(0, 1) * q(0, 2) / f2;
+  jac(2, 2) = 1;
+  return jac;
+}
+
 Mechanics::Plane Mechanics::Plane::fromAnglesZYX(double gamma,
                                                  double beta,
                                                  double alpha,
@@ -327,26 +359,31 @@ void Mechanics::Geometry::correctGlobal(Index sensorId,
                                         const Vector6& delta,
                                         const SymMatrix6& cov)
 {
-  auto& plane = m_planes.at(sensorId);
-  // TODO jacobian from dalpha,dbeta,dgamma to alpha,beta,gamma
-  plane = plane.correctedGlobal(delta);
-  m_covs[sensorId] = cov;
+  const auto& plane = m_planes.at(sensorId);
+
+  // Jacobian from global corrections to geometry parameters
+  Matrix6 jac = ROOT::Math::SMatrixIdentity();
+  // angle corrections to global angles;
+  jac.Place_at(jacobianCorrectionsToAngles(plane.rotation), 3, 3);
+
+  m_planes[sensorId] = plane.correctedLocal(delta);
+  m_covs[sensorId] = Similarity(jac, cov);
 }
 
 void Mechanics::Geometry::correctLocal(Index sensorId,
                                        const Vector6& delta,
                                        const SymMatrix6& cov)
 {
-  auto& plane = m_planes.at(sensorId);
-  // Jacobian from local corrections to geometry parameters
-  // TODO 2016-11-28 msmk: jacobian from dalpha,dbeta,dgamma to alpha,beta,gamma
-  Matrix6 jac;
-  jac.Place_at(plane.rotation, 0, 0);
-  jac(3, 3) = 1;
-  jac(4, 4) = 1;
-  jac(5, 5) = 1;
+  const auto& plane = m_planes.at(sensorId);
 
-  plane = plane.correctedLocal(delta);
+  // Jacobian from local corrections to geometry parameters
+  Matrix6 jac = ROOT::Math::SMatrixIdentity();
+  // local offset corrections to global offset
+  jac.Place_at(plane.rotation, 0, 0);
+  // angle corrections to global angles;
+  jac.Place_at(jacobianCorrectionsToAngles(plane.rotation), 3, 3);
+
+  m_planes[sensorId] = plane.correctedLocal(delta);
   m_covs[sensorId] = Similarity(jac, cov);
 }
 
