@@ -12,15 +12,15 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 
-find_package(Eigen3 REQUIRED)
-find_package(ROOT REQUIRED)
+find_package(Eigen3 3.2.9 REQUIRED)
+find_package(ROOT 6.12 REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXX_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 if(PROTEUS_USE_EUDAQ)
   find_package(EUDAQ REQUIRED)
 endif()
 # after setting CMAKE_CXX_FLAGS to be able to pick up existing -std=... flags
-include(RequireCXX11)
+include(RequireCXX14)
 
 # Set the source files to clang-format
 file(GLOB_RECURSE

@@ -8,21 +8,24 @@ independent package.
 Dependencies
 ------------
 
-Proteus requires only a C++11 compatible compiler and [ROOT][root] for its core
-functionality. Optional components might require additional software. A full
-list of dependencies and the minimum version required is listed below.
+Proteus requires a C++14 compatible compiler, [CMake][cmake], [Eigen][eigen],
+and [ROOT][root] for its core functionality. Optional components might require
+additional software. A full list of dependencies and their minimum version
+required is listed below.
 
 *   A C++11 compiler, gcc 4.9 or clang 3.9
-*   [ROOT][root] 5.34/36
+*   [CMake][cmake] 2.8.12
+*   [Eigen][eigen] 3.2.9
+*   [ROOT][root] 6.12
 *   [EUDAQ][eudaq] 1.7 (optional, for the EUDAQ reader)
 *   Doxygen 1.6 (optional, for the documentation generation)
 *   Sphinx (optional, for the documentation generation)
 *   Breathe (optional, for the documentation generation)
 
-On CERN lxplus machines you can setup an LCG release to provide a recent
-compiler and a [ROOT][root] version via the following command
+On CERN lxplus machines you can setup a LCG release to provide a recent
+compiler and a compatible [ROOT][root] version via the following command
 
-    source /cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-slc6-gcc49-opt/setup.sh
+    source /cvmfs/sft.cern.ch/lcg/views/LCG_92/x86_64-slc6-gcc7-opt/setup.sh
 
 Building
 --------
@@ -116,6 +119,7 @@ distributed under the simplified BSD License.
 
 [ccby4]: https://creativecommons.org/licenses/by/4.0/
 [cmake]: http://www.cmake.org
+[eigen]: http://eigen.tuxfamily.org
 [eudaq]: http://eudaq.github.io
 [judith]: https://github.com/gmcgoldr/judith
 [paper2014]: http://dx.doi.org/10.1016/j.nima.2014.05.033
