@@ -81,6 +81,9 @@ Bugfixes
     tools.
 *   Ensure the histogram files only contain a single version of each histogram
     and existing objects are correctly overwritten.
+*   Fix incorrect slope-to-slope Jacobian calculation.
+
+    It is unclear if and how this affected the tracking results.
 
 Internal changes
 ----------------
