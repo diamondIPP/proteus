@@ -112,7 +112,7 @@ void Tracking::TrackFinder::searchSensor(
     // estimated track on the source plane using last cluster and beam
     const Mechanics::Plane& source = m_geo.getPlane(lastSensor);
     Storage::TrackState onSource(lastCluster.posLocal(),
-                                 Transpose(source.rotation) *
+                                 source.rotationToLocal() *
                                      m_geo.beamDirection());
     onSource.setCovOffset(lastCluster.covLocal());
 
