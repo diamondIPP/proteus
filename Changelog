@@ -11,6 +11,11 @@ User-visible changes
 --------------------
 
 *   Increased compression in the output root files. The RCE files will be a factor of 3 smaller than before. Added compression to the match, track, recon and hist files as well.
+*   Use the Eigen library for linear algebra and geometry calculations.
+
+    This replaces the internal usage of ``ROOT::SMatrix`` and
+    ``ROOT::GenVector`` and adds the Eigen library as a new external
+    dependency.
 *   Remove ``event/...`` histograms that showed the
     ``Trigger{Offset,Phase}`` variables.
 *   Add occupancy histograms in the global coordinate system. They can be
