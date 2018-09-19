@@ -98,10 +98,6 @@ Processors::BinaryClusterizer::BinaryClusterizer(
   DEBUG("binary clustering for ", sensor.name());
 }
 
-static const Vector3 HIT_COV_ENTRIES(1. / 12., 0., 1. / 12.);
-// set upper triangular part of the covariance matrix
-static const SymMatrix2 HIT_COV(HIT_COV_ENTRIES, false);
-
 void Processors::BinaryClusterizer::estimateProperties(
     Storage::Cluster& cluster) const
 {
@@ -117,13 +113,9 @@ void Processors::BinaryClusterizer::estimateProperties(
   pos /= cluster.size();
 
   // 1/12 factor from pixel size to stddev of equivalent gaussian
-  SymMatrix2 cov;
-  cov(0, 0) = 1.0 / (12.0f * cluster.sizeCol());
-  cov(0, 1) = 0;
-  cov(1, 0) = 0;
-  cov(1, 1) = 1.0 / (12.0f * cluster.sizeRow());
-
-  cluster.setPixel(pos, cov);
+  Vector2 var(1.0 / (12.0f * cluster.sizeCol()),
+              1.0 / (12.0f * cluster.sizeRow()));
+  cluster.setPixel(pos, var.asDiagonal());
   cluster.setTime(time);
   cluster.setValue(value);
 }
@@ -151,13 +143,9 @@ void Processors::ValueWeightedClusterizer::estimateProperties(
 
   // TODO 2016-11-14 msmk: consider also the value weighting
   // 1/12 factor from pixel size to stddev of equivalent gaussian
-  SymMatrix2 cov;
-  cov(0, 0) = 1.0 / (12.0f * cluster.sizeCol());
-  cov(0, 1) = 0;
-  cov(1, 0) = 0;
-  cov(1, 1) = 1.0 / (12.0f * cluster.sizeRow());
-
-  cluster.setPixel(pos, cov);
+  Vector2 var(1.0 / (12.0f * cluster.sizeCol()),
+              1.0 / (12.0f * cluster.sizeRow()));
+  cluster.setPixel(pos, var.asDiagonal());
   cluster.setTime(time);
   cluster.setValue(value);
 }
@@ -185,13 +173,8 @@ void Processors::FastestHitClusterizer::estimateProperties(
   }
 
   // 1/12 factor from pixel size to stddev of equivalent gaussian
-  SymMatrix2 cov;
-  cov(0, 0) = 1.0 / 12.0;
-  cov(0, 1) = 0;
-  cov(1, 0) = 0;
-  cov(1, 1) = 1.0 / 12.0;
-
-  cluster.setPixel(pos, cov);
+  Vector2 var(1.0 / 12.0, 1.0 / 12.0);
+  cluster.setPixel(pos, var.asDiagonal());
   cluster.setTime(time);
   cluster.setValue(value);
 }
