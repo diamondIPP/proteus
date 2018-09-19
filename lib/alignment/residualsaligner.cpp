@@ -100,31 +100,27 @@ Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
     constexpr int binOffset = -1;
 
     auto resDU = Utils::getRestrictedMean(hists.corrU, binOffset);
-    double du = resDU.first;
-    double varDU = resDU.second;
-
     auto resDV = Utils::getRestrictedMean(hists.corrV, binOffset);
-    double dv = resDV.first;
-    double varDV = resDV.second;
-
     auto resDGamma = Utils::getRestrictedMean(hists.corrGamma, binOffset);
-    double dgamma = resDGamma.first;
-    double varDGamma = resDGamma.second;
+    auto du = resDU.first;
+    auto varDU = resDU.second;
+    auto dv = resDV.first;
+    auto varDV = resDV.second;
+    auto dgamma = resDGamma.first;
+    auto varDGamma = resDGamma.second;
 
     // enforce vanishing dz
-    Vector3 offsetGlobal = plane.rotation * Vector3(du, dv, 0.0);
+    Vector3 offsetGlobal = plane.rotationToGlobal() * Vector3(du, dv, 0.0);
     offsetGlobal[2] = 0.0;
-    Vector3 offsetLocal = Transpose(plane.rotation) * offsetGlobal;
+    Vector3 offsetLocal = plane.rotationToLocal() * offsetGlobal;
 
     // combined local corrections
-    Vector6 delta;
+    Vector6 delta = Vector6::Zero();
     delta[0] = m_damping * offsetLocal[0];
     delta[1] = m_damping * offsetLocal[1];
     delta[2] = m_damping * offsetLocal[2];
-    delta[3] = 0.0;
-    delta[4] = 0.0;
     delta[5] = m_damping * dgamma;
-    SymMatrix6 cov;
+    SymMatrix6 cov = SymMatrix6::Zero();
     cov(0, 0) = varDU;
     cov(1, 1) = varDV;
     cov(5, 5) = varDGamma;
@@ -136,7 +132,8 @@ Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
     INFO("  du: ", delta[0], " +- ", std::sqrt(varDU));
     INFO("  dv: ", delta[1], " +- ", std::sqrt(varDV));
     INFO("  dw: ", delta[2], " (dz=0 enforced)");
-    INFO("  dgamma: ", delta[5] * toDeg, " +- ", std::sqrt(varDGamma) * toDeg, " degree");
+    INFO("  dgamma: ", delta[5] * toDeg, " +- ", std::sqrt(varDGamma) * toDeg,
+         " degree");
   }
   return geo;
 }
