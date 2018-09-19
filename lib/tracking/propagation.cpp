@@ -43,6 +43,22 @@ Matrix2 Tracking::jacobianSlopeSlope(const Vector3& direction,
   return jac;
 }
 
+Matrix4 Tracking::jacobianState(const Vector3& direction,
+                                const Matrix3& rotation)
+{
+  // WARNING
+  // current implementation assumes vanishing slopes and needs to be amended.
+  // TODO 2017-10-10 msmk add full jacobian for all parameters
+
+  Matrix4 jac;
+  // clang-format off
+  jac << rotation.topLeftCorner<2,2>(), Matrix2::Zero(),
+         Matrix2::Zero(),               jacobianSlopeSlope(direction, rotation);
+  // clang-format on
+
+  return jac;
+}
+
 Storage::TrackState Tracking::propagate_to(const Storage::TrackState& state,
                                            const Mechanics::Plane& source,
                                            const Mechanics::Plane& target)
