@@ -42,11 +42,10 @@ Analyzers::Correlations::Correlations(TDirectory* dir,
 Analyzers::Correlations::Correlations(TDirectory* dir,
                                       const Mechanics::Device& device,
                                       const int neighbors)
-    : Correlations(
-          dir,
-          device,
-          Mechanics::sortedAlongBeam(device.geometry(), device.sensorIds()),
-          neighbors)
+    : Correlations(dir,
+                   device,
+                   sortedAlongBeam(device.geometry(), device.sensorIds()),
+                   neighbors)
 {
 }
 

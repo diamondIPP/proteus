@@ -92,6 +92,7 @@ void Analyzers::SensorClusters::execute(const Storage::SensorEvent& sensorEvent)
 {
   auto fill = [](const Storage::Cluster& cluster, AreaHists& hists) {
     auto pos = cluster.posPixel();
+    auto stdev = extractStdev(cluster.covLocal());
     hists.pos->Fill(pos[0], pos[1]);
     hists.time->Fill(cluster.time());
     hists.value->Fill(cluster.value());
@@ -100,8 +101,8 @@ void Analyzers::SensorClusters::execute(const Storage::SensorEvent& sensorEvent)
     hists.sizeSizeRow->Fill(cluster.size(), cluster.sizeRow());
     hists.sizeColSizeRow->Fill(cluster.sizeCol(), cluster.sizeRow());
     hists.sizeValue->Fill(cluster.size(), cluster.value());
-    hists.uncertaintyU->Fill(std::sqrt(cluster.covLocal()(0, 0)));
-    hists.uncertaintyV->Fill(std::sqrt(cluster.covLocal()(1, 1)));
+    hists.uncertaintyU->Fill(stdev[0]);
+    hists.uncertaintyV->Fill(stdev[1]);
     for (const Storage::Hit& hit : cluster.hits()) {
       hists.hitPos->Fill(hit.col(), hit.row());
       hists.hitTimedelta->Fill(hit.time() - cluster.time());
@@ -132,7 +133,7 @@ void Analyzers::SensorClusters::finalize()
   for (int ix = 1; ix <= m_whole.pos->GetNbinsX(); ++ix) {
     for (int iy = 1; iy <= m_whole.pos->GetNbinsY(); ++iy) {
       auto count = m_whole.pos->GetBinContent(ix, iy);
-      if (count != 0)
+      if (0 < count)
         m_rate->Fill(count / numEvents);
     }
   }
