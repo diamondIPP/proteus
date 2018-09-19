@@ -90,12 +90,12 @@ namespace Mechanics {
  *        = dQ^T q - dq  .
  *
  */
-struct Plane {
-  Matrix3 rotation; // from local to global coordinates
-  Vector3 offset;   // position of the origin in global coordinates
-
+class Plane {
+public:
+  /** Construct a plane from 3-2-1 rotation angles. */
   static Plane
-  fromAnglesZYX(double gamma, double beta, double alpha, const Vector3& offset);
+  fromAngles321(double gamma, double beta, double alpha, const Vector3& offset);
+  /** Construct a plane from two direction vectors for the local axes. */
   static Plane fromDirections(const Vector3& dirU,
                               const Vector3& dirV,
                               const Vector3& offset);
@@ -105,18 +105,35 @@ struct Plane {
   /** Corrected plane from [du, dv, dw, dalpha, dbeta, dgamma]. */
   Plane correctedLocal(const Vector6& delta) const;
 
-  Vector3 unitU() const { return rotation.SubCol<Vector3>(0); }
-  Vector3 unitV() const { return rotation.SubCol<Vector3>(1); }
-  Vector3 unitNormal() const { return rotation.SubCol<Vector3>(2); }
+  auto rotationToGlobal() const { return m_rotation; }
+  auto rotationToLocal() const { return m_rotation.transpose(); }
+  auto unitU() const { return m_rotation.col(0); }
+  auto unitV() const { return m_rotation.col(1); }
+  auto unitNormal() const { return m_rotation.col(2); }
+  auto offset() const { return m_offset; }
   /** Compute minimal parameters [x0, y0, z0, alpha, beta, gamma]. */
   Vector6 asParams() const;
 
+  /** Transform a local position into global coordinates.
+   *
+   * For local positions with less than 3 coordinates the missing components
+   * are assumed to be zero.
+   */
+  template <typename Position>
+  auto toGlobal(const Eigen::MatrixBase<Position>& uvw) const
+  {
+    return m_offset + m_rotation.leftCols<Position::RowsAtCompileTime>() * uvw;
+  }
   /** Transform a global position into local coordinates. */
-  Vector3 toLocal(const Vector3& xyz) const;
-  /** Transform a local position on the plane into global coordinates. */
-  Vector3 toGlobal(const Vector2& uv) const;
-  /** Transform a local position into global coordinates. */
-  Vector3 toGlobal(const Vector3& uvw) const;
+  template <typename Position>
+  auto toLocal(const Eigen::MatrixBase<Position>& xyz) const
+  {
+    return m_rotation.transpose() * (xyz - m_offset);
+  }
+
+private:
+  Matrix3 m_rotation; // from local to global coordinates
+  Vector3 m_offset;   // position of the origin in global coordinates
 };
 
 /** Store and process the geometry of the telescope setup.

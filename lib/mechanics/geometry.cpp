@@ -18,7 +18,7 @@ static Matrix3 orthogonalize(const Matrix3& m, size_t iterations = 2)
 {
   Matrix3 q = m;
   for (size_t i = 0; i < iterations; ++i) {
-    Matrix3 n = Transpose(q) * q;
+    Matrix3 n = q.transpose() * q;
     Matrix3 p = 0.5 * q * n;
     Matrix3 qi = 2 * q + p * n - 3 * p;
     DEBUG("orthogonal correction ", i, ":\n", q - qi);
@@ -93,19 +93,10 @@ static Angles321 extractAngles321(const Matrix3& q)
   // cross-check that we get the same matrix back
   Matrix3 qFromAngles =
       makeRotation321(angles.gamma, angles.beta, angles.alpha);
-  Matrix3 test = ROOT::Math::SMatrixIdentity();
-  test -= Transpose(qFromAngles) * q;
-  // compute the Frobenius norm of the test matrix
-  double norm = 0.0;
-  for (int i = 0; i < 3; ++i) {
-    for (int j = 0; j < 3; ++j) {
-      norm += test(i, j) * test(i, j);
-    }
-  }
-  norm = std::sqrt(norm);
-  // norm should vanish for correct angle extraction
+  // Frobenius norm should vanish for correct angle extraction
+  auto norm = (Matrix3::Identity() - qFromAngles.transpose() * q).norm();
   // single epsilon results in too many false-positives.
-  if (4 * std::numeric_limits<double>::epsilon() < norm) {
+  if (4 * std::numeric_limits<decltype(norm)>::epsilon() < norm) {
     constexpr double toDeg = 180.0 / M_PI;
     ERROR("detected inconsistent matrix to angles conversion");
     INFO("angles:");
@@ -152,14 +143,14 @@ static Matrix3 jacobianCorrectionsToAngles(const Matrix3 q)
   return jac;
 }
 
-Mechanics::Plane Mechanics::Plane::fromAnglesZYX(double gamma,
+Mechanics::Plane Mechanics::Plane::fromAngles321(double gamma,
                                                  double beta,
                                                  double alpha,
                                                  const Vector3& offset)
 {
   Plane p;
-  p.rotation = makeRotation321(gamma, beta, alpha);
-  p.offset = offset;
+  p.m_rotation = makeRotation321(gamma, beta, alpha);
+  p.m_offset = offset;
   return p;
 }
 
@@ -168,59 +159,46 @@ Mechanics::Plane Mechanics::Plane::fromDirections(const Vector3& dirU,
                                                   const Vector3& offset)
 {
   Plane p;
-  p.rotation.Place_in_col(Unit(dirU), 0, 0);
-  p.rotation.Place_in_col(Unit(dirV), 0, 1);
-  p.rotation.Place_in_col(Unit(Cross(dirU, dirV)), 0, 2);
-  p.rotation = orthogonalize(p.rotation);
-  p.offset = offset;
+  p.m_rotation.col(0) = dirU.normalized();
+  p.m_rotation.col(1) = dirV.normalized();
+  p.m_rotation.col(2) = dirU.normalized().cross(dirV.normalized());
+  p.m_rotation = orthogonalize(p.m_rotation);
+  p.m_offset = offset;
   return p;
 }
 
 Mechanics::Plane Mechanics::Plane::correctedGlobal(const Vector6& delta) const
 {
   Plane corrected;
-  corrected.rotation = rotation * makeRotation321(delta[5], delta[4], delta[3]);
-  corrected.rotation = orthogonalize(corrected.rotation);
-  corrected.offset = offset + delta.Sub<Vector3>(0);
+  corrected.m_rotation =
+      m_rotation * makeRotation321(delta[5], delta[4], delta[3]);
+  corrected.m_rotation = orthogonalize(corrected.m_rotation);
+  corrected.m_offset = m_offset + delta.head<3>();
   return corrected;
 }
 
 Mechanics::Plane Mechanics::Plane::correctedLocal(const Vector6& delta) const
 {
   Plane corrected;
-  corrected.rotation = rotation * makeRotation321(delta[5], delta[4], delta[3]);
-  corrected.rotation = orthogonalize(corrected.rotation);
+  corrected.m_rotation =
+      m_rotation * makeRotation321(delta[5], delta[4], delta[3]);
+  corrected.m_rotation = orthogonalize(corrected.m_rotation);
   // local offset is defined in the old system
-  corrected.offset = offset + rotation * delta.Sub<Vector3>(0);
+  corrected.m_offset = m_offset + m_rotation * delta.head<3>();
   return corrected;
 }
 
 Vector6 Mechanics::Plane::asParams() const
 {
   Vector6 params;
-  params[0] = offset[0];
-  params[1] = offset[1];
-  params[2] = offset[2];
-  auto angles = extractAngles321(rotation);
+  params[0] = m_offset[0];
+  params[1] = m_offset[1];
+  params[2] = m_offset[2];
+  auto angles = extractAngles321(m_rotation);
   params[3] = angles.alpha;
   params[4] = angles.beta;
   params[5] = angles.gamma;
   return params;
-}
-
-Vector3 Mechanics::Plane::toLocal(const Vector3& xyz) const
-{
-  return Transpose(rotation) * (xyz - offset);
-}
-
-Vector3 Mechanics::Plane::toGlobal(const Vector2& uv) const
-{
-  return offset + rotation.Sub<Matrix32>(0, 0) * uv;
-}
-
-Vector3 Mechanics::Plane::toGlobal(const Vector3& uvw) const
-{
-  return offset + rotation * uvw;
 }
 
 Mechanics::Geometry::Geometry()
@@ -292,12 +270,13 @@ Mechanics::Geometry Mechanics::Geometry::fromConfig(const toml::Value& cfg)
       Vector3 unitU(unU[0], unU[1], unU[2]);
       Vector3 unitV(unV[0], unV[1], unV[2]);
       Vector3 offset(off[0], off[1], off[2]);
-      double dot = Dot(unitU.Unit(), unitV.Unit());
+      auto projUV = std::abs(unitU.normalized().dot(unitV.normalized()));
 
-      DEBUG("sensor ", sensorId, " unit vector projection ", dot);
+      DEBUG("sensor ", sensorId, " unit vector projection ", projUV);
       // approximate zero check; the number of ignored bits is a bit arbitrary
-      if ((4 * std::numeric_limits<double>::epsilon()) < std::abs(dot))
+      if ((4 * std::numeric_limits<decltype(projUV)>::epsilon()) < projUV) {
         FAIL("sensor ", sensorId, " has non-orthogonal unit vectors");
+      }
 
       geo.m_planes[sensorId] = Plane::fromDirections(unitU, unitV, offset);
     } else {
@@ -308,7 +287,7 @@ Mechanics::Geometry Mechanics::Geometry::fromConfig(const toml::Value& cfg)
       auto offY = cs.get<double>("offset_y");
       auto offZ = cs.get<double>("offset_z");
       geo.m_planes[sensorId] =
-          Plane::fromAnglesZYX(rotZ, rotY, rotX, {offX, offY, offZ});
+          Plane::fromAngles321(rotZ, rotY, rotX, {offX, offY, offZ});
     }
   }
   return geo;
@@ -327,7 +306,7 @@ toml::Value Mechanics::Geometry::toConfig() const
     int id = static_cast<int>(ip.first);
     Vector3 unU = ip.second.unitU();
     Vector3 unV = ip.second.unitV();
-    Vector3 off = ip.second.offset;
+    Vector3 off = ip.second.offset();
 
     toml::Value cfgSensor;
     cfgSensor["id"] = id;
@@ -362,12 +341,14 @@ void Mechanics::Geometry::correctGlobal(Index sensorId,
   const auto& plane = m_planes.at(sensorId);
 
   // Jacobian from global corrections to geometry parameters
-  Matrix6 jac = ROOT::Math::SMatrixIdentity();
-  // angle corrections to global angles;
-  jac.Place_at(jacobianCorrectionsToAngles(plane.rotation), 3, 3);
+  Matrix6 jac;
+  // clang-format off
+  jac << Matrix3::Identity(), Matrix3::Zero(),
+         Matrix3::Zero(), jacobianCorrectionsToAngles(plane.rotationToGlobal());
+  // clang-format on
 
   m_planes[sensorId] = plane.correctedLocal(delta);
-  m_covs[sensorId] = Similarity(jac, cov);
+  m_covs[sensorId] = jac * cov * jac.transpose();
 }
 
 void Mechanics::Geometry::correctLocal(Index sensorId,
@@ -377,14 +358,14 @@ void Mechanics::Geometry::correctLocal(Index sensorId,
   const auto& plane = m_planes.at(sensorId);
 
   // Jacobian from local corrections to geometry parameters
-  Matrix6 jac = ROOT::Math::SMatrixIdentity();
-  // local offset corrections to global offset
-  jac.Place_at(plane.rotation, 0, 0);
-  // angle corrections to global angles;
-  jac.Place_at(jacobianCorrectionsToAngles(plane.rotation), 3, 3);
+  Matrix6 jac;
+  // clang-format off
+  jac << plane.rotationToGlobal(), Matrix3::Zero(),
+         Matrix3::Zero(), jacobianCorrectionsToAngles(plane.rotationToGlobal());
+  // clang-format on
 
   m_planes[sensorId] = plane.correctedLocal(delta);
-  m_covs[sensorId] = Similarity(jac, cov);
+  m_covs[sensorId] = jac * cov * jac.transpose();
 }
 
 const Mechanics::Plane& Mechanics::Geometry::getPlane(Index sensorId) const
@@ -440,7 +421,7 @@ void Mechanics::Geometry::print(std::ostream& os,
      << m_beamDivergenceY << "]\n";
   for (const auto& ip : m_planes) {
     os << prefix << "sensor " << ip.first << ":\n"
-       << prefix << "  offset: [" << ip.second.offset << "]\n"
+       << prefix << "  offset: [" << ip.second.offset() << "]\n"
        << prefix << "  unit u: [" << ip.second.unitU() << "]\n"
        << prefix << "  unit v: [" << ip.second.unitV() << "]\n"
        << prefix << "  unit w: [" << ip.second.unitNormal() << "]\n";
@@ -456,7 +437,7 @@ Mechanics::sortedAlongBeam(const Mechanics::Geometry& geo,
   //                    z-axis as proxy.
   std::vector<Index> sorted(std::begin(sensorIds), std::end(sensorIds));
   std::sort(sorted.begin(), sorted.end(), [&](Index id0, Index id1) {
-    return geo.getPlane(id0).offset[2] < geo.getPlane(id1).offset[2];
+    return geo.getPlane(id0).offset()[2] < geo.getPlane(id1).offset()[2];
   });
   return sorted;
 }
