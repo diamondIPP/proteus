@@ -84,14 +84,13 @@ void Storage::Cluster::addHit(Storage::Hit& hit)
 
 void Storage::Cluster::print(std::ostream& os, const std::string& prefix) const
 {
-  Vector2 ep = sqrt(m_crCov.Diagonal());
-  Vector2 el = sqrt(m_uvCov.Diagonal());
-
+  auto stdevCR = extractStdev(m_crCov);
+  auto stdevUV = extractStdev(m_uvCov);
   os << prefix << "size: " << size() << '\n';
-  os << prefix << "pixel: " << posPixel() << '\n';
-  os << prefix << "pixel stddev: " << ep << '\n';
-  os << prefix << "local: " << posLocal() << '\n';
-  os << prefix << "local stddev: " << el << '\n';
+  os << prefix << "pixel: [" << m_cr[0] << ", " << m_cr[1] << "]\n";
+  os << prefix << "pixel stdev: [" << stdevCR[0] << ", " << stdevCR[1] << "]\n";
+  os << prefix << "local: [" << m_uv[0] << ", " << m_uv[1] << "]\n";
+  os << prefix << "local stdev: [" << stdevUV[0] << ", " << stdevUV[1] << "]\n";
   os.flush();
 }
 
