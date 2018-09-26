@@ -111,9 +111,9 @@ void Tracking::TrackFinder::searchSensor(
 
     // estimated track on the source plane using last cluster and beam
     const Mechanics::Plane& source = m_geo.getPlane(lastSensor);
-    Storage::TrackState onSource(
-        Vector2(lastCluster.posLocal().x(), lastCluster.posLocal().y()),
-        Transpose(source.rotation) * m_geo.beamDirection());
+    Storage::TrackState onSource(lastCluster.posLocal(),
+                                 Transpose(source.rotation) *
+                                     m_geo.beamDirection());
     onSource.setCovOffset(lastCluster.covLocal());
 
     // propagate track to the target plane
@@ -127,10 +127,9 @@ void Tracking::TrackFinder::searchSensor(
       if (curr.isInTrack())
         continue;
 
-      double deltaU = curr.posLocal().x() - onTarget.offset().x();
-      double deltaV = curr.posLocal().y() - onTarget.offset().y();
+      Vector2 delta = curr.posLocal() - onTarget.offset();
       SymMatrix2 cov = curr.covLocal() + onTarget.covOffset();
-      double d2 = mahalanobisSquared(cov, Vector2(deltaU, deltaV));
+      double d2 = mahalanobisSquared(cov, delta);
 
       if ((0 < m_d2Max) && (m_d2Max < d2))
         continue;

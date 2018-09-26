@@ -96,11 +96,10 @@ inline void Tracking::LineFitter3D::addPoint(
 inline void Tracking::LineFitter3D::addPoint(const Storage::Cluster& cluster,
                                              const Mechanics::Plane& source)
 {
-  auto rot = source.rotation.Sub<Matrix32>(0, 0);
   // local to global assuming a position on the local plane
-  Vector2 abc(cluster.posLocal().x(), cluster.posLocal().y());
-  Vector3 xyz = source.offset + rot * abc;
-  Matrix3 cov = Similarity(rot, cluster.covLocal());
+  Vector3 xyz = source.toGlobal(cluster.posLocal());
+  SymMatrix3 cov =
+      Similarity(source.rotation.Sub<Matrix32>(0, 0), cluster.covLocal());
   addPoint(xyz[0], xyz[1], xyz[2], 1 / cov(0, 0), 1 / cov(1, 1));
 }
 
@@ -108,14 +107,11 @@ inline void Tracking::LineFitter3D::addPoint(const Storage::Cluster& cluster,
                                              const Mechanics::Plane& source,
                                              const Mechanics::Plane& target)
 {
-  auto rot = source.rotation.Sub<Matrix32>(0, 0);
-  // source local to global assuming a position on the local plane
-  Vector2 abc(cluster.posLocal().x(), cluster.posLocal().y());
-  Vector3 xyz = source.offset + rot * abc;
-  // global to target local
-  Vector3 uvw = Transpose(target.rotation) * (xyz - target.offset);
-  Matrix3 cov =
-      Similarity(Transpose(target.rotation) * rot, cluster.covLocal());
+  // source local to target local assuming a position on the local source plane
+  Vector3 uvw = target.toLocal(source.toGlobal(cluster.posLocal()));
+  Matrix3 cov = Similarity(Transpose(target.rotation) *
+                               source.rotation.Sub<Matrix32>(0, 0),
+                           cluster.covLocal());
   addPoint(uvw[0], uvw[1], uvw[2], 1 / cov(0, 0), 1 / cov(1, 1));
 }
 

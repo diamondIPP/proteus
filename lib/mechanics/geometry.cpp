@@ -1,6 +1,7 @@
 #include "geometry.h"
 
 #include <cassert>
+#include <limits>
 #include <stdexcept>
 #include <string>
 
@@ -8,55 +9,66 @@
 
 PT_SETUP_LOCAL_LOGGER(Geometry)
 
-// Construct R1(alpha) * R2(beta) * R3(gamma) rotation matrix.
+// compute the nearest orthogonal matrix.
 //
-// see also: https://en.wikipedia.org/wiki/Rotation_matrix#Basic_rotations
+// assumes the matrix already is or is close to an orthogonal matrix and uses
+// the interative algorithm outlined at
+// https://en.wikipedia.org/wiki/Orthogonal_matrix to orthogonalize it.
+static Matrix3 orthogonalize(const Matrix3& m, size_t iterations = 2)
+{
+  Matrix3 q = m;
+  for (size_t i = 0; i < iterations; ++i) {
+    Matrix3 n = Transpose(q) * q;
+    Matrix3 p = 0.5 * q * n;
+    Matrix3 qi = 2 * q + p * n - 3 * p;
+    DEBUG("orthogonal correction ", i, ":\n", q - qi);
+    q = qi;
+  }
+  return q;
+}
+
+// Most of the code uses the rotation matrix for all geometric computations.
+// For cases where the minimal set of three angles is needed the
+// 3-2-1 convention is used to compute the rotation matrix.
+//
+//            | Q00  Q01  Q02 |
+//     Q321 = | Q10  Q11  Q12 | = R1(𝛼) * R2(𝛽) * R3(𝛾)
+//            | Q20  Q21  Q22 |
+//
+// The three angles 𝛾, 𝛽, 𝛼 are right-handed angles around the third, second,
+// and first current axis. The resulting matrix can be written as:
+//
+//     Q00 =          cos(𝛽) cos(𝛾)
+//     Q10 =  sin(𝛼) sin(𝛽) cos(𝛾) + cos(𝛼)        sin(𝛾)
+//     Q20 =  sin(𝛼)        sin(𝛾) - cos(𝛼) sin(𝛽) cos(𝛾)
+//     Q01 =         -cos(𝛽) sin(𝛾)
+//     Q11 = -sin(𝛼) sin(𝛽) sin(𝛾) + cos(𝛼)        cos(𝛾)
+//     Q21 =  sin(𝛼)        cos(𝛾) + cos(𝛼) sin(𝛽) sin(𝛾)
+//     Q02 =  sin(𝛽)
+//     Q12 = -sin(𝛼) cos(𝛽)
+//     Q22 =  cos(𝛼) cos(𝛽)
+//
+
+// Construct R321 = R1(alpha)*R2(beta)*R3(gamma) rotation matrix from angles.
 static Matrix3 makeRotation321(double gamma, double beta, double alpha)
 {
-  Matrix3 rot;
-  Matrix3 tmp;
-  // R1(alpha), elementary right-handed rotation around first axis
+  using std::cos;
+  using std::sin;
+
+  Matrix3 q;
   // column 0
-  rot(0, 0) = 1;
-  rot(1, 0) = 0;
-  rot(2, 0) = 0;
+  q(0, 0) = cos(beta) * cos(gamma);
+  q(1, 0) = sin(alpha) * sin(beta) * cos(gamma) + cos(alpha) * sin(gamma);
+  q(2, 0) = sin(alpha) * sin(gamma) - cos(alpha) * sin(beta) * cos(gamma);
   // column 1
-  rot(0, 1) = 0;
-  rot(1, 1) = std::cos(alpha);
-  rot(2, 1) = std::sin(alpha);
+  q(0, 1) = -cos(beta) * sin(gamma);
+  q(1, 1) = -sin(alpha) * sin(beta) * sin(gamma) + cos(alpha) * cos(gamma);
+  q(2, 1) = sin(alpha) * cos(gamma) + cos(alpha) * sin(beta) * sin(gamma);
   // column 2
-  rot(0, 2) = 0;
-  rot(1, 2) = -std::sin(alpha);
-  rot(2, 2) = std::cos(alpha);
-  // R2(beta), elementary right-handed rotation around second axis
-  // column 0
-  tmp(0, 0) = std::cos(beta);
-  tmp(1, 0) = 0;
-  tmp(2, 0) = -std::sin(beta);
-  // column 1
-  tmp(0, 1) = 0;
-  tmp(1, 1) = 1;
-  tmp(2, 1) = 0;
-  // column 2
-  tmp(0, 2) = std::sin(alpha);
-  tmp(1, 2) = 0;
-  tmp(2, 2) = std::cos(alpha);
-  rot *= tmp;
-  // R3(gamma), elementary right-handed rotation around third axis
-  // column 0
-  tmp(0, 0) = std::cos(gamma);
-  tmp(1, 0) = std::sin(gamma);
-  tmp(2, 0) = 0;
-  // column 1
-  tmp(0, 1) = -std::sin(gamma);
-  tmp(1, 1) = std::cos(gamma);
-  tmp(2, 1) = 0;
-  // column 2
-  tmp(0, 2) = 0;
-  tmp(1, 2) = 0;
-  tmp(2, 2) = 1;
-  rot *= tmp;
-  return rot;
+  q(0, 2) = sin(beta);
+  q(1, 2) = -sin(alpha) * cos(beta);
+  q(2, 2) = cos(alpha) * cos(beta);
+  return q;
 };
 
 struct Angles321 {
@@ -66,19 +78,78 @@ struct Angles321 {
 };
 
 // Extract rotation angles in 321 convention from rotation matrix.
-static Angles321 extractAngles321(const Matrix3& rotation)
+static Angles321 extractAngles321(const Matrix3& q)
 {
-  // TODO remove ROOT dependency and implement matrix to angles directly. See:
-  // https://project-mathlibs.web.cern.ch/project-mathlibs/documents/eulerAngleComputation.pdf
-  Rotation3D rot;
-  rot.SetRotationMatrix(rotation);
-  RotationZYX zyx(rot);
-
+  // WARNING
+  // this is not a stable algorithm and will break down for the case of
+  // 𝛽 = ±π, cos(𝛽) = 0, sin(𝛽) = ±1. It should be replaced by a better
+  // algorithm. in this code base, the rotation matrix is used and stored
+  // and the angles are only used for reporting. we should be fine.
   Angles321 angles;
-  angles.alpha = zyx.Psi();
-  angles.beta = zyx.Theta();
-  angles.gamma = zyx.Phi();
+  angles.alpha = std::atan2(-q(1, 2), q(2, 2));
+  angles.beta = std::asin(q(0, 2));
+  angles.gamma = std::atan2(-q(0, 1), q(0, 0));
+
+  // cross-check that we get the same matrix back
+  Matrix3 qFromAngles =
+      makeRotation321(angles.gamma, angles.beta, angles.alpha);
+  Matrix3 test = ROOT::Math::SMatrixIdentity();
+  test -= Transpose(qFromAngles) * q;
+  // compute the Frobenius norm of the test matrix
+  double norm = 0.0;
+  for (int i = 0; i < 3; ++i) {
+    for (int j = 0; j < 3; ++j) {
+      norm += test(i, j) * test(i, j);
+    }
+  }
+  norm = std::sqrt(norm);
+  // norm should vanish for correct angle extraction
+  // single epsilon results in too many false-positives.
+  if (4 * std::numeric_limits<double>::epsilon() < norm) {
+    constexpr double toDeg = 180.0 / M_PI;
+    ERROR("detected inconsistent matrix to angles conversion");
+    INFO("angles:");
+    INFO("  alpha: ", angles.alpha * toDeg, " degree");
+    INFO("  beta: ", angles.beta * toDeg, " degree");
+    INFO("  gamma: ", angles.gamma * toDeg, " degree");
+    INFO("rotation matrix:\n", q);
+    INFO("rotation matrix from angles:\n", qFromAngles);
+    INFO("forward-backward distance to identity: ", norm);
+  }
+
   return angles;
+}
+
+// Jacobian from correction angles to global
+//
+// Maps small changes [dalpha, dbeta, dgamma] to resulting changes in
+// global angles [alpha, beta, gamma]. This is computed by assuming the
+// input rotation matrix to the angles extraction to be
+//
+//     Q' = Q * dQ
+//
+// where dQ is the small angle rotation matrix using the correction angles.
+// Using the angles extraction defined above the global angles are expressed
+// as a function of the corrections and the Jacobian can be calculated.
+static Matrix3 jacobianCorrectionsToAngles(const Matrix3 q)
+{
+  Matrix3 jac;
+  // d alpha / d [dalpha, dbeta, dgamma]
+  double f0 = q(1, 2) * q(1, 2) + q(2, 2) * q(2, 2);
+  jac(0, 0) = (q(1, 1) * q(2, 2) - q(1, 2) * q(2, 1)) / f0;
+  jac(1, 0) = (q(1, 2) * q(2, 0) - q(1, 0) * q(2, 2)) / f0;
+  jac(2, 0) = 0;
+  // d beta / d [dalpha, dbeta, dgamma]
+  double f1 = std::sqrt(1.0 - q(0, 2) * q(0, 2));
+  jac(0, 1) = -q(0, 1) / f1;
+  jac(1, 1) = q(0, 0) / f1;
+  jac(2, 1) = 0;
+  // d gamma / d [dalpha, dbeta, dgamma];
+  double f2 = q(0, 0) * q(0, 0) + q(0, 1) * q(0, 1);
+  jac(0, 2) = -q(0, 0) * q(0, 2) / f2;
+  jac(1, 2) = -q(0, 1) * q(0, 2) / f2;
+  jac(2, 2) = 1;
+  return jac;
 }
 
 Mechanics::Plane Mechanics::Plane::fromAnglesZYX(double gamma,
@@ -100,6 +171,7 @@ Mechanics::Plane Mechanics::Plane::fromDirections(const Vector3& dirU,
   p.rotation.Place_in_col(Unit(dirU), 0, 0);
   p.rotation.Place_in_col(Unit(dirV), 0, 1);
   p.rotation.Place_in_col(Unit(Cross(dirU, dirV)), 0, 2);
+  p.rotation = orthogonalize(p.rotation);
   p.offset = offset;
   return p;
 }
@@ -108,12 +180,8 @@ Mechanics::Plane Mechanics::Plane::correctedGlobal(const Vector6& delta) const
 {
   Plane corrected;
   corrected.rotation = rotation * makeRotation321(delta[5], delta[4], delta[3]);
-  corrected.offset = offset + Vector3(delta[0], delta[1], delta[2]);
-
-  DEBUG("corrected rotation:");
-  DEBUG("  dot(u,v): ", Dot(corrected.unitU(), corrected.unitV()));
-  DEBUG("  dot(u,w): ", Dot(corrected.unitU(), corrected.unitNormal()));
-  DEBUG("  dot(v,w): ", Dot(corrected.unitV(), corrected.unitNormal()));
+  corrected.rotation = orthogonalize(corrected.rotation);
+  corrected.offset = offset + delta.Sub<Vector3>(0);
   return corrected;
 }
 
@@ -121,12 +189,9 @@ Mechanics::Plane Mechanics::Plane::correctedLocal(const Vector6& delta) const
 {
   Plane corrected;
   corrected.rotation = rotation * makeRotation321(delta[5], delta[4], delta[3]);
-  corrected.offset = offset + rotation * Vector3(delta[0], delta[1], delta[2]);
-
-  DEBUG("corrected rotation:");
-  DEBUG("  dot(u,v): ", Dot(corrected.unitU(), corrected.unitV()));
-  DEBUG("  dot(u,w): ", Dot(corrected.unitU(), corrected.unitNormal()));
-  DEBUG("  dot(v,w): ", Dot(corrected.unitV(), corrected.unitNormal()));
+  corrected.rotation = orthogonalize(corrected.rotation);
+  // local offset is defined in the old system
+  corrected.offset = offset + rotation * delta.Sub<Vector3>(0);
   return corrected;
 }
 
@@ -148,19 +213,9 @@ Vector3 Mechanics::Plane::toLocal(const Vector3& xyz) const
   return Transpose(rotation) * (xyz - offset);
 }
 
-Vector3 Mechanics::Plane::toLocal(const XYZPoint& xyz) const
-{
-  return Transpose(rotation) * (Vector3(xyz.x(), xyz.y(), xyz.z()) - offset);
-}
-
 Vector3 Mechanics::Plane::toGlobal(const Vector2& uv) const
 {
   return offset + rotation.Sub<Matrix32>(0, 0) * uv;
-}
-
-Vector3 Mechanics::Plane::toGlobal(const XYPoint& uv) const
-{
-  return offset + rotation.Sub<Matrix32>(0, 0) * Vector2(uv.x(), uv.y());
 }
 
 Vector3 Mechanics::Plane::toGlobal(const Vector3& uvw) const
@@ -304,26 +359,31 @@ void Mechanics::Geometry::correctGlobal(Index sensorId,
                                         const Vector6& delta,
                                         const SymMatrix6& cov)
 {
-  auto& plane = m_planes.at(sensorId);
-  // TODO jacobian from dalpha,dbeta,dgamma to alpha,beta,gamma
-  plane = plane.correctedGlobal(delta);
-  m_covs[sensorId] = cov;
+  const auto& plane = m_planes.at(sensorId);
+
+  // Jacobian from global corrections to geometry parameters
+  Matrix6 jac = ROOT::Math::SMatrixIdentity();
+  // angle corrections to global angles;
+  jac.Place_at(jacobianCorrectionsToAngles(plane.rotation), 3, 3);
+
+  m_planes[sensorId] = plane.correctedLocal(delta);
+  m_covs[sensorId] = Similarity(jac, cov);
 }
 
 void Mechanics::Geometry::correctLocal(Index sensorId,
                                        const Vector6& delta,
                                        const SymMatrix6& cov)
 {
-  auto& plane = m_planes.at(sensorId);
-  // Jacobian from local corrections to geometry parameters
-  // TODO 2016-11-28 msmk: jacobian from dalpha,dbeta,dgamma to alpha,beta,gamma
-  Matrix6 jac;
-  jac.Place_at(plane.rotation, 0, 0);
-  jac(3, 3) = 1;
-  jac(4, 4) = 1;
-  jac(5, 5) = 1;
+  const auto& plane = m_planes.at(sensorId);
 
-  plane = plane.correctedLocal(delta);
+  // Jacobian from local corrections to geometry parameters
+  Matrix6 jac = ROOT::Math::SMatrixIdentity();
+  // local offset corrections to global offset
+  jac.Place_at(plane.rotation, 0, 0);
+  // angle corrections to global angles;
+  jac.Place_at(jacobianCorrectionsToAngles(plane.rotation), 3, 3);
+
+  m_planes[sensorId] = plane.correctedLocal(delta);
   m_covs[sensorId] = Similarity(jac, cov);
 }
 

@@ -33,7 +33,7 @@ public:
   int col() const { return m_col; }
   int row() const { return m_row; }
   /** Return the pixel center position in pixel coordinates. */
-  XYPoint posPixel() const { return XYPoint(col() + 0.5, row() + 0.5); }
+  Vector2 posPixel() const { return {col() + 0.5, row() + 0.5}; }
   float time() const { return m_time; }
   float value() const { return m_value; }
 

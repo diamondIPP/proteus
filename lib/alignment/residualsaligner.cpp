@@ -63,10 +63,10 @@ void Alignment::ResidualsAligner::execute(const Storage::Event& event)
 
       const Storage::TrackState& state =
           sensorEvent.getLocalState(cluster.track());
-      double u = state.offset().x();
-      double v = state.offset().y();
-      double ru = cluster.posLocal().x() - u;
-      double rv = cluster.posLocal().y() - v;
+      double u = state.offset()[0];
+      double v = state.offset()[1];
+      double ru = cluster.posLocal()[0] - u;
+      double rv = cluster.posLocal()[1] - v;
       // if we have no measurement uncertainties, the measured residuals are
       // fully defined by the three alignment corrections du, dv, dgamma as
       //

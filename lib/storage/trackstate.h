@@ -48,10 +48,10 @@ public:
   /** Covariance matrix of the full parameter vector. */
   const SymMatrix4& cov() const { return m_cov; }
   /** Plane offset in local coordinates. */
-  XYPoint offset() const { return {m_params[U], m_params[V]}; }
+  Vector2 offset() const { return m_params.Sub<Vector2>(U); }
   SymMatrix2 covOffset() const { return m_cov.Sub<SymMatrix2>(U, U); }
   /** Slope in local coordinates. */
-  XYVector slope() const { return {m_params[Du], m_params[Dv]}; }
+  Vector2 slope() const { return m_params.Sub<Vector2>(Du); }
   SymMatrix2 covSlope() const { return m_cov.Sub<SymMatrix2>(Du, Du); }
   /** Direction vector in local coordinates. */
   Vector3 direction() const { return {m_params[Du], m_params[Dv], 1}; }

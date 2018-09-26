@@ -98,18 +98,18 @@ Mechanics::Sensor::Sensor(Index id,
   }
 }
 
-XYPoint Mechanics::Sensor::transformPixelToLocal(const XYPoint& cr) const
+Vector2 Mechanics::Sensor::transformPixelToLocal(const Vector2& cr) const
 {
   // place sensor center on a pixel edge in the middle of the sensitive area
-  return XYPoint(m_pitchCol * (cr.x() - std::round(m_numCols / 2.0)),
-                 m_pitchRow * (cr.y() - std::round(m_numRows / 2.0)));
+  return {m_pitchCol * (cr[0] - std::round(m_numCols / 2.0)),
+          m_pitchRow * (cr[1] - std::round(m_numRows / 2.0))};
 }
 
-XYPoint Mechanics::Sensor::transformLocalToPixel(const XYPoint& uv) const
+Vector2 Mechanics::Sensor::transformLocalToPixel(const Vector2& uv) const
 {
   // place sensor center on a pixel edge in the middle of the sensitive area
-  return XYPoint((uv.x() / m_pitchCol) + std::round(m_numCols / 2.0),
-                 (uv.y() / m_pitchRow) + std::round(m_numRows / 2.0));
+  return {(uv[0] / m_pitchCol) + std::round(m_numCols / 2.0),
+          (uv[1] / m_pitchRow) + std::round(m_numRows / 2.0)};
 }
 
 Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaPixel() const
@@ -122,10 +122,10 @@ Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaLocal() const
 {
   auto pix = sensitiveAreaPixel();
   // calculate local sensitive area
-  XYPoint lowerLeft = transformPixelToLocal({pix.min(0), pix.min(1)});
-  XYPoint upperRight = transformPixelToLocal({pix.max(0), pix.max(1)});
-  return Area(Area::AxisInterval(lowerLeft.x(), upperRight.x()),
-              Area::AxisInterval(lowerLeft.y(), upperRight.y()));
+  Vector2 lowerLeft = transformPixelToLocal({pix.min(0), pix.min(1)});
+  Vector2 upperRight = transformPixelToLocal({pix.max(0), pix.max(1)});
+  return Area(Area::AxisInterval(lowerLeft[0], upperRight[0]),
+              Area::AxisInterval(lowerLeft[1], upperRight[1]));
 }
 
 Mechanics::Sensor::Volume Mechanics::Sensor::sensitiveVolumeLocal() const

@@ -105,11 +105,11 @@ static const SymMatrix2 HIT_COV(HIT_COV_ENTRIES, false);
 void Processors::BinaryClusterizer::estimateProperties(
     Storage::Cluster& cluster) const
 {
-  XYPoint pos(0, 0);
+  Vector2 pos; // zero by default
   float time = std::numeric_limits<float>::max();
 
   for (const Storage::Hit& hit : cluster.hits()) {
-    pos += XYVector(hit.posPixel());
+    pos += hit.posPixel();
     time = std::min(time, hit.time());
   }
   pos /= cluster.size();
@@ -136,12 +136,12 @@ Processors::ValueWeightedClusterizer::ValueWeightedClusterizer(
 void Processors::ValueWeightedClusterizer::estimateProperties(
     Storage::Cluster& cluster) const
 {
-  XYPoint pos(0, 0);
+  Vector2 pos; // zero by default
   float time = std::numeric_limits<float>::max();
   float value = 0;
 
   for (const Storage::Hit& hit : cluster.hits()) {
-    pos += hit.value() * XYVector(hit.posPixel());
+    pos += hit.value() * hit.posPixel();
     time = std::min(time, hit.time());
     value += hit.value();
   }
@@ -170,7 +170,7 @@ Processors::FastestHitClusterizer::FastestHitClusterizer(
 void Processors::FastestHitClusterizer::estimateProperties(
     Storage::Cluster& cluster) const
 {
-  XYPoint pos(0, 0);
+  Vector2 pos; // zero by default
   float time = std::numeric_limits<float>::max();
   float value = 0;
 

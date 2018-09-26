@@ -45,7 +45,7 @@ void Processors::Matcher::execute(Storage::Event& event) const
       const Storage::Cluster& cluster = sensorEvent.getCluster(icluster);
 
       // compute mahalanobis distance between state/cluster
-      XYVector delta = cluster.posLocal() - state.offset();
+      Vector2 delta = cluster.posLocal() - state.offset();
       SymMatrix2 cov = cluster.covLocal() + state.covOffset();
       double d2 = mahalanobisSquared(cov, delta);
 

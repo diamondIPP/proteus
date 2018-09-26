@@ -32,8 +32,7 @@ public:
   /** Check if the given pixel address is masked. */
   bool isMasked(int col, int row) const;
   /** Check if the position in pixel coordinates is inside a masked pixel. */
-  bool isMasked(const XYVector& cr) const;
-  bool isMasked(const XYPoint& cr) const;
+  bool isMasked(const Vector2& cr) const;
 
   /** Return a new mask where the masked area is outset by the given offset. */
   DenseMask protruded(int offset) const;
@@ -69,18 +68,11 @@ inline bool Utils::DenseMask::isMasked(int col, int row) const
   return isInsideMask && m_mask[index(col, row)];
 }
 
-inline bool Utils::DenseMask::isMasked(const XYVector& cr) const
+inline bool Utils::DenseMask::isMasked(const Vector2& cr) const
 {
   // the pixel area has a range [0, 1) along each axis
-  return isMasked(static_cast<Index>(std::floor(cr.x())),
-                  static_cast<Index>(std::floor(cr.y())));
-}
-
-inline bool Utils::DenseMask::isMasked(const XYPoint& cr) const
-{
-  // the pixel area has a range [0, 1) along each axis
-  return isMasked(static_cast<Index>(std::floor(cr.x())),
-                  static_cast<Index>(std::floor(cr.y())));
+  return isMasked(static_cast<int>(std::floor(cr[0])),
+                  static_cast<int>(std::floor(cr[1])));
 }
 
 #endif // PT_DENSEMASK_H

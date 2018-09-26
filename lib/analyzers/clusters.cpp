@@ -75,7 +75,7 @@ void Analyzers::SensorClusters::execute(const Storage::SensorEvent& sensorEvent)
 {
   auto fill = [](const Storage::Cluster& cluster, AreaHists& hists) {
     auto pos = cluster.posPixel();
-    hists.pos->Fill(pos.x(), pos.y());
+    hists.pos->Fill(pos[0], pos[1]);
     hists.time->Fill(cluster.time());
     hists.value->Fill(cluster.value());
     hists.size->Fill(cluster.size());

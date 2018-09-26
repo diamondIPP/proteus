@@ -74,13 +74,13 @@ void Io::MatchWriter::ClusterData::addToTree(TTree* tree)
 
 void Io::MatchWriter::ClusterData::set(const Storage::Cluster& c)
 {
-  u = c.posLocal().x();
-  v = c.posLocal().y();
+  u = c.posLocal()[0];
+  v = c.posLocal()[1];
   stdU = std::sqrt(c.covLocal()(0, 0));
   stdV = std::sqrt(c.covLocal()(1, 1));
   corrUV = c.covLocal()(0, 1) / (stdU * stdV);
-  col = c.posPixel().x();
-  row = c.posPixel().y();
+  col = c.posPixel()[0];
+  row = c.posPixel()[1];
   time = c.time();
   value = c.value();
   region = (c.hasRegion() ? c.region() : -1);
@@ -180,16 +180,16 @@ void Io::MatchWriter::append(const Storage::Event& event)
     const Storage::Track& track = event.getTrack(s.first);
 
     // always set track data
-    XYPoint cr = m_sensor.transformLocalToPixel(state.offset());
-    m_track.u = state.offset().x();
-    m_track.v = state.offset().y();
-    m_track.du = state.slope().x();
-    m_track.dv = state.slope().y();
+    auto cr = m_sensor.transformLocalToPixel(state.offset());
+    m_track.u = state.offset()[0];
+    m_track.v = state.offset()[1];
+    m_track.du = state.slope()[0];
+    m_track.dv = state.slope()[1];
     m_track.stdU = std::sqrt(state.covOffset()(0, 0));
     m_track.stdV = std::sqrt(state.covOffset()(1, 1));
     m_track.corrUV = state.covOffset()(0, 1) / (m_track.stdU * m_track.stdV);
-    m_track.col = cr.x();
-    m_track.row = cr.y();
+    m_track.col = cr[0];
+    m_track.row = cr[1];
     m_track.chi2 = track.chi2();
     m_track.dof = track.degreesOfFreedom();
     m_track.size = track.size();
@@ -202,7 +202,7 @@ void Io::MatchWriter::append(const Storage::Event& event)
       m_matchedCluster.set(cluster);
       // set matching information
       SymMatrix2 cov = cluster.covLocal() + state.covOffset();
-      XYVector delta = cluster.posLocal() - state.offset();
+      Vector2 delta = cluster.posLocal() - state.offset();
       m_matchedDist.d2 = mahalanobisSquared(cov, delta);
     } else {
       // fill invalid data if no matching cluster exists

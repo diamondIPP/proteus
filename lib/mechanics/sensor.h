@@ -99,9 +99,9 @@ public:
   const Utils::DenseMask& pixelMask() const { return m_pixelMask; }
 
   /** Transform pixel matrix position to local coordinates. */
-  XYPoint transformPixelToLocal(const XYPoint& cr) const;
+  Vector2 transformPixelToLocal(const Vector2& cr) const;
   /** Transform local coordinates to pixel matrix position. */
-  XYPoint transformLocalToPixel(const XYPoint& uv) const;
+  Vector2 transformLocalToPixel(const Vector2& uv) const;
 
   /** Sensitive area in pixel coordinates. */
   Area sensitiveAreaPixel() const;

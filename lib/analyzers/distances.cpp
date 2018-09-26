@@ -32,14 +32,14 @@ Analyzers::Distances::Hists::Hists(TDirectory* dir,
   }
 }
 
-void Analyzers::Distances::Hists::fill(const XYVector& delta)
+void Analyzers::Distances::Hists::fill(const Vector2& delta)
 {
-  deltaU->Fill(delta.x());
-  deltaV->Fill(delta.y());
-  dist->Fill(delta.r());
+  deltaU->Fill(delta[0]);
+  deltaV->Fill(delta[1]);
+  dist->Fill(std::hypot(delta[0], delta[1]));
 }
 
-void Analyzers::Distances::Hists::fill(const XYVector& delta,
+void Analyzers::Distances::Hists::fill(const Vector2& delta,
                                        const SymMatrix2& cov)
 {
   fill(delta);
