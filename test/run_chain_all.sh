@@ -11,5 +11,5 @@ flags=$@ # e.g. -n 10000, to process only the first 10k events
 ./run_chain_noisescan.sh ${dataset} ${flags}
 ./run_chain_align_tel.sh ${dataset} ${flags}
 ./run_chain_align_dut.sh ${dataset} ${flags}
-./run_chain_reco.sh ${dataset} ${flags}
+./run_chain_recon.sh ${dataset} ${flags}
 
