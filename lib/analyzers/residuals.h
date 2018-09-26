@@ -92,8 +92,7 @@ public:
    * \param bins      Number of histogram bins
    */
   Matching(TDirectory* dir,
-           const Mechanics::Device& device,
-           const std::vector<Index>& sensorIds,
+           const Mechanics::Sensor& sensor,
            /* Histogram options */
            const double rangeStd = 5.0,
            const int bins = 128);
@@ -102,7 +101,8 @@ public:
   void execute(const Storage::Event& refEvent);
 
 private:
-  std::unordered_map<Index, detail::SensorResidualHists> m_hists_map;
+  Index m_sensorId;
+  detail::SensorResidualHists m_hists;
 };
 
 } // namespace Analyzers
