@@ -68,7 +68,7 @@ struct Timing {
       std::ostringstream s;
       s << std::chrono::duration_cast<std::chrono::minutes>(dt).count()
         << " min "
-        << std::chrono::duration_cast<std::chrono::seconds>(dt).count() << " s";
+        << std::chrono::duration_cast<std::chrono::seconds>(dt).count()%60 << " s";
       return s.str();
     };
 

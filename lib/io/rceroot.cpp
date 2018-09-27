@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include "Compression.h"
+
 #include "storage/event.h"
 #include "utils/logger.h"
 
@@ -342,7 +344,7 @@ bool Io::RceRootReader::read(Storage::Event& event)
 // writer
 
 Io::RceRootWriter::RceRootWriter(const std::string& path, size_t numSensors)
-    : RceRootCommon(TFile::Open(path.c_str(), "RECREATE"))
+    : RceRootCommon(TFile::Open(path.c_str(), "RECREATE", "", ROOT::CompressionSettings(ROOT::kLZMA, 1)))
 {
   if (!m_file)
     THROW("could not open '", path, "' to write");
