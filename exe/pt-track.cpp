@@ -60,7 +60,7 @@ int main(int argc, char const* argv[])
       app.outputPath("data.root"), app.device().numSensors()));
   loop.run();
 
-  hists.Write();
+  hists.Write(nullptr, TFile::kOverwrite);
   hists.Close();
 
   return EXIT_SUCCESS;

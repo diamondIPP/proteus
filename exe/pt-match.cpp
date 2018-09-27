@@ -47,9 +47,9 @@ int main(int argc, char const* argv[])
   }
   loop.run();
 
-  hists.Write();
+  hists.Write(nullptr, TFile::kOverwrite);
   hists.Close();
-  trees.Write();
+  trees.Write(nullptr, TFile::kOverwrite);
   trees.Close();
 
   return EXIT_SUCCESS;
