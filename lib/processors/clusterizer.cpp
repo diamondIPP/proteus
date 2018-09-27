@@ -107,10 +107,12 @@ void Processors::BinaryClusterizer::estimateProperties(
 {
   Vector2 pos; // zero by default
   float time = std::numeric_limits<float>::max();
+  float value = 0;
 
   for (const Storage::Hit& hit : cluster.hits()) {
     pos += hit.posPixel();
     time = std::min(time, hit.time());
+    value += hit.value();
   }
   pos /= cluster.size();
 
@@ -123,7 +125,7 @@ void Processors::BinaryClusterizer::estimateProperties(
 
   cluster.setPixel(pos, cov);
   cluster.setTime(time);
-  cluster.setValue(cluster.size());
+  cluster.setValue(value);
 }
 
 Processors::ValueWeightedClusterizer::ValueWeightedClusterizer(

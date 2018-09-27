@@ -32,6 +32,10 @@ User-visible changes
 Bugfixes
 --------
 
+*   Fixed cluster value in the binary clusterizer.
+
+    Previously it would use the cluster size, now it uses the sum of the hits value.
+
 *   Set event number and timestamp when using with ``pt-combine``.
 
     Previously ``pt-combine`` would not set the event number and
