@@ -151,7 +151,7 @@ test-combine:
     - ./download_data.py ${DATASET}
     - ./run_noisescan.sh ${DATASET} --no-progress
 
-.reco: &template_reco
+.recon: &template_recon
   stage: test
   tags:
     - cvmfs
@@ -159,7 +159,7 @@ test-combine:
     - source install/activate.sh
     - cd test
     - ./download_data.py ${DATASET}
-    - ./run_reco.sh ${DATASET} --no-progress
+    - ./run_recon.sh ${DATASET} --no-progress
 
 # tests for UNIGEtel ebeam=12GeV nparticles=1
 
@@ -178,8 +178,8 @@ test-unigetel_ebeam012_nparticles01-noisescan:
   variables:
     DATASET: unigetel_ebeam012_nparticles01
 
-test-unigetel_ebeam012_nparticles01-reco:
-  <<: *template_reco
+test-unigetel_ebeam012_nparticles01-recon:
+  <<: *template_recon
   variables:
     DATASET: unigetel_ebeam012_nparticles01
 
@@ -200,7 +200,7 @@ test-unigetel_ebeam120_nparticles01-noisescan:
   variables:
     DATASET: unigetel_ebeam120_nparticles01
 
-test-unigetel_ebeam120_nparticles01-reco:
-  <<: *template_reco
+test-unigetel_ebeam120_nparticles01-recon:
+  <<: *template_recon
   variables:
     DATASET: unigetel_ebeam120_nparticles01
