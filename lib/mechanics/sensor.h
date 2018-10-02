@@ -80,8 +80,7 @@ public:
          double pitchCol,
          double pitchRow,
          double thickness,
-         double xX0,
-         const std::vector<Region>& regions = std::vector<Region>());
+         double xX0);
 
   // identification
   Index id() const { return m_id; }
@@ -129,6 +128,11 @@ public:
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
+  void addRegion(const std::string& name,
+                 int col_min,
+                 int col_max,
+                 int row_min,
+                 int row_max);
   void updateBeam(const Plane& plane,
                   const Vector3& directionXYZ,
                   const Vector2& stdevXY);

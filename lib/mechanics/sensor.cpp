@@ -59,50 +59,45 @@ Mechanics::Sensor::Sensor(Index id,
                           double pitchCol,
                           double pitchRow,
                           double thickness,
-                          double xX0,
-                          const std::vector<Region>& regions)
+                          double xX0)
     : m_id(id)
     , m_name(name)
     , m_numCols(numCols)
     , m_numRows(numRows)
-    // input max time is inclusive
-    , m_timeRange(timeMin, timeMax + 1)
-    // input max value is inclusive
-    , m_valueRange(0, valueMax + 1)
+    , m_timeRange(timeMin, timeMax)
+    , m_valueRange(0, valueMax)
     , m_pitchCol(pitchCol)
     , m_pitchRow(pitchRow)
     , m_thickness(thickness)
     , m_xX0(xX0)
     // reasonable defaults for global properties that require the full geometry.
-    // this should be updated later on by the device.
+    // this should be updated later by the device.
     , m_beamSlope(0.0, 0.0)
     , m_beamDivergence(0.00125, 0.00125)
     , m_projPitch(pitchCol, pitchRow, 0)
     , m_projEnvelope(sensitiveVolumeLocal())
     , m_measurement(measurement)
-    , m_regions(regions)
 {
-  // ensure that all regions are bounded by the sensor size
-  for (auto& region : m_regions) {
-    region.areaPixel =
-        intersection(region.areaPixel, Area(Area::AxisInterval(0, numCols),
-                                            Area::AxisInterval(0, numRows)));
-  }
-  // ensure that all regions are uniquely named and have exclusive areas
-  for (size_t i = 0; i < m_regions.size(); ++i) {
-    for (size_t j = 0; j < m_regions.size(); ++j) {
-      if (i == j)
-        continue;
-      const auto& r0 = m_regions[i];
-      const auto& r1 = m_regions[j];
-      if (r0.name == r1.name) {
-        FAIL("region ", i, " and region ", j, " share the same name");
-      }
-      if (!intersection(r0.areaPixel, r1.areaPixel).isEmpty()) {
-        FAIL("region '", r0.name, "' intersects with region '", r1.name, "'");
-      }
+}
+
+void Mechanics::Sensor::addRegion(
+    const std::string& name, int col_min, int col_max, int row_min, int row_max)
+{
+  // ensure that the region is bounded by the sensor size
+  auto area = Area(Area::AxisInterval(col_min, col_max),
+                   Area::AxisInterval(row_min, row_max));
+  area = intersection(this->sensitiveAreaPixel(), area);
+  // ensure that all regions are uniquely named and areas are exclusive
+  for (const auto& region : m_regions) {
+    if (region.name == name) {
+      FAIL("region '", name, "' already exists and can not be defined again");
+    }
+    if (!(intersection(region.areaPixel, area).isEmpty())) {
+      FAIL("region '", region.name, "' intersects with region '", name, "'");
     }
   }
+  // region is well-defined and can be added
+  m_regions.push_back({name, area});
 }
 
 Vector2 Mechanics::Sensor::transformPixelToLocal(const Vector2& cr) const
@@ -121,8 +116,8 @@ Vector2 Mechanics::Sensor::transformLocalToPixel(const Vector2& uv) const
 
 Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaPixel() const
 {
-  return Area(Area::AxisInterval(0, static_cast<double>(m_numCols)),
-              Area::AxisInterval(0, static_cast<double>(m_numRows)));
+  return Area(Area::AxisInterval(0.0, static_cast<double>(m_numCols)),
+              Area::AxisInterval(0.0, static_cast<double>(m_numRows)));
 }
 
 Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaLocal() const

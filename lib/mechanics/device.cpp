@@ -61,81 +61,91 @@ Mechanics::Device Mechanics::Device::fromFile(const std::string& path,
 
 Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
 {
-  Device device;
+  using Utils::Config::withDefaults;
 
   if (cfg.has("device"))
     ERROR("device configuration is deprecated and will not be used");
 
-  auto cfgTypes = cfg.get<toml::Table>("sensor_types");
-  auto cfgSensors = cfg.get<toml::Array>("sensors");
-  for (size_t isensor = 0; isensor < cfgSensors.size(); ++isensor) {
-    toml::Value defaultsType = toml::Table{
-        {"time_min", 0},
-        {"time_max", 15},
-        {"value_max", 15},
-    };
-    toml::Value defaultsSensor = toml::Table{
-        {"name", "sensor" + std::to_string(isensor)},
-    };
-    toml::Value cfgSensor =
-        Utils::Config::withDefaults(cfgSensors[isensor], defaultsSensor);
+  // WARNING
+  // upper limits in the configuration file are inclusive, but in
+  // the code the interval is always half-open w/ the upper limit
+  // being exclusive.
 
-    auto name = cfgSensor.get<std::string>("name");
-    auto typeName = cfgSensor.get<std::string>("type");
-    if (cfgTypes.count(typeName) == 0) {
-      throw std::runtime_error("Device: sensor type '" + typeName +
-                               "' does not exist");
-    }
-    auto cfgType =
-        Utils::Config::withDefaults(cfgTypes[typeName], defaultsType);
-    auto cfgRegions = cfgType.find("regions");
-    auto measurement =
-        Sensor::measurementFromName(cfgType.get<std::string>("measurement"));
-
-    // construct sensor regions if they are defined
-    std::vector<Sensor::Region> regions;
-    if (cfgRegions && cfgRegions->is<toml::Array>()) {
-      for (size_t iregion = 0; iregion < cfgRegions->size(); ++iregion) {
-        toml::Value defaults =
-            toml::Table{{"name", "region" + std::to_string(iregion)},
-                        {"col_min", INT_MIN},
-                        // upper limit in the configuration is inclusive, but in
-                        // the code the interval is half-open w/ the upper limit
-                        // being exclusive. Ensure +1 is still within the
-                        // numerical limits.
-                        {"col_max", INT_MAX - 1},
-                        {"row_min", INT_MIN},
-                        {"row_max", INT_MAX - 1}};
-        toml::Value cfgRegion =
-            Utils::Config::withDefaults(*cfgRegions->find(iregion), defaults);
-
-        Sensor::Region region;
-        region.name = cfgRegion.get<std::string>("name");
-        region.areaPixel = Sensor::Area(
-            Sensor::Area::AxisInterval(cfgRegion.get<int>("col_min"),
-                                       cfgRegion.get<int>("col_max") + 1),
-            Sensor::Area::AxisInterval(cfgRegion.get<int>("row_min"),
-                                       cfgRegion.get<int>("row_max") + 1));
-        regions.emplace_back(std::move(region));
+  // defaults for optional sensor type entries
+  // the values are taken for FEI4 sensors; these values were hardcorded
+  // before and are now used as defaults to keep backward compatibility
+  auto defaultsType = toml::Table{
+      {"time_min", 0},
+      {"time_max", 15},
+      {"value_max", 15},
+  };
+  auto defaultsRegion = toml::Table{
+      {"col_min", INT_MIN},
+      {"col_max", INT_MAX - 1},
+      {"row_min", INT_MIN},
+      {"row_max", INT_MAX - 1},
+  };
+  // fill defaults for optional sensor type settings
+  auto configTypes = toml::Table{};
+  for (const auto& it : cfg.get<toml::Table>("sensor_types")) {
+    auto configType = withDefaults(it.second, defaultsType);
+    auto configRegions = toml::Array{};
+    if (configType.has("regions")) {
+      for (const auto& configRegion : configType.get<toml::Array>("regions")) {
+        configRegions.push_back(withDefaults(configRegion, defaultsRegion));
       }
     }
+    configType["regions"] = std::move(configRegions);
+    configTypes[it.first] = std::move(configType);
+  }
 
-    device.addSensor(Sensor(
-        isensor, name, measurement, cfgType.get<int>("cols"),
-        cfgType.get<int>("rows"), cfgType.get<int>("time_min"),
-        cfgType.get<int>("time_max"), cfgType.get<int>("value_max"),
-        cfgType.get<double>("pitch_col"), cfgType.get<double>("pitch_row"),
-        cfgType.get<double>("thickness"), cfgType.get<double>("x_x0"),
-        regions));
+  // construct device and sensors
+  Device device;
+  Index isensor = 0;
+  for (auto configSensor : cfg.get<toml::Array>("sensors")) {
+
+    // sensor-specific settings
+    auto id = isensor++;
+    auto name =
+        (configSensor.has("name") ? configSensor.get<std::string>("name")
+                                  : "sensor" + std::to_string(id));
+    auto type = configSensor.get<std::string>("type");
+
+    // get sensor type configuration
+    if (configTypes.count(type) == 0) {
+      THROW("sensor type '", type, "' is undefined");
+    }
+    const auto& config = configTypes.at(type);
+
+    // construct basic sensor
+    auto sensor = Sensor(
+        id, name,
+        Sensor::measurementFromName(config.get<std::string>("measurement")),
+        static_cast<Index>(config.get<int>("cols")),
+        static_cast<Index>(config.get<int>("rows")),
+        // see comments above for +1
+        config.get<int>("time_min"), config.get<int>("time_max") + 1,
+        config.get<int>("value_max") + 1, config.get<double>("pitch_col"),
+        config.get<double>("pitch_row"), config.get<double>("thickness"),
+        config.get<double>("x_x0"));
+
+    // add regions if defined
+    for (const auto& r : config.get<toml::Array>("regions")) {
+      sensor.addRegion(r.get<std::string>("name"), r.get<int>("col_min"),
+                       r.get<int>("col_max") + 1, r.get<int>("row_min"),
+                       r.get<int>("row_max") + 1);
+    }
+
+    device.addSensor(std::move(sensor));
   }
   return device;
 }
 
-void Mechanics::Device::addSensor(const Sensor& sensor)
+void Mechanics::Device::addSensor(Sensor&& sensor)
 {
   // TODO 2017-02-07 msmk: assumes ids are indices from 0 to n_sensors w/o gaps
-  m_sensorIds.emplace_back(sensor.id());
-  m_sensors.emplace_back(sensor);
+  m_sensors.emplace_back(std::move(sensor));
+  m_sensorIds.emplace_back(m_sensors.back().id());
 }
 
 void Mechanics::Device::setGeometry(const Geometry& geometry)

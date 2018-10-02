@@ -39,6 +39,7 @@ User-visible changes
     that contain the fully reconstructed data. For ``pt-recon`` the
     reconstructed events exists only transiently and only the required data
     is stored.
+*   Sensor regions in the device configuration must set the ``name``.
 
 Bugfixes
 --------
