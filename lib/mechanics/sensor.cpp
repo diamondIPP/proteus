@@ -53,6 +53,9 @@ Mechanics::Sensor::Sensor(Index id,
                           Measurement measurement,
                           Index numCols,
                           Index numRows,
+                          int timeMin,
+                          int timeMax,
+                          int valueMax,
                           double pitchCol,
                           double pitchRow,
                           double thickness,
@@ -62,6 +65,10 @@ Mechanics::Sensor::Sensor(Index id,
     , m_name(name)
     , m_numCols(numCols)
     , m_numRows(numRows)
+    // input max time is inclusive
+    , m_timeRange(timeMin, timeMax + 1)
+    // input max value is inclusive
+    , m_valueRange(0, valueMax + 1)
     , m_pitchCol(pitchCol)
     , m_pitchRow(pitchRow)
     , m_thickness(thickness)
@@ -203,6 +210,8 @@ void Mechanics::Sensor::print(std::ostream& os, const std::string& prefix) const
   os << prefix << "measurement: " << measurementName(m_measurement) << '\n';
   os << prefix << "cols: " << m_numCols << '\n';
   os << prefix << "rows: " << m_numRows << '\n';
+  os << prefix << "time: " << m_timeRange << '\n';
+  os << prefix << "value: " << m_valueRange << '\n';
   os << prefix << "pitch_col: " << m_pitchCol << '\n';
   os << prefix << "pitch_row: " << m_pitchRow << '\n';
   if (!m_regions.empty()) {

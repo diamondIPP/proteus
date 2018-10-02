@@ -69,10 +69,16 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
   auto cfgTypes = cfg.get<toml::Table>("sensor_types");
   auto cfgSensors = cfg.get<toml::Array>("sensors");
   for (size_t isensor = 0; isensor < cfgSensors.size(); ++isensor) {
-    toml::Value defaults =
-        toml::Table{{"name", "sensor" + std::to_string(isensor)}};
+    toml::Value defaultsType = toml::Table{
+        {"time_min", 0},
+        {"time_max", 15},
+        {"value_max", 15},
+    };
+    toml::Value defaultsSensor = toml::Table{
+        {"name", "sensor" + std::to_string(isensor)},
+    };
     toml::Value cfgSensor =
-        Utils::Config::withDefaults(cfgSensors[isensor], defaults);
+        Utils::Config::withDefaults(cfgSensors[isensor], defaultsSensor);
 
     auto name = cfgSensor.get<std::string>("name");
     auto typeName = cfgSensor.get<std::string>("type");
@@ -80,7 +86,8 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
       throw std::runtime_error("Device: sensor type '" + typeName +
                                "' does not exist");
     }
-    auto cfgType = cfgTypes[typeName];
+    auto cfgType =
+        Utils::Config::withDefaults(cfgTypes[typeName], defaultsType);
     auto cfgRegions = cfgType.find("regions");
     auto measurement =
         Sensor::measurementFromName(cfgType.get<std::string>("measurement"));
@@ -115,9 +122,11 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
 
     device.addSensor(Sensor(
         isensor, name, measurement, cfgType.get<int>("cols"),
-        cfgType.get<int>("rows"), cfgType.get<double>("pitch_col"),
-        cfgType.get<double>("pitch_row"), cfgType.get<double>("thickness"),
-        cfgType.get<double>("x_x0"), regions));
+        cfgType.get<int>("rows"), cfgType.get<int>("time_min"),
+        cfgType.get<int>("time_max"), cfgType.get<int>("value_max"),
+        cfgType.get<double>("pitch_col"), cfgType.get<double>("pitch_row"),
+        cfgType.get<double>("thickness"), cfgType.get<double>("x_x0"),
+        regions));
   }
   return device;
 }

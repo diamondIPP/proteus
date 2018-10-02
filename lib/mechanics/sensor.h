@@ -53,6 +53,8 @@ public:
   static Measurement measurementFromName(const std::string& name);
   static std::string measurementName(Measurement measurement);
 
+  /** One-dimensional range of possible values, e.g. for time and value. */
+  using IntRange = Utils::Interval<int>;
   /** Two-dimensional area type, e.g. for size and region-of-interest. */
   using Area = Utils::Box<2, double>;
   /** Three-dimensional bounding box type for projected volume. */
@@ -72,6 +74,9 @@ public:
          Measurement measurement,
          Index numCols,
          Index numRows,
+         int timeMin,
+         int timeMax,
+         int valueMax,
          double pitchCol,
          double pitchRow,
          double thickness,
@@ -82,11 +87,13 @@ public:
   Index id() const { return m_id; }
   const std::string& name() const { return m_name; }
 
-  // local properties
   Measurement measurement() const { return m_measurement; }
+  // local digital properties
   Index numCols() const { return m_numCols; }
   Index numRows() const { return m_numRows; }
-  Index numPixels() const { return m_numCols * m_numRows; }
+  const IntRange& timeRange() const { return m_timeRange; }
+  const IntRange& valueRange() const { return m_valueRange; }
+  // local physical properties
   double pitchCol() const { return m_pitchCol; }
   double pitchRow() const { return m_pitchRow; }
   double thickness() const { return m_thickness; }
@@ -129,7 +136,9 @@ private:
 
   Index m_id;
   std::string m_name;
-  Index m_numCols, m_numRows;    // number of columns and rows
+  Index m_numCols, m_numRows; // number of columns and rows
+  IntRange m_timeRange;
+  IntRange m_valueRange;
   double m_pitchCol, m_pitchRow; // pitch along column and row direction
   double m_thickness;            // sensor thickness
   double m_xX0;                  // X/X0 (thickness in radiation lengths)
