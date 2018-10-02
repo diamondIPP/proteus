@@ -12,8 +12,6 @@
 
 Analyzers::SensorClusters::SensorClusters(TDirectory* dir,
                                           const Mechanics::Sensor& sensor,
-                                          const int timeMax,
-                                          const int valueMax,
                                           const int sizeMax,
                                           const int binsUncertainty)
 {
@@ -22,10 +20,20 @@ Analyzers::SensorClusters::SensorClusters(TDirectory* dir,
   auto makeAreaHists = [&](const Mechanics::Sensor& sensor,
                            const Mechanics::Sensor::Area& area,
                            TDirectory* sub) {
+    auto time = sensor.timeRange();
+    auto value = sensor.valueRange();
+    // maximum time differences computable, max value is exclusive
+    auto timedeltaMin = time.min() - time.max() + 1;
+    auto timedeltaMax = time.max() - time.min();
+
     HistAxis axCol(area.interval(0), area.length(0), "Cluster column position");
     HistAxis axRow(area.interval(1), area.length(1), "Cluster row position");
-    HistAxis axTime(0, timeMax, "Cluster time");
-    HistAxis axValue(0, valueMax, "Cluster value");
+    // WARNING treat time/value as digital values, bin 0 = [-0.5, 0.5)
+    HistAxis axTime(time.min() - 0.5, time.max() - 0.5,
+                    std::min(1024, time.length()), "Cluster time");
+    // increase value range since cluster value is usually additive
+    HistAxis axValue(value.min() - 0.5, (value.max() + value.length()) - 0.5,
+                     std::min(1024, 2 * value.length()), "Cluster value");
     HistAxis axSize(1, sizeMax, "Cluster size");
     HistAxis axSizeCol(1, sizeMax, "Cluster column size");
     HistAxis axSizeRow(1, sizeMax, "Cluster row size");
@@ -37,8 +45,14 @@ Analyzers::SensorClusters::SensorClusters(TDirectory* dir,
                       "Cluster hit column position");
     HistAxis axHitRow(area.interval(1), area.length(1),
                       "Cluster hit row position");
-    HistAxis axHitTime(0, timeMax, "Hit time");
-    HistAxis axHitValue(0, valueMax, "Hit value");
+    // WARNING treat time/value as digital values, bin 0 = [-0.5, 0.5)
+    HistAxis axHitTime(time.min() - 0.5, time.max() - 0.5,
+                       std::min(1024, time.length()), "Hit time");
+    HistAxis axHitTimedelta(timedeltaMin - 0.5, timedeltaMax - 0.5,
+                            timedeltaMax - timedeltaMin,
+                            "Hit time - cluster time");
+    HistAxis axHitValue(value.min() - 0.5, value.max() - 0.5,
+                        std::min(1024, value.length()), "Hit value");
 
     AreaHists hs;
     hs.pos = makeH2(sub, "pos", axCol, axRow);
@@ -52,7 +66,10 @@ Analyzers::SensorClusters::SensorClusters(TDirectory* dir,
     hs.uncertaintyU = makeH1(sub, "uncertainty_u", axUnU);
     hs.uncertaintyV = makeH1(sub, "uncertainty_v", axUnV);
     hs.hitPos = makeH2(sub, "hit_pos", axHitCol, axHitRow);
+    hs.hitTimedelta = makeH1(sub, "hit_timedelta", axHitTimedelta);
     hs.sizeHitTime = makeH2(sub, "hit_time-size", axSize, axHitTime);
+    hs.sizeHitTimedelta =
+        makeH2(sub, "hit_timedelta-size", axSize, axHitTimedelta);
     hs.sizeHitValue = makeH2(sub, "hit_value-size", axSize, axHitValue);
     hs.hitValueHitTime =
         makeH2(sub, "hit_time-hit_value", axHitValue, axHitTime);
@@ -87,7 +104,9 @@ void Analyzers::SensorClusters::execute(const Storage::SensorEvent& sensorEvent)
     hists.uncertaintyV->Fill(std::sqrt(cluster.covLocal()(1, 1)));
     for (const Storage::Hit& hit : cluster.hits()) {
       hists.hitPos->Fill(hit.col(), hit.row());
+      hists.hitTimedelta->Fill(hit.time() - cluster.time());
       hists.sizeHitTime->Fill(cluster.size(), hit.time());
+      hists.sizeHitTimedelta->Fill(cluster.size(), hit.time() - cluster.time());
       hists.sizeHitValue->Fill(cluster.size(), hit.value());
       hists.hitValueHitTime->Fill(hit.value(), hit.time());
     }
@@ -122,15 +141,13 @@ void Analyzers::SensorClusters::finalize()
 Analyzers::Clusters::Clusters(TDirectory* dir,
                               const Mechanics::Device& device,
                               const int sizeMax,
-                              const int timeMax,
-                              const int valueMax,
                               const int binsUncertainty)
 {
   using namespace Utils;
 
   for (auto isensor : device.sensorIds())
-    m_sensors.emplace_back(dir, *device.getSensor(isensor), timeMax, valueMax,
-                           sizeMax, binsUncertainty);
+    m_sensors.emplace_back(dir, *device.getSensor(isensor), sizeMax,
+                           binsUncertainty);
 }
 
 std::string Analyzers::Clusters::name() const { return "ClusterInfo"; }
