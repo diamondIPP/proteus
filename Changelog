@@ -85,6 +85,8 @@ Internal changes
     the full rotation matrix instead of a linearized matrix followed by
     a manual orthogonalization of the combined matrix.
 *   Remove ``ROOT::GenVector`` dependency.
+*   ``Utils::Interval`` and ``Utils::Box`` always represent half-open
+    intervals.
 
 v1.3.0 (2017-12-06)
 ===================
