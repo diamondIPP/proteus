@@ -21,6 +21,9 @@ pt-cfg masks/dut_empty.toml
 # NOTE the shell seems to treat `! <cmd>` as a single command. To ensure the
 # that the shell exits when pt-cfg unexpectedly succeeds, an additional
 # failing command `false` is needed.
+! pt-cfg devices/test_failure-missing_settings.toml || false
+! pt-cfg devices/test_failure-non_exclusive_regions.toml || false
+
 ! pt-cfg geometry/ || false # directory
 ! pt-cfg geometry/does-not-exists || false
 
