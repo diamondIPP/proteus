@@ -13,24 +13,27 @@
 #include "utils/root.h"
 
 Analyzers::SensorHits::SensorHits(TDirectory* dir,
-                                  const Mechanics::Sensor& sensor,
-                                  const int timeMax,
-                                  const int valueMax)
+                                  const Mechanics::Sensor& sensor)
 
 {
   using namespace Utils;
 
-  const auto& area = sensor.sensitiveAreaPixel();
+  auto area = sensor.sensitiveAreaPixel();
+  auto time = sensor.timeRange();
+  auto value = sensor.valueRange();
 
   TDirectory* sub = Utils::makeDir(dir, "sensors/" + sensor.name() + "/hits");
 
   HistAxis axCol(area.interval(0), area.length(0), "Hit column");
   HistAxis axRow(area.interval(1), area.length(1), "Hit row");
-  HistAxis axTime(0, timeMax, "Hit time");
-  HistAxis axValue(0, valueMax, "Hit value");
+  // WARNING treat time/value as digital values, bin 0 = [-0.5, 0.5)
+  HistAxis axTime(time.min() - 0.5, time.max() - 0.5,
+                  std::min(1024, time.length()), "Hit time");
+  HistAxis axValue(value.min() - 0.5, value.max() - 0.5,
+                   std::min(1024, value.length()), "Hit value");
 
   m_nHits = makeH1(sub, "nhits", HistAxis{0, 64, "Hits / event"});
-  m_rate = makeH1(sub, "rate", HistAxis{0.0, 1.0, 128, "Hits / pixel / event"});
+  m_rate = makeH1(sub, "rate", HistAxis{0.0, 1.0, 100, "Hits / pixel / event"});
   m_pos = makeH2(sub, "pos", axCol, axRow);
   m_time = makeH1(sub, "time", axTime);
   m_value = makeH1(sub, "value", axValue);
@@ -83,13 +86,10 @@ void Analyzers::SensorHits::finalize()
   m_meanValueMap->Divide(m_pos);
 }
 
-Analyzers::Hits::Hits(TDirectory* dir,
-                      const Mechanics::Device& device,
-                      const int timeMax,
-                      const int valueMax)
+Analyzers::Hits::Hits(TDirectory* dir, const Mechanics::Device& device)
 {
   for (auto isensor : device.sensorIds())
-    m_sensors.emplace_back(dir, *device.getSensor(isensor), timeMax, valueMax);
+    m_sensors.emplace_back(dir, *device.getSensor(isensor));
 }
 
 std::string Analyzers::Hits::name() const { return "Hits"; }

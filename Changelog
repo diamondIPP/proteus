@@ -39,6 +39,23 @@ User-visible changes
     that contain the fully reconstructed data. For ``pt-recon`` the
     reconstructed events exists only transiently and only the required data
     is stored.
+*   Sensor regions in the device configuration must set the ``name``.
+*   Make sensor time and value range configurable.
+
+    These values were hardcoded to the FE-I4 values. They can now be configured
+    by setting the following keys in the relevant sensor type section
+
+        [sensor_types.some_sensor]
+        ...
+        time_min = 0
+        time_max = 31
+        value_max = 63
+        ...
+
+    All values are exclusive and should be set to the minimum and maximum
+    value that can occur in the data.
+*   Add histograms for hit timing within a cluster in
+    ``sensors/<sensor>/cluster`` folder.
 
 Bugfixes
 --------
@@ -85,6 +102,8 @@ Internal changes
     the full rotation matrix instead of a linearized matrix followed by
     a manual orthogonalization of the combined matrix.
 *   Remove ``ROOT::GenVector`` dependency.
+*   ``Utils::Interval`` and ``Utils::Box`` always represent half-open
+    intervals.
 
 v1.3.0 (2017-12-06)
 ===================

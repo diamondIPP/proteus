@@ -30,7 +30,6 @@ public:
   /** Construct device from a configuration object. */
   static Device fromConfig(const toml::Value& cfg);
 
-  void addSensor(const Sensor& sensor);
   const std::vector<Index>& sensorIds() const { return m_sensorIds; }
   Index numSensors() const { return static_cast<Index>(m_sensors.size()); }
   Sensor* getSensor(Index i) { return &m_sensors.at(i); }
@@ -48,6 +47,7 @@ public:
 
 private:
   Device() = default;
+  void addSensor(Sensor&& sensor);
 
   std::vector<Index> m_sensorIds;
   std::vector<Sensor> m_sensors;

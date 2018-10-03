@@ -22,10 +22,7 @@ namespace Analyzers {
 /** Hit histograms for a single sensor. */
 class SensorHits {
 public:
-  SensorHits(TDirectory* dir,
-             const Mechanics::Sensor& sensor,
-             const int timeMax,
-             const int valueMax);
+  SensorHits(TDirectory* dir, const Mechanics::Sensor& sensor);
 
   void execute(const Storage::SensorEvent& sensorEvent);
   void finalize();
@@ -49,11 +46,7 @@ private:
 /** Hit histograms for all sensors in the device. */
 class Hits : public Loop::Analyzer {
 public:
-  Hits(TDirectory* dir,
-       const Mechanics::Device& device,
-       /* Histogram options */
-       const int timeMax = 16,
-       const int valueMax = 16);
+  Hits(TDirectory* dir, const Mechanics::Device& device);
 
   std::string name() const;
   void execute(const Storage::Event& event);

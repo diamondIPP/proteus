@@ -24,8 +24,6 @@ class SensorClusters {
 public:
   SensorClusters(TDirectory* dir,
                  const Mechanics::Sensor& sensor,
-                 const int timeMax,
-                 const int valueMax,
                  const int sizeMax,
                  const int binsUncertainty);
 
@@ -45,7 +43,9 @@ private:
     TH1D* uncertaintyU;
     TH1D* uncertaintyV;
     TH2D* hitPos;
+    TH1D* hitTimedelta;
     TH2D* sizeHitTime;
+    TH2D* sizeHitTimedelta;
     TH2D* sizeHitValue;
     TH2D* hitValueHitTime;
   };
@@ -61,10 +61,7 @@ class Clusters : public Loop::Analyzer {
 public:
   Clusters(TDirectory* dir,
            const Mechanics::Device& device,
-           /* Histogram options */
-           const int sizeMax = 8,
-           const int timeMax = 16,
-           const int valueMax = 32,
+           const int sizeMax = 9,
            const int binsUncertainty = 32);
 
   std::string name() const;

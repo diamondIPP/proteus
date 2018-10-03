@@ -53,49 +53,55 @@ Mechanics::Sensor::Sensor(Index id,
                           Measurement measurement,
                           Index numCols,
                           Index numRows,
+                          int timeMin,
+                          int timeMax,
+                          int valueMax,
                           double pitchCol,
                           double pitchRow,
                           double thickness,
-                          double xX0,
-                          const std::vector<Region>& regions)
+                          double xX0)
     : m_id(id)
     , m_name(name)
     , m_numCols(numCols)
     , m_numRows(numRows)
+    , m_timeRange(timeMin, timeMax)
+    , m_valueRange(0, valueMax)
     , m_pitchCol(pitchCol)
     , m_pitchRow(pitchRow)
     , m_thickness(thickness)
     , m_xX0(xX0)
     // reasonable defaults for global properties that require the full geometry.
-    // this should be updated later on by the device.
+    // this should be updated later by the device.
     , m_beamSlope(0.0, 0.0)
     , m_beamDivergence(0.00125, 0.00125)
     , m_projPitch(pitchCol, pitchRow, 0)
     , m_projEnvelope(sensitiveVolumeLocal())
     , m_measurement(measurement)
-    , m_regions(regions)
 {
-  // ensure that all regions are bounded by the sensor size
-  for (auto& region : m_regions) {
-    region.areaPixel =
-        intersection(region.areaPixel, Area(Area::AxisInterval(0, numCols),
-                                            Area::AxisInterval(0, numRows)));
-  }
-  // ensure that all regions are uniquely named and have exclusive areas
-  for (size_t i = 0; i < m_regions.size(); ++i) {
-    for (size_t j = 0; j < m_regions.size(); ++j) {
-      if (i == j)
-        continue;
-      const auto& r0 = m_regions[i];
-      const auto& r1 = m_regions[j];
-      if (r0.name == r1.name) {
-        FAIL("region ", i, " and region ", j, " share the same name");
-      }
-      if (!intersection(r0.areaPixel, r1.areaPixel).isEmpty()) {
-        FAIL("region '", r0.name, "' intersects with region '", r1.name, "'");
-      }
+}
+
+void Mechanics::Sensor::addRegion(
+    const std::string& name, int col_min, int col_max, int row_min, int row_max)
+{
+  Region region;
+  region.name = name;
+  // ensure that the region is bounded by the sensor size
+  region.areaPixel = Area(Area::AxisInterval(col_min, col_max),
+                          Area::AxisInterval(row_min, row_max));
+  region.areaPixel = intersection(this->sensitiveAreaPixel(), region.areaPixel);
+  // ensure that all regions are uniquely named and areas are exclusive
+  for (const auto& other : m_regions) {
+    if (other.name == region.name) {
+      FAIL("region '", other.name,
+           "' already exists and can not be defined again");
+    }
+    if (!(intersection(other.areaPixel, region.areaPixel).isEmpty())) {
+      FAIL("region '", other.name, "' intersects with region '", region.name,
+           "'");
     }
   }
+  // region is well-defined and can be added
+  m_regions.push_back(std::move(region));
 }
 
 Vector2 Mechanics::Sensor::transformPixelToLocal(const Vector2& cr) const
@@ -114,8 +120,8 @@ Vector2 Mechanics::Sensor::transformLocalToPixel(const Vector2& uv) const
 
 Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaPixel() const
 {
-  return Area(Area::AxisInterval(0, static_cast<double>(m_numCols)),
-              Area::AxisInterval(0, static_cast<double>(m_numRows)));
+  return Area(Area::AxisInterval(0.0, static_cast<double>(m_numCols)),
+              Area::AxisInterval(0.0, static_cast<double>(m_numRows)));
 }
 
 Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaLocal() const
@@ -203,6 +209,8 @@ void Mechanics::Sensor::print(std::ostream& os, const std::string& prefix) const
   os << prefix << "measurement: " << measurementName(m_measurement) << '\n';
   os << prefix << "cols: " << m_numCols << '\n';
   os << prefix << "rows: " << m_numRows << '\n';
+  os << prefix << "time: " << m_timeRange << '\n';
+  os << prefix << "value: " << m_valueRange << '\n';
   os << prefix << "pitch_col: " << m_pitchCol << '\n';
   os << prefix << "pitch_row: " << m_pitchRow << '\n';
   if (!m_regions.empty()) {
