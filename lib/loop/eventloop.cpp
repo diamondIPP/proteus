@@ -68,29 +68,30 @@ struct Timing {
       std::ostringstream s;
       s << std::chrono::duration_cast<std::chrono::minutes>(dt).count()
         << " min "
-        << std::chrono::duration_cast<std::chrono::seconds>(dt).count()%60 << " s";
+        << std::chrono::duration_cast<std::chrono::seconds>(dt).count() % 60
+        << " s";
       return s.str();
     };
 
-    INFO("time: ", time_us_per_event(total));
-    INFO("  reader: ", time_us_per_event(reader));
-    INFO("  processors: ", time_us_per_event(pros));
+    VERBOSE("time: ", time_us_per_event(total));
+    VERBOSE("  reader: ", time_us_per_event(reader));
+    VERBOSE("  processors: ", time_us_per_event(pros));
     size_t ip = 0;
     for (const auto& p : ps) {
-      DEBUG("    ", p->name(), ": ", time_us_per_event(processors[ip++]));
+      VERBOSE("    ", p->name(), ": ", time_us_per_event(processors[ip++]));
     }
-    INFO("  analyzers: ", time_us_per_event(anas));
+    VERBOSE("  analyzers: ", time_us_per_event(anas));
     size_t ia = 0;
     for (const auto& a : as) {
-      DEBUG("    ", a->name(), ": ", time_us_per_event(analyzers[ia++]));
+      VERBOSE("    ", a->name(), ": ", time_us_per_event(analyzers[ia++]));
     }
-    INFO("  writers: ", time_us_per_event(wrts));
+    VERBOSE("  writers: ", time_us_per_event(wrts));
     size_t iw = 0;
     for (const auto& w : ws) {
-      DEBUG("    ", w->name(), ": ", time_us_per_event(writers[iw++]));
+      VERBOSE("    ", w->name(), ": ", time_us_per_event(writers[iw++]));
     }
-    INFO("time (clocked): ", time_min_s(total));
-    INFO("time (wall): ", time_min_s(stop_ - start_));
+    VERBOSE("time (clocked): ", time_min_s(total));
+    VERBOSE("time (wall): ", time_min_s(stop_ - start_));
   }
 };
 
@@ -198,14 +199,17 @@ void Loop::EventLoop::run()
   DEBUG("configured readers:");
   DEBUG("  ", m_reader->name());
   DEBUG("configured processors:");
-  for (const auto& processor : m_processors)
+  for (const auto& processor : m_processors) {
     DEBUG("  ", processor->name());
+  }
   DEBUG("configured analyzers:");
-  for (const auto& analyzer : m_analyzers)
+  for (const auto& analyzer : m_analyzers) {
     DEBUG("  ", analyzer->name());
+  }
   DEBUG("configured writers:");
-  for (const auto& writer : m_writers)
+  for (const auto& writer : m_writers) {
     DEBUG("  ", writer->name());
+  }
 
   Utils::Progress progress(m_showProgress ? m_events : 0);
   progress.update(0);
@@ -237,8 +241,9 @@ void Loop::EventLoop::run()
     progress.update(processed + 1);
   }
   progress.clear();
-  for (const auto& analyzer : m_analyzers)
+  for (const auto& analyzer : m_analyzers) {
     analyzer->finalize();
+  }
   timing.stop();
   timing.summarize(processed + 1, m_processors, m_analyzers, m_writers);
   stats.summarize();
