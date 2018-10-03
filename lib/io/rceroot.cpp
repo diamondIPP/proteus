@@ -229,7 +229,7 @@ size_t Io::RceRootReader::numSensors() const { return m_sensors.size(); }
 void Io::RceRootReader::skip(uint64_t n)
 {
   if (m_entries <= static_cast<int64_t>(m_next + n)) {
-    INFO("skipping ", n, " events goes beyond available events");
+    ERROR("skipping ", n, " events goes beyond available events");
     m_next = m_entries;
   } else {
     m_next += n;
@@ -344,7 +344,10 @@ bool Io::RceRootReader::read(Storage::Event& event)
 // writer
 
 Io::RceRootWriter::RceRootWriter(const std::string& path, size_t numSensors)
-    : RceRootCommon(TFile::Open(path.c_str(), "RECREATE", "", ROOT::CompressionSettings(ROOT::kLZMA, 1)))
+    : RceRootCommon(TFile::Open(path.c_str(),
+                                "RECREATE",
+                                "",
+                                ROOT::CompressionSettings(ROOT::kLZMA, 1)))
 {
   if (!m_file)
     THROW("could not open '", path, "' to write");
