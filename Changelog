@@ -56,6 +56,8 @@ User-visible changes
     value that can occur in the data.
 *   Add histograms for hit timing within a cluster in
     ``sensors/<sensor>/cluster`` folder.
+*   Add ``--print-events`` flag to most tools that enables the printing of
+    event information independent of the verbosity settings.
 
 Bugfixes
 --------
