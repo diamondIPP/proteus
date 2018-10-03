@@ -83,21 +83,25 @@ Mechanics::Sensor::Sensor(Index id,
 void Mechanics::Sensor::addRegion(
     const std::string& name, int col_min, int col_max, int row_min, int row_max)
 {
+  Region region;
+  region.name = name;
   // ensure that the region is bounded by the sensor size
-  auto area = Area(Area::AxisInterval(col_min, col_max),
-                   Area::AxisInterval(row_min, row_max));
-  area = intersection(this->sensitiveAreaPixel(), area);
+  region.areaPixel = Area(Area::AxisInterval(col_min, col_max),
+                          Area::AxisInterval(row_min, row_max));
+  region.areaPixel = intersection(this->sensitiveAreaPixel(), region.areaPixel);
   // ensure that all regions are uniquely named and areas are exclusive
-  for (const auto& region : m_regions) {
-    if (region.name == name) {
-      FAIL("region '", name, "' already exists and can not be defined again");
+  for (const auto& other : m_regions) {
+    if (other.name == region.name) {
+      FAIL("region '", other.name,
+           "' already exists and can not be defined again");
     }
-    if (!(intersection(region.areaPixel, area).isEmpty())) {
-      FAIL("region '", region.name, "' intersects with region '", name, "'");
+    if (!(intersection(other.areaPixel, region.areaPixel).isEmpty())) {
+      FAIL("region '", other.name, "' intersects with region '", region.name,
+           "'");
     }
   }
   // region is well-defined and can be added
-  m_regions.push_back({name, area});
+  m_regions.push_back(std::move(region));
 }
 
 Vector2 Mechanics::Sensor::transformPixelToLocal(const Vector2& cr) const
