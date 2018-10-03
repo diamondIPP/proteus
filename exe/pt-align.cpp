@@ -217,7 +217,7 @@ int main(int argc, char const* argv[])
   }
 
   steps.writeGraphs(dev, Utils::makeDir(&hists, "results"));
-  hists.Write();
+  hists.Write(nullptr, TFile::kOverwrite);
   hists.Close();
 
   return EXIT_SUCCESS;

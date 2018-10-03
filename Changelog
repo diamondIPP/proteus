@@ -29,6 +29,16 @@ User-visible changes
     variables were unused anywhere in the code base and their content
     was unclear.
 *   Alignment using the ``residuals`` method enforces a fixed z-position.
+*   Add combined reconstruction tool ``pt-recon``.
+
+    This tool performs per-sensor processing, track finding, track fitting
+    as well as extrapolation and matching on selected reconstruction planes.
+    Reconstructed data is written to disk only for the reconstruction planes.
+    This tool takes over the functionality of both ``pt-track`` and ``pt-match``
+    and removes the need for the large and (mostly) unused intermediate files
+    that contain the fully reconstructed data. For ``pt-recon`` the
+    reconstructed events exists only transiently and only the required data
+    is stored.
 
 Bugfixes
 --------
@@ -49,6 +59,8 @@ Bugfixes
     The progress bar is shown by default and can be deactivated using the
     ``--no-progress`` option. This is the same behaviour as for all other
     tools.
+*   Ensure the histogram files only contain a single version of each histogram
+    and existing objects are correctly overwritten.
 
 Internal changes
 ----------------

@@ -12,8 +12,6 @@ mkdir -p output/${dataset}
 
 geo="geometry/${dataset}.toml"
 
-echo "=== using $(which pt-track)"
-echo "=== using $(which pt-match)"
+echo "=== using $(which pt-recon)"
 
-pt-track -g ${geo} ${flags} ${datadir}/${dataset}.root output/${dataset}/track
-pt-match -g ${geo} ${flags} output/${dataset}/track-data.root output/${dataset}/match
+pt-recon -g ${geo} ${flags} ${datadir}/${dataset}.root output/${dataset}/recon

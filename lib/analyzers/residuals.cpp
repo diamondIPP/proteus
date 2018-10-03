@@ -122,39 +122,26 @@ void Analyzers::Residuals::execute(const Storage::Event& event)
 }
 
 Analyzers::Matching::Matching(TDirectory* dir,
-                              const Mechanics::Device& device,
-                              const std::vector<Index>& sensorIds,
+                              const Mechanics::Sensor& sensor,
                               const double rangeStd,
                               const int bins)
+    : m_hists(dir, sensor, rangeStd, bins, "matching")
 {
-  for (auto isensor : sensorIds) {
-    m_hists_map.emplace(
-        isensor, detail::SensorResidualHists(dir, *device.getSensor(isensor),
-                                             rangeStd, bins, "matching"));
-  }
 }
 
 std::string Analyzers::Matching::name() const { return "Matching"; }
 
 void Analyzers::Matching::execute(const Storage::Event& event)
 {
-  for (Index isensor = 0; isensor < event.numSensorEvents(); ++isensor) {
-    const Storage::SensorEvent& sensorEvent = event.getSensorEvent(isensor);
+  const Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
 
-    if (!m_hists_map.count(sensorEvent.sensor()))
-      continue;
-
-    auto& hists = m_hists_map[sensorEvent.sensor()];
-
-    // matched pairs
-    for (const auto& s : sensorEvent.localStates()) {
-      const Storage::TrackState& state = s.second;
-
-      if (state.isMatched()) {
-        const Storage::Cluster& cluster =
-            sensorEvent.getCluster(state.matchedCluster());
-        hists.fill(state, cluster);
-      }
+  // iterate over all matched pairs
+  for (const auto& s : sensorEvent.localStates()) {
+    const Storage::TrackState& state = s.second;
+    if (state.isMatched()) {
+      const Storage::Cluster& cluster =
+          sensorEvent.getCluster(state.matchedCluster());
+      m_hists.fill(state, cluster);
     }
   }
 }
