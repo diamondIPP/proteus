@@ -41,7 +41,7 @@ int main(int argc, char const* argv[])
   if (args.has("quiet")) {
     Utils::Logger::setGlobalLevel(Utils::Logger::Level::Error);
   } else if (args.has("verbose")) {
-    Utils::Logger::setGlobalLevel(Utils::Logger::Level::Debug);
+    Utils::Logger::setGlobalLevel(Utils::Logger::Level::Verbose);
   } else {
     Utils::Logger::setGlobalLevel(Utils::Logger::Level::Info);
   }

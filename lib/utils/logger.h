@@ -48,6 +48,12 @@ void print(std::ostream& os, T0&& thing, TN&&... rest)
   print(os, rest...);
 }
 
+// helper function to suppress unused variables warnings in non-debug builds
+template <typename... Ts>
+inline void unreferenced(Ts&&...)
+{
+}
+
 } // namespace detail
 
 /** A logger object with global log level.
@@ -68,10 +74,9 @@ void print(std::ostream& os, T0&& thing, TN&&... rest)
  */
 class Logger {
 public:
-  enum class Level { Error = 0, Info = 1, Debug = 2 };
+  enum class Level { Error = 0, Info = 1, Verbose = 2 };
 
   static void setGlobalLevel(Level lvl) { s_level = lvl; }
-  static bool isActive(Level lvl) { return (lvl <= s_level); }
   static Logger& globalLogger();
 
   Logger(std::string name);
@@ -87,40 +92,47 @@ public:
     log(Level::Info, things...);
   }
   template <typename... Ts>
-  void debug(const Ts&... things)
+  void verbose(const Ts&... things)
   {
-    log(Level::Debug, things...);
+    log(Level::Verbose, things...);
   }
-  /** Log debug information using an objects print(...) function. */
-  template <typename T>
-  void debugp(const T& thing, const std::string& extraPrefix = std::string())
+
+  /** Log information with a given log level. */
+  template <typename... Ts>
+  void log(Level lvl, const Ts&... things)
   {
-    if (isActive(Level::Debug)) {
-      thing.print(stream(Level::Debug), prefix(Level::Debug) + extraPrefix);
-      stream(Level::Debug) << kReset;
+    if (isActive(lvl)) {
+      detail::print(stream(lvl), prefix(lvl), things..., kReset);
     }
   }
+  /** Log information using an objects print(...) function. */
+  template <typename T>
+  void logp(Level lvl,
+            const T& thing,
+            const std::string& extraPrefix = std::string())
+  {
+    if (isActive(lvl)) {
+      thing.print(stream(lvl), prefix(lvl) + extraPrefix);
+      stream(lvl) << kReset;
+    }
+  }
+  bool isActive(Level lvl) { return (lvl <= s_level); }
 
 private:
   static std::ostream& stream(Level lvl)
   {
     return (lvl == Level::Error) ? std::cerr : std::cout;
   }
-  std::string prefix(Level lvl) const
-  {
-    return kLevelPrefix[static_cast<int>(lvl)] + m_prefix;
-  }
-  template <typename... Ts>
-  void log(Level lvl, const Ts&... things)
-  {
-    if (isActive(lvl))
-      detail::print(stream(lvl), prefix(lvl), things..., kReset);
-  }
 
   static const char* const kLevelPrefix[3];
   static const char* const kReset;
   static Logger s_global;
   static Level s_level;
+
+  std::string prefix(Level lvl) const
+  {
+    return kLevelPrefix[static_cast<int>(lvl)] + m_prefix;
+  }
 
   std::string m_prefix;
 };
@@ -153,31 +165,45 @@ private:
 /* Convenience macros to log a message via the logger.
  *
  * The macros should be used to log a single message. The message **must not**
- * end in a newline. The `DEBUG(...)` macros is a noop in non-debug builds.
- *
- * These macros expect a `logger()` function to be available that
- * returns a reference to a `Logger` object. This can be either defined
+ * end in a newline. These macros expect a `logger()` function to be available
+ * that returns a reference to a `Logger` object. This can be either defined
  * at file scope by using the `PT_SETUP_..._LOGGER` macros or by implementing
  * a private class method to use a class-specific logger.
  */
 #define ERROR(...)                                                             \
   do {                                                                         \
-    logger().error(__VA_ARGS__, '\n');                                         \
+    if (logger().isActive(Utils::Logger::Level::Error)) {                      \
+      logger().error(__VA_ARGS__, '\n');                                       \
+    }                                                                          \
   } while (false)
 #define INFO(...)                                                              \
   do {                                                                         \
-    logger().info(__VA_ARGS__, '\n');                                          \
+    if (logger().isActive(Utils::Logger::Level::Info)) {                       \
+      logger().info(__VA_ARGS__, '\n');                                        \
+    }                                                                          \
   } while (false)
+#define VERBOSE(...)                                                           \
+  do {                                                                         \
+    if (logger().isActive(Utils::Logger::Level::Verbose)) {                    \
+      logger().verbose(__VA_ARGS__, '\n');                                     \
+    }                                                                          \
+  } while (false)
+
+/* Debug messages are logged with the verbose level but are only shown in
+ * a debug build. They become noops in a release build. In a release build
+ * arguments should not be evaluated and no warning for unused variables
+ * should be emitted.
+ */
 #ifdef NDEBUG
-#define DEBUG(...) ((void)0)
-#else
 #define DEBUG(...)                                                             \
   do {                                                                         \
-    logger().debug(__VA_ARGS__, '\n');                                         \
+    (decltype(Utils::detail::unreferenced(__VA_ARGS__)))0;                     \
   } while (false)
+#else
+#define DEBUG(...) VERBOSE(__VA_ARGS__)
 #endif
 
-/** Write the error message w/ the logger and quit the application. */
+/** Write the error message to the logger and quit the application. */
 #define FAIL(...)                                                              \
   do {                                                                         \
     logger().error(__VA_ARGS__, '\n');                                         \
@@ -191,7 +217,7 @@ private:
     Utils::detail::print(os, __VA_ARGS__);                                     \
     throw ExceptionType(os.str());                                             \
   } while (false)
-/** Throw a std::runtimer_error with a custom error message. */
+/** Throw a std::runtime_error with a custom error message. */
 #define THROW(...) THROWX(std::runtime_error, __VA_ARGS__)
 
 #endif // PT_LOGGER_H

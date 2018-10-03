@@ -107,6 +107,7 @@ Internal changes
 *   Remove ``ROOT::GenVector`` dependency.
 *   ``Utils::Interval`` and ``Utils::Box`` always represent half-open
     intervals.
+*   Clarify log levels and add support for non-debug verbose output.
 
 v1.3.0 (2017-12-06)
 ===================
