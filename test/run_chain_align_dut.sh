@@ -5,9 +5,9 @@
 set -ex
 
 datadir=${DATADIR:-data}
+nalign=${NALIGN:-25000}
 dataset=$1; shift
-flags=$@ # e.g. -n 10000, to process only the first 10k events
-nalign=10000
+flags=$@
 
 mkdir -p output/${dataset}-chain
 
@@ -18,7 +18,6 @@ pt-align ${flags} -u dut_coarse \
   -m output/${dataset}-chain/noisescan-mask.toml \
   -n ${nalign} \
   ${datadir}/${dataset}.root output/${dataset}-chain/align_dut_coarse
-
 pt-align ${flags} -u dut_fine \
   -g output/${dataset}-chain/align_dut_coarse-geo.toml \
   -m output/${dataset}-chain/noisescan-mask.toml \
