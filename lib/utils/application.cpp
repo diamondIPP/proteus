@@ -38,7 +38,7 @@ void Utils::Application::initialize(int argc, char const* argv[])
   args.addOption('s', "skip_events", "skip the first n events", 0);
   args.addOption('n', "num_events", "number of events to process", UINT64_MAX);
   args.addFlag('q', "quiet", "print only errors");
-  args.addFlag('\0', "debug", "print more information");
+  args.addFlag('v', "verbose", "print more information");
   args.addFlag('\0', "print-events", "print full event information");
   args.addFlag('\0', "no-progress", "do not show a progress bar");
   args.addRequired("input", "path to the input file");
@@ -51,7 +51,7 @@ void Utils::Application::initialize(int argc, char const* argv[])
   // logging level
   if (args.has("quiet")) {
     Utils::Logger::setGlobalLevel(Utils::Logger::Level::Error);
-  } else if (args.has("debug")) {
+  } else if (args.has("verbose")) {
     Utils::Logger::setGlobalLevel(Utils::Logger::Level::Debug);
   } else {
     Utils::Logger::setGlobalLevel(Utils::Logger::Level::Info);
