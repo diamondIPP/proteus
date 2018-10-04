@@ -83,8 +83,8 @@ static Angles321 extractAngles321(const Matrix3& q)
   // WARNING
   // this is not a stable algorithm and will break down for the case of
   // 𝛽 = ±π, cos(𝛽) = 0, sin(𝛽) = ±1. It should be replaced by a better
-  // algorithm. in this code base, the rotation matrix is used and stored
-  // and the angles are only used for reporting. we should be fine.
+  // algorithm. in this code base, only the resulting rotation matrix is used
+  // and the angles are only employed for reporting. we should be fine.
   Angles321 angles;
   angles.alpha = std::atan2(-q(1, 2), q(2, 2));
   angles.beta = std::asin(q(0, 2));
@@ -438,11 +438,14 @@ void Mechanics::Geometry::print(std::ostream& os,
   os << prefix << "  divergence: [" << m_beamDivergenceX << ","
      << m_beamDivergenceY << "]\n";
   for (const auto& ip : m_planes) {
-    os << prefix << "sensor " << ip.first << ":\n"
-       << prefix << "  offset: [" << ip.second.offset << "]\n"
-       << prefix << "  unit u: [" << ip.second.unitU() << "]\n"
-       << prefix << "  unit v: [" << ip.second.unitV() << "]\n"
-       << prefix << "  unit w: [" << ip.second.unitNormal() << "]\n";
+    auto params = ip.second.asParams();
+    os << prefix << "sensor " << ip.first << ":\n";
+    os << prefix << "  offset: [" << ip.second.offset << "]\n";
+    os << prefix << "  angles: [" << degree(params[3]) << ", "
+       << degree(params[4]) << ", " << degree(params[5]) << "]\n";
+    os << prefix << "  unit u: [" << ip.second.unitU() << "]\n";
+    os << prefix << "  unit v: [" << ip.second.unitV() << "]\n";
+    os << prefix << "  unit w: [" << ip.second.unitNormal() << "]\n";
   }
   os.flush();
 }

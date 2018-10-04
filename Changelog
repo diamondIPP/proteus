@@ -65,6 +65,7 @@ User-visible changes
     The verification step computes correlations, finds tracks, and calculates
     residuals to allow a simpler crosscheck of the final geometry. It also
     computes the beam parameters using the final geometry.
+*   ``pt-cfg`` shows rotation angles in addition to the local unit vectors.
 
 Bugfixes
 --------
