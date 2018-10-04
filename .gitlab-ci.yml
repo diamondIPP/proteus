@@ -117,7 +117,7 @@ test-combine:
     - source install/activate.sh
     - cd test
     - ./download_data.py unigetel_ebeam012_nparticles01 unigetel_ebeam120_nparticles02
-    - ./check_combine.sh
+    - ./check_combine.sh --no-progress
 
 # templates for dataset tests
 
