@@ -31,15 +31,15 @@ struct SensorStepsGraphs {
   std::vector<double> offX;
   std::vector<double> offY;
   std::vector<double> offZ;
-  std::vector<double> rotX;
-  std::vector<double> rotY;
-  std::vector<double> rotZ;
+  std::vector<double> rotAlpha;
+  std::vector<double> rotBeta;
+  std::vector<double> rotGamma;
   std::vector<double> errOffX;
   std::vector<double> errOffY;
   std::vector<double> errOffZ;
-  std::vector<double> errRotX;
-  std::vector<double> errRotY;
-  std::vector<double> errRotZ;
+  std::vector<double> errRotAlpha;
+  std::vector<double> errRotBeta;
+  std::vector<double> errRotGamma;
 
   void addStep(const Vector6& delta, const SymMatrix6& cov)
   {
@@ -47,16 +47,16 @@ struct SensorStepsGraphs {
     offX.push_back(delta[0]);
     offY.push_back(delta[1]);
     offZ.push_back(delta[2]);
-    rotX.push_back(delta[3]);
-    rotY.push_back(delta[4]);
-    rotZ.push_back(delta[5]);
+    rotAlpha.push_back(delta[3]);
+    rotBeta.push_back(delta[4]);
+    rotGamma.push_back(delta[5]);
     // errors
     errOffX.push_back(std::sqrt(cov(0, 0)));
     errOffY.push_back(std::sqrt(cov(1, 1)));
     errOffZ.push_back(std::sqrt(cov(2, 2)));
-    errRotX.push_back(std::sqrt(cov(3, 3)));
-    errRotY.push_back(std::sqrt(cov(4, 4)));
-    errRotZ.push_back(std::sqrt(cov(5, 5)));
+    errRotAlpha.push_back(std::sqrt(cov(3, 3)));
+    errRotBeta.push_back(std::sqrt(cov(4, 4)));
+    errRotGamma.push_back(std::sqrt(cov(5, 5)));
   }
   void write(const std::string& sensorName, TDirectory* dir) const
   {
@@ -81,9 +81,12 @@ struct SensorStepsGraphs {
     makeGraph("offset_z", "offset z", offZ, errOffZ);
     // show rotation angles in degree
     double yscale = 180.0 / M_PI;
-    makeGraph("rotation_x", "rotation x / degree", rotX, errRotX, yscale);
-    makeGraph("rotation_y", "rotation y / degree", rotY, errRotY, yscale);
-    makeGraph("rotation_z", "rotation z / degree", rotZ, errRotZ, yscale);
+    makeGraph("rotation_alpha", "rotation #alpha / degree", rotAlpha,
+              errRotAlpha, yscale);
+    makeGraph("rotation_beta", "rotation #beta / degree", rotBeta, errRotBeta,
+              yscale);
+    makeGraph("rotation_gamma", "rotation #gamma / degree", rotGamma,
+              errRotGamma, yscale);
   }
 };
 
