@@ -24,7 +24,7 @@ Alignment::ResidualsAligner::ResidualsAligner(
   using namespace Utils;
 
   for (auto id = alignIds.begin(); id != alignIds.end(); ++id) {
-    const Mechanics::Sensor& sensor = *device.getSensor(*id);
+    const Mechanics::Sensor& sensor = device.getSensor(*id);
     double offsetRange =
         pixelRange * std::hypot(sensor.pitchCol(), sensor.pitchRow());
 
@@ -95,7 +95,7 @@ Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
   Mechanics::Geometry geo = m_device.geometry();
 
   for (auto hists = m_hists.begin(); hists != m_hists.end(); ++hists) {
-    const Mechanics::Sensor& sensor = *m_device.getSensor(hists->sensorId);
+    const Mechanics::Sensor& sensor = m_device.getSensor(hists->sensorId);
     const Mechanics::Plane& plane = geo.getPlane(hists->sensorId);
 
     double du = hists->corrU->GetMean();

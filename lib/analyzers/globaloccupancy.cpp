@@ -16,12 +16,12 @@ Analyzers::GlobalOccupancy::GlobalOccupancy(TDirectory* dir,
   auto active = Mechanics::Sensor::Volume::Empty();
   for (auto isensor : device.sensorIds()) {
     active = Utils::boundingBox(active,
-                                device.getSensor(isensor)->projectedEnvelope());
+                                device.getSensor(isensor).projectedEnvelope());
   }
 
   // create per-sensor histograms
   for (auto isensor : device.sensorIds()) {
-    const auto& sensor = *device.getSensor(isensor);
+    const auto& sensor = device.getSensor(isensor);
     auto pitch = sensor.projectedPitch();
 
     Utils::HistAxis ax(active.min(0), active.max(0),

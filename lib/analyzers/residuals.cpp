@@ -93,7 +93,7 @@ Analyzers::Residuals::Residuals(TDirectory* dir,
 {
   for (auto isensor : sensorIds) {
     m_hists_map.emplace(
-        isensor, detail::SensorResidualHists(dir, *device.getSensor(isensor),
+        isensor, detail::SensorResidualHists(dir, device.getSensor(isensor),
                                              rangeStd, bins, subdir));
   }
 }

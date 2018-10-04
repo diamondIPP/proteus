@@ -68,7 +68,7 @@ Mechanics::Geometry Alignment::CorrelationsAligner::updatedGeometry() const
     deltaY += hY->GetBinCenter(hY->GetMaximumBin());
     deltaYVar += hY->GetMeanError() * hY->GetMeanError();
 
-    INFO(m_device.getSensor(currId)->name(),
+    INFO(m_device.getSensor(currId).name(),
          " alignment corrections (before fixed sensor):");
     INFO("  dx:  ", deltaX, " +- ", std::sqrt(deltaXVar));
     INFO("  dy:  ", deltaY, " +- ", std::sqrt(deltaYVar));
@@ -93,7 +93,7 @@ Mechanics::Geometry Alignment::CorrelationsAligner::updatedGeometry() const
     deltaY -= hY->GetBinCenter(hY->GetMaximumBin());
     deltaYVar += hY->GetMeanError() * hY->GetMeanError();
 
-    INFO(m_device.getSensor(currId)->name(),
+    INFO(m_device.getSensor(currId).name(),
          " alignment corrections (after fixed sensor):");
     INFO("  dx:  ", deltaX, " +- ", std::sqrt(deltaXVar));
     INFO("  dy:  ", deltaY, " +- ", std::sqrt(deltaYVar));
