@@ -19,7 +19,11 @@ PT_SETUP_LOCAL_LOGGER(Application)
 Utils::Application::Application(const std::string& name,
                                 const std::string& description,
                                 const toml::Table& defaults)
-    : m_name(name), m_desc(description), m_cfg(defaults), m_showProgress(false)
+    : m_name(name)
+    , m_desc(description)
+    , m_cfg(defaults)
+    , m_printEvents(false)
+    , m_showProgress(false)
 {
 }
 
@@ -34,7 +38,8 @@ void Utils::Application::initialize(int argc, char const* argv[])
   args.addOption('s', "skip_events", "skip the first n events", 0);
   args.addOption('n', "num_events", "number of events to process", UINT64_MAX);
   args.addFlag('q', "quiet", "print only errors");
-  args.addFlag('\0', "debug", "print more information");
+  args.addFlag('v', "verbose", "print more information");
+  args.addFlag('\0', "print-events", "print full event information");
   args.addFlag('\0', "no-progress", "do not show a progress bar");
   args.addRequired("input", "path to the input file");
   args.addRequired("output_prefix", "output path prefix");
@@ -46,15 +51,19 @@ void Utils::Application::initialize(int argc, char const* argv[])
   // logging level
   if (args.has("quiet")) {
     Utils::Logger::setGlobalLevel(Utils::Logger::Level::Error);
-  } else if (args.has("debug")) {
-    Utils::Logger::setGlobalLevel(Utils::Logger::Level::Debug);
+  } else if (args.has("verbose")) {
+    Utils::Logger::setGlobalLevel(Utils::Logger::Level::Verbose);
   } else {
     Utils::Logger::setGlobalLevel(Utils::Logger::Level::Info);
   }
-
+  // event printing
+  if (args.has("print-events")) {
+    m_printEvents = true;
+  }
   // hide progress-bar
-  if (!args.has("no-progress"))
+  if (!args.has("no-progress")) {
     m_showProgress = true;
+  }
 
   // select configuration (sub-)section
   std::string section = m_name;
@@ -104,7 +113,8 @@ Loop::EventLoop Utils::Application::makeEventLoop() const
                        m_dev->numSensors(), m_skipEvents, m_numEvents,
                        m_showProgress);
   // full-event output in debug mode
-  if (Logger::isActive(Logger::Level::Debug))
+  if (m_printEvents) {
     loop.addAnalyzer(std::make_shared<Analyzers::EventPrinter>());
+  }
   return loop;
 }

@@ -11,8 +11,6 @@
 #define ANSI_ITALIC "\x1B[3m"
 #define ANSI_RED "\x1B[31m"
 
-const static size_t kPrefixMax = 16;
-
 // per-level prefix
 // clang-format off
 const char* const Utils::Logger::kLevelPrefix[3] = {
@@ -30,6 +28,8 @@ Utils::Logger::Level Utils::Logger::s_level = Utils::Logger::Level::Error;
 
 Utils::Logger::Logger(std::string name) : m_prefix(std::move(name))
 {
+  constexpr size_t kPrefixMax = 16;
+
   m_prefix.resize(kPrefixMax, ' ');
   m_prefix += "| ";
 }

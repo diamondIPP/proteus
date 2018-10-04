@@ -61,6 +61,7 @@ private:
   std::string m_outputPrefix;
   uint64_t m_skipEvents;
   uint64_t m_numEvents;
+  bool m_printEvents;
   bool m_showProgress;
 };
 

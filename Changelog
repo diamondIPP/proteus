@@ -56,6 +56,9 @@ User-visible changes
     value that can occur in the data.
 *   Add histograms for hit timing within a cluster in
     ``sensors/<sensor>/cluster`` folder.
+*   Add ``--print-events`` flag to most tools that enables the printing of
+    event information independent of the verbosity settings.
+*   Rename ``--debug`` flag to ``--verbose`` and add a ``-v`` short flag.
 
 Bugfixes
 --------
@@ -104,6 +107,7 @@ Internal changes
 *   Remove ``ROOT::GenVector`` dependency.
 *   ``Utils::Interval`` and ``Utils::Box`` always represent half-open
     intervals.
+*   Clarify log levels and add support for non-debug verbose output.
 
 v1.3.0 (2017-12-06)
 ===================
