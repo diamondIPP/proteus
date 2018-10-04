@@ -30,7 +30,6 @@ public:
    */
   Distances(TDirectory* dir,
             const Mechanics::Sensor& sensor,
-            const double pixelRange = 3.0,
             const double d2Max = 10.0,
             const int bins = 256);
 
