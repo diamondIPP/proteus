@@ -30,9 +30,8 @@ Analyzers::detail::SensorResidualHists::SensorResidualHists(
   auto posRangeV = sensor.sensitiveAreaLocal().interval(1);
   auto distRange = std::sqrt(resMaxU * resMaxU + resMaxV * resMaxV);
 
-  Vector2 slope = sensor.beamSlope();
-  Vector2 slopeMin = slope - rangeStd * sensor.beamDivergence();
-  Vector2 slopeMax = slope + rangeStd * sensor.beamDivergence();
+  Vector2 slopeMin = sensor.beamSlope() - rangeStd * sensor.beamDivergence();
+  Vector2 slopeMax = sensor.beamSlope() + rangeStd * sensor.beamDivergence();
 
   HistAxis axResU(-resMaxU, resMaxU, bins, "Cluster - track residual u");
   HistAxis axResV(-resMaxV, resMaxV, bins, "Cluster - track residual v");
@@ -50,15 +49,12 @@ Analyzers::detail::SensorResidualHists::SensorResidualHists(
   trackVResU = makeH2(sub, "res_u-pos_v", axPosV, axResU);
   slopeUResU = makeH2(sub, "res_u-slope_u", axSlopeU, axResU);
   slopeVResU = makeH2(sub, "res_u-slope_v", axSlopeV, axResU);
-
   resV = makeH1(sub, "res_v", axResV);
   trackUResV = makeH2(sub, "res_v-pos_u", axPosU, axResV);
   trackVResV = makeH2(sub, "res_v-pos_v", axPosV, axResV);
   slopeUResV = makeH2(sub, "res_v-slope_u", axSlopeU, axResV);
   slopeVResV = makeH2(sub, "res_v-slope_v", axSlopeV, axResV);
-
   resUV = makeH2(sub, "res_uv", axResU, axResV);
-
   resDist = makeH1(sub, "res_dist", axResDist);
   resD2 = makeH1(sub, "res_d2", axResD2);
 }
