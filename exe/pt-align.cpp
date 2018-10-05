@@ -5,6 +5,7 @@
 #include <TFile.h>
 #include <TGraphErrors.h>
 #include <TTree.h>
+#include <Compression.h>
 
 #include "alignment/correlationsaligner.h"
 #include "alignment/residualsaligner.h"
@@ -147,7 +148,7 @@ int main(int argc, char const* argv[])
   }
 
   // output
-  TFile hists(app.outputPath("hists.root").c_str(), "RECREATE");
+  TFile hists(app.outputPath("hists.root").c_str(), "RECREATE", "", ROOT::CompressionSettings(ROOT::kLZMA, 1));
 
   // alignment steps monitoring starting w/ the initial geometry
   StepsGraphs steps;
