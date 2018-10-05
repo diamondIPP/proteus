@@ -132,10 +132,10 @@ Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
 
     // output w/ angles in degrees
     INFO(sensor.name(), " alignment corrections:");
-    INFO("  du: ", delta[0], " +- ", std::sqrt(varDU));
-    INFO("  dv: ", delta[1], " +- ", std::sqrt(varDV));
+    INFO("  du: ", delta[0], " ± ", std::sqrt(varDU));
+    INFO("  dv: ", delta[1], " ± ", std::sqrt(varDV));
     INFO("  dw: ", delta[2], " (dz=0 enforced)");
-    INFO("  dgamma: ", degree(delta[5]), " +- ", degree(std::sqrt(varDGamma)),
+    INFO("  dgamma: ", degree(delta[5]), " ± ", degree(std::sqrt(varDGamma)),
          " degree");
   }
   return geo;
