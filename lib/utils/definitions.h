@@ -56,7 +56,7 @@ using Vector6 = Vector<double, 6>;
  * measure.
  */
 template <typename T, unsigned int kD1>
-inline double mahalanobisSquared(
+static inline double mahalanobisSquared(
     const ROOT::Math::SMatrix<T, kD1, kD1, ROOT::Math::MatRepSym<T, kD1>>& cov,
     const ROOT::Math::SVector<T, kD1>& x)
 {
@@ -69,7 +69,7 @@ inline double mahalanobisSquared(
 
 /** Mahalanobis distance / norm of a vector. */
 template <typename T, unsigned int kD1>
-inline double mahalanobis(
+static inline double mahalanobis(
     const ROOT::Math::SMatrix<T, kD1, kD1, ROOT::Math::MatRepSym<T, kD1>>& cov,
     const ROOT::Math::SVector<T, kD1>& x)
 {
