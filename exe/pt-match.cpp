@@ -39,7 +39,7 @@ int main(int argc, char const* argv[])
     loop.addProcessor(std::make_shared<Matcher>(app.device(), sensorId));
   loop.addAnalyzer(std::make_shared<Tracks>(&hists, app.device()));
   for (auto sensorId : sensorIds) {
-    const auto& sensor = *app.device().getSensor(sensorId);
+    const auto& sensor = app.device().getSensor(sensorId);
     loop.addAnalyzer(std::make_shared<Distances>(&hists, sensor));
     loop.addAnalyzer(std::make_shared<Matching>(&hists, sensor));
     loop.addAnalyzer(std::make_shared<Efficiency>(&hists, sensor));

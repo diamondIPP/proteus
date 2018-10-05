@@ -14,7 +14,7 @@ Processors::Matcher::Matcher(const Mechanics::Device& device,
     : m_sensorId(sensorId)
     , m_distSquaredMax(
           (distanceSigmaMax < 0) ? -1 : (distanceSigmaMax * distanceSigmaMax))
-    , m_name("Matcher(" + device.getSensor(sensorId)->name() + ')')
+    , m_name("Matcher(" + device.getSensor(sensorId).name() + ')')
 {
 }
 

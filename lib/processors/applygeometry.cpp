@@ -17,7 +17,7 @@ void Processors::ApplyGeometry::execute(Storage::Event& event) const
 
   for (Index iplane = 0; iplane < event.numSensorEvents(); iplane++) {
     Storage::SensorEvent& sensorEvent = event.getSensorEvent(iplane);
-    const Mechanics::Sensor& sensor = *m_device.getSensor(iplane);
+    const Mechanics::Sensor& sensor = m_device.getSensor(iplane);
 
     // jacobian from pixel to local coordinates
     Matrix2 p2l;

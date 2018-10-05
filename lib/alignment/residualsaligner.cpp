@@ -23,8 +23,8 @@ Alignment::ResidualsAligner::ResidualsAligner(
 {
   using namespace Utils;
 
-  for (auto id = alignIds.begin(); id != alignIds.end(); ++id) {
-    const Mechanics::Sensor& sensor = *device.getSensor(*id);
+  for (auto id : alignIds) {
+    const Mechanics::Sensor& sensor = device.getSensor(id);
     double offsetRange =
         pixelRange * std::hypot(sensor.pitchCol(), sensor.pitchRow());
 
@@ -36,7 +36,7 @@ Alignment::ResidualsAligner::ResidualsAligner(
     HistAxis axGamma(-gammaRange, gammaRange, bins,
                      "Local rotation #gamma correction");
     SensorHists hists;
-    hists.sensorId = *id;
+    hists.sensorId = id;
     hists.corrU = makeH1(sub, "correction_u", axU);
     hists.corrV = makeH1(sub, "correction_v", axV);
     hists.corrGamma = makeH1(sub, "correction_gamma", axGamma);
@@ -51,7 +51,7 @@ std::string Alignment::ResidualsAligner::name() const
 
 void Alignment::ResidualsAligner::execute(const Storage::Event& event)
 {
-  for (const auto& hists : m_hists) {
+  for (auto& hists : m_hists) {
     Index isensor = hists.sensorId;
     const Storage::SensorEvent& sensorEvent = event.getSensorEvent(isensor);
 
@@ -94,16 +94,16 @@ Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
 {
   Mechanics::Geometry geo = m_device.geometry();
 
-  for (auto hists = m_hists.begin(); hists != m_hists.end(); ++hists) {
-    const Mechanics::Sensor& sensor = *m_device.getSensor(hists->sensorId);
-    const Mechanics::Plane& plane = geo.getPlane(hists->sensorId);
+  for (const auto& hists : m_hists) {
+    const Mechanics::Sensor& sensor = m_device.getSensor(hists.sensorId);
+    const Mechanics::Plane& plane = geo.getPlane(hists.sensorId);
 
-    double du = hists->corrU->GetMean();
-    double stdDU = hists->corrU->GetMeanError();
-    double dv = hists->corrV->GetMean();
-    double stdDV = hists->corrV->GetMeanError();
-    double dgamma = hists->corrGamma->GetMean();
-    double stdDGamma = hists->corrGamma->GetMeanError();
+    double du = hists.corrU->GetMean();
+    double stdDU = hists.corrU->GetMeanError();
+    double dv = hists.corrV->GetMean();
+    double stdDV = hists.corrV->GetMeanError();
+    double dgamma = hists.corrGamma->GetMean();
+    double stdDGamma = hists.corrGamma->GetMeanError();
 
     // enforce vanishing dz
     Vector3 offsetGlobal = plane.rotation * Vector3(du, dv, 0.0);
@@ -122,7 +122,7 @@ Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
     cov(0, 0) = stdDU * stdDU;
     cov(1, 1) = stdDV * stdDV;
     cov(5, 5) = stdDGamma * stdDGamma;
-    geo.correctLocal(hists->sensorId, delta, cov);
+    geo.correctLocal(hists.sensorId, delta, cov);
 
     // output w/ angles in degrees
     constexpr double toDeg = 180.0 / M_PI;

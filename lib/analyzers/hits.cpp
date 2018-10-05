@@ -89,7 +89,7 @@ void Analyzers::SensorHits::finalize()
 Analyzers::Hits::Hits(TDirectory* dir, const Mechanics::Device& device)
 {
   for (auto isensor : device.sensorIds())
-    m_sensors.emplace_back(dir, *device.getSensor(isensor));
+    m_sensors.emplace_back(dir, device.getSensor(isensor));
 }
 
 std::string Analyzers::Hits::name() const { return "Hits"; }

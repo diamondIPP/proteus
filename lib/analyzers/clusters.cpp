@@ -146,7 +146,7 @@ Analyzers::Clusters::Clusters(TDirectory* dir,
   using namespace Utils;
 
   for (auto isensor : device.sensorIds())
-    m_sensors.emplace_back(dir, *device.getSensor(isensor), sizeMax,
+    m_sensors.emplace_back(dir, device.getSensor(isensor), sizeMax,
                            binsUncertainty);
 }
 

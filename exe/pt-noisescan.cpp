@@ -61,9 +61,8 @@ int main(int argc, char const* argv[])
     // min/max are inclusive but Area uses right-open intervals
     Area roi(Interval(c->get<int>("col_min"), c->get<int>("col_max") + 1),
              Interval(c->get<int>("row_min"), c->get<int>("row_max") + 1));
-    noiseScans.push_back(
-        std::make_shared<NoiseScan>(&hists, *app.device().getSensor(id),
-                                    bandwidth, sigmaMax, rateMax, roi));
+    noiseScans.push_back(std::make_shared<NoiseScan>(
+        &hists, app.device().getSensor(id), bandwidth, sigmaMax, rateMax, roi));
   }
 
   Loop::EventLoop loop = app.makeEventLoop();

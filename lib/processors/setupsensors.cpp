@@ -17,7 +17,7 @@ void Processors::setupHitPreprocessing(const Mechanics::Device& device,
   using namespace Mechanics;
 
   for (auto isensor : device.sensorIds()) {
-    const Sensor& sensor = *device.getSensor(isensor);
+    const Sensor& sensor = device.getSensor(isensor);
 
     // hit mapper
     if (sensor.measurement() == Sensor::Measurement::Ccpdv4Binary) {
@@ -36,7 +36,7 @@ void Processors::setupClusterizers(const Mechanics::Device& device,
   using namespace Mechanics;
 
   for (auto isensor : device.sensorIds()) {
-    const Sensor& sensor = *device.getSensor(isensor);
+    const Sensor& sensor = device.getSensor(isensor);
     switch (sensor.measurement()) {
     case Sensor::Measurement::PixelBinary:
     case Sensor::Measurement::Ccpdv4Binary:

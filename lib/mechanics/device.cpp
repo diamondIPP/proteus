@@ -154,7 +154,7 @@ void Mechanics::Device::setGeometry(const Geometry& geometry)
 
   // update geometry-dependent sensor properties
   for (auto sensorId : m_sensorIds) {
-    auto& sensor = *getSensor(sensorId);
+    auto& sensor = getSensor(sensorId);
     const auto& plane = m_geometry.getPlane(sensorId);
     sensor.updateBeam(plane, m_geometry.beamDirection(),
                       m_geometry.beamDivergence());
@@ -167,9 +167,8 @@ void Mechanics::Device::applyPixelMasks(const PixelMasks& pixelMasks)
 {
   m_pixelMasks = pixelMasks;
 
-  for (auto sensorId : m_sensorIds) {
-    Sensor* sensor = getSensor(sensorId);
-    sensor->setMaskedPixels(m_pixelMasks.getMaskedPixels(sensorId));
+  for (auto id : m_sensorIds) {
+    getSensor(id).setMaskedPixels(m_pixelMasks.getMaskedPixels(id));
   }
   // TODO 2016-08-18 msmk: check number of sensors / id consistency
 }
@@ -178,7 +177,7 @@ void Mechanics::Device::print(std::ostream& os, const std::string& prefix) const
 {
   for (auto sensorId : m_sensorIds) {
     os << prefix << "sensor " << sensorId << ":\n";
-    getSensor(sensorId)->print(os, prefix + "  ");
+    getSensor(sensorId).print(os, prefix + "  ");
   }
   os << prefix << "geometry:\n";
   m_geometry.print(os, prefix + "  ");

@@ -96,7 +96,7 @@ struct StepsGraphs {
   void writeGraphs(const Mechanics::Device& device, TDirectory* dir) const
   {
     for (const auto& g : graphs)
-      g.second.writeGraphs(device.getSensor(g.first)->name(), dir);
+      g.second.writeGraphs(device.getSensor(g.first).name(), dir);
   }
 };
 

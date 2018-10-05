@@ -67,7 +67,7 @@ int main(int argc, char const* argv[])
   // matching
   for (auto sensorId : extrapolationIds) {
     loop.addProcessor(std::make_shared<Matcher>(app.device(), sensorId));
-    const auto& sensor = *app.device().getSensor(sensorId);
+    const auto& sensor = app.device().getSensor(sensorId);
     loop.addAnalyzer(std::make_shared<Distances>(&hists, sensor));
     loop.addAnalyzer(std::make_shared<Matching>(&hists, sensor));
     loop.addAnalyzer(std::make_shared<Efficiency>(&hists, sensor));

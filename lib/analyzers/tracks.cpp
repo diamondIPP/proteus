@@ -22,10 +22,11 @@ Analyzers::Tracks::Tracks(TDirectory* dir,
   using namespace Utils;
 
   // estimate bounding box of all sensor projections into the xy-plane
-  auto active = device.getSensor(0)->projectedEnvelope();
-  for (auto isensor : device.sensorIds())
-    active = Utils::boundingBox(active,
-                                device.getSensor(isensor)->projectedEnvelope());
+  auto active = Mechanics::Sensor::Volume::Empty();
+  for (auto isensor : device.sensorIds()) {
+    auto sensorBox = device.getSensor(isensor).projectedEnvelope();
+    active = Utils::boundingBox(active, sensorBox);
+  }
 
   Vector3 direction = device.geometry().beamDirection();
   Vector2 slope(direction[0] / direction[2], direction[1] / direction[2]);

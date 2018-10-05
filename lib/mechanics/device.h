@@ -32,8 +32,8 @@ public:
 
   const std::vector<Index>& sensorIds() const { return m_sensorIds; }
   Index numSensors() const { return static_cast<Index>(m_sensors.size()); }
-  Sensor* getSensor(Index i) { return &m_sensors.at(i); }
-  const Sensor* getSensor(Index i) const { return &m_sensors.at(i); }
+  Sensor& getSensor(Index i) { return m_sensors.at(i); }
+  const Sensor& getSensor(Index i) const { return m_sensors.at(i); }
 
   /** Store the geometry and apply it to all configured sensors. */
   void setGeometry(const Geometry& geometry);

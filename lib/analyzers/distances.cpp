@@ -50,7 +50,6 @@ void Analyzers::Distances::Hists::fill(const Vector2& delta,
 
 Analyzers::Distances::Distances(TDirectory* dir,
                                 const Mechanics::Sensor& sensor,
-                                const double pixelRange,
                                 const double d2Max,
                                 const int bins)
     : m_sensorId(sensor.id())

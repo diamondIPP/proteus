@@ -32,8 +32,8 @@ Analyzers::Correlations::Correlations(TDirectory* dir,
   const size_t n = sensorIds.size();
   for (size_t i = 0; i < n; ++i) {
     for (size_t j = 1 + i; j < std::min(n, 1 + i + neighbors); ++j) {
-      const Mechanics::Sensor& sensor0 = *dev.getSensor(sensorIds[i]);
-      const Mechanics::Sensor& sensor1 = *dev.getSensor(sensorIds[j]);
+      const Mechanics::Sensor& sensor0 = dev.getSensor(sensorIds[i]);
+      const Mechanics::Sensor& sensor1 = dev.getSensor(sensorIds[j]);
       addHist(sensor0, sensor1, sub);
     }
   }
