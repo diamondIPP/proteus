@@ -76,4 +76,7 @@ static inline double mahalanobis(
   return std::sqrt(mahalanobisSquared(cov, x));
 }
 
+/** Conversion from angle in radian to equivalent angle in degrees. */
+static constexpr double degree(double radian) { return radian * 180.0 / M_PI; }
+
 #endif // PT_DEFINITIONS_H

@@ -106,12 +106,11 @@ static Angles321 extractAngles321(const Matrix3& q)
   // norm should vanish for correct angle extraction
   // single epsilon results in too many false-positives.
   if (4 * std::numeric_limits<double>::epsilon() < norm) {
-    constexpr double toDeg = 180.0 / M_PI;
     ERROR("detected inconsistent matrix to angles conversion");
     INFO("angles:");
-    INFO("  alpha: ", angles.alpha * toDeg, " degree");
-    INFO("  beta: ", angles.beta * toDeg, " degree");
-    INFO("  gamma: ", angles.gamma * toDeg, " degree");
+    INFO("  alpha: ", degree(angles.alpha), " degree");
+    INFO("  beta: ", degree(angles.beta), " degree");
+    INFO("  gamma: ", degree(angles.gamma), " degree");
     INFO("rotation matrix:\n", q);
     INFO("rotation matrix from angles:\n", qFromAngles);
     INFO("forward-backward distance to identity: ", norm);
