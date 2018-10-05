@@ -10,7 +10,7 @@ v1.4.0 (to be released)
 User-visible changes
 --------------------
 
-*   Increased compression in the output root files. The RCE files will be a factor of 3 smaller than before.
+*   Increased compression in the output root files. The RCE files will be a factor of 3 smaller than before. Added compression to the match, track, recon and hist files as well.
 *   Remove ``event/...`` histograms that showed the
     ``Trigger{Offset,Phase}`` variables.
 *   Add occupancy histograms in the global coordinate system. They can be
@@ -108,6 +108,8 @@ Internal changes
 *   ``Utils::Interval`` and ``Utils::Box`` always represent half-open
     intervals.
 *   Clarify log levels and add support for non-debug verbose output.
+*   Added ``ROOT::CompressionSettings(ROOT::kLZMA, 1)`` every time that a ROOT
+    is opened for writing
 
 v1.3.0 (2017-12-06)
 ===================
