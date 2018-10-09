@@ -87,9 +87,11 @@ struct StepsGraphs {
   std::map<Index, SensorStepsGraphs> sensors;
   StepsGraph beamX;
   StepsGraph beamY;
+  StepsGraph numTracks;
 
   void addStep(const std::vector<Index>& sensorIds,
-               const Mechanics::Geometry& geo)
+               const Mechanics::Geometry& geo,
+               double ntracks = 0.0)
   {
     for (auto id : sensorIds) {
       sensors[id].addStep(geo.getParams(id), geo.getParamsCov(id));
@@ -98,6 +100,7 @@ struct StepsGraphs {
     auto div = geo.beamDivergence();
     beamX.addStep(dir[0] / dir[2], div[0]);
     beamY.addStep(dir[1] / dir[2], div[1]);
+    numTracks.addStep(ntracks);
   }
   void write(const Mechanics::Device& device, TDirectory* dir) const
   {
@@ -106,6 +109,7 @@ struct StepsGraphs {
     }
     beamX.write("beam_slope_x", "Beam slope x", dir);
     beamY.write("beam_slope_y", "Beam slope y", dir);
+    numTracks.write("ntracks", "Tracks / event", dir);
   }
 };
 
@@ -229,7 +233,8 @@ int main(int argc, char const* argv[])
     dev.geometry().writeFile(app.outputPath("geo.toml"));
 
     // register updated geometry in alignment monitoring
-    steps.addStep(alignIds, dev.geometry());
+    double ntracks = (tracks ? tracks->avgNumTracks() : 0.0);
+    steps.addStep(alignIds, dev.geometry(), ntracks);
   }
 
   // validation step w/o geometry changes but final beam parameter updates
@@ -267,7 +272,7 @@ int main(int argc, char const* argv[])
     // no need to update the device; it will not be used again
 
     // close alignment monitoring w/ the final validation step geometry
-    steps.addStep(alignIds, geo);
+    steps.addStep(alignIds, geo, tracks->avgNumTracks());
   }
 
   steps.write(dev, Utils::makeDir(&hists, "summary"));
