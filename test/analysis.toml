@@ -38,32 +38,53 @@ num_points_min = 5
 [match]
 sensor_ids = [0]
 
-[align.tel_coarse]
+[align.tel_correlations]
 method = "correlations" # use method based on cluster correlations
 sensor_ids = [1,2,3,4,5,6] # sensors to calculate correlations for
 align_ids = [2,3,4,5,6] # sensors to align
 
-# only align inner telescope sensors, keep first and last fixed
-[align.tel_coarse_inner]
-method = "correlations" # use method based on cluster correlations
-sensor_ids = [1,2,3,4,5,6] # sensors to calculate correlations for
-align_ids = [2,3,4,5] # sensors to align
+# align inner telescope sensors, keep first and last fixed
+[align.tel_correlations_inner]
+method = "correlations"
+sensor_ids = [1,2,3,4,5,6]
+align_ids = [2,3,4,5]
 
-[align.tel_fine]
-method = "residuals" # use method based on track residuals
+# align inner telescope planes using track residuals histograms
+[align.tel_residuals]
+method = "residuals"
 sensor_ids = [1,2,3,4,5,6] # sensors to build tracks
 align_ids = [2,3,4,5] # sensors to align
+num_steps = 25 # number of iterative steps
+search_sigma_max = 10.0 # distance search window for track finding
+reduced_chi2_max = 10.0 # chi2 cut for track finding
+
+# align inner telescope planes using a local chi2 method
+[align.tel_localchi2]
+method = "localchi2"
+sensor_ids = [1,2,3,4,5,6] # sensors to build tracks
+align_ids = [2,3,4,5] # sensors to align
+num_steps = 25 # number of iterative steps
+search_sigma_max = 10.0 # distance search window for track finding
+reduced_chi2_max = 10.0 # chi2 cut for track finding
+
+# align device-under-test using cluster correlations
+[align.dut_correlations]
+method = "correlations"
+sensor_ids = [0,1,2,3,4,5,6] # sensors to calculate correlations for
+align_ids = [0] # align dut plane
+
+# align device-under-test using track residuals histograms
+[align.dut_residuals]
+method = "residuals"
+sensor_ids = [0,1,2,3,4,5,6] # sensors to build tracks
+align_ids = [0] # align dut plane
 num_steps = 20 # number of iterative steps
 search_sigma_max = 10.0 # distance search window for track finding
 reduced_chi2_max = 10.0 # chi2 cut for track finding
 
-[align.dut_coarse]
-method = "correlations" # use method based on cluster correlations
-sensor_ids = [0,1,2,3,4,5,6] # sensors to calculate correlations for
-align_ids = [0] # align dut plane
-
-[align.dut_fine]
-method = "residuals" # use method based on track residuals
+# align device-under-test using a local chi2 method
+[align.dut_localchi2]
+method = "localchi2"
 sensor_ids = [0,1,2,3,4,5,6] # sensors to build tracks
 align_ids = [0] # align dut plane
 num_steps = 20 # number of iterative steps

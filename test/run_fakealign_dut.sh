@@ -12,6 +12,9 @@ mkdir -p output/${dataset}
 
 echo "=== using $(which pt-align)"
 
-pt-align ${flags} -u dut_fine \
+pt-align ${flags} -u dut_residuals \
   -g geometry/${dataset}.toml \
-  ${datadir}/${dataset}.root output/${dataset}/fakealign_dut_fine
+  ${datadir}/${dataset}.root output/${dataset}/fakealign_dut_residuals
+pt-align ${flags} -u dut_localchi2 \
+  -g geometry/${dataset}.toml \
+  ${datadir}/${dataset}.root output/${dataset}/fakealign_dut_localchi2

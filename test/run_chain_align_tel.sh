@@ -13,11 +13,11 @@ mkdir -p output/${dataset}-chain
 
 echo "=== using $(which pt-align)"
 
-pt-align ${flags} -u tel_coarse \
+pt-align ${flags} -u tel_correlations \
   -m output/${dataset}-chain/noisescan-mask.toml \
   -n ${nalign} \
   ${datadir}/${dataset}.root output/${dataset}-chain/align_tel_coarse
-pt-align ${flags} -u tel_fine \
+pt-align ${flags} -u tel_residuals \
   -g output/${dataset}-chain/align_tel_coarse-geo.toml \
   -m output/${dataset}-chain/noisescan-mask.toml \
   -n ${nalign} \
