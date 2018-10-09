@@ -36,6 +36,8 @@ public:
   std::string name() const;
   void execute(const Storage::Event& event);
 
+  /** Average nmber of tracks per event. */
+  double avgNumTracks() const;
   /** The beam slope (mean track slope) in global coordinates. */
   Vector2 beamSlope() const;
   /** The beam divergence (track slope standard dev) in global coordinates. */
