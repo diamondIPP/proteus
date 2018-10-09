@@ -66,6 +66,25 @@ User-visible changes
     residuals to allow a simpler crosscheck of the final geometry. It also
     computes the beam parameters using the final geometry.
 *   ``pt-cfg`` shows rotation angles in addition to the local unit vectors.
+*   The six per-plane alignment parameters are consistently labelled as
+    ``x``, ``y``, ``z``, ``alpha``, ``beta``, ``gamma``. This changes
+    various histogram names as well as log output.
+*   Add a new alignment algorithm based on
+    ``V. Karimaeki et al., 2003, arXiv:physics/0306034`` that uses a
+    local least square minimization to align all six plane parameters.
+
+    The new algorithm can be selected by setting the alignment method
+    in the configuration
+
+        [align]
+        ...
+        method = "localchi2"
+        ...
+
+    The remaining parameters are the same as for the existing ``residuals``
+    method.
+*   Move alignment summary graphs to the ``summary`` directory and add
+    graphs for the beam slope and number of reconstructed tracks per event.
 
 Bugfixes
 --------
