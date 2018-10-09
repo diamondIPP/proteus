@@ -26,99 +26,67 @@
 
 PT_SETUP_LOCAL_LOGGER(align)
 
-/** Store sensor geometry parameters for multiple steps. */
-struct SensorStepsGraphs {
-  std::vector<double> offX;
-  std::vector<double> offY;
-  std::vector<double> offZ;
-  std::vector<double> rotAlpha;
-  std::vector<double> rotBeta;
-  std::vector<double> rotGamma;
-  std::vector<double> errOffX;
-  std::vector<double> errOffY;
-  std::vector<double> errOffZ;
-  std::vector<double> errRotAlpha;
-  std::vector<double> errRotBeta;
-  std::vector<double> errRotGamma;
+/** Store values for every step and produce a graph at the end. */
+struct StepsGraph {
+  std::vector<double> values;
+  std::vector<double> errors;
 
-  void addStep(const Vector6& delta, const SymMatrix6& cov)
+  void addStep(double value, double error = 0.0)
   {
-    // values
-    offX.push_back(delta[0]);
-    offY.push_back(delta[1]);
-    offZ.push_back(delta[2]);
-    rotAlpha.push_back(delta[3]);
-    rotBeta.push_back(delta[4]);
-    rotGamma.push_back(delta[5]);
-    // errors
-    errOffX.push_back(std::sqrt(cov(0, 0)));
-    errOffY.push_back(std::sqrt(cov(1, 1)));
-    errOffZ.push_back(std::sqrt(cov(2, 2)));
-    errRotAlpha.push_back(std::sqrt(cov(3, 3)));
-    errRotBeta.push_back(std::sqrt(cov(4, 4)));
-    errRotGamma.push_back(std::sqrt(cov(5, 5)));
+    values.push_back(value);
+    errors.push_back(error);
   }
-  void write(const std::string& sensorName, TDirectory* dir) const
+  void write(const std::string& name,
+             const std::string& ylabel,
+             TDirectory* dir) const
   {
-    TDirectory* sub = Utils::makeDir(dir, sensorName);
-    auto makeGraph = [&](const std::string& name, const std::string& ylabel,
-                         const std::vector<double>& yval,
-                         const std::vector<double>& yerr,
-                         const double yscale = 1.0) {
-      TGraphErrors* g = new TGraphErrors(std::min(yval.size(), yerr.size()));
-      for (int i = 0; i < g->GetN(); ++i) {
-        g->SetPoint(i, i, yscale * yval[i]);
-        g->SetPointError(i, 0.0, yscale * yerr[i]);
-      }
-      g->SetName(name.c_str());
-      g->SetTitle("");
-      g->GetXaxis()->SetTitle("Alignment step");
-      g->GetYaxis()->SetTitle((sensorName + ' ' + ylabel).c_str());
-      sub->WriteTObject(g, nullptr, "Overwrite");
-    };
-    makeGraph("offset_x", "offset x", offX, errOffX);
-    makeGraph("offset_y", "offset y", offY, errOffY);
-    makeGraph("offset_z", "offset z", offZ, errOffZ);
-    // show rotation angles in degree
-    double yscale = 180.0 / M_PI;
-    makeGraph("rotation_alpha", "rotation #alpha / degree", rotAlpha,
-              errRotAlpha, yscale);
-    makeGraph("rotation_beta", "rotation #beta / degree", rotBeta, errRotBeta,
-              yscale);
-    makeGraph("rotation_gamma", "rotation #gamma / degree", rotGamma,
-              errRotGamma, yscale);
+    TGraphErrors* g = new TGraphErrors(std::min(values.size(), errors.size()));
+    for (int i = 0; i < g->GetN(); ++i) {
+      g->SetPoint(i, i, values[i]);
+      g->SetPointError(i, 0.0, errors[i]);
+    }
+    g->SetName(name.c_str());
+    g->SetTitle("");
+    g->GetXaxis()->SetTitle("Alignment step");
+    g->GetYaxis()->SetTitle(ylabel.c_str());
+    dir->WriteTObject(g, nullptr, "Overwrite");
   }
 };
 
-struct BeamStepsGraphs {
-  std::vector<double> slope;
-  std::vector<double> divergence;
+/** Store sensor geometry parameters for multiple steps. */
+struct SensorStepsGraphs {
+  StepsGraph x;
+  StepsGraph y;
+  StepsGraph z;
+  StepsGraph alpha;
+  StepsGraph beta;
+  StepsGraph gamma;
 
-  void addStep(double slope_, double divergence_)
+  void addStep(const Vector6& params, const SymMatrix6& cov)
   {
-    slope.push_back(slope_);
-    divergence.push_back(divergence_);
+    Vector6 stdev = sqrt(cov.Diagonal());
+    x.addStep(params[0], stdev[0]);
+    y.addStep(params[1], stdev[1]);
+    z.addStep(params[2], stdev[2]);
+    alpha.addStep(degree(params[3]), degree(stdev[3]));
+    beta.addStep(degree(params[4]), degree(stdev[3]));
+    gamma.addStep(degree(params[5]), degree(stdev[3]));
   }
-  void write(const std::string& axis, TDirectory* dir) const
+  void write(TDirectory* dir) const
   {
-    TGraphErrors* g =
-        new TGraphErrors(std::min(slope.size(), divergence.size()));
-    for (int i = 0; i < g->GetN(); ++i) {
-      g->SetPoint(i, i, slope[i]);
-      g->SetPointError(i, 0.0, divergence[i]);
-    }
-    g->SetName(("beam_slope_" + axis).c_str());
-    g->SetTitle("");
-    g->GetXaxis()->SetTitle("Alignment step");
-    g->GetYaxis()->SetTitle(("Beam slope " + axis).c_str());
-    dir->WriteTObject(g, nullptr, "Overwrite");
+    x.write("offset_x", "Offset x", dir);
+    y.write("offset_y", "Offset y", dir);
+    z.write("offset_z", "Offset z", dir);
+    alpha.write("rotation_alpha", "Rotation #alpha / #circ", dir);
+    beta.write("rotation_beta", "Rotation #beta / #circ", dir);
+    gamma.write("rotation_gamma", "Rotation #gamma / #circ", dir);
   }
 };
 
 struct StepsGraphs {
   std::map<Index, SensorStepsGraphs> sensors;
-  BeamStepsGraphs beamX;
-  BeamStepsGraphs beamY;
+  StepsGraph beamX;
+  StepsGraph beamY;
 
   void addStep(const std::vector<Index>& sensorIds,
                const Mechanics::Geometry& geo)
@@ -134,10 +102,10 @@ struct StepsGraphs {
   void write(const Mechanics::Device& device, TDirectory* dir) const
   {
     for (const auto& g : sensors) {
-      g.second.write(device.getSensor(g.first).name(), dir);
+      g.second.write(Utils::makeDir(dir, device.getSensor(g.first).name()));
     }
-    beamX.write("x", dir);
-    beamY.write("y", dir);
+    beamX.write("beam_slope_x", "Beam slope x", dir);
+    beamY.write("beam_slope_y", "Beam slope y", dir);
   }
 };
 
@@ -298,7 +266,7 @@ int main(int argc, char const* argv[])
     geo.writeFile(app.outputPath("geo.toml"));
     // no need to update the device; it will not be used again
 
-    // register validation step in alignment monitoring
+    // close alignment monitoring w/ the final validation step geometry
     steps.addStep(alignIds, geo);
   }
 
