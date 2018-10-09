@@ -5,6 +5,8 @@
 #include <map>
 #include <string>
 
+#include <Eigen/SVD>
+
 #include "utils/config.h"
 #include "utils/definitions.h"
 
@@ -92,6 +94,8 @@ namespace Mechanics {
  */
 class Plane {
 public:
+  /** Construct a plane consistent with the global system. */
+  Plane() : m_rotation(Matrix3::Identity()), m_offset(Vector3::Zero()) {}
   /** Construct a plane from 3-2-1 rotation angles. */
   static Plane
   fromAngles321(double gamma, double beta, double alpha, const Vector3& offset);
@@ -100,9 +104,9 @@ public:
                               const Vector3& dirV,
                               const Vector3& offset);
 
-  /** Corrected plane from [dx, dy, dz, dalpha, dbeta, dgamma]. */
+  /** Create a corrected plane from [dx, dy, dz, dalpha, dbeta, dgamma]. */
   Plane correctedGlobal(const Vector6& delta) const;
-  /** Corrected plane from [du, dv, dw, dalpha, dbeta, dgamma]. */
+  /** Create a corrected plane from [du, dv, dw, dalpha, dbeta, dgamma]. */
   Plane correctedLocal(const Vector6& delta) const;
 
   auto rotationToGlobal() const { return m_rotation; }
@@ -132,6 +136,18 @@ public:
   }
 
 private:
+  template <typename Offset, typename Rotation>
+  Plane(const Eigen::MatrixBase<Offset>& off,
+        const Eigen::MatrixBase<Rotation>& rot)
+      : m_rotation(rot), m_offset(off)
+  {
+    // ensure orthogonality of rotation matrix
+    // https://en.wikipedia.org/wiki/Orthogonal_matrix#Nearest_orthogonal_matrix
+    Eigen::JacobiSVD<Matrix3> svd(m_rotation,
+                                  Eigen::ComputeThinU | Eigen::ComputeThinV);
+    m_rotation = svd.matrixU() * svd.matrixV().transpose();
+  }
+
   Matrix3 m_rotation; // from local to global coordinates
   Vector3 m_offset;   // position of the origin in global coordinates
 };

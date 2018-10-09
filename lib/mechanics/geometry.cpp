@@ -9,24 +9,6 @@
 
 PT_SETUP_LOCAL_LOGGER(Geometry)
 
-// compute the nearest orthogonal matrix.
-//
-// assumes the matrix already is or is close to an orthogonal matrix and uses
-// the interative algorithm outlined at
-// https://en.wikipedia.org/wiki/Orthogonal_matrix to orthogonalize it.
-static Matrix3 orthogonalize(const Matrix3& m, size_t iterations = 2)
-{
-  Matrix3 q = m;
-  for (size_t i = 0; i < iterations; ++i) {
-    Matrix3 n = q.transpose() * q;
-    Matrix3 p = 0.5 * q * n;
-    Matrix3 qi = 2 * q + p * n - 3 * p;
-    DEBUG("orthogonal correction ", i, ":\n", q - qi);
-    q = qi;
-  }
-  return q;
-}
-
 // Most of the code uses the rotation matrix for all geometric computations.
 // For cases where the minimal set of three angles is needed the
 // 3-2-1 convention is used to compute the rotation matrix.
@@ -148,44 +130,30 @@ Mechanics::Plane Mechanics::Plane::fromAngles321(double gamma,
                                                  double alpha,
                                                  const Vector3& offset)
 {
-  Plane p;
-  p.m_rotation = makeRotation321(gamma, beta, alpha);
-  p.m_offset = offset;
-  return p;
+  return {offset, makeRotation321(gamma, beta, alpha)};
 }
 
 Mechanics::Plane Mechanics::Plane::fromDirections(const Vector3& dirU,
                                                   const Vector3& dirV,
                                                   const Vector3& offset)
 {
-  Plane p;
-  p.m_rotation.col(0) = dirU.normalized();
-  p.m_rotation.col(1) = dirV.normalized();
-  p.m_rotation.col(2) = dirU.normalized().cross(dirV.normalized());
-  p.m_rotation = orthogonalize(p.m_rotation);
-  p.m_offset = offset;
-  return p;
+  Matrix3 rot;
+  rot.col(0) = dirU.normalized();
+  rot.col(1) = dirV.normalized();
+  rot.col(2) = dirU.normalized().cross(dirV.normalized());
+  return {offset, rot};
 }
 
 Mechanics::Plane Mechanics::Plane::correctedGlobal(const Vector6& delta) const
 {
-  Plane corrected;
-  corrected.m_rotation =
-      m_rotation * makeRotation321(delta[5], delta[4], delta[3]);
-  corrected.m_rotation = orthogonalize(corrected.m_rotation);
-  corrected.m_offset = m_offset + delta.head<3>();
-  return corrected;
+  return {m_offset + delta.head<3>(),
+          m_rotation * makeRotation321(delta[5], delta[4], delta[3])};
 }
 
 Mechanics::Plane Mechanics::Plane::correctedLocal(const Vector6& delta) const
 {
-  Plane corrected;
-  corrected.m_rotation =
-      m_rotation * makeRotation321(delta[5], delta[4], delta[3]);
-  corrected.m_rotation = orthogonalize(corrected.m_rotation);
-  // local offset is defined in the old system
-  corrected.m_offset = m_offset + m_rotation * delta.head<3>();
-  return corrected;
+  return {m_offset + m_rotation * delta.head<3>(),
+          m_rotation * makeRotation321(delta[5], delta[4], delta[3])};
 }
 
 Vector6 Mechanics::Plane::asParams() const
