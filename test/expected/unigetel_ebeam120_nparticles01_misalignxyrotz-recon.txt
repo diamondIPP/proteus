@@ -1,0 +1,6 @@
+tracks/ntracks  entries 100000
+tracks/ntracks  mean    0.59811
+tracks/ntracks  stddev  0.49027994849881434
+tracks/size     entries 59811
+tracks/size     mean    5.395612847135142
+tracks/size     stddev  0.4889819243251931
