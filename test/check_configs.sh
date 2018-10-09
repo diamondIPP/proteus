@@ -10,10 +10,13 @@ echo "=== using $(which pt-cfg)"
 pt-cfg device.toml
 pt-cfg geometry/unigetel_ebeam012_nparticles01.toml
 pt-cfg geometry/unigetel_ebeam012_nparticles01-telescope.toml
+pt-cfg geometry/unigetel_ebeam012_nparticles01-telescope_first_last.toml
 pt-cfg geometry/unigetel_ebeam120_nparticles01.toml
 pt-cfg geometry/unigetel_ebeam120_nparticles01-telescope.toml
-pt-cfg geometry/unigetel_ebeam120_nparticles01_misalignxyrotz.toml
-pt-cfg geometry/unigetel_ebeam120_nparticles01_misalignxyrotz-telescope.toml
+pt-cfg geometry/unigetel_ebeam120_nparticles01-telescope_first_last.toml
+pt-cfg geometry/unigetel_ebeam120_nparticles01_xygamma.toml
+pt-cfg geometry/unigetel_ebeam120_nparticles01_xygamma-telescope.toml
+pt-cfg geometry/unigetel_ebeam120_nparticles01_xygamma-telescope_first_last.toml
 pt-cfg masks/telescope_empty.toml
 pt-cfg masks/dut_empty.toml
 

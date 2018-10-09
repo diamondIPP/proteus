@@ -73,9 +73,9 @@ following files are available:
 Datasets
 --------
 
-| Name                                          | Beam        | Particles/event | Events | Comment |
-| --------------------------------------------- | ----------- | --------------- | ------ | ------- |
-| unigetel_ebeam012_nparticles01                | 12 GeV pi+  | 1               | 100k   | |
-| unigetel_ebeam120_nparticles01_misalignxyrotz | 120 GeV pi+ | 1               | 100k   | Only misalignment in x, y, z-rotation |
-| unigetel_ebeam120_nparticles01                | 120 GeV pi+ | 1               | 100k   | |
-| unigetel_ebeam120_nparticles02                | 120 GeV pi+ | 2               | 100k   | |
+| Name                                   | Beam        | Particles/event | Events | Comment |
+| -------------------------------------- | ----------- | --------------- | ------ | ------- |
+| unigetel_ebeam012_nparticles01         | 12 GeV pi+  | 1               | 100k   | |
+| unigetel_ebeam120_nparticles01_xygamma | 120 GeV pi+ | 1               | 100k   | Only misalignment in x,y,gamma |
+| unigetel_ebeam120_nparticles01         | 120 GeV pi+ | 1               | 100k   | |
+| unigetel_ebeam120_nparticles02         | 120 GeV pi+ | 2               | 100k   | |
