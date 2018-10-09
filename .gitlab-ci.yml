@@ -204,3 +204,25 @@ test-unigetel_ebeam120_nparticles01-recon:
   <<: *template_recon
   variables:
     DATASET: unigetel_ebeam120_nparticles01
+
+# tests for UNIGEtel ebeam=120GeV nparticles=2
+
+test-unigetel_ebeam120_nparticles02-align_dut:
+  <<: *template_align_dut
+  variables:
+    DATASET: unigetel_ebeam120_nparticles02
+
+test-unigetel_ebeam120_nparticles02-align_tel:
+  <<: *template_align_tel
+  variables:
+    DATASET: unigetel_ebeam120_nparticles02
+
+test-unigetel_ebeam120_nparticles02-noisescan:
+  <<: *template_noisescan
+  variables:
+    DATASET: unigetel_ebeam120_nparticles02
+
+test-unigetel_ebeam120_nparticles02-recon:
+  <<: *template_recon
+  variables:
+    DATASET: unigetel_ebeam120_nparticles02
