@@ -14,14 +14,14 @@
 
 namespace Tracking {
 
-/** Slope jacobian from one coordinate to another.
+/** Transport jacobian of the track slope between two coordinate systems.
  *
  * \param direction  Direction vector in the source system
  * \param rotation   Rotation matrix from the source to the target system
  */
 Matrix2 jacobianSlopeSlope(const Vector3& direction, const Matrix3& rotation);
 
-/** Transport jacobian of the full track state to the target system.
+/** Transport jacobian of the full track state between two coordinate systems.
  *
  * \param direction  Direction vector in the source system
  * \param rotation   Rotation matrix from the source to the target system

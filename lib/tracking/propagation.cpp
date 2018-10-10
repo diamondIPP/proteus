@@ -11,34 +11,56 @@
 
 PT_SETUP_LOCAL_LOGGER(Propagation)
 
+// Jacobian from slope [u', v'] to normalized direction [tu, tv, tw]
+//
+// \param t Normalized direction vector
+//
+// The tangent vector is [u'/f, v'/f, 1/f] with f = sqrt(1 + u'^2 + v'^2)
+template <typename Tangent>
+static inline Matrix32 jacobianSlopeTangent(const Eigen::MatrixBase<Tangent>& t)
+{
+  Matrix32 jac;
+  jac(0, 0) = (1 - t[0] * t[0]) * t[2];
+  jac(1, 0) = -t[0] * t[1] * t[2];
+  jac(2, 0) = -t[0] * t[2] * t[2];
+  jac(0, 1) = -t[0] * t[1] * t[2];
+  jac(1, 1) = (1 - t[1] * t[1]) * t[2];
+  jac(2, 1) = -t[1] * t[2] * t[2];
+  return jac;
+}
+
+// Jacobian from normalized direction [tu, tv, tw] to slope [u', v']
+//
+// \param t Normalized direction vector
+//
+// The slope vector is [tu / tw, tv / tw]
+template <typename Tangent>
+static inline Matrix23 jacobianTangentSlope(const Eigen::MatrixBase<Tangent>& t)
+{
+  Matrix23 jac;
+  jac(0, 0) = 1 / t[2];
+  jac(1, 0) = 0;
+  jac(0, 1) = 0;
+  jac(1, 1) = 1 / t[2];
+  jac(0, 2) = -t[0] / (t[2] * t[2]);
+  jac(1, 2) = -t[1] / (t[2] * t[2]);
+  return jac;
+}
+
 Matrix2 Tracking::jacobianSlopeSlope(const Vector3& direction,
                                      const Matrix3& rotation)
 {
   // local and global tangent unit vector
-  Vector3 tl = direction.normalized();
-  Vector3 tg = rotation * tl;
-  DEBUG("tangent source: [", tl, "]");
-  DEBUG("tangent target: [", tg, "]");
-  // local slope to local tangent: [u', v'] to [tw * u', tw * v', tw]
-  Matrix32 a;
-  a(0, 0) = (1 - tl[0] * tl[0]) * tl[2];
-  a(1, 0) = -tl[0] * tl[1] * tl[2];
-  a(2, 0) = -tl[0] * tl[2] * tl[2];
-  a(0, 1) = -tl[0] * tl[1] * tl[2];
-  a(1, 1) = (1 - tl[1] * tl[1]) * tl[2];
-  a(2, 1) = -tl[1] * tl[2] * tl[2];
-  DEBUG("matrix a:\n", a);
-  // global tangent to global slope: [tx, ty, tz] to [tx/tz, ty/tz]
-  Matrix23 d;
-  d(0, 0) = 1 / tg[2];
-  d(1, 0) = 0;
-  d(0, 1) = 0;
-  d(1, 1) = 1 / tg[2];
-  d(0, 2) = -tg[0] / (tg[2] * tg[2]);
-  d(1, 2) = -tg[1] / (tg[2] * tg[2]);
-  DEBUG("matrix d:\n", d);
-  // jacobian: local slope -> local tangent -> global tangent -> global slope
-  Matrix2 jac = d * rotation * a;
+  auto tan0 = direction.normalized();
+  auto tan1 = rotation * tan0;
+  auto A = jacobianSlopeTangent(tan0);
+  auto D = jacobianTangentSlope(tan1);
+  // target slope <- target tangent <- source tangent <- source slope
+  auto jac = D * rotation * A;
+  DEBUG("tangent source: [", tan0[0], ", ", tan0[1], ", ", tan0[2], "]");
+  DEBUG("tangent target: [", tan1[0], ", ", tan0[1], ", ", tan1[2], "]");
+  DEBUG("matrix A:\n", A);
+  DEBUG("matrix D:\n", D);
   DEBUG("jacobian:\n", jac);
   return jac;
 }
@@ -73,9 +95,8 @@ Storage::TrackState Tracking::propagate_to(const Storage::TrackState& state,
   uvw -= dir * uvw[2] / dir[2];
 
   Matrix4 jac = jacobianState(state.direction(), combinedRotation);
-  SymMatrix4 cov = transformCovariance(jac, state.cov());
 
-  Storage::TrackState propagated(uvw.head<2>(), dir);
-  propagated.setCov(cov);
+  Storage::TrackState propagated(uvw.head<2>(), dir.head<2>() / dir[2]);
+  propagated.setCov(transformCovariance(jac, state.cov()));
   return propagated;
 }
