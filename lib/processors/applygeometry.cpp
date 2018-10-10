@@ -31,12 +31,3 @@ void Processors::ApplyGeometry::execute(Storage::Event& event) const
     }
   }
 }
-
-void Processors::applyAlignment(Storage::Event* event,
-                                const Mechanics::Device* device)
-{
-  assert(event && device &&
-         "Processors: can't apply alignment with null event and/or device");
-
-  ApplyGeometry(*device).execute(*event);
-}

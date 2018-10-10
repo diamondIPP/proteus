@@ -25,9 +25,6 @@ private:
   const Mechanics::Device& m_device;
 };
 
-/** \deprecated Use ApplyGeometry processor via EventLoop. */
-void applyAlignment(Storage::Event* event, const Mechanics::Device* device);
-
 } // namespace Processors
 
 #endif // PT_APPLYGEOMETRY_H
