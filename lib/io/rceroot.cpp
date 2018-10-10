@@ -306,10 +306,10 @@ bool Io::RceRootReader::read(Storage::Event& event)
 
       for (Int_t icluster = 0; icluster < numClusters; ++icluster) {
         Vector2 pos(clusterCol[icluster], clusterRow[icluster]);
-        SymMatrix2 cov;
+        SymMatrix2 cov = SymMatrix2::Zero();
         cov(0, 0) = clusterVarCol[icluster];
         cov(1, 1) = clusterVarRow[icluster];
-        cov(0, 1) = clusterCovColRow[icluster];
+        cov(0, 1) = cov(1, 0) = clusterCovColRow[icluster];
         Storage::Cluster& cluster = sensorEvent.addCluster();
         cluster.setPixel(pos, cov);
         cluster.setTime(clusterTiming[icluster]);
