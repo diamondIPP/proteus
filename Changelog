@@ -110,6 +110,10 @@ Internal changes
 *   Clarify log levels and add support for non-debug verbose output.
 *   Added ``ROOT::CompressionSettings(ROOT::kLZMA, 1)`` every time that a ROOT
     is opened for writing
+*   The offset estimation of the residuals aligner uses the mean of 3+3 bins
+    around the maximum instead of the position of the maximum (added function
+    `getRestrictedMean(...)` to `root.h`). This function is used also in the correlations
+    aligner, but still using the whole histogram (`offset=-1`).
 
 v1.3.0 (2017-12-06)
 ===================
