@@ -87,8 +87,9 @@ void Processors::BaseClusterizer::execute(Storage::Event& event) const
   cluster(hits, sensorEvent);
 
   // estimate cluster properties
-  for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster)
+  for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
     estimateProperties(sensorEvent.getCluster(icluster));
+  }
 }
 
 Processors::BinaryClusterizer::BinaryClusterizer(
@@ -101,7 +102,7 @@ Processors::BinaryClusterizer::BinaryClusterizer(
 void Processors::BinaryClusterizer::estimateProperties(
     Storage::Cluster& cluster) const
 {
-  Vector2 pos; // zero by default
+  Vector2 pos = Vector2::Zero();
   float time = std::numeric_limits<float>::max();
   float value = 0;
 
@@ -112,9 +113,9 @@ void Processors::BinaryClusterizer::estimateProperties(
   }
   pos /= cluster.size();
 
-  // 1/12 factor from pixel size to stddev of equivalent gaussian
-  Vector2 var(1.0 / (12.0f * cluster.sizeCol()),
-              1.0 / (12.0f * cluster.sizeRow()));
+  // 1/12 factor from pixel size to stdev of equivalent gaussian
+  Vector2 var(1.0f / (12.0f * cluster.sizeCol()),
+              1.0f / (12.0f * cluster.sizeRow()));
   cluster.setPixel(pos, var.asDiagonal());
   cluster.setTime(time);
   cluster.setValue(value);
@@ -130,7 +131,7 @@ Processors::ValueWeightedClusterizer::ValueWeightedClusterizer(
 void Processors::ValueWeightedClusterizer::estimateProperties(
     Storage::Cluster& cluster) const
 {
-  Vector2 pos; // zero by default
+  Vector2 pos = Vector2::Zero();
   float time = std::numeric_limits<float>::max();
   float value = 0;
 
@@ -142,9 +143,9 @@ void Processors::ValueWeightedClusterizer::estimateProperties(
   pos /= value;
 
   // TODO 2016-11-14 msmk: consider also the value weighting
-  // 1/12 factor from pixel size to stddev of equivalent gaussian
-  Vector2 var(1.0 / (12.0f * cluster.sizeCol()),
-              1.0 / (12.0f * cluster.sizeRow()));
+  // 1/12 factor from pixel size to stdev of equivalent gaussian
+  Vector2 var(1.0f / (12.0f * cluster.sizeCol()),
+              1.0f / (12.0f * cluster.sizeRow()));
   cluster.setPixel(pos, var.asDiagonal());
   cluster.setTime(time);
   cluster.setValue(value);
@@ -160,7 +161,7 @@ Processors::FastestHitClusterizer::FastestHitClusterizer(
 void Processors::FastestHitClusterizer::estimateProperties(
     Storage::Cluster& cluster) const
 {
-  Vector2 pos; // zero by default
+  Vector2 pos = Vector2::Zero();
   float time = std::numeric_limits<float>::max();
   float value = 0;
 
@@ -172,9 +173,8 @@ void Processors::FastestHitClusterizer::estimateProperties(
     }
   }
 
-  // 1/12 factor from pixel size to stddev of equivalent gaussian
-  Vector2 var(1.0 / 12.0, 1.0 / 12.0);
-  cluster.setPixel(pos, var.asDiagonal());
+  // 1/12 factor from pixel size to stdev of equivalent gaussian
+  cluster.setPixel(pos, Vector2::Constant(1.0 / 12.0f).asDiagonal());
   cluster.setTime(time);
   cluster.setValue(value);
 }
