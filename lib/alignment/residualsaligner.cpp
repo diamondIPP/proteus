@@ -97,13 +97,19 @@ Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
   for (const auto& hists : m_hists) {
     const Mechanics::Sensor& sensor = m_device.getSensor(hists.sensorId);
     const Mechanics::Plane& plane = geo.getPlane(hists.sensorId);
+    constexpr int binOffset = -1;
 
-    double du = hists.corrU->GetMean();
-    double stdDU = hists.corrU->GetMeanError();
-    double dv = hists.corrV->GetMean();
-    double stdDV = hists.corrV->GetMeanError();
-    double dgamma = hists.corrGamma->GetMean();
-    double stdDGamma = hists.corrGamma->GetMeanError();
+    auto resDU = Utils::getRestrictedMean(hists.corrU, binOffset);
+    double du = resDU.first;
+    double varDU = resDU.second;
+
+    auto resDV = Utils::getRestrictedMean(hists.corrV, binOffset);
+    double dv = resDV.first;
+    double varDV = resDV.second;
+
+    auto resDGamma = Utils::getRestrictedMean(hists.corrGamma, binOffset);
+    double dgamma = resDGamma.first;
+    double varDGamma = resDGamma.second;
 
     // enforce vanishing dz
     Vector3 offsetGlobal = plane.rotation * Vector3(du, dv, 0.0);
@@ -119,18 +125,18 @@ Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
     delta[4] = 0.0;
     delta[5] = m_damping * dgamma;
     SymMatrix6 cov;
-    cov(0, 0) = stdDU * stdDU;
-    cov(1, 1) = stdDV * stdDV;
-    cov(5, 5) = stdDGamma * stdDGamma;
+    cov(0, 0) = varDU;
+    cov(1, 1) = varDV;
+    cov(5, 5) = varDGamma;
     geo.correctLocal(hists.sensorId, delta, cov);
 
     // output w/ angles in degrees
     constexpr double toDeg = 180.0 / M_PI;
     INFO(sensor.name(), " alignment corrections:");
-    INFO("  du: ", delta[0], " +- ", stdDU);
-    INFO("  dv: ", delta[1], " +- ", stdDV);
+    INFO("  du: ", delta[0], " +- ", std::sqrt(varDU));
+    INFO("  dv: ", delta[1], " +- ", std::sqrt(varDV));
     INFO("  dw: ", delta[2], " (dz=0 enforced)");
-    INFO("  dgamma: ", delta[5] * toDeg, " +- ", stdDGamma * toDeg, " degree");
+    INFO("  dgamma: ", delta[5] * toDeg, " +- ", std::sqrt(varDGamma) * toDeg, " degree");
   }
   return geo;
 }
