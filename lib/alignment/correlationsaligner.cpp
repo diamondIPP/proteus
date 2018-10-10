@@ -5,6 +5,7 @@
 #include "analyzers/correlations.h"
 #include "mechanics/device.h"
 #include "utils/logger.h"
+#include "utils/root.h"
 
 PT_SETUP_LOCAL_LOGGER(CorrelationsAligner)
 
@@ -56,6 +57,7 @@ Mechanics::Geometry Alignment::CorrelationsAligner::updatedGeometry() const
   double deltaXVar = 0;
   double deltaY = 0;
   double deltaYVar = 0;
+  constexpr int binOffset = 3;
   // backward ids are ordered opposite the beam direction
   for (Index currId : m_backwardIds) {
     const TH1D* hX = m_corr->getHistDiffX(currId, nextId);
@@ -63,10 +65,13 @@ Mechanics::Geometry Alignment::CorrelationsAligner::updatedGeometry() const
 
     // correlation was calculated in reverse order and we get an
     // additional sign for the correction
-    deltaX += hX->GetBinCenter(hX->GetMaximumBin());
-    deltaXVar += hX->GetMeanError() * hX->GetMeanError();
-    deltaY += hY->GetBinCenter(hY->GetMaximumBin());
-    deltaYVar += hY->GetMeanError() * hY->GetMeanError();
+    auto resultX = Utils::getRestrictedMean(hX, binOffset);
+    deltaX += resultX.first;
+    deltaXVar += resultX.second;
+
+    auto resultY = Utils::getRestrictedMean(hY, binOffset);
+    deltaY += resultY.first;
+    deltaYVar += resultY.second;
 
     INFO(m_device.getSensor(currId).name(),
          " alignment corrections (before fixed sensor):");
@@ -88,10 +93,13 @@ Mechanics::Geometry Alignment::CorrelationsAligner::updatedGeometry() const
     const TH1D* hX = m_corr->getHistDiffX(prevId, currId);
     const TH1D* hY = m_corr->getHistDiffY(prevId, currId);
 
-    deltaX -= hX->GetBinCenter(hX->GetMaximumBin());
-    deltaXVar += hX->GetMeanError() * hX->GetMeanError();
-    deltaY -= hY->GetBinCenter(hY->GetMaximumBin());
-    deltaYVar += hY->GetMeanError() * hY->GetMeanError();
+    auto resultX = Utils::getRestrictedMean(hX, binOffset);
+    deltaX -= resultX.first;
+    deltaXVar += resultX.second;
+
+    auto resultY = Utils::getRestrictedMean(hY, binOffset);
+    deltaY -= resultY.first;
+    deltaYVar += resultY.second;
 
     INFO(m_device.getSensor(currId).name(),
          " alignment corrections (after fixed sensor):");

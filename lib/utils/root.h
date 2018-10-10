@@ -78,6 +78,14 @@ TH2D* makeTransientH2(HistAxis axis0, HistAxis axis1);
  */
 void fillDist(const TH2D* values, TH1D* dist);
 
+/**
+ * Returns the mean and variance restricted around the maximum of a histogram.
+ * @param histo The histogram
+ * @param offset How many bins per side should be considered
+ * @return A std::pair with mean and variance
+ */
+std::pair<double, double> getRestrictedMean(const TH1D* histo, const int offset);
+
 } // namespace Utils
 
 // implementation
@@ -174,6 +182,18 @@ inline void Utils::fillDist(const TH2D* values, TH1D* dist)
         dist->Fill(value);
     }
   }
+}
+
+inline std::pair<double, double> Utils::getRestrictedMean(const TH1D* histo, const int offset)
+{
+  TH1D* h = new TH1D(*histo);
+  int maxBin = h->GetMaximumBin();
+  h->GetXaxis()->SetRange(maxBin - offset, maxBin + offset);
+  double mean = h->GetMean();
+  double var = h->GetMeanError() * h->GetMeanError();
+
+  delete h;
+  return std::make_pair(mean, var);
 }
 
 #endif // PT_ROOT_H
