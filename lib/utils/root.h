@@ -78,11 +78,11 @@ TH2D* makeTransientH2(HistAxis axis0, HistAxis axis1);
  */
 void fillDist(const TH2D* values, TH1D* dist);
 
-/**
- * Returns the mean and variance restricted around the maximum of a histogram.
- * @param histo The histogram
- * @param offset How many bins per side should be considered. If negative, the whole histogram will be used.
- * @return A std::pair with mean and variance
+/** Returns the mean and variance restricted around the maximum of a histogram.
+ *
+ * \param histo The histogram
+ * \param offset How many bins per side should be considered. If negative, the whole histogram will be used.
+ * \return A std::pair with mean and variance
  */
 std::pair<double, double> getRestrictedMean(const TH1D* histo, const int offset);
 
@@ -186,7 +186,9 @@ inline void Utils::fillDist(const TH2D* values, TH1D* dist)
 
 inline std::pair<double, double> Utils::getRestrictedMean(const TH1D* histo, const int offset)
 {
+  //assert(offset >= 0); //TODO uncomment it after verifying with the updated alignment by Moritz
   TH1D* h = new TH1D(*histo);
+  h->SetDirectory(nullptr);
   int maxBin = h->GetMaximumBin();
   if (offset >= 0) {
     h->GetXaxis()->SetRange(maxBin - offset, maxBin + offset);
