@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <string>
 
+#include "tracking/propagation.h"
 #include "utils/logger.h"
 
 PT_SETUP_LOCAL_LOGGER(Geometry)
@@ -140,7 +141,7 @@ Mechanics::Plane Mechanics::Plane::fromDirections(const Vector3& dirU,
   Matrix3 rot;
   rot.col(0) = dirU.normalized();
   rot.col(1) = dirV.normalized();
-  rot.col(2) = dirU.normalized().cross(dirV.normalized());
+  rot.col(2) = rot.col(0).cross(rot.col(1));
   return {offset, rot};
 }
 
@@ -170,11 +171,11 @@ Vector6 Mechanics::Plane::asParams() const
 }
 
 Mechanics::Geometry::Geometry()
-    : m_beamSlopeX(0)
-    , m_beamSlopeY(0)
-    , m_beamDivergenceX(0.00125)
-    , m_beamDivergenceY(0.00125)
-    , m_beamEnergy(0)
+    : m_beamSlopeX(0.0f)
+    , m_beamSlopeY(0.0f)
+    , m_beamStdevX(0.00125f)
+    , m_beamStdevY(0.00125f)
+    , m_beamEnergy(0.0f)
 {
 }
 
@@ -266,7 +267,7 @@ toml::Value Mechanics::Geometry::toConfig() const
   toml::Value cfg;
 
   cfg["beam"]["slope"] = toml::Array{m_beamSlopeX, m_beamSlopeY};
-  cfg["beam"]["divergence"] = toml::Array{m_beamDivergenceX, m_beamDivergenceY};
+  cfg["beam"]["divergence"] = toml::Array{m_beamStdevX, m_beamStdevY};
   cfg["beam"]["energy"] = m_beamEnergy;
 
   cfg["sensors"] = toml::Array();
@@ -333,7 +334,7 @@ void Mechanics::Geometry::correctLocal(Index sensorId,
   // clang-format on
 
   m_planes[sensorId] = plane.correctedLocal(delta);
-  m_covs[sensorId] = jac * cov * jac.transpose();
+  m_covs[sensorId] = transformCovariance(jac, cov);
 }
 
 const Mechanics::Plane& Mechanics::Geometry::getPlane(Index sensorId) const
@@ -352,7 +353,7 @@ SymMatrix6 Mechanics::Geometry::getParamsCov(Index sensorId) const
   if (it != m_covs.end()) {
     return it->second;
   } else {
-    return SymMatrix6(); // zero by default
+    return SymMatrix6::Zero();
   }
 }
 
@@ -365,18 +366,24 @@ void Mechanics::Geometry::setBeamSlope(double slopeX, double slopeY)
 void Mechanics::Geometry::setBeamDivergence(double divergenceX,
                                             double divergenceY)
 {
-  m_beamDivergenceX = divergenceX;
-  m_beamDivergenceY = divergenceY;
+  m_beamStdevX = divergenceX;
+  m_beamStdevY = divergenceY;
 }
 
-Vector3 Mechanics::Geometry::beamDirection() const
+Vector2 Mechanics::Geometry::getBeamSlope(Index sensorId) const
 {
-  return Vector3(m_beamSlopeX, m_beamSlopeY, 1);
+  auto dirGlobal = Vector3(m_beamSlopeX, m_beamSlopeY, 1.0f);
+  auto dirLocal = m_planes.at(sensorId).rotationToLocal() * dirGlobal;
+  return dirLocal.head<2>() / dirLocal[2];
 }
 
-Vector2 Mechanics::Geometry::beamDivergence() const
+SymMatrix2 Mechanics::Geometry::getBeamCovariance(Index sensorId) const
 {
-  return Vector2(m_beamDivergenceX, m_beamDivergenceY);
+  const auto& plane = m_planes.at(sensorId);
+  auto dir = Vector3(m_beamSlopeX, m_beamSlopeY, 1.0f);
+  auto jac = Tracking::jacobianSlopeSlope(dir, plane.rotationToLocal());
+  auto var = Vector2(m_beamStdevX * m_beamStdevX, m_beamStdevY * m_beamStdevY);
+  return transformCovariance(jac, var.asDiagonal());
 }
 
 void Mechanics::Geometry::print(std::ostream& os,
@@ -385,8 +392,8 @@ void Mechanics::Geometry::print(std::ostream& os,
   os << prefix << "beam:\n";
   os << prefix << "  energy: " << m_beamEnergy << '\n';
   os << prefix << "  slope: [" << m_beamSlopeX << "," << m_beamSlopeY << "]\n";
-  os << prefix << "  divergence: [" << m_beamDivergenceX << ","
-     << m_beamDivergenceY << "]\n";
+  os << prefix << "  divergence: [" << m_beamStdevX << "," << m_beamStdevY
+     << "]\n";
   for (const auto& ip : m_planes) {
     os << prefix << "sensor " << ip.first << ":\n"
        << prefix << "  offset: [" << ip.second.offset() << "]\n"

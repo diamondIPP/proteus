@@ -143,8 +143,8 @@ private:
   {
     // ensure orthogonality of rotation matrix
     // https://en.wikipedia.org/wiki/Orthogonal_matrix#Nearest_orthogonal_matrix
-    Eigen::JacobiSVD<Matrix3> svd(m_rotation,
-                                  Eigen::ComputeThinU | Eigen::ComputeThinV);
+    Eigen::JacobiSVD<Matrix3, Eigen::NoQRPreconditioner> svd(
+        rot, Eigen::ComputeFullU | Eigen::ComputeFullV);
     m_rotation = svd.matrixU() * svd.matrixV().transpose();
   }
 
@@ -164,7 +164,7 @@ public:
 
   /** Construct geometry from a configuration file. */
   static Geometry fromFile(const std::string& path);
-  /** Write alignment to a configuration file. */
+  /** Write geometry to a configuration file. */
   void writeFile(const std::string& path) const;
 
   /** Construct geometry from a configuration object. */
@@ -196,11 +196,15 @@ public:
   /** Set the beam divergence/ standard deviation along the z axis. */
   void setBeamDivergence(double divergenceX, double divergenceY);
   /** Beam energy. */
-  double beamEnergy() const;
-  /** Beam direction in the global coordinate system. */
-  Vector3 beamDirection() const;
-  /** Beam divergence along the z axis in global x and y coordinates. */
-  Vector2 beamDivergence() const;
+  double beamEnergy() const { return m_beamEnergy; }
+  /** Beam slope in the global coordinate system. */
+  Vector2 beamSlope() const { return {m_beamSlopeX, m_beamSlopeY}; }
+  /** Beam slope divergence along the z axis in global x and y coordinates. */
+  Vector2 beamDivergence() const { return {m_beamStdevX, m_beamStdevY}; }
+  /** Beam direction in the local coordinate system of the sensor. */
+  Vector2 getBeamSlope(Index sensorId) const;
+  /** Beam slope covariance in the local coordinate system of the sensor. */
+  SymMatrix2 getBeamCovariance(Index sensorId) const;
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
@@ -208,7 +212,7 @@ private:
   std::map<Index, Plane> m_planes;
   std::map<Index, SymMatrix6> m_covs;
   double m_beamSlopeX, m_beamSlopeY;
-  double m_beamDivergenceX, m_beamDivergenceY;
+  double m_beamStdevX, m_beamStdevY;
   double m_beamEnergy;
 };
 
