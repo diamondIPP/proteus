@@ -53,6 +53,27 @@ using Vector3 = Vector<double, 3>;
 using Vector4 = Vector<double, 4>;
 using Vector6 = Vector<double, 6>;
 
+/** Transform the covariance to a different base using a Jacobian.
+ *
+ * Compute `jac * cov * jac^T`. This only gives the correct result if
+ * the input covariance is symmetric.
+ */
+template <typename Jacobian, typename Covariance>
+inline auto transformCovariance(const Eigen::MatrixBase<Jacobian>& jac,
+                                const Eigen::EigenBase<Covariance>& cov)
+{
+  // w/o the eval, all hell breaks loose and the compiler seems to
+  // optimize things away that should stay where they are.
+  return (jac * cov.derived() * jac.transpose()).eval();
+}
+template <typename Jacobian, typename Covariance>
+inline auto transformCovariance(const Eigen::DiagonalBase<Jacobian>& jac,
+                                const Eigen::EigenBase<Covariance>& cov)
+{
+  // see above for eval
+  return (jac * cov.derived() * jac).eval();
+}
+
 /** Squared Mahalanobis distance / norm of a vector.
  *
  * The vector elements are weighted with the inverse of a covariance matrix.
