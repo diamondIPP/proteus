@@ -22,9 +22,9 @@
 
 include(CheckCXXCompilerFlag)
 
-CHECK_CXX_COMPILER_FLAG("-std=c++14" _has_cxx11_support)
-if(NOT _has_cxx11_support)
-  message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support.")
+CHECK_CXX_COMPILER_FLAG("-std=c++14" _has_cxx14_support)
+if(NOT _has_cxx14_support)
+  message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++14 support.")
 endif()
 
 # check for existing compiler flags
@@ -37,9 +37,9 @@ endif()
 # enable support
 if(CMAKE_VERSION VERSION_LESS "3.1")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-  message(STATUS "Added -std=c++11 compiler flag.")
+  message(STATUS "Added -std=c++14 compiler flag.")
 else()
-  set(CMAKE_CXX_STANDARD 11)
+  set(CMAKE_CXX_STANDARD 14)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
   set(CMAKE_CXX_EXTENSIONS OFF)
   message(STATUS "Require CXX_STANDARD=14.")
