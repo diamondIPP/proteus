@@ -156,6 +156,10 @@ test-combine:
     - cd test
     - ./download_data.py ${DATASET}
     - ./run_recon.sh ${DATASET} --no-progress
+  artifacts:
+    paths:
+      - test/output
+    expire_in: 1 week
 
 # tests for UNIGEtel ebeam=12GeV nparticles=1
 
