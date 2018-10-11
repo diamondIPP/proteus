@@ -1,6 +1,6 @@
+#include <Compression.h>
 #include <TFile.h>
 #include <TTree.h>
-#include <Compression.h>
 
 #include "analyzers/distances.h"
 #include "analyzers/efficiency.h"
@@ -30,8 +30,10 @@ int main(int argc, char const* argv[])
   auto sensorIds = app.config().get<std::vector<Index>>("sensor_ids");
 
   // output
-  TFile hists(app.outputPath("hists.root").c_str(), "RECREATE", "", ROOT::CompressionSettings(ROOT::kLZMA, 1));
-  TFile trees(app.outputPath("trees.root").c_str(), "RECREATE", "", ROOT::CompressionSettings(ROOT::kLZMA, 1));
+  TFile hists(app.outputPath("hists.root").c_str(), "RECREATE", "",
+              ROOT::CompressionSettings(ROOT::kLZMA, 1));
+  TFile trees(app.outputPath("trees.root").c_str(), "RECREATE", "",
+              ROOT::CompressionSettings(ROOT::kLZMA, 1));
 
   auto loop = app.makeEventLoop();
   setupHitPreprocessing(app.device(), loop);

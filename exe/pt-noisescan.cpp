@@ -13,8 +13,8 @@
 #include <string>
 #include <vector>
 
-#include <TFile.h>
 #include <Compression.h>
+#include <TFile.h>
 
 #include "analyzers/hits.h"
 #include "analyzers/noisescan.h"
@@ -44,7 +44,8 @@ int main(int argc, char const* argv[])
   app.initialize(argc, argv);
 
   // output
-  TFile hists(app.outputPath("hists.root").c_str(), "RECREATE", "", ROOT::CompressionSettings(ROOT::kLZMA, 1));
+  TFile hists(app.outputPath("hists.root").c_str(), "RECREATE", "",
+              ROOT::CompressionSettings(ROOT::kLZMA, 1));
 
   // construct per-sensor configuration
   // construct per-sensor noise analyzer
