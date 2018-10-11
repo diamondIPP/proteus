@@ -65,7 +65,7 @@ struct SensorStepsGraphs {
 
   void addStep(const Vector6& params, const SymMatrix6& cov)
   {
-    Vector6 stdev = sqrt(cov.Diagonal());
+    Vector6 stdev = extractStdev(cov);
     x.addStep(params[0], stdev[0]);
     y.addStep(params[1], stdev[1]);
     z.addStep(params[2], stdev[2]);
@@ -97,10 +97,10 @@ struct StepsGraphs {
     for (auto id : sensorIds) {
       sensors[id].addStep(geo.getParams(id), geo.getParamsCov(id));
     }
-    auto dir = geo.beamDirection();
+    auto slope = geo.beamSlope();
     auto div = geo.beamDivergence();
-    beamX.addStep(dir[0] / dir[2], div[0]);
-    beamY.addStep(dir[1] / dir[2], div[1]);
+    beamX.addStep(slope[0], div[0]);
+    beamY.addStep(slope[1], div[1]);
     numTracks.addStep(ntracks);
   }
   void write(const Mechanics::Device& device, TDirectory* dir) const
