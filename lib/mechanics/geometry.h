@@ -5,6 +5,8 @@
 #include <map>
 #include <string>
 
+#include <Eigen/SVD>
+
 #include "utils/config.h"
 #include "utils/definitions.h"
 
@@ -90,33 +92,64 @@ namespace Mechanics {
  *        = dQ^T q - dq  .
  *
  */
-struct Plane {
-  Matrix3 rotation; // from local to global coordinates
-  Vector3 offset;   // position of the origin in global coordinates
-
+class Plane {
+public:
+  /** Construct a plane consistent with the global system. */
+  Plane() : m_rotation(Matrix3::Identity()), m_offset(Vector3::Zero()) {}
+  /** Construct a plane from 3-2-1 rotation angles. */
   static Plane
-  fromAnglesZYX(double gamma, double beta, double alpha, const Vector3& offset);
+  fromAngles321(double gamma, double beta, double alpha, const Vector3& offset);
+  /** Construct a plane from two direction vectors for the local axes. */
   static Plane fromDirections(const Vector3& dirU,
                               const Vector3& dirV,
                               const Vector3& offset);
 
-  /** Corrected plane from [dx, dy, dz, dalpha, dbeta, dgamma]. */
+  /** Create a corrected plane from [dx, dy, dz, dalpha, dbeta, dgamma]. */
   Plane correctedGlobal(const Vector6& delta) const;
-  /** Corrected plane from [du, dv, dw, dalpha, dbeta, dgamma]. */
+  /** Create a corrected plane from [du, dv, dw, dalpha, dbeta, dgamma]. */
   Plane correctedLocal(const Vector6& delta) const;
 
-  Vector3 unitU() const { return rotation.SubCol<Vector3>(0); }
-  Vector3 unitV() const { return rotation.SubCol<Vector3>(1); }
-  Vector3 unitNormal() const { return rotation.SubCol<Vector3>(2); }
+  auto rotationToGlobal() const { return m_rotation; }
+  auto rotationToLocal() const { return m_rotation.transpose(); }
+  auto unitU() const { return m_rotation.col(0); }
+  auto unitV() const { return m_rotation.col(1); }
+  auto unitNormal() const { return m_rotation.col(2); }
+  auto offset() const { return m_offset; }
   /** Compute minimal parameters [x0, y0, z0, alpha, beta, gamma]. */
   Vector6 asParams() const;
 
+  /** Transform a local position into global coordinates.
+   *
+   * For local positions with less than 3 coordinates the missing components
+   * are assumed to be zero.
+   */
+  template <typename Position>
+  auto toGlobal(const Eigen::MatrixBase<Position>& uvw) const
+  {
+    return m_offset + m_rotation.leftCols<Position::RowsAtCompileTime>() * uvw;
+  }
   /** Transform a global position into local coordinates. */
-  Vector3 toLocal(const Vector3& xyz) const;
-  /** Transform a local position on the plane into global coordinates. */
-  Vector3 toGlobal(const Vector2& uv) const;
-  /** Transform a local position into global coordinates. */
-  Vector3 toGlobal(const Vector3& uvw) const;
+  template <typename Position>
+  auto toLocal(const Eigen::MatrixBase<Position>& xyz) const
+  {
+    return m_rotation.transpose() * (xyz - m_offset);
+  }
+
+private:
+  template <typename Offset, typename Rotation>
+  Plane(const Eigen::MatrixBase<Offset>& off,
+        const Eigen::MatrixBase<Rotation>& rot)
+      : m_rotation(rot), m_offset(off)
+  {
+    // ensure orthogonality of rotation matrix
+    // https://en.wikipedia.org/wiki/Orthogonal_matrix#Nearest_orthogonal_matrix
+    Eigen::JacobiSVD<Matrix3, Eigen::NoQRPreconditioner> svd(
+        rot, Eigen::ComputeFullU | Eigen::ComputeFullV);
+    m_rotation = svd.matrixU() * svd.matrixV().transpose();
+  }
+
+  Matrix3 m_rotation; // from local to global coordinates
+  Vector3 m_offset;   // position of the origin in global coordinates
 };
 
 /** Store and process the geometry of the telescope setup.
@@ -131,7 +164,7 @@ public:
 
   /** Construct geometry from a configuration file. */
   static Geometry fromFile(const std::string& path);
-  /** Write alignment to a configuration file. */
+  /** Write geometry to a configuration file. */
   void writeFile(const std::string& path) const;
 
   /** Construct geometry from a configuration object. */
@@ -163,11 +196,15 @@ public:
   /** Set the beam divergence/ standard deviation along the z axis. */
   void setBeamDivergence(double divergenceX, double divergenceY);
   /** Beam energy. */
-  double beamEnergy() const;
-  /** Beam direction in the global coordinate system. */
-  Vector3 beamDirection() const;
-  /** Beam divergence along the z axis in global x and y coordinates. */
-  Vector2 beamDivergence() const;
+  double beamEnergy() const { return m_beamEnergy; }
+  /** Beam slope in the global coordinate system. */
+  Vector2 beamSlope() const { return {m_beamSlopeX, m_beamSlopeY}; }
+  /** Beam slope divergence along the z axis in global x and y coordinates. */
+  Vector2 beamDivergence() const { return {m_beamStdevX, m_beamStdevY}; }
+  /** Beam direction in the local coordinate system of the sensor. */
+  Vector2 getBeamSlope(Index sensorId) const;
+  /** Beam slope covariance in the local coordinate system of the sensor. */
+  SymMatrix2 getBeamCovariance(Index sensorId) const;
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
@@ -175,7 +212,7 @@ private:
   std::map<Index, Plane> m_planes;
   std::map<Index, SymMatrix6> m_covs;
   double m_beamSlopeX, m_beamSlopeY;
-  double m_beamDivergenceX, m_beamDivergenceY;
+  double m_beamStdevX, m_beamStdevY;
   double m_beamEnergy;
 };
 

@@ -273,7 +273,7 @@ bool Io::RceRootReader::read(Storage::Event& event)
     for (Int_t itrack = 0; itrack < numTracks; ++itrack) {
       Storage::TrackState state(trackX[itrack], trackY[itrack],
                                 trackSlopeX[itrack], trackSlopeY[itrack]);
-      state.setCov(trackCov[itrack]);
+      state.setCovPacked(trackCov[itrack]);
       std::unique_ptr<Storage::Track> track(new Storage::Track(state));
       track->setGoodnessOfFit(trackChi2[itrack], trackDof[itrack]);
       event.addTrack(std::move(track));
@@ -294,7 +294,7 @@ bool Io::RceRootReader::read(Storage::Event& event)
         Storage::TrackState local(
             interceptU[iintercept], interceptV[iintercept],
             interceptSlopeU[iintercept], interceptSlopeV[iintercept]);
-        local.setCov(interceptCov[iintercept]);
+        local.setCovPacked(interceptCov[iintercept]);
         sensorEvent.setLocalState(interceptTrack[iintercept], std::move(local));
       }
     }
@@ -306,10 +306,10 @@ bool Io::RceRootReader::read(Storage::Event& event)
 
       for (Int_t icluster = 0; icluster < numClusters; ++icluster) {
         Vector2 pos(clusterCol[icluster], clusterRow[icluster]);
-        SymMatrix2 cov;
+        SymMatrix2 cov = SymMatrix2::Zero();
         cov(0, 0) = clusterVarCol[icluster];
         cov(1, 1) = clusterVarRow[icluster];
-        cov(0, 1) = clusterCovColRow[icluster];
+        cov(0, 1) = cov(1, 0) = clusterCovColRow[icluster];
         Storage::Cluster& cluster = sensorEvent.addCluster();
         cluster.setPixel(pos, cov);
         cluster.setTime(clusterTiming[icluster]);
@@ -454,7 +454,7 @@ void Io::RceRootWriter::append(const Storage::Event& event)
       trackY[itrack] = state.offset()[1];
       trackSlopeX[itrack] = state.slope()[0];
       trackSlopeY[itrack] = state.slope()[1];
-      std::copy(state.cov().begin(), state.cov().end(), trackCov[itrack]);
+      state.getCovPacked(trackCov[itrack]);
     }
     m_tracks->Fill();
   }
@@ -510,8 +510,7 @@ void Io::RceRootWriter::append(const Storage::Event& event)
         interceptV[numIntercepts] = local.offset()[1];
         interceptSlopeU[numIntercepts] = local.slope()[0];
         interceptSlopeV[numIntercepts] = local.slope()[1];
-        std::copy(local.cov().begin(), local.cov().end(),
-                  interceptCov[numIntercepts]);
+        local.getCovPacked(interceptCov[numIntercepts]);
         interceptTrack[numIntercepts] = s.first;
         numIntercepts += 1;
       }

@@ -9,12 +9,15 @@
 #include "storage/event.h"
 #include "tracking/propagation.h"
 #include "tracking/straighttools.h"
+#include "utils/logger.h"
 
 using Storage::Cluster;
 using Storage::Event;
 using Storage::SensorEvent;
 using Storage::Track;
 using Storage::TrackState;
+
+PT_SETUP_LOCAL_LOGGER(TrackFinder)
 
 Tracking::TrackFinder::TrackFinder(const Mechanics::Device& device,
                                    const std::vector<Index>& sensors,
@@ -110,15 +113,14 @@ void Tracking::TrackFinder::searchSensor(
     Index matched = kInvalidIndex;
 
     // estimated track on the source plane using last cluster and beam
-    const Mechanics::Plane& source = m_geo.getPlane(lastSensor);
     Storage::TrackState onSource(lastCluster.posLocal(),
-                                 Transpose(source.rotation) *
-                                     m_geo.beamDirection());
+                                 m_geo.getBeamSlope(lastSensor));
     onSource.setCovOffset(lastCluster.covLocal());
+    onSource.setCovSlope(m_geo.getBeamCovariance(lastSensor));
 
     // propagate track to the target plane
     Storage::TrackState onTarget =
-        Tracking::propagate_to(onSource, source, target);
+        Tracking::propagate_to(onSource, m_geo.getPlane(lastSensor), target);
 
     for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
       Storage::Cluster& curr = sensorEvent.getCluster(icluster);
@@ -129,7 +131,7 @@ void Tracking::TrackFinder::searchSensor(
 
       Vector2 delta = curr.posLocal() - onTarget.offset();
       SymMatrix2 cov = curr.covLocal() + onTarget.covOffset();
-      double d2 = mahalanobisSquared(cov, delta);
+      auto d2 = mahalanobisSquared(cov, delta);
 
       if ((0 < m_d2Max) && (m_d2Max < d2))
         continue;

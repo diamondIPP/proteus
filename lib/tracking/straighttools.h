@@ -98,8 +98,8 @@ inline void Tracking::LineFitter3D::addPoint(const Storage::Cluster& cluster,
 {
   // local to global assuming a position on the local plane
   Vector3 xyz = source.toGlobal(cluster.posLocal());
-  SymMatrix3 cov =
-      Similarity(source.rotation.Sub<Matrix32>(0, 0), cluster.covLocal());
+  SymMatrix3 cov = transformCovariance(source.rotationToGlobal().leftCols<2>(),
+                                       cluster.covLocal());
   addPoint(xyz[0], xyz[1], xyz[2], 1 / cov(0, 0), 1 / cov(1, 1));
 }
 
@@ -109,9 +109,10 @@ inline void Tracking::LineFitter3D::addPoint(const Storage::Cluster& cluster,
 {
   // source local to target local assuming a position on the local source plane
   Vector3 uvw = target.toLocal(source.toGlobal(cluster.posLocal()));
-  Matrix3 cov = Similarity(Transpose(target.rotation) *
-                               source.rotation.Sub<Matrix32>(0, 0),
-                           cluster.covLocal());
+  // the extra eval is needed to make older Eigen/compiler versions happy
+  Matrix2 jac = target.rotationToLocal().eval().topRows<2>() *
+                source.rotationToGlobal().leftCols<2>();
+  SymMatrix2 cov = transformCovariance(jac, cluster.covLocal());
   addPoint(uvw[0], uvw[1], uvw[2], 1 / cov(0, 0), 1 / cov(1, 1));
 }
 
@@ -125,8 +126,14 @@ inline Storage::TrackState Tracking::LineFitter3D::state() const
 {
   Storage::TrackState s(lineU.offset(), lineV.offset(), lineU.slope(),
                         lineV.slope());
-  s.setCovU(lineU.varOffset(), lineU.varSlope(), lineU.cov());
-  s.setCovV(lineV.varOffset(), lineV.varSlope(), lineV.cov());
+  SymMatrix4 cov = SymMatrix4::Zero();
+  cov(0, 0) = lineU.varOffset();
+  cov(1, 1) = lineV.varOffset();
+  cov(2, 2) = lineU.varSlope();
+  cov(3, 3) = lineV.varSlope();
+  cov(0, 2) = cov(2, 0) = lineU.cov();
+  cov(1, 3) = cov(3, 1) = lineV.cov();
+  s.setCov(cov);
   return s;
 }
 
@@ -135,8 +142,9 @@ inline void Tracking::fitStraightTrackGlobal(const Mechanics::Geometry& geo,
 {
   LineFitter3D fitter;
 
-  for (const auto& c : track.clusters())
+  for (const auto& c : track.clusters()) {
     fitter.addPoint(c.second, geo.getPlane(c.first));
+  }
   fitter.fit();
   track.setGlobalState(fitter.state());
   track.setGoodnessOfFit(fitter.chi2(), 2 * (track.size() - 2));

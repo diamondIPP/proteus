@@ -28,8 +28,7 @@ Analyzers::Tracks::Tracks(TDirectory* dir,
     active = Utils::boundingBox(active, sensorBox);
   }
 
-  Vector3 direction = device.geometry().beamDirection();
-  Vector2 slope(direction[0] / direction[2], direction[1] / direction[2]);
+  Vector2 slope = device.geometry().beamSlope();
   Vector2 slopeMin = slope - slopeRangeStd * device.geometry().beamDivergence();
   Vector2 slopeMax = slope + slopeRangeStd * device.geometry().beamDivergence();
 
@@ -78,10 +77,10 @@ double Analyzers::Tracks::avgNumTracks() const { return m_nTracks->GetMean(); }
 
 Vector2 Analyzers::Tracks::beamSlope() const
 {
-  return Vector2(m_slopeXY->GetMean(1), m_slopeXY->GetMean(2));
+  return {m_slopeXY->GetMean(1), m_slopeXY->GetMean(2)};
 }
 
 Vector2 Analyzers::Tracks::beamDivergence() const
 {
-  return Vector2(m_slopeXY->GetStdDev(1), m_slopeXY->GetStdDev(2));
+  return {m_slopeXY->GetStdDev(1), m_slopeXY->GetStdDev(2)};
 }

@@ -21,16 +21,15 @@ public:
   Cluster();
 
   void setPixel(const Vector2& cr, const SymMatrix2& cov);
-  void setPixel(float col, float row, float stdCol, float stdRow);
   void setLocal(const Vector2& uv, const SymMatrix2& cov);
   void setTime(float time_) { m_time = time_; }
   void setValue(float value_) { m_value = value_; }
   void setTrack(Index track);
 
-  const Vector2& posPixel() const { return m_cr; }
-  const Vector2& posLocal() const { return m_uv; }
-  const SymMatrix2& covPixel() const { return m_crCov; }
-  const SymMatrix2& covLocal() const { return m_uvCov; }
+  Vector2 posPixel() const { return {m_col, m_row}; }
+  Vector2 posLocal() const { return {m_u, m_v}; }
+  auto covPixel() const { return m_crCov; }
+  auto covLocal() const { return m_uvCov; }
   float time() const { return m_time; }
   float value() const { return m_value; }
   /** The area enclosing the cluster in pixel coordinates.
@@ -57,8 +56,8 @@ public:
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
-  Vector2 m_cr;
-  Vector2 m_uv;
+  float m_col, m_row;
+  float m_u, m_v;
   float m_time;
   float m_value;
   SymMatrix2 m_crCov;

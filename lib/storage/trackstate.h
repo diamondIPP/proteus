@@ -21,39 +21,59 @@ namespace Storage {
  */
 class TrackState {
 public:
-  /** Construct a state w/ undefined parameters. */
+  /** Construct invalid state; only here for container support. */
   TrackState();
-  /** Construct from local offset and direction vector. */
-  TrackState(const Vector2& offset, const Vector3& direction);
   /** Construct from local offset and slope values. */
   TrackState(float u, float v, float dU = 0, float dV = 0);
+  /** Construct from local offset and slope vectors. */
+  TrackState(const Vector2& offset, const Vector2& slope);
 
   /** Set the full covariance matrix. */
-  void setCov(const SymMatrix4& cov) { m_cov = cov; }
-  /** Set full covariance matrix from entries.
+  template <typename Covariance>
+  void setCov(const Eigen::MatrixBase<Covariance>& cov)
+  {
+    m_cov = cov.template selfadjointView<Eigen::Lower>();
+  }
+  /** Set only the offset covariance. */
+  template <typename Covariance>
+  void setCovOffset(const Eigen::MatrixBase<Covariance>& cov)
+  {
+    m_cov.block<2, 2>(U, U) = cov.template selfadjointView<Eigen::Lower>();
+  }
+  /** Set only the slope covariance. */
+  template <typename Covariance>
+  void setCovSlope(const Eigen::MatrixBase<Covariance>& cov)
+  {
+    m_cov.block<2, 2>(Du, Du) = cov.template selfadjointView<Eigen::Lower>();
+  }
+  /** Set covariance matrix from packed storage.
    *
-   * The iterator must point to an array of 10 elements that contain the
+   * The iterator must point to a 10 element container that contains the
    * lower triangular block of the symmetric covariance matrix in compressed
-   * row-major layout, i.e. [c00, c10, c11, c20, ...]
+   * column-major layout, i.e. [c00, c10, c20, c30, c11, ...].
    */
   template <typename InputIterator>
-  void setCov(InputIterator first);
-  void setCovU(float varOffset, float varSlope, float cov = 0);
-  void setCovV(float varOffset, float varSlope, float cov = 0);
-  /** Set only the offset covariance. */
-  void setCovOffset(const SymMatrix2& covOffset);
+  void setCovPacked(InputIterator in);
+  /** Store the covariance into packed storage.
+   *
+   * The iterator must point to a 10 element container that will be filled
+   * with the lower triangular block of the symmetric covariance matrix in
+   * compressed column-major layout, i.e. [c00, c10, c20, c30, c11, ...].
+   */
+  template <typename OutputIterator>
+  void getCovPacked(OutputIterator out) const;
 
   /** Full parameter vector. */
-  const Vector4& params() const { return m_params; }
+  auto params() const { return m_params; }
   /** Covariance matrix of the full parameter vector. */
-  const SymMatrix4& cov() const { return m_cov; }
+  auto cov() const { return m_cov; }
   /** Plane offset in local coordinates. */
-  Vector2 offset() const { return m_params.Sub<Vector2>(U); }
-  SymMatrix2 covOffset() const { return m_cov.Sub<SymMatrix2>(U, U); }
+  auto offset() const { return m_params.segment<2>(U); }
+  auto covOffset() const { return m_cov.block<2, 2>(U, U); }
   /** Slope in local coordinates. */
-  Vector2 slope() const { return m_params.Sub<Vector2>(Du); }
-  SymMatrix2 covSlope() const { return m_cov.Sub<SymMatrix2>(Du, Du); }
-  /** Direction vector in local coordinates. */
+  auto slope() const { return m_params.segment<2>(Du); }
+  auto covSlope() const { return m_cov.block<2, 2>(Du, Du); }
+  /** Track direction in local coordinates. */
   Vector3 direction() const { return {m_params[Du], m_params[Dv], 1}; }
 
   bool isMatched() const { return (m_matchedCluster != kInvalidIndex); }
@@ -75,9 +95,35 @@ std::ostream& operator<<(std::ostream& os, const TrackState& state);
 } // namespace Storage
 
 template <typename InputIterator>
-inline void Storage::TrackState::setCov(InputIterator first)
+inline void Storage::TrackState::setCovPacked(InputIterator in)
 {
-  m_cov.SetElements(first, 10, true, true);
+  // manual unpacking of compressed, column-major storage
+  m_cov(0, 0) = *(in++);
+  m_cov(1, 0) = m_cov(0, 1) = *(in++);
+  m_cov(2, 0) = m_cov(0, 2) = *(in++);
+  m_cov(3, 0) = m_cov(0, 3) = *(in++);
+  m_cov(1, 1) = *(in++);
+  m_cov(2, 1) = m_cov(1, 2) = *(in++);
+  m_cov(3, 1) = m_cov(1, 3) = *(in++);
+  m_cov(2, 2) = *(in++);
+  m_cov(3, 2) = m_cov(2, 3) = *(in++);
+  m_cov(3, 3) = *(in++);
+}
+
+template <typename OutputIterator>
+inline void Storage::TrackState::getCovPacked(OutputIterator out) const
+{
+  // manual packing using symmetric, compressed, column-major storage
+  *(out++) = m_cov(0, 0);
+  *(out++) = m_cov(1, 0);
+  *(out++) = m_cov(2, 0);
+  *(out++) = m_cov(3, 0);
+  *(out++) = m_cov(1, 1);
+  *(out++) = m_cov(2, 1);
+  *(out++) = m_cov(3, 1);
+  *(out++) = m_cov(2, 2);
+  *(out++) = m_cov(3, 2);
+  *(out++) = m_cov(3, 3);
 }
 
 #endif // PT_TRACKSTATE_H

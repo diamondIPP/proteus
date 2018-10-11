@@ -11,8 +11,10 @@
 #include <cassert>
 #include <utility>
 
-#include <Math/SMatrix.h>
-#include <Math/SVector.h>
+#include <Eigen/Cholesky>
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+#include <Eigen/LU>
 
 // Use to number and identify things, e.g. hits, sensors
 typedef unsigned int Index;
@@ -22,13 +24,15 @@ constexpr Index kInvalidIndex = static_cast<Index>(-1);
 typedef std::pair<Index, Index> ColumnRow;
 
 // Templated vector types
-template <typename T, unsigned int kRows, unsigned int kCols>
-using Matrix = ROOT::Math::SMatrix<T, kRows, kCols>;
-template <typename T, unsigned int kSize>
-using SymMatrix =
-    ROOT::Math::SMatrix<T, kSize, kSize, ROOT::Math::MatRepSym<T, kSize>>;
-template <typename T, unsigned int kSize>
-using Vector = ROOT::Math::SVector<T, kSize>;
+template <typename T, int kRows, int kCols>
+using Matrix = Eigen::Matrix<T, kRows, kCols>;
+template <typename T, int kSize>
+using DiagMatrix = Eigen::DiagonalMatrix<T, kSize>;
+// Eigen has no special symmetric type, keep it for annotation
+template <typename T, int kSize>
+using SymMatrix = Eigen::Matrix<T, kSize, kSize>;
+template <typename T, int kSize>
+using Vector = Eigen::Matrix<T, kSize, 1>;
 
 // Commonly used vector and matrix types
 // For non-quadratic matrices the first number is the target dimensionality and
@@ -49,29 +53,52 @@ using Vector3 = Vector<double, 3>;
 using Vector4 = Vector<double, 4>;
 using Vector6 = Vector<double, 6>;
 
+/** Transform the covariance to a different base using a Jacobian.
+ *
+ * Compute `jac * cov * jac^T`. This only gives the correct result if
+ * the input covariance is symmetric.
+ */
+template <typename Jacobian, typename Covariance>
+inline auto transformCovariance(const Eigen::MatrixBase<Jacobian>& jac,
+                                const Eigen::EigenBase<Covariance>& cov)
+{
+  // w/o the eval, all hell breaks loose and the compiler seems to
+  // optimize things away that should stay where they are.
+  return (jac * cov.derived() * jac.transpose()).eval();
+}
+template <typename Jacobian, typename Covariance>
+inline auto transformCovariance(const Eigen::DiagonalBase<Jacobian>& jac,
+                                const Eigen::EigenBase<Covariance>& cov)
+{
+  // see above for eval
+  return (jac * cov.derived() * jac).eval();
+}
+
+/** Extract the standard deviation vector from a covariance matrix. */
+template <typename Covariance>
+inline auto extractStdev(const Eigen::EigenBase<Covariance>& cov)
+{
+  return cov.derived().diagonal().cwiseSqrt().eval();
+}
+
 /** Squared Mahalanobis distance / norm of a vector.
  *
  * The vector elements are weighted with the inverse of a covariance matrix.
  * This is a multi-dimensional generalization of the pull / significance
  * measure.
  */
-template <typename T, unsigned int kD1>
-static inline double mahalanobisSquared(
-    const ROOT::Math::SMatrix<T, kD1, kD1, ROOT::Math::MatRepSym<T, kD1>>& cov,
-    const ROOT::Math::SVector<T, kD1>& x)
+template <typename T, typename U>
+inline auto mahalanobisSquared(const Eigen::MatrixBase<T>& cov,
+                               const Eigen::MatrixBase<U>& x)
 {
-  ROOT::Math::SMatrix<T, kD1, kD1, ROOT::Math::MatRepSym<T, kD1>> weight(cov);
-  if (!weight.InvertChol())
-    throw std::runtime_error(
-        "Covariance inversion failed for Mahalanobis distance");
-  return ROOT::Math::Dot(x, weight * x);
+  // compute `x^T C^-1 x` via `x^T y` where `y` is the solution to `C y = x`
+  return x.dot(cov.template selfadjointView<Eigen::Lower>().llt().solve(x));
 }
 
 /** Mahalanobis distance / norm of a vector. */
-template <typename T, unsigned int kD1>
-static inline double mahalanobis(
-    const ROOT::Math::SMatrix<T, kD1, kD1, ROOT::Math::MatRepSym<T, kD1>>& cov,
-    const ROOT::Math::SVector<T, kD1>& x)
+template <typename T, typename U>
+inline auto mahalanobis(const Eigen::MatrixBase<T>& cov,
+                        const Eigen::MatrixBase<U>& x)
 {
   return std::sqrt(mahalanobisSquared(cov, x));
 }

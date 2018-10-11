@@ -10,12 +10,10 @@ cache:
   paths:
     - test/data/
 
-# setup default build environment w/ minimal version requirements
-# run debug build by default
+# default build environment w/ minimal version requirements
 before_script:
-  - source /cvmfs/sft.cern.ch/lcg/views/LCG_92/x86_64-slc6-gcc62-opt/setup.sh
-  - export "PATH=${PWD}/install-slc6-dbg/bin${PATH:+:}${PATH}"
-  - export "LD_LIBRARY_PATH=${PWD}/install-slc6-dbg/lib${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
+  - source ci/lcg_view.sh
+  - source ${lcg_view}/setup.sh
 
 check-format:
   # clang-format on ci yields different output from local installation
@@ -69,9 +67,7 @@ build-cc7-dbg:
   stage: build
   tags:
     - cvmfs
-  before_script: []
   script:
-    - source /cvmfs/sft.cern.ch/lcg/views/LCG_92/x86_64-centos7-gcc62-opt/setup.sh
     - mkdir build && cd build
     - cmake -GNinja -DCMAKE_BUILD_TYPE=Debug ..
     - cmake --build .
@@ -81,17 +77,17 @@ build-cc7-opt:
   stage: build
   tags:
     - cvmfs
-  before_script: []
   script:
-    - source /cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-centos7-gcc62-opt/setup.sh
     - mkdir build && cd build
     - cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
     - cmake --build .
 
 doc:
+  allow_failure: true
   image: gitlab-registry.cern.ch/unige-fei4tel/proteus:cc7
   stage: build
-  before_script: []
+  tags:
+    - cvmfs
   script:
     - mkdir build && cd build
     - cmake -DPROTEUS_ENABLE_DOC=on ..
@@ -160,6 +156,10 @@ test-combine:
     - cd test
     - ./download_data.py ${DATASET}
     - ./run_recon.sh ${DATASET} --no-progress
+  artifacts:
+    paths:
+      - test/output
+    expire_in: 1 week
 
 .chain: &template_chain
   stage: test
@@ -224,3 +224,30 @@ test-unigetel_ebeam120_nparticles01-chain:
   <<: *template_chain
   variables:
     DATASET: unigetel_ebeam120_nparticles01
+
+# tests for UNIGEtel ebeam=120GeV nparticles=2
+
+test-unigetel_ebeam120_nparticles02-align_dut:
+  <<: *template_align_dut
+  variables:
+    DATASET: unigetel_ebeam120_nparticles02
+
+test-unigetel_ebeam120_nparticles02-align_tel:
+  <<: *template_align_tel
+  variables:
+    DATASET: unigetel_ebeam120_nparticles02
+
+test-unigetel_ebeam120_nparticles02-noisescan:
+  <<: *template_noisescan
+  variables:
+    DATASET: unigetel_ebeam120_nparticles02
+
+test-unigetel_ebeam120_nparticles02-recon:
+  <<: *template_recon
+  variables:
+    DATASET: unigetel_ebeam120_nparticles02
+
+test-unigetel_ebeam120_nparticles02-chain:
+  <<: *template_chain
+  variables:
+    DATASET: unigetel_ebeam120_nparticles02

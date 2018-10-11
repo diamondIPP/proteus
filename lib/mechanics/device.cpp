@@ -151,14 +151,38 @@ void Mechanics::Device::addSensor(Sensor&& sensor)
 void Mechanics::Device::setGeometry(const Geometry& geometry)
 {
   m_geometry = geometry;
-
   // update geometry-dependent sensor properties
-  for (auto sensorId : m_sensorIds) {
-    auto& sensor = getSensor(sensorId);
-    const auto& plane = m_geometry.getPlane(sensorId);
-    sensor.updateBeam(plane, m_geometry.beamDirection(),
-                      m_geometry.beamDivergence());
-    sensor.updateProjections(plane);
+  for (auto& sensor : m_sensors) {
+    const auto& plane = m_geometry.getPlane(sensor.id());
+    auto pitch = Vector3(sensor.pitchCol(), sensor.pitchRow(), 0);
+    auto volume = sensor.sensitiveVolumeLocal();
+
+    sensor.m_beamSlope = m_geometry.getBeamSlope(sensor.id());
+    sensor.m_beamCov = m_geometry.getBeamCovariance(sensor.id());
+    // only absolute pitch is relevant here
+    sensor.m_projPitch = (plane.rotationToGlobal() * pitch).cwiseAbs();
+    // corners of the local bounding box converted into the global system
+    Matrix<double, 3, 8> corners;
+    corners << plane.toGlobal(
+        Vector3(volume.min(0), volume.min(1), volume.min(2))),
+        plane.toGlobal(Vector3(volume.min(0), volume.min(1), volume.max(2))),
+        plane.toGlobal(Vector3(volume.min(0), volume.max(1), volume.min(2))),
+        plane.toGlobal(Vector3(volume.min(0), volume.max(1), volume.max(2))),
+        plane.toGlobal(Vector3(volume.max(0), volume.min(1), volume.min(2))),
+        plane.toGlobal(Vector3(volume.max(0), volume.min(1), volume.max(2))),
+        plane.toGlobal(Vector3(volume.max(0), volume.max(1), volume.min(2))),
+        plane.toGlobal(Vector3(volume.max(0), volume.max(1), volume.max(2)));
+    // determine bounding box of the rotated volume
+    auto xmin = corners.row(0).minCoeff();
+    auto xmax = corners.row(0).maxCoeff();
+    auto ymin = corners.row(1).minCoeff();
+    auto ymax = corners.row(1).maxCoeff();
+    auto zmin = corners.row(2).minCoeff();
+    auto zmax = corners.row(2).maxCoeff();
+    sensor.m_projEnvelope =
+        Sensor::Volume(Sensor::Volume::AxisInterval(xmin, xmax),
+                       Sensor::Volume::AxisInterval(ymin, ymax),
+                       Sensor::Volume::AxisInterval(zmin, zmax));
   }
   // TODO 2016-08-18 msmk: check number of sensors / id consistency
 }

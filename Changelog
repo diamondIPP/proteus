@@ -10,7 +10,14 @@ v1.4.0 (to be released)
 User-visible changes
 --------------------
 
-*   Increased compression in the output root files. The RCE files will be a factor of 3 smaller than before. Added compression to the match, track, recon and hist files as well.
+*   Increased compression in the output data and histogam root
+    files. The RCE files will be a factor of 3 smaller than before.
+*   Use the Eigen library for linear algebra and geometry calculations.
+
+    This replaces the internal usage of ``ROOT::SMatrix`` and
+    ``ROOT::GenVector`` and adds the Eigen library as a new external
+    dependency.
+*   Increase the required C++ version to C++14.
 *   Remove ``event/...`` histograms that showed the
     ``Trigger{Offset,Phase}`` variables.
 *   Add occupancy histograms in the global coordinate system. They can be
@@ -111,6 +118,9 @@ Bugfixes
 
     Previously, this was calculated during the last alignment step and was
     therefore using the second-to-last geometry and not the final one.
+*   Fix incorrect slope-to-slope Jacobian calculation.
+
+    It is unclear if and how this affected the tracking results.
 
 Internal changes
 ----------------
