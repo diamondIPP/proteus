@@ -109,7 +109,8 @@ inline void Tracking::LineFitter3D::addPoint(const Storage::Cluster& cluster,
 {
   // source local to target local assuming a position on the local source plane
   Vector3 uvw = target.toLocal(source.toGlobal(cluster.posLocal()));
-  Matrix2 jac = target.rotationToLocal().topRows<2>() *
+  // the extra eval is needed to make older Eigen/compiler versions happy
+  Matrix2 jac = target.rotationToLocal().eval().topRows<2>() *
                 source.rotationToGlobal().leftCols<2>();
   SymMatrix2 cov = transformCovariance(jac, cluster.covLocal());
   addPoint(uvw[0], uvw[1], uvw[2], 1 / cov(0, 0), 1 / cov(1, 1));
