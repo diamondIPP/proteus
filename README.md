@@ -16,16 +16,16 @@ required is listed below.
 *   A C++11 compiler, gcc 4.9 or clang 3.9
 *   [CMake][cmake] 2.8.12
 *   [Eigen][eigen] 3.2.9
-*   [ROOT][root] 6.12
+*   [ROOT][root] 6.08
 *   [EUDAQ][eudaq] 1.7 (optional, for the EUDAQ reader)
 *   Doxygen 1.6 (optional, for the documentation generation)
 *   Sphinx (optional, for the documentation generation)
 *   Breathe (optional, for the documentation generation)
 
 On CERN lxplus machines you can setup a LCG release to provide a recent
-compiler and a compatible [ROOT][root] version via the following command
+compiler and compatible depedencies via the following command
 
-    source /cvmfs/sft.cern.ch/lcg/views/LCG_92/x86_64-slc6-gcc7-opt/setup.sh
+    source /cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-slc6-gcc7-opt/setup.sh
 
 Building
 --------
