@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include <Eigen/SVD>
+
 #include "storage/event.h"
 #include "utils/logger.h"
 #include "utils/root.h"
@@ -232,13 +234,16 @@ static std::vector<size_t> findAlignableParams(const Vector6& precision)
 //
 //    Cov = F^-1
 //
+// Or you can switch to a good linear algebra library with a working and
+// robust singular value decomposition, ignore vanishing singular values,
+// and do not have to bother with the whole regularization scheme at all.
 
-Alignment::LocalChi2PlaneFitter::LocalChi2PlaneFitter(
-    const Vector6& precision, std::vector<size_t> indices)
-    : m_numTracks(0), m_subspaceIndices(std::move(indices))
+Alignment::LocalChi2PlaneFitter::LocalChi2PlaneFitter(double threshold)
+    : m_fr(SymMatrix6::Zero())
+    , m_y(Vector6::Zero())
+    , m_numTracks(0)
+    , m_threshold(threshold)
 {
-  // m_wa, m_fr, m_y are zeroed by default in SMatrix
-  m_wa.SetDiagonal(precision);
 }
 
 bool Alignment::LocalChi2PlaneFitter::addTrack(
@@ -268,24 +273,28 @@ bool Alignment::LocalChi2PlaneFitter::addTrack(
 
   // add finite contribution to the normal equations
   auto jac = jacobianOffsetAlignment(track);
-  m_fr += SimilarityT(jac, weight);
-  m_y += Transpose(jac) * weight * (measurement.posLocal() - track.offset());
+  m_fr += jac.transpose() * weight * jac;
+  m_y += jac.transpose() * weight * (measurement.posLocal() - track.offset());
   m_numTracks += 1;
   return true;
 }
 
-bool Alignment::LocalChi2PlaneFitter::minimize(Vector6& a,
+size_t Alignment::LocalChi2PlaneFitter::minimize(Vector6& a,
                                                SymMatrix6& cov) const
 {
-  // regularize the normal matrix
-  SymMatrix6 f = m_fr + m_wa;
-
   DEBUG("num tracks: ", m_numTracks);
   DEBUG("normal vector:\n", m_y);
   DEBUG("normal matrix:\n", m_fr);
-  DEBUG("normal matrix (regularized):\n", f);
 
-  return solveSubspace(f, m_y, m_subspaceIndices, cov, a);
+  Eigen::JacobiSVD<Matrix6, Eigen::NoQRPreconditioner> svd(
+      m_fr, Eigen::ComputeFullU | Eigen::ComputeFullV);
+
+  // ignore small singular values that correspond to weak modes
+  svd.setThreshold(m_threshold);
+  a = svd.solve(m_y);
+  cov = svd.solve(Matrix6::Identity());
+
+  return svd.rank();
 }
 
 Alignment::LocalChi2Aligner::LocalChi2Aligner(
@@ -294,23 +303,8 @@ Alignment::LocalChi2Aligner::LocalChi2Aligner(
     const double damping)
     : m_device(device), m_damping(damping)
 {
-  static const char* const names[] = {
-      "du", "dv", "dw", "dalpha", "dbeta", "dgamma",
-  };
-
   for (auto isensor : alignIds) {
-    const auto& sensor = device.getSensor(isensor);
-    auto precision = estimateAlignmentPrecision(sensor);
-    auto indices = findAlignableParams(precision);
-
-    std::string selectedNames;
-    for (auto index : indices) {
-      selectedNames.append(!selectedNames.empty() ? ", " : "");
-      selectedNames.append(names[index]);
-    }
-    INFO("sensor ", sensor.name(), " alignment parameters: ", selectedNames);
-
-    m_fitters.emplace_back(isensor, LocalChi2PlaneFitter(precision, indices));
+    m_fitters.emplace_back(isensor, LocalChi2PlaneFitter(1e-3));
   }
 }
 
@@ -334,11 +328,7 @@ void Alignment::LocalChi2Aligner::execute(const Storage::Event& event)
 
       // unbiased residuals have a contribution from
       // the cluster uncertainty and the tracking uncertainty
-      SymMatrix2 weight = cluster.covLocal() + state.covOffset();
-      if (!weight.InvertChol()) {
-        ERROR("Failed to invert cluster covariance event=", event.frame(),
-              " sensor=", sensorEvent.sensor(), " track=", cluster.track());
-      }
+      SymMatrix2 weight = (cluster.covLocal() + state.covOffset()).inverse();
       if (!fitter.addTrack(state, cluster, weight)) {
         ERROR("Invalid track/cluster input event=", event.frame(),
               " sensor=", sensorEvent.sensor(), " track=", cluster.track());
@@ -359,13 +349,14 @@ Mechanics::Geometry Alignment::LocalChi2Aligner::updatedGeometry() const
     // solve the chi2 minimization for optimal parameters
     Vector6 delta;
     SymMatrix6 cov;
-    if (!fitter.minimize(delta, cov)) {
+    auto neffective = fitter.minimize(delta, cov);
+    if (neffective == 0) {
       FAIL("Could not solve alignment equations for sensor ", sensor.name());
     }
     delta *= m_damping;
 
     // output w/ angles in degrees
-    Vector6 stddev = sqrt(cov.Diagonal());
+    Vector6 stddev = extractStdev(cov);
     INFO(sensor.name(), " alignment corrections:");
     INFO("  du: ", delta[0], " ± ", stddev[0]);
     INFO("  dv: ", delta[1], " ± ", stddev[1]);
@@ -373,6 +364,7 @@ Mechanics::Geometry Alignment::LocalChi2Aligner::updatedGeometry() const
     INFO("  dalpha: ", degree(delta[3]), " ± ", degree(stddev[3]), " degree");
     INFO("  dbeta: ", degree(delta[4]), " ± ", degree(stddev[4]), " degree");
     INFO("  dgamma: ", degree(delta[5]), " ± ", degree(stddev[5]), " degree");
+    VERBOSE("  effective number of parameters: ", neffective);
 
     // update sensor geometry
     geo.correctLocal(isensor, delta, cov);
