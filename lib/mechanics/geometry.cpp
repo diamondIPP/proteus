@@ -395,13 +395,15 @@ void Mechanics::Geometry::print(std::ostream& os,
      << "]\n";
   for (const auto& ip : m_planes) {
     auto params = ip.second.asParams();
+    auto angles =
+        Vector3(degree(params[3]), degree(params[4]), degree(params[5]));
     os << prefix << "sensor " << ip.first << ":\n";
-    os << prefix << "  offset: [" << ip.second.offset() << "]\n";
-    os << prefix << "  angles: [" << degree(params[3]) << ", "
-       << degree(params[4]) << ", " << degree(params[5]) << "]\n";
-    os << prefix << "  unit u: [" << ip.second.unitU() << "]\n";
-    os << prefix << "  unit v: [" << ip.second.unitV() << "]\n";
-    os << prefix << "  unit w: [" << ip.second.unitNormal() << "]\n";
+    os << prefix << "  offset: [" << ip.second.offset().transpose() << "]\n";
+    os << prefix << "  angles: [" << angles.transpose() << "]\n";
+    os << prefix << "  unit u: [" << ip.second.unitU().transpose() << "]\n";
+    os << prefix << "  unit v: [" << ip.second.unitV().transpose() << "]\n";
+    os << prefix << "  unit w: [" << ip.second.unitNormal().transpose()
+       << "]\n";
   }
   os.flush();
 }
