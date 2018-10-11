@@ -24,9 +24,7 @@ Storage::TrackState::TrackState(const Vector2& offset, const Vector2& slope)
 
 std::ostream& Storage::operator<<(std::ostream& os, const TrackState& state)
 {
-  auto o = state.offset();
-  auto s = state.slope();
-  os << "offset=[" << o[0] << "," << o[1] << "]";
-  os << " slope=[" << s[0] << "," << s[1] << "]";
+  os << "offset=[" << state.offset().transpose() << "]";
+  os << " slope=[" << state.slope().transpose() << "]";
   return os;
 }
