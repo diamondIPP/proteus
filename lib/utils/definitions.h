@@ -74,6 +74,13 @@ inline auto transformCovariance(const Eigen::DiagonalBase<Jacobian>& jac,
   return (jac * cov.derived() * jac).eval();
 }
 
+/** Extract the standard deviation vector from a covariance matrix. */
+template <typename Covariance>
+inline auto extractStdev(const Eigen::EigenBase<Covariance>& cov)
+{
+  return cov.derived().diagonal().cwiseSqrt().eval();
+}
+
 /** Squared Mahalanobis distance / norm of a vector.
  *
  * The vector elements are weighted with the inverse of a covariance matrix.
