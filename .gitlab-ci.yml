@@ -83,7 +83,11 @@ build-cc7-opt:
     - cmake --build .
 
 doc:
+  allow_failure: true
+  image: gitlab-registry.cern.ch/unige-fei4tel/proteus:cc7
   stage: build
+  tags:
+    - cvmfs
   script:
     - mkdir build && cd build
     - cmake -DPROTEUS_ENABLE_DOC=on ..
