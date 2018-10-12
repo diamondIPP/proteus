@@ -53,6 +53,7 @@ private:
   TH2D* m_slopeXY;
   TH1D* m_slopeX;
   TH1D* m_slopeY;
+  TH1D* m_time;
 };
 
 } // namespace Analyzers

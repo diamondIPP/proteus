@@ -21,11 +21,13 @@ Analyzers::Tracks::Tracks(TDirectory* dir,
 {
   using namespace Utils;
 
-  // estimate bounding box of all sensor projections into the xy-plane
+  // estimate bounding box of all sensor projections and time ranges
   auto active = Mechanics::Sensor::Volume::Empty();
+  auto time = Mechanics::Sensor::IntRange::Empty();
   for (auto isensor : device.sensorIds()) {
-    auto sensorBox = device.getSensor(isensor).projectedEnvelope();
-    active = Utils::boundingBox(active, sensorBox);
+    const auto& sensor = device.getSensor(isensor);
+    active.enclose(sensor.projectedEnvelope());
+    time.enclose(sensor.timeRange());
   }
 
   Vector2 slope = device.geometry().beamSlope();
@@ -39,6 +41,7 @@ Analyzers::Tracks::Tracks(TDirectory* dir,
   HistAxis axOffY(active.interval(1), bins, "Track offset y");
   HistAxis axSlopeX(slopeMin[0], slopeMax[0], bins, "Track slope x");
   HistAxis axSlopeY(slopeMin[1], slopeMax[1], bins, "Track slope y");
+  HistAxis axTime(time.min(), time.max(), "Track time");
 
   TDirectory* sub = makeDir(dir, "tracks");
   m_nTracks = makeH1(sub, "ntracks", axNTracks);
@@ -50,6 +53,7 @@ Analyzers::Tracks::Tracks(TDirectory* dir,
   m_slopeX = makeH1(sub, "slope_x", axSlopeX);
   m_slopeY = makeH1(sub, "slope_y", axSlopeY);
   m_slopeXY = makeH2(sub, "slope_xy", axSlopeX, axSlopeY);
+  m_time = makeH1(sub, "time", axTime);
 }
 
 std::string Analyzers::Tracks::name() const { return "Tracks"; }
@@ -70,6 +74,7 @@ void Analyzers::Tracks::execute(const Storage::Event& event)
     m_slopeXY->Fill(state.slope()[0], state.slope()[1]);
     m_slopeX->Fill(state.slope()[0]);
     m_slopeY->Fill(state.slope()[1]);
+    m_time->Fill(state.time());
   }
 }
 
