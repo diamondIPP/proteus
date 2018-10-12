@@ -7,6 +7,11 @@ set(Proteus_VERSION v1.3.0)
 option(PROTEUS_ENABLE_DOC "Enable the documentation build" OFF)
 option(PROTEUS_USE_EUDAQ "Build EUDAQ file reader" OFF)
 
+# build as release if nothing else was requested
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
+endif()
+
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)

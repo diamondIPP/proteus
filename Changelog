@@ -154,6 +154,7 @@ Internal changes
     around the maximum instead of the position of the maximum (added function
     `getRestrictedMean(...)` to `root.h`). This function is used also in the correlations
     aligner, but still using the whole histogram (`offset=-1`).
+*   Set the default built to ``Release`` if nothing else was requested.
 
 v1.3.0 (2017-12-06)
 ===================
