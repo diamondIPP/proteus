@@ -5,7 +5,7 @@
 # sets the `platform`, `lcg_version`, and `lcg_view` variables
 
 if [ "$(cat /etc/redhat-release | grep 'Scientific Linux CERN SLC release 6')" ]; then
-  platform="x86_64-slc6-gcc62-opt"
+  platform="x86_64-slc6-gcc49-opt"
 elif [ "$(cat /etc/centos-release | grep 'CentOS Linux release 7')" ]; then
   platform="x86_64-centos7-gcc62-opt"
 else
