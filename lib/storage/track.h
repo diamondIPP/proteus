@@ -33,7 +33,7 @@ public:
 
   float chi2() const { return m_chi2; }
   float reducedChi2() const { return m_chi2 / m_dof; }
-  float degreesOfFreedom() const { return m_dof; }
+  int degreesOfFreedom() const { return m_dof; }
   const TrackState& globalState() const { return m_state; }
 
   /** Adds a cluster on the given sensor to the track.
