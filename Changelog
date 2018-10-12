@@ -101,6 +101,12 @@ User-visible changes
     to the local expected variations. While the output histograms contain
     the masks generated from both steps separately only a single combined
     mask file is produced.
+*   Add support for per-track time information. Yeah, 4-d tracking!
+
+    The per-track time is derived from the earliest constituent cluster of
+    the track. The track time is exported as an additional branch in the
+    match trees output produced by ``pt-recon`` and ``pt-match``. All tools
+    also produce additional histograms related to the track time.
 
 Bugfixes
 --------
