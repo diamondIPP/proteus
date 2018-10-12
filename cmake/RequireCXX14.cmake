@@ -28,19 +28,34 @@ if(NOT _has_cxx14_support)
 endif()
 
 # check for existing compiler flags
-string(REGEX MATCH "-std=[a-z0-9+]+" _defined_std ${CMAKE_CXX_FLAGS})
-if(_defined_std MATCHES "-std=.+")
-  message(STATUS "C++ standard compiler flag ${_defined_std} already defined.")
-  return()
-endif()
+string(REGEX MATCHALL "-std=[a-z0-9+]+" _defined_stds ${CMAKE_CXX_FLAGS})
+set(_compatible_stds)
+foreach(_std ${_defined_stds})
+  # extract standard version number
+  string(REGEX REPLACE "-std=(c|gnu)\\+\\+([a-z0-9]+)" "\\2" _version ${_std})
+  if(_version MATCHES "98|03|0x|11|1y")
+    message(STATUS "Remove C++ standard flag ${_std}")
+  else()
+    message(STATUS "Keep C++ standard flag ${_std}")
+    set(_compatible_stds "${_compatible_stds} ${_std}")
+  endif()
+endforeach()
 
-# enable support
-if(CMAKE_VERSION VERSION_LESS "3.1")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-  message(STATUS "Added -std=c++14 compiler flag.")
+if(_compatible_stds)
+  # (some) existing standard flags are compatible w/ c++14
+  # remove all standard flags
+  string(REGEX REPLACE "-std=[a-z0-9+]+" "" _cxx_flags ${CMAKE_CXX_FLAGS})
+  # readd compatible ones
+  set(CMAKE_CXX_FLAGS "${_cxx_flags} ${_compatible_stds}")
 else()
-  set(CMAKE_CXX_STANDARD 14)
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
-  set(CMAKE_CXX_EXTENSIONS OFF)
-  message(STATUS "Require CXX_STANDARD=14.")
+  # existing standard flags are not enough
+  if(CMAKE_VERSION VERSION_LESS "3.1")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+    message(STATUS "Added -std=c++14 compiler flag.")
+  else()
+    set(CMAKE_CXX_STANDARD 14)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    set(CMAKE_CXX_EXTENSIONS OFF)
+    message(STATUS "Require CXX_STANDARD=14.")
+  endif()
 endif()
