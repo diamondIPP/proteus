@@ -29,6 +29,9 @@ Analyzers::detail::SensorResidualHists::SensorResidualHists(
   auto posRangeU = sensor.sensitiveAreaLocal().interval(0);
   auto posRangeV = sensor.sensitiveAreaLocal().interval(1);
   auto distRange = std::sqrt(resMaxU * resMaxU + resMaxV * resMaxV);
+  // maximum time differences computable, max value is exclusive
+  auto timedeltaMin = sensor.timeRange().min() - sensor.timeRange().max() + 1;
+  auto timedeltaMax = sensor.timeRange().max() - sensor.timeRange().min();
 
   Vector2 slopeMin = sensor.beamSlope() - rangeStd * sensor.beamDivergence();
   Vector2 slopeMax = sensor.beamSlope() + rangeStd * sensor.beamDivergence();
@@ -42,6 +45,8 @@ Analyzers::detail::SensorResidualHists::SensorResidualHists(
   HistAxis axResDist(0, distRange, bins, "Cluster - track distance");
   HistAxis axResD2(0, 2 * rangeStd, bins,
                    "Cluster - track weighted squared distance");
+  HistAxis axResTime(timedeltaMin - 0.5, timedeltaMax - 0.5,
+                     timedeltaMax - timedeltaMin, "Cluster - track time");
 
   TDirectory* sub = makeDir(dir, "sensors/" + sensor.name() + "/" + name);
   resU = makeH1(sub, "res_u", axResU);
@@ -57,6 +62,7 @@ Analyzers::detail::SensorResidualHists::SensorResidualHists(
   resUV = makeH2(sub, "res_uv", axResU, axResV);
   resDist = makeH1(sub, "res_dist", axResDist);
   resD2 = makeH1(sub, "res_d2", axResD2);
+  resTime = makeH1(sub, "res_time", axResTime);
 }
 
 void Analyzers::detail::SensorResidualHists::fill(
@@ -69,6 +75,7 @@ void Analyzers::detail::SensorResidualHists::fill(
   resV->Fill(res[1]);
   resDist->Fill(std::hypot(res[0], res[1]));
   resD2->Fill(mahalanobisSquared(cov, res));
+  resTime->Fill(cluster.time() - state.time());
   resUV->Fill(res[0], res[1]);
   trackUResU->Fill(state.offset()[0], res[0]);
   trackUResV->Fill(state.offset()[0], res[1]);

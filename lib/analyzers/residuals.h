@@ -28,6 +28,7 @@ struct SensorResidualHists {
   TH1D* resV;
   TH1D* resDist;
   TH1D* resD2;
+  TH1D* resTime;
   TH2D* resUV;
   TH2D* trackUResU;
   TH2D* trackUResV;
