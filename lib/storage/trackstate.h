@@ -8,6 +8,7 @@
 #define PT_TRACKSTATE_H
 
 #include <iosfwd>
+#include <limits>
 
 #include "utils/definitions.h"
 
@@ -23,10 +24,26 @@ class TrackState {
 public:
   /** Construct invalid state; only here for container support. */
   TrackState();
-  /** Construct from local offset and slope values. */
-  TrackState(float u, float v, float dU = 0, float dV = 0);
-  /** Construct from local offset and slope vectors. */
-  TrackState(const Vector2& offset, const Vector2& slope);
+  /** Construct from offset vector, slope vector, and time. */
+  TrackState(float u,
+             float v,
+             float dU,
+             float dV,
+             float time = std::numeric_limits<float>::quiet_NaN());
+  /** Construct from offsets, slopes, and time. */
+  TrackState(const Vector2& offset,
+             const Vector2& slope,
+             float time = std::numeric_limits<float>::quiet_NaN());
+  /** Construct from parameter vector and time. */
+  template <typename Params>
+  TrackState(const Eigen::MatrixBase<Params>& params,
+             float time = std::numeric_limits<float>::quiet_NaN())
+      : m_params(params)
+      , m_cov(SymMatrix4::Zero())
+      , m_time(time)
+      , m_matchedCluster(kInvalidIndex)
+  {
+  }
 
   /** Set the full covariance matrix. */
   template <typename Covariance>
@@ -67,14 +84,16 @@ public:
   auto params() const { return m_params; }
   /** Covariance matrix of the full parameter vector. */
   auto cov() const { return m_cov; }
-  /** Plane offset in local coordinates. */
+  /** Track offset in local coordinates. */
   auto offset() const { return m_params.segment<2>(U); }
   auto covOffset() const { return m_cov.block<2, 2>(U, U); }
-  /** Slope in local coordinates. */
+  /** Track slope in local coordinates. */
   auto slope() const { return m_params.segment<2>(Du); }
   auto covSlope() const { return m_cov.block<2, 2>(Du, Du); }
   /** Track direction in local coordinates. */
   Vector3 direction() const { return {m_params[Du], m_params[Dv], 1}; }
+  /** Track time on the local plane. */
+  float time() const { return m_time; }
 
   bool isMatched() const { return (m_matchedCluster != kInvalidIndex); }
   Index matchedCluster() const { return m_matchedCluster; }
@@ -84,6 +103,7 @@ private:
 
   Vector4 m_params;
   SymMatrix4 m_cov;
+  float m_time;
   Index m_matchedCluster;
 
   friend class SensorEvent;

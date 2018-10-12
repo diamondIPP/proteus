@@ -1,24 +1,23 @@
 #include "trackstate.h"
 
-#include <cassert>
-#include <limits>
+#include <ostream>
 
 Storage::TrackState::TrackState()
-    : m_params(Vector4::Constant(std::numeric_limits<double>::quiet_NaN()))
-    , m_cov(SymMatrix4::Zero())
-    , m_matchedCluster(kInvalidIndex)
+    : TrackState(Vector4::Constant(std::numeric_limits<double>::quiet_NaN()),
+                 std::numeric_limits<float>::quiet_NaN())
 {
 }
 
-Storage::TrackState::TrackState(float u, float v, float dU, float dV)
-    : m_params(u, v, dU, dV)
-    , m_cov(SymMatrix4::Zero())
-    , m_matchedCluster(kInvalidIndex)
+Storage::TrackState::TrackState(
+    float u, float v, float dU, float dV, float time)
+    : TrackState(Vector4(u, v, dU, dV), time)
 {
 }
 
-Storage::TrackState::TrackState(const Vector2& offset, const Vector2& slope)
-    : TrackState(offset[0], offset[1], slope[0], slope[1])
+Storage::TrackState::TrackState(const Vector2& offset,
+                                const Vector2& slope,
+                                float time)
+    : TrackState(Vector4(offset[0], offset[1], slope[0], slope[1]), time)
 {
 }
 
@@ -26,5 +25,6 @@ std::ostream& Storage::operator<<(std::ostream& os, const TrackState& state)
 {
   os << "offset=[" << state.offset().transpose() << "]";
   os << " slope=[" << state.slope().transpose() << "]";
+  os << " time=" << state.time();
   return os;
 }
