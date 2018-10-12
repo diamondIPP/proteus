@@ -53,6 +53,7 @@ private:
     float u, v, du, dv;
     float stdU, stdV, corrUV;
     float col, row;
+    float time;
     float chi2;
     int16_t dof;
     int16_t size;

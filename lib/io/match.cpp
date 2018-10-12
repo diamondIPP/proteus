@@ -44,6 +44,7 @@ void Io::MatchWriter::TrackData::addToTree(TTree* tree)
   tree->Branch("trk_corr_uv", &corrUV);
   tree->Branch("trk_col", &col);
   tree->Branch("trk_row", &row);
+  tree->Branch("trk_time", &time);
   tree->Branch("trk_chi2", &chi2);
   tree->Branch("trk_dof", &dof);
   tree->Branch("trk_size", &size);
@@ -190,6 +191,7 @@ void Io::MatchWriter::append(const Storage::Event& event)
     m_track.corrUV = state.covOffset()(0, 1) / (m_track.stdU * m_track.stdV);
     m_track.col = cr[0];
     m_track.row = cr[1];
+    m_track.time = state.time();
     m_track.chi2 = track.chi2();
     m_track.dof = track.degreesOfFreedom();
     m_track.size = track.size();
