@@ -70,13 +70,12 @@ Mechanics::Sensor::Sensor(Index id,
     , m_pitchRow(pitchRow)
     , m_thickness(thickness)
     , m_xX0(xX0)
-    // reasonable defaults for global properties that require the full geometry.
-    // this should be updated later by the device.
-    , m_beamSlope(0.0, 0.0)
-    , m_beamDivergence(0.00125, 0.00125)
+    , m_measurement(measurement)
+    // reasonable defaults for geometry-dependent properties. to be updated.
+    , m_beamSlope(Vector2::Zero())
+    , m_beamCov(SymMatrix2::Zero())
     , m_projPitch(pitchCol, pitchRow, 0)
     , m_projEnvelope(sensitiveVolumeLocal())
-    , m_measurement(measurement)
 {
 }
 
@@ -107,15 +106,15 @@ void Mechanics::Sensor::addRegion(
 Vector2 Mechanics::Sensor::transformPixelToLocal(const Vector2& cr) const
 {
   // place sensor center on a pixel edge in the middle of the sensitive area
-  return {m_pitchCol * (cr[0] - std::round(m_numCols / 2.0)),
-          m_pitchRow * (cr[1] - std::round(m_numRows / 2.0))};
+  return {m_pitchCol * (cr[0] - std::round(m_numCols / 2.0f)),
+          m_pitchRow * (cr[1] - std::round(m_numRows / 2.0f))};
 }
 
 Vector2 Mechanics::Sensor::transformLocalToPixel(const Vector2& uv) const
 {
   // place sensor center on a pixel edge in the middle of the sensitive area
-  return {(uv[0] / m_pitchCol) + std::round(m_numCols / 2.0),
-          (uv[1] / m_pitchRow) + std::round(m_numRows / 2.0)};
+  return {(uv[0] / m_pitchCol) + std::round(m_numCols / 2.0f),
+          (uv[1] / m_pitchRow) + std::round(m_numRows / 2.0f)};
 }
 
 Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaPixel() const
@@ -145,62 +144,6 @@ Mechanics::Sensor::Volume Mechanics::Sensor::sensitiveVolumeLocal() const
 void Mechanics::Sensor::setMaskedPixels(const std::set<ColumnRow>& pixels)
 {
   m_pixelMask = Utils::DenseMask(pixels);
-}
-
-void Mechanics::Sensor::updateBeam(const Plane& plane,
-                                   const Vector3& directionXYZ,
-                                   const Vector2& stdevXY)
-{
-  // project global beam parameters into the local plane
-  Vector3 dir = Transpose(plane.rotation) * directionXYZ;
-  Matrix2 jac =
-      Tracking::jacobianSlopeSlope(directionXYZ, Transpose(plane.rotation));
-  SymMatrix2 covGlobal;
-  covGlobal(0, 0) = stdevXY[0] * stdevXY[0];
-  covGlobal(1, 1) = stdevXY[1] * stdevXY[1];
-  covGlobal(0, 1) = covGlobal(1, 0) = 0;
-  SymMatrix2 covLocal = Similarity(jac, covGlobal);
-  m_beamSlope = Vector2(dir[0] / dir[2], dir[1] / dir[2]);
-  m_beamDivergence = sqrt(covLocal.Diagonal());
-}
-
-void Mechanics::Sensor::updateProjections(const Plane& plane)
-{
-  // project pitch vector into the global system
-  m_projPitch = plane.rotation * Vector3(m_pitchCol, m_pitchRow, 0);
-  // only interested in absolute values not in direction
-  m_projPitch[0] = std::abs(m_projPitch[0]);
-  m_projPitch[1] = std::abs(m_projPitch[1]);
-  m_projPitch[2] = std::abs(m_projPitch[2]);
-
-  // project sensor envelope into the global xyz system
-  Area pix = sensitiveAreaLocal();
-  // TODO 2016-08 msmk: find a smarter way to this, but its Friday
-  // TODO 2017-10 msmk: which way does the thickess grow, z or -z
-  // transform each corner of the sensitive box,
-  Vector3 iii = plane.toGlobal(Vector3(pix.min(0), pix.min(1), 0));
-  Vector3 iia = plane.toGlobal(Vector3(pix.min(0), pix.min(1), m_thickness));
-  Vector3 iai = plane.toGlobal(Vector3(pix.min(0), pix.max(1), 0));
-  Vector3 iaa = plane.toGlobal(Vector3(pix.min(0), pix.max(1), m_thickness));
-  Vector3 aii = plane.toGlobal(Vector3(pix.max(0), pix.min(1), 0));
-  Vector3 aia = plane.toGlobal(Vector3(pix.max(0), pix.min(1), m_thickness));
-  Vector3 aai = plane.toGlobal(Vector3(pix.max(0), pix.max(1), 0));
-  Vector3 aaa = plane.toGlobal(Vector3(pix.max(0), pix.max(1), m_thickness));
-  double xmin = std::min(
-      {iii[0], iia[0], iai[0], iaa[0], aii[0], aia[0], aai[0], aaa[0]});
-  double xmax = std::max(
-      {iii[0], iia[0], iai[0], iaa[0], aii[0], aia[0], aai[0], aaa[0]});
-  double ymin = std::min(
-      {iii[1], iia[1], iai[1], iaa[1], aii[1], aia[1], aai[1], aaa[1]});
-  double ymax = std::max(
-      {iii[1], iia[1], iai[1], iaa[1], aii[1], aia[1], aai[1], aaa[1]});
-  double zmin = std::min(
-      {iii[2], iia[2], iai[2], iaa[2], aii[2], aia[2], aai[2], aaa[2]});
-  double zmax = std::max(
-      {iii[2], iia[2], iai[2], iaa[2], aii[2], aia[2], aai[2], aaa[2]});
-  m_projEnvelope =
-      Volume(Volume::AxisInterval(xmin, xmax), Volume::AxisInterval(ymin, ymax),
-             Volume::AxisInterval(zmin, zmax));
 }
 
 void Mechanics::Sensor::print(std::ostream& os, const std::string& prefix) const

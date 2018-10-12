@@ -5,6 +5,7 @@
 
 #include "densemask.h"
 
+#include <iomanip>
 #include <limits>
 #include <ostream>
 

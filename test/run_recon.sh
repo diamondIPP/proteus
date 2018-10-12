@@ -15,3 +15,5 @@ geo="geometry/${dataset}.toml"
 echo "=== using $(which pt-recon)"
 
 pt-recon -g ${geo} ${flags} ${datadir}/${dataset}.root output/${dataset}/recon
+
+./root-checker expected/${dataset}-recon.txt output/${dataset}/recon-hists.root

@@ -12,8 +12,6 @@
 
 namespace Mechanics {
 
-struct Plane;
-
 /** Pixel sensor with digital and local geometry information.
  *
  * To define the sensor and its orientation in space, three different
@@ -85,8 +83,8 @@ public:
   // identification
   Index id() const { return m_id; }
   const std::string& name() const { return m_name; }
-
   Measurement measurement() const { return m_measurement; }
+
   // local digital properties
   Index numCols() const { return m_numCols; }
   Index numRows() const { return m_numRows; }
@@ -115,15 +113,18 @@ public:
   Area sensitiveAreaLocal() const;
   /** Sensitive volume in local coordinates. */
   Volume sensitiveVolumeLocal() const;
+
   /** Beam slope in the local coordinate system. */
-  const Vector2& beamSlope() const { return m_beamSlope; }
+  auto beamSlope() const { return m_beamSlope; }
+  /** Beam slope covariance in the local coordinate system. */
+  auto beamCovariance() const { return m_beamCov; }
   /** Beam slope divergence in the local coordinate system. */
-  const Vector2& beamDivergence() const { return m_beamDivergence; }
+  auto beamDivergence() const { return extractStdev(m_beamCov); }
 
   /** Bounding box volume of the detector in the global system. */
-  const Volume& projectedEnvelope() const { return m_projEnvelope; }
+  auto projectedEnvelope() const { return m_projEnvelope; }
   /** Projected pitch in the global system. */
-  const Vector3& projectedPitch() const { return m_projPitch; }
+  auto projectedPitch() const { return m_projPitch; }
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
@@ -133,11 +134,8 @@ private:
                  int col_max,
                  int row_min,
                  int row_max);
-  void updateBeam(const Plane& plane,
-                  const Vector3& directionXYZ,
-                  const Vector2& stdevXY);
-  void updateProjections(const Plane& plane);
 
+  // local information
   Index m_id;
   std::string m_name;
   Index m_numCols, m_numRows; // number of columns and rows
@@ -146,13 +144,15 @@ private:
   double m_pitchCol, m_pitchRow; // pitch along column and row direction
   double m_thickness;            // sensor thickness
   double m_xX0;                  // X/X0 (thickness in radiation lengths)
-  Vector2 m_beamSlope;           // beam slope as seen in the local system
-  Vector2 m_beamDivergence;      // beam divergence as seen in the local system
-  Vector3 m_projPitch;
-  Volume m_projEnvelope;
   Measurement m_measurement;
   std::vector<Region> m_regions;
   Utils::DenseMask m_pixelMask;
+
+  // geometry-dependent information
+  Vector2 m_beamSlope;  // global beam slope in the local system
+  SymMatrix2 m_beamCov; // global beam slope covariance in the local system
+  Vector3 m_projPitch;
+  Volume m_projEnvelope;
 
   friend class Device;
 };

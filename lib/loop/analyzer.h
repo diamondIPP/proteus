@@ -20,7 +20,7 @@ public:
   virtual std::string name() const = 0;
   virtual void execute(const Storage::Event&) = 0;
   /** The finalize method is optional. */
-  virtual void finalize(){};
+  virtual void finalize() {}
 };
 
 } // namespace Loop

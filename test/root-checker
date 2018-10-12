@@ -18,6 +18,7 @@ from __future__ import print_function
 
 import argparse
 import io
+import os.path
 import sys
 
 import ROOT
@@ -29,17 +30,20 @@ def main(config_path, root_path):
         config_file = sys.stdin
     else:
         config_file = io.open(config_path, mode='r', encoding='utf-8')
-    # open the ROOT file to be checked
-    root_file = ROOT.TFile.Open(root_path)
-
-    result = True
+    config = []
     for line in config_file:
         line = line.strip()
         # drop empty and comment lines
         if not line or line.startswith('#'):
             continue
-        # get configuration
+        # extract configuration entry
         name, type_, value_should = line.split()
+        config.append((name, type_, value_should))
+
+    # open the ROOT file to be checked
+    root_file = ROOT.TFile.Open(root_path)
+    result = True
+    for name, type_, value_should in config:
         check = verify_property(root_file, name, type_, value_should)
         result = result and check
 
@@ -47,11 +51,11 @@ def main(config_path, root_path):
     return (0 if result else 1)
 
 def verify_property(directory, name, property_, value_should):
-    """\
+    """
     Verify that the object has a property with the given value.
     """
     # try to get the object
-    obj = directory.Get(name)
+    obj = directory.Get(name.encode('utf-8'))
     if not obj:
         print('{} does not exist'.format(name))
         return False
