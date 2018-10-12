@@ -29,7 +29,7 @@ def main(config_path, root_path):
     if config_path == '-':
         config_file = sys.stdin
     else:
-        config_file = io.open(config_path, mode='r', encoding='utf-8')
+        config_file = io.open(config_path, mode='rt', encoding='utf-8')
     config = []
     for line in config_file:
         line = line.strip()
@@ -50,12 +50,20 @@ def main(config_path, root_path):
     # return success if all tests succeed
     return (0 if result else 1)
 
+# ROOT seems to behave differently for python2/3
+if (sys.version_info > (3, 0)):
+    def get(directory, name):
+        return directory.Get(name)
+else:
+    def get(directory, name):
+        return directory.Get(name.encode('utf-8'))
+
 def verify_property(directory, name, property_, value_should):
     """
     Verify that the object has a property with the given value.
     """
     # try to get the object
-    obj = directory.Get(name.encode('utf-8'))
+    obj = get(directory, name)
     if not obj:
         print('{} does not exist'.format(name))
         return False
