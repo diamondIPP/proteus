@@ -13,7 +13,7 @@ and [ROOT][root] for its core functionality. Optional components might require
 additional software. A full list of dependencies and their minimum version
 required is listed below.
 
-*   A C++11 compiler, gcc 4.9 or clang 3.9
+*   A C++14-compatible compiler, e.g. gcc 5 or clang 3.4
 *   [CMake][cmake] 2.8.12
 *   [Eigen][eigen] 3.2.9
 *   [ROOT][root] 6.08
