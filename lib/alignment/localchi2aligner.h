@@ -27,10 +27,8 @@ namespace Alignment {
  */
 class LocalChi2PlaneFitter {
 public:
-  /**
-   * \param threshold Relative threshold to suppress weak alignment parameters
-   */
-  LocalChi2PlaneFitter(double threshold = 0.0);
+  /** Construct an zeroed fitter. */
+  LocalChi2PlaneFitter();
 
   /** Add one track-measurement pair to the fitter.
    *
@@ -42,15 +40,15 @@ public:
                 const SymMatrix2& weight);
   /** Calculate alignment parameters from all tracks added so far.
    *
-   * \return The effective number of alignment parameters.
+   * \returns true  On sucessful minimization
+   * \returns false On minimization failure e.g. due to singularities
    */
-  size_t minimize(Vector6& a, SymMatrix6& cov) const;
+  bool minimize(Vector6& a, SymMatrix6& cov) const;
 
 private:
   SymMatrix6 m_fr;
   Vector6 m_y;
   size_t m_numTracks;
-  double m_threshold;
 };
 
 /** Align sensors using using local chi^2 minimization of track residuals. */

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numeric>
 
 #include <Eigen/SVD>
 
@@ -12,8 +13,6 @@
 PT_SETUP_LOCAL_LOGGER(LocalChi2Aligner)
 
 // local helper functions
-
-static constexpr double kDefaultInversionThreshold = 1e-6;
 
 // Map [du, dv, dw, dalpha, dbeta, dgamma] to track offset changes.
 //
@@ -90,11 +89,8 @@ static Matrix26 jacobianOffsetAlignment(const Storage::TrackState& state)
 // robust singular value decomposition, ignore vanishing singular values,
 // and do not have to bother with the whole regularization scheme at all.
 
-Alignment::LocalChi2PlaneFitter::LocalChi2PlaneFitter(double threshold)
-    : m_fr(SymMatrix6::Zero())
-    , m_y(Vector6::Zero())
-    , m_numTracks(0)
-    , m_threshold(threshold)
+Alignment::LocalChi2PlaneFitter::LocalChi2PlaneFitter()
+    : m_fr(SymMatrix6::Zero()), m_y(Vector6::Zero()), m_numTracks(0)
 {
 }
 
@@ -131,8 +127,8 @@ bool Alignment::LocalChi2PlaneFitter::addTrack(
   return true;
 }
 
-size_t Alignment::LocalChi2PlaneFitter::minimize(Vector6& a,
-                                                 SymMatrix6& cov) const
+bool Alignment::LocalChi2PlaneFitter::minimize(Vector6& a,
+                                               SymMatrix6& cov) const
 {
   DEBUG("num tracks: ", m_numTracks);
   DEBUG("normal vector:\n", m_y);
@@ -142,11 +138,19 @@ size_t Alignment::LocalChi2PlaneFitter::minimize(Vector6& a,
       m_fr, Eigen::ComputeFullU | Eigen::ComputeFullV);
 
   // ignore small singular values that correspond to weak modes
-  svd.setThreshold(m_threshold);
+  // the default value of just epsilon is not enough large enough to handle
+  // weak modes
+  // TODO 2018-10-16 msmk
+  // rescale angles to same length unit to reduce numerical instabilities
+  svd.setThreshold(4096 * std::numeric_limits<double>::epsilon());
+
+  VERBOSE("singular values:\n", svd.singularValues().transpose());
+  VERBOSE("effective #parameters: ", svd.rank());
+
   a = svd.solve(m_y);
   cov = svd.solve(Matrix6::Identity());
 
-  return svd.rank();
+  return (0 < svd.rank());
 }
 
 Alignment::LocalChi2Aligner::LocalChi2Aligner(
@@ -156,8 +160,7 @@ Alignment::LocalChi2Aligner::LocalChi2Aligner(
     : m_device(device), m_damping(damping)
 {
   for (auto isensor : alignIds) {
-    m_fitters.emplace_back(isensor,
-                           LocalChi2PlaneFitter(kDefaultInversionThreshold));
+    m_fitters.emplace_back(isensor, LocalChi2PlaneFitter());
   }
 }
 
@@ -217,7 +220,6 @@ Mechanics::Geometry Alignment::LocalChi2Aligner::updatedGeometry() const
     INFO("  dalpha: ", degree(delta[3]), " ± ", degree(stddev[3]), " degree");
     INFO("  dbeta: ", degree(delta[4]), " ± ", degree(stddev[4]), " degree");
     INFO("  dgamma: ", degree(delta[5]), " ± ", degree(stddev[5]), " degree");
-    VERBOSE("  effective number of parameters: ", neffective);
 
     // update sensor geometry
     geo.correctLocal(isensor, delta, cov);
