@@ -9,17 +9,11 @@
 
 #include <vector>
 
-#include "processors/processor.h"
-#include "utils/definitions.h"
-#include "storage/event.h"
-#include <Eigen/Dense>
-#include <GblTrajectory.h>
+#include "loop/processor.h"
 
 namespace Mechanics {
 class Device;
-class Sensor;
 } // namespace Mechanics
-
 namespace Tracking {
 
 /** Estimate local track parameters using a straight line track model.
@@ -27,12 +21,12 @@ namespace Tracking {
  * This calculates new global track parameters and goodness-of-fit and
  * calculates the local track parameters on the selected sensor planes.
  */
-class GBLFitter : public Processors::Processor {
+class GBLFitter : public Loop::Processor {
 public:
   GBLFitter(const Mechanics::Device& device);
 
   std::string name() const;
-  void process(Storage::Event& event) const;
+  void execute(Storage::Event& event) const;
 
 private:
   const Mechanics::Device& m_device;
