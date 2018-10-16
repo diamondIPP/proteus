@@ -13,6 +13,8 @@ PT_SETUP_LOCAL_LOGGER(LocalChi2Aligner)
 
 // local helper functions
 
+static constexpr double kDefaultInversionThreshold = 1e-6;
+
 // Map [du, dv, dw, dalpha, dbeta, dgamma] to track offset changes.
 //
 // Assumes the track will stay the constant in the global frame and the
@@ -130,7 +132,7 @@ bool Alignment::LocalChi2PlaneFitter::addTrack(
 }
 
 size_t Alignment::LocalChi2PlaneFitter::minimize(Vector6& a,
-                                               SymMatrix6& cov) const
+                                                 SymMatrix6& cov) const
 {
   DEBUG("num tracks: ", m_numTracks);
   DEBUG("normal vector:\n", m_y);
@@ -154,7 +156,8 @@ Alignment::LocalChi2Aligner::LocalChi2Aligner(
     : m_device(device), m_damping(damping)
 {
   for (auto isensor : alignIds) {
-    m_fitters.emplace_back(isensor, LocalChi2PlaneFitter(1e-3));
+    m_fitters.emplace_back(isensor,
+                           LocalChi2PlaneFitter(kDefaultInversionThreshold));
   }
 }
 
