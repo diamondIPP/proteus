@@ -27,7 +27,10 @@ namespace Alignment {
  */
 class LocalChi2PlaneFitter {
 public:
-  /** Construct an zeroed fitter. */
+  /** Construct an zeroed fitter.
+   *
+   * \param scaling  Internal parameter scaling e.g. for numerical stability.
+   */
   LocalChi2PlaneFitter(const DiagMatrix6 scaling);
 
   /** Add one track-measurement pair to the fitter.
@@ -46,10 +49,10 @@ public:
   bool minimize(Vector6& a, SymMatrix6& cov) const;
 
 private:
+  DiagMatrix6 m_scaling;
   SymMatrix6 m_fr;
   Vector6 m_y;
   size_t m_numTracks;
-  DiagMatrix6 m_scaling;
 };
 
 /** Align sensors using using local chi^2 minimization of track residuals. */

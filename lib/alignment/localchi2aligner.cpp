@@ -6,10 +6,10 @@
 
 #include <Eigen/SVD>
 
+#include "mechanics/sensor.h"
 #include "storage/event.h"
 #include "utils/logger.h"
 #include "utils/root.h"
-#include "mechanics/sensor.h"
 
 PT_SETUP_LOCAL_LOGGER(LocalChi2Aligner)
 
@@ -46,21 +46,20 @@ static Matrix26 jacobianOffsetAlignment(const Storage::TrackState& state)
   return jac;
 }
 
-// For regularization it's better to have all the parameters with the same units.
-// This function returns the matrix that converts the rotation angles to distances
-// (using the sensor dimensions). It must be applied to the jacobian and later
-// to the covariance matrix and to the offset vector.
+// For regularization it's better to have all the parameters with the same
+// units. This function returns the matrix that converts the rotation angles to
+// distances (using the sensor dimensions). It must be applied to the jacobian
+// and later to the covariance matrix and to the offset vector.
 
 static DiagMatrix6 jacobianScaling(const Mechanics::Sensor& sensor)
 {
   auto area = sensor.sensitiveAreaLocal();
-  double l_alpha = area.length(1);
-  double l_beta = area.length(0);
-  double l_gamma = std::sqrt(l_alpha*l_alpha + l_beta*l_beta);
-
+  auto l_alpha = area.length(1);
+  auto l_beta = area.length(0);
+  auto l_gamma = std::hypot(l_alpha, l_beta);
 
   DiagMatrix6 scaling;
-  scaling.diagonal() << 1., 1., 1., 1/l_alpha, 1/l_beta, 1/l_gamma;
+  scaling.diagonal() << 1., 1., 1., 1 / l_alpha, 1 / l_beta, 1 / l_gamma;
 
   return scaling;
 }
@@ -110,9 +109,11 @@ static DiagMatrix6 jacobianScaling(const Mechanics::Sensor& sensor)
 // and do not have to bother with the whole regularization scheme at all.
 
 Alignment::LocalChi2PlaneFitter::LocalChi2PlaneFitter(const DiagMatrix6 scaling)
-    : m_fr(SymMatrix6::Zero()), m_y(Vector6::Zero()), m_numTracks(0)
+    : m_scaling(scaling)
+    , m_fr(SymMatrix6::Zero())
+    , m_y(Vector6::Zero())
+    , m_numTracks(0)
 {
-  m_scaling = scaling;
 }
 
 bool Alignment::LocalChi2PlaneFitter::addTrack(
@@ -144,7 +145,8 @@ bool Alignment::LocalChi2PlaneFitter::addTrack(
   auto jac = jacobianOffsetAlignment(track);
   // m_scaling is diagonal, no need to transpose it
   m_fr += m_scaling * jac.transpose() * weight * jac * m_scaling;
-  m_y += m_scaling * jac.transpose() * weight * (measurement.posLocal() - track.offset());
+  m_y += m_scaling * jac.transpose() * weight *
+         (measurement.posLocal() - track.offset());
   m_numTracks += 1;
   return true;
 }
@@ -160,20 +162,18 @@ bool Alignment::LocalChi2PlaneFitter::minimize(Vector6& a,
       m_fr, Eigen::ComputeFullU | Eigen::ComputeFullV);
 
   // ignore small singular values that correspond to weak modes
-  // the default value of just epsilon is not enough large enough to handle
-  // weak modes
-  // TODO 2018-10-16 msmk
-  // rescale angles to same length unit to reduce numerical instabilities
-  // TODO the threshold probably needs to be dependent on tel/dut. Set it from the conf file?
-  //svd.setThreshold(4096 * std::numeric_limits<double>::epsilon());
+  // the default value of just epsilon is not large enough to handle weak modes
+  // TODO the threshold probably needs to be dependent on tel/dut. Set it from
+  // the conf file?
+  // svd.setThreshold(4096 * std::numeric_limits<double>::epsilon());
   svd.setThreshold(1e-7);
 
   VERBOSE("singular values:\n", svd.singularValues().transpose());
   VERBOSE("effective #parameters: ", svd.rank());
 
-  //offset and covariance must be rescaled to radians
+  // offset and covariance must be rescaled to radians
   a = m_scaling * svd.solve(m_y);
-  cov = m_scaling * svd.solve(Matrix6::Identity()) * m_scaling;
+  cov = transformCovariance(m_scaling, svd.solve(Matrix6::Identity()));
 
   // we should have at least 2 effective parameters
   return (2 <= svd.rank());
@@ -186,7 +186,8 @@ Alignment::LocalChi2Aligner::LocalChi2Aligner(
     : m_device(device), m_damping(damping)
 {
   for (auto isensor : alignIds) {
-    m_fitters.emplace_back(isensor, LocalChi2PlaneFitter(jacobianScaling(m_device.getSensor(isensor))));
+    m_fitters.emplace_back(isensor, LocalChi2PlaneFitter(jacobianScaling(
+                                        m_device.getSensor(isensor))));
   }
 }
 
@@ -234,8 +235,6 @@ Mechanics::Geometry Alignment::LocalChi2Aligner::updatedGeometry() const
     if (!fitter.minimize(delta, cov)) {
       FAIL("Could not solve alignment equations for sensor ", sensor.name());
     }
-    // rescale the angles from distances to radians
-    delta = delta;
     delta *= m_damping;
 
     // output w/ angles in degrees
