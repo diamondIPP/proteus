@@ -32,7 +32,7 @@ public:
 
   /** Add one track-measurement pair to the fitter.
    *
-   * \returns true  On sucessful addition of the track
+   * \returns true  On successful addition of the track
    * \returns false On failure due to non-finite input values
    */
   bool addTrack(const Storage::TrackState& track,
@@ -40,15 +40,19 @@ public:
                 const SymMatrix2& weight);
   /** Calculate alignment parameters from all tracks added so far.
    *
-   * \returns true  On sucessful minimization
+   * \returns true  On successful minimization
    * \returns false On minimization failure e.g. due to singularities
    */
   bool minimize(Vector6& a, SymMatrix6& cov) const;
+
+  DiagMatrix6 getScaling() const { return m_scaling;}
+  void setScaling(const DiagMatrix6 scaling) {m_scaling = scaling;}
 
 private:
   SymMatrix6 m_fr;
   Vector6 m_y;
   size_t m_numTracks;
+  DiagMatrix6 m_scaling;
 };
 
 /** Align sensors using using local chi^2 minimization of track residuals. */

@@ -9,6 +9,7 @@
 #include "storage/event.h"
 #include "utils/logger.h"
 #include "utils/root.h"
+#include "mechanics/sensor.h"
 
 PT_SETUP_LOCAL_LOGGER(LocalChi2Aligner)
 
@@ -43,6 +44,25 @@ static Matrix26 jacobianOffsetAlignment(const Storage::TrackState& state)
   jac(1, 4) = -slopeV * offsetU; // d v / d dbeta
   jac(1, 5) = -offsetU;          // d v / d dgamma
   return jac;
+}
+
+// For regularization it's better to have all the parameters with the same units.
+// This function returns the matrix that converts the rotation angles to distances
+// (using the sensor dimensions). It must be applied to the jacobian and later
+// to the covariance matrix and to the offset vector.
+
+static DiagMatrix6 jacobianScaling(const Mechanics::Sensor& sensor)
+{
+  auto area = sensor.sensitiveAreaLocal();
+  double l_alpha = area.length(1);
+  double l_beta = area.length(0);
+  double l_gamma = std::sqrt(l_alpha*l_alpha + l_beta*l_beta);
+
+
+  DiagMatrix6 scaling;
+  scaling.diagonal() << 1., 1., 1., 1/l_alpha, 1/l_beta, 1/l_gamma;
+
+  return scaling;
 }
 
 // To find the optimal alignment parameters a we linearize the local track
@@ -121,8 +141,9 @@ bool Alignment::LocalChi2PlaneFitter::addTrack(
 
   // add finite contribution to the normal equations
   auto jac = jacobianOffsetAlignment(track);
-  m_fr += jac.transpose() * weight * jac;
-  m_y += jac.transpose() * weight * (measurement.posLocal() - track.offset());
+  // m_scaling is diagonal, no need to transpose it
+  m_fr += m_scaling * jac.transpose() * weight * jac * m_scaling;
+  m_y += m_scaling * jac.transpose() * weight * (measurement.posLocal() - track.offset());
   m_numTracks += 1;
   return true;
 }
@@ -142,7 +163,9 @@ bool Alignment::LocalChi2PlaneFitter::minimize(Vector6& a,
   // weak modes
   // TODO 2018-10-16 msmk
   // rescale angles to same length unit to reduce numerical instabilities
-  svd.setThreshold(4096 * std::numeric_limits<double>::epsilon());
+  // TODO the threshold probably needs to be dependent on tel/dut. Set it from the conf file?
+  //svd.setThreshold(4096 * std::numeric_limits<double>::epsilon());
+  svd.setThreshold(1e-7);
 
   VERBOSE("singular values:\n", svd.singularValues().transpose());
   VERBOSE("effective #parameters: ", svd.rank());
@@ -174,6 +197,8 @@ void Alignment::LocalChi2Aligner::execute(const Storage::Event& event)
   for (auto& f : m_fitters) {
     const Storage::SensorEvent& sensorEvent = event.getSensorEvent(f.first);
     LocalChi2PlaneFitter& fitter = f.second;
+
+    fitter.setScaling(jacobianScaling(m_device.getSensor(f.first)));
 
     for (Index iclu = 0; iclu < sensorEvent.numClusters(); ++iclu) {
       const Storage::Cluster& cluster = sensorEvent.getCluster(iclu);
@@ -209,7 +234,12 @@ Mechanics::Geometry Alignment::LocalChi2Aligner::updatedGeometry() const
     if (neffective == 0) {
       FAIL("Could not solve alignment equations for sensor ", sensor.name());
     }
+    // rescale the angles from distances to radians
+    delta = fitter.getScaling() * delta;
     delta *= m_damping;
+
+    // m_scaling is diagonal, no need to transpose it
+    cov = fitter.getScaling() * cov * fitter.getScaling();
 
     // output w/ angles in degrees
     Vector6 stddev = extractStdev(cov);
