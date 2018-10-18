@@ -45,7 +45,6 @@ public:
    */
   bool minimize(Vector6& a, SymMatrix6& cov) const;
 
-  DiagMatrix6 getScaling() const { return m_scaling;}
   void setScaling(const DiagMatrix6 scaling) {m_scaling = scaling;}
 
 private:

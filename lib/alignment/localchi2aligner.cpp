@@ -170,8 +170,9 @@ bool Alignment::LocalChi2PlaneFitter::minimize(Vector6& a,
   VERBOSE("singular values:\n", svd.singularValues().transpose());
   VERBOSE("effective #parameters: ", svd.rank());
 
-  a = svd.solve(m_y);
-  cov = svd.solve(Matrix6::Identity());
+  //offset and covariance must be rescaled to radians
+  a = m_scaling * svd.solve(m_y);
+  cov = m_scaling * svd.solve(Matrix6::Identity()) * m_scaling;
 
   return (0 < svd.rank());
 }
@@ -235,11 +236,8 @@ Mechanics::Geometry Alignment::LocalChi2Aligner::updatedGeometry() const
       FAIL("Could not solve alignment equations for sensor ", sensor.name());
     }
     // rescale the angles from distances to radians
-    delta = fitter.getScaling() * delta;
+    delta = delta;
     delta *= m_damping;
-
-    // m_scaling is diagonal, no need to transpose it
-    cov = fitter.getScaling() * cov * fitter.getScaling();
 
     // output w/ angles in degrees
     Vector6 stddev = extractStdev(cov);
