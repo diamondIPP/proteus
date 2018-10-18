@@ -28,7 +28,7 @@ namespace Alignment {
 class LocalChi2PlaneFitter {
 public:
   /** Construct an zeroed fitter. */
-  LocalChi2PlaneFitter();
+  LocalChi2PlaneFitter(const DiagMatrix6 scaling);
 
   /** Add one track-measurement pair to the fitter.
    *
@@ -44,8 +44,6 @@ public:
    * \returns false On minimization failure e.g. due to singularities
    */
   bool minimize(Vector6& a, SymMatrix6& cov) const;
-
-  void setScaling(const DiagMatrix6 scaling) {m_scaling = scaling;}
 
 private:
   SymMatrix6 m_fr;

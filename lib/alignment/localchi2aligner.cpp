@@ -109,9 +109,10 @@ static DiagMatrix6 jacobianScaling(const Mechanics::Sensor& sensor)
 // robust singular value decomposition, ignore vanishing singular values,
 // and do not have to bother with the whole regularization scheme at all.
 
-Alignment::LocalChi2PlaneFitter::LocalChi2PlaneFitter()
+Alignment::LocalChi2PlaneFitter::LocalChi2PlaneFitter(const DiagMatrix6 scaling)
     : m_fr(SymMatrix6::Zero()), m_y(Vector6::Zero()), m_numTracks(0)
 {
+  m_scaling = scaling;
 }
 
 bool Alignment::LocalChi2PlaneFitter::addTrack(
@@ -184,7 +185,7 @@ Alignment::LocalChi2Aligner::LocalChi2Aligner(
     : m_device(device), m_damping(damping)
 {
   for (auto isensor : alignIds) {
-    m_fitters.emplace_back(isensor, LocalChi2PlaneFitter());
+    m_fitters.emplace_back(isensor, LocalChi2PlaneFitter(jacobianScaling(m_device.getSensor(isensor))));
   }
 }
 
@@ -198,8 +199,6 @@ void Alignment::LocalChi2Aligner::execute(const Storage::Event& event)
   for (auto& f : m_fitters) {
     const Storage::SensorEvent& sensorEvent = event.getSensorEvent(f.first);
     LocalChi2PlaneFitter& fitter = f.second;
-
-    fitter.setScaling(jacobianScaling(m_device.getSensor(f.first)));
 
     for (Index iclu = 0; iclu < sensorEvent.numClusters(); ++iclu) {
       const Storage::Cluster& cluster = sensorEvent.getCluster(iclu);
