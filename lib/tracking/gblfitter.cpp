@@ -8,6 +8,9 @@
 
 #include <cmath>
 
+#include <GblPoint.h>
+#include <GblTrajectory.h>
+
 #include "mechanics/device.h"
 #include "mechanics/geometry.h"
 #include "mechanics/sensor.h"
