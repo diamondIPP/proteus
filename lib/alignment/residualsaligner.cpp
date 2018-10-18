@@ -127,12 +127,11 @@ Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
     geo.correctLocal(hists.sensorId, delta, cov);
 
     // output w/ angles in degrees
-    constexpr double toDeg = 180.0 / M_PI;
     INFO(sensor.name(), " alignment corrections:");
-    INFO("  du: ", delta[0], " +- ", std::sqrt(varDU));
-    INFO("  dv: ", delta[1], " +- ", std::sqrt(varDV));
+    INFO("  du: ", delta[0], " ± ", std::sqrt(varDU));
+    INFO("  dv: ", delta[1], " ± ", std::sqrt(varDV));
     INFO("  dw: ", delta[2], " (dz=0 enforced)");
-    INFO("  dgamma: ", delta[5] * toDeg, " +- ", std::sqrt(varDGamma) * toDeg,
+    INFO("  dgamma: ", degree(delta[5]), " ± ", degree(std::sqrt(varDGamma)),
          " degree");
   }
   return geo;

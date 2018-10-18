@@ -44,6 +44,7 @@ using Matrix3 = Matrix<double, 3, 3>;
 using Matrix32 = Matrix<double, 3, 2>;
 using Matrix4 = Matrix<double, 4, 4>;
 using Matrix6 = Matrix<double, 6, 6>;
+using DiagMatrix6 = DiagMatrix<double, 6>;
 using SymMatrix2 = SymMatrix<double, 2>;
 using SymMatrix3 = SymMatrix<double, 3>;
 using SymMatrix4 = SymMatrix<double, 4>;
@@ -102,5 +103,8 @@ inline auto mahalanobis(const Eigen::MatrixBase<T>& cov,
 {
   return std::sqrt(mahalanobisSquared(cov, x));
 }
+
+/** Conversion from angle in radian to equivalent angle in degrees. */
+static constexpr double degree(double radian) { return radian * 180.0 / M_PI; }
 
 #endif // PT_DEFINITIONS_H

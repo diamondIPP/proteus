@@ -16,7 +16,7 @@
 const char* const Utils::Logger::kLevelPrefix[3] = {
     ANSI_BOLD ANSI_RED "E|",
                        "I|",
-    ANSI_ITALIC        "D|",
+    ANSI_ITALIC        "V|",
 };
 // clang-format on
 const char* const Utils::Logger::kReset = ANSI_RESET;

@@ -75,8 +75,8 @@ Mechanics::Geometry Alignment::CorrelationsAligner::updatedGeometry() const
 
     INFO(m_device.getSensor(currId).name(),
          " alignment corrections (before fixed sensor):");
-    INFO("  dx:  ", deltaX, " +- ", std::sqrt(deltaXVar));
-    INFO("  dy:  ", deltaY, " +- ", std::sqrt(deltaYVar));
+    INFO("  dx:  ", deltaX, " ± ", std::sqrt(deltaXVar));
+    INFO("  dy:  ", deltaY, " ± ", std::sqrt(deltaYVar));
     geo.correctGlobalOffset(currId, deltaX, deltaY, 0);
 
     nextId = currId;
@@ -103,8 +103,8 @@ Mechanics::Geometry Alignment::CorrelationsAligner::updatedGeometry() const
 
     INFO(m_device.getSensor(currId).name(),
          " alignment corrections (after fixed sensor):");
-    INFO("  dx:  ", deltaX, " +- ", std::sqrt(deltaXVar));
-    INFO("  dy:  ", deltaY, " +- ", std::sqrt(deltaYVar));
+    INFO("  dx:  ", deltaX, " ± ", std::sqrt(deltaXVar));
+    INFO("  dy:  ", deltaY, " ± ", std::sqrt(deltaYVar));
 
     geo.correctGlobalOffset(currId, deltaX, deltaY, 0);
 

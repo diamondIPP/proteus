@@ -110,23 +110,21 @@ struct StopWatch {
 // Summary statistics for basic event information.
 struct Statistics {
   uint64_t events = 0;
-  uint64_t eventsWithTracks = 0;
   Utils::StatAccumulator<uint64_t> hits, clusters, tracks;
 
   void fill(uint64_t nHits, uint64_t nClusters, uint64_t nTracks)
   {
     events += 1;
-    eventsWithTracks += (0 < nTracks) ? 1 : 0;
     hits.fill(nHits);
     clusters.fill(nClusters);
     tracks.fill(nTracks);
   }
   void summarize() const
   {
-    INFO("events (with tracks/total): ", eventsWithTracks, "/", events);
-    INFO("hits/event: ", hits);
-    INFO("clusters/event: ", clusters);
-    INFO("tracks/event: ", tracks);
+    INFO("processed ", events, " events");
+    VERBOSE("  hits/event: ", hits);
+    VERBOSE("  clusters/event: ", clusters);
+    VERBOSE("  tracks/event: ", tracks);
   }
 };
 } // namespace

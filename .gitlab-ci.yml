@@ -161,6 +161,16 @@ test-combine:
       - test/output
     expire_in: 1 week
 
+.chain: &template_chain
+  stage: test
+  tags:
+    - cvmfs
+  script:
+    - source install/activate.sh
+    - cd test
+    - ./download_data.py ${DATASET}
+    - ./run_chain_all.sh ${DATASET} --no-progress
+
 # tests for UNIGEtel ebeam=12GeV nparticles=1
 
 test-unigetel_ebeam012_nparticles01-align_dut:
@@ -180,6 +190,11 @@ test-unigetel_ebeam012_nparticles01-noisescan:
 
 test-unigetel_ebeam012_nparticles01-recon:
   <<: *template_recon
+  variables:
+    DATASET: unigetel_ebeam012_nparticles01
+
+test-unigetel_ebeam012_nparticles01-chain:
+  <<: *template_chain
   variables:
     DATASET: unigetel_ebeam012_nparticles01
 
@@ -205,6 +220,11 @@ test-unigetel_ebeam120_nparticles01-recon:
   variables:
     DATASET: unigetel_ebeam120_nparticles01
 
+test-unigetel_ebeam120_nparticles01-chain:
+  <<: *template_chain
+  variables:
+    DATASET: unigetel_ebeam120_nparticles01
+
 # tests for UNIGEtel ebeam=120GeV nparticles=2
 
 test-unigetel_ebeam120_nparticles02-align_dut:
@@ -224,5 +244,10 @@ test-unigetel_ebeam120_nparticles02-noisescan:
 
 test-unigetel_ebeam120_nparticles02-recon:
   <<: *template_recon
+  variables:
+    DATASET: unigetel_ebeam120_nparticles02
+
+test-unigetel_ebeam120_nparticles02-chain:
+  <<: *template_chain
   variables:
     DATASET: unigetel_ebeam120_nparticles02

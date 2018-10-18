@@ -80,19 +80,17 @@ void Storage::Cluster::print(std::ostream& os, const std::string& prefix) const
   auto stdevUV = extractStdev(m_uvCov);
   os << prefix << "size: " << size() << '\n';
   os << prefix << "pixel: [" << m_col << ", " << m_row << "]\n";
-  os << prefix << "pixel stdev: [" << stdevCR[0] << ", " << stdevCR[1] << "]\n";
+  os << prefix << "pixel stdev: [" << stdevCR.transpose() << "]\n";
   os << prefix << "local: [" << m_u << ", " << m_v << "]\n";
-  os << prefix << "local stdev: [" << stdevUV[0] << ", " << stdevUV[1] << "]\n";
+  os << prefix << "local stdev: [" << stdevUV.transpose() << "]\n";
   os.flush();
 }
 
 std::ostream& Storage::operator<<(std::ostream& os, const Cluster& cluster)
 {
-  auto cr = cluster.posPixel();
-  auto uv = cluster.posLocal();
   os << "size=" << cluster.size();
-  os << " pixel=[" << cr[0] << "," << cr[1] << "]";
-  os << " local=[" << uv[0] << "," << uv[1] << "]";
+  os << " pixel=[" << cluster.posPixel().transpose() << "]";
+  os << " local=[" << cluster.posLocal().transpose() << "]";
   if (cluster.isInTrack()) {
     os << " track=" << cluster.track();
   }

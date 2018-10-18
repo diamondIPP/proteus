@@ -19,7 +19,7 @@ BASE_TARGET = 'data/'
 # dataset names and corresponding checksum
 DATASETS = {
     'unigetel_ebeam012_nparticles01': 'f025b66031a37a58d9fb3fc9d574aac8597f556d2251ce10cbe08bfdabcda611',
-    'unigetel_ebeam120_nparticles01_misalignxyrotz': 'e404d731805afa139da83ca577dc0341f91799f9e1361c862297cb6abd0b5d57',
+    'unigetel_ebeam120_nparticles01_xygamma': 'e404d731805afa139da83ca577dc0341f91799f9e1361c862297cb6abd0b5d57',
     'unigetel_ebeam120_nparticles01': 'edeadc77354748162848c448cbfa12a9026aba769eecb52db85c382f4e239024',
     'unigetel_ebeam120_nparticles02': '9fc48ea74ea1b5aa5711e0689ae42c132ac2f8357c3c2758aa5379162c2d3393',
 }

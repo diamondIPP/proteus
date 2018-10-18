@@ -73,6 +73,8 @@ void Analyzers::Tracks::execute(const Storage::Event& event)
   }
 }
 
+double Analyzers::Tracks::avgNumTracks() const { return m_nTracks->GetMean(); }
+
 Vector2 Analyzers::Tracks::beamSlope() const
 {
   return {m_slopeXY->GetMean(1), m_slopeXY->GetMean(2)};
