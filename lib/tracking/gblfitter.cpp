@@ -67,32 +67,32 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
 
     // Loop over all the sensors
     for (Index isensor = 0; isensor < m_device.numSensors(); isensor++) {
+      const auto& plane = m_device.geometry().getPlane(isensor);
+
       DEBUG("SensorId: ", isensor);
       DEBUG("Sensor Name: ", m_device.getSensor(isensor).name());
       DEBUG("Sensor Rows: ", m_device.getSensor(isensor).numRows());
       DEBUG("Sensor Cols: ", m_device.getSensor(isensor).numCols());
       DEBUG("Sensor Pitch Row: ", m_device.getSensor(isensor).pitchRow());
       DEBUG("Sensor Pitch Col: ", m_device.getSensor(isensor).pitchCol());
-      DEBUG("Sensor Origin: ", m_device.getSensor(isensor)->origin());
-      DEBUG("Sensor Normal: ", m_device.getSensor(isensor)->normal());
-      DEBUG("Sensor L2G: ", m_device.getSensor(isensor)->localToGlobal());
-      DEBUG("Sensor G2L: ", m_device.getSensor(isensor)->globalToLocal());
-      DEBUG("Sensor P2G: ",
-            m_device.getSensor(isensor)->constructPixelToGlobal());
+      //      DEBUG("Sensor Origin: ", m_device.getSensor(isensor)->origin());
+      //      DEBUG("Sensor Normal: ", m_device.getSensor(isensor)->normal());
+      //      DEBUG("Sensor L2G: ",
+      //      m_device.getSensor(isensor)->localToGlobal()); DEBUG("Sensor G2L:
+      //      ", m_device.getSensor(isensor)->globalToLocal()); DEBUG("Sensor
+      //      P2G: ",
+      //            m_device.getSensor(isensor)->constructPixelToGlobal());
 
       // Get the Plane Normal vector
-      Eigen::Vector3d planeNormal;
-      planeNormal(0) = m_device.getSensor(isensor)->normal().X();
-      planeNormal(1) = m_device.getSensor(isensor)->normal().Y();
-      planeNormal(2) = m_device.getSensor(isensor)->normal().Z();
+      Eigen::Vector3d planeNormal = plane.unitNormal();
       DEBUG("Plane Normal: ", planeNormal);
 
       // Propagate global track to intersection to get global path length
       // to the intersection point between track and sensor
-      double xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz;
-      m_device.getSensor(isensor)->localToGlobal().GetComponents(
-          xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz);
-      Eigen::Vector3d localOrigin(dx, dy, dz);
+      //      double xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz;
+      //      m_device.getSensor(isensor)->localToGlobal().GetComponents(
+      //          xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz);
+      Eigen::Vector3d localOrigin = plane.offset();
       double pathLength = -1 * (trackPos - localOrigin).dot(planeNormal) /
                           trackDirec.dot(planeNormal);
       DEBUG("Path Length: ", pathLength);
@@ -103,20 +103,9 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
       // Compute Q1 from the G2L matrix of the sensor
       // NOTE: This would also be used for computing the Jacobian
       // TODO: Change to iterator version
-      Eigen::Matrix3d Q1;
+      Eigen::Matrix3d Q1 = plane.rotationToLocal();
       Eigen::Matrix3d Q1T;
       Eigen::MatrixXd Q1T23(2, 3);
-      m_device.getSensor(isensor)->globalToLocal().GetComponents(
-          xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz);
-      Q1(0, 0) = xx;
-      Q1(0, 1) = xy;
-      Q1(0, 2) = xz;
-      Q1(1, 0) = yx;
-      Q1(1, 1) = yy;
-      Q1(1, 2) = yz;
-      Q1(2, 0) = zx;
-      Q1(2, 1) = zy;
-      Q1(2, 2) = zz;
       // Get the Q1 transpose
       Q1T = Q1.transpose();
       // Get the Q1T23 block
@@ -152,33 +141,9 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
       // TODO: Opportunity to optimize code by using fixed size matrices below
       Eigen::Matrix3d Q0;
       if (isensor == 0) {
-        // Compute Q0 from L2G matrix
-        m_device.getSensor(isensor)->localToGlobal().GetComponents(
-            xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz);
-        Q0(0, 0) = xx;
-        Q0(0, 1) = xy;
-        Q0(0, 2) = xz;
-        Q0(1, 0) = yx;
-        Q0(1, 1) = yy;
-        Q0(1, 2) = yz;
-        Q0(2, 0) = zx;
-        Q0(2, 1) = zy;
-        Q0(2, 2) = zz;
+        Q0 = plane.rotationToGlobal();
       } else {
-        // Compute Q0 from L2G matrix of the previous sensor
-        double xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz;
-        m_device.getSensor(isensor - 1)
-            ->localToGlobal()
-            .GetComponents(xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz);
-        Q0(0, 0) = xx;
-        Q0(0, 1) = xy;
-        Q0(0, 2) = xz;
-        Q0(1, 0) = yx;
-        Q0(1, 1) = yy;
-        Q0(1, 2) = yz;
-        Q0(2, 0) = zx;
-        Q0(2, 1) = zy;
-        Q0(2, 2) = zz;
+        Q0 = m_device.geometry().getPlane(isensor - 1).rotationToGlobal();
       }
 
       // Compute Matrix A
@@ -305,7 +270,7 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
       // Get theta from the Highland formula
       // TODO: Seems like we need to adapt this formula for our case
       // Need energy for the calculation
-      double radLength = m_device.getSensor(isensor)->xX0();
+      double radLength = m_device.getSensor(isensor).xX0();
       double energy = 180;
       double theta =
           0.0136 * sqrt(radLength) / energy * (1 + 0.038 * log(totalRadLength));
@@ -423,7 +388,7 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
 
       // Update the covariance for each state
       Eigen::Matrix4d cov = aCovariance.block(1, 1, 4, 4);
-      state.setCovMat(cov);
+      state.setCov(cov);
 
       // Set the local state for the sensor event
       sev.setLocalState(itrack, std::move(state));
