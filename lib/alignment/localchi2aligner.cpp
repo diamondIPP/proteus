@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <numeric>
 
 #include <Eigen/SVD>
@@ -151,6 +152,48 @@ bool Alignment::LocalChi2PlaneFitter::addTrack(
   return true;
 }
 
+template <typename Unit>
+static inline std::string
+printEffectiveParameter(const Eigen::MatrixBase<Unit>& unit)
+{
+  constexpr size_t kSize = 6;
+  constexpr double kCutoff = 0.001;
+  // clang-format off
+  static const char* kNames[] = {
+      "du    ",
+      "dv    ",
+      "dw    ",
+      "dalpha",
+      "dbeta ",
+      "dgamma",
+  };
+  // clang-format on
+
+  // sort contributions by absolute size, largest first
+  std::array<size_t, kSize> order;
+  std::iota(order.begin(), order.end(), 0);
+  std::sort(order.begin(), order.end(),
+            [&](size_t i, size_t j) { return unit[i] > unit[j]; });
+
+  // print linear combinations and ignore small contributions
+  std::string out;
+  for (size_t i : order) {
+    double value = unit[i];
+    if (std::abs(value) <= kCutoff) {
+      continue;
+    }
+    if (!out.empty()) {
+      out += ' ';
+    }
+    char valueStr[8];
+    std::snprintf(valueStr, 8, "%+6.3f", value);
+    out += valueStr;
+    out += ' ';
+    out += kNames[i];
+  }
+  return out;
+}
+
 bool Alignment::LocalChi2PlaneFitter::minimize(Vector6& a,
                                                SymMatrix6& cov) const
 {
@@ -165,13 +208,17 @@ bool Alignment::LocalChi2PlaneFitter::minimize(Vector6& a,
   // the default value of just epsilon is not large enough to handle weak modes
   // TODO the threshold probably needs to be dependent on tel/dut. Set it from
   // the conf file?
-  // svd.setThreshold(4096 * std::numeric_limits<double>::epsilon());
-  svd.setThreshold(1e-7);
+  svd.setThreshold(1e-6);
 
   VERBOSE("singular values:\n", svd.singularValues().transpose());
-  VERBOSE("effective #parameters: ", svd.rank());
+  VERBOSE("U^T y:\n", (svd.matrixU().transpose() * m_y).transpose());
+  VERBOSE("threshold: ", svd.threshold());
+  for (size_t i = 0; i < static_cast<size_t>(svd.rank()); ++i) {
+    VERBOSE("effective parameter: ",
+            printEffectiveParameter(svd.matrixU().col(i)));
+  }
 
-  // offset and covariance must be rescaled to radians
+  // revert internal parameter scaling for output
   a = m_scaling * svd.solve(m_y);
   cov = transformCovariance(m_scaling, svd.solve(Matrix6::Identity()));
 
