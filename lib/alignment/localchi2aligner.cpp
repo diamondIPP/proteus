@@ -150,7 +150,8 @@ bool Alignment::LocalChi2PlaneFitter::minimize(Vector6& a,
   a = svd.solve(m_y);
   cov = svd.solve(Matrix6::Identity());
 
-  return (0 < svd.rank());
+  // we should have at least 2 effective parameters
+  return (2 <= svd.rank());
 }
 
 Alignment::LocalChi2Aligner::LocalChi2Aligner(
@@ -205,8 +206,7 @@ Mechanics::Geometry Alignment::LocalChi2Aligner::updatedGeometry() const
     // solve the chi2 minimization for optimal parameters
     Vector6 delta;
     SymMatrix6 cov;
-    auto neffective = fitter.minimize(delta, cov);
-    if (neffective == 0) {
+    if (!fitter.minimize(delta, cov)) {
       FAIL("Could not solve alignment equations for sensor ", sensor.name());
     }
     delta *= m_damping;
