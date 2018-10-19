@@ -6,6 +6,74 @@
 
 #include "root.h"
 
+#include <Compression.h>
+
+#include "utils/logger.h"
+
+PT_SETUP_LOCAL_LOGGER(Root)
+
+static void closeTFileRead(TFile* f)
+{
+  if (!f) {
+    return;
+  }
+  if (f->IsZombie()) {
+    ERROR("could not close '", f->GetName(), "' because it eats brains");
+  } else if (!f->IsOpen()) {
+    ERROR("could not close '", f->GetName(), "' because it is not open");
+  } else {
+    f->Close();
+  }
+  // delete is independent of open/close status
+  delete f;
+}
+
+static void closeTFileWrite(TFile* f)
+{
+  if (!f) {
+    return;
+  }
+  if (f->IsZombie()) {
+    ERROR("could not close '", f->GetName(), "' because it eats brains");
+  } else if (!f->IsOpen()) {
+    ERROR("could not close '", f->GetName(), "' because it is not open");
+  } else {
+    // ensure everything is written to disk before closing
+    auto bytes = f->Write(nullptr, TFile::kOverwrite);
+    VERBOSE("wrote ", bytes, " bytes to '", f->GetName(), "'");
+    f->Close();
+  }
+  // delete is independent of open/close status
+  delete f;
+}
+
+Utils::RootFilePtr Utils::openRootRead(const std::string& path)
+{
+  RootFilePtr f(TFile::Open(path.c_str(), "READ"), &closeTFileRead);
+  if (!f) {
+    throw std::runtime_error("Could not open '" + path + "' to read");
+  }
+  if (!f->IsOpen()) {
+    throw std::runtime_error("'" + path + "' is not open");
+  }
+  return f;
+}
+
+Utils::RootFilePtr Utils::openRootWrite(const std::string& path)
+{
+  // always use better, non-standard compression
+  RootFilePtr f(TFile::Open(path.c_str(), "RECREATE", "",
+                            ROOT::CompressionSettings(ROOT::kLZMA, 1)),
+                &closeTFileWrite);
+  if (!f) {
+    throw std::runtime_error("Could not open '" + path + "' to write");
+  }
+  if (!f->IsOpen()) {
+    throw std::runtime_error("'" + path + "' is not open");
+  }
+  return f;
+}
+
 TDirectory* Utils::makeDir(TDirectory* parent, const std::string& path)
 {
   assert(parent && "Parent directory must be non-NULL");

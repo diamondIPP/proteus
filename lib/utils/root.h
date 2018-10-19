@@ -8,14 +8,35 @@
 
 #include <cassert>
 #include <cmath>
+#include <memory>
 #include <stdexcept>
 #include <string>
 
 #include <TDirectory.h>
+#include <TFile.h>
 #include <TH1.h>
 #include <TH2.h>
 
 namespace Utils {
+
+using RootFilePtr = std::unique_ptr<TFile, void (*)(TFile*)>;
+
+/** Open a ROOT file in read-only mode.
+ *
+ * \exception std::runtime_error When the file can not be opened.
+ *
+ * The resulting object will automatically close the file on destruction.
+ */
+RootFilePtr openRootRead(const std::string& path);
+
+/** Open a ROOT file in write mode and overwrite existing content.
+ *
+ * \exception std::runtime_error When the file can not be opened.
+ *
+ * The resulting object will automatically write data to disk and close the
+ * file on destruction. Pre-existing data will be overwritten.
+ */
+RootFilePtr openRootWrite(const std::string& path);
 
 /** Create a directory relative to the parent or return an existing one. */
 TDirectory* makeDir(TDirectory* parent, const std::string& path);
