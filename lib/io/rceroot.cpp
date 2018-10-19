@@ -352,8 +352,11 @@ Io::RceRootWriter::RceRootWriter(const std::string& path, size_t numSensors)
   if (!m_file)
     THROW("could not open '", path, "' to write");
 
+  m_file->cd();
+
   // global event tree
   m_eventInfo = new TTree("Event", "Event information");
+  m_eventInfo->SetDirectory(m_file);
   m_eventInfo->Branch("FrameNumber", &frameNumber, "FrameNumber/l");
   m_eventInfo->Branch("TimeStamp", &timestamp, "TimeStamp/l");
   m_eventInfo->Branch("TriggerTime", &triggerTime, "TriggerTime/l");
@@ -361,6 +364,7 @@ Io::RceRootWriter::RceRootWriter(const std::string& path, size_t numSensors)
 
   // global track tree
   m_tracks = new TTree("Tracks", "Track parameters");
+  m_tracks->SetDirectory(m_file);
   m_tracks->Branch("NTracks", &numTracks, "NTracks/I");
   m_tracks->Branch("Chi2", trackChi2, "Chi2[NTracks]/D");
   m_tracks->Branch("Dof", trackDof, "Dof[NTracks]/I");
@@ -385,6 +389,7 @@ void Io::RceRootWriter::addSensor(TDirectory* dir)
   SensorTrees trees;
   // local hits
   trees.hits = new TTree("Hits", "Hits");
+  trees.hits->SetDirectory(dir);
   trees.hits->Branch("NHits", &numHits, "NHits/I");
   trees.hits->Branch("PixX", hitPixX, "HitPixX[NHits]/I");
   trees.hits->Branch("PixY", hitPixY, "HitPixY[NHits]/I");
@@ -393,6 +398,7 @@ void Io::RceRootWriter::addSensor(TDirectory* dir)
   trees.hits->Branch("HitInCluster", hitInCluster, "HitInCluster[NHits]/I");
   // local clusters
   trees.clusters = new TTree("Clusters", "Clusters");
+  trees.clusters->SetDirectory(dir);
   trees.clusters->Branch("NClusters", &numClusters, "NClusters/I");
   trees.clusters->Branch("Col", clusterCol, "Col[NClusters]/D");
   trees.clusters->Branch("Row", clusterRow, "Row[NClusters]/D");
@@ -405,6 +411,7 @@ void Io::RceRootWriter::addSensor(TDirectory* dir)
   trees.clusters->Branch("Track", clusterTrack, "Track[NClusters]/I");
   // local track states
   trees.intercepts = new TTree("Intercepts", "Intercepts");
+  trees.intercepts->SetDirectory(dir);
   trees.intercepts->Branch("NIntercepts", &numIntercepts, "NIntercepts/I");
   trees.intercepts->Branch("U", interceptU, "U[NIntercepts]/D");
   trees.intercepts->Branch("V", interceptV, "V[NIntercepts]/D");
