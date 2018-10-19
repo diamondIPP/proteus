@@ -100,8 +100,9 @@ inline TDirectory* Utils::makeDir(TDirectory* parent, const std::string& path)
     dir = parent->mkdir(path.c_str());
     dir = parent->GetDirectory(path.c_str());
   }
-  if (!dir)
+  if (!dir) {
     throw std::runtime_error("Could not create ROOT directory '" + path + '\'');
+  }
   return dir;
 }
 
@@ -172,8 +173,9 @@ inline void Utils::fillDist(const TH2D* values, TH1D* dist)
   for (int icol = 1; icol <= values->GetNbinsX(); ++icol) {
     for (int irow = 1; irow <= values->GetNbinsY(); ++irow) {
       auto value = values->GetBinContent(icol, irow);
-      if (std::isfinite(value))
+      if (std::isfinite(value)) {
         dist->Fill(value);
+      }
     }
   }
 }
@@ -181,18 +183,17 @@ inline void Utils::fillDist(const TH2D* values, TH1D* dist)
 inline std::pair<double, double> Utils::getRestrictedMean(const TH1D* histo,
                                                           const int offset)
 {
-  // assert(offset >= 0); //TODO uncomment it after verifying with the updated
-  // alignment by Moritz
-  TH1D* h = new TH1D(*histo);
-  h->SetDirectory(nullptr);
-  int maxBin = h->GetMaximumBin();
+  // TODO uncomment it after verifying with the updated alignment by Moritz
+  // assert(offset >= 0);
+  TH1D h;
+  h.SetDirectory(nullptr);
+  histo->Copy(h);
+  int maxBin = h.GetMaximumBin();
   if (offset >= 0) {
-    h->GetXaxis()->SetRange(maxBin - offset, maxBin + offset);
+    h.GetXaxis()->SetRange(maxBin - offset, maxBin + offset);
   }
-  double mean = h->GetMean();
-  double var = h->GetMeanError() * h->GetMeanError();
-
-  delete h;
+  double mean = h.GetMean();
+  double var = h.GetMeanError() * h.GetMeanError();
   return std::make_pair(mean, var);
 }
 
