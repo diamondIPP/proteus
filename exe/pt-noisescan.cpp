@@ -22,6 +22,7 @@
 #include "mechanics/device.h"
 #include "utils/application.h"
 #include "utils/logger.h"
+#include "utils/root.h"
 
 int main(int argc, char const* argv[])
 {
@@ -44,8 +45,7 @@ int main(int argc, char const* argv[])
   app.initialize(argc, argv);
 
   // output
-  TFile hists(app.outputPath("hists.root").c_str(), "RECREATE", "",
-              ROOT::CompressionSettings(ROOT::kLZMA, 1));
+  auto hists = Utils::openRootWrite(app.outputPath("hists.root").c_str());
 
   // construct per-sensor configuration
   // construct per-sensor noise analyzer
@@ -63,12 +63,14 @@ int main(int argc, char const* argv[])
     // min/max are inclusive but Area uses right-open intervals
     Area roi(Interval(c->get<int>("col_min"), c->get<int>("col_max") + 1),
              Interval(c->get<int>("row_min"), c->get<int>("row_max") + 1));
-    noiseScans.push_back(std::make_shared<NoiseScan>(
-        &hists, app.device().getSensor(id), bandwidth, sigmaMax, rateMax, roi));
+    noiseScans.push_back(
+        std::make_shared<NoiseScan>(hists.get(), app.device().getSensor(id),
+                                    bandwidth, sigmaMax, rateMax, roi));
   }
 
   Loop::EventLoop loop = app.makeEventLoop();
-  loop.addAnalyzer(std::make_shared<Analyzers::Hits>(&hists, app.device()));
+  loop.addAnalyzer(
+      std::make_shared<Analyzers::Hits>(hists.get(), app.device()));
   for (auto noise = noiseScans.begin(); noise != noiseScans.end(); ++noise)
     loop.addAnalyzer(*noise);
   loop.run();
@@ -78,9 +80,6 @@ int main(int argc, char const* argv[])
   for (auto noise = noiseScans.begin(); noise != noiseScans.end(); ++noise)
     newMask.merge((*noise)->constructMasks());
   newMask.writeFile(app.outputPath("mask.toml"));
-
-  hists.Write(nullptr, TFile::kOverwrite);
-  hists.Close();
 
   return EXIT_SUCCESS;
 }
