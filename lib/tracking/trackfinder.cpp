@@ -7,8 +7,8 @@
 
 #include "mechanics/device.h"
 #include "storage/event.h"
+#include "tracking/linefitter.h"
 #include "tracking/propagation.h"
-#include "tracking/straighttools.h"
 #include "utils/logger.h"
 
 using Storage::Cluster;

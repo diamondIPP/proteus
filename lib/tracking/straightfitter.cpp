@@ -8,7 +8,7 @@
 
 #include "mechanics/device.h"
 #include "storage/event.h"
-#include "tracking/straighttools.h"
+#include "tracking/linefitter.h"
 
 Tracking::StraightFitter::StraightFitter(const Mechanics::Device& device)
     : m_geo(device.geometry()), m_sensorIds(device.sensorIds())

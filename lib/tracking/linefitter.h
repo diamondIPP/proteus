@@ -19,20 +19,36 @@ namespace Tracking {
  * Straight from Numerical Recipes with offset = a and slope = b.
  */
 struct LineFitter2D {
-  double s, sx, sy, sxx, sxy, syy; // weighted sums of inputs
-  double cxx;                      // (unscaled) input variance
+  // weighted sums of inputs
+  double s = 0.0;
+  double sx = 0.0;
+  double sy = 0.0;
+  double sxx = 0.0;
+  double sxy = 0.0;
+  double syy = 0.0;
+  // (unscaled) input variance
+  double cxx = 0.0;
 
-  LineFitter2D() : s(0), sx(0), sy(0), sxx(0), sxy(0), syy(0), cxx(0) {}
-
-  void addPoint(double x, double y, double w = 1);
-  void fit();
+  void addPoint(double x, double y, double weight = 1.0)
+  {
+    s += weight;
+    sx += weight * x;
+    sy += weight * y;
+    sxx += weight * x * x;
+    sxy += weight * x * y;
+    syy += weight * y * y;
+  }
+  void fit() { cxx = (s * sxx - sx * sx); }
 
   double offset() const { return (sy * sxx - sx * sxy) / cxx; }
   double slope() const { return (s * sxy - sx * sy) / cxx; }
   double varOffset() const { return sxx / cxx; }
   double varSlope() const { return s / cxx; }
   double cov() const { return -sx / cxx; }
-  double chi2() const;
+  double chi2() const
+  {
+    return syy + (sxy * (2 * sx * sy - s * sxy) - sxx * sy * sy) / cxx;
+  }
 };
 
 /** Fit a line in three dimensions as a function of the third dimension.
@@ -41,11 +57,12 @@ struct LineFitter2D {
  * dimensions and between different points.
  */
 struct LineFitter3D {
-  LineFitter2D lineU, lineV;
+  LineFitter2D lineZX;
+  LineFitter2D lineZY;
+  int numPoints = 0;
 
-  LineFitter3D() = default;
-
-  void addPoint(double u, double v, double w, double wu = 1, double wv = 1);
+  void addPoint(
+      double x, double y, double z, double weightX = 1, double weightY = 1);
   /** Add a cluster as seen in the global coordinates. */
   void addPoint(const Storage::Cluster& cluster,
                 const Mechanics::Plane& source);
@@ -55,8 +72,13 @@ struct LineFitter3D {
                 const Mechanics::Plane& target);
   void fit();
 
+  /** Fitted parameters [x, y, slopeX, slopeY]. */
+  Vector4 params() const;
+  /** Fitted parameter covariance [x, y, slopeX, slopeY]. */
+  SymMatrix4 cov() const;
   Storage::TrackState state() const;
-  double chi2() const { return lineU.chi2() + lineV.chi2(); }
+  double chi2() const { return lineZX.chi2() + lineZY.chi2(); }
+  int dof() const { return 2 * numPoints - 4; }
 };
 
 /** Fit a straight track in the global coordinates.
@@ -69,28 +91,42 @@ void fitStraightTrackGlobal(const Mechanics::Geometry& geo,
 
 } // namespace Tracking
 
-inline void Tracking::LineFitter2D::addPoint(double x, double y, double w)
-{
-  s += w;
-  sx += w * x;
-  sy += w * y;
-  sxx += w * x * x;
-  sxy += w * x * y;
-  syy += w * y * y;
-}
-
-inline void Tracking::LineFitter2D::fit() { cxx = (s * sxx - sx * sx); }
-
-inline double Tracking::LineFitter2D::chi2() const
-{
-  return syy + (sxy * (2 * sx * sy - s * sxy) - sxx * sy * sy) / cxx;
-}
-
 inline void Tracking::LineFitter3D::addPoint(
-    double u, double v, double w, double wu, double wv)
+    double x, double y, double z, double weightX, double weightY)
 {
-  lineU.addPoint(w, u, wu);
-  lineV.addPoint(w, v, wv);
+  lineZX.addPoint(z, x, weightX);
+  lineZY.addPoint(z, y, weightY);
+  numPoints += 1;
+}
+
+inline void Tracking::LineFitter3D::fit()
+{
+  lineZX.fit();
+  lineZY.fit();
+}
+
+inline Vector4 Tracking::LineFitter3D::params() const
+{
+  return {lineZX.offset(), lineZY.offset(), lineZX.slope(), lineZY.slope()};
+}
+
+inline SymMatrix4 Tracking::LineFitter3D::cov() const
+{
+  SymMatrix4 cov = SymMatrix4::Zero();
+  cov(0, 0) = lineZX.varOffset();
+  cov(1, 1) = lineZY.varOffset();
+  cov(2, 2) = lineZX.varSlope();
+  cov(3, 3) = lineZY.varSlope();
+  cov(0, 2) = cov(2, 0) = lineZX.cov();
+  cov(1, 3) = cov(3, 1) = lineZY.cov();
+  return cov;
+}
+
+inline Storage::TrackState Tracking::LineFitter3D::state() const
+{
+  Storage::TrackState s(params());
+  s.setCov(cov());
+  return s;
 }
 
 inline void Tracking::LineFitter3D::addPoint(const Storage::Cluster& cluster,
@@ -116,27 +152,6 @@ inline void Tracking::LineFitter3D::addPoint(const Storage::Cluster& cluster,
   addPoint(uvw[0], uvw[1], uvw[2], 1 / cov(0, 0), 1 / cov(1, 1));
 }
 
-inline void Tracking::LineFitter3D::fit()
-{
-  lineU.fit();
-  lineV.fit();
-}
-
-inline Storage::TrackState Tracking::LineFitter3D::state() const
-{
-  Storage::TrackState s(lineU.offset(), lineV.offset(), lineU.slope(),
-                        lineV.slope());
-  SymMatrix4 cov = SymMatrix4::Zero();
-  cov(0, 0) = lineU.varOffset();
-  cov(1, 1) = lineV.varOffset();
-  cov(2, 2) = lineU.varSlope();
-  cov(3, 3) = lineV.varSlope();
-  cov(0, 2) = cov(2, 0) = lineU.cov();
-  cov(1, 3) = cov(3, 1) = lineV.cov();
-  s.setCov(cov);
-  return s;
-}
-
 inline void Tracking::fitStraightTrackGlobal(const Mechanics::Geometry& geo,
                                              Storage::Track& track)
 {
@@ -147,7 +162,7 @@ inline void Tracking::fitStraightTrackGlobal(const Mechanics::Geometry& geo,
   }
   fitter.fit();
   track.setGlobalState(fitter.state());
-  track.setGoodnessOfFit(fitter.chi2(), 2 * (track.size() - 2));
+  track.setGoodnessOfFit(fitter.chi2(), fitter.dof());
 }
 
 #endif // PT_STRAIGHTTOOLS_H
