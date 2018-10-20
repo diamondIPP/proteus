@@ -154,6 +154,25 @@ void Tracking::TrackFinder::searchSensor(
   }
 }
 
+// fit track in the global system but only record chi2
+static void fitChi2Only(const Mechanics::Geometry& geo, Storage::Track& track)
+{
+  Tracking::LineFitter3D fitter;
+
+  for (const auto& ci : track.clusters()) {
+    const auto& plane = geo.getPlane(ci.first);
+    const Storage::Cluster& cluster = ci.second;
+    // convert to global system
+    Vector3 xyz = plane.toGlobal(cluster.posLocal());
+    SymMatrix3 cov = transformCovariance(plane.rotationToGlobal().leftCols<2>(),
+                                         cluster.covLocal());
+    fitter.addPoint(xyz[0], xyz[1], xyz[2], 1 / cov(0, 0), 1 / cov(1, 1));
+  }
+
+  fitter.fit();
+  track.setGoodnessOfFit(fitter.chi2(), fitter.dof());
+}
+
 // compare tracks by number of clusters and chi2. high n, low chi2 comes first
 struct CompareNumClusterChi2 {
   bool operator()(const std::unique_ptr<Storage::Track>& a,
@@ -171,7 +190,7 @@ void Tracking::TrackFinder::selectTracks(std::vector<TrackPtr>& candidates,
 {
   // ensure chi2 value is up-to-date
   std::for_each(candidates.begin(), candidates.end(),
-                [&](TrackPtr& t) { fitStraightTrackGlobal(m_geo, *t); });
+                [&](TrackPtr& t) { fitChi2Only(m_geo, *t); });
   // sort good candidates first, i.e. longest track and smallest chi2
   std::sort(candidates.begin(), candidates.end(), CompareNumClusterChi2());
 
