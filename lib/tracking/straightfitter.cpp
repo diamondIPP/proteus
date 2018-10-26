@@ -6,6 +6,8 @@
 
 #include "straightfitter.h"
 
+#include <limits>
+
 #include "mechanics/device.h"
 #include "storage/event.h"
 #include "tracking/linefitter.h"
@@ -20,6 +22,7 @@ static void fitLocal(const Storage::Track& track,
                      Index ignoreSensorId = kInvalidIndex)
 {
   Tracking::LineFitter3D fitter;
+  float time = std::numeric_limits<float>::max();
 
   for (const auto& ci : track.clusters()) {
     // only add the cluster if it is not ignored
@@ -35,12 +38,14 @@ static void fitLocal(const Storage::Track& track,
     Matrix2 jac = target.rotationToLocal().eval().topRows<2>() *
                   source.rotationToGlobal().leftCols<2>();
     SymMatrix2 cov = transformCovariance(jac, cluster.covLocal());
-
     fitter.addPoint(uvw[0], uvw[1], uvw[2], 1 / cov(0, 0), 1 / cov(1, 1));
+
+    // the track time is not fitted; fasted time is selected for now
+    time = std::min(time, cluster.time());
   }
 
   fitter.fit();
-  state = Storage::TrackState(fitter.params());
+  state = Storage::TrackState(fitter.params(), time);
   state.setCov(fitter.cov());
   chi2 = fitter.chi2();
   dof = fitter.dof();
