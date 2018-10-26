@@ -8,8 +8,6 @@
 #define PT_STRAIGHTTOOLS_H
 
 #include "mechanics/geometry.h"
-#include "storage/cluster.h"
-#include "storage/track.h"
 #include "utils/definitions.h"
 
 namespace Tracking {
@@ -63,31 +61,17 @@ struct LineFitter3D {
 
   void addPoint(
       double x, double y, double z, double weightX = 1, double weightY = 1);
-  /** Add a cluster as seen in the global coordinates. */
-  void addPoint(const Storage::Cluster& cluster,
-                const Mechanics::Plane& source);
-  /** Add a cluster as seen in the target local coordinates. */
-  void addPoint(const Storage::Cluster& cluster,
-                const Mechanics::Plane& source,
-                const Mechanics::Plane& target);
   void fit();
 
   /** Fitted parameters [x, y, slopeX, slopeY]. */
   Vector4 params() const;
   /** Fitted parameter covariance [x, y, slopeX, slopeY]. */
   SymMatrix4 cov() const;
-  Storage::TrackState state() const;
+  /** Fitted sum of squared residuals. */
   double chi2() const { return lineZX.chi2() + lineZY.chi2(); }
+  /** Fit degrees-of-freedom. */
   int dof() const { return 2 * numPoints - 4; }
 };
-
-/** Fit a straight track in the global coordinates.
- *
- * \param[in] geo The setup geometry with the local-global transformations
- * \param[in,out] track The global track state is set to fit result.
- */
-void fitStraightTrackGlobal(const Mechanics::Geometry& geo,
-                            Storage::Track& track);
 
 } // namespace Tracking
 
@@ -120,49 +104,6 @@ inline SymMatrix4 Tracking::LineFitter3D::cov() const
   cov(0, 2) = cov(2, 0) = lineZX.cov();
   cov(1, 3) = cov(3, 1) = lineZY.cov();
   return cov;
-}
-
-inline Storage::TrackState Tracking::LineFitter3D::state() const
-{
-  Storage::TrackState s(params());
-  s.setCov(cov());
-  return s;
-}
-
-inline void Tracking::LineFitter3D::addPoint(const Storage::Cluster& cluster,
-                                             const Mechanics::Plane& source)
-{
-  // local to global assuming a position on the local plane
-  Vector3 xyz = source.toGlobal(cluster.posLocal());
-  SymMatrix3 cov = transformCovariance(source.rotationToGlobal().leftCols<2>(),
-                                       cluster.covLocal());
-  addPoint(xyz[0], xyz[1], xyz[2], 1 / cov(0, 0), 1 / cov(1, 1));
-}
-
-inline void Tracking::LineFitter3D::addPoint(const Storage::Cluster& cluster,
-                                             const Mechanics::Plane& source,
-                                             const Mechanics::Plane& target)
-{
-  // source local to target local assuming a position on the local source plane
-  Vector3 uvw = target.toLocal(source.toGlobal(cluster.posLocal()));
-  // the extra eval is needed to make older Eigen/compiler versions happy
-  Matrix2 jac = target.rotationToLocal().eval().topRows<2>() *
-                source.rotationToGlobal().leftCols<2>();
-  SymMatrix2 cov = transformCovariance(jac, cluster.covLocal());
-  addPoint(uvw[0], uvw[1], uvw[2], 1 / cov(0, 0), 1 / cov(1, 1));
-}
-
-inline void Tracking::fitStraightTrackGlobal(const Mechanics::Geometry& geo,
-                                             Storage::Track& track)
-{
-  LineFitter3D fitter;
-
-  for (const auto& c : track.clusters()) {
-    fitter.addPoint(c.second, geo.getPlane(c.first));
-  }
-  fitter.fit();
-  track.setGlobalState(fitter.state());
-  track.setGoodnessOfFit(fitter.chi2(), fitter.dof());
 }
 
 #endif // PT_STRAIGHTTOOLS_H
