@@ -1,11 +1,11 @@
 /**
  * \file
- * \brief Common tools for straight track fitting
+ * \brief Tools for simple line fits in two and three dimensions
  * \author Moritz Kiehn (msmk@cern.ch)
  */
 
-#ifndef PT_STRAIGHTTOOLS_H
-#define PT_STRAIGHTTOOLS_H
+#ifndef PT_LINEFITTER_H
+#define PT_LINEFITTER_H
 
 #include "mechanics/geometry.h"
 #include "utils/definitions.h"
@@ -106,4 +106,4 @@ inline SymMatrix4 Tracking::LineFitter3D::cov() const
   return cov;
 }
 
-#endif // PT_STRAIGHTTOOLS_H
+#endif // PT_LINEFITTER_H
