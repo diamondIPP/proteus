@@ -52,8 +52,10 @@ Analyzers::NoiseScan::NoiseScan(TDirectory* dir,
 
   HistAxis axCol(roi.interval(0), roi.length(0), "Hit column");
   HistAxis axRow(roi.interval(1), roi.length(1), "Hit row");
-  HistAxis axOcc(0, 1, binsOccupancy, "Pixel occupancy / hits/pixel/event");
-  HistAxis axSig(0, 1, binsOccupancy, "Local significance");
+  HistAxis axOcc(0, 2 * rateMax, binsOccupancy,
+                 "Pixel occupancy / hits/pixel/event");
+  HistAxis axSig(-2 * sigmaMax, 2 * sigmaMax, binsOccupancy,
+                 "Local significance");
 
   TDirectory* sub =
       Utils::makeDir(dir, "sensors/" + sensor.name() + "/noisescan");
