@@ -92,6 +92,15 @@ User-visible changes
     method.
 *   Move alignment summary graphs to the ``summary`` directory and add
     graphs for the beam slope and number of reconstructed tracks per event.
+*   Use a global absolute and a local relative rate cut for the noise scan.
+
+    In the first step, all pixels with a hit rate above the global rate cute
+    are masked. The expected local hit density is then computed for each
+    pixel using the local neighbourhood but ignoring the already masked
+    pixels. The second step masks pixels with a high hit rate relative
+    to the local expected variations. While the output histograms contain
+    the masks generated from both steps separately only a single combined
+    mask file is produced.
 
 Bugfixes
 --------
