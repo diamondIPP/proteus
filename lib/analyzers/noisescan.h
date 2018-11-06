@@ -51,7 +51,7 @@ public:
 
 private:
   Index m_sensorId;
-  int m_bandwidthCol, m_bandwidthRow;
+  double m_bandwidthCol, m_bandwidthRow;
   double m_sigmaMax, m_rateMax;
   uint64_t m_numEvents;
   TH2D* m_occupancy;
@@ -59,7 +59,8 @@ private:
   TH2D* m_density;
   TH2D* m_significance;
   TH1D* m_significanceDist;
-  TH2D* m_mask;
+  TH2D* m_maskAbsolute;
+  TH2D* m_maskRelative;
 };
 
 } // namespace Analyzers

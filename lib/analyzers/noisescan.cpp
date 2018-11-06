@@ -33,8 +33,8 @@ Analyzers::NoiseScan::NoiseScan(TDirectory* dir,
   // adjust per-axis bandwith for pixel pitch along each axis such that the
   // covered area is approximately circular in metric coordinates.
   double scale = std::hypot(sensor.pitchCol(), sensor.pitchRow()) / M_SQRT2;
-  m_bandwidthCol = std::ceil(bandwidth * scale / sensor.pitchCol());
-  m_bandwidthRow = std::ceil(bandwidth * scale / sensor.pitchRow());
+  m_bandwidthCol = bandwidth * scale / sensor.pitchCol();
+  m_bandwidthRow = bandwidth * scale / sensor.pitchRow();
 
   DEBUG("pixel pitch scale: ", scale);
   DEBUG("bandwidth col: ", m_bandwidthCol);
@@ -62,7 +62,8 @@ Analyzers::NoiseScan::NoiseScan(TDirectory* dir,
   m_density = makeH2(sub, "density", axCol, axRow);
   m_significance = makeH2(sub, "local_significance", axCol, axRow);
   m_significanceDist = makeH1(sub, "local_significance_dist", axSig);
-  m_mask = makeH2(sub, "mask", axCol, axRow);
+  m_maskAbsolute = makeH2(sub, "mask_absolute", axCol, axRow);
+  m_maskRelative = makeH2(sub, "mask_relative", axCol, axRow);
 }
 
 std::string Analyzers::NoiseScan::name() const
@@ -85,30 +86,42 @@ void Analyzers::NoiseScan::execute(const Storage::Event& event)
  *
  * Use kernel density estimation w/ an Epanechnikov kernel to estimate the
  * density at the given point without using the actual value.
+ *
+ * Positions with a non-zero entry in the mask will not be taken into account.
  */
-static double
-estimateDensityAtPosition(const TH2D* values, int i, int j, int bwi, int bwj)
+static double estimateDensityAt(const TH2D* values,
+                                const TH2D* mask,
+                                int icol,
+                                int jrow,
+                                double bandwidthCol,
+                                double bandwidthRow)
 {
-  assert((1 <= i) && (i <= values->GetNbinsX()));
-  assert((1 <= j) && (j <= values->GetNbinsY()));
-  assert(0 < bwi);
-  assert(1 < bwj);
+  assert(values);
+  assert(mask);
+  assert(values->GetNbinsX() == mask->GetNbinsX());
+  assert(values->GetNbinsY() == mask->GetNbinsY());
+  assert((1 <= icol) && (icol <= values->GetNbinsX()));
+  assert((1 <= jrow) && (jrow <= values->GetNbinsY()));
+  assert(0 < bandwidthCol);
+  assert(0 < bandwidthRow);
 
   double sumWeights = 0;
   double sumValues = 0;
-  // with a bounded kernel only a subset of the gpoints need to be considered.
-  // only 2*bandwidth sized window around selected point needs to be considered.
-  int imin = std::max(1, i - bwi);
-  int imax = std::min(i + bwi, values->GetNbinsX());
-  int jmin = std::max(1, j - bwj);
-  int jmax = std::min(j + bwj, values->GetNbinsY());
-  for (int l = imin; l <= imax; ++l) {
-    for (int m = jmin; m <= jmax; ++m) {
-      if ((l == i) && (m == j))
+  // with a bounded kernel only a subset of all points need to be considered.
+  // only 2*bandwidth sized window around selected point is needed.
+  int imin = std::max<int>(std::floor(icol - bandwidthCol), 1);
+  int imax = std::min<int>(std::ceil(icol + bandwidthCol), values->GetNbinsX());
+  int jmin = std::max<int>(std::floor(jrow - bandwidthRow), 1);
+  int jmax = std::min<int>(std::ceil(jrow + bandwidthRow), values->GetNbinsY());
+  for (int i = imin; i <= imax; ++i) {
+    for (int j = jmin; j <= jmax; ++j) {
+      if ((i == icol) && (j == jrow))
+        continue;
+      if ((0 < mask->GetBinContent(i, j)))
         continue;
 
-      double ui = (l - i) / static_cast<double>(bwi);
-      double uj = (m - j) / static_cast<double>(bwj);
+      double ui = (i - icol) / bandwidthCol;
+      double uj = (j - jrow) / bandwidthRow;
       double u2 = ui * ui + uj * uj;
 
       if (1 < u2)
@@ -119,7 +132,7 @@ estimateDensityAtPosition(const TH2D* values, int i, int j, int bwi, int bwj)
       double w = 3 * (1 - u2) / 4;
 
       sumWeights += w;
-      sumValues += w * values->GetBinContent(l, m);
+      sumValues += w * values->GetBinContent(i, j);
     }
   }
   return sumValues / sumWeights;
@@ -127,80 +140,112 @@ estimateDensityAtPosition(const TH2D* values, int i, int j, int bwi, int bwj)
 
 /** Write a smoothed density estimate to the density histogram. */
 static void estimateDensity(const TH2D* values,
-                            int bandwidthX,
-                            int bandwidthY,
+                            const TH2D* mask,
+                            double bandwidthCol,
+                            double bandwidthRow,
                             TH2D* density)
 {
+  assert(values);
+  assert(mask);
+  assert(density);
+  assert(values->GetNbinsX() == mask->GetNbinsX());
+  assert(values->GetNbinsY() == mask->GetNbinsY());
   assert(values->GetNbinsX() == density->GetNbinsX());
   assert(values->GetNbinsY() == density->GetNbinsY());
 
-  for (int icol = 1; icol <= values->GetNbinsX(); ++icol) {
-    for (int irow = 1; irow <= values->GetNbinsY(); ++irow) {
+  for (int i = 1; i <= values->GetNbinsX(); ++i) {
+    for (int j = 1; j <= values->GetNbinsY(); ++j) {
       auto den =
-          estimateDensityAtPosition(values, icol, irow, bandwidthX, bandwidthY);
-      density->SetBinContent(icol, irow, den);
+          estimateDensityAt(values, mask, i, j, bandwidthCol, bandwidthRow);
+      density->SetBinContent(i, j, den);
     }
   }
   density->ResetStats();
   density->SetEntries(values->GetEntries());
 }
 
-void Analyzers::NoiseScan::finalize()
+/** Calculate local signifance, i.e. (observed - expected) / sqrt(expected) */
+static void computeSignificance(const TH2D* observed,
+                                const TH2D* expected,
+                                TH2D* significance)
 {
-  estimateDensity(m_occupancy, m_bandwidthCol, m_bandwidthRow, m_density);
-  // calculate local signifance, i.e. (hits - density) / sqrt(density)
-  for (int icol = 1; icol <= m_occupancy->GetNbinsX(); ++icol) {
-    for (int irow = 1; irow <= m_occupancy->GetNbinsY(); ++irow) {
-      auto val = m_occupancy->GetBinContent(icol, irow);
-      auto den = m_density->GetBinContent(icol, irow);
-      auto sig = (val - den) / std::sqrt(den);
-      m_significance->SetBinContent(icol, irow, sig);
+  assert(observed->GetNbinsX() == expected->GetNbinsX());
+  assert(observed->GetNbinsY() == expected->GetNbinsY());
+  assert(observed->GetNbinsX() == significance->GetNbinsX());
+  assert(observed->GetNbinsY() == significance->GetNbinsY());
+
+  for (int i = 1; i <= observed->GetNbinsX(); ++i) {
+    for (int j = 1; j <= observed->GetNbinsY(); ++j) {
+      auto obs = observed->GetBinContent(i, j);
+      auto exd = expected->GetBinContent(i, j);
+      auto sig = (obs - exd) / std::sqrt(exd);
+      significance->SetBinContent(i, j, sig);
     }
   }
-  m_significance->ResetStats();
-  m_significance->SetEntries(m_occupancy->GetEntries());
-  // rescale hit counts to occupancy
+  significance->ResetStats();
+  significance->SetEntries(observed->GetEntries());
+}
+
+void Analyzers::NoiseScan::finalize()
+{
+  // mask pixels above the absolute rate cut
+  auto entriesMax = m_numEvents * m_rateMax;
+  for (int i = 1; i <= m_occupancy->GetNbinsX(); ++i) {
+    for (int j = 1; j <= m_occupancy->GetNbinsY(); ++j) {
+      if (entriesMax < m_occupancy->GetBinContent(i, j)) {
+        m_maskAbsolute->SetBinContent(i, j, 1);
+      }
+    }
+  }
+
+  // compute rate significance using the local density
+  estimateDensity(m_occupancy, m_maskAbsolute, m_bandwidthCol, m_bandwidthRow,
+                  m_density);
+  computeSignificance(m_occupancy, m_density, m_significance);
+  // mask pixels above the local relative rate cut
+  for (int i = 1; i <= m_significance->GetNbinsX(); ++i) {
+    for (int j = 1; j <= m_significance->GetNbinsY(); ++j) {
+      if (m_sigmaMax < m_significance->GetBinContent(i, j)) {
+        m_maskRelative->SetBinContent(i, j, 1);
+      }
+    }
+  }
+
+  // rescale from hit counts to occupancy
   m_occupancy->Sumw2();
   m_occupancy->Scale(1.0 / m_numEvents);
+  m_density->Sumw2();
   m_density->Scale(1.0 / m_numEvents);
+
   // fill per-pixel distributions
   Utils::fillDist(m_occupancy, m_occupancyDist);
   Utils::fillDist(m_significance, m_significanceDist);
 
-  // select noisy pixels
-  for (int icol = 1; icol <= m_significance->GetNbinsX(); ++icol) {
-    for (int irow = 1; irow <= m_significance->GetNbinsY(); ++irow) {
-      auto sig = m_significance->GetBinContent(icol, irow);
-      auto rate = m_occupancy->GetBinContent(icol, irow);
-      // pixel occupancy is a number of stddevs above local average
-      bool isAboveRelative = (m_sigmaMax < sig);
-      // pixel occupancy is above absolute limit
-      bool isAboveAbsolute = (m_rateMax < rate);
-      if (isAboveRelative || isAboveAbsolute) {
-        m_mask->SetBinContent(icol, irow, 1);
-      }
-    }
-  }
-
   INFO("noise scan sensor ", m_sensorId, ":");
-  INFO("  cut relative: local mean + ", m_sigmaMax, " * local sigma");
-  INFO("  cut absolute: ", m_rateMax, " hits/pixel/event");
   INFO("  max occupancy: ", m_occupancy->GetMaximum(), " hits/pixel/event");
-  INFO("  noisy pixels: ", m_mask->GetEntries());
+  INFO("  cut absolute: ", m_rateMax, " hits/pixel/event");
+  INFO("  cut relative: local mean + ", m_sigmaMax, " * local sigma");
+  INFO("  pixels masked absolute: ", m_maskAbsolute->GetEntries());
+  INFO("  pixels masked relative: ", m_maskRelative->GetEntries());
 }
 
 Mechanics::PixelMasks Analyzers::NoiseScan::constructMasks() const
 {
-  Mechanics::PixelMasks newMask;
+  Mechanics::PixelMasks pixelMask;
 
-  for (int icol = 1; icol <= m_mask->GetNbinsX(); ++icol) {
-    for (int irow = 1; irow <= m_mask->GetNbinsY(); ++irow) {
-      if (0 < m_mask->GetBinContent(icol, irow)) {
-        auto col = static_cast<Index>(m_mask->GetXaxis()->GetBinLowEdge(icol));
-        auto row = static_cast<Index>(m_mask->GetYaxis()->GetBinLowEdge(irow));
-        newMask.maskPixel(m_sensorId, col, row);
+  auto extractMaskedPixels = [&](const TH2D* mask) {
+    for (int i = 1; i <= mask->GetNbinsX(); ++i) {
+      for (int j = 1; j <= mask->GetNbinsY(); ++j) {
+        if (mask->GetBinContent(i, j) == 0)
+          continue;
+        // due to region-of-interest selection bin index != pixel index
+        auto col = static_cast<Index>(mask->GetXaxis()->GetBinLowEdge(i));
+        auto row = static_cast<Index>(mask->GetYaxis()->GetBinLowEdge(j));
+        pixelMask.maskPixel(m_sensorId, col, row);
       }
     }
-  }
-  return newMask;
+  };
+  extractMaskedPixels(m_maskAbsolute);
+  extractMaskedPixels(m_maskRelative);
+  return pixelMask;
 }
