@@ -204,10 +204,12 @@ void Analyzers::NoiseScan::finalize()
   estimateDensity(m_occupancy, m_maskAbsolute, m_bandwidthCol, m_bandwidthRow,
                   m_density);
   computeSignificance(m_occupancy, m_density, m_significance);
-  // mask pixels above the local relative rate cut
+  // mask pixels above the local relative rate cut not already masked
   for (int i = 1; i <= m_significance->GetNbinsX(); ++i) {
     for (int j = 1; j <= m_significance->GetNbinsY(); ++j) {
-      if (m_sigmaMax < m_significance->GetBinContent(i, j)) {
+      auto isNotMasked = (m_maskAbsolute->GetBinContent(i, j) == 0);
+      auto isAboveCut = (m_sigmaMax < m_significance->GetBinContent(i, j));
+      if (isNotMasked and isAboveCut) {
         m_maskRelative->SetBinContent(i, j, 1);
       }
     }
