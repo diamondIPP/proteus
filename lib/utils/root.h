@@ -71,20 +71,17 @@ TH1D* makeTransientH1(HistAxis axis);
 /** Create an unnamed 2d histogram that is not stored. */
 TH2D* makeTransientH2(HistAxis axis0, HistAxis axis1);
 
-/** Fill a histogram with the values in each bin of the 2d histogram.
- *
- * The binning range of the output histograms are adjusted to the actual limits
- * while the number of bins are kept fixed.
- */
+/** Fill a histogram with the values in each bin of the 2d histogram. */
 void fillDist(const TH2D* values, TH1D* dist);
 
 /** Returns the mean and variance restricted around the maximum of a histogram.
  *
  * \param histo The histogram
- * \param offset How many bins per side should be considered. If negative, the whole histogram will be used.
- * \return A std::pair with mean and variance
+ * \param offset How many bins per side should be considered. If negative, the
+ * whole histogram will be used. \return A std::pair with mean and variance
  */
-std::pair<double, double> getRestrictedMean(const TH1D* histo, const int offset);
+std::pair<double, double> getRestrictedMean(const TH1D* histo,
+                                            const int offset);
 
 } // namespace Utils
 
@@ -172,9 +169,6 @@ inline TH2D* Utils::makeTransientH2(HistAxis axis0, HistAxis axis1)
 
 inline void Utils::fillDist(const TH2D* values, TH1D* dist)
 {
-  // ensure all values are binned
-  dist->SetBins(dist->GetNbinsX(), values->GetMinimum(),
-                std::nextafter(values->GetMaximum(), values->GetMaximum() + 1));
   for (int icol = 1; icol <= values->GetNbinsX(); ++icol) {
     for (int irow = 1; irow <= values->GetNbinsY(); ++irow) {
       auto value = values->GetBinContent(icol, irow);
@@ -184,9 +178,11 @@ inline void Utils::fillDist(const TH2D* values, TH1D* dist)
   }
 }
 
-inline std::pair<double, double> Utils::getRestrictedMean(const TH1D* histo, const int offset)
+inline std::pair<double, double> Utils::getRestrictedMean(const TH1D* histo,
+                                                          const int offset)
 {
-  //assert(offset >= 0); //TODO uncomment it after verifying with the updated alignment by Moritz
+  // assert(offset >= 0); //TODO uncomment it after verifying with the updated
+  // alignment by Moritz
   TH1D* h = new TH1D(*histo);
   h->SetDirectory(nullptr);
   int maxBin = h->GetMaximumBin();
