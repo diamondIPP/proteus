@@ -61,6 +61,7 @@ private:
   TH1D* m_significanceDist;
   TH2D* m_maskAbsolute;
   TH2D* m_maskRelative;
+  TH2D* m_mask;
 };
 
 } // namespace Analyzers

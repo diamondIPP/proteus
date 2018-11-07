@@ -66,6 +66,7 @@ Analyzers::NoiseScan::NoiseScan(TDirectory* dir,
   m_significanceDist = makeH1(sub, "local_significance_dist", axSig);
   m_maskAbsolute = makeH2(sub, "mask_absolute", axCol, axRow);
   m_maskRelative = makeH2(sub, "mask_relative", axCol, axRow);
+  m_mask = makeH2(sub, "mask", axCol, axRow);
 }
 
 std::string Analyzers::NoiseScan::name() const
@@ -215,6 +216,10 @@ void Analyzers::NoiseScan::finalize()
     }
   }
 
+  // fill combined mask
+  m_mask->Add(m_maskAbsolute);
+  m_mask->Add(m_maskRelative);
+
   // rescale from hit counts to occupancy
   m_occupancy->Sumw2();
   m_occupancy->Scale(1.0 / m_numEvents);
@@ -231,6 +236,7 @@ void Analyzers::NoiseScan::finalize()
   INFO("  cut relative: local mean + ", m_sigmaMax, " * local sigma");
   INFO("  pixels masked absolute: ", m_maskAbsolute->GetEntries());
   INFO("  pixels masked relative: ", m_maskRelative->GetEntries());
+  INFO("  pixels masked: ", m_mask->GetEntries());
 }
 
 Mechanics::PixelMasks Analyzers::NoiseScan::constructMasks() const
