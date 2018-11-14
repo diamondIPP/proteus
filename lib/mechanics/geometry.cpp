@@ -79,7 +79,7 @@ static Angles321 extractAngles321(const Matrix3& q)
   // Frobenius norm should vanish for correct angle extraction
   auto norm = (Matrix3::Identity() - qFromAngles.transpose() * q).norm();
   // single epsilon results in too many false-positives.
-  if (4 * std::numeric_limits<decltype(norm)>::epsilon() < norm) {
+  if (8 * std::numeric_limits<decltype(norm)>::epsilon() < norm) {
     ERROR("detected inconsistent matrix to angles conversion");
     INFO("angles:");
     INFO("  alpha: ", degree(angles.alpha), " degree");
@@ -242,7 +242,7 @@ Mechanics::Geometry Mechanics::Geometry::fromConfig(const toml::Value& cfg)
 
       DEBUG("sensor ", sensorId, " unit vector projection ", projUV);
       // approximate zero check; the number of ignored bits is a bit arbitrary
-      if ((4 * std::numeric_limits<decltype(projUV)>::epsilon()) < projUV) {
+      if ((8 * std::numeric_limits<decltype(projUV)>::epsilon()) < projUV) {
         FAIL("sensor ", sensorId, " has non-orthogonal unit vectors");
       }
 
