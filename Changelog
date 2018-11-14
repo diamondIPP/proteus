@@ -135,7 +135,7 @@ Internal changes
 ----------------
 
 *   Loosened the cut to determine if two vectors are orthogonal
-    and changed the ``FAIL'' to ``ERROR''. Added an even looser cut that
+    and changed the ``FAIL`` to ``ERROR``. Added an even looser cut that
     gives a ``FAIL'' (to account for errors from the operator).
 *   Move event loop related classes and interfaces into a separate
     ``Loop`` namespace to better separate the event loop logic from
