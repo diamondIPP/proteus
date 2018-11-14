@@ -242,8 +242,11 @@ Mechanics::Geometry Mechanics::Geometry::fromConfig(const toml::Value& cfg)
 
       DEBUG("sensor ", sensorId, " unit vector projection ", projUV);
       // approximate zero check; the number of ignored bits is a bit arbitrary
-      if ((8 * std::numeric_limits<decltype(projUV)>::epsilon()) < projUV) {
-        FAIL("sensor ", sensorId, " has non-orthogonal unit vectors");
+      if ((128 * std::numeric_limits<decltype(projUV)>::epsilon()) < projUV) {
+        FAIL("sensor ", sensorId, " has highly non-orthogonal unit vectors");
+      }
+      else if ((8 * std::numeric_limits<decltype(projUV)>::epsilon()) < projUV) {
+        ERROR("sensor ", sensorId, " has non-orthogonal unit vectors");
       }
 
       geo.m_planes[sensorId] = Plane::fromDirections(unitU, unitV, offset);
