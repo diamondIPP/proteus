@@ -17,11 +17,14 @@
 #include <Eigen/LU>
 
 // Use to number and identify things, e.g. hits, sensors
-typedef unsigned int Index;
+using Index = unsigned int;
 constexpr Index kInvalidIndex = static_cast<Index>(-1);
 
 // Digital matrix position defined by column and row index
 typedef std::pair<Index, Index> ColumnRow;
+
+// Default floating point scalar type
+using Scalar = double;
 
 // Templated vector types
 template <typename T, int kRows, int kCols>
@@ -37,22 +40,22 @@ using Vector = Eigen::Matrix<T, kSize, 1>;
 // Commonly used vector and matrix types
 // For non-quadratic matrices the first number is the target dimensionality and
 // the second number is the source dimensionality.
-using Matrix2 = Matrix<double, 2, 2>;
-using Matrix23 = Matrix<double, 2, 3>;
-using Matrix26 = Matrix<double, 2, 6>;
-using Matrix3 = Matrix<double, 3, 3>;
-using Matrix32 = Matrix<double, 3, 2>;
-using Matrix4 = Matrix<double, 4, 4>;
-using Matrix6 = Matrix<double, 6, 6>;
-using DiagMatrix6 = DiagMatrix<double, 6>;
-using SymMatrix2 = SymMatrix<double, 2>;
-using SymMatrix3 = SymMatrix<double, 3>;
-using SymMatrix4 = SymMatrix<double, 4>;
-using SymMatrix6 = SymMatrix<double, 6>;
-using Vector2 = Vector<double, 2>;
-using Vector3 = Vector<double, 3>;
-using Vector4 = Vector<double, 4>;
-using Vector6 = Vector<double, 6>;
+using Matrix2 = Matrix<Scalar, 2, 2>;
+using Matrix23 = Matrix<Scalar, 2, 3>;
+using Matrix26 = Matrix<Scalar, 2, 6>;
+using Matrix3 = Matrix<Scalar, 3, 3>;
+using Matrix32 = Matrix<Scalar, 3, 2>;
+using Matrix4 = Matrix<Scalar, 4, 4>;
+using Matrix6 = Matrix<Scalar, 6, 6>;
+using DiagMatrix6 = DiagMatrix<Scalar, 6>;
+using SymMatrix2 = SymMatrix<Scalar, 2>;
+using SymMatrix3 = SymMatrix<Scalar, 3>;
+using SymMatrix4 = SymMatrix<Scalar, 4>;
+using SymMatrix6 = SymMatrix<Scalar, 6>;
+using Vector2 = Vector<Scalar, 2>;
+using Vector3 = Vector<Scalar, 3>;
+using Vector4 = Vector<Scalar, 4>;
+using Vector6 = Vector<Scalar, 6>;
 
 /** Transform the covariance to a different base using a Jacobian.
  *
