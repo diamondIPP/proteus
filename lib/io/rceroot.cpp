@@ -12,8 +12,8 @@ PT_SETUP_LOCAL_LOGGER(RceRoot)
 // -----------------------------------------------------------------------------
 // common
 
-Io::RceRootCommon::RceRootCommon(TFile* file)
-    : m_file(file)
+Io::RceRootCommon::RceRootCommon(Utils::RootFilePtr&& file)
+    : m_file(std::move(file))
     , m_entries(0)
     , m_next(0)
     , m_eventInfo(nullptr)
@@ -48,13 +48,10 @@ Io::RceRootReader::open(const std::string& path,
 }
 
 Io::RceRootReader::RceRootReader(const std::string& path)
-    : RceRootCommon(TFile::Open(path.c_str(), "READ"))
+    : RceRootCommon(Utils::openRootRead(path.c_str()))
 {
   int64_t entriesEvent = INT64_MAX;
   int64_t entriesTracks = INT64_MAX;
-
-  if (!m_file)
-    THROW("could not open '", path, "' to read");
 
   // event tree is optional
   m_file->GetObject("Event", m_eventInfo);
@@ -209,14 +206,6 @@ int64_t Io::RceRootReader::addSensor(TDirectory* dir)
   return trees.entries;
 }
 
-Io::RceRootReader::~RceRootReader()
-{
-  if (m_file) {
-    m_file->Close();
-    delete m_file;
-  }
-}
-
 std::string Io::RceRootReader::name() const { return "RceRootReader"; }
 
 uint64_t Io::RceRootReader::numEvents() const
@@ -344,16 +333,13 @@ bool Io::RceRootReader::read(Storage::Event& event)
 // writer
 
 Io::RceRootWriter::RceRootWriter(const std::string& path, size_t numSensors)
-    : RceRootCommon(TFile::Open(path.c_str(),
-                                "RECREATE",
-                                "",
-                                ROOT::CompressionSettings(ROOT::kLZMA, 1)))
+    : RceRootCommon(Utils::openRootWrite(path))
 {
-  if (!m_file)
-    THROW("could not open '", path, "' to write");
+  m_file->cd();
 
   // global event tree
   m_eventInfo = new TTree("Event", "Event information");
+  m_eventInfo->SetDirectory(m_file.get());
   m_eventInfo->Branch("FrameNumber", &frameNumber, "FrameNumber/l");
   m_eventInfo->Branch("TimeStamp", &timestamp, "TimeStamp/l");
   m_eventInfo->Branch("TriggerTime", &triggerTime, "TriggerTime/l");
@@ -361,6 +347,7 @@ Io::RceRootWriter::RceRootWriter(const std::string& path, size_t numSensors)
 
   // global track tree
   m_tracks = new TTree("Tracks", "Track parameters");
+  m_tracks->SetDirectory(m_file.get());
   m_tracks->Branch("NTracks", &numTracks, "NTracks/I");
   m_tracks->Branch("Chi2", trackChi2, "Chi2[NTracks]/D");
   m_tracks->Branch("Dof", trackDof, "Dof[NTracks]/I");
@@ -385,6 +372,7 @@ void Io::RceRootWriter::addSensor(TDirectory* dir)
   SensorTrees trees;
   // local hits
   trees.hits = new TTree("Hits", "Hits");
+  trees.hits->SetDirectory(dir);
   trees.hits->Branch("NHits", &numHits, "NHits/I");
   trees.hits->Branch("PixX", hitPixX, "HitPixX[NHits]/I");
   trees.hits->Branch("PixY", hitPixY, "HitPixY[NHits]/I");
@@ -393,6 +381,7 @@ void Io::RceRootWriter::addSensor(TDirectory* dir)
   trees.hits->Branch("HitInCluster", hitInCluster, "HitInCluster[NHits]/I");
   // local clusters
   trees.clusters = new TTree("Clusters", "Clusters");
+  trees.clusters->SetDirectory(dir);
   trees.clusters->Branch("NClusters", &numClusters, "NClusters/I");
   trees.clusters->Branch("Col", clusterCol, "Col[NClusters]/D");
   trees.clusters->Branch("Row", clusterRow, "Row[NClusters]/D");
@@ -405,6 +394,7 @@ void Io::RceRootWriter::addSensor(TDirectory* dir)
   trees.clusters->Branch("Track", clusterTrack, "Track[NClusters]/I");
   // local track states
   trees.intercepts = new TTree("Intercepts", "Intercepts");
+  trees.intercepts->SetDirectory(dir);
   trees.intercepts->Branch("NIntercepts", &numIntercepts, "NIntercepts/I");
   trees.intercepts->Branch("U", interceptU, "U[NIntercepts]/D");
   trees.intercepts->Branch("V", interceptV, "V[NIntercepts]/D");
@@ -419,9 +409,6 @@ Io::RceRootWriter::~RceRootWriter()
 {
   if (m_file) {
     INFO("wrote ", m_sensors.size(), " sensors to '", m_file->GetPath(), "'");
-    m_file->Write(nullptr, TObject::kOverwrite);
-    m_file->Close();
-    delete m_file;
   }
 }
 

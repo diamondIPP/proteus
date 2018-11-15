@@ -16,6 +16,7 @@
 #include "storage/event.h"
 #include "tracking/straightfitter.h"
 #include "utils/application.h"
+#include "utils/root.h"
 
 int main(int argc, char const* argv[])
 {
@@ -28,32 +29,24 @@ int main(int argc, char const* argv[])
 
   // configuration
   auto sensorIds = app.config().get<std::vector<Index>>("sensor_ids");
-
   // output
-  TFile hists(app.outputPath("hists.root").c_str(), "RECREATE", "",
-              ROOT::CompressionSettings(ROOT::kLZMA, 1));
-  TFile trees(app.outputPath("trees.root").c_str(), "RECREATE", "",
-              ROOT::CompressionSettings(ROOT::kLZMA, 1));
+  auto hists = Utils::openRootWrite(app.outputPath("hists.root"));
+  auto trees = Utils::openRootWrite(app.outputPath("trees.root"));
 
   auto loop = app.makeEventLoop();
   setupHitPreprocessing(app.device(), loop);
   loop.addProcessor(std::make_shared<ApplyGeometry>(app.device()));
   for (auto sensorId : sensorIds)
     loop.addProcessor(std::make_shared<Matcher>(app.device(), sensorId));
-  loop.addAnalyzer(std::make_shared<Tracks>(&hists, app.device()));
+  loop.addAnalyzer(std::make_shared<Tracks>(hists.get(), app.device()));
   for (auto sensorId : sensorIds) {
     const auto& sensor = app.device().getSensor(sensorId);
-    loop.addAnalyzer(std::make_shared<Distances>(&hists, sensor));
-    loop.addAnalyzer(std::make_shared<Matching>(&hists, sensor));
-    loop.addAnalyzer(std::make_shared<Efficiency>(&hists, sensor));
-    loop.addWriter(std::make_shared<Io::MatchWriter>(&trees, sensor));
+    loop.addAnalyzer(std::make_shared<Distances>(hists.get(), sensor));
+    loop.addAnalyzer(std::make_shared<Matching>(hists.get(), sensor));
+    loop.addAnalyzer(std::make_shared<Efficiency>(hists.get(), sensor));
+    loop.addWriter(std::make_shared<Io::MatchWriter>(trees.get(), sensor));
   }
   loop.run();
-
-  hists.Write(nullptr, TFile::kOverwrite);
-  hists.Close();
-  trees.Write(nullptr, TFile::kOverwrite);
-  trees.Close();
 
   return EXIT_SUCCESS;
 }

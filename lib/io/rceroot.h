@@ -6,13 +6,12 @@
 #include <string>
 #include <vector>
 
-#include <TDirectory.h>
-#include <TFile.h>
 #include <TTree.h>
 
 #include "loop/reader.h"
 #include "loop/writer.h"
 #include "utils/definitions.h"
+#include "utils/root.h"
 
 namespace toml {
 class Value;
@@ -22,7 +21,8 @@ namespace Io {
 /** Common data for RceRoot{Reader,Writer}. */
 class RceRootCommon {
 protected:
-  RceRootCommon(TFile* file);
+  RceRootCommon(Utils::RootFilePtr&& file);
+  ~RceRootCommon() = default;
 
   /* NOTE: these sizes are used to initialize arrays of track, cluster and
    * hit information. BUT these arrays are generated ONLY ONCE and re-used
@@ -38,7 +38,7 @@ protected:
     int64_t entries = 0;
   };
 
-  TFile* m_file;
+  Utils::RootFilePtr m_file;
   int64_t m_entries;
   int64_t m_next;
   // Trees global to the entire event
@@ -99,7 +99,6 @@ public:
 
   /** Open an existing file and determine the number of sensors and events. */
   RceRootReader(const std::string& path);
-  ~RceRootReader();
 
   std::string name() const override final;
   uint64_t numEvents() const override final;

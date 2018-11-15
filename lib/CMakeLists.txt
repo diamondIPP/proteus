@@ -41,7 +41,8 @@ set(proteus_SOURCES
     utils/arguments.cpp
     utils/config.cpp
     utils/densemask.cpp
-    utils/logger.cpp)
+    utils/logger.cpp
+    utils/root.cpp)
 file(GLOB_RECURSE proteus_HEADERS LIST_DIRECTORIES false *.h)
 set(proteus_DEFINITIONS)
 set(proteus_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR} ${ROOT_INCLUDE_DIRS} ${EIGEN_INCLUDE_DIRS})

@@ -151,18 +151,14 @@ int main(int argc, char const* argv[])
   auto redChi2Max = app.config().get<double>("reduced_chi2_max");
   auto damping = app.config().get<double>("damping");
 
-  // copy device to allow modifications after each alignment step
-  auto dev = app.device();
-
   // split sensors into fixed and alignable set
   std::vector<Index> fixedSensorIds;
   std::sort(sensorIds.begin(), sensorIds.end());
   std::sort(alignIds.begin(), alignIds.end());
   std::set_difference(sensorIds.begin(), sensorIds.end(), alignIds.begin(),
                       alignIds.end(), std::back_inserter(fixedSensorIds));
-
   INFO("fixed sensors: ", fixedSensorIds);
-  INFO("align sensors: ", alignIds);
+  INFO("align sensors: ", alignIds); 
 
   if (!std::includes(sensorIds.begin(), sensorIds.end(), alignIds.begin(),
                      alignIds.end())) {
@@ -175,8 +171,10 @@ int main(int argc, char const* argv[])
   }
 
   // output
-  TFile hists(app.outputPath("hists.root").c_str(), "RECREATE", "",
-              ROOT::CompressionSettings(ROOT::kLZMA, 1));
+  auto hists = Utils::openRootWrite(app.outputPath("hists.root"));
+
+  // copy device to allow modifications after each alignment step
+  auto dev = app.device();
 
   // alignment steps monitoring starting w/ the initial geometry
   StepsGraphs steps;
@@ -184,7 +182,8 @@ int main(int argc, char const* argv[])
 
   // iterative alignment steps
   for (int step = 1; step <= numSteps; ++step) {
-    TDirectory* stepDir = Utils::makeDir(&hists, "step" + std::to_string(step));
+    TDirectory* stepDir =
+        Utils::makeDir(hists.get(), "step" + std::to_string(step));
 
     INFO("alignment step ", step, "/", numSteps);
 
@@ -253,7 +252,7 @@ int main(int argc, char const* argv[])
   {
     INFO("validation step ");
 
-    TDirectory* subDir = Utils::makeDir(&hists, "validation");
+    TDirectory* subDir = Utils::makeDir(hists.get(), "validation");
 
     auto loop = app.makeEventLoop();
 
@@ -286,10 +285,7 @@ int main(int argc, char const* argv[])
     // close alignment monitoring w/ the final validation step geometry
     steps.addStep(alignIds, geo, tracks->avgNumTracks());
   }
-
-  steps.write(dev, Utils::makeDir(&hists, "summary"));
-  hists.Write(nullptr, TFile::kOverwrite);
-  hists.Close();
+  steps.write(dev, Utils::makeDir(hists.get(), "summary"));
 
   return EXIT_SUCCESS;
 }
