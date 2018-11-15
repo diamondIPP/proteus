@@ -97,12 +97,11 @@ void fillDist(const TH2D* values, TH1D* dist);
 
 /** Returns the mean and variance restricted around the maximum of a histogram.
  *
- * \param histo The histogram
- * \param offset How many bins per side should be considered. If negative, the
- * whole histogram will be used. \return A std::pair with mean and variance
+ * \param h1     1-d input histograms
+ * \param offset How many additional bins should be be considered
+ * \return The restricted mean and variance
  */
-std::pair<double, double> getRestrictedMean(const TH1D* histo,
-                                            const int offset);
+std::pair<double, double> getRestrictedMean(const TH1D* h1, int offset);
 
 } // namespace Utils
 

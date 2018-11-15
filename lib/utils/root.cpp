@@ -169,19 +169,17 @@ void Utils::fillDist(const TH2D* values, TH1D* dist)
   }
 }
 
-std::pair<double, double> Utils::getRestrictedMean(const TH1D* histo,
-                                                   const int offset)
+std::pair<double, double> Utils::getRestrictedMean(const TH1D* h1, int offset)
 {
-  // TODO uncomment it after verifying with the updated alignment by Moritz
-  // assert(offset >= 0);
-  TH1D h;
-  h.SetDirectory(nullptr);
-  histo->Copy(h);
-  int maxBin = h.GetMaximumBin();
-  if (offset >= 0) {
-    h.GetXaxis()->SetRange(maxBin - offset, maxBin + offset);
-  }
-  double mean = h.GetMean();
-  double var = h.GetMeanError() * h.GetMeanError();
-  return std::make_pair(mean, var);
+  assert((0 <= offset) && "");
+
+  // use local non-stored copy of the histogram
+  TH1D tmp;
+  tmp.SetDirectory(nullptr);
+  h1->Copy(tmp);
+
+  int maxBin = tmp.GetMaximumBin();
+  tmp.GetXaxis()->SetRange(maxBin - offset, maxBin + offset);
+
+  return std::make_pair(tmp.GetMean(), tmp.GetMeanError() * tmp.GetMeanError());
 }
