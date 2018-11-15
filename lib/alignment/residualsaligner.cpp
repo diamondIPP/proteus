@@ -92,16 +92,18 @@ void Alignment::ResidualsAligner::execute(const Storage::Event& event)
 
 Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
 {
+  // how many bins are used to calculated the means
+  static constexpr int kBinsRestricted = 5;
+
   Mechanics::Geometry geo = m_device.geometry();
 
   for (const auto& hists : m_hists) {
     const Mechanics::Sensor& sensor = m_device.getSensor(hists.sensorId);
     const Mechanics::Plane& plane = geo.getPlane(hists.sensorId);
-    constexpr int binOffset = -1;
 
-    auto resDU = Utils::getRestrictedMean(hists.corrU, binOffset);
-    auto resDV = Utils::getRestrictedMean(hists.corrV, binOffset);
-    auto resDGamma = Utils::getRestrictedMean(hists.corrGamma, binOffset);
+    auto resDU = Utils::getRestrictedMean(hists.corrU, kBinsRestricted);
+    auto resDV = Utils::getRestrictedMean(hists.corrV, kBinsRestricted);
+    auto resDGamma = Utils::getRestrictedMean(hists.corrGamma, kBinsRestricted);
     auto du = resDU.first;
     auto varDU = resDU.second;
     auto dv = resDV.first;
