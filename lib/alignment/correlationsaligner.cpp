@@ -49,6 +49,9 @@ void Alignment::CorrelationsAligner::finalize() { m_corr->finalize(); }
 
 Mechanics::Geometry Alignment::CorrelationsAligner::updatedGeometry() const
 {
+  // how many bins are used to calculated the means
+  static constexpr int kBinsRestricted = 3;
+
   Mechanics::Geometry geo = m_device.geometry();
 
   // align sensors that are located before the fixed sensor
@@ -57,7 +60,6 @@ Mechanics::Geometry Alignment::CorrelationsAligner::updatedGeometry() const
   double deltaXVar = 0;
   double deltaY = 0;
   double deltaYVar = 0;
-  constexpr int binOffset = 3;
   // backward ids are ordered opposite the beam direction
   for (Index currId : m_backwardIds) {
     const TH1D* hX = m_corr->getHistDiffX(currId, nextId);
@@ -65,11 +67,10 @@ Mechanics::Geometry Alignment::CorrelationsAligner::updatedGeometry() const
 
     // correlation was calculated in reverse order and we get an
     // additional sign for the correction
-    auto resultX = Utils::getRestrictedMean(hX, binOffset);
+    auto resultX = Utils::getRestrictedMean(hX, kBinsRestricted);
     deltaX += resultX.first;
     deltaXVar += resultX.second;
-
-    auto resultY = Utils::getRestrictedMean(hY, binOffset);
+    auto resultY = Utils::getRestrictedMean(hY, kBinsRestricted);
     deltaY += resultY.first;
     deltaYVar += resultY.second;
 
@@ -93,11 +94,11 @@ Mechanics::Geometry Alignment::CorrelationsAligner::updatedGeometry() const
     const TH1D* hX = m_corr->getHistDiffX(prevId, currId);
     const TH1D* hY = m_corr->getHistDiffY(prevId, currId);
 
-    auto resultX = Utils::getRestrictedMean(hX, binOffset);
+    auto resultX = Utils::getRestrictedMean(hX, kBinsRestricted);
     deltaX -= resultX.first;
     deltaXVar += resultX.second;
 
-    auto resultY = Utils::getRestrictedMean(hY, binOffset);
+    auto resultY = Utils::getRestrictedMean(hY, kBinsRestricted);
     deltaY -= resultY.first;
     deltaYVar += resultY.second;
 
@@ -105,7 +106,6 @@ Mechanics::Geometry Alignment::CorrelationsAligner::updatedGeometry() const
          " alignment corrections (after fixed sensor):");
     INFO("  dx:  ", deltaX, " ± ", std::sqrt(deltaXVar));
     INFO("  dy:  ", deltaY, " ± ", std::sqrt(deltaYVar));
-
     geo.correctGlobalOffset(currId, deltaX, deltaY, 0);
 
     prevId = currId;
