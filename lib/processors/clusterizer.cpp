@@ -103,8 +103,8 @@ void Processors::BinaryClusterizer::estimateProperties(
     Storage::Cluster& cluster) const
 {
   Vector2 pos = Vector2::Zero();
-  float time = std::numeric_limits<float>::max();
-  float value = 0;
+  int time = std::numeric_limits<int>::max();
+  int value = 0;
 
   for (const Storage::Hit& hit : cluster.hits()) {
     pos += hit.posPixel();
@@ -132,8 +132,8 @@ void Processors::ValueWeightedClusterizer::estimateProperties(
     Storage::Cluster& cluster) const
 {
   Vector2 pos = Vector2::Zero();
-  float time = std::numeric_limits<float>::max();
-  float value = 0;
+  int time = std::numeric_limits<int>::max();
+  int value = 0;
 
   for (const Storage::Hit& hit : cluster.hits()) {
     pos += hit.value() * hit.posPixel();
@@ -162,8 +162,8 @@ void Processors::FastestHitClusterizer::estimateProperties(
     Storage::Cluster& cluster) const
 {
   Vector2 pos = Vector2::Zero();
-  float time = std::numeric_limits<float>::max();
-  float value = 0;
+  int time = std::numeric_limits<int>::max();
+  int value = 0;
 
   for (const Storage::Hit& hit : cluster.hits()) {
     if (hit.time() < time) {
