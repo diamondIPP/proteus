@@ -63,22 +63,34 @@ public:
   {
     m_cov.block<2, 2>(Du, Du) = cov.template selfadjointView<Eigen::Lower>();
   }
-  /** Set covariance matrix from packed storage.
+  /** Set the spatial covariance matrix from packed storage.
    *
    * The iterator must point to a 10 element container that contains the
-   * lower triangular block of the symmetric covariance matrix in compressed
-   * column-major layout, i.e. [c00, c10, c20, c30, c11, ...].
+   * lower triangular block of the symmetric covariance matrix for the
+   * parameters [u, v, u', v'] in compressed column-major layout, i.e.
+   *
+   *     | c[0]                |
+   *     | c[1] c[4]           |
+   *     | c[2] c[5] c[7]      |
+   *     | c[3] c[6] c[8] c[9] |
+   *
    */
   template <typename InputIterator>
-  void setCovPacked(InputIterator in);
-  /** Store the covariance into packed storage.
+  void setCovSpatialPacked(InputIterator in);
+  /** Store the spatial covariance into packed storage.
    *
    * The iterator must point to a 10 element container that will be filled
-   * with the lower triangular block of the symmetric covariance matrix in
-   * compressed column-major layout, i.e. [c00, c10, c20, c30, c11, ...].
+   * with the lower triangular block of the symmetric covariance matrix for the
+   * parameters [u, v, u', v'] in compressed column-major layout, i.e.
+   *
+   *     | c[0]                |
+   *     | c[1] c[4]           |
+   *     | c[2] c[5] c[7]      |
+   *     | c[3] c[6] c[8] c[9] |
+   *
    */
   template <typename OutputIterator>
-  void getCovPacked(OutputIterator out) const;
+  void getCovSpatialPacked(OutputIterator out) const;
 
   /** Full parameter vector. */
   auto params() const { return m_params; }
@@ -115,35 +127,39 @@ std::ostream& operator<<(std::ostream& os, const TrackState& state);
 } // namespace Storage
 
 template <typename InputIterator>
-inline void Storage::TrackState::setCovPacked(InputIterator in)
+inline void Storage::TrackState::setCovSpatialPacked(InputIterator in)
 {
   // manual unpacking of compressed, column-major storage
-  m_cov(0, 0) = *(in++);
-  m_cov(1, 0) = m_cov(0, 1) = *(in++);
-  m_cov(2, 0) = m_cov(0, 2) = *(in++);
-  m_cov(3, 0) = m_cov(0, 3) = *(in++);
-  m_cov(1, 1) = *(in++);
-  m_cov(2, 1) = m_cov(1, 2) = *(in++);
-  m_cov(3, 1) = m_cov(1, 3) = *(in++);
-  m_cov(2, 2) = *(in++);
-  m_cov(3, 2) = m_cov(2, 3) = *(in++);
-  m_cov(3, 3) = *(in++);
+  // clang-format off
+  m_cov(U,  U)                  = *(in++);
+  m_cov(V,  U)  = m_cov(U,  V)  = *(in++);
+  m_cov(Du, U)  = m_cov(U,  Du) = *(in++);
+  m_cov(Dv, U)  = m_cov(U,  Dv) = *(in++);
+  m_cov(V,  V)                  = *(in++);
+  m_cov(Du, V)  = m_cov(V,  Du) = *(in++);
+  m_cov(Dv, V)  = m_cov(V,  Du) = *(in++);
+  m_cov(Du, Du)                 = *(in++);
+  m_cov(Dv, Du) = m_cov(Du, Dv) = *(in++);
+  m_cov(Dv, Dv)                 = *(in++);
+  // clang-format on
 }
 
 template <typename OutputIterator>
-inline void Storage::TrackState::getCovPacked(OutputIterator out) const
+inline void Storage::TrackState::getCovSpatialPacked(OutputIterator out) const
 {
   // manual packing using symmetric, compressed, column-major storage
-  *(out++) = m_cov(0, 0);
-  *(out++) = m_cov(1, 0);
-  *(out++) = m_cov(2, 0);
-  *(out++) = m_cov(3, 0);
-  *(out++) = m_cov(1, 1);
-  *(out++) = m_cov(2, 1);
-  *(out++) = m_cov(3, 1);
-  *(out++) = m_cov(2, 2);
-  *(out++) = m_cov(3, 2);
-  *(out++) = m_cov(3, 3);
+  // clang-format off
+  *(out++) = m_cov(U,   U);
+  *(out++) = m_cov(V,   U);
+  *(out++) = m_cov(Du,  U);
+  *(out++) = m_cov(Dv,  U);
+  *(out++) = m_cov(V,   V);
+  *(out++) = m_cov(Du,  V);
+  *(out++) = m_cov(Dv,  V);
+  *(out++) = m_cov(Du, Du);
+  *(out++) = m_cov(Dv, Du);
+  *(out++) = m_cov(Dv, Dv);
+  // clang-format on
 }
 
 #endif // PT_TRACKSTATE_H

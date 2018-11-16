@@ -262,7 +262,7 @@ bool Io::RceRootReader::read(Storage::Event& event)
     for (Int_t itrack = 0; itrack < numTracks; ++itrack) {
       Storage::TrackState state(trackX[itrack], trackY[itrack],
                                 trackSlopeX[itrack], trackSlopeY[itrack]);
-      state.setCovPacked(trackCov[itrack]);
+      state.setCovSpatialPacked(trackCov[itrack]);
       std::unique_ptr<Storage::Track> track(new Storage::Track(state));
       track->setGoodnessOfFit(trackChi2[itrack], trackDof[itrack]);
       event.addTrack(std::move(track));
@@ -283,7 +283,7 @@ bool Io::RceRootReader::read(Storage::Event& event)
         Storage::TrackState local(
             interceptU[iintercept], interceptV[iintercept],
             interceptSlopeU[iintercept], interceptSlopeV[iintercept]);
-        local.setCovPacked(interceptCov[iintercept]);
+        local.setCovSpatialPacked(interceptCov[iintercept]);
         sensorEvent.setLocalState(interceptTrack[iintercept], std::move(local));
       }
     }
@@ -441,7 +441,7 @@ void Io::RceRootWriter::append(const Storage::Event& event)
       trackY[itrack] = state.offset()[1];
       trackSlopeX[itrack] = state.slope()[0];
       trackSlopeY[itrack] = state.slope()[1];
-      state.getCovPacked(trackCov[itrack]);
+      state.getCovSpatialPacked(trackCov[itrack]);
     }
     m_tracks->Fill();
   }
@@ -497,7 +497,7 @@ void Io::RceRootWriter::append(const Storage::Event& event)
         interceptV[numIntercepts] = local.offset()[1];
         interceptSlopeU[numIntercepts] = local.slope()[0];
         interceptSlopeV[numIntercepts] = local.slope()[1];
-        local.getCovPacked(interceptCov[numIntercepts]);
+        local.getCovSpatialPacked(interceptCov[numIntercepts]);
         interceptTrack[numIntercepts] = s.first;
         numIntercepts += 1;
       }
