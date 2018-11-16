@@ -22,23 +22,24 @@ public:
 
   void setPixel(const Vector2& cr, const SymMatrix2& cov);
   void setLocal(const Vector2& uv, const SymMatrix2& cov);
-  void setTime(float time_) { m_time = time_; }
-  void setValue(float value_) { m_value = value_; }
+  void setTime(Scalar time_) { m_time = time_; }
+  void setValue(Scalar value_) { m_value = value_; }
   void setTrack(Index track);
 
-  Vector2 posPixel() const { return {m_col, m_row}; }
-  Vector2 posLocal() const { return {m_u, m_v}; }
+  auto posPixel() const { return m_cr; }
+  auto posLocal() const { return m_uv; }
   auto covPixel() const { return m_crCov; }
   auto covLocal() const { return m_uvCov; }
-  float time() const { return m_time; }
-  float value() const { return m_value; }
+  auto time() const { return m_time; }
+  auto value() const { return m_value; }
+
   /** The area enclosing the cluster in pixel coordinates.
    *
    * \returns Empty area for an empty cluster.
    */
   Area areaPixel() const;
-  int sizeCol() const;
-  int sizeRow() const;
+  size_t sizeCol() const { return areaPixel().length(0); }
+  size_t sizeRow() const { return areaPixel().length(1); }
 
   bool hasRegion() const;
   Index region() const;
@@ -56,10 +57,10 @@ public:
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
-  float m_col, m_row;
-  float m_u, m_v;
-  float m_time;
-  float m_value;
+  Vector2 m_cr;
+  Vector2 m_uv;
+  Scalar m_time;
+  Scalar m_value;
   SymMatrix2 m_crCov;
   SymMatrix2 m_uvCov;
 
