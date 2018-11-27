@@ -40,12 +40,15 @@ using Vector = Eigen::Matrix<T, kSize, 1>;
 // For non-quadratic matrices the first number is the target dimensionality and
 // the second number is the source dimensionality.
 using Matrix2 = Matrix<Scalar, 2, 2>;
-using Matrix23 = Matrix<Scalar, 2, 3>;
+using Matrix24 = Matrix<Scalar, 2, 4>;
 using Matrix26 = Matrix<Scalar, 2, 6>;
 using Matrix3 = Matrix<Scalar, 3, 3>;
-using Matrix32 = Matrix<Scalar, 3, 2>;
+using Matrix34 = Matrix<Scalar, 3, 4>;
 using Matrix4 = Matrix<Scalar, 4, 4>;
+using Matrix42 = Matrix<Scalar, 4, 2>;
+using Matrix43 = Matrix<Scalar, 4, 3>;
 using Matrix6 = Matrix<Scalar, 6, 6>;
+using DiagMatrix4 = DiagMatrix<Scalar, 4>;
 using DiagMatrix6 = DiagMatrix<Scalar, 6>;
 using SymMatrix2 = SymMatrix<Scalar, 2>;
 using SymMatrix3 = SymMatrix<Scalar, 3>;
@@ -107,6 +110,21 @@ inline auto mahalanobis(const Eigen::MatrixBase<T>& cov,
 }
 
 /** Conversion from angle in radian to equivalent angle in degrees. */
-static constexpr double degree(double radian) { return radian * 180.0 / M_PI; }
+constexpr double degree(double radian) { return radian * 180.0 / M_PI; }
+
+/** Print format helper for Eigen types. */
+template <typename T>
+inline Eigen::WithFormat<T> format(const Eigen::DenseBase<T>& mtx)
+{
+  if ((mtx.rows() == 1) or (mtx.cols() == 1)) {
+    // print all vectors as row vectors [x, y, z, ...]
+    return mtx.format(Eigen::IOFormat(4, 0, ",", "", "", "", "[", "]"));
+  } else {
+    // print matrices as
+    // [ a, b, c
+    //   d, e, f]
+    return mtx.format(Eigen::IOFormat(4, 0, ",", "\n", "", ",", "[", "]"));
+  }
+}
 
 #endif // PT_DEFINITIONS_H
