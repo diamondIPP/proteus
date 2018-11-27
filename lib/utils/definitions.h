@@ -59,6 +59,26 @@ using Vector3 = Vector<Scalar, 3>;
 using Vector4 = Vector<Scalar, 4>;
 using Vector6 = Vector<Scalar, 6>;
 
+// convenience enums to access coordinates or track parameters by name
+enum CoordinateIndex {
+  kX = 0,
+  kY = 1,
+  kZ = 2,
+  kT = 3,
+  kU = kX,
+  kV = kY,
+  kW = kZ,
+  kS = kT,
+};
+enum TrackParameterIndex {
+  kLoc0 = 0,
+  kLoc1 = 1,
+  kTime = 2,
+  kSlopeLoc0 = 3,
+  kSlopeLoc1 = 4,
+  kSlopeTime = 5,
+};
+
 /** Transform the covariance to a different base using a Jacobian.
  *
  * Compute `jac * cov * jac^T`. This only gives the correct result if
