@@ -8,7 +8,6 @@
 #ifndef PT_DEFINITIONS_H
 #define PT_DEFINITIONS_H
 
-#include <cassert>
 #include <utility>
 
 #include <Eigen/Cholesky>
@@ -21,7 +20,7 @@ using Index = unsigned int;
 constexpr Index kInvalidIndex = static_cast<Index>(-1);
 
 // Digital matrix position defined by column and row index
-typedef std::pair<Index, Index> ColumnRow;
+using ColumnRow = std::pair<Index, Index>;
 
 // Default floating point scalar type
 using Scalar = double;
