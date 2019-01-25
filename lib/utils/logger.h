@@ -17,9 +17,13 @@
 namespace Utils {
 namespace detail {
 
-// support << operator for std::vector
 template <typename T>
-std::ostream& operator<<(std::ostream& os, const std::vector<T>& things)
+inline void print_impl(std::ostream& os, const T& thing)
+{
+  os << thing;
+}
+template <typename T>
+inline void print_impl(std::ostream& os, const std::vector<T>& things)
 {
   bool first = true;
   os << '[';
@@ -32,20 +36,14 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& things)
     os << t;
   }
   os << ']';
-  return os;
 }
 
-// simple printing w/o << operators
-template <typename T>
-void print(std::ostream& os, T&& thing)
+// shorter printing w/o << operators
+template <typename... Ts>
+inline void print(std::ostream& os, const Ts&... things)
 {
-  os << thing;
-}
-template <typename T0, typename... TN>
-void print(std::ostream& os, T0&& thing, TN&&... rest)
-{
-  os << thing;
-  print(os, rest...);
+  using swallow = int[];
+  (void)swallow{0, (print_impl(os, things), 0)...};
 }
 
 // helper function to suppress unused variables warnings in non-debug builds
