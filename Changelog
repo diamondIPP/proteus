@@ -107,6 +107,18 @@ User-visible changes
     the track. The track time is exported as an additional branch in the
     match trees output produced by ``pt-recon`` and ``pt-match``. All tools
     also produce additional histograms related to the track time.
+*   Digital coordinates now always refer to the bin center.
+
+    Previously, the pixel address (0,0) would correspond to the lower-left
+    corner of a pixel that covers the area [0,1) along both column and row
+    axis, with the position (0.5,0.5) describing the pixel center. This
+    behaviour was different from timestamp or value bins. To simplify
+    conversions and unify behaviour, now the pixel address (0,0) corresponds
+    directly to the pixel center and the pixel covers an area [-0.5,0.5) along
+    each axis.
+
+    This might impact the output data values and will shift the boundaries for
+    some histograms.
 
 Bugfixes
 --------
