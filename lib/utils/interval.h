@@ -37,13 +37,19 @@ public:
   constexpr Interval(T a, T b) : m_min((a < b) ? a : b), m_max((a < b) ? b : a)
   {
   }
+  /** Construct from an interval of another type. */
+  template <typename U>
+  constexpr Interval(const Interval<U>& other)
+      : m_min(other.min()), m_max(other.max())
+  {
+  }
 
   constexpr T length() const { return m_max - m_min; }
   constexpr T min() const { return m_min; }
   constexpr T max() const { return m_max; }
   /** Check if the interval is empty. */
   constexpr bool isEmpty() const { return (m_min == m_max); }
-  constexpr bool isInside(T x) const { return (m_min <= x) && (x < m_max); }
+  constexpr bool isInside(T x) const { return (m_min <= x) and (x < m_max); }
 
   /** Limit the interval to the intersection with the second interval. */
   template <typename U>
@@ -126,16 +132,13 @@ public:
   }
 
   /** The full interval definition of the i-th axis. */
-  constexpr const AxisInterval& interval(unsigned int i) const
-  {
-    return m_axes[i];
-  }
+  constexpr AxisInterval interval(size_t i) const { return m_axes.at(i); }
   /** The interval-length along the i-th axis. */
-  constexpr T length(size_t i) const { return interval(i).length(); }
+  constexpr T length(size_t i) const { return m_axes.at(i).length(); }
   /** The minimal value along the i-th axis. */
-  constexpr T min(size_t i) const { return interval(i).min(); }
+  constexpr T min(size_t i) const { return m_axes.at(i).min(); }
   /** The maximal value along the i-th axis. */
-  constexpr T max(size_t i) const { return interval(i).max(); }
+  constexpr T max(size_t i) const { return m_axes.at(i).max(); }
 
   /** The N-dimensional volume of the box. */
   T volume() const
@@ -195,7 +198,7 @@ private:
 
 /** Calculate maximum box that is contained in both input boxes. */
 template <size_t N, typename T0, typename T1>
-Box<N, T0> intersection(const Box<N, T0>& box0, const Box<N, T1>& box1)
+inline Box<N, T0> intersection(const Box<N, T0>& box0, const Box<N, T1>& box1)
 {
   Box<N, T0> box = box0;
   box.intersect(box1);
@@ -204,7 +207,7 @@ Box<N, T0> intersection(const Box<N, T0>& box0, const Box<N, T1>& box1)
 
 /** Calculate minimum bounding box that contains both input boxes. */
 template <size_t N, typename T0, typename T1>
-Box<N, T0> boundingBox(const Box<N, T0>& box0, const Box<N, T1>& box1)
+inline Box<N, T0> boundingBox(const Box<N, T0>& box0, const Box<N, T1>& box1)
 {
   Box<N, T0> box = box0;
   box.enclose(box1);
@@ -212,7 +215,7 @@ Box<N, T0> boundingBox(const Box<N, T0>& box0, const Box<N, T1>& box1)
 }
 
 template <size_t N, typename T, typename U>
-Box<N, T> enlarged(const Box<N, T>& box, U extra)
+inline Box<N, T> enlarged(const Box<N, T>& box, U extra)
 {
   Box<N, T> larger = box;
   larger.enlarge(extra);
@@ -220,7 +223,7 @@ Box<N, T> enlarged(const Box<N, T>& box, U extra)
 }
 
 template <typename T>
-std::ostream& operator<<(std::ostream& os, const Interval<T>& interval)
+inline std::ostream& operator<<(std::ostream& os, const Interval<T>& interval)
 {
   os << '[' << interval.min() << ", " << interval.max() << ')';
   return os;
