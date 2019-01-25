@@ -6,6 +6,9 @@
 
 #include "root.h"
 
+#include <cassert>
+#include <stdexcept>
+
 #include <Compression.h>
 
 #include "utils/logger.h"
@@ -93,6 +96,18 @@ TDirectory* Utils::makeDir(TDirectory* parent, const std::string& path)
   return dir;
 }
 
+Utils::HistAxis::HistAxis(double a, double b, int n, std::string l)
+  : limit0(a), limit1(b), bins(n), label(std::move(l))
+{
+  assert((0 < n) and "Axis must have at least one bin");
+}
+
+Utils::HistAxis Utils::HistAxis::Integer(int a, int b, std::string l)
+{
+  // integer values are placed at bin centers
+  return {a - 0.5, b - 0.5, std::abs(b - a), std::move(l)};
+}
+
 TH1D* Utils::makeH1(TDirectory* dir, const std::string& name, HistAxis axis)
 {
   assert(dir && "Directory must be non-NULL");
@@ -146,8 +161,8 @@ TH2D* Utils::makeTransientH2(HistAxis axis0, HistAxis axis1)
   name += std::to_string(axis1.limit1);
   name += std::to_string(axis1.bins);
 
-  TH2D* h = new TH2D("", "", axis0.bins, axis0.limit0, axis0.limit1, axis1.bins,
-                     axis1.limit0, axis1.limit1);
+  TH2D* h = new TH2D(name.c_str(), "", axis0.bins, axis0.limit0, axis0.limit1,
+                     axis1.bins, axis1.limit0, axis1.limit1);
   h->SetXTitle(axis0.label.c_str());
   h->SetYTitle(axis1.label.c_str());
   h->SetDirectory(nullptr);
@@ -156,9 +171,6 @@ TH2D* Utils::makeTransientH2(HistAxis axis0, HistAxis axis1)
 
 void Utils::fillDist(const TH2D* values, TH1D* dist)
 {
-  // ensure all values are binned
-  dist->SetBins(dist->GetNbinsX(), values->GetMinimum(),
-                std::nextafter(values->GetMaximum(), values->GetMaximum() + 1));
   for (int icol = 1; icol <= values->GetNbinsX(); ++icol) {
     for (int irow = 1; irow <= values->GetNbinsY(); ++irow) {
       auto value = values->GetBinContent(icol, irow);
@@ -171,7 +183,7 @@ void Utils::fillDist(const TH2D* values, TH1D* dist)
 
 std::pair<double, double> Utils::getRestrictedMean(const TH1D* h1, int offset)
 {
-  assert((0 <= offset) && "");
+  assert((0 <= offset) && "Offset must be zero or positive");
 
   // use local non-stored copy of the histogram
   TH1D tmp;
