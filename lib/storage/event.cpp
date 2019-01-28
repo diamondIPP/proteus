@@ -45,16 +45,18 @@ void Storage::Event::addTrack(std::unique_ptr<Track> track)
 size_t Storage::Event::getNumHits() const
 {
   size_t n = 0;
-  for (const auto& se : m_sensors)
+  for (const auto& se : m_sensors) {
     n += se.numHits();
+  }
   return n;
 }
 
 size_t Storage::Event::getNumClusters() const
 {
   size_t n = 0;
-  for (const auto& se : m_sensors)
+  for (const auto& se : m_sensors) {
     n += se.numClusters();
+  }
   return n;
 }
 
@@ -73,7 +75,7 @@ void Storage::Event::print(std::ostream& os, const std::string& prefix) const
   if (!m_tracks.empty()) {
     os << prefix << "tracks:\n";
     for (size_t itrack = 0; itrack < m_tracks.size(); ++itrack) {
-      os << prefix << "  track " << itrack << ":\n";
+      os << prefix << "  " << itrack << ":\n";
       m_tracks[itrack]->print(os, prefix + "    ");
     }
   }
