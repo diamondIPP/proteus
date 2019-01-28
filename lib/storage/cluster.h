@@ -20,18 +20,43 @@ public:
 
   Cluster();
 
-  void setPixel(const Vector2& cr, const SymMatrix2& cov);
-  void setLocal(const Vector2& uv, const SymMatrix2& cov);
-  void setTime(Scalar time_) { m_time = time_; }
-  void setValue(Scalar value_) { m_value = value_; }
+  void setPixel(const Vector2& cr,
+                const SymMatrix2& crCov,
+                Scalar timestamp,
+                Scalar timestampVar = static_cast<Scalar>(1.0 / 12.0));
+  template <typename Position, typename Covariance>
+  void setLocal(const Eigen::MatrixBase<Position>& loc,
+                const Eigen::MatrixBase<Covariance>& cov)
+  {
+    m_pos = loc;
+    m_posCov = cov.template selfadjointView<Eigen::Lower>();
+  }
+  void setValue(Scalar value) { m_value = value; }
   void setTrack(Index track);
 
-  auto posPixel() const { return m_cr; }
-  auto posLocal() const { return m_uv; }
-  auto covPixel() const { return m_crCov; }
-  auto covLocal() const { return m_uvCov; }
-  auto time() const { return m_time; }
-  auto value() const { return m_value; }
+  // properties in the pixel system
+  Scalar col() const { return m_col; }
+  Scalar colVar() const { return m_colVar; }
+  Scalar row() const { return m_row; }
+  Scalar rowVar() const { return m_rowVar; }
+  Scalar colRowCov() const { return m_colRowCov; }
+  Scalar timestamp() const { return m_timestamp; }
+  Scalar timestampVar() const { return m_timestampVar; }
+  Scalar value() const { return m_value; }
+
+  // properties in the local system
+  /** On-plane local spatial coordinates. */
+  auto location() const { return m_pos.segment<2>(kU); }
+  /** On-plane local spatial covariance. */
+  auto locationCov() const { return m_posCov.block<2, 2>(kU, kU); }
+  /** Local time. */
+  Scalar time() const { return m_pos[kS]; }
+  /** Local time variance. */
+  Scalar timeVar() const { return m_posCov(kS, kS); }
+  /** Full position in local coordinates. */
+  const Vector4& position() const { return m_pos; }
+  /** Full position covariance in local coordinates. */
+  const SymMatrix4& positionCov() const { return m_posCov; }
 
   /** The area enclosing the cluster in pixel coordinates.
    *
@@ -54,15 +79,17 @@ public:
   bool isMatched() const { return m_matchedState != kInvalidIndex; }
   Index matchedState() const { return m_matchedState; }
 
-  void print(std::ostream& os, const std::string& prefix = std::string()) const;
-
 private:
-  Vector2 m_cr;
-  Vector2 m_uv;
-  Scalar m_time;
+  Scalar m_col;
+  Scalar m_row;
+  Scalar m_timestamp;
   Scalar m_value;
-  SymMatrix2 m_crCov;
-  SymMatrix2 m_uvCov;
+  Scalar m_colVar;
+  Scalar m_rowVar;
+  Scalar m_colRowCov;
+  Scalar m_timestampVar;
+  Vector4 m_pos;
+  SymMatrix4 m_posCov;
 
   Hits m_hits; // List of hits composing the cluster
 
