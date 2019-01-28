@@ -78,7 +78,7 @@ std::string Io::Timepix3Reader::name() const { return "Timepix3Reader"; }
 void Io::Timepix3Reader::skip(uint64_t n)
 {
 
-  Storage::SensorEvent evt(0);
+  Storage::SensorEvent evt;
   for (uint64_t i = 0; i < n; i++) {
     evt.clear(0, 0);
     if (!getSensorEvent(evt)) {
@@ -90,7 +90,7 @@ void Io::Timepix3Reader::skip(uint64_t n)
 bool Io::Timepix3Reader::read(Storage::Event& event)
 {
 
-  Storage::SensorEvent sensorEvent(0);
+  Storage::SensorEvent sensorEvent;
   bool status = getSensorEvent(sensorEvent);
   // INFO("Frame ", sensorEvent.frame(), " with ", sensorEvent.numHits(), " hits
   // at ", ((double)sensorEvent.timestamp() / (4096. * 40000000.)), "sec");
