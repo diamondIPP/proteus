@@ -2,29 +2,37 @@
 
 #include <ostream>
 
-Storage::TrackState::TrackState()
-    : TrackState(Vector4::Constant(std::numeric_limits<double>::quiet_NaN()),
-                 std::numeric_limits<float>::quiet_NaN())
+#include "utils/logger.h"
+
+Storage::TrackState::TrackState(Scalar location0,
+                                Scalar location1,
+                                Scalar slope0,
+                                Scalar slope1)
+    : TrackState()
 {
+  m_params[kLoc0] = location0;
+  m_params[kLoc1] = location1;
+  m_params[kSlopeLoc0] = slope0;
+  m_params[kSlopeLoc1] = slope1;
 }
 
-Storage::TrackState::TrackState(
-    float u, float v, float dU, float dV, float time)
-    : TrackState(Vector4(u, v, dU, dV), time)
-{
-}
-
-Storage::TrackState::TrackState(const Vector2& offset,
+Storage::TrackState::TrackState(const Vector2& location,
                                 const Vector2& slope,
-                                float time)
-    : TrackState(Vector4(offset[0], offset[1], slope[0], slope[1]), time)
+                                const SymMatrix2& locationCov,
+                                const SymMatrix2& slopeCov)
+    : TrackState(location[0], location[1], slope[0], slope[1])
 {
+  m_cov.block<2, 2>(kLoc0, kLoc0) = locationCov;
+  m_cov.block<2, 2>(kSlopeLoc0, kSlopeLoc1) = slopeCov;
+  m_cov.block<2, 2>(kLoc0, kSlopeLoc0).setZero();
+  m_cov.block<2, 2>(kSlopeLoc0, kLoc0).setZero();
 }
 
 std::ostream& Storage::operator<<(std::ostream& os, const TrackState& state)
 {
-  os << "offset=[" << state.offset().transpose() << "]";
-  os << " slope=[" << state.slope().transpose() << "]";
+  os << "loc=" << format(state.location());
   os << " time=" << state.time();
+  os << " slope=" << format(state.slope());
+  os << " dtime=" << state.slopeTime();
   return os;
 }
