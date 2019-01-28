@@ -4,8 +4,8 @@
 
 #include "storage/track.h"
 
-Storage::SensorEvent::SensorEvent(Index sensor)
-    : m_sensor(sensor), m_frame(UINT64_MAX), m_timestamp(UINT64_MAX)
+Storage::SensorEvent::SensorEvent()
+    : m_frame(UINT64_MAX), m_timestamp(UINT64_MAX)
 {
 }
 

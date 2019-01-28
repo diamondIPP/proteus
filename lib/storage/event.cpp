@@ -8,7 +8,7 @@ Storage::Event::Event(size_t sensors)
 {
   m_sensors.reserve(sensors);
   for (size_t isensor = 0; isensor < sensors; ++isensor)
-    m_sensors.emplace_back(SensorEvent(isensor));
+    m_sensors.emplace_back(SensorEvent());
 }
 
 void Storage::Event::clear(uint64_t frame, uint64_t timestamp)
@@ -26,7 +26,6 @@ void Storage::Event::setSensorData(Index isensor, SensorEvent&& sensorEvent)
          "Sensor index must be valid");
 
   m_sensors[isensor] = std::move(sensorEvent);
-  m_sensors[isensor].m_sensor = isensor;
   m_sensors[isensor].m_states.clear();
 }
 
