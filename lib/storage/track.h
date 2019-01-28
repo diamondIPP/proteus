@@ -28,11 +28,11 @@ public:
   /** Construct a track without hits but with known global parameters. */
   Track(const TrackState& global);
 
-  void setGoodnessOfFit(float chi2, int dof) { m_chi2 = chi2, m_dof = dof; }
+  void setGoodnessOfFit(Scalar chi2, int dof) { m_chi2 = chi2, m_dof = dof; }
   void setGlobalState(const TrackState& state) { m_state = state; }
 
-  float chi2() const { return m_chi2; }
-  float reducedChi2() const { return m_chi2 / m_dof; }
+  Scalar chi2() const { return m_chi2; }
+  Scalar reducedChi2() const { return m_chi2 / m_dof; }
   int degreesOfFreedom() const { return m_dof; }
   const TrackState& globalState() const { return m_state; }
 
@@ -51,7 +51,7 @@ private:
   void freezeClusterAssociation();
 
   TrackState m_state;
-  float m_chi2;
+  Scalar m_chi2;
   int m_dof;
   Index m_index;
   Clusters m_clusters;
