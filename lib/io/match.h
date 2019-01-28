@@ -38,7 +38,7 @@ public:
   void append(const Storage::Event& event) override final;
 
 private:
-  static constexpr size_t MAX_CLUSTER_SIZE = 1024;
+  static constexpr size_t kMaxClusterSize = 1024;
 
   struct EventData {
     uint64_t frame;
@@ -50,30 +50,33 @@ private:
     void set(const Storage::SensorEvent& e);
   };
   struct TrackData {
-    float u, v, du, dv;
-    float stdU, stdV, corrUV;
-    float col, row;
-    float time;
+    float u, v, time, du, dv, dtime;
+    float stdU, stdV, stdTime;
+    float corrUV;
+    float col, row, timestamp;
     float chi2;
     int16_t dof;
     int16_t size;
 
     void addToTree(TTree* tree);
+    void set(const Storage::Track& track,
+             const Storage::TrackState& state,
+             const Vector4& posPixel);
   };
   struct ClusterData {
-    float u, v;
-    float stdU, stdV, corrUV;
-    float col, row;
-    float time, value;
+    float u, v, time;
+    float stdU, stdV, stdTime;
+    float corrUV;
+    float col, row, timestamp, value;
     int16_t region;
     int16_t size, sizeCol, sizeRow;
-    int16_t hitCol[MAX_CLUSTER_SIZE];
-    int16_t hitRow[MAX_CLUSTER_SIZE];
-    float hitTime[MAX_CLUSTER_SIZE];
-    float hitValue[MAX_CLUSTER_SIZE];
+    int16_t hitCol[kMaxClusterSize];
+    int16_t hitRow[kMaxClusterSize];
+    int16_t hitTimestamp[kMaxClusterSize];
+    int16_t hitValue[kMaxClusterSize];
 
     void addToTree(TTree* tree);
-    void set(const Storage::Cluster& c);
+    void set(const Storage::Cluster& cluster);
     void invalidate();
   };
   struct DistData {
