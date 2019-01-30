@@ -17,12 +17,12 @@ static void fitLocal(const Storage::Track& track,
                      const Mechanics::Geometry& geo,
                      const Mechanics::Plane& target,
                      Storage::TrackState& state,
-                     float& chi2,
+                     Scalar& chi2,
                      int& dof,
                      Index ignoreSensorId = kInvalidIndex)
 {
   Tracking::LineFitter3D fitter;
-  float time = std::numeric_limits<float>::max();
+  auto time = std::numeric_limits<Scalar>::max();
 
   for (const auto& ci : track.clusters()) {
     // only add the cluster if it is not ignored
@@ -32,21 +32,20 @@ static void fitLocal(const Storage::Track& track,
     const auto& source = geo.getPlane(ci.first);
     const Storage::Cluster& cluster = ci.second;
 
-    // source local to target local assuming a position on the local source plane
-    Vector3 uvw = target.toLocal(source.toGlobal(cluster.posLocal()));
-    // the extra eval is needed to make older Eigen/compiler versions happy
-    Matrix2 jac = target.rotationToLocal().eval().topRows<2>() *
-                  source.rotationToGlobal().leftCols<2>();
-    SymMatrix2 cov = transformCovariance(jac, cluster.covLocal());
-    fitter.addPoint(uvw[0], uvw[1], uvw[2], 1 / cov(0, 0), 1 / cov(1, 1));
+    // source local to target local assuming position on the local source plane
+    Vector4 local = target.toLocal(source.toGlobal(cluster.position()));
+    Matrix4 jac = target.linearToLocal() * source.linearToGlobal();
+    Vector4 weight = transformCovariance(jac, cluster.positionCov())
+                         .diagonal()
+                         .cwiseInverse();
+    fitter.addPoint(local, weight);
 
     // the track time is not fitted; fasted time is selected for now
     time = std::min(time, cluster.time());
   }
 
   fitter.fit();
-  state = Storage::TrackState(fitter.params(), time);
-  state.setCov(fitter.cov());
+  state = Storage::TrackState(fitter.params(), fitter.cov());
   chi2 = fitter.chi2();
   dof = fitter.dof();
 }
@@ -60,16 +59,15 @@ std::string Tracking::StraightFitter::name() const { return "StraightFitter"; }
 
 void Tracking::StraightFitter::execute(Storage::Event& event) const
 {
-  const Mechanics::Plane kGlobal; // default plane is the global plane
   Storage::TrackState state;
-  float chi2;
+  Scalar chi2;
   int dof;
 
   for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
     Storage::Track& track = event.getTrack(itrack);
 
     // global fit for common goodness-of-fit
-    fitLocal(track, m_geo, kGlobal, state, chi2, dof);
+    fitLocal(track, m_geo, Mechanics::Plane{}, state, chi2, dof);
     track.setGlobalState(state);
     track.setGoodnessOfFit(chi2, dof);
 
@@ -94,16 +92,15 @@ std::string Tracking::UnbiasedStraightFitter::name() const
 
 void Tracking::UnbiasedStraightFitter::execute(Storage::Event& event) const
 {
-  const Mechanics::Plane kGlobal; // default plane is the global plane
   Storage::TrackState state;
-  float chi2;
+  Scalar chi2;
   int dof;
 
   for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
     Storage::Track& track = event.getTrack(itrack);
 
     // global fit for common goodness-of-fit
-    fitLocal(track, m_geo, kGlobal, state, chi2, dof);
+    fitLocal(track, m_geo, Mechanics::Plane{}, state, chi2, dof);
     track.setGlobalState(state);
     track.setGoodnessOfFit(chi2, dof);
 

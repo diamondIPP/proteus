@@ -187,6 +187,10 @@ Internal changes
 *   Add ``Utils::openRoot{Read/Write}`` helpers with error handling and
     automatic file closing on destruction.
 *   All geometry calculations are performed using 4d coordinates.
+*   The ``Tracking::LineFitterND`` is now templated on the input coordinates
+    to be able to support fitting with and without the time component. Its
+    dependency on the geometry classes was removed and it only encapsulates
+    the linear regression math.
 
 v1.3.0 (2017-12-06)
 ===================
