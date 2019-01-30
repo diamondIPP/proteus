@@ -191,6 +191,8 @@ Internal changes
     to be able to support fitting with and without the time component. Its
     dependency on the geometry classes was removed and it only encapsulates
     the linear regression math.
+*   Track propagation uses 6d state vectors that include time and time slope
+    (inverse velocity) along the propagation path.
 
 v1.3.0 (2017-12-06)
 ===================

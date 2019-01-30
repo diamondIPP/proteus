@@ -14,27 +14,27 @@
 
 namespace Tracking {
 
-/** Transport jacobian of the track slope between two coordinate systems.
+/** Spatial slope [slope0,slope1] transport jacobian between two systems.
  *
- * \param direction  Direction vector in the source system
- * \param rotation   Rotation matrix from the source to the target system
+ * \param tangent   Track tangent in the source local system
+ * \param toTarget  Transformation from source local to the target local system
  */
-Matrix2 jacobianSlopeSlope(const Vector3& direction, const Matrix3& rotation);
+Matrix2 jacobianSlopeSlope(const Vector4& tangent, const Matrix4& toTarget);
 
-/** Transport jacobian of the full track state between two coordinate systems.
+/** Full parameter transport jacobian between two systems.
  *
- * \param direction  Direction vector in the source system
- * \param rotation   Rotation matrix from the source to the target system
+ * \param tangent   Track tangent in the source local system
+ * \param toTarget  Transformation from source local to the target local system
+ * \param w         Propagation distance along the target normal direction
  */
-Matrix4 jacobianState(const Vector3& direction, const Matrix3& rotation);
+Matrix6
+jacobianState(const Vector4& tangent, const Matrix4& toTarget, Scalar w);
 
 /** Propagate to the target plane and return the propagated state.
  *
  * \param state   Track state on the source plane
  * \param source  Source plane
  * \param target  Target plane
- *
- * \warning Only propagates offset uncertainty for now.
  */
 Storage::TrackState propagate_to(const Storage::TrackState& state,
                                  const Mechanics::Plane& source,
