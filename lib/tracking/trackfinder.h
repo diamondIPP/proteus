@@ -48,7 +48,8 @@ public:
 private:
   using TrackPtr = std::unique_ptr<Storage::Track>;
 
-  void searchSensor(Storage::SensorEvent& sensorEvent,
+  void searchSensor(Index sensorId,
+                    Storage::SensorEvent& sensorEvent,
                     std::vector<TrackPtr>& candidates) const;
   void selectTracks(std::vector<TrackPtr>& candidates,
                     Storage::Event& event) const;

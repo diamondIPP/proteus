@@ -63,7 +63,8 @@ void Tracking::TrackFinder::execute(Storage::Event& event) const
 
     // second iteration over remaining sensors to find compatible points
     for (size_t j = i + 1; j < m_sensorIds.size(); ++j) {
-      searchSensor(event.getSensorEvent(m_sensorIds[j]), candidates);
+      searchSensor(m_sensorIds[j], event.getSensorEvent(m_sensorIds[j]),
+                   candidates);
 
       // remove seeds that are already too short
       size_t remainingSensors = m_sensorIds.size() - (j + 1);
@@ -100,9 +101,11 @@ void Tracking::TrackFinder::execute(Storage::Event& event) const
  * Ambiguities are not resolved but result in additional track candidates.
  */
 void Tracking::TrackFinder::searchSensor(
-    Storage::SensorEvent& sensorEvent, std::vector<TrackPtr>& candidates) const
+    Index sensorId,
+    Storage::SensorEvent& sensorEvent,
+    std::vector<TrackPtr>& candidates) const
 {
-  const Mechanics::Plane& target = m_geo.getPlane(sensorEvent.sensor());
+  const Mechanics::Plane& target = m_geo.getPlane(sensorId);
 
   // loop only over the initial candidates and not the added ones
   Index numTracks = static_cast<Index>(candidates.size());
@@ -113,11 +116,10 @@ void Tracking::TrackFinder::searchSensor(
     Index matched = kInvalidIndex;
 
     // estimated track on the source plane using last cluster and beam
-    Storage::TrackState onSource(lastCluster.posLocal(),
-                                 m_geo.getBeamSlope(lastSensor));
-    onSource.setCovOffset(lastCluster.covLocal());
-    onSource.setCovSlope(m_geo.getBeamCovariance(lastSensor));
-
+    Storage::TrackState onSource(lastCluster.position(),
+                                 lastCluster.positionCov(),
+                                 m_geo.getBeamSlope(lastSensor),
+                                 m_geo.getBeamSlopeCovariance(lastSensor));
     // propagate track to the target plane
     Storage::TrackState onTarget =
         Tracking::propagate_to(onSource, m_geo.getPlane(lastSensor), target);
@@ -129,8 +131,8 @@ void Tracking::TrackFinder::searchSensor(
       if (curr.isInTrack())
         continue;
 
-      Vector2 delta = curr.posLocal() - onTarget.offset();
-      SymMatrix2 cov = curr.covLocal() + onTarget.covOffset();
+      Vector2 delta(curr.u() - onTarget.loc0(), curr.v() - onTarget.loc1());
+      SymMatrix2 cov = curr.uvCov() + onTarget.loc01Cov();
       auto d2 = mahalanobisSquared(cov, delta);
 
       if ((0 < m_d2Max) && (m_d2Max < d2))
@@ -142,7 +144,7 @@ void Tracking::TrackFinder::searchSensor(
       } else {
         // matching ambiguity -> bifurcate track
         candidates.push_back(TrackPtr(new Track(track)));
-        candidates.back()->addCluster(sensorEvent.sensor(), curr);
+        candidates.back()->addCluster(sensorId, curr);
       }
     }
     // first matched cluster can be only be added after all other clusters
@@ -150,7 +152,7 @@ void Tracking::TrackFinder::searchSensor(
     // candidate when it bifurcates and the new candidate would have two
     // clusters on this sensor.
     if (matched != kInvalidIndex)
-      track.addCluster(sensorEvent.sensor(), sensorEvent.getCluster(matched));
+      track.addCluster(sensorId, sensorEvent.getCluster(matched));
   }
 }
 
@@ -163,12 +165,13 @@ static void fitChi2Only(const Mechanics::Geometry& geo, Storage::Track& track)
     const auto& plane = geo.getPlane(ci.first);
     const Storage::Cluster& cluster = ci.second;
     // convert to global system
-    Vector3 xyz = plane.toGlobal(cluster.posLocal());
-    SymMatrix3 cov = transformCovariance(plane.rotationToGlobal().leftCols<2>(),
-                                         cluster.covLocal());
-    fitter.addPoint(xyz[0], xyz[1], xyz[2], 1 / cov(0, 0), 1 / cov(1, 1));
+    Vector4 global = plane.toGlobal(cluster.position());
+    Vector4 weight =
+        transformCovariance(plane.linearToGlobal(), cluster.positionCov())
+            .diagonal()
+            .cwiseInverse();
+    fitter.addPoint(global, weight);
   }
-
   fitter.fit();
   track.setGoodnessOfFit(fitter.chi2(), fitter.dof());
 }
@@ -189,8 +192,9 @@ void Tracking::TrackFinder::selectTracks(std::vector<TrackPtr>& candidates,
                                          Storage::Event& event) const
 {
   // ensure chi2 value is up-to-date
-  std::for_each(candidates.begin(), candidates.end(),
-                [&](TrackPtr& t) { fitChi2Only(m_geo, *t); });
+  for (auto& candidate : candidates) {
+    fitChi2Only(m_geo, *candidate);
+  }
   // sort good candidates first, i.e. longest track and smallest chi2
   std::sort(candidates.begin(), candidates.end(), CompareNumClusterChi2());
 
