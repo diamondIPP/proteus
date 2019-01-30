@@ -186,6 +186,7 @@ Internal changes
 *   Set the default built to ``Release`` if nothing else was requested.
 *   Add ``Utils::openRoot{Read/Write}`` helpers with error handling and
     automatic file closing on destruction.
+*   All geometry calculations are performed using 4d coordinates.
 
 v1.3.0 (2017-12-06)
 ===================
