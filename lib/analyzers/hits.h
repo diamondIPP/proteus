@@ -29,16 +29,18 @@ public:
 
 private:
   struct RegionHists {
-    TH1D* time;
+    TH1D* timestamp;
     TH1D* value;
+    TH2D* valueTimestamp;
   };
 
   TH1D* m_nHits;
   TH1D* m_rate;
-  TH2D* m_pos;
-  TH1D* m_time;
+  TH2D* m_colRow;
+  TH1D* m_timestamp;
   TH1D* m_value;
-  TH2D* m_meanTimeMap;
+  TH2D* m_valueTimestamp;
+  TH2D* m_meanTimestampMap;
   TH2D* m_meanValueMap;
   std::vector<RegionHists> m_regions;
 };
