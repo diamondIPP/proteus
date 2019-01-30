@@ -26,12 +26,15 @@ public:
   TrackState();
   /** Construct from scalar spatial parameters. */
   TrackState(Scalar location0, Scalar location1, Scalar slope0, Scalar slope1);
-  /** Construct from location and spatial slope */
-  TrackState(const Vector2& location,
+  /** Construct from position and slope
+   *
+   * \warning Assumes the position is on the plane and ignores normal component.
+   */
+  TrackState(const Vector4& position,
+             const SymMatrix4& positionCov,
              const Vector2& slope,
-             const SymMatrix2& locationCov = SymMatrix2::Zero(),
-             const SymMatrix2& slopeCov = SymMatrix2::Zero());
-  /** Construct from parameter vector. */
+             const SymMatrix2& slopeCov);
+  /** Construct from full parameter vector. */
   template <typename Params, typename Covariance>
   TrackState(const Eigen::MatrixBase<Params>& params,
              const Eigen::MatrixBase<Covariance>& cov);
