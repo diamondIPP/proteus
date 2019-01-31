@@ -21,39 +21,37 @@ Analyzers::Tracks::Tracks(TDirectory* dir,
 {
   using namespace Utils;
 
-  // estimate bounding box of all sensor projections and time ranges
-  auto active = Mechanics::Sensor::Volume::Empty();
-  auto time = Mechanics::Sensor::IntRange::Empty();
-  for (auto isensor : device.sensorIds()) {
-    const auto& sensor = device.getSensor(isensor);
-    active.enclose(sensor.projectedEnvelope());
-    time.enclose(sensor.timeRange());
-  }
-
+  auto box = device.boundingBox();
+  auto pitch = device.minimumPitch();
   Vector2 slope = device.geometry().beamSlope();
-  Vector2 slopeMin = slope - slopeRangeStd * device.geometry().beamDivergence();
-  Vector2 slopeMax = slope + slopeRangeStd * device.geometry().beamDivergence();
+  Vector2 slopeStdev = extractStdev(device.geometry().beamSlopeCovariance());
+  Vector2 slopeMin = slope - slopeRangeStd * slopeStdev;
+  Vector2 slopeMax = slope + slopeRangeStd * slopeStdev;
 
-  HistAxis axNTracks(0, numTracksMax, "Tracks / event");
-  HistAxis axSize(0, device.numSensors() + 1, "Clusters on track");
+  auto axNTracks = HistAxis::Integer(0, numTracksMax, "Tracks / event");
+  auto axSize =
+      HistAxis::Integer(0, device.numSensors() + 1, "Clusters on track");
   HistAxis axChi2(0, reducedChi2Max, bins, "#chi^2 / degrees of freedom");
-  HistAxis axOffX(active.interval(0), bins, "Track offset x");
-  HistAxis axOffY(active.interval(1), bins, "Track offset y");
+  HistAxis axPosX(box.interval(kX), box.length(kX) / pitch[kX],
+                  "Track position x");
+  HistAxis axPosY(box.interval(kY), box.length(kY) / pitch[kY],
+                  "Track position y");
+  HistAxis axTime(box.interval(kT), box.length(kT) / pitch[kT],
+                  "Track global time");
   HistAxis axSlopeX(slopeMin[0], slopeMax[0], bins, "Track slope x");
   HistAxis axSlopeY(slopeMin[1], slopeMax[1], bins, "Track slope y");
-  HistAxis axTime(time.min(), time.max(), "Track time");
 
   TDirectory* sub = makeDir(dir, "tracks");
   m_nTracks = makeH1(sub, "ntracks", axNTracks);
   m_size = makeH1(sub, "size", axSize);
   m_reducedChi2 = makeH1(sub, "reduced_chi2", axChi2);
-  m_offsetX = makeH1(sub, "offset_x", axOffX);
-  m_offsetY = makeH1(sub, "offset_y", axOffY);
-  m_offsetXY = makeH2(sub, "offset_xy", axOffX, axOffY);
+  m_posX = makeH1(sub, "position_x", axPosX);
+  m_posY = makeH1(sub, "position_y", axPosY);
+  m_posXY = makeH2(sub, "position_xy", axPosX, axPosY);
+  m_time = makeH1(sub, "time", axTime);
   m_slopeX = makeH1(sub, "slope_x", axSlopeX);
   m_slopeY = makeH1(sub, "slope_y", axSlopeY);
   m_slopeXY = makeH2(sub, "slope_xy", axSlopeX, axSlopeY);
-  m_time = makeH1(sub, "time", axTime);
 }
 
 std::string Analyzers::Tracks::name() const { return "Tracks"; }
@@ -68,13 +66,13 @@ void Analyzers::Tracks::execute(const Storage::Event& event)
 
     m_size->Fill(track.size());
     m_reducedChi2->Fill(track.reducedChi2());
-    m_offsetXY->Fill(state.offset()[0], state.offset()[1]);
-    m_offsetX->Fill(state.offset()[0]);
-    m_offsetY->Fill(state.offset()[1]);
-    m_slopeXY->Fill(state.slope()[0], state.slope()[1]);
-    m_slopeX->Fill(state.slope()[0]);
-    m_slopeY->Fill(state.slope()[1]);
+    m_posX->Fill(state.loc0());
+    m_posY->Fill(state.loc1());
+    m_posXY->Fill(state.loc0(), state.loc1());
     m_time->Fill(state.time());
+    m_slopeX->Fill(state.slopeLoc0());
+    m_slopeY->Fill(state.slopeLoc1());
+    m_slopeXY->Fill(state.slopeLoc0(), state.slopeLoc1());
   }
 }
 
