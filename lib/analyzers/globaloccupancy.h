@@ -8,6 +8,7 @@
 #include "utils/definitions.h"
 
 class TDirectory;
+class TH1D;
 class TH2D;
 
 namespace Mechanics {
@@ -25,11 +26,12 @@ public:
 
 private:
   struct SensorHists {
-    Mechanics::Plane plane;
     Index id = kInvalidIndex;
-    TH2D* clusters_xy = nullptr;
+    TH2D* clustersXY = nullptr;
+    TH1D* clustersT = nullptr;
   };
 
+  const Mechanics::Geometry& m_geo;
   std::vector<SensorHists> m_sensorHists;
 };
 
