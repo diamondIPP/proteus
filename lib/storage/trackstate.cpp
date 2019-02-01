@@ -34,15 +34,18 @@ Storage::TrackState::TrackState(const Vector4& position,
   m_cov(kTime, kLoc1) = m_cov(kLoc1, kTime) = positionCov(kS, kV);
   m_cov(kTime, kTime) = positionCov(kS, kS);
   m_cov(kSlopeLoc0, kSlopeLoc0) = slopeCov(0, 0);
-  m_cov(kSlopeLoc1, kSlopeLoc0) = m_cov(kSlopeLoc0, kSlopeLoc1) = slopeCov(1, 0);
+  m_cov(kSlopeLoc1, kSlopeLoc0) = m_cov(kSlopeLoc0, kSlopeLoc1) =
+      slopeCov(1, 0);
   m_cov(kSlopeLoc1, kSlopeLoc1) = slopeCov(1, 1);
 }
 
 std::ostream& Storage::operator<<(std::ostream& os, const TrackState& state)
 {
-  os << "loc=" << format(state.location());
+  os << "loc0=" << state.loc0();
+  os << " loc1=" << state.loc1();
   os << " time=" << state.time();
-  os << " slope=" << format(state.slope());
+  os << " dloc0=" << state.slopeLoc0();
+  os << " dloc1=" << state.slopeLoc1();
   os << " dtime=" << state.slopeTime();
   return os;
 }

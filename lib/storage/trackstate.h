@@ -78,10 +78,12 @@ public:
   /** Covariance matrix of the full parameter vector. */
   const SymMatrix6& cov() const { return m_cov; }
 
-  /** On-plane spatial track coordinates. */
-  auto location() const { return m_params.segment<2>(kLoc0); }
+  /** On-plane track first spatial dimension. */
+  Scalar loc0() const { return m_params[kLoc0]; }
+  /** On-plane track second spatial dimension. */
+  Scalar loc1() const { return m_params[kLoc1]; }
   /** On-plane spatial track coordinates covariance. */
-  auto locationCov() const { return m_cov.block<2, 2>(kLoc0, kLoc0); }
+  auto loc01Cov() const { return m_cov.block<2, 2>(kLoc0, kLoc0); }
   /** Track time. */
   Scalar time() const { return m_params[kTime]; }
   /** Track time variance. */
@@ -91,9 +93,11 @@ public:
   /** Full track position covariance. */
   SymMatrix4 positionCov() const;
 
-  /** Spatial track slope. */
-  auto slope() const { return m_params.segment<2>(kSlopeLoc0); }
-  /** Track time slope. */
+  /** Track slope along the first spatial dimension. */
+  Scalar slopeLoc0() const { return m_params[kSlopeLoc0]; }
+  /** Track slope along the second spatial dimension. */
+  Scalar slopeLoc1() const { return m_params[kSlopeLoc1]; }
+  /** Track slope along the temporal dimension (inverse velocity). */
   Scalar slopeTime() const { return m_params[kSlopeTime]; }
   /** Full track tangent in slope parametrization. */
   Vector4 tangent() const;
