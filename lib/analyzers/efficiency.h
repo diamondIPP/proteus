@@ -67,11 +67,12 @@ public:
   void finalize();
 
 private:
-  using Area = Utils::Box<2, double>;
+  using DigitalArea = Utils::Box<2, int>;
+  using Area = Utils::Box<2, Scalar>;
   struct Hists {
-    Area areaPixel; // region-of-interest area + edge bins
-    Area roiPixel;  // only the region-of-interest
-    int edgeBins;   // how many bins are edges outside the region-of-interest
+    DigitalArea areaPixel; // region-of-interest area + edge bins
+    DigitalArea roiPixel;  // only the region-of-interest
+    int edgeBins; // how many bins are edges outside the region-of-interest
     TH2D* total;
     TH2D* pass;
     TH2D* fail;
@@ -96,12 +97,12 @@ private:
     Hists() = default;
     Hists(TDirectory* dir,
           const Mechanics::Sensor& sensor,
-          const Area roi,
+          const DigitalArea& roi,
           const int increaseArea,
           const int inPixelPeriod,
           const int inPixelBinsMin,
           const int efficiencyDistBins);
-    void fill(const Storage::TrackState& state, const Vector2& posPixel);
+    void fill(const Storage::TrackState& state, Scalar col, Scalar row);
     void fill(const Storage::Cluster& cluster);
     void finalize();
   };
