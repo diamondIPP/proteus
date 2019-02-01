@@ -78,7 +78,8 @@ std::ostream& Storage::operator<<(std::ostream& os, const Cluster& cluster)
 {
   os << "col=" << cluster.col();
   os << " row=" << cluster.row();
-  os << " loc=" << format(cluster.location());
+  os << " u=" << cluster.u();
+  os << " v=" << cluster.v();
   os << " time=" << cluster.time();
   os << " value=" << cluster.value();
   os << " size=" << cluster.size();

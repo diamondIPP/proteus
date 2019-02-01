@@ -45,10 +45,12 @@ public:
   Scalar value() const { return m_value; }
 
   // properties in the local system
-  /** On-plane local spatial coordinates. */
-  auto location() const { return m_pos.segment<2>(kU); }
-  /** On-plane local spatial covariance. */
-  auto locationCov() const { return m_posCov.block<2, 2>(kU, kU); }
+  /** On-plane spatial u coordinate. */
+  Scalar u() const { return m_pos[kU]; }
+  /** On-plane spatial v coordinate. */
+  Scalar v() const { return m_pos[kV]; }
+  /** On-plane spatial covariance. */
+  auto uvCov() const { return m_posCov.block<2, 2>(kU, kU); }
   /** Local time. */
   Scalar time() const { return m_pos[kS]; }
   /** Local time variance. */
