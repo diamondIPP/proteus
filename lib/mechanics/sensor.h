@@ -54,7 +54,7 @@ public:
   /** Two-dimensional area of digital matrix positions, i.e. column and row. */
   using DigitalArea = Utils::Box<2, int>;
   /** Four-dimensional bounding box type for projected volume. */
-  using Volume = Utils::Box<4, double>;
+  using Volume = Utils::Box<4, Scalar>;
   /** A named region on the sensor. */
   struct Region {
     std::string name;
