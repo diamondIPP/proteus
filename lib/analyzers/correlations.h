@@ -56,16 +56,17 @@ private:
                const Mechanics::Sensor& sensor1,
                TDirectory* dir);
 
-  typedef std::pair<Index, Index> Indices;
   struct Hists {
-    TH2D* corrX;
-    TH2D* corrY;
-    TH1D* diffX;
-    TH1D* diffY;
+    TH2D* corrX = nullptr;
+    TH2D* corrY = nullptr;
+    TH2D* corrT = nullptr;
+    TH1D* diffX = nullptr;
+    TH1D* diffY = nullptr;
+    TH1D* diffT = nullptr;
   };
 
   const Mechanics::Geometry& m_geo;
-  std::map<Indices, Hists> m_hists;
+  std::map<std::pair<Index, Index>, Hists> m_hists;
 };
 
 } // namespace Analyzers
