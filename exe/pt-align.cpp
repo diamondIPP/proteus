@@ -98,9 +98,9 @@ struct StepsGraphs {
       sensors[id].addStep(geo.getParams(id), geo.getParamsCov(id));
     }
     auto slope = geo.beamSlope();
-    auto div = geo.beamDivergence();
-    beamX.addStep(slope[0], div[0]);
-    beamY.addStep(slope[1], div[1]);
+    auto slopeStdev = extractStdev(geo.beamSlopeCovariance());
+    beamX.addStep(slope[0], slopeStdev[0]);
+    beamY.addStep(slope[1], slopeStdev[1]);
     numTracks.addStep(ntracks);
   }
   void write(const Mechanics::Device& device, TDirectory* dir) const
@@ -124,8 +124,8 @@ void updateBeamParameters(const Analyzers::Tracks& tracks,
   INFO("  slope x: ", beamSlope[0], " ± ", beamDivergence[0]);
   INFO("  slope y: ", beamSlope[1], " ± ", beamDivergence[1]);
 
-  geo.setBeamSlope(beamSlope[0], beamSlope[1]);
-  geo.setBeamDivergence(beamDivergence[0], beamDivergence[1]);
+  geo.setBeamSlope(beamSlope);
+  geo.setBeamDivergence(beamDivergence);
 }
 
 int main(int argc, char const* argv[])
@@ -135,10 +135,14 @@ int main(int argc, char const* argv[])
   using namespace Mechanics;
   using namespace Processors;
 
-  toml::Table defaults = {{"num_steps", 1},
-                          {"search_sigma_max", 5.},
-                          {"reduced_chi2_max", -1.},
-                          {"damping", 0.9}};
+  toml::Table defaults = {
+      // tracking settings
+      {"search_sigma_max", 5.},
+      {"reduced_chi2_max", -1.},
+      // alignment settings
+      {"num_steps", 1},
+      {"damping", 0.9},
+  };
   Utils::Application app("align", "align selected sensors", defaults);
   app.initialize(argc, argv);
 
@@ -147,9 +151,9 @@ int main(int argc, char const* argv[])
   auto alignIds = app.config().get<std::vector<Index>>("align_ids");
   auto method = app.config().get<std::string>("method");
   auto numSteps = app.config().get<int>("num_steps");
+  auto damping = app.config().get<double>("damping");
   auto searchSigmaMax = app.config().get<double>("search_sigma_max");
   auto redChi2Max = app.config().get<double>("reduced_chi2_max");
-  auto damping = app.config().get<double>("damping");
 
   // split sensors into fixed and alignable set
   std::vector<Index> fixedSensorIds;
@@ -158,7 +162,7 @@ int main(int argc, char const* argv[])
   std::set_difference(sensorIds.begin(), sensorIds.end(), alignIds.begin(),
                       alignIds.end(), std::back_inserter(fixedSensorIds));
   INFO("fixed sensors: ", fixedSensorIds);
-  INFO("align sensors: ", alignIds); 
+  INFO("align sensors: ", alignIds);
 
   if (!std::includes(sensorIds.begin(), sensorIds.end(), alignIds.begin(),
                      alignIds.end())) {
@@ -250,7 +254,7 @@ int main(int argc, char const* argv[])
 
   // validation step w/o geometry changes but final beam parameter updates
   {
-    INFO("validation step ");
+    INFO("validation step");
 
     TDirectory* subDir = Utils::makeDir(hists.get(), "validation");
 
