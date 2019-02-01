@@ -26,14 +26,16 @@ namespace detail {
 struct SensorResidualHists {
   TH1D* resU;
   TH1D* resV;
+  TH1D* resS;
+  TH2D* resUV;
   TH1D* resDist;
   TH1D* resD2;
-  TH1D* resTime;
-  TH2D* resUV;
-  TH2D* trackUResU;
-  TH2D* trackUResV;
-  TH2D* trackVResU;
-  TH2D* trackVResV;
+  TH2D* posUResU;
+  TH2D* posUResV;
+  TH2D* posVResU;
+  TH2D* posVResV;
+  TH2D* timeResU;
+  TH2D* timeResV;
   TH2D* slopeUResU;
   TH2D* slopeUResV;
   TH2D* slopeVResU;
@@ -42,8 +44,8 @@ struct SensorResidualHists {
   SensorResidualHists() = default;
   SensorResidualHists(TDirectory* dir,
                       const Mechanics::Sensor& sensor,
-                      const double rangeStd,
-                      const int bins,
+                      double rangeStd,
+                      int bins,
                       const std::string& name);
 
   void fill(const Storage::TrackState& state, const Storage::Cluster& cluster);
@@ -66,9 +68,8 @@ public:
             const Mechanics::Device& device,
             const std::vector<Index>& sensorIds,
             const std::string& subdir = std::string("residuals"),
-            /* Histogram options */
-            const double rangeStd = 5.0,
-            const int bins = 128);
+            double rangeStd = 5.0,
+            int bins = 127);
 
   std::string name() const;
   void execute(const Storage::Event& refEvent);
@@ -89,9 +90,8 @@ public:
    */
   Matching(TDirectory* dir,
            const Mechanics::Sensor& sensor,
-           /* Histogram options */
-           const double rangeStd = 5.0,
-           const int bins = 128);
+           double rangeStd = 8.0,
+           int bins = 255);
 
   std::string name() const;
   void execute(const Storage::Event& refEvent);
