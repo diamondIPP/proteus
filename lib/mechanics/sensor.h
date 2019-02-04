@@ -75,6 +75,7 @@ public:
          int valueMax,
          Scalar pitchCol,
          Scalar pitchRow,
+         Scalar pitchTimestamp,
          Scalar thickness,
          Scalar xX0);
 

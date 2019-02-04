@@ -58,6 +58,7 @@ Mechanics::Sensor::Sensor(Index id,
                           int valueMax,
                           Scalar pitchCol,
                           Scalar pitchRow,
+                          Scalar pitchTimestamp,
                           Scalar thickness,
                           Scalar xX0)
     : m_id(id)
@@ -68,7 +69,7 @@ Mechanics::Sensor::Sensor(Index id,
     , m_valueRange(0, valueMax)
     , m_pitchCol(pitchCol)
     , m_pitchRow(pitchRow)
-    , m_pitchTimestamp(1.0)
+    , m_pitchTimestamp(pitchTimestamp)
     , m_thickness(thickness)
     , m_xX0(xX0)
     , m_measurement(measurement)
