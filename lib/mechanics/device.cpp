@@ -75,9 +75,10 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
   // the values are taken for FEI4 sensors; these values were hardcorded
   // before and are now used as defaults to keep backward compatibility
   auto defaultsType = toml::Table{
-      {"time_min", 0},
-      {"time_max", 15},
+      {"timestamp_min", 0},
+      {"timestamp_max", 15},
       {"value_max", 15},
+      {"pitch_timestamp", 1.0},
   };
   auto defaultsRegion = toml::Table{
       {"col_min", INT_MIN},
@@ -124,10 +125,10 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
         static_cast<Index>(config.get<int>("cols")),
         static_cast<Index>(config.get<int>("rows")),
         // see comments above for +1
-        config.get<int>("time_min"), config.get<int>("time_max") + 1,
+        config.get<int>("timestamp_min"), config.get<int>("timestamp_max") + 1,
         config.get<int>("value_max") + 1, config.get<double>("pitch_col"),
-        config.get<double>("pitch_row"), config.get<double>("thickness"),
-        config.get<double>("x_x0"));
+        config.get<double>("pitch_row"), config.get<double>("pitch_timestamp"),
+        config.get<double>("thickness"), config.get<double>("x_x0"));
 
     // add regions if defined
     for (const auto& r : config.get<toml::Array>("regions")) {
