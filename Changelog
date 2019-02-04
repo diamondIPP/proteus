@@ -47,15 +47,15 @@ User-visible changes
     reconstructed events exists only transiently and only the required data
     is stored.
 *   Sensor regions in the device configuration must set the ``name``.
-*   Make sensor time and value range configurable.
+*   Make sensor timestamp and value range configurable.
 
     These values were hardcoded to the FE-I4 values. They can now be configured
     by setting the following keys in the relevant sensor type section
 
         [sensor_types.some_sensor]
         ...
-        time_min = 0
-        time_max = 31
+        timestamp_min = 0
+        timestamp_max = 31
         value_max = 63
         ...
 
