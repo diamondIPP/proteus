@@ -24,8 +24,8 @@ public:
 
   /** Construct a track without hits and undefined global state. */
   Track();
-  /** Construct a track without hits but with known global parameters. */
-  Track(const TrackState& global);
+  /** Construct a track without hits but with known global state. */
+  Track(const TrackState& global, Scalar chi2, int dof);
 
   /** Update the goodness-of-fit via χ² and degrees-of-freedom. */
   void setGoodnessOfFit(Scalar chi2, int dof) { m_chi2 = chi2, m_dof = dof; }

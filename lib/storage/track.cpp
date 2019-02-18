@@ -8,8 +8,8 @@
 
 Storage::Track::Track() : m_chi2(-1), m_dof(-1) {}
 
-Storage::Track::Track(const TrackState& global)
-    : m_state(global), m_chi2(-1), m_dof(-1)
+Storage::Track::Track(const TrackState& global, Scalar chi2, int dof)
+    : m_state(global), m_chi2(chi2), m_dof(dof)
 {
 }
 
