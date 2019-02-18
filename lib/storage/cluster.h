@@ -78,7 +78,6 @@ public:
   size_t size() const { return m_hits.size(); }
   const Hits& hits() const { return m_hits; }
 
-  Index index() const { return m_index; }
   bool isInTrack() const { return m_track != kInvalidIndex; }
   Index track() const { return m_track; }
   bool isMatched() const { return m_matchedState != kInvalidIndex; }
