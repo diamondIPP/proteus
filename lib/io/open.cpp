@@ -35,7 +35,7 @@ namespace {
 struct Format {
   using EventReaderPtr = std::shared_ptr<Loop::Reader>;
 
-  std::string name;
+  const char* name;
   std::function<int(const std::string&)> check;
   std::function<EventReaderPtr(const std::string&, const toml::Value&)> open;
 };
