@@ -183,17 +183,6 @@ static void fitGlobal(const Mechanics::Geometry& geo,
   track.setGoodnessOfFit(fitter.chi2(), fitter.dof());
 }
 
-// compare tracks by number of clusters and chi2. high n, low chi2 comes first
-struct CompareNumClusterChi2 {
-  bool operator()(const Storage::Track& a, const Storage::Track& b)
-  {
-    if (a.size() == b.size()) {
-      return (a.reducedChi2() < b.reducedChi2());
-    }
-    return (b.size() < a.size());
-  }
-};
-
 /** Add tracks selected by chi2 and unique cluster association to the event. */
 void Tracking::TrackFinder::selectTracks(
     std::vector<Storage::Track>& candidates, Storage::Event& event) const
@@ -203,7 +192,10 @@ void Tracking::TrackFinder::selectTracks(
     fitGlobal(m_geo, event, candidate);
   }
   // sort good candidates first, i.e. longest track and smallest chi2
-  std::sort(candidates.begin(), candidates.end(), CompareNumClusterChi2());
+  std::sort(
+      candidates.begin(), candidates.end(), [](const auto& ta, const auto& tb) {
+        return (ta.size() > tb.size()) or (ta.reducedChi2() < tb.reducedChi2());
+      });
 
   // fix cluster assignment starting w/ best tracks first
   for (auto& track : candidates) {
