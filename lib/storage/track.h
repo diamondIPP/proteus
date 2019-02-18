@@ -51,7 +51,8 @@ public:
 
   /** Adds a cluster on the given sensor to the track.
    *
-   * The cluster/track association is not fixed automatically here.
+   * The cluster to track association is not set to allow this class to be
+   * used also for track candidates.
    */
   void addCluster(Index sensor, Cluster& cluster);
   size_t size() const { return m_clusters.size(); }
@@ -59,12 +60,11 @@ public:
 
 private:
   /** Inform all track clusters that they belong to this track now. */
-  void freezeClusterAssociation();
+  void freezeClusterAssociation(Index trackIdx);
 
   TrackState m_state;
   Scalar m_chi2;
   int m_dof;
-  Index m_index;
   Clusters m_clusters;
 
   friend class Event;

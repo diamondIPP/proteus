@@ -38,8 +38,7 @@ void Storage::Event::setSensorData(Index first, Event&& event)
 void Storage::Event::addTrack(std::unique_ptr<Track> track)
 {
   m_tracks.emplace_back(std::move(track));
-  m_tracks.back()->m_index = m_tracks.size() - 1;
-  m_tracks.back()->freezeClusterAssociation();
+  m_tracks.back()->freezeClusterAssociation(m_tracks.size() - 1);
 }
 
 size_t Storage::Event::getNumHits() const

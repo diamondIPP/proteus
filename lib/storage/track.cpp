@@ -6,10 +6,10 @@
 
 #include "cluster.h"
 
-Storage::Track::Track() : m_chi2(-1), m_dof(-1), m_index(-1) {}
+Storage::Track::Track() : m_chi2(-1), m_dof(-1) {}
 
 Storage::Track::Track(const TrackState& global)
-    : m_state(global), m_chi2(-1), m_dof(-1), m_index(-1)
+    : m_state(global), m_chi2(-1), m_dof(-1)
 {
 }
 
@@ -26,10 +26,11 @@ void Storage::Track::addCluster(Index sensor, Cluster& cluster)
   m_clusters.emplace(sensor, cluster);
 }
 
-void Storage::Track::freezeClusterAssociation()
+void Storage::Track::freezeClusterAssociation(Index trackIdx)
 {
-  for (const auto& c : m_clusters)
-    c.second.get().setTrack(m_index);
+  for (const auto& c : m_clusters) {
+    c.second.get().setTrack(trackIdx);
+  }
 }
 
 std::ostream& Storage::operator<<(std::ostream& os, const Storage::Track& track)
