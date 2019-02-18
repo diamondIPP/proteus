@@ -284,7 +284,7 @@ bool Io::RceRootReader::read(Storage::Event& event)
             interceptU[iintercept], interceptV[iintercept],
             interceptSlopeU[iintercept], interceptSlopeV[iintercept]);
         local.setCovSpatialPacked(interceptCov[iintercept]);
-        sensorEvent.setLocalState(interceptTrack[iintercept], std::move(local));
+        sensorEvent.setLocalState(interceptTrack[iintercept], local);
       }
     }
 
@@ -300,9 +300,8 @@ bool Io::RceRootReader::read(Storage::Event& event)
             clusterVarRow[icluster], 1.0 / 12.0, clusterCovColRow[icluster]);
         // Fix cluster/track relationship if possible
         if (m_tracks && (0 <= clusterTrack[icluster])) {
-          Storage::Track& track = event.getTrack(clusterTrack[icluster]);
-          track.addCluster(isensor, cluster);
           cluster.setTrack(clusterTrack[icluster]);
+          event.getTrack(clusterTrack[icluster]).addCluster(isensor, icluster);
         }
       }
     }
