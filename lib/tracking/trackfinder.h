@@ -1,7 +1,6 @@
 #ifndef PT_TRACKFINDER_H
 #define PT_TRACKFINDER_H
 
-#include <memory>
 #include <vector>
 
 #include "loop/processor.h"
@@ -50,12 +49,10 @@ public:
   void execute(Storage::Event& event) const;
 
 private:
-  using TrackPtr = std::unique_ptr<Storage::Track>;
-
   void searchSensor(Index sensorId,
                     Storage::SensorEvent& sensorEvent,
-                    std::vector<TrackPtr>& candidates) const;
-  void selectTracks(std::vector<TrackPtr>& candidates,
+                    std::vector<Storage::Track>& candidates) const;
+  void selectTracks(std::vector<Storage::Track>& candidates,
                     Storage::Event& event) const;
 
   const Mechanics::Geometry& m_geo;

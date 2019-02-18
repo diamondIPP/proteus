@@ -38,10 +38,10 @@ void Storage::Event::setSensorData(Index first, Event&& event)
   }
 }
 
-void Storage::Event::addTrack(std::unique_ptr<Track> track)
+void Storage::Event::addTrack(const Track& track)
 {
-  m_tracks.emplace_back(std::move(track));
-  m_tracks.back()->freezeClusterAssociation(m_tracks.size() - 1);
+  m_tracks.push_back(track);
+  m_tracks.back().freezeClusterAssociation(m_tracks.size() - 1);
 }
 
 size_t Storage::Event::getNumHits() const
@@ -77,7 +77,7 @@ void Storage::Event::print(std::ostream& os, const std::string& prefix) const
   if (!m_tracks.empty()) {
     os << prefix << "tracks:\n";
     for (size_t itrack = 0; itrack < m_tracks.size(); ++itrack) {
-      os << prefix << "  " << itrack << ": " << *m_tracks[itrack] << '\n';
+      os << prefix << "  " << itrack << ": " << m_tracks[itrack] << '\n';
     }
   }
   os.flush();

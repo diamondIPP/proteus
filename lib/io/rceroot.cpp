@@ -263,9 +263,7 @@ bool Io::RceRootReader::read(Storage::Event& event)
       Storage::TrackState state(trackX[itrack], trackY[itrack],
                                 trackSlopeX[itrack], trackSlopeY[itrack]);
       state.setCovSpatialPacked(trackCov[itrack]);
-      std::unique_ptr<Storage::Track> track(new Storage::Track(state));
-      track->setGoodnessOfFit(trackChi2[itrack], trackDof[itrack]);
-      event.addTrack(std::move(track));
+      event.addTrack({state, trackChi2[itrack], trackDof[itrack]});
     }
   }
 

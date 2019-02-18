@@ -43,7 +43,7 @@ std::string Tracking::TrackFinder::name() const { return "TrackFinder"; }
 
 void Tracking::TrackFinder::execute(Storage::Event& event) const
 {
-  std::vector<TrackPtr> candidates;
+  std::vector<Storage::Track> candidates;
 
   // first iteration over all seed sensors
   size_t numSeedSeensors = 1 + (m_sensorIds.size() - m_numClustersMin);
@@ -57,8 +57,8 @@ void Tracking::TrackFinder::execute(Storage::Event& event) const
       Cluster& cluster = seedEvent.getCluster(icluster);
       if (cluster.isInTrack())
         continue;
-      candidates.push_back(TrackPtr(new Track()));
-      candidates.back()->addCluster(seedSensor, cluster);
+      candidates.push_back(Track{});
+      candidates.back().addCluster(seedSensor, cluster);
     }
 
     // second iteration over remaining sensors to find compatible points
@@ -68,8 +68,8 @@ void Tracking::TrackFinder::execute(Storage::Event& event) const
 
       // remove seeds that are already too short
       size_t remainingSensors = m_sensorIds.size() - (j + 1);
-      auto isLongEnough = [&](const TrackPtr& cand) {
-        return (m_numClustersMin <= (cand->size() + remainingSensors));
+      auto isLongEnough = [&](const Storage::Track& candidate) {
+        return (m_numClustersMin <= (candidate.size() + remainingSensors));
       };
       auto beginBad =
           std::partition(candidates.begin(), candidates.end(), isLongEnough);
@@ -103,14 +103,14 @@ void Tracking::TrackFinder::execute(Storage::Event& event) const
 void Tracking::TrackFinder::searchSensor(
     Index sensorId,
     Storage::SensorEvent& sensorEvent,
-    std::vector<TrackPtr>& candidates) const
+    std::vector<Storage::Track>& candidates) const
 {
   const Mechanics::Plane& target = m_geo.getPlane(sensorId);
 
   // loop only over the initial candidates and not the added ones
   Index numTracks = static_cast<Index>(candidates.size());
   for (Index itrack = 0; itrack < numTracks; ++itrack) {
-    Storage::Track& track = *candidates[itrack];
+    Storage::Track& track = candidates[itrack];
     Storage::Cluster& lastCluster = track.clusters().rbegin()->second;
     Index lastSensor = track.clusters().rbegin()->first;
     Index matched = kInvalidIndex;
@@ -143,8 +143,8 @@ void Tracking::TrackFinder::searchSensor(
         matched = icluster;
       } else {
         // matching ambiguity -> bifurcate track
-        candidates.push_back(TrackPtr(new Track(track)));
-        candidates.back()->addCluster(sensorId, curr);
+        candidates.push_back(track);
+        candidates.back().addCluster(sensorId, curr);
       }
     }
     // first matched cluster can be only be added after all other clusters
@@ -179,22 +179,22 @@ static void fitGlobal(const Mechanics::Geometry& geo, Storage::Track& track)
 
 // compare tracks by number of clusters and chi2. high n, low chi2 comes first
 struct CompareNumClusterChi2 {
-  bool operator()(const std::unique_ptr<Storage::Track>& a,
-                  const std::unique_ptr<Storage::Track>& b)
+  bool operator()(const Storage::Track& a, const Storage::Track& b)
   {
-    if (a->size() == b->size())
-      return (a->reducedChi2() < b->reducedChi2());
-    return (b->size() < a->size());
+    if (a.size() == b.size()) {
+      return (a.reducedChi2() < b.reducedChi2());
+    }
+    return (b.size() < a.size());
   }
 };
 
 /** Add tracks selected by chi2 and unique cluster association to the event. */
-void Tracking::TrackFinder::selectTracks(std::vector<TrackPtr>& candidates,
-                                         Storage::Event& event) const
+void Tracking::TrackFinder::selectTracks(
+    std::vector<Storage::Track>& candidates, Storage::Event& event) const
 {
   // ensure chi2 value is up-to-date
   for (auto& candidate : candidates) {
-    fitGlobal(m_geo, *candidate);
+    fitGlobal(m_geo, candidate);
   }
   // sort good candidates first, i.e. longest track and smallest chi2
   std::sort(candidates.begin(), candidates.end(), CompareNumClusterChi2());
@@ -203,12 +203,12 @@ void Tracking::TrackFinder::selectTracks(std::vector<TrackPtr>& candidates,
   for (auto& track : candidates) {
 
     // apply track cuts
-    if ((0 < m_redChi2Max) && (m_redChi2Max < track->reducedChi2()))
+    if ((0 < m_redChi2Max) && (m_redChi2Max < track.reducedChi2()))
       continue;
 
     // check that all constituent clusters are still unused
     bool hasUsedClusters = false;
-    for (const auto& c : track->clusters()) {
+    for (const auto& c : track.clusters()) {
       const Storage::Cluster& cluster = c.second;
       if (cluster.isInTrack()) {
         hasUsedClusters = true;
@@ -220,6 +220,6 @@ void Tracking::TrackFinder::selectTracks(std::vector<TrackPtr>& candidates,
       continue;
 
     // add new, good track to the event; also fixes cluster-track association
-    event.addTrack(TrackPtr(track.release()));
+    event.addTrack(track);
   }
 }

@@ -3,7 +3,6 @@
 
 #include <cstdint>
 #include <iosfwd>
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -43,10 +42,10 @@ public:
   const SensorEvent& getSensorEvent(Index i) const { return m_sensors.at(i); }
 
   /** Add track to the event and fix the cluster to track association. */
-  void addTrack(std::unique_ptr<Track> track);
+  void addTrack(const Track& track);
   Index numTracks() const { return static_cast<Index>(m_tracks.size()); }
-  Track& getTrack(Index i) { return *m_tracks.at(i).get(); }
-  const Track& getTrack(Index i) const { return *m_tracks.at(i).get(); }
+  Track& getTrack(Index i) { return m_tracks.at(i); }
+  const Track& getTrack(Index i) const { return m_tracks.at(i); }
 
   size_t getNumHits() const;
   size_t getNumClusters() const;
@@ -58,7 +57,7 @@ private:
   uint64_t m_timestamp;
 
   std::vector<SensorEvent> m_sensors;
-  std::vector<std::unique_ptr<Track>> m_tracks;
+  std::vector<Track> m_tracks;
 };
 
 } // namespace Storage
