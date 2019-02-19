@@ -27,6 +27,10 @@ namespace Tracking {
  * i.e. the one with the highest number of hits and the lowest chi2 value, to
  * form a track. Successive candidates that contain clusters that are already
  * used are dropped.
+ *
+ * The ``Tracks``s build by the track finder store the constituent clusters
+ * and an estimate of the global track parameters. Local track states are
+ * not estimated and must be computed using one of the fitter processors.
  */
 class TrackFinder : public Loop::Processor {
 public:

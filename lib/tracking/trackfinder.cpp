@@ -156,8 +156,8 @@ void Tracking::TrackFinder::searchSensor(
   }
 }
 
-// fit track in the global system but only record chi2
-static void fitChi2Only(const Mechanics::Geometry& geo, Storage::Track& track)
+// Fit track in the global system and store chi2 and global state.
+static void fitGlobal(const Mechanics::Geometry& geo, Storage::Track& track)
 {
   Tracking::LineFitter3D fitter;
 
@@ -173,6 +173,7 @@ static void fitChi2Only(const Mechanics::Geometry& geo, Storage::Track& track)
     fitter.addPoint(global, weight);
   }
   fitter.fit();
+  track.setGlobalState(fitter.params(), fitter.cov());
   track.setGoodnessOfFit(fitter.chi2(), fitter.dof());
 }
 
@@ -193,7 +194,7 @@ void Tracking::TrackFinder::selectTracks(std::vector<TrackPtr>& candidates,
 {
   // ensure chi2 value is up-to-date
   for (auto& candidate : candidates) {
-    fitChi2Only(m_geo, *candidate);
+    fitGlobal(m_geo, *candidate);
   }
   // sort good candidates first, i.e. longest track and smallest chi2
   std::sort(candidates.begin(), candidates.end(), CompareNumClusterChi2());
