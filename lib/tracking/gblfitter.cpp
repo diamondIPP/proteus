@@ -1,4 +1,4 @@
-/**
+﻿/**
  * \file
  * \author Moritz Kiehn (msmk@cern.ch)
  * \date 2016-10
@@ -23,6 +23,9 @@ PT_SETUP_LOCAL_LOGGER(GBLFitter)
 
 Tracking::GBLFitter::GBLFitter(const Mechanics::Device& device)
     : m_device(device)
+    // sensor ids sorted along the expected propagation order
+    , m_propagationIds(
+          Mechanics::sortedAlongBeam(m_device.geometry(), m_device.sensorIds()))
 {
 }
 
@@ -129,10 +132,11 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
     // Reference track in global coordinates
     Vector4 globalPos = track.globalState().position();
     Vector4 globalTan = track.globalState().tangent();
+    Index prevSensorId = kInvalidIndex;
 
     // Propagate reference track through all sensor to define GBL trajectory
-    for (Index isensor = 0; isensor < m_device.numSensors(); isensor++) {
-      const auto& plane = m_device.geometry().getPlane(isensor);
+    for (auto sensorId : m_propagationIds) {
+      const auto& plane = m_device.geometry().getPlane(sensorId);
 
       // 1. Propagate track state to the plane intersection
 
@@ -163,11 +167,11 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
       // different from the parameter ordering in the rest of the code base.
 
       Matrix5 jac;
-      if (isensor == 0) {
+      if (prevSensorId == kInvalidIndex) {
         // first plane has no predecessor and no propagation Jacobian.
         jac = Matrix5::Identity();
       } else {
-        const auto& prev = m_device.geometry().getPlane(isensor - 1);
+        const auto& prev = m_device.geometry().getPlane(prevSensorId);
         Vector4 prevTan = prev.linearToLocal() * globalTan;
         Matrix4 prevToLocal = plane.linearToLocal() * prev.linearToGlobal();
         jac = buildJacobian(prevTan, prevToLocal, dw);
@@ -182,7 +186,7 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
       // Get theta from the Highland formula
       // TODO: Seems like we need to adapt this formula for our case
       // Need energy for the calculation
-      double radLength = m_device.getSensor(isensor).xX0();
+      double radLength = m_device.getSensor(sensorId).xX0();
       double energy = 180;
       double theta =
           0.0136 * sqrt(radLength) / energy * (1 + 0.038 * log(totalRadLength));
@@ -199,7 +203,7 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
 
       // 4b. If available, add a measurement
 
-      auto ic = track.clusters().find(isensor);
+      auto ic = track.clusters().find(sensorId);
       if (ic != track.clusters().end()) {
         const Storage::Cluster& cluster = ic->second;
         DEBUG("Cluster ", cluster);
@@ -232,6 +236,7 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
     }
 
     // fit the GBL trajectory w/o track curvature
+
     GblTrajectory traj(gblPoints, false);
     double chi2;
     double lostWeight;
@@ -244,21 +249,21 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
     DEBUG("lost weight: ", lostWeight);
 
     // extract local track states for all sensors
-    for (Index isensor = 0; isensor < m_device.numSensors(); ++isensor) {
-      // positive gbl label means that we extract the parameters before
-      // scattering. not relevant for measurement and kink residuals.
-      int gblLabel = isensor + 1;
+
+    int ipoint = 0;
+    for (auto sensorId : m_propagationIds) {
+      // GBL label starts counting at 1, w/ positive values indicating that
+      // we want to get the parameters before the scatterer.
+      int gblLabel = ipoint + 1;
 
       // Get the track parameter corrections and build the full state
       traj.getResults(gblLabel, gblCorrection, gblCovariance);
-      const auto& ref = referenceParams[isensor];
-      auto state = buildCorrectedState(ref, gblCorrection, gblCovariance);
-
+      auto state = buildCorrectedState(referenceParams[ipoint], gblCorrection,
+                                       gblCovariance);
       // Set the local state for the sensor event
-      event.getSensorEvent(isensor).setLocalState(itrack, std::move(state));
+      event.getSensorEvent(sensorId).setLocalState(itrack, std::move(state));
 
-      DEBUG("results sensor ", isensor);
-      DEBUG("  reference: ", format(ref));
+      DEBUG("results sensor ", sensorId);
       DEBUG("  correction: ", format(gblCorrection));
       DEBUG("  parameters: ", format(state.params()));
       DEBUG("  covariance:\n", format(state.cov()));
@@ -270,7 +275,7 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
       traj.getMeasResults(gblLabel, numData, gblResiduals,
                           gblErrorsMeasurements, gblErrorsResiduals,
                           gblDownWeights);
-      DEBUG("Measurement Results for Sensor ", isensor);
+      DEBUG("Measurement Results for Sensor ", sensorId);
       for (unsigned int i = 0; i < numData; ++i) {
         DEBUG(i, " Residual: ", residuals[i],
               " , Measurement Error: ", measErr[i],
@@ -280,12 +285,14 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
       // Get the scatterer residuals
       Eigen::VectorXd sc1(2), sc2(2), sc3(2), sc4(2);
       traj.getScatResults(gblLabel, numData, sc1, sc2, sc3, sc4);
-      DEBUG("Scattering Results for Sensor ", isensor);
+      DEBUG("Scattering Results for Sensor ", sensorId);
       for (unsigned int i = 0; i < numData; ++i) {
         // TODO: Revise these names. Are probably incorrect.
         DEBUG(i, " Kink: ", sc1[i], " , Kink measurement error: ", sc2[i],
               " , Kink error: ", sc3[i]);
       }
+
+      ipoint += 1;
     }
 
     // debug printout

@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "loop/processor.h"
+#include "utils/definitions.h"
 
 namespace Mechanics {
 class Device;
@@ -30,6 +31,7 @@ public:
 
 private:
   const Mechanics::Device& m_device;
+  std::vector<Index> m_propagationIds;
 };
 
 } // namespace Tracking
