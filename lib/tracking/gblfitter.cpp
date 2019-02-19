@@ -52,16 +52,15 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
 
     // Get the track
     Storage::Track& track = event.getTrack(itrack);
+    const Storage::TrackState& state = track.globalState();
 
     // Print Track info
     DEBUG("TrackState: ", track.globalState());
     INFO("Number of clusters in the track: ", track.size());
 
     // Specify the track in global coordinates
-    auto offset = track.globalState().offset();
-    auto slope = track.globalState().slope();
-    Eigen::Vector3d trackPos(offset.x(), offset.y(), 0);
-    Eigen::Vector3d trackDirec(slope.x(), slope.y(), 1);
+    Eigen::Vector3d trackPos(state.loc0(), state.loc1(), 0);
+    Eigen::Vector3d trackDirec(state.slopeLoc0(), state.slopeLoc1(), 1);
     trackDirec.normalize();
     DEBUG("Track Direction: ", trackDirec);
 
@@ -71,8 +70,8 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
 
       DEBUG("SensorId: ", isensor);
       DEBUG("Sensor Name: ", m_device.getSensor(isensor).name());
-      DEBUG("Sensor Rows: ", m_device.getSensor(isensor).numRows());
-      DEBUG("Sensor Cols: ", m_device.getSensor(isensor).numCols());
+      DEBUG("Sensor Rows: ", m_device.getSensor(isensor).rowRange().length());
+      DEBUG("Sensor Cols: ", m_device.getSensor(isensor).colRange().length());
       DEBUG("Sensor Pitch Row: ", m_device.getSensor(isensor).pitchRow());
       DEBUG("Sensor Pitch Col: ", m_device.getSensor(isensor).pitchCol());
       //      DEBUG("Sensor Origin: ", m_device.getSensor(isensor)->origin());
@@ -84,7 +83,8 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
       //            m_device.getSensor(isensor)->constructPixelToGlobal());
 
       // Get the Plane Normal vector
-      Eigen::Vector3d planeNormal = plane.unitNormal();
+      Eigen::Vector3d planeNormal =
+          plane.linearToGlobal().col(kW).segment<3>(kX);
       DEBUG("Plane Normal: ", planeNormal);
 
       // Propagate global track to intersection to get global path length
@@ -92,7 +92,7 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
       //      double xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz;
       //      m_device.getSensor(isensor)->localToGlobal().GetComponents(
       //          xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz);
-      Eigen::Vector3d localOrigin = plane.offset();
+      Eigen::Vector3d localOrigin = plane.origin().segment<3>(kX);
       double pathLength = -1 * (trackPos - localOrigin).dot(planeNormal) /
                           trackDirec.dot(planeNormal);
       DEBUG("Path Length: ", pathLength);
@@ -103,7 +103,7 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
       // Compute Q1 from the G2L matrix of the sensor
       // NOTE: This would also be used for computing the Jacobian
       // TODO: Change to iterator version
-      Eigen::Matrix3d Q1 = plane.rotationToLocal();
+      Eigen::Matrix3d Q1 = plane.linearToLocal().block<3, 3>(kX, kU);
       Eigen::Matrix3d Q1T;
       Eigen::MatrixXd Q1T23(2, 3);
       // Get the Q1 transpose
@@ -141,9 +141,12 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
       // TODO: Opportunity to optimize code by using fixed size matrices below
       Eigen::Matrix3d Q0;
       if (isensor == 0) {
-        Q0 = plane.rotationToGlobal();
+        Q0 = plane.linearToGlobal().block<3, 3>(kX, kU);
       } else {
-        Q0 = m_device.geometry().getPlane(isensor - 1).rotationToGlobal();
+        Q0 = m_device.geometry()
+                 .getPlane(isensor - 1)
+                 .linearToGlobal()
+                 .block<3, 3>(kX, kU);
       }
 
       // Compute Matrix A
@@ -299,19 +302,15 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
             DEBUG("Hit: ", someHit);
           }
           // Get the measurement precision
-          Eigen::Matrix2d measCoVar;
-          measCoVar(0, 0) = cluster.covLocal()(0, 0);
-          measCoVar(0, 1) = cluster.covLocal()(0, 1);
-          measCoVar(1, 0) = cluster.covLocal()(1, 0);
-          measCoVar(1, 1) = cluster.covLocal()(1, 1);
+          Eigen::Matrix2d measCoVar = cluster.uvCov();
           Eigen::Matrix2d measPrec;
           measPrec = measCoVar.inverse();
           DEBUG("measPrec: ", measPrec);
 
           // Get the measurement (residuals)
           Eigen::Vector2d meas;
-          meas(0) = localIntersection(0) - cluster.posLocal().x();
-          meas(1) = localIntersection(1) - cluster.posLocal().y();
+          meas(0) = localIntersection(0) - cluster.u();
+          meas(1) = localIntersection(1) - cluster.v();
           DEBUG("Meas: ", meas);
 
           // Set the proL2m matrix to unit matrix
@@ -388,7 +387,7 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
 
       // Update the covariance for each state
       Eigen::Matrix4d cov = aCovariance.block(1, 1, 4, 4);
-      state.setCov(cov);
+//      state.setCov(cov);
 
       // Set the local state for the sensor event
       sev.setLocalState(itrack, std::move(state));
