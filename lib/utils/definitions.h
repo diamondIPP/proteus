@@ -47,6 +47,7 @@ using Matrix34 = Matrix<Scalar, 3, 4>;
 using Matrix4 = Matrix<Scalar, 4, 4>;
 using Matrix42 = Matrix<Scalar, 4, 2>;
 using Matrix43 = Matrix<Scalar, 4, 3>;
+using Matrix5 = Matrix<Scalar, 5, 5>;
 using Matrix6 = Matrix<Scalar, 6, 6>;
 using DiagMatrix4 = DiagMatrix<Scalar, 4>;
 using DiagMatrix6 = DiagMatrix<Scalar, 6>;
