@@ -4,8 +4,8 @@
  * \date 2016-10
  */
 
-#ifndef PT_GBLFitter_H
-#define PT_GBLFitter_H
+#ifndef PT_GBLFITTER_H
+#define PT_GBLFITTER_H
 
 #include <vector>
 
@@ -31,6 +31,7 @@ public:
 private:
   const Mechanics::Device& m_device;
 };
+
 } // namespace Tracking
 
-#endif // PT_GBLFitter_H
+#endif // PT_GBLFITTER_H
