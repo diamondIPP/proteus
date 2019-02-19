@@ -6,6 +6,7 @@
 
 #include "gblfitter.h"
 
+#include <cassert>
 #include <cmath>
 
 #include <GblPoint.h>
@@ -27,13 +28,77 @@ Tracking::GBLFitter::GBLFitter(const Mechanics::Device& device)
 
 std::string Tracking::GBLFitter::name() const { return "GBLFitter"; }
 
+/// Construct a GBL Jacobian for the propagation between two planes.
+///
+/// \param tangent   Track tangent vector in the source system
+/// \param toTarget  Transformation matrix from the source to the target system
+/// \param w         Propagation distance along the target normal axis
+///
+static Matrix5
+buildJacobian(const Vector4& tangent, const Matrix4& toTarget, Scalar w)
+{
+  // Full Jacobian w/ Proteus parameter ordering
+  Matrix6 jacPt = Tracking::jacobianState(tangent, toTarget, w);
+  // Reduce to Jacobian w/ GBL ordering [q/p, u', v', u, v] and no time
+  Matrix5 jacGbl = Matrix5::Zero();
+  jacGbl(0, 0) = 1;
+  jacGbl(1, 1) = jacPt(kSlopeLoc0, kSlopeLoc0);
+  jacGbl(1, 2) = jacPt(kSlopeLoc0, kSlopeLoc1);
+  jacGbl(1, 3) = jacPt(kSlopeLoc0, kLoc0);
+  jacGbl(1, 4) = jacPt(kSlopeLoc0, kLoc1);
+  jacGbl(2, 1) = jacPt(kSlopeLoc1, kSlopeLoc0);
+  jacGbl(2, 2) = jacPt(kSlopeLoc1, kSlopeLoc1);
+  jacGbl(2, 3) = jacPt(kSlopeLoc1, kLoc0);
+  jacGbl(2, 4) = jacPt(kSlopeLoc1, kLoc1);
+  jacGbl(3, 1) = jacPt(kLoc0, kSlopeLoc0);
+  jacGbl(3, 2) = jacPt(kLoc0, kSlopeLoc1);
+  jacGbl(3, 3) = jacPt(kLoc0, kLoc0);
+  jacGbl(3, 4) = jacPt(kLoc0, kLoc1);
+  jacGbl(4, 1) = jacPt(kLoc1, kSlopeLoc0);
+  jacGbl(4, 2) = jacPt(kLoc1, kSlopeLoc1);
+  jacGbl(4, 3) = jacPt(kLoc1, kLoc0);
+  jacGbl(4, 4) = jacPt(kLoc1, kLoc1);
+  return jacGbl;
+}
+
+/// Construct a full track state from reference parameters and GBL fit results.
+///
+/// This also handles the conversion from the GBL parameter order to the
+/// Proteus parameter ordering used everywhere else.
+static Storage::TrackState
+buildCorrectedState(const Vector6& reference,
+                    const Eigen::VectorXd& correction,
+                    const Eigen::MatrixXd& covariance)
+{
+  // ensure code assumptions stay valid
+  static_assert((kLoc0 + 1 == kLoc1), "Who changed the order?");
+  static_assert((kSlopeLoc0 + 1 == kSlopeLoc1), "Who changed the order?");
+  assert(correction.size() == 5);
+  assert((covariance.cols() == 5) and (covariance.rows() == 5));
+
+  Vector6 params = reference;
+  // GBL ordering is [q/p, u', v', u, v]
+  params[kLoc0] -= correction[3];
+  params[kLoc1] -= correction[4];
+  params[kSlopeLoc0] -= correction[1];
+  params[kSlopeLoc1] -= correction[2];
+
+  SymMatrix6 cov = Matrix6::Zero();
+  cov.block<2, 2>(kLoc0, kLoc0) = covariance.block<2, 2>(3, 3);
+  cov.block<2, 2>(kLoc0, kSlopeLoc0) = covariance.block<2, 2>(3, 1);
+  cov.block<2, 2>(kSlopeLoc0, kSlopeLoc0) = covariance.block<2, 2>(1, 1);
+  cov.block<2, 2>(kSlopeLoc0, kLoc0) = covariance.block<2, 2>(1, 3);
+
+  return {params, cov};
+}
+
 void Tracking::GBLFitter::execute(Storage::Event& event) const
 {
+  using gbl::GblPoint;
+  using gbl::GblTrajectory;
+
   // Print Generic Information
   INFO("Number of tracks in the event: ", event.numTracks());
-
-  // Declare a vector for storing the original state
-  Eigen::Vector4d originalState;
 
   // INIT: Loop over all the sensors to get the total radiation length
   double totalRadLength = 0;
@@ -42,233 +107,77 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
   }
   DEBUG("Total Radiation Length: ", totalRadLength);
 
-  // Loop over all the tracks in the event
+  // temporary (resuable) storage
+  std::vector<Vector6> referenceParams(m_device.numSensors());
+  std::vector<GblPoint> gblPoints(m_device.numSensors(), {Matrix5::Identity()});
+  Eigen::VectorXd gblCorrection(5);
+  Eigen::MatrixXd gblCovariance(5, 5);
+  Eigen::VectorXd gblResiduals(2);
+  Eigen::VectorXd gblErrorsMeasurements(2);
+  Eigen::VectorXd gblErrorsResiduals(2);
+  Eigen::VectorXd gblDownWeights(2);
+
   for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
-    // Initialize list of GblPoints
-    std::vector<gbl::GblPoint> points;
-
-    // Initialize the vector of original states
-    std::vector<Eigen::Vector4d> originalStates;
-
-    // Get the track
     Storage::Track& track = event.getTrack(itrack);
-    const Storage::TrackState& state = track.globalState();
-
-    // Print Track info
     DEBUG("TrackState: ", track.globalState());
     INFO("Number of clusters in the track: ", track.size());
 
-    // Specify the track in global coordinates
-    Eigen::Vector3d trackPos(state.loc0(), state.loc1(), 0);
-    Eigen::Vector3d trackDirec(state.slopeLoc0(), state.slopeLoc1(), 1);
-    trackDirec.normalize();
-    DEBUG("Track Direction: ", trackDirec);
+    // Clear temporary storage
+    referenceParams.clear();
+    gblPoints.clear();
 
-    // Loop over all the sensors
+    // Reference track in global coordinates
+    Vector4 globalPos = track.globalState().position();
+    Vector4 globalTan = track.globalState().tangent();
+
+    // Propagate reference track through all sensor to define GBL trajectory
     for (Index isensor = 0; isensor < m_device.numSensors(); isensor++) {
       const auto& plane = m_device.geometry().getPlane(isensor);
 
-      DEBUG("SensorId: ", isensor);
-      DEBUG("Sensor Name: ", m_device.getSensor(isensor).name());
-      DEBUG("Sensor Rows: ", m_device.getSensor(isensor).rowRange().length());
-      DEBUG("Sensor Cols: ", m_device.getSensor(isensor).colRange().length());
-      DEBUG("Sensor Pitch Row: ", m_device.getSensor(isensor).pitchRow());
-      DEBUG("Sensor Pitch Col: ", m_device.getSensor(isensor).pitchCol());
-      //      DEBUG("Sensor Origin: ", m_device.getSensor(isensor)->origin());
-      //      DEBUG("Sensor Normal: ", m_device.getSensor(isensor)->normal());
-      //      DEBUG("Sensor L2G: ",
-      //      m_device.getSensor(isensor)->localToGlobal()); DEBUG("Sensor G2L:
-      //      ", m_device.getSensor(isensor)->globalToLocal()); DEBUG("Sensor
-      //      P2G: ",
-      //            m_device.getSensor(isensor)->constructPixelToGlobal());
+      // 1. Propagate track state to the plane intersection
 
-      // Get the Plane Normal vector
-      Eigen::Vector3d planeNormal =
-          plane.linearToGlobal().col(kW).segment<3>(kX);
-      DEBUG("Plane Normal: ", planeNormal);
+      // equivalent state in local parameters
+      Vector4 localPos = plane.toLocal(globalPos);
+      Vector4 localTan = plane.linearToLocal() * globalTan;
+      // propagation distance along the plane normal
+      Scalar dw = -localPos[kW];
+      // convert tangent to slope parametrization
+      localTan /= localTan[kW];
+      // propagate position to the intersection
+      localPos += dw * localTan;
 
-      // Propagate global track to intersection to get global path length
-      // to the intersection point between track and sensor
-      //      double xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz;
-      //      m_device.getSensor(isensor)->localToGlobal().GetComponents(
-      //          xx, xy, xz, dx, yx, yy, yz, dy, zx, zy, zz, dz);
-      Eigen::Vector3d localOrigin = plane.origin().segment<3>(kX);
-      double pathLength = -1 * (trackPos - localOrigin).dot(planeNormal) /
-                          trackDirec.dot(planeNormal);
-      DEBUG("Path Length: ", pathLength);
-      // Get the global intersection coordinates
-      Eigen::Vector3d globalIntersection;
-      globalIntersection = trackPos + pathLength * trackDirec;
+      // 2. Compute local track parameters to be used as reference later on
 
-      // Compute Q1 from the G2L matrix of the sensor
-      // NOTE: This would also be used for computing the Jacobian
-      // TODO: Change to iterator version
-      Eigen::Matrix3d Q1 = plane.linearToLocal().block<3, 3>(kX, kU);
-      Eigen::Matrix3d Q1T;
-      Eigen::MatrixXd Q1T23(2, 3);
-      // Get the Q1 transpose
-      Q1T = Q1.transpose();
-      // Get the Q1T23 block
-      Q1T23 = Q1T.block(0, 0, 2, 3);
+      Vector6 params;
+      params[kLoc0] = localPos[kU];
+      params[kLoc1] = localPos[kV];
+      params[kTime] = localPos[kS];
+      // tangent is already in slope parametrization
+      params[kSlopeLoc0] = localTan[kU];
+      params[kSlopeLoc1] = localTan[kV];
+      params[kSlopeTime] = localTan[kS];
+      referenceParams.push_back(params);
 
-      // Convert position into local coordinates
-      Eigen::Vector3d localIntersection =
-          Q1 * (globalIntersection - localOrigin);
-      // Convert track direction into local tangents
-      Eigen::Vector3d localTangent = Q1 * trackDirec;
-      // Convert local tangents to local slopes
-      Eigen::Vector2d localSlope;
-      localSlope(0) = localTangent(0) / localTangent(2);
-      localSlope(1) = localTangent(1) / localTangent(2);
+      // 3. Compute Jacobian from previous to current plane
+      // Note: this is already computed in the GBL parameter ordering which is
+      // different from the parameter ordering in the rest of the code base.
 
-      // Initialize the state vector
-      originalState(0) = localSlope(0);
-      originalState(1) = localSlope(1);
-      originalState(2) = localIntersection(0);
-      originalState(3) = localIntersection(1);
-      // Push back the original state to the vectors
-      originalStates.push_back(originalState);
-
-      DEBUG("Original State: ", originalState);
-      DEBUG("Track Intersection with sensor in Global coordinates: ",
-            globalIntersection);
-      DEBUG("Track Intersection with sensor in Local coordinates: ",
-            localIntersection);
-      DEBUG("Local tangent: ", localTangent);
-      DEBUG("Local slope: ", localSlope);
-
-      // Caluclate Jacobians for all the sensors
-      // TODO: Opportunity to optimize code by using fixed size matrices below
-      Eigen::Matrix3d Q0;
+      Matrix5 jac;
       if (isensor == 0) {
-        Q0 = plane.linearToGlobal().block<3, 3>(kX, kU);
+        // first plane has no predecessor and no propagation Jacobian.
+        jac = Matrix5::Identity();
       } else {
-        Q0 = m_device.geometry()
-                 .getPlane(isensor - 1)
-                 .linearToGlobal()
-                 .block<3, 3>(kX, kU);
+        const auto& prev = m_device.geometry().getPlane(isensor - 1);
+        Vector4 prevTan = prev.linearToLocal() * globalTan;
+        Matrix4 prevToLocal = plane.linearToLocal() * prev.linearToGlobal();
+        jac = buildJacobian(prevTan, prevToLocal, dw);
       }
 
-      // Compute Matrix A
-      float f;
-      f = 1 / sqrt(1 + localSlope(0) * localSlope(0) +
-                   localSlope(1) * localSlope(1));
-      float f_cubed;
-      f_cubed = f * f * f;
-      Eigen::MatrixXd A(3, 2);
-      A(0, 0) = f - f_cubed * localSlope(0) * localSlope(0);
-      A(0, 1) = -f * localSlope(0) * localSlope(1);
-      A(1, 0) = A(0, 1);
-      A(1, 1) = f - f_cubed * localSlope(1) * localSlope(1);
-      A(2, 0) = -f_cubed * localSlope(0);
-      A(2, 1) = -f_cubed * localSlope(1);
+      // 4. Create GBL point
 
-      // Compute Matrix F (Local to global)
-      Eigen::MatrixXd F_0(3, 2);
-      F_0 = Q0.block(0, 0, 3, 2);
-      Eigen::MatrixXd F_1 = Eigen::MatrixXd::Zero(3, 2);
-      Eigen::MatrixXd F_2 = Q0 * A;
-      Eigen::MatrixXd F_3(F_0.rows(), F_0.cols() + F_1.cols());
-      F_3 << F_0, F_1;
-      Eigen::MatrixXd F_4(F_1.rows(), F_1.cols() + F_2.cols());
-      F_4 << F_1, F_2;
-      Eigen::MatrixXd F(F_3.rows() + F_4.rows(), F_3.cols());
-      F << F_3, F_4;
+      GblPoint point(jac);
 
-      // Compute Matrix B
-      Eigen::Matrix3d twt = trackDirec * planeNormal.transpose();
-      double tw = trackDirec.dot(planeNormal);
-      Eigen::Matrix3d eye3 = Eigen::Matrix3d::Identity();
-      Eigen::Matrix3d B = eye3 - (twt / tw);
-
-      // Computer Matrix C
-      // TODO: Check which path length I should use
-      Eigen::Matrix3d ttt = trackDirec * trackDirec.transpose();
-      Eigen::Matrix3d C = pathLength * (eye3 - (ttt / tw));
-
-      // Compute Matrix D
-      Eigen::MatrixXd D(2, 3);
-      D(0, 0) = f;
-      D(0, 1) = 0;
-      D(0, 2) = -localSlope(0);
-      D(1, 0) = D(0, 1);
-      D(1, 1) = D(0, 0);
-      D(1, 2) = -localSlope(1);
-
-      // Compute Matrix G
-      Eigen::MatrixXd G_0(2, 3);
-      G_0 = Q1T23 * B;
-      Eigen::MatrixXd G_1(2, 3);
-      G_1 = Q1T23 * C;
-      Eigen::MatrixXd G_2 = Eigen::MatrixXd::Zero(2, 3);
-      Eigen::MatrixXd G_3(2, 3);
-      G_3 = D * Q1T;
-      Eigen::MatrixXd G_4(G_0.rows(), G_0.cols() + G_1.cols());
-      G_4 << G_0, G_1;
-      Eigen::MatrixXd G_5(G_2.rows(), G_2.cols() + G_3.cols());
-      G_5 << G_2, G_3;
-      Eigen::MatrixXd G(G_4.rows() + G_5.rows(), G_4.cols());
-      G << G_4, G_5;
-
-      // Compute Matrix H
-      Eigen::Matrix4d H_temp = G * F;
-
-      // Rearrange H so that it corresponds to (u',v',u,v) instead of
-      // (u,v,u',v')
-      Eigen::MatrixXd H1(2, 2);
-      H1 = H_temp.block(0, 0, 2, 2);
-      Eigen::MatrixXd H2(2, 2);
-      H2 = H_temp.block(0, 2, 2, 2);
-      Eigen::MatrixXd H3(2, 2);
-      H3 = H_temp.block(2, 0, 2, 2);
-      Eigen::MatrixXd H4(2, 2);
-      H4 = H_temp.block(2, 2, 2, 2);
-      Eigen::MatrixXd H5(2, 4);
-      H5 << H4, H3;
-      Eigen::MatrixXd H6(2, 4);
-      H6 << H2, H1;
-      Eigen::Matrix4d H;
-      H << H5, H6;
-
-      // We have to make the Jacobain 5x5 in GBL format (q/p,u',v',u,v)
-      Eigen::MatrixXd jac_0(1, 4);
-      jac_0(0, 0) = 0;
-      jac_0(0, 1) = 0;
-      jac_0(0, 2) = 0;
-      jac_0(0, 3) = 0;
-      Eigen::MatrixXd jac_1(5, 4);
-      jac_1 << jac_0, H;
-      Eigen::MatrixXd jac_2(5, 1);
-      jac_2(0, 0) = 1;
-      jac_2(1, 0) = 0;
-      jac_2(2, 0) = 0;
-      jac_2(3, 0) = 0;
-      jac_2(4, 0) = 0;
-      Eigen::MatrixXd jac(5, 5);
-      jac << jac_2, jac_1;
-
-      // Print the Jacobian information
-      DEBUG("Q0: ", Q0);
-      DEBUG("f: ", f);
-      DEBUG("f^3: ", f_cubed);
-      DEBUG("A: ", A);
-      DEBUG("F: ", F);
-      DEBUG("Q1: ", Q1);
-      DEBUG("Q1 Transpose: ", Q1T);
-      DEBUG("TWT: ", twt);
-      DEBUG("TW: ", tw);
-      DEBUG("Eye3: ", eye3);
-      DEBUG("B: ", B);
-      DEBUG("Path Length: ", pathLength);
-      DEBUG("TTT: ", ttt);
-      DEBUG("C: ", C);
-      DEBUG("D: ", D);
-      DEBUG("G: ", G);
-      DEBUG("H: ", H);
-      DEBUG("Jacobian: ", jac);
-
-      // Initialize the GBL point with the Jacobian
-      gbl::GblPoint point(jac);
+      // 4a. Always add a scatterer
 
       // Get theta from the Highland formula
       // TODO: Seems like we need to adapt this formula for our case
@@ -279,75 +188,88 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
           0.0136 * sqrt(radLength) / energy * (1 + 0.038 * log(totalRadLength));
 
       // Get the scattering uncertainity
-      Eigen::Vector2d scatPrec;
+      // TODO this is incorrect for rotated planes
+      Vector2 scatPrec;
       scatPrec(0) = 1 / (theta * theta);
       scatPrec(1) = scatPrec(0);
 
-      // Set the scattering mean as Zero
-      Eigen::Vector2d scat;
-      scat(0) = 0;
-      scat(1) = 0;
-
       // Add scatterer to the defined GblPoint
-      point.addScatterer(scat, scatPrec);
+      // Expected scattering angle vanishes
+      point.addScatterer(Vector2::Zero(), scatPrec);
 
-      // Loop over all the clusters to find the matching information
-      for (const auto& c : track.clusters()) {
-        Index isensorFromCluster = c.first;
-        const Storage::Cluster& cluster = c.second;
-        if (isensor == isensorFromCluster) {
-          DEBUG("Cluster ", cluster);
-          DEBUG("Sensor Number of Hits: ", cluster.size());
-          for (const Storage::Hit& someHit : cluster.hits()) {
-            DEBUG("Hit: ", someHit);
-          }
-          // Get the measurement precision
-          Eigen::Matrix2d measCoVar = cluster.uvCov();
-          Eigen::Matrix2d measPrec;
-          measPrec = measCoVar.inverse();
-          DEBUG("measPrec: ", measPrec);
+      // 4b. If available, add a measurement
 
-          // Get the measurement (residuals)
-          Eigen::Vector2d meas;
-          meas(0) = localIntersection(0) - cluster.u();
-          meas(1) = localIntersection(1) - cluster.v();
-          DEBUG("Meas: ", meas);
-
-          // Set the proL2m matrix to unit matrix
-          // Identity Matrix since measurement and scattering plane are the same
-          Eigen::Matrix2d proL2m = Eigen::Matrix2d::Identity();
-
-          // Add measurement to the defined GblPoint
-          point.addMeasurement(proL2m, meas, measPrec);
+      auto ic = track.clusters().find(isensor);
+      if (ic != track.clusters().end()) {
+        const Storage::Cluster& cluster = ic->second;
+        DEBUG("Cluster ", cluster);
+        DEBUG("Sensor Number of Hits: ", cluster.size());
+        for (const Storage::Hit& someHit : cluster.hits()) {
+          DEBUG("Hit: ", someHit);
         }
+
+        // Get the measurement precision
+        Matrix2 measPrec = cluster.uvCov().inverse();
+        DEBUG("measPrec:\n", measPrec);
+
+        // Get the measurement (residuals)
+        Vector2 meas(localPos[kU] - cluster.u(), localPos[kV] - cluster.v());
+        DEBUG("Meas: ", meas);
+
+        // Add measurement to the point, measurements and track parameters
+        // are defined in the same coordinates and no projection is required.
+        point.addMeasurement(meas, measPrec);
       }
 
-      // Add the GblPoint to the list of GblPoints
-      points.push_back(point);
+      // 5. Add GBL point to the trajectory
+
+      gblPoints.push_back(point);
+
+      // 6. Update global state as the starting point for the next iteration
+
+      globalPos = plane.toGlobal(localPos);
+      // the tangent is a constant of the motion and remains unchanged
     }
 
-    // Define and initialize the GblTrajectory
-    gbl::GblTrajectory traj(points, false);
-
-    // Fit trajectory
-    double Chi2;
-    int Ndf;
+    // fit the GBL trajectory w/o track curvature
+    GblTrajectory traj(gblPoints, false);
+    double chi2;
     double lostWeight;
-    traj.fit(Chi2, Ndf, lostWeight);
+    int dof;
+    // TODO what to do for errors?
+    traj.fit(chi2, dof, lostWeight);
+    track.setGoodnessOfFit(chi2, dof);
 
-    INFO("Chi2: ", Chi2);
-    INFO("Ndf: ", Ndf);
-    INFO("lostWeight: ", lostWeight);
+    DEBUG("chi2/dof: ", chi2, " / ", dof);
+    DEBUG("lost weight: ", lostWeight);
 
-    // Loop over all the sensors to get the measurement and scatterer
-    // residuals and then update the track state
+    // extract local track states for all sensors
     for (Index isensor = 0; isensor < m_device.numSensors(); ++isensor) {
+      // positive gbl label means that we extract the parameters before
+      // scattering. not relevant for measurement and kink residuals.
+      int gblLabel = isensor + 1;
+
+      // Get the track parameter corrections and build the full state
+      traj.getResults(gblLabel, gblCorrection, gblCovariance);
+      const auto& ref = referenceParams[isensor];
+      auto state = buildCorrectedState(ref, gblCorrection, gblCovariance);
+
+      // Set the local state for the sensor event
+      event.getSensorEvent(isensor).setLocalState(itrack, std::move(state));
+
+      DEBUG("results sensor ", isensor);
+      DEBUG("  reference: ", format(ref));
+      DEBUG("  correction: ", format(gblCorrection));
+      DEBUG("  parameters: ", format(state.params()));
+      DEBUG("  covariance:\n", format(state.cov()));
+
       unsigned int numData = 0;
       Eigen::VectorXd residuals(2), measErr(2), resErr(2), downWeights(2);
 
       // Get the measurement residuals
-      traj.getMeasResults(isensor + 1, numData, residuals, measErr, resErr,
-                          downWeights);
+      traj.getMeasResults(gblLabel, numData, gblResiduals,
+                          gblErrorsMeasurements, gblErrorsResiduals,
+                          gblDownWeights);
       DEBUG("Measurement Results for Sensor ", isensor);
       for (unsigned int i = 0; i < numData; ++i) {
         DEBUG(i, " Residual: ", residuals[i],
@@ -357,40 +279,13 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
 
       // Get the scatterer residuals
       Eigen::VectorXd sc1(2), sc2(2), sc3(2), sc4(2);
-      traj.getScatResults(isensor + 1, numData, sc1, sc2, sc3, sc4);
+      traj.getScatResults(gblLabel, numData, sc1, sc2, sc3, sc4);
       DEBUG("Scattering Results for Sensor ", isensor);
       for (unsigned int i = 0; i < numData; ++i) {
         // TODO: Revise these names. Are probably incorrect.
         DEBUG(i, " Kink: ", sc1[i], " , Kink measurement error: ", sc2[i],
               " , Kink error: ", sc3[i]);
       }
-
-      // Get the track parameter corrections
-      Eigen::VectorXd aCorrection(5);
-      Eigen::MatrixXd aCovariance(5, 5);
-      traj.getResults(isensor + 1, aCorrection, aCovariance);
-      DEBUG("aCorrection: ", aCorrection);
-      DEBUG("Covariance: ", aCovariance);
-
-      // Calcualte the updated state: u', v', u, v
-      DEBUG("For Sensor: ", isensor);
-      Eigen::Vector4d corr = aCorrection.tail(4);
-      DEBUG("Correction: ", corr);
-      Eigen::Vector4d updatedState = originalStates[isensor] - corr;
-      DEBUG("Original State: ", originalStates[isensor]);
-      DEBUG("Updated State: ", updatedState);
-
-      // Initialize and update the sensor event for each sensor
-      Storage::SensorEvent& sev = event.getSensorEvent(isensor);
-      Storage::TrackState state(updatedState(2), updatedState(3),
-                                updatedState(0), updatedState(1));
-
-      // Update the covariance for each state
-      Eigen::Matrix4d cov = aCovariance.block(1, 1, 4, 4);
-//      state.setCov(cov);
-
-      // Set the local state for the sensor event
-      sev.setLocalState(itrack, std::move(state));
     }
 
     // debug printout
