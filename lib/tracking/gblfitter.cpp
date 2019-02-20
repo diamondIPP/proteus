@@ -19,9 +19,9 @@
 #include "tracking/propagation.h"
 #include "utils/logger.h"
 
-PT_SETUP_LOCAL_LOGGER(GBLFitter)
+PT_SETUP_LOCAL_LOGGER(GblFitter)
 
-Tracking::GBLFitter::GBLFitter(const Mechanics::Device& device)
+Tracking::GblFitter::GblFitter(const Mechanics::Device& device)
     : m_device(device)
     // sensor ids sorted along the expected propagation order
     , m_propagationIds(
@@ -29,7 +29,7 @@ Tracking::GBLFitter::GBLFitter(const Mechanics::Device& device)
 {
 }
 
-std::string Tracking::GBLFitter::name() const { return "GBLFitter"; }
+std::string Tracking::GblFitter::name() const { return "GBLFitter"; }
 
 /// Construct a GBL Jacobian for the propagation between two planes.
 ///
@@ -95,7 +95,7 @@ buildCorrectedState(const Vector6& reference,
   return {params, cov};
 }
 
-void Tracking::GBLFitter::execute(Storage::Event& event) const
+void Tracking::GblFitter::execute(Storage::Event& event) const
 {
   using gbl::GblPoint;
   using gbl::GblTrajectory;

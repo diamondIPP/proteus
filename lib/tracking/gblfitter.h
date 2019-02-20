@@ -22,9 +22,9 @@ namespace Tracking {
  * This calculates new global track parameters and goodness-of-fit and
  * calculates the local track parameters on the selected sensor planes.
  */
-class GBLFitter : public Loop::Processor {
+class GblFitter : public Loop::Processor {
 public:
-  GBLFitter(const Mechanics::Device& device);
+  GblFitter(const Mechanics::Device& device);
 
   std::string name() const;
   void execute(Storage::Event& event) const;
