@@ -100,15 +100,13 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
   using gbl::GblPoint;
   using gbl::GblTrajectory;
 
-  // Print Generic Information
-  INFO("Number of tracks in the event: ", event.numTracks());
-
   // INIT: Loop over all the sensors to get the total radiation length
+  // TODO not sure why this is needed
   double totalRadLength = 0;
   for (Index isns = 0; isns < m_device.numSensors(); ++isns) {
     totalRadLength += m_device.getSensor(isns).xX0();
   }
-  DEBUG("Total Radiation Length: ", totalRadLength);
+  DEBUG("total x/X0: ", totalRadLength);
 
   // temporary (resuable) storage
   std::vector<Vector6> referenceParams(m_device.numSensors());
@@ -122,8 +120,6 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
 
   for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
     Storage::Track& track = event.getTrack(itrack);
-    DEBUG("TrackState: ", track.globalState());
-    INFO("Number of clusters in the track: ", track.size());
 
     // Clear temporary storage
     referenceParams.clear();
@@ -143,11 +139,11 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
       // equivalent state in local parameters
       Vector4 localPos = plane.toLocal(globalPos);
       Vector4 localTan = plane.linearToLocal() * globalTan;
-      // propagation distance along the plane normal
+      // propagation distance to intersection along the plane normal
       Scalar dw = -localPos[kW];
       // convert tangent to slope parametrization
       localTan /= localTan[kW];
-      // propagate position to the intersection
+      // propagate position to the intersection, tangent is invariant
       localPos += dw * localTan;
 
       // 2. Compute local track parameters to be used as reference later on
@@ -177,7 +173,7 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
         jac = buildJacobian(prevTan, prevToLocal, dw);
       }
 
-      // 4. Create GBL point
+      // 4. Create a GBL point for this step
 
       GblPoint point(jac);
 
@@ -206,19 +202,11 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
       auto ic = track.clusters().find(sensorId);
       if (ic != track.clusters().end()) {
         const Storage::Cluster& cluster = ic->second;
-        DEBUG("Cluster ", cluster);
-        DEBUG("Sensor Number of Hits: ", cluster.size());
-        for (const Storage::Hit& someHit : cluster.hits()) {
-          DEBUG("Hit: ", someHit);
-        }
-
-        // Get the measurement precision
-        Matrix2 measPrec = cluster.uvCov().inverse();
-        DEBUG("measPrec:\n", measPrec);
 
         // Get the measurement (residuals)
         Vector2 meas(localPos[kU] - cluster.u(), localPos[kV] - cluster.v());
-        DEBUG("Meas: ", meas);
+        // Get the measurement precision
+        Matrix2 measPrec = cluster.uvCov().inverse();
 
         // Add measurement to the point, measurements and track parameters
         // are defined in the same coordinates and no projection is required.
@@ -229,10 +217,11 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
 
       gblPoints.push_back(point);
 
-      // 6. Update global state as the starting point for the next iteration
+      // 6. Update starting point for the next step
 
       globalPos = plane.toGlobal(localPos);
       // the tangent is a constant of the motion and remains unchanged
+      prevSensorId = sensorId;
     }
 
     // fit the GBL trajectory w/o track curvature
@@ -245,55 +234,93 @@ void Tracking::GBLFitter::execute(Storage::Event& event) const
     traj.fit(chi2, dof, lostWeight);
     track.setGoodnessOfFit(chi2, dof);
 
-    DEBUG("chi2/dof: ", chi2, " / ", dof);
-    DEBUG("lost weight: ", lostWeight);
+    // extract fitted local track states for all sensors
 
-    // extract local track states for all sensors
-
-    int ipoint = 0;
-    for (auto sensorId : m_propagationIds) {
+    for (unsigned int ipoint = 0; ipoint < m_propagationIds.size(); ++ipoint) {
+      auto sensorId = m_propagationIds[ipoint];
       // GBL label starts counting at 1, w/ positive values indicating that
       // we want to get the parameters before the scatterer.
-      int gblLabel = ipoint + 1;
+      auto label = ipoint + 1;
 
-      // Get the track parameter corrections and build the full state
-      traj.getResults(gblLabel, gblCorrection, gblCovariance);
+      traj.getResults(label, gblCorrection, gblCovariance);
       auto state = buildCorrectedState(referenceParams[ipoint], gblCorrection,
                                        gblCovariance);
-      // Set the local state for the sensor event
       event.getSensorEvent(sensorId).setLocalState(itrack, std::move(state));
-
-      DEBUG("results sensor ", sensorId);
-      DEBUG("  correction: ", format(gblCorrection));
-      DEBUG("  parameters: ", format(state.params()));
-      DEBUG("  covariance:\n", format(state.cov()));
-
-      unsigned int numData = 0;
-      Eigen::VectorXd residuals(2), measErr(2), resErr(2), downWeights(2);
-
-      // Get the measurement residuals
-      traj.getMeasResults(gblLabel, numData, gblResiduals,
-                          gblErrorsMeasurements, gblErrorsResiduals,
-                          gblDownWeights);
-      DEBUG("Measurement Results for Sensor ", sensorId);
-      for (unsigned int i = 0; i < numData; ++i) {
-        DEBUG(i, " Residual: ", residuals[i],
-              " , Measurement Error: ", measErr[i],
-              " , Residual Error: ", resErr[i]);
-      }
-
-      // Get the scatterer residuals
-      Eigen::VectorXd sc1(2), sc2(2), sc3(2), sc4(2);
-      traj.getScatResults(gblLabel, numData, sc1, sc2, sc3, sc4);
-      DEBUG("Scattering Results for Sensor ", sensorId);
-      for (unsigned int i = 0; i < numData; ++i) {
-        // TODO: Revise these names. Are probably incorrect.
-        DEBUG(i, " Kink: ", sc1[i], " , Kink measurement error: ", sc2[i],
-              " , Kink error: ", sc3[i]);
-      }
-
-      ipoint += 1;
     }
+
+    // debug output of the full trajectory w/ input and results
+    // this is intentionally separate from the logic to be able to show input
+    // and results for each sensor together and to avoid cluttering the code.
+
+    DEBUG("global reference: ", track.globalState());
+
+    for (unsigned int ipoint = 0; ipoint < gblPoints.size(); ++ipoint) {
+      auto sensorId = m_propagationIds[ipoint];
+      auto label = ipoint + 1;
+
+      const auto& point = gblPoints[ipoint];
+      const auto& reference = referenceParams[ipoint];
+      const auto& state = event.getSensorEvent(sensorId).getLocalState(itrack);
+
+      DEBUG("sensor ", sensorId, ":");
+
+      // propagation
+      DEBUG("  jacobian:\n", format(point.getP2pJacobian()));
+
+      // track parameters
+
+      DEBUG("  params:");
+      DEBUG("    reference: ", format(reference));
+      DEBUG("    correction: ", format(state.params() - reference));
+      DEBUG("    covariance:\n", format(state.cov()));
+
+      // measurement
+
+      if (point.hasMeasurement()) {
+        gbl::Matrix5d projection;
+        gbl::Vector5d data;
+        gbl::Vector5d prec;
+        unsigned int numData;
+
+        // only the last two coordinates are valid
+        point.getMeasurement(projection, data, prec);
+        traj.getMeasResults(label, numData, gblResiduals, gblErrorsMeasurements,
+                            gblErrorsResiduals, gblDownWeights);
+
+        DEBUG("  measurement:");
+        DEBUG("    projection:\n",
+              format(projection.bottomRightCorner<2, 2>()));
+        DEBUG("    data:      ", format(data.tail<2>()));
+        DEBUG("    residuals: ", format(gblResiduals));
+        DEBUG("    stddev data:      ", format(gblErrorsMeasurements));
+        DEBUG("    stddev residuals: ", format(gblErrorsResiduals));
+        DEBUG("    weights: ", format(gblDownWeights));
+      }
+
+      // scatterer
+
+      if (point.hasScatterer()) {
+        Eigen::Matrix2d transformation;
+        Eigen::Vector2d data;
+        Eigen::Vector2d prec;
+        unsigned int numData;
+
+        point.getScatterer(transformation, data, prec);
+        traj.getScatResults(label, numData, gblResiduals, gblErrorsMeasurements,
+                            gblErrorsResiduals, gblDownWeights);
+
+        DEBUG("  scatterer:");
+        DEBUG("    transformation:\n", format(transformation));
+        DEBUG("    data:      ", format(data));
+        DEBUG("    residuals: ", format(gblResiduals));
+        DEBUG("    stddev data:      ", format(gblErrorsMeasurements));
+        DEBUG("    stddev residuals: ", format(gblErrorsResiduals));
+        DEBUG("    weights: ", format(gblDownWeights));
+      }
+    }
+
+    DEBUG("chi2/dof: ", chi2, " / ", dof);
+    DEBUG("lost weight: ", lostWeight);
 
     // debug printout
     // traj.printTrajectory(1);
