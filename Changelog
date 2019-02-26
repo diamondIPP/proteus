@@ -61,6 +61,24 @@ User-visible changes
 
     All values are exclusive and should be set to the minimum and maximum
     value that can occur in the data.
+*   Add support for sensor-specific timestamp frequencies.
+
+    For each sensor type the time period for a single timestamp bin, i.e.
+    the timestamp pitch, can be specified:
+
+        [sensor_types.some_sensor]
+        ...
+        pitch_timestamp = 25.0  # 40MHz clock, 25ns duration w/ base unit ns
+        ...
+
+        [sensor_types.another_sensor]
+        ...
+        pitch_timestamp = 6.25  # 160MHz clock, 6.25ns duration w/ base unit ns
+        ...
+
+    The timestamp pitch is then used to convert the digital hit timestamp into
+    metric time, similarly to how the spatial pitch is used to convert
+    digital pixel addresses to metric coordinates.
 *   Add histograms for hit timing within a cluster in
     ``sensors/<sensor>/cluster`` folder.
 *   Add ``--print-events`` flag to most tools that enables the printing of
