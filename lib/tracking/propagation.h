@@ -23,12 +23,12 @@ Matrix2 jacobianSlopeSlope(const Vector4& tangent, const Matrix4& toTarget);
 
 /** Full parameter transport jacobian between two systems.
  *
- * \param tangent   Track tangent in the source local system
- * \param toTarget  Transformation from source local to the target local system
- * \param w         Propagation distance along the target normal direction
+ * \param tangent   Initial track tangent in the source system
+ * \param toTarget  Transformation from the source to the target system
+ * \param w0        Initial distance to the plane along the target normal
  */
 Matrix6
-jacobianState(const Vector4& tangent, const Matrix4& toTarget, Scalar w);
+jacobianState(const Vector4& tangent, const Matrix4& toTarget, Scalar w0);
 
 /** Propagate to the target plane and return the propagated state.
  *

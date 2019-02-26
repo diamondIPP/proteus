@@ -31,7 +31,7 @@ Matrix2 Tracking::jacobianSlopeSlope(const Vector4& tangent,
 
 Matrix6 Tracking::jacobianState(const Vector4& tangent,
                                 const Matrix4& toTarget,
-                                Scalar w)
+                                Scalar w0)
 {
   // the code assumes that the parameter vector is split into three
   // position-like and three tangent-like parameters with the same relative
@@ -51,13 +51,13 @@ Matrix6 Tracking::jacobianState(const Vector4& tangent,
   static_assert((kLoc1 - kLoc0) == (kSlopeLoc1 - kSlopeLoc0),
                 "Inconsistent parameter ordering");
 
+  // target tangent derived from the source tangent in slope normalization
+  Vector4 S = toTarget * tangent * (1 / tangent[kW]);
   // map source track parameters to unrestricted target coordinates (pos or tan)
   Matrix43 R;
   R.col(kLoc0) = toTarget.col(kU);
   R.col(kLoc1) = toTarget.col(kV);
   R.col(kTime) = toTarget.col(kS);
-  // source tangent in slope parametrization -> target tangent w/ same length
-  Vector4 S = toTarget * tangent * (1 / tangent[kW]);
   // map changes in unrestricted target coords to changes restricted to plane
   Matrix34 F = Matrix34::Zero();
   F(kLoc0, kU) = 1;
@@ -68,8 +68,8 @@ Matrix6 Tracking::jacobianState(const Vector4& tangent,
   F(kTime, kW) = -S[kS] / S[kW];
   Matrix6 jac;
   // clang-format off
-  jac <<              F * R, (w / S[kW]) * F * R,
-            Matrix3::Zero(), (1 / S[kW]) * F * R;
+  jac <<              F * R, (-w0 / S[kW]) * F * R,
+            Matrix3::Zero(), (  1 / S[kW]) * F * R;
   // clang-format on
   return jac;
 }
