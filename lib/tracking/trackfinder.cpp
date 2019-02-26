@@ -122,7 +122,7 @@ void Tracking::TrackFinder::searchSensor(
                                  m_geo.getBeamSlopeCovariance(lastSensor));
     // propagate track to the target plane
     Storage::TrackState onTarget =
-        Tracking::propagate_to(onSource, m_geo.getPlane(lastSensor), target);
+        Tracking::propagateTo(onSource, m_geo.getPlane(lastSensor), target);
 
     for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
       Storage::Cluster& curr = sensorEvent.getCluster(icluster);

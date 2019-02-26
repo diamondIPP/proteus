@@ -74,9 +74,9 @@ Matrix6 Tracking::jacobianState(const Vector4& tangent,
   return jac;
 }
 
-Storage::TrackState Tracking::propagate_to(const Storage::TrackState& state,
-                                           const Mechanics::Plane& source,
-                                           const Mechanics::Plane& target)
+Storage::TrackState Tracking::propagateTo(const Storage::TrackState& state,
+                                          const Mechanics::Plane& source,
+                                          const Mechanics::Plane& target)
 {
   // combined transformation matrix from source to target system
   Matrix4 toTarget = target.linearToLocal() * source.linearToGlobal();

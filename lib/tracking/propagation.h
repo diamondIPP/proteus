@@ -36,9 +36,9 @@ jacobianState(const Vector4& tangent, const Matrix4& toTarget, Scalar w);
  * \param source  Source plane
  * \param target  Target plane
  */
-Storage::TrackState propagate_to(const Storage::TrackState& state,
-                                 const Mechanics::Plane& source,
-                                 const Mechanics::Plane& target);
+Storage::TrackState propagateTo(const Storage::TrackState& state,
+                                const Mechanics::Plane& source,
+                                const Mechanics::Plane& target);
 
 } // namespace Tracking
 
