@@ -23,32 +23,117 @@ import sys
 
 import ROOT
 
-def main(config_path, root_path):
+def main():
+    p = argparse.ArgumentParser('root-checker')
+    p.add_argument('--generate', action='store_true', help='generate property config')
+    p.add_argument('root_path', help='root file to verify or generate from')
+    p.add_argument('config_path', nargs='?', default='-', help='use - to use stdin/stdout')
+    args = p.parse_args()
 
-    # parse input to determine which object should be checked
-    if config_path == '-':
-        config_file = sys.stdin
+    if args.generate:
+        return generate(args.root_path, args.config_path)
     else:
-        config_file = io.open(config_path, mode='rt', encoding='utf-8')
-    config = []
+        return verify(args.root_path, args.config_path)
+
+def generate(root_path, config_path):
+    """
+    Step through all objects and extract verifiable properties.
+    """
+    root_file = ROOT.TFile.Open(root_path)
+    props = list_properties(root_file)
+    if config_path == '-':
+        write_config(sys.stdout, props)
+    else:
+        with io.open(config_path, mode='wt', encoding='utf-8') as out:
+            write_config(out, props)
+
+def verify(root_path, config_path):
+    """
+    Verify properties of the configured objects.
+    """
+    # read config to determine which objects should be checked
+    if config_path == '-':
+        properties = read_config(sys.stdin)
+    else:
+        with io.open(config_path, mode='rt', encoding='utf-8') as f:
+            properties = read_config(f)
+
+    # open the ROOT file to be checked
+    root_file = ROOT.TFile.Open(root_path)
+    result = True
+    for object_name, property_name, value in properties:
+        check = verify_property(root_file, object_name, property_name, value)
+        result = result and check
+
+    # return success if all tests succeed
+    return (0 if result else 1)
+
+def write_config(config_file, properties):
+    """
+    Write a list of (object, property, value) tuples.
+    """
+    config_file.write('# object\tproperty\tvalue\n')
+    for object_name, property_name, value in properties:
+        config_file.write(
+            '{}\t{}\t{}\n'.format(object_name, property_name, value))
+
+def read_config(config_file):
+    """
+    Read a list of (object, property, value) tuples.
+    """
+    props = []
     for line in config_file:
         line = line.strip()
         # drop empty and comment lines
         if not line or line.startswith('#'):
             continue
         # extract configuration entry
-        name, type_, value_should = line.split()
-        config.append((name, type_, value_should))
+        object_name, property_name, value = line.split()
+        props.append((object_name, property_name, value))
+    return props
 
-    # open the ROOT file to be checked
-    root_file = ROOT.TFile.Open(root_path)
-    result = True
-    for name, type_, value_should in config:
-        check = verify_property(root_file, name, type_, value_should)
-        result = result and check
+def properties_th1(obj):
+    return [
+        ('entries', obj.GetEntries()),
+        ('mean', obj.GetMean()),
+        ('stddev', obj.GetStdDev()),
+    ]
+def properties_th2(obj):
+    return [
+        ('entries', obj.GetEntries()),
+        # TODO x/y mean/stdev/...
+    ]
+def properties_ttree(obj):
+    return [
+        ('entries', obj.GetEntries()),
+    ]
 
-    # return success if all tests succeed
-    return (0 if result else 1)
+PROPERTY_EXTRACTORS = {
+    'TH1D': properties_th1,
+    'TH2D': properties_th2,
+    'TTree': properties_ttree,
+}
+
+def list_properties(directory):
+    """
+    Walk through directories and extract object properties.
+    """
+    dirs = [('', directory)]
+    props = []
+    while dirs:
+        curr_path, curr_dir = dirs.pop()
+        for key in curr_dir.GetListOfKeys():
+            item_path = curr_path + key.GetName()
+            if key.IsFolder():
+                dirs.append((item_path + '/', key.ReadObj()))
+            else:
+                extractor = PROPERTY_EXTRACTORS.get(key.GetClassName())
+                if extractor is not None:
+                    for item_prop in extractor(key.ReadObj()):
+                        props.append((item_path,) + item_prop)
+
+    props.sort(key=lambda _: (_[0], _[1]))
+    return props
 
 # ROOT seems to behave differently for python2/3
 if (sys.version_info > (3, 0)):
@@ -58,39 +143,35 @@ else:
     def get(directory, name):
         return directory.Get(name.encode('utf-8'))
 
-def verify_property(directory, name, property_, value_should):
+def verify_property(directory, object_name, property_name, value_should):
     """
     Verify that the object has a property with the given value.
     """
     # try to get the object
-    obj = get(directory, name)
+    obj = get(directory, object_name)
     if not obj:
-        print('{} does not exist'.format(name))
+        print('{} does not exist'.format(object_name))
         return False
     # try to access the requested property
     try:
-        if property_ == 'entries':
+        if property_name == 'entries':
             value_is = obj.GetEntries()
-        elif property_ == 'mean':
+        elif property_name == 'mean':
             value_is = obj.GetMean()
-        elif property_ == 'stddev':
+        elif property_name == 'stddev':
             value_is = obj.GetStdDev()
         else:
-            print('{} property={} is unknown'.format(name, property_))
+            print('{} property={} is unknown'.format(object_name, property_name))
             return False
     except AttributeError:
-        print('{} property={} is unsupported'.format(name, property_))
+        print('{} property={} is unsupported'.format(object_name, property_name))
         return False
     # check that values match
     if value_is != type(value_is)(value_should):
         fmt = '{} property={} should={} is={}'
-        print(fmt.format(name, property_, value_should, value_is))
+        print(fmt.format(object_name, property_name, value_should, value_is))
         return False
     return True
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser('root-checker')
-    p.add_argument('config_path', help='use - to read from stdin')
-    p.add_argument('root_path', help='')
-    args = p.parse_args()
-    sys.exit(main(args.config_path, args.root_path))
+    sys.exit(main())
