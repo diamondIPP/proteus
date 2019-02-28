@@ -24,11 +24,8 @@ void Storage::Event::clear(uint64_t frame, uint64_t timestamp)
 
 void Storage::Event::setSensorData(Index isensor, SensorEvent&& sensorEvent)
 {
-  assert(((0 <= isensor) && (isensor < m_sensors.size())) &&
-         "Sensor index must be valid");
-
-  m_sensors[isensor] = std::move(sensorEvent);
-  m_sensors[isensor].m_states.clear();
+  m_sensors.at(isensor) = std::move(sensorEvent);
+  m_sensors.at(isensor).m_states.clear();
 }
 
 void Storage::Event::setSensorData(Index first, Event&& event)
