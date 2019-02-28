@@ -52,6 +52,8 @@ public:
   Scalar u() const { return m_pos[kU]; }
   /** On-plane spatial v coordinate. */
   Scalar v() const { return m_pos[kV]; }
+  /** On-plane spatial coordinates. */
+  auto uv() const { return m_pos.segment<2>(kU); }
   /** On-plane spatial covariance. */
   auto uvCov() const { return m_posCov.block<2, 2>(kU, kU); }
   /** Local time. */
