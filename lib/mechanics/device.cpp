@@ -103,7 +103,7 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
   // construct device and sensors
   Device device;
   Index isensor = 0;
-  for (auto configSensor : cfg.get<toml::Array>("sensors")) {
+  for (const auto& configSensor : cfg.get<toml::Array>("sensors")) {
 
     // sensor-specific settings
     auto id = isensor++;

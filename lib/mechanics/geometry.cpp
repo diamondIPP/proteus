@@ -373,9 +373,8 @@ SymMatrix6 Mechanics::Geometry::getParamsCov(Index sensorId) const
   auto it = m_covs.find(sensorId);
   if (it != m_covs.end()) {
     return it->second;
-  } else {
-    return SymMatrix6::Zero();
   }
+  return SymMatrix6::Zero();
 }
 
 Vector4 Mechanics::Geometry::beamTangent() const
