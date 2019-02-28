@@ -37,10 +37,7 @@ void Processors::Matcher::execute(Storage::Event& event) const
   std::set<Index> matchedStates;
 
   // preselect possible track state / cluster pairs
-  for (const auto& s : sensorEvent.localStates()) {
-    Index itrack = s.first;
-    const Storage::TrackState& state = s.second;
-
+  for (const auto& state : sensorEvent.localStates()) {
     for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
       const Storage::Cluster& cluster = sensorEvent.getCluster(icluster);
 
@@ -50,7 +47,8 @@ void Processors::Matcher::execute(Storage::Event& event) const
       double d2 = mahalanobisSquared(cov, delta);
 
       if ((m_distSquaredMax < 0) || (d2 < m_distSquaredMax))
-        possibleMatches.emplace_back(PossibleMatch{icluster, itrack, d2});
+        possibleMatches.emplace_back(
+            PossibleMatch{icluster, state.track(), d2});
     }
   }
   // sort by pair distance, closest distance first

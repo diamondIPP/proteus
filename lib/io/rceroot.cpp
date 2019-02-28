@@ -481,16 +481,15 @@ void Io::RceRootWriter::append(const Storage::Event& event)
     // local track states
     if (trees.intercepts) {
       numIntercepts = 0;
-      for (const auto& s : sensorEvent.localStates()) {
+      for (const auto& local : sensorEvent.localStates()) {
         if (kMaxTracks < static_cast<Index>(numIntercepts + 1))
           FAIL("intercepts exceed MAX_TRACKS");
-        const Storage::TrackState& local = s.second;
         interceptU[numIntercepts] = local.loc0();
         interceptV[numIntercepts] = local.loc1();
         interceptSlopeU[numIntercepts] = local.slopeLoc0();
         interceptSlopeV[numIntercepts] = local.slopeLoc1();
         local.getCovSpatialPacked(interceptCov[numIntercepts]);
-        interceptTrack[numIntercepts] = s.first;
+        interceptTrack[numIntercepts] = local.track();
         numIntercepts += 1;
       }
       trees.intercepts->Fill();

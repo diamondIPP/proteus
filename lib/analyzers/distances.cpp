@@ -67,17 +67,15 @@ void Analyzers::Distances::execute(const Storage::Event& event)
   // combinatorics: all tracks to all other tracks
   for (const auto& s0 : sensorEvent.localStates()) {
     for (const auto& s1 : sensorEvent.localStates()) {
-      if (s0.first == s1.first) {
+      if (s0.track() == s1.track()) {
         continue;
       }
 
-      fillDelta(m_trackTrack, s1.second.position() - s0.second.position());
+      fillDelta(m_trackTrack, s1.position() - s0.position());
     }
   }
   // combinatorics: all clusters to all tracks
-  for (const auto& s : sensorEvent.localStates()) {
-    const Storage::TrackState& state = s.second;
-
+  for (const auto& state : sensorEvent.localStates()) {
     for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
       const Storage::Cluster& cluster = sensorEvent.getCluster(icluster);
 

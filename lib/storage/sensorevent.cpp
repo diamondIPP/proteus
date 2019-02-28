@@ -1,5 +1,6 @@
 #include "sensorevent.h"
 
+#include <algorithm>
 #include <ostream>
 
 #include "storage/track.h"
@@ -18,18 +19,51 @@ void Storage::SensorEvent::clear(uint64_t frame, uint64_t timestamp)
   m_states.clear();
 }
 
-void Storage::SensorEvent::addMatch(Index cluster, Index track)
+bool Storage::SensorEvent::hasLocalState(Index itrack) const
 {
-  assert((0 <= cluster) && (cluster < m_clusters.size()) &&
-         "invalid cluster index");
-  assert((0 < m_states.count(track)) && "invalid track index");
-  assert(!m_clusters[cluster]->isMatched() &&
-         "cluster can only be matched to one track state");
-  assert(!m_states[track].isMatched() &&
-         "cluster can only be matched to one track state");
+  return (std::find_if(m_states.begin(), m_states.end(),
+                       [=](const TrackState& state) {
+                         return (state.track() == itrack);
+                       }) != m_states.end());
+}
 
-  m_clusters[cluster]->m_matchedState = track;
-  m_states[track].m_matchedCluster = cluster;
+const Storage::TrackState&
+Storage::SensorEvent::getLocalState(Index itrack) const
+{
+  auto it = std::find_if(
+      m_states.begin(), m_states.end(),
+      [=](const TrackState& state) { return (state.track() == itrack); });
+  if (it == m_states.end()) {
+    throw std::out_of_range("Invalid track index");
+  }
+  return *it;
+}
+
+void Storage::SensorEvent::addMatch(Index icluster, Index itrack)
+{
+  auto isInTrack = [=](const TrackState& state) {
+    return (state.track() == itrack);
+  };
+  auto& cluster = m_clusters.at(icluster);
+  auto state = std::find_if(m_states.begin(), m_states.end(), isInTrack);
+  if (state == m_states.end()) {
+    throw std::out_of_range("Invalid track index");
+  }
+
+  // remove previous associations
+  if (cluster->isMatched()) {
+    auto other = std::find_if(m_states.begin(), m_states.end(), isInTrack);
+    if (other != m_states.end()) {
+      other->m_matchedCluster = kInvalidIndex;
+    }
+  }
+  if (state->isMatched()) {
+    m_clusters.at(state->matchedCluster())->m_matchedState = kInvalidIndex;
+  }
+
+  // set new association
+  cluster->m_matchedState = itrack;
+  state->m_matchedCluster = icluster;
 }
 
 void Storage::SensorEvent::print(std::ostream& os,
@@ -44,14 +78,14 @@ void Storage::SensorEvent::print(std::ostream& os,
   }
   if (!m_clusters.empty()) {
     os << prefix << "clusters:\n";
-    for (size_t iclu = 0; iclu < m_clusters.size(); ++iclu) {
-      os << prefix << "  " << iclu << ": " << *m_clusters[iclu] << '\n';
+    for (size_t icluster = 0; icluster < m_clusters.size(); ++icluster) {
+      os << prefix << "  " << icluster << ": " << *m_clusters[icluster] << '\n';
     }
   }
   if (!m_states.empty()) {
     os << prefix << "track states:\n";
     for (const auto& ts : m_states)
-      os << prefix << "  " << ts.first << ": " << ts.second << '\n';
+      os << prefix << "  " << ts.track() << ": " << ts << '\n';
   }
   os.flush();
 }

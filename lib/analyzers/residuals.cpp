@@ -156,8 +156,7 @@ void Analyzers::Matching::execute(const Storage::Event& event)
   const Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
 
   // iterate over all matched pairs
-  for (const auto& s : sensorEvent.localStates()) {
-    const Storage::TrackState& state = s.second;
+  for (const auto& state : sensorEvent.localStates()) {
     if (state.isMatched()) {
       const Storage::Cluster& cluster =
           sensorEvent.getCluster(state.matchedCluster());

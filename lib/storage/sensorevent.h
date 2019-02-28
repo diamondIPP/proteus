@@ -25,8 +25,6 @@ namespace Storage {
  */
 class SensorEvent {
 public:
-  using TrackStates = std::map<Index, TrackState>;
-
   SensorEvent();
 
   void clear(uint64_t frame, uint64_t timestamp);
@@ -37,23 +35,32 @@ public:
   template <typename... Params>
   Hit& addHit(Params&&... params);
   Index numHits() const { return static_cast<Index>(m_hits.size()); }
-  Hit& getHit(Index i) { return *m_hits.at(i); }
-  const Hit& getHit(Index i) const { return *m_hits.at(i); }
+  Hit& getHit(Index ihit) { return *m_hits.at(ihit); }
+  const Hit& getHit(Index ihit) const { return *m_hits.at(ihit); }
 
   template <typename... Params>
   Cluster& addCluster(Params&&... params);
   Index numClusters() const { return static_cast<Index>(m_clusters.size()); }
-  Cluster& getCluster(Index i) { return *m_clusters.at(i); }
-  const Cluster& getCluster(Index i) const { return *m_clusters.at(i); }
+  Cluster& getCluster(Index icluster) { return *m_clusters.at(icluster); }
+  const Cluster& getCluster(Index icluster) const
+  {
+    return *m_clusters.at(icluster);
+  }
 
   /** Set a local track state for the given track. */
   template <typename... Params>
-  void setLocalState(Index track, Params&&... params);
-  const TrackState& getLocalState(Index i) const { return m_states.at(i); }
-  const TrackStates& localStates() const { return m_states; }
+  void setLocalState(Index itrack, Params&&... params);
+  /** Check if a local state is available for a specific track. */
+  bool hasLocalState(Index itrack) const;
+  const TrackState& getLocalState(Index itrack) const;
+  const std::vector<TrackState>& localStates() const { return m_states; }
 
-  /** Associate one cluster to one track state. */
-  void addMatch(Index cluster, Index track);
+  /** Associate one cluster to one track state.
+   *
+   * Any previously existing association for either the cluster or the track
+   * will be overwritten.
+   */
+  void addMatch(Index icluster, Index itrack);
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
@@ -62,7 +69,7 @@ private:
   uint64_t m_timestamp;
   std::vector<std::unique_ptr<Hit>> m_hits;
   std::vector<std::unique_ptr<Cluster>> m_clusters;
-  TrackStates m_states;
+  std::vector<TrackState> m_states;
 
   friend class Event;
   friend class Processors::BinaryClusterizer;
@@ -88,9 +95,19 @@ inline Storage::Cluster& Storage::SensorEvent::addCluster(Params&&... params)
 }
 
 template <typename... Params>
-inline void Storage::SensorEvent::setLocalState(Index track, Params&&... params)
+inline void Storage::SensorEvent::setLocalState(Index itrack,
+                                                Params&&... params)
 {
-  m_states[track] = TrackState(std::forward<Params>(params)...);
+  auto it = std::find_if(
+      m_states.begin(), m_states.end(),
+      [=](const TrackState& state) { return (state.track() == itrack); });
+  if (it != m_states.end()) {
+    *it = TrackState(std::forward<Params>(params)...);
+    it->m_track = itrack;
+  } else {
+    m_states.emplace_back(std::forward<Params>(params)...);
+    m_states.back().m_track = itrack;
+  }
 }
 
 #endif // PT_SENSOREVENT_H
