@@ -110,7 +110,8 @@ static DiagMatrix6 jacobianScaling(const Mechanics::Sensor& sensor)
 // robust singular value decomposition, ignore vanishing singular values,
 // and do not have to bother with the whole regularization scheme at all.
 
-Alignment::LocalChi2PlaneFitter::LocalChi2PlaneFitter(const DiagMatrix6 scaling)
+Alignment::LocalChi2PlaneFitter::LocalChi2PlaneFitter(
+    const DiagMatrix6& scaling)
     : m_scaling(scaling)
     , m_fr(SymMatrix6::Zero())
     , m_y(Vector6::Zero())

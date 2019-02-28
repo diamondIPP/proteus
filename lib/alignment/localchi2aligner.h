@@ -31,7 +31,7 @@ public:
    *
    * \param scaling  Internal parameter scaling e.g. for numerical stability.
    */
-  LocalChi2PlaneFitter(const DiagMatrix6 scaling);
+  LocalChi2PlaneFitter(const DiagMatrix6& scaling);
 
   /** Add one track-measurement pair to the fitter.
    *
