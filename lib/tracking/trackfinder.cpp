@@ -44,41 +44,25 @@ std::string Tracking::TrackFinder::name() const { return "TrackFinder"; }
 // remove track candidates that are too short
 static void removeShortTracks(size_t numPointsMin,
                               size_t numRemainingSensors,
-                              std::vector<Track>& candidates)
+                              std::vector<Track>& tracks)
 {
-  // long enough means the track can potentially still fullfill the
+  // a track is long enough if it can potentially still fullfill the
   // mininum number of points on track at the end of the search
-  auto isLongEnough = [&](const auto& candidate) {
-    return numPointsMin <= (candidate.size() + numRemainingSensors);
+  auto isShort = [=](const auto& track) {
+    return (track.size() + numRemainingSensors) < numPointsMin;
   };
-  auto bad = std::partition(candidates.begin(), candidates.end(), isLongEnough);
-  // remove the short tracks
-  candidates.erase(bad, candidates.end());
+  auto rm = std::remove_if(tracks.begin(), tracks.end(), isShort);
+  tracks.erase(rm, tracks.end());
 }
 
-// fit all tracks in the global system
-static void fitGlobal(const Mechanics::Geometry& geo,
-                      const Event& event,
-                      std::vector<Track>& candidates)
+// remove track badly fitted candidates
+static void removeBadTracks(Scalar reducedChi2Max, std::vector<Track>& tracks)
 {
-  for (auto& track : candidates) {
-    Tracking::LineFitter3D fitter;
-    for (const auto& c : track.clusters()) {
-      const auto& plane = geo.getPlane(c.sensor);
-      const auto& cluster =
-          event.getSensorEvent(c.sensor).getCluster(c.cluster);
-      // convert to global system
-      Vector4 global = plane.toGlobal(cluster.position());
-      Vector4 weight =
-          transformCovariance(plane.linearToGlobal(), cluster.positionCov())
-              .diagonal()
-              .cwiseInverse();
-      fitter.addPoint(global, weight);
-    }
-    fitter.fit();
-    track.setGoodnessOfFit(fitter.chi2(), fitter.dof());
-    track.setGlobalState({fitter.params(), fitter.cov()});
-  }
+  auto isBad = [=](const auto& track) {
+    return reducedChi2Max <= track.reducedChi2();
+  };
+  auto rm = std::remove_if(tracks.begin(), tracks.end(), isBad);
+  tracks.erase(rm, tracks.end());
 }
 
 void Tracking::TrackFinder::execute(Event& event) const
@@ -129,23 +113,31 @@ void Tracking::TrackFinder::execute(Event& event) const
       // TODO handle dead material, e.g. sensors not used for tracking
       const auto& source = m_geo.getPlane(sourceId);
       const auto& target = m_geo.getPlane(targetId);
-      for (auto& candidate : candidates) {
-        candidate.setGlobalState(
-            propagateTo(candidate.globalState(), source, target));
+      for (auto& track : candidates) {
+        track.setGlobalState(propagateTo(track.globalState(), source, target));
       }
 
       // search for compatible points and update local state
       searchSensor(targetId, event.getSensorEvent(targetId), candidates);
 
-      // remove candidates that are already too short
-      size_t numRemainingSensors = m_sensorIds.size() - (j + 2);
-      removeShortTracks(m_numClustersMin, numRemainingSensors, candidates);
+      // ignore candidates that can never fullfill the final cut
+      if (0 < m_numClustersMin) {
+        size_t numRemainingSensors = m_sensorIds.size() - (j + 2);
+        removeShortTracks(m_numClustersMin, numRemainingSensors, candidates);
+      }
     }
 
-    // get final chi2 and global parameters for all possible candidates
-    fitGlobal(m_geo, event, candidates);
-
-    // select final tracks after all possible candidates have been found
+    // remove bad tracks if requested
+    if (0 < m_redChi2Max) {
+      removeBadTracks(m_redChi2Max, candidates);
+    }
+    // transport last local state to the global plane
+    const auto& source = m_geo.getPlane(m_sensorIds.back());
+    const auto& target = Mechanics::Plane{}; // global plane
+    for (auto& track : candidates) {
+      track.setGlobalState(propagateTo(track.globalState(), source, target));
+    }
+    // store best, unique tracks in the event
     selectTracks(candidates, event);
   }
 }
@@ -159,10 +151,12 @@ void Tracking::TrackFinder::searchSensor(
     Index iSearchSensor,
     std::vector<Storage::Track>& candidates) const
 {
-  const auto& target = m_geo.getPlane(iSearchSensor);
-  auto& sensorEvent = event.getSensorEvent(iSearchSensor);
-  auto beamSlope = m_geo.getBeamSlope(sensorId);
-  auto beamSlopeCov = m_geo.getBeamSlopeCovariance(sensorId);
+  // Projection from track state into local measurement plane
+  // TODO can we just use a projection matrix?
+  // TODO extend to time
+  Matrix26 H = Matrix26::Zero();
+  H(kU, kLoc0) = 1;
+  H(kV, kLoc1) = 1;
 
   // loop only over the initial candidates and not the added ones
   //
@@ -174,6 +168,7 @@ void Tracking::TrackFinder::searchSensor(
   Index numTracks = static_cast<Index>(candidates.size());
   for (Index itrack = 0; itrack < numTracks; ++itrack) {
     TrackState state = candidates[itrack].globalState();
+    Scalar chi2 = candidates[itrack].chi2();
     int numMatchedClusters = 0;
 
     for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
@@ -184,35 +179,45 @@ void Tracking::TrackFinder::searchSensor(
         continue;
       }
 
-      Vector2 delta(cluster.u() - state.loc0(), cluster.v() - state.loc1());
-      SymMatrix2 cov = cluster.uvCov() + state.loc01Cov();
-      auto d2 = mahalanobisSquared(cov, delta);
+      // compute kalman filter update from this cluster
+
+      // predicted residuals and covariance
+      Vector2 r = cluster.uv() - H * state.params();
+      Matrix2 R = cluster.uvCov() + transformCovariance(H, state.cov());
+      // Kalman gain matrix
+      Matrix<Scalar, 6, 2> K = state.cov() * H.transpose() * R.inverse();
+      // filtered local state and covariance
+      // use numerical superior (but slower formula) for covariance update
+      Vector6 xf = state.params() + K * r;
+      SymMatrix6 Cf =
+          transformCovariance(SymMatrix6::Identity() - K * H, state.cov()) +
+          transformCovariance(K, cluster.uvCov());
+      // filtered residuals and covariance
+      r = cluster.uv() - H * xf;
+      R = cluster.uvCov() - transformCovariance(H, Cf);
+      // compute chi2 update
+      Scalar chi2Update = mahalanobisSquared(R, r);
 
       // check if the cluster is compatible
-      if ((0 < m_d2Max) && (m_d2Max < d2)) {
+      if ((0 < m_d2Max) && (m_d2Max < chi2Update)) {
         continue;
       }
-      // updated track state for further propagation
-      TrackState updatedState(cluster.position(), cluster.positionCov(),
-                              beamSlope, beamSlopeCov);
 
-      if (numMatchedClusters == 0) {
-        // first cluster matched to this tracks
-        candidates[itrack].addCluster(sensorId, icluster);
-        candidates[itrack].setGlobalState(updatedState);
-      } else {
-        // more than one match cluster/ matching ambiguity -> bifurcate track
-        candidates.push_back(candidates[itrack]);
-        // this replaces any previously added cluster for this sensor
-        candidates.back().addCluster(sensorId, icluster);
-        candidates.back().setGlobalState(updatedState);
-      }
+      // if this is not the first cluster, we need to bifurcate the track
+      auto& track =
+          (numMatchedClusters == 0)
+              ? candidates[itrack]
+              : (candidates.push_back(candidates[itrack]), candidates.back());
+      // this replaces a previous
+      track.addCluster(sensorId, icluster);
+      track.setGlobalState({xf, Cf});
+      track.setGoodnessOfFit(chi2 + chi2Update, 2 * track.size() - 6);
       numMatchedClusters += 1;
     }
   }
 }
 
-/** Add tracks selected by chi2 and unique cluster association to the event. */
+/** Add best, unique tracks to the event. */
 void Tracking::TrackFinder::selectTracks(std::vector<Track>& candidates,
                                          Event& event) const
 {
@@ -222,25 +227,18 @@ void Tracking::TrackFinder::selectTracks(std::vector<Track>& candidates,
         return (ta.size() > tb.size()) or (ta.reducedChi2() < tb.reducedChi2());
       });
 
-  // fix cluster assignment starting w/ best tracks first
   for (auto& track : candidates) {
-    // apply track cuts; minimum number of points is ensured by iteration steps
-    if ((0 < m_redChi2Max) && (m_redChi2Max < track.reducedChi2()))
-      continue;
 
-    // check that all constituent clusters are still unused
-    bool hasUsedClusters = false;
-    for (const auto& c : track.clusters()) {
-      const auto& cluster =
-          event.getSensorEvent(c.sensor).getCluster(c.cluster);
-      if (cluster.isInTrack()) {
-        hasUsedClusters = true;
-        break;
-      }
-    }
-    // some clusters are already used by other tracks
-    if (hasUsedClusters)
+    // all clusters must be unused
+    bool hasUsedClusters = std::any_of(
+        track.clusters().begin(), track.clusters().end(), [&](const auto& c) {
+          return event.getSensorEvent(c.sensor)
+              .getCluster(c.cluster)
+              .isInTrack();
+        });
+    if (hasUsedClusters) {
       continue;
+    }
 
     // add new, good track to the event; also fixes cluster-track association
     event.addTrack(track);
