@@ -102,6 +102,9 @@ private:
   Index m_matchedState;
 
   friend class SensorEvent;
+
+public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 std::ostream& operator<<(std::ostream& os, const Cluster& cluster);
