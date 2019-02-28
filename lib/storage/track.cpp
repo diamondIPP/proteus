@@ -4,10 +4,6 @@
 
 #include <Math/ProbFunc.h>
 
-#include "cluster.h"
-
-Storage::Track::Track() : m_chi2(-1), m_dof(-1) {}
-
 Storage::Track::Track(const TrackState& global, Scalar chi2, int dof)
     : m_state(global), m_chi2(chi2), m_dof(dof)
 {
@@ -20,16 +16,14 @@ Scalar Storage::Track::probability() const
              : std::numeric_limits<Scalar>::quiet_NaN();
 }
 
-// NOTE: this doesn't tell the cluster about the track
-void Storage::Track::addCluster(Index sensor, Cluster& cluster)
+void Storage::Track::addCluster(Index sensor, Index cluster)
 {
-  m_clusters.emplace(sensor, cluster);
-}
-
-void Storage::Track::freezeClusterAssociation(Index trackIdx)
-{
-  for (const auto& c : m_clusters) {
-    c.second.get().setTrack(trackIdx);
+  auto pos = std::find_if(m_clusters.begin(), m_clusters.end(),
+                          [=](const auto& c) { return c.sensor == sensor; });
+  if (pos != m_clusters.end()) {
+    pos->cluster = cluster;
+  } else {
+    m_clusters.push_back({sensor, cluster});
   }
 }
 

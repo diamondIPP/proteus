@@ -1,16 +1,13 @@
 #ifndef PT_TRACK_H
 #define PT_TRACK_H
 
-#include <functional>
 #include <iosfwd>
-#include <map>
+#include <vector>
 
 #include "storage/trackstate.h"
 #include "utils/definitions.h"
 
 namespace Storage {
-
-class Cluster;
 
 /** A particle track.
  *
@@ -20,12 +17,15 @@ class Cluster;
 class Track {
 public:
   /** Clusters indexed by the sensor. */
-  using Clusters = std::map<Index, std::reference_wrapper<Cluster>>;
+  struct TrackCluster {
+    Index sensor;
+    Index cluster;
+  };
 
   /** Construct a track without hits and undefined global state. */
-  Track();
+  Track() : m_chi2(-1), m_dof(-1) {}
   /** Construct a track without hits but with known global state. */
-  Track(const TrackState& global, Scalar chi2, int dof);
+  Track(const TrackState& global, Scalar chi2 = -1, int dof = -1);
 
   /** Update the goodness-of-fit via χ² and degrees-of-freedom. */
   void setGoodnessOfFit(Scalar chi2, int dof) { m_chi2 = chi2, m_dof = dof; }
@@ -51,23 +51,24 @@ public:
 
   /** Adds a cluster on the given sensor to the track.
    *
-   * The cluster to track association is not set to allow this class to be
-   * used also for track candidates.
+   * This enforces a single-cluster-per-sensor rule i.e. if another cluster
+   * was previously added for the same sensor than it will be replaced with
+   * the new one.
    */
-  void addCluster(Index sensor, Cluster& cluster);
+  void addCluster(Index sensor, Index cluster);
   size_t size() const { return m_clusters.size(); }
-  const Clusters& clusters() const { return m_clusters; }
+  const std::vector<TrackCluster>& clusters() const { return m_clusters; }
 
 private:
-  /** Inform all track clusters that they belong to this track now. */
-  void freezeClusterAssociation(Index trackIdx);
-
   TrackState m_state;
   Scalar m_chi2;
   int m_dof;
-  Clusters m_clusters;
+  std::vector<TrackCluster> m_clusters;
 
   friend class Event;
+
+public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 std::ostream& operator<<(std::ostream& os, const Track& track);

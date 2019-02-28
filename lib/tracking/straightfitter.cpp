@@ -27,8 +27,9 @@ executeImpl(const Geometry& geo, bool fitUnbiased, Event& event)
       Fitter fitter;
       // add all clusters in the global system
       for (const auto& c : track.clusters()) {
-        const Plane& source = geo.getPlane(c.first);
-        const Cluster& cluster = c.second;
+        const Plane& source = geo.getPlane(c.sensor);
+        const Cluster& cluster =
+            event.getSensorEvent(c.sensor).getCluster(c.cluster);
         Vector4 global = source.toGlobal(cluster.position());
         Vector4 weight =
             transformCovariance(source.linearToGlobal(), cluster.positionCov())
@@ -48,11 +49,12 @@ executeImpl(const Geometry& geo, bool fitUnbiased, Event& event)
       const Plane& target = geo.getPlane(iref);
       for (const auto& c : track.clusters()) {
         // exclude measurements on target plane for unbiased fit
-        if (fitUnbiased and (c.first == iref)) {
+        if (fitUnbiased and (c.sensor == iref)) {
           continue;
         }
-        const Plane& source = geo.getPlane(c.first);
-        const Cluster& cluster = c.second;
+        const Plane& source = geo.getPlane(c.sensor);
+        const Cluster& cluster =
+            event.getSensorEvent(c.sensor).getCluster(c.cluster);
         Vector4 local = target.toLocal(source.toGlobal(cluster.position()));
         Matrix4 jac = target.linearToLocal() * source.linearToGlobal();
         Vector4 weight = transformCovariance(jac, cluster.positionCov())
@@ -67,7 +69,6 @@ executeImpl(const Geometry& geo, bool fitUnbiased, Event& event)
     }
   }
 }
-
 // straight 3d
 
 Tracking::Straight3dFitter::Straight3dFitter(const Device& device)

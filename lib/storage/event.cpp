@@ -37,8 +37,12 @@ void Storage::Event::setSensorData(Index first, Event&& event)
 
 void Storage::Event::addTrack(const Track& track)
 {
+  Index trackId = static_cast<Index>(m_tracks.size());
   m_tracks.push_back(track);
-  m_tracks.back().freezeClusterAssociation(m_tracks.size() - 1);
+  // freeze cluster-to-track association
+  for (const auto& c : m_tracks.back().m_clusters) {
+    getSensorEvent(c.sensor).getCluster(c.cluster).setTrack(trackId);
+  }
 }
 
 size_t Storage::Event::getNumHits() const

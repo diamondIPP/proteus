@@ -209,7 +209,8 @@ void Tracking::TrackFinder::selectTracks(
     // check that all constituent clusters are still unused
     bool hasUsedClusters = false;
     for (const auto& c : track.clusters()) {
-      const Storage::Cluster& cluster = c.second;
+      const auto& cluster =
+          event.getSensorEvent(c.sensor).getCluster(c.cluster);
       if (cluster.isInTrack()) {
         hasUsedClusters = true;
         break;
