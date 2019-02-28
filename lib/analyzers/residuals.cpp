@@ -133,9 +133,8 @@ void Analyzers::Residuals::execute(const Storage::Event& event)
     for (Index icluster = 0; icluster < sev.numClusters(); ++icluster) {
       const Storage::Cluster& cluster = sev.getCluster(icluster);
 
-      if (cluster.isInTrack()) {
-        const Storage::TrackState& state = sev.getLocalState(cluster.track());
-        hists.fill(state, cluster);
+      if (cluster.isInTrack() and sev.hasLocalState(cluster.track())) {
+        hists.fill(sev.getLocalState(cluster.track()), cluster);
       }
     }
   }
