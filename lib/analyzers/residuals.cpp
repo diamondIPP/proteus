@@ -18,74 +18,94 @@ PT_SETUP_GLOBAL_LOGGER
 Analyzers::detail::SensorResidualHists::SensorResidualHists(
     TDirectory* dir,
     const Mechanics::Sensor& sensor,
-    const double rangeStd,
-    const int bins,
+    double rangeStd,
+    int bins,
     const std::string& name)
 {
   using namespace Utils;
 
-  auto resMaxU = rangeStd * sensor.pitchCol() / std::sqrt(12.0);
-  auto resMaxV = rangeStd * sensor.pitchRow() / std::sqrt(12.0);
-  auto posRangeU = sensor.sensitiveAreaLocal().interval(0);
-  auto posRangeV = sensor.sensitiveAreaLocal().interval(1);
-  auto distRange = std::sqrt(resMaxU * resMaxU + resMaxV * resMaxV);
+  // always use odd number of bins to have a central bin for zero residual
+  bins += ((bins % 2) ? 0 : 1);
 
-  Vector2 slopeMin = sensor.beamSlope() - rangeStd * sensor.beamDivergence();
-  Vector2 slopeMax = sensor.beamSlope() + rangeStd * sensor.beamDivergence();
+  auto box = sensor.sensitiveVolume();
+  auto pitch = sensor.pitch();
+  Vector2 slopeStdev = extractStdev(sensor.beamSlopeCovariance());
+  Vector2 slopeMin = sensor.beamSlope() - rangeStd * slopeStdev;
+  Vector2 slopeMax = sensor.beamSlope() + rangeStd * slopeStdev;
 
-  HistAxis axResU(-resMaxU, resMaxU, bins, "Cluster - track residual u");
-  HistAxis axResV(-resMaxV, resMaxV, bins, "Cluster - track residual v");
-  HistAxis axPosU(posRangeU, bins, "Local track position u");
-  HistAxis axPosV(posRangeV, bins, "Local track position v");
-  HistAxis axSlopeU(slopeMin[0], slopeMax[0], bins, "Local track slope u");
-  HistAxis axSlopeV(slopeMin[1], slopeMax[1], bins, "Local track slope v");
-  HistAxis axResDist(0, distRange, bins, "Cluster - track distance");
-  HistAxis axResD2(0, 2 * rangeStd, bins,
-                   "Cluster - track weighted squared distance");
+  auto resUMax = rangeStd * pitch[kU] / std::sqrt(12.0);
+  auto resVMax = rangeStd * pitch[kV] / std::sqrt(12.0);
+  auto distMax = std::hypot(resUMax, resVMax);
+  auto binsU = static_cast<int>(box.length(kU) / pitch[kU]);
+  auto binsV = static_cast<int>(box.length(kV) / pitch[kV]);
+  auto binsS = static_cast<int>(box.length(kS) / pitch[kS]);
+
+  // residual axes
+  HistAxis axResU(-resUMax, resUMax, bins, "Cluster - track position u");
+  HistAxis axResV(-resVMax, resVMax, bins, "Cluster - track position v");
+  // time is a bit special since it might not be fitted at all but usually
+  // has a smaller range. use the full range for the residuals
+  auto axResS = HistAxis::Difference(box.interval(kS), pitch[kS],
+                                     "Cluster - track local time");
+  HistAxis axDist(0, distMax, bins, "Cluster - track distance");
+  HistAxis axD2(0, 2 * rangeStd, bins,
+                "Cluster - track weighted squared distance");
+  // track parameter axes
+  HistAxis axU(box.interval(kU), binsU, "Track position u");
+  HistAxis axV(box.interval(kV), binsV, "Track position v");
+  HistAxis axS(box.interval(kS), binsS, "Track local time");
+  HistAxis axSlopeU(slopeMin[0], slopeMax[0], bins, "Track slope u");
+  HistAxis axSlopeV(slopeMin[1], slopeMax[1], bins, "Track slope v");
 
   TDirectory* sub = makeDir(dir, "sensors/" + sensor.name() + "/" + name);
   resU = makeH1(sub, "res_u", axResU);
-  trackUResU = makeH2(sub, "res_u-pos_u", axPosU, axResU);
-  trackVResU = makeH2(sub, "res_u-pos_v", axPosV, axResU);
+  posUResU = makeH2(sub, "res_u-position_u", axU, axResU);
+  posVResU = makeH2(sub, "res_u-position_v", axV, axResU);
+  timeResU = makeH2(sub, "res_u-time", axS, axResU);
   slopeUResU = makeH2(sub, "res_u-slope_u", axSlopeU, axResU);
   slopeVResU = makeH2(sub, "res_u-slope_v", axSlopeV, axResU);
   resV = makeH1(sub, "res_v", axResV);
-  trackUResV = makeH2(sub, "res_v-pos_u", axPosU, axResV);
-  trackVResV = makeH2(sub, "res_v-pos_v", axPosV, axResV);
+  posUResV = makeH2(sub, "res_v-position_u", axU, axResV);
+  posVResV = makeH2(sub, "res_v-position_v", axV, axResV);
+  timeResV = makeH2(sub, "res_v-time", axS, axResV);
   slopeUResV = makeH2(sub, "res_v-slope_u", axSlopeU, axResV);
   slopeVResV = makeH2(sub, "res_v-slope_v", axSlopeV, axResV);
   resUV = makeH2(sub, "res_uv", axResU, axResV);
-  resDist = makeH1(sub, "res_dist", axResDist);
-  resD2 = makeH1(sub, "res_d2", axResD2);
+  resS = makeH1(sub, "res_time", axResS);
+  resDist = makeH1(sub, "res_dist", axDist);
+  resD2 = makeH1(sub, "res_d2", axD2);
 }
 
 void Analyzers::detail::SensorResidualHists::fill(
     const Storage::TrackState& state, const Storage::Cluster& cluster)
 {
-  Vector2 res = cluster.posLocal() - state.offset();
-  SymMatrix2 cov = cluster.covLocal() + state.covOffset();
+  Vector4 res = cluster.position() - state.position();
+  SymMatrix2 locCov = cluster.uvCov() + state.loc01Cov();
 
-  resU->Fill(res[0]);
-  resV->Fill(res[1]);
-  resDist->Fill(std::hypot(res[0], res[1]));
-  resD2->Fill(mahalanobisSquared(cov, res));
-  resUV->Fill(res[0], res[1]);
-  trackUResU->Fill(state.offset()[0], res[0]);
-  trackUResV->Fill(state.offset()[0], res[1]);
-  trackVResU->Fill(state.offset()[1], res[0]);
-  trackVResV->Fill(state.offset()[1], res[1]);
-  slopeUResU->Fill(state.slope()[0], res[0]);
-  slopeUResV->Fill(state.slope()[0], res[1]);
-  slopeVResU->Fill(state.slope()[1], res[0]);
-  slopeVResV->Fill(state.slope()[1], res[1]);
+  resU->Fill(res[kU]);
+  resV->Fill(res[kV]);
+  resS->Fill(res[kS]);
+  resUV->Fill(res[kU], res[kV]);
+  resDist->Fill(std::hypot(res[kU], res[kV]));
+  resD2->Fill(mahalanobisSquared(locCov, res.segment<2>(kU)));
+  posUResU->Fill(state.loc0(), res[kU]);
+  posUResV->Fill(state.loc0(), res[kV]);
+  posVResU->Fill(state.loc1(), res[kU]);
+  posVResV->Fill(state.loc1(), res[kV]);
+  timeResU->Fill(state.time(), res[kU]);
+  timeResV->Fill(state.time(), res[kV]);
+  slopeUResU->Fill(state.slopeLoc0(), res[kU]);
+  slopeUResV->Fill(state.slopeLoc0(), res[kV]);
+  slopeVResU->Fill(state.slopeLoc1(), res[kU]);
+  slopeVResV->Fill(state.slopeLoc1(), res[kV]);
 }
 
 Analyzers::Residuals::Residuals(TDirectory* dir,
                                 const Mechanics::Device& device,
                                 const std::vector<Index>& sensorIds,
                                 const std::string& subdir,
-                                const double rangeStd,
-                                const int bins)
+                                double rangeStd,
+                                int bins)
 {
   for (auto isensor : sensorIds) {
     m_hists_map.emplace(
@@ -101,10 +121,11 @@ void Analyzers::Residuals::execute(const Storage::Event& event)
   for (Index isensor = 0; isensor < event.numSensorEvents(); ++isensor) {
     const Storage::SensorEvent& sev = event.getSensorEvent(isensor);
 
-    if (!m_hists_map.count(sev.sensor()))
+    if (!m_hists_map.count(isensor)) {
       continue;
+    }
 
-    auto& hists = m_hists_map[sev.sensor()];
+    auto& hists = m_hists_map[isensor];
 
     for (Index icluster = 0; icluster < sev.numClusters(); ++icluster) {
       const Storage::Cluster& cluster = sev.getCluster(icluster);
@@ -121,7 +142,7 @@ Analyzers::Matching::Matching(TDirectory* dir,
                               const Mechanics::Sensor& sensor,
                               const double rangeStd,
                               const int bins)
-    : m_hists(dir, sensor, rangeStd, bins, "matching")
+    : m_sensorId(sensor.id()), m_hists(dir, sensor, rangeStd, bins, "matching")
 {
 }
 

@@ -10,117 +10,110 @@
 
 PT_SETUP_LOCAL_LOGGER(Geometry)
 
-// Most of the code uses the rotation matrix for all geometric computations.
-// For cases where the minimal set of three angles is needed the
-// 3-2-1 convention is used to compute the rotation matrix.
+// Construct rotation matrix Q321 = R1(𝛼) * R2(𝛽) * R3(𝛾).
 //
-//            | Q00  Q01  Q02 |
-//     Q321 = | Q10  Q11  Q12 | = R1(𝛼) * R2(𝛽) * R3(𝛾)
-//            | Q20  Q21  Q22 |
+// The rotation matrix in 3-2-1 convention mapping the spatial coordinates
+// (u,v,w) to the spatial coordinates (x,y,z) is defined as:
+//
+//            | Qxu  Qxv  Qxw |
+//     Q321 = | Qyu  Qyv  Qyw | = R1(𝛼) * R2(𝛽) * R3(𝛾)
+//            | Qzu  Qzv  Qzw |
 //
 // The three angles 𝛾, 𝛽, 𝛼 are right-handed angles around the third, second,
 // and first current axis. The resulting matrix can be written as:
 //
-//     Q00 =          cos(𝛽) cos(𝛾)
-//     Q10 =  sin(𝛼) sin(𝛽) cos(𝛾) + cos(𝛼)        sin(𝛾)
-//     Q20 =  sin(𝛼)        sin(𝛾) - cos(𝛼) sin(𝛽) cos(𝛾)
-//     Q01 =         -cos(𝛽) sin(𝛾)
-//     Q11 = -sin(𝛼) sin(𝛽) sin(𝛾) + cos(𝛼)        cos(𝛾)
-//     Q21 =  sin(𝛼)        cos(𝛾) + cos(𝛼) sin(𝛽) sin(𝛾)
-//     Q02 =  sin(𝛽)
-//     Q12 = -sin(𝛼) cos(𝛽)
-//     Q22 =  cos(𝛼) cos(𝛽)
+//     Qxu =          cos(𝛽) cos(𝛾)
+//     Qyu =  sin(𝛼) sin(𝛽) cos(𝛾) + cos(𝛼)        sin(𝛾)
+//     Qzu =  sin(𝛼)        sin(𝛾) - cos(𝛼) sin(𝛽) cos(𝛾)
+//     Qxv =         -cos(𝛽) sin(𝛾)
+//     Qyv = -sin(𝛼) sin(𝛽) sin(𝛾) + cos(𝛼)        cos(𝛾)
+//     Qzv =  sin(𝛼)        cos(𝛾) + cos(𝛼) sin(𝛽) sin(𝛾)
+//     Qxw =  sin(𝛽)
+//     Qyw = -sin(𝛼) cos(𝛽)
+//     Qzw =  cos(𝛼) cos(𝛽)
 //
-
-// Construct R321 = R1(alpha)*R2(beta)*R3(gamma) rotation matrix from angles.
-static Matrix3 makeRotation321(double gamma, double beta, double alpha)
+static Matrix4 makeRotation321(double alpha, double beta, double gamma)
 {
   using std::cos;
   using std::sin;
 
-  Matrix3 q;
-  // column 0
-  q(0, 0) = cos(beta) * cos(gamma);
-  q(1, 0) = sin(alpha) * sin(beta) * cos(gamma) + cos(alpha) * sin(gamma);
-  q(2, 0) = sin(alpha) * sin(gamma) - cos(alpha) * sin(beta) * cos(gamma);
-  // column 1
-  q(0, 1) = -cos(beta) * sin(gamma);
-  q(1, 1) = -sin(alpha) * sin(beta) * sin(gamma) + cos(alpha) * cos(gamma);
-  q(2, 1) = sin(alpha) * cos(gamma) + cos(alpha) * sin(beta) * sin(gamma);
-  // column 2
-  q(0, 2) = sin(beta);
-  q(1, 2) = -sin(alpha) * cos(beta);
-  q(2, 2) = cos(alpha) * cos(beta);
+  Matrix4 q = Matrix4::Zero();
+  // unit u
+  q(kX, kU) = cos(beta) * cos(gamma);
+  q(kY, kU) = sin(alpha) * sin(beta) * cos(gamma) + cos(alpha) * sin(gamma);
+  q(kZ, kU) = sin(alpha) * sin(gamma) - cos(alpha) * sin(beta) * cos(gamma);
+  // unit v
+  q(kX, kV) = -cos(beta) * sin(gamma);
+  q(kY, kV) = -sin(alpha) * sin(beta) * sin(gamma) + cos(alpha) * cos(gamma);
+  q(kZ, kV) = sin(alpha) * cos(gamma) + cos(alpha) * sin(beta) * sin(gamma);
+  // unit w
+  q(kX, kW) = sin(beta);
+  q(kY, kW) = -sin(alpha) * cos(beta);
+  q(kZ, kW) = cos(alpha) * cos(beta);
+  // time coordinate is not rotated
+  q(kT, kS) = 1;
   return q;
 };
 
-struct Angles321 {
-  double alpha = 0.0;
-  double beta = 0.0;
-  double gamma = 0.0;
-};
-
-// Extract rotation angles in 321 convention from rotation matrix.
-static Angles321 extractAngles321(const Matrix3& q)
+// Extract rotation angles in 321 convention from 3x3 rotation matrix.
+static Vector3 extractAngles321(const Matrix4& q)
 {
   // WARNING
   // this is not a stable algorithm and will break down for the case of
   // 𝛽 = ±π, cos(𝛽) = 0, sin(𝛽) = ±1. It should be replaced by a better
   // algorithm. in this code base, only the resulting rotation matrix is used
   // and the angles are only employed for reporting. we should be fine.
-  Angles321 angles;
-  angles.alpha = std::atan2(-q(1, 2), q(2, 2));
-  angles.beta = std::asin(q(0, 2));
-  angles.gamma = std::atan2(-q(0, 1), q(0, 0));
+  double alpha = std::atan2(-q(kY, kW), q(kZ, kW));
+  double beta = std::asin(q(kX, kW));
+  double gamma = std::atan2(-q(kX, kV), q(kX, kU));
 
   // cross-check that we get the same matrix back
-  Matrix3 qFromAngles =
-      makeRotation321(angles.gamma, angles.beta, angles.alpha);
+  Matrix4 qAngles = makeRotation321(alpha, beta, gamma);
   // Frobenius norm should vanish for correct angle extraction
-  auto norm = (Matrix3::Identity() - qFromAngles.transpose() * q).norm();
+  auto norm = (Matrix4::Identity() - qAngles.transpose() * q).norm();
   // single epsilon results in too many false-positives.
   if (8 * std::numeric_limits<decltype(norm)>::epsilon() < norm) {
     ERROR("detected inconsistent matrix to angles conversion");
     INFO("angles:");
-    INFO("  alpha: ", degree(angles.alpha), " degree");
-    INFO("  beta: ", degree(angles.beta), " degree");
-    INFO("  gamma: ", degree(angles.gamma), " degree");
+    INFO("  alpha: ", degree(alpha), " degree");
+    INFO("  beta: ", degree(beta), " degree");
+    INFO("  gamma: ", degree(gamma), " degree");
     INFO("rotation matrix:\n", q);
-    INFO("rotation matrix from angles:\n", qFromAngles);
+    INFO("rotation matrix from angles:\n", qAngles);
     INFO("forward-backward distance to identity: ", norm);
   }
 
-  return angles;
+  return {alpha, beta, gamma};
 }
 
-// Jacobian from correction angles to global
+// Jacobian from small correction angles to full global angles.
 //
 // Maps small changes [dalpha, dbeta, dgamma] to resulting changes in
 // global angles [alpha, beta, gamma]. This is computed by assuming the
 // input rotation matrix to the angles extraction to be
 //
-//     Q' = Q * dQ
+//     Q'(alpha, beta, gamma) = Q * dQ(dalpha, dbeta, dgamma)  ,
 //
 // where dQ is the small angle rotation matrix using the correction angles.
 // Using the angles extraction defined above the global angles are expressed
 // as a function of the corrections and the Jacobian can be calculated.
-static Matrix3 jacobianCorrectionsToAngles(const Matrix3 q)
+static Matrix3 jacobianCorrectionsToAngles(const Matrix4& q)
 {
   Matrix3 jac;
-  // d alpha / d [dalpha, dbeta, dgamma]
-  double f0 = q(1, 2) * q(1, 2) + q(2, 2) * q(2, 2);
-  jac(0, 0) = (q(1, 1) * q(2, 2) - q(1, 2) * q(2, 1)) / f0;
-  jac(1, 0) = (q(1, 2) * q(2, 0) - q(1, 0) * q(2, 2)) / f0;
-  jac(2, 0) = 0;
-  // d beta / d [dalpha, dbeta, dgamma]
-  double f1 = std::sqrt(1.0 - q(0, 2) * q(0, 2));
-  jac(0, 1) = -q(0, 1) / f1;
-  jac(1, 1) = q(0, 0) / f1;
-  jac(2, 1) = 0;
-  // d gamma / d [dalpha, dbeta, dgamma];
-  double f2 = q(0, 0) * q(0, 0) + q(0, 1) * q(0, 1);
-  jac(0, 2) = -q(0, 0) * q(0, 2) / f2;
-  jac(1, 2) = -q(0, 1) * q(0, 2) / f2;
+  // row0: d alpha / d [dalpha, dbeta, dgamma]
+  double f0 = q(kY, kW) * q(kY, kW) + q(kZ, kW) * q(kZ, kW);
+  jac(0, 0) = (q(kY, kV) * q(kZ, kW) - q(kY, kW) * q(kZ, kV)) / f0;
+  jac(0, 1) = (q(kY, kW) * q(kZ, kU) - q(kY, kU) * q(kZ, kW)) / f0;
+  jac(0, 2) = 0;
+  // row1: d beta / d [dalpha, dbeta, dgamma]
+  double f1 = std::sqrt(1.0 - q(kX, kW) * q(kX, kW));
+  jac(1, 0) = -q(kX, kV) / f1;
+  jac(1, 1) = q(kX, kU) / f1;
+  jac(1, 2) = 0;
+  // row2: d gamma / d [dalpha, dbeta, dgamma];
+  double f2 = q(kX, kU) * q(kX, kU) + q(kX, kV) * q(kX, kV);
+  jac(0, 2) = -q(kX, kU) * q(kX, kW) / f2;
+  jac(1, 2) = -q(kX, kV) * q(kX, kW) / f2;
   jac(2, 2) = 1;
   return jac;
 }
@@ -128,53 +121,76 @@ static Matrix3 jacobianCorrectionsToAngles(const Matrix3 q)
 Mechanics::Plane Mechanics::Plane::fromAngles321(double gamma,
                                                  double beta,
                                                  double alpha,
-                                                 const Vector3& offset)
+                                                 const Vector3& origin)
 {
-  return {offset, makeRotation321(gamma, beta, alpha)};
+  Vector4 r0;
+  r0[kX] = origin[0];
+  r0[kY] = origin[1];
+  r0[kZ] = origin[2];
+  r0[kT] = 0;
+  return {r0, makeRotation321(alpha, beta, gamma)};
 }
 
 Mechanics::Plane Mechanics::Plane::fromDirections(const Vector3& dirU,
                                                   const Vector3& dirV,
-                                                  const Vector3& offset)
+                                                  const Vector3& origin)
 {
-  Matrix3 rot;
-  rot.col(0) = dirU.normalized();
-  rot.col(1) = dirV.normalized();
-  rot.col(2) = rot.col(0).cross(rot.col(1));
-  return {offset, rot};
+  // code assumes x, y, z are stored continously
+  static_assert(kX + 1 == kY, "Spatial coordinates must be continous");
+  static_assert(kX + 2 == kZ, "Spatial coordinates must be continous");
+  static_assert(kU + 1 == kV, "Spatial coordinates must be continous");
+  static_assert(kU + 2 == kW, "Spatial coordinates must be continous");
+
+  Vector4 r0;
+  r0[kX] = origin[0];
+  r0[kY] = origin[1];
+  r0[kZ] = origin[2];
+  r0[kT] = 0;
+  Matrix4 q = Matrix4::Zero();
+  q.col(kU).segment<3>(kX) = dirU;
+  q.col(kV).segment<3>(kX) = dirV;
+  q.col(kW).segment<3>(kX) = dirU.cross(dirV);
+  q(kT, kS) = 1;
+  q.colwise().normalize();
+  return {r0, q};
 }
 
 Mechanics::Plane Mechanics::Plane::correctedGlobal(const Vector6& delta) const
 {
-  return {m_offset + delta.head<3>(),
-          m_rotation * makeRotation321(delta[5], delta[4], delta[3])};
+  Vector4 dr;
+  dr[kX] = delta[0];
+  dr[kY] = delta[1];
+  dr[kZ] = delta[2];
+  dr[kT] = 0;
+  return {m_origin + dr,
+          m_linear * makeRotation321(delta[3], delta[4], delta[5])};
 }
 
 Mechanics::Plane Mechanics::Plane::correctedLocal(const Vector6& delta) const
 {
-  return {m_offset + m_rotation * delta.head<3>(),
-          m_rotation * makeRotation321(delta[5], delta[4], delta[3])};
+  Vector4 dr;
+  dr[kX] = delta[0];
+  dr[kY] = delta[1];
+  dr[kZ] = delta[2];
+  dr[kT] = 0;
+  return {m_origin + m_linear * dr,
+          m_linear * makeRotation321(delta[3], delta[4], delta[5])};
 }
 
 Vector6 Mechanics::Plane::asParams() const
 {
   Vector6 params;
-  params[0] = m_offset[0];
-  params[1] = m_offset[1];
-  params[2] = m_offset[2];
-  auto angles = extractAngles321(m_rotation);
-  params[3] = angles.alpha;
-  params[4] = angles.beta;
-  params[5] = angles.gamma;
+  params[0] = m_origin[kX];
+  params[1] = m_origin[kY];
+  params[2] = m_origin[kZ];
+  params.segment<3>(3) = extractAngles321(m_linear);
   return params;
 }
 
 Mechanics::Geometry::Geometry()
-    : m_beamSlopeX(0.0f)
-    , m_beamSlopeY(0.0f)
-    , m_beamStdevX(0.00125f)
-    , m_beamStdevY(0.00125f)
-    , m_beamEnergy(0.0f)
+    : m_beamSlope(Vector2::Zero())
+    , m_beamSlopeStdev(Vector2::Constant(0.00125f))
+    , m_beamEnergy(0)
 {
 }
 
@@ -201,11 +217,11 @@ Mechanics::Geometry Mechanics::Geometry::fromConfig(const toml::Value& cfg)
     auto slope = cfg.get<std::vector<double>>("beam.slope");
     if (slope.size() != 2)
       FAIL("beam.slope has ", slope.size(), " != 2 entries");
-    geo.setBeamSlope(slope[0], slope[1]);
+    geo.setBeamSlope({slope[0], slope[1]});
   } else if (cfg.has("beam.slope_x") || cfg.has("beam.slope_y")) {
     ERROR("beam.slope_{x,y} is deprecated, use beam.slope instead");
-    geo.setBeamSlope(cfg.get<double>("beam.slope_x"),
-                     cfg.get<double>("beam.slope_y"));
+    geo.setBeamSlope(
+        {cfg.get<double>("beam.slope_x"), cfg.get<double>("beam.slope_y")});
   }
   if (cfg.has("beam.divergence")) {
     auto div = cfg.get<std::vector<double>>("beam.divergence");
@@ -213,7 +229,7 @@ Mechanics::Geometry Mechanics::Geometry::fromConfig(const toml::Value& cfg)
       FAIL("beam.divergence has ", div.size(), " != 2 entries");
     if (!(0 < div[0]) || !(0 < div[1]))
       FAIL("beam.divergence must have non-zero, positive values");
-    geo.setBeamDivergence(div[0], div[1]);
+    geo.setBeamDivergence({div[0], div[1]});
   }
   if (cfg.has("beam.energy")) {
     geo.m_beamEnergy = cfg.get<double>("beam.energy");
@@ -244,8 +260,8 @@ Mechanics::Geometry Mechanics::Geometry::fromConfig(const toml::Value& cfg)
       // approximate zero check; the number of ignored bits is a bit arbitrary
       if ((128 * std::numeric_limits<decltype(projUV)>::epsilon()) < projUV) {
         FAIL("sensor ", sensorId, " has highly non-orthogonal unit vectors");
-      }
-      else if ((8 * std::numeric_limits<decltype(projUV)>::epsilon()) < projUV) {
+      } else if ((8 * std::numeric_limits<decltype(projUV)>::epsilon()) <
+                 projUV) {
         ERROR("sensor ", sensorId, " has non-orthogonal unit vectors");
       }
 
@@ -268,22 +284,22 @@ toml::Value Mechanics::Geometry::toConfig() const
 {
   toml::Value cfg;
 
-  cfg["beam"]["slope"] = toml::Array{m_beamSlopeX, m_beamSlopeY};
-  cfg["beam"]["divergence"] = toml::Array{m_beamStdevX, m_beamStdevY};
+  cfg["beam"]["slope"] = toml::Array{m_beamSlope[0], m_beamSlope[1]};
+  cfg["beam"]["divergence"] =
+      toml::Array{m_beamSlopeStdev[0], m_beamSlopeStdev[1]};
   cfg["beam"]["energy"] = m_beamEnergy;
 
   cfg["sensors"] = toml::Array();
   for (const auto& ip : m_planes) {
-    int id = static_cast<int>(ip.first);
-    Vector3 unU = ip.second.unitU();
-    Vector3 unV = ip.second.unitV();
-    Vector3 off = ip.second.offset();
+    Vector4 off = ip.second.origin();
+    Vector4 unU = ip.second.linearToGlobal().col(kU);
+    Vector4 unV = ip.second.linearToGlobal().col(kV);
 
     toml::Value cfgSensor;
-    cfgSensor["id"] = id;
-    cfgSensor["offset"] = toml::Array{off[0], off[1], off[2]};
-    cfgSensor["unit_u"] = toml::Array{unU[0], unU[1], unU[2]};
-    cfgSensor["unit_v"] = toml::Array{unV[0], unV[1], unV[2]};
+    cfgSensor["id"] = static_cast<int>(ip.first);
+    cfgSensor["offset"] = toml::Array{off[kX], off[kY], off[kZ]};
+    cfgSensor["unit_u"] = toml::Array{unU[kX], unU[kY], unU[kZ]};
+    cfgSensor["unit_v"] = toml::Array{unV[kX], unV[kY], unV[kZ]};
     cfg["sensors"].push(std::move(cfgSensor));
   }
   return cfg;
@@ -315,11 +331,11 @@ void Mechanics::Geometry::correctGlobal(Index sensorId,
   Matrix6 jac;
   // clang-format off
   jac << Matrix3::Identity(), Matrix3::Zero(),
-         Matrix3::Zero(), jacobianCorrectionsToAngles(plane.rotationToGlobal());
+         Matrix3::Zero(), jacobianCorrectionsToAngles(plane.linearToGlobal());
   // clang-format on
 
-  m_planes[sensorId] = plane.correctedLocal(delta);
-  m_covs[sensorId] = jac * cov * jac.transpose();
+  m_planes[sensorId] = plane.correctedGlobal(delta);
+  m_covs[sensorId] = transformCovariance(jac, cov);
 }
 
 void Mechanics::Geometry::correctLocal(Index sensorId,
@@ -331,8 +347,8 @@ void Mechanics::Geometry::correctLocal(Index sensorId,
   // Jacobian from local corrections to geometry parameters
   Matrix6 jac;
   // clang-format off
-  jac << plane.rotationToGlobal(), Matrix3::Zero(),
-         Matrix3::Zero(), jacobianCorrectionsToAngles(plane.rotationToGlobal());
+  jac << plane.linearToGlobal().block<3,3>(kX, kX), Matrix3::Zero(),
+         Matrix3::Zero(), jacobianCorrectionsToAngles(plane.linearToGlobal());
   // clang-format on
 
   m_planes[sensorId] = plane.correctedLocal(delta);
@@ -359,33 +375,45 @@ SymMatrix6 Mechanics::Geometry::getParamsCov(Index sensorId) const
   }
 }
 
-void Mechanics::Geometry::setBeamSlope(double slopeX, double slopeY)
+Vector4 Mechanics::Geometry::beamTangent() const
 {
-  m_beamSlopeX = slopeX;
-  m_beamSlopeY = slopeY;
+  Vector4 tangent;
+  tangent[kX] = m_beamSlope[0];
+  tangent[kY] = m_beamSlope[1];
+  tangent[kZ] = 1.0;
+  tangent[kT] = 0;
+  return tangent;
 }
 
-void Mechanics::Geometry::setBeamDivergence(double divergenceX,
-                                            double divergenceY)
+SymMatrix2 Mechanics::Geometry::beamSlopeCovariance() const
 {
-  m_beamStdevX = divergenceX;
-  m_beamStdevY = divergenceY;
+  return m_beamSlopeStdev.cwiseProduct(m_beamSlopeStdev).asDiagonal();
 }
 
 Vector2 Mechanics::Geometry::getBeamSlope(Index sensorId) const
 {
-  auto dirGlobal = Vector3(m_beamSlopeX, m_beamSlopeY, 1.0f);
-  auto dirLocal = m_planes.at(sensorId).rotationToLocal() * dirGlobal;
-  return dirLocal.head<2>() / dirLocal[2];
+  Vector4 tgtLocal = m_planes.at(sensorId).linearToLocal() * beamTangent();
+  Vector2 slopeLocal(tgtLocal[kU] / tgtLocal[kW], tgtLocal[kV] / tgtLocal[kW]);
+  DEBUG("global beam tangent: [", beamTangent().transpose(), "]");
+  DEBUG("sensor ", sensorId, " beam tangent: [", tgtLocal.transpose(), "]");
+  DEBUG("sensor ", sensorId, " beam slope: [", slopeLocal.transpose(), "]");
+  return slopeLocal;
 }
 
-SymMatrix2 Mechanics::Geometry::getBeamCovariance(Index sensorId) const
+SymMatrix2 Mechanics::Geometry::getBeamSlopeCovariance(Index sensorId) const
 {
   const auto& plane = m_planes.at(sensorId);
-  auto dir = Vector3(m_beamSlopeX, m_beamSlopeY, 1.0f);
-  auto jac = Tracking::jacobianSlopeSlope(dir, plane.rotationToLocal());
-  auto var = Vector2(m_beamStdevX * m_beamStdevX, m_beamStdevY * m_beamStdevY);
-  return transformCovariance(jac, var.asDiagonal());
+  auto jac =
+      Tracking::jacobianSlopeSlope(beamTangent(), plane.linearToGlobal());
+  SymMatrix2 cov = transformCovariance(jac, beamSlopeCovariance());
+  DEBUG("global beam divergence: [",
+        extractStdev(beamSlopeCovariance()).transpose(), "]");
+  DEBUG("global beam covariance:\n", beamSlopeCovariance());
+  DEBUG("global to sensor ", sensorId, " slope jacobian:\n", jac);
+  DEBUG("sensor ", sensorId, " beam covariance:\n", cov);
+  DEBUG("sensor ", sensorId, " beam divergence: [",
+        extractStdev(cov).transpose(), "]");
+  return cov;
 }
 
 void Mechanics::Geometry::print(std::ostream& os,
@@ -393,33 +421,55 @@ void Mechanics::Geometry::print(std::ostream& os,
 {
   os << prefix << "beam:\n";
   os << prefix << "  energy: " << m_beamEnergy << '\n';
-  os << prefix << "  slope: [" << m_beamSlopeX << "," << m_beamSlopeY << "]\n";
-  os << prefix << "  divergence: [" << m_beamStdevX << "," << m_beamStdevY
-     << "]\n";
+  os << prefix << "  slope: " << format(m_beamSlope) << '\n';
+  os << prefix << "  divergence: " << format(m_beamSlopeStdev) << '\n';
   for (const auto& ip : m_planes) {
-    auto params = ip.second.asParams();
-    auto angles =
-        Vector3(degree(params[3]), degree(params[4]), degree(params[5]));
-    os << prefix << "sensor " << ip.first << ":\n";
-    os << prefix << "  offset: [" << ip.second.offset().transpose() << "]\n";
-    os << prefix << "  angles: [" << angles.transpose() << "]\n";
-    os << prefix << "  unit u: [" << ip.second.unitU().transpose() << "]\n";
-    os << prefix << "  unit v: [" << ip.second.unitV().transpose() << "]\n";
-    os << prefix << "  unit w: [" << ip.second.unitNormal().transpose()
-       << "]\n";
+    const auto& sensorId = ip.first;
+    const auto& plane = ip.second;
+
+    os << prefix << "sensor " << sensorId << ":\n";
+
+    Vector3 r0(plane.origin()[kX], plane.origin()[kY], plane.origin()[kZ]);
+    os << prefix << "  offset: " << format(r0) << '\n';
+
+    auto Q = plane.linearToGlobal();
+    Vector3 unitU(Q(kU, kX), Q(kU, kY), Q(kU, kZ));
+    Vector3 unitV(Q(kV, kX), Q(kV, kY), Q(kV, kZ));
+    Vector3 unitW(Q(kW, kX), Q(kW, kY), Q(kW, kZ));
+    os << prefix << "  unit u: " << format(unitU) << '\n';
+    os << prefix << "  unit v: " << format(unitV) << '\n';
+    os << prefix << "  unit w: " << format(unitW) << '\n';
+
+    Vector3 angles = plane.asParams().segment<3>(3);
+    for (size_t i = 0; i < 3; ++i) {
+      angles[i] = degree(angles[i]);
+    }
+    os << prefix << "  angles: " << format(angles) << '\n';
+
+    Vector2 beamSlope = getBeamSlope(sensorId);
+    Vector2 beamDivergence = extractStdev(getBeamSlopeCovariance(sensorId));
+    os << prefix << "  beam:\n";
+    os << prefix << "    slope: " << format(beamSlope) << '\n';
+    os << prefix << "    divergence: " << format(beamDivergence) << '\n';
   }
   os.flush();
+}
+
+void Mechanics::sortAlongBeam(const Mechanics::Geometry& geo,
+                              std::vector<Index>& sensorIds)
+{
+  // TODO 2017-10 msmk: actually sort along beam direction and not just along
+  //                    z-axis as proxy.
+  std::sort(sensorIds.begin(), sensorIds.end(), [&](Index id0, Index id1) {
+    return geo.getPlane(id0).origin()[kZ] < geo.getPlane(id1).origin()[kZ];
+  });
 }
 
 std::vector<Index>
 Mechanics::sortedAlongBeam(const Mechanics::Geometry& geo,
                            const std::vector<Index>& sensorIds)
 {
-  // TODO 2017-10 msmk: actually sort along beam direction and not just along
-  //                    z-axis as proxy.
   std::vector<Index> sorted(std::begin(sensorIds), std::end(sensorIds));
-  std::sort(sorted.begin(), sorted.end(), [&](Index id0, Index id1) {
-    return geo.getPlane(id0).offset()[2] < geo.getPlane(id1).offset()[2];
-  });
+  sortAlongBeam(geo, sorted);
   return sorted;
 }

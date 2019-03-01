@@ -32,26 +32,26 @@ public:
 
 private:
   struct AreaHists {
-    TH2D* pos;
-    TH1D* time;
+    TH1D* timestamp;
     TH1D* value;
     TH1D* size;
+    TH2D* sizeTimestamp;
+    TH2D* sizeValue;
     TH2D* sizeSizeCol;
     TH2D* sizeSizeRow;
     TH2D* sizeColSizeRow;
-    TH2D* sizeValue;
     TH1D* uncertaintyU;
     TH1D* uncertaintyV;
-    TH2D* hitPos;
+    TH1D* uncertaintyTime;
+    TH2D* sizeHitTimestamp;
     TH1D* hitTimedelta;
-    TH2D* sizeHitTime;
     TH2D* sizeHitTimedelta;
     TH2D* sizeHitValue;
-    TH2D* hitValueHitTime;
   };
 
   TH1D* m_nClusters;
   TH1D* m_rate;
+  TH2D* m_colRow;
   AreaHists m_whole;
   std::vector<AreaHists> m_regions;
 };

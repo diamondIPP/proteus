@@ -262,7 +262,7 @@ bool Io::RceRootReader::read(Storage::Event& event)
     for (Int_t itrack = 0; itrack < numTracks; ++itrack) {
       Storage::TrackState state(trackX[itrack], trackY[itrack],
                                 trackSlopeX[itrack], trackSlopeY[itrack]);
-      state.setCovPacked(trackCov[itrack]);
+      state.setCovSpatialPacked(trackCov[itrack]);
       std::unique_ptr<Storage::Track> track(new Storage::Track(state));
       track->setGoodnessOfFit(trackChi2[itrack], trackDof[itrack]);
       event.addTrack(std::move(track));
@@ -283,7 +283,7 @@ bool Io::RceRootReader::read(Storage::Event& event)
         Storage::TrackState local(
             interceptU[iintercept], interceptV[iintercept],
             interceptSlopeU[iintercept], interceptSlopeV[iintercept]);
-        local.setCovPacked(interceptCov[iintercept]);
+        local.setCovSpatialPacked(interceptCov[iintercept]);
         sensorEvent.setLocalState(interceptTrack[iintercept], std::move(local));
       }
     }
@@ -300,8 +300,7 @@ bool Io::RceRootReader::read(Storage::Event& event)
         cov(1, 1) = clusterVarRow[icluster];
         cov(0, 1) = cov(1, 0) = clusterCovColRow[icluster];
         Storage::Cluster& cluster = sensorEvent.addCluster();
-        cluster.setPixel(pos, cov);
-        cluster.setTime(clusterTiming[icluster]);
+        cluster.setPixel(pos, cov, clusterTiming[icluster]);
         cluster.setValue(clusterValue[icluster]);
         // Fix cluster/track relationship if possible
         if (m_tracks && (0 <= clusterTrack[icluster])) {
@@ -437,11 +436,11 @@ void Io::RceRootWriter::append(const Storage::Event& event)
       trackChi2[itrack] = track.chi2();
       trackDof[itrack] = track.degreesOfFreedom();
       const Storage::TrackState& state = track.globalState();
-      trackX[itrack] = state.offset()[0];
-      trackY[itrack] = state.offset()[1];
-      trackSlopeX[itrack] = state.slope()[0];
-      trackSlopeY[itrack] = state.slope()[1];
-      state.getCovPacked(trackCov[itrack]);
+      trackX[itrack] = state.loc0();
+      trackY[itrack] = state.loc1();
+      trackSlopeX[itrack] = state.slopeLoc0();
+      trackSlopeY[itrack] = state.slopeLoc1();
+      state.getCovSpatialPacked(trackCov[itrack]);
     }
     m_tracks->Fill();
   }
@@ -460,7 +459,7 @@ void Io::RceRootWriter::append(const Storage::Event& event)
         const Storage::Hit hit = sensorEvent.getHit(ihit);
         hitPixX[ihit] = hit.digitalCol();
         hitPixY[ihit] = hit.digitalRow();
-        hitTiming[ihit] = hit.time();
+        hitTiming[ihit] = hit.timestamp();
         hitValue[ihit] = hit.value();
         hitInCluster[ihit] = hit.isInCluster() ? hit.cluster() : -1;
       }
@@ -474,11 +473,11 @@ void Io::RceRootWriter::append(const Storage::Event& event)
       numClusters = sensorEvent.numClusters();
       for (Index iclu = 0; iclu < sensorEvent.numClusters(); ++iclu) {
         const Storage::Cluster& cluster = sensorEvent.getCluster(iclu);
-        clusterCol[iclu] = cluster.posPixel()[0];
-        clusterRow[iclu] = cluster.posPixel()[1];
-        clusterVarCol[iclu] = cluster.covPixel()(0, 0);
-        clusterVarRow[iclu] = cluster.covPixel()(1, 1);
-        clusterCovColRow[iclu] = cluster.covPixel()(0, 1);
+        clusterCol[iclu] = cluster.col();
+        clusterRow[iclu] = cluster.row();
+        clusterVarCol[iclu] = cluster.colVar();
+        clusterVarRow[iclu] = cluster.rowVar();
+        clusterCovColRow[iclu] = cluster.colRowCov();
         clusterTiming[iclu] = cluster.time();
         clusterValue[iclu] = cluster.value();
         clusterTrack[iclu] = cluster.isInTrack() ? cluster.track() : -1;
@@ -493,11 +492,11 @@ void Io::RceRootWriter::append(const Storage::Event& event)
         if (kMaxTracks < static_cast<Index>(numIntercepts + 1))
           FAIL("intercepts exceed MAX_TRACKS");
         const Storage::TrackState& local = s.second;
-        interceptU[numIntercepts] = local.offset()[0];
-        interceptV[numIntercepts] = local.offset()[1];
-        interceptSlopeU[numIntercepts] = local.slope()[0];
-        interceptSlopeV[numIntercepts] = local.slope()[1];
-        local.getCovPacked(interceptCov[numIntercepts]);
+        interceptU[numIntercepts] = local.loc0();
+        interceptV[numIntercepts] = local.loc1();
+        interceptSlopeU[numIntercepts] = local.slopeLoc0();
+        interceptSlopeV[numIntercepts] = local.slopeLoc1();
+        local.getCovSpatialPacked(interceptCov[numIntercepts]);
         interceptTrack[numIntercepts] = s.first;
         numIntercepts += 1;
       }

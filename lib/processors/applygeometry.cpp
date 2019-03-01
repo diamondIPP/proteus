@@ -18,16 +18,19 @@ void Processors::ApplyGeometry::execute(Storage::Event& event) const
   for (Index iplane = 0; iplane < event.numSensorEvents(); iplane++) {
     Storage::SensorEvent& sensorEvent = event.getSensorEvent(iplane);
     const Mechanics::Sensor& sensor = m_device.getSensor(iplane);
-
-    // jacobian from pixel to local coordinates
-    Vector2 p2l(sensor.pitchCol(), sensor.pitchRow());
+    DiagMatrix4 scalePitch = sensor.pitch().asDiagonal();
 
     for (Index icluster = 0; icluster < sensorEvent.numClusters(); icluster++) {
       Storage::Cluster& cluster = sensorEvent.getCluster(icluster);
 
-      auto loc = sensor.transformPixelToLocal(cluster.posPixel());
-      auto cov = transformCovariance(p2l.asDiagonal(), cluster.covPixel());
-      cluster.setLocal(loc, cov);
+      SymMatrix4 cov = SymMatrix4::Zero();
+      cov(kU, kU) = cluster.colVar();
+      cov(kV, kU) = cov(kU, kV) = cluster.colRowCov();
+      cov(kV, kV) = cluster.rowVar();
+      cov(kS, kS) = cluster.timestampVar();
+      cluster.setLocal(sensor.transformPixelToLocal(
+                           cluster.col(), cluster.row(), cluster.timestamp()),
+                       transformCovariance(scalePitch, cov));
     }
   }
 }

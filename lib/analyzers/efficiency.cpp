@@ -45,12 +45,12 @@ Analyzers::Efficiency::Efficiency(TDirectory* dir,
       Utils::makeDir(dir, "sensors/" + sensor.name() + "/efficiency");
 
   // one set of histograms for the whole sensor
-  m_sensorHists = Hists(sub, sensor, sensor.sensitiveAreaPixel(), increaseArea,
+  m_sensorHists = Hists(sub, sensor, sensor.colRowArea(), increaseArea,
                         inPixelPeriod, inPixelBinsMin, efficiencyDistBins);
   // one additional set for each region
   for (const auto& region : sensor.regions()) {
     TDirectory* rsub = Utils::makeDir(sub, region.name);
-    m_regionsHists.emplace_back(rsub, sensor, region.areaPixel, increaseArea,
+    m_regionsHists.emplace_back(rsub, sensor, region.colRow, increaseArea,
                                 inPixelPeriod, inPixelBinsMin,
                                 efficiencyDistBins);
   }
@@ -58,7 +58,7 @@ Analyzers::Efficiency::Efficiency(TDirectory* dir,
 
 Analyzers::Efficiency::Hists::Hists(TDirectory* dir,
                                     const Mechanics::Sensor& sensor,
-                                    const Area roi,
+                                    const DigitalArea& roi,
                                     const int increaseArea,
                                     const int inPixelPeriod,
                                     const int inPixelBinsMin,
@@ -70,27 +70,25 @@ Analyzers::Efficiency::Hists::Hists(TDirectory* dir,
   using namespace Utils;
 
   // define in-pixel submatrix where positions will be folded back to
-  Vector2 anchorPix(roi.min(0), roi.min(1));
-  Vector2 anchorLoc = sensor.transformPixelToLocal(anchorPix);
-  double uMin = anchorLoc[0];
-  double uMax = anchorLoc[0] + inPixelPeriod * sensor.pitchCol();
-  double vMin = anchorLoc[1];
-  double vMax = anchorLoc[1] + inPixelPeriod * sensor.pitchRow();
-  inPixelAreaLocal =
-      Area(Area::AxisInterval(uMin, uMax), Area::AxisInterval(vMin, vMax));
+  Vector4 lowerLeft =
+      sensor.transformPixelToLocal(roi.min(0) - 0.5, roi.min(1) - 0.5, 0);
+  Vector4 upperRight = sensor.transformPixelToLocal(
+      roi.min(0) + inPixelPeriod - 0.5, roi.min(1) + inPixelPeriod - 0.5, 0);
+  inPixelAreaLocal = Area(Area::AxisInterval(lowerLeft[kU], upperRight[kU]),
+                          Area::AxisInterval(lowerLeft[kV], upperRight[kV]));
   // use approximately quadratic bins in local coords for in-pixel histograms
-  double inPixelBinSize =
+  auto inPixelBinSize =
       std::min(sensor.pitchCol(), sensor.pitchRow()) / inPixelBinsMin;
   int inPixelBinsU = std::round(inPixelAreaLocal.length(0) / inPixelBinSize);
   int inPixelBinsV = std::round(inPixelAreaLocal.length(1) / inPixelBinSize);
 
-  HistAxis axCol(areaPixel.interval(0), areaPixel.length(0), "Hit column");
-  HistAxis axRow(areaPixel.interval(1), areaPixel.length(1), "Hit row");
-  HistAxis axInPixU(0, inPixelAreaLocal.length(0), inPixelBinsU,
-                    "Folded track position u");
-  HistAxis axInPixV(0, inPixelAreaLocal.length(1), inPixelBinsV,
-                    "Folded track position v");
-  HistAxis axEff(0, 1, efficiencyDistBins, "Pixel efficiency");
+  auto axCol = HistAxis::Integer(areaPixel.interval(0), "Hit column");
+  auto axRow = HistAxis::Integer(areaPixel.interval(1), "Hit row");
+  auto axInPixU = HistAxis{0, inPixelAreaLocal.length(0), inPixelBinsU,
+                           "Folded track position u"};
+  auto axInPixV = HistAxis{0, inPixelAreaLocal.length(1), inPixelBinsV,
+                           "Folded track position v"};
+  auto axEff = HistAxis{0, 1, efficiencyDistBins, "Pixel efficiency"};
 
   total = makeH2(dir, "tracks_total", axCol, axRow);
   pass = makeH2(dir, "tracks_pass", axCol, axRow);
@@ -124,25 +122,30 @@ void Analyzers::Efficiency::execute(const Storage::Event& event)
 
   for (const auto& s : sensorEvent.localStates()) {
     const Storage::TrackState& state = s.second;
-    auto posPixel = m_sensor.transformLocalToPixel(state.offset());
+    auto pix = m_sensor.transformLocalToPixel(state.position());
+    auto col = pix[kU];
+    auto row = pix[kV];
+    // find closest digital pixel address
+    int icol = std::round(col);
+    int irow = std::round(row);
 
     // ignore tracks that fall within a masked area
-    if (m_mask.isMasked(posPixel))
+    if (m_mask.isMasked(icol, irow))
       continue;
 
     // fill efficiency for the whole matrix
-    m_sensorHists.fill(state, posPixel);
+    m_sensorHists.fill(state, col, row);
     // fill efficiency for each region
     for (Index iregion = 0; iregion < m_regionsHists.size(); ++iregion) {
       Hists& regionHists = m_regionsHists[iregion];
       // insides region-of-interest + extra edges
-      if (!regionHists.areaPixel.isInside(posPixel[0], posPixel[1]))
+      if (!regionHists.areaPixel.isInside(icol, irow))
         continue;
       // ignore tracks that are matched to a cluster in a different region
       if ((state.isMatched()) &&
           (sensorEvent.getCluster(state.matchedCluster()).region() != iregion))
         continue;
-      regionHists.fill(state, posPixel);
+      regionHists.fill(state, col, row);
     }
   }
   for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
@@ -154,46 +157,51 @@ void Analyzers::Efficiency::execute(const Storage::Event& event)
 }
 
 void Analyzers::Efficiency::Hists::fill(const Storage::TrackState& state,
-                                        const Vector2& posPixel)
+                                        Scalar col,
+                                        Scalar row)
 {
   bool isMatched = state.isMatched();
 
-  total->Fill(posPixel[0], posPixel[1]);
-  if (isMatched)
-    pass->Fill(posPixel[0], posPixel[1]);
+  total->Fill(col, row);
+  if (isMatched) {
+    pass->Fill(col, row);
+  }
 
-  if (roiPixel.interval(1).isInside(posPixel[1])) {
-    colTotal->Fill(posPixel[0]);
-    if (isMatched)
-      colPass->Fill(posPixel[0]);
+  if (roiPixel.interval(1).isInside(row)) {
+    colTotal->Fill(col);
+    if (isMatched) {
+      colPass->Fill(col);
+    }
   }
-  if (roiPixel.interval(0).isInside(posPixel[0])) {
-    rowTotal->Fill(posPixel[1]);
-    if (isMatched)
-      rowPass->Fill(posPixel[1]);
+  if (roiPixel.interval(0).isInside(col)) {
+    rowTotal->Fill(row);
+    if (isMatched) {
+      rowPass->Fill(row);
+    }
   }
-  if (roiPixel.isInside(posPixel[0], posPixel[1])) {
+  if (roiPixel.isInside(col, row)) {
     // calculate folded position
     // TODO 2017-02-17 msmk: can this be done w/ std::remainder or std::fmod?
-    double foldedU = state.offset()[0] - inPixelAreaLocal.min(0);
-    double foldedV = state.offset()[1] - inPixelAreaLocal.min(1);
+    double foldedU = state.loc0() - inPixelAreaLocal.min(0);
+    double foldedV = state.loc1() - inPixelAreaLocal.min(1);
     foldedU -= inPixelAreaLocal.length(0) *
                std::floor(foldedU / inPixelAreaLocal.length(0));
     foldedV -= inPixelAreaLocal.length(1) *
                std::floor(foldedV / inPixelAreaLocal.length(1));
 
     inPixTotal->Fill(foldedU, foldedV);
-    if (isMatched)
+    if (isMatched) {
       inPixPass->Fill(foldedU, foldedV);
+    }
   }
 }
 
 void Analyzers::Efficiency::Hists::fill(const Storage::Cluster& cluster)
 {
   if (cluster.isMatched()) {
-    clustersPass->Fill(cluster.posPixel()[0], cluster.posPixel()[1]);
+    clustersPass->Fill(cluster.col(), cluster.row());
   } else {
-    clustersFail->Fill(cluster.posPixel()[0], cluster.posPixel()[1]);
+    clustersFail->Fill(cluster.col(), cluster.row());
   }
 }
 

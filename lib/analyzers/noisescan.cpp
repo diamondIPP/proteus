@@ -41,7 +41,7 @@ Analyzers::NoiseScan::NoiseScan(TDirectory* dir,
   DEBUG("bandwidth row: ", m_bandwidthRow);
 
   // region-of-interest must be bounded by the actual sensor size
-  Area roi = intersection(regionOfInterest, sensor.sensitiveAreaPixel());
+  Area roi = intersection(regionOfInterest, sensor.colRowArea());
 
   DEBUG("input roi ", sensor.name(), ':');
   DEBUG("  col: ", regionOfInterest.interval(0));

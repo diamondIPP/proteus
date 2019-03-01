@@ -8,7 +8,7 @@ Storage::Event::Event(size_t sensors)
 {
   m_sensors.reserve(sensors);
   for (size_t isensor = 0; isensor < sensors; ++isensor)
-    m_sensors.emplace_back(SensorEvent(isensor));
+    m_sensors.emplace_back(SensorEvent());
 }
 
 void Storage::Event::clear(uint64_t frame, uint64_t timestamp)
@@ -26,7 +26,6 @@ void Storage::Event::setSensorData(Index isensor, SensorEvent&& sensorEvent)
          "Sensor index must be valid");
 
   m_sensors[isensor] = std::move(sensorEvent);
-  m_sensors[isensor].m_sensor = isensor;
   m_sensors[isensor].m_states.clear();
 }
 
@@ -46,16 +45,18 @@ void Storage::Event::addTrack(std::unique_ptr<Track> track)
 size_t Storage::Event::getNumHits() const
 {
   size_t n = 0;
-  for (const auto& se : m_sensors)
+  for (const auto& se : m_sensors) {
     n += se.numHits();
+  }
   return n;
 }
 
 size_t Storage::Event::getNumClusters() const
 {
   size_t n = 0;
-  for (const auto& se : m_sensors)
+  for (const auto& se : m_sensors) {
     n += se.numClusters();
+  }
   return n;
 }
 
@@ -74,7 +75,7 @@ void Storage::Event::print(std::ostream& os, const std::string& prefix) const
   if (!m_tracks.empty()) {
     os << prefix << "tracks:\n";
     for (size_t itrack = 0; itrack < m_tracks.size(); ++itrack) {
-      os << prefix << "  track " << itrack << ":\n";
+      os << prefix << "  " << itrack << ":\n";
       m_tracks[itrack]->print(os, prefix + "    ");
     }
   }

@@ -37,16 +37,42 @@ void Io::MatchWriter::TrackData::addToTree(TTree* tree)
 
   tree->Branch("trk_u", &u);
   tree->Branch("trk_v", &v);
+  tree->Branch("trk_time", &time);
   tree->Branch("trk_du", &du);
   tree->Branch("trk_dv", &dv);
+  tree->Branch("trk_dtime", &dtime);
   tree->Branch("trk_std_u", &stdU);
   tree->Branch("trk_std_v", &stdV);
+  tree->Branch("trk_std_time", &stdTime);
   tree->Branch("trk_corr_uv", &corrUV);
   tree->Branch("trk_col", &col);
   tree->Branch("trk_row", &row);
+  tree->Branch("trk_timestamp", &timestamp);
   tree->Branch("trk_chi2", &chi2);
   tree->Branch("trk_dof", &dof);
   tree->Branch("trk_size", &size);
+}
+
+void Io::MatchWriter::TrackData::set(const Storage::Track& track,
+                                     const Storage::TrackState& state,
+                                     const Vector4& posPixel)
+{
+  u = state.loc0();
+  v = state.loc1();
+  time = state.time();
+  du = state.slopeLoc0();
+  dv = state.slopeLoc1();
+  dtime = state.slopeTime();
+  stdU = std::sqrt(state.cov()(kLoc0, kLoc0));
+  stdV = std::sqrt(state.cov()(kLoc1, kLoc1));
+  stdTime = std::sqrt(state.timeVar());
+  corrUV = state.cov()(kLoc0, kLoc1) / (stdU * stdV);
+  col = posPixel[kU];
+  row = posPixel[kV];
+  timestamp = posPixel[kS];
+  chi2 = track.chi2();
+  dof = track.degreesOfFreedom();
+  size = track.size();
 }
 
 void Io::MatchWriter::ClusterData::addToTree(TTree* tree)
@@ -55,12 +81,14 @@ void Io::MatchWriter::ClusterData::addToTree(TTree* tree)
 
   tree->Branch("clu_u", &u);
   tree->Branch("clu_v", &v);
+  tree->Branch("clu_time", &time);
   tree->Branch("clu_std_u", &stdU);
   tree->Branch("clu_std_v", &stdV);
+  tree->Branch("clu_std_time", &stdTime);
   tree->Branch("clu_corr_uv", &corrUV);
   tree->Branch("clu_col", &col);
   tree->Branch("clu_row", &row);
-  tree->Branch("clu_time", &time);
+  tree->Branch("clu_timestamp", &timestamp);
   tree->Branch("clu_value", &value);
   tree->Branch("clu_region", &region);
   tree->Branch("clu_size", &size);
@@ -68,31 +96,33 @@ void Io::MatchWriter::ClusterData::addToTree(TTree* tree)
   tree->Branch("clu_size_row", &sizeRow);
   tree->Branch("hit_col", &hitCol, "hit_col[clu_size]/S");
   tree->Branch("hit_row", &hitRow, "hit_row[clu_size]/S");
-  tree->Branch("hit_time", &hitTime, "hit_time[clu_size]/F");
-  tree->Branch("hit_value", &hitValue, "hit_value[clu_size]/F");
+  tree->Branch("hit_timestamp", &hitTimestamp, "hit_timestamp[clu_size]/S");
+  tree->Branch("hit_value", &hitValue, "hit_value[clu_size]/S");
 }
 
-void Io::MatchWriter::ClusterData::set(const Storage::Cluster& c)
+void Io::MatchWriter::ClusterData::set(const Storage::Cluster& cluster)
 {
-  u = c.posLocal()[0];
-  v = c.posLocal()[1];
-  stdU = std::sqrt(c.covLocal()(0, 0));
-  stdV = std::sqrt(c.covLocal()(1, 1));
-  corrUV = c.covLocal()(0, 1) / (stdU * stdV);
-  col = c.posPixel()[0];
-  row = c.posPixel()[1];
-  time = c.time();
-  value = c.value();
-  region = (c.hasRegion() ? c.region() : -1);
-  size = std::min(c.size(), size_t(MAX_CLUSTER_SIZE));
-  sizeCol = c.sizeCol();
-  sizeRow = c.sizeRow();
-  const auto& hits = c.hits();
+  u = cluster.u();
+  v = cluster.v();
+  time = cluster.time();
+  stdU = std::sqrt(cluster.uvCov()(0, 0));
+  stdV = std::sqrt(cluster.uvCov()(1, 1));
+  stdTime = std::sqrt(cluster.timeVar());
+  corrUV = cluster.uvCov()(0, 1) / (stdU * stdV);
+  col = cluster.col();
+  row = cluster.row();
+  timestamp = cluster.timestamp();
+  value = cluster.value();
+  region = (cluster.hasRegion() ? cluster.region() : -1);
+  size = std::min(cluster.size(), size_t(kMaxClusterSize));
+  sizeCol = cluster.sizeCol();
+  sizeRow = cluster.sizeRow();
+  const auto& hits = cluster.hits();
   for (int16_t ihit = 0; ihit < size; ++ihit) {
     const Storage::Hit& hit = hits[ihit];
     hitCol[ihit] = hit.col();
     hitRow[ihit] = hit.row();
-    hitTime[ihit] = hit.time();
+    hitTimestamp[ihit] = hit.timestamp();
     hitValue[ihit] = hit.value();
   }
 }
@@ -101,13 +131,14 @@ void Io::MatchWriter::ClusterData::invalidate()
 {
   u = std::numeric_limits<float>::quiet_NaN();
   v = std::numeric_limits<float>::quiet_NaN();
+  time = std::numeric_limits<float>::quiet_NaN();
   stdU = std::numeric_limits<float>::quiet_NaN();
   stdV = std::numeric_limits<float>::quiet_NaN();
   corrUV = std::numeric_limits<float>::quiet_NaN();
   col = std::numeric_limits<float>::quiet_NaN();
   row = std::numeric_limits<float>::quiet_NaN();
-  time = std::numeric_limits<float>::quiet_NaN();
   value = std::numeric_limits<float>::quiet_NaN();
+  timestamp = std::numeric_limits<float>::quiet_NaN();
   region = -1;
   size = 0; // required to have empty hit information
   sizeCol = 0;
@@ -154,9 +185,11 @@ Io::MatchWriter::MatchWriter(TDirectory* dir, const Mechanics::Sensor& sensor)
   treeMask->SetDirectory(sub);
   MaskData maskData;
   maskData.addToTree(treeMask);
-  auto mask = m_sensor.pixelMask();
-  for (Index c = 0; c < m_sensor.numCols(); ++c) {
-    for (Index r = 0; r < m_sensor.numRows(); ++r) {
+  const auto& mask = m_sensor.pixelMask();
+  const auto& cols = m_sensor.colRange();
+  const auto& rows = m_sensor.rowRange();
+  for (auto c = cols.min(); c < cols.max(); ++c) {
+    for (auto r = rows.min(); r < rows.max(); ++r) {
       if (mask.isMasked(c, r)) {
         maskData.col = static_cast<int16_t>(c);
         maskData.row = static_cast<int16_t>(r);
@@ -179,30 +212,18 @@ void Io::MatchWriter::append(const Storage::Event& event)
     const Storage::TrackState& state = s.second;
     const Storage::Track& track = event.getTrack(s.first);
 
-    // always set track data
-    auto cr = m_sensor.transformLocalToPixel(state.offset());
-    m_track.u = state.offset()[0];
-    m_track.v = state.offset()[1];
-    m_track.du = state.slope()[0];
-    m_track.dv = state.slope()[1];
-    m_track.stdU = std::sqrt(state.covOffset()(0, 0));
-    m_track.stdV = std::sqrt(state.covOffset()(1, 1));
-    m_track.corrUV = state.covOffset()(0, 1) / (m_track.stdU * m_track.stdV);
-    m_track.col = cr[0];
-    m_track.row = cr[1];
-    m_track.chi2 = track.chi2();
-    m_track.dof = track.degreesOfFreedom();
-    m_track.size = track.size();
+    // always export track data
+    m_track.set(track, state, m_sensor.transformLocalToPixel(state.position()));
 
-    // matching cluster data
+    // export matched cluster data if it exists
     if (state.isMatched()) {
       const Storage::Cluster& cluster =
           sensorEvent.getCluster(state.matchedCluster());
       // set cluster information
       m_matchedCluster.set(cluster);
       // set matching information
-      SymMatrix2 cov = cluster.covLocal() + state.covOffset();
-      Vector2 delta = cluster.posLocal() - state.offset();
+      Vector2 delta(cluster.u() - state.loc0(), cluster.v() - state.loc1());
+      SymMatrix2 cov = cluster.uvCov() + state.loc01Cov();
       m_matchedDist.d2 = mahalanobisSquared(cov, delta);
     } else {
       // fill invalid data if no matching cluster exists

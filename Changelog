@@ -47,20 +47,38 @@ User-visible changes
     reconstructed events exists only transiently and only the required data
     is stored.
 *   Sensor regions in the device configuration must set the ``name``.
-*   Make sensor time and value range configurable.
+*   Make sensor timestamp and value range configurable.
 
     These values were hardcoded to the FE-I4 values. They can now be configured
     by setting the following keys in the relevant sensor type section
 
         [sensor_types.some_sensor]
         ...
-        time_min = 0
-        time_max = 31
+        timestamp_min = 0
+        timestamp_max = 31
         value_max = 63
         ...
 
     All values are exclusive and should be set to the minimum and maximum
     value that can occur in the data.
+*   Add support for sensor-specific timestamp frequencies.
+
+    For each sensor type the time period for a single timestamp bin, i.e.
+    the timestamp pitch, can be specified:
+
+        [sensor_types.some_sensor]
+        ...
+        pitch_timestamp = 25.0  # 40MHz clock, 25ns duration w/ base unit ns
+        ...
+
+        [sensor_types.another_sensor]
+        ...
+        pitch_timestamp = 6.25  # 160MHz clock, 6.25ns duration w/ base unit ns
+        ...
+
+    The timestamp pitch is then used to convert the digital hit timestamp into
+    metric time, similarly to how the spatial pitch is used to convert
+    digital pixel addresses to metric coordinates.
 *   Add histograms for hit timing within a cluster in
     ``sensors/<sensor>/cluster`` folder.
 *   Add ``--print-events`` flag to most tools that enables the printing of
@@ -101,6 +119,24 @@ User-visible changes
     to the local expected variations. While the output histograms contain
     the masks generated from both steps separately only a single combined
     mask file is produced.
+*   Add support for per-track time information. Yeah, 4-d tracking!
+
+    The per-track time is derived from the earliest constituent cluster of
+    the track. The track time is exported as an additional branch in the
+    match trees output produced by ``pt-recon`` and ``pt-match``. All tools
+    also produce additional histograms related to the track time.
+*   Digital coordinates now always refer to the bin center.
+
+    Previously, the pixel address (0,0) would correspond to the lower-left
+    corner of a pixel that covers the area [0,1) along both column and row
+    axis, with the position (0.5,0.5) describing the pixel center. This
+    behaviour was different from timestamp or value bins. To simplify
+    conversions and unify behaviour, now the pixel address (0,0) corresponds
+    directly to the pixel center and the pixel covers an area [-0.5,0.5) along
+    each axis.
+
+    This might impact the output data values and will shift the boundaries for
+    some histograms.
 
 Bugfixes
 --------
@@ -168,6 +204,13 @@ Internal changes
 *   Set the default built to ``Release`` if nothing else was requested.
 *   Add ``Utils::openRoot{Read/Write}`` helpers with error handling and
     automatic file closing on destruction.
+*   All geometry calculations are performed using 4d coordinates.
+*   The ``Tracking::LineFitterND`` is now templated on the input coordinates
+    to be able to support fitting with and without the time component. Its
+    dependency on the geometry classes was removed and it only encapsulates
+    the linear regression math.
+*   Track propagation uses 6d state vectors that include time and time slope
+    (inverse velocity) along the propagation path.
 
 v1.3.0 (2017-12-06)
 ===================

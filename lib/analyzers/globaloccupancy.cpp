@@ -11,29 +11,28 @@
 
 Analyzers::GlobalOccupancy::GlobalOccupancy(TDirectory* dir,
                                             const Mechanics::Device& device)
+    : m_geo(device.geometry())
 {
-  // estimate bounding box of all sensor projections into the xy-plane
-  auto active = Mechanics::Sensor::Volume::Empty();
-  for (auto isensor : device.sensorIds()) {
-    active = Utils::boundingBox(active,
-                                device.getSensor(isensor).projectedEnvelope());
-  }
+  using namespace Utils;
 
+  auto box = device.boundingBox();
   // create per-sensor histograms
   for (auto isensor : device.sensorIds()) {
     const auto& sensor = device.getSensor(isensor);
     auto pitch = sensor.projectedPitch();
 
-    Utils::HistAxis ax(active.min(0), active.max(0),
-                       active.length(0) / pitch[0], "Global x position");
-    Utils::HistAxis ay(active.min(1), active.max(1),
-                       active.length(1) / pitch[1], "Global y position");
+    HistAxis ax(box.interval(kX), box.length(kX) / pitch[kX],
+                "Cluster position x");
+    HistAxis ay(box.interval(kY), box.length(kY) / pitch[kY],
+                "Cluster position y");
+    HistAxis at(box.interval(kT), box.length(kT) / pitch[kT],
+                "Cluster global time");
 
-    TDirectory* sub = Utils::makeDir(dir, "global/" + sensor.name());
+    TDirectory* sub = makeDir(dir, "global/" + sensor.name());
     SensorHists h;
-    h.plane = device.geometry().getPlane(isensor);
     h.id = isensor;
-    h.clusters_xy = Utils::makeH2(sub, "clusters_xy", ax, ay);
+    h.clustersXY = makeH2(sub, "clusters_xy", ax, ay);
+    h.clustersT = makeH1(sub, "clusters_time", at);
     m_sensorHists.push_back(std::move(h));
   }
 }
@@ -47,10 +46,12 @@ void Analyzers::GlobalOccupancy::execute(const Storage::Event& event)
 {
   for (auto& hists : m_sensorHists) {
     const Storage::SensorEvent& se = event.getSensorEvent(hists.id);
+    const Mechanics::Plane& plane = m_geo.getPlane(hists.id);
 
     for (Index ic = 0; ic < se.numClusters(); ++ic) {
-      Vector3 xyz = hists.plane.toGlobal(se.getCluster(ic).posLocal());
-      hists.clusters_xy->Fill(xyz[0], xyz[1]);
+      Vector4 global = plane.toGlobal(se.getCluster(ic).position());
+      hists.clustersXY->Fill(global[kX], global[kY]);
+      hists.clustersT->Fill(global[kT]);
     }
   }
 }

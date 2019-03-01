@@ -23,37 +23,20 @@ namespace Analyzers {
 
 class Distances : public Loop::Analyzer {
 public:
-  /**
-   * \param pixelRange Distance histogram range in number of pixels
-   * \param d2Max Maximum weighted squared distance in histogram
-   * \param bins Number of histogram bins
-   */
-  Distances(TDirectory* dir,
-            const Mechanics::Sensor& sensor,
-            const double d2Max = 10.0,
-            const int bins = 256);
+  Distances(TDirectory* dir, const Mechanics::Sensor& sensor);
 
   std::string name() const;
   void execute(const Storage::Event& event);
 
 private:
   struct Hists {
-    TH1D* deltaU;
-    TH1D* deltaV;
-    TH1D* dist;
-    TH1D* d2;
-
-    Hists() = default;
-    Hists(TDirectory* dir,
-          const std::string& prefix,
-          const double distMax,
-          const double d2Max,
-          const int bins);
-    void fill(const Vector2& delta);
-    void fill(const Vector2& delta, const SymMatrix2& cov);
+    TH1D* deltaU = nullptr;
+    TH1D* deltaV = nullptr;
+    TH1D* deltaS = nullptr;
+    TH1D* dist = nullptr;
   };
 
-  Index m_sensorId;
+  Index m_sensorId = kInvalidIndex;
   Hists m_trackTrack;
   Hists m_trackCluster;
   Hists m_clusterCluster;

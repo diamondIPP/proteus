@@ -11,7 +11,7 @@ pt-combine ${flags} -n 10000 \
     data/unigetel_ebeam012_nparticles01.root \
     data/unigetel_ebeam012_nparticles01.root
 
-./root-checker - output/merged0.root <<__END_OF_CONFIG__
+./root-checker output/merged0.root <<__END_OF_CONFIG__
   Event        entries 10000
   Plane0/Hits  entries 10000
   Plane1/Hits  entries 10000
@@ -34,7 +34,7 @@ pt-combine ${flags} -n 10000 \
     data/unigetel_ebeam120_nparticles02.root \
     data/unigetel_ebeam120_nparticles02.root
 
-./root-checker - output/merged1.root <<__END_OF_CONFIG__
+./root-checker output/merged1.root <<__END_OF_CONFIG__
   Event        entries 10000
   Plane0/Hits  entries 10000
   Plane1/Hits  entries 10000

@@ -47,12 +47,13 @@ private:
   TH1D* m_nTracks;
   TH1D* m_size;
   TH1D* m_reducedChi2;
-  TH2D* m_offsetXY;
-  TH1D* m_offsetX;
-  TH1D* m_offsetY;
-  TH2D* m_slopeXY;
+  TH1D* m_posX;
+  TH1D* m_posY;
+  TH2D* m_posXY;
+  TH1D* m_time;
   TH1D* m_slopeX;
   TH1D* m_slopeY;
+  TH2D* m_slopeXY;
 };
 
 } // namespace Analyzers

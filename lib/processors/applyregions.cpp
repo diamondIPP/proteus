@@ -31,7 +31,7 @@ void Processors::ApplyRegions::execute(Storage::Event& event) const
 
     for (Index iregion = 0; iregion < m_sensor.regions().size(); ++iregion) {
       const auto& region = m_sensor.regions()[iregion];
-      if (region.areaPixel.isInside(hit.col(), hit.row())) {
+      if (region.colRow.isInside(hit.col(), hit.row())) {
         hit.setRegion(iregion);
         // regions are exclusive and each hit can only belong to one region
         break;

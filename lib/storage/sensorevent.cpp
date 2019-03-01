@@ -4,8 +4,8 @@
 
 #include "storage/track.h"
 
-Storage::SensorEvent::SensorEvent(Index sensor)
-    : m_sensor(sensor), m_frame(UINT64_MAX), m_timestamp(UINT64_MAX)
+Storage::SensorEvent::SensorEvent()
+    : m_frame(UINT64_MAX), m_timestamp(UINT64_MAX)
 {
 }
 
@@ -40,18 +40,18 @@ void Storage::SensorEvent::print(std::ostream& os,
   if (!m_hits.empty()) {
     os << prefix << "hits:\n";
     for (size_t ihit = 0; ihit < m_hits.size(); ++ihit)
-      os << prefix << "  hit " << ihit << ": " << *m_hits[ihit] << '\n';
+      os << prefix << "  " << ihit << ": " << *m_hits[ihit] << '\n';
   }
   if (!m_clusters.empty()) {
     os << prefix << "clusters:\n";
     for (size_t iclu = 0; iclu < m_clusters.size(); ++iclu) {
-      os << prefix << "  cluster " << iclu << ": " << *m_clusters[iclu] << '\n';
+      os << prefix << "  " << iclu << ": " << *m_clusters[iclu] << '\n';
     }
   }
   if (!m_states.empty()) {
-    os << prefix << "states:\n";
+    os << prefix << "track states:\n";
     for (const auto& ts : m_states)
-      os << prefix << "  track " << ts.first << ": " << ts.second << '\n';
+      os << prefix << "  " << ts.first << ": " << ts.second << '\n';
   }
   os.flush();
 }

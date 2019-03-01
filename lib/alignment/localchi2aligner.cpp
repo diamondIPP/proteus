@@ -26,24 +26,24 @@ PT_SETUP_LOCAL_LOGGER(LocalChi2Aligner)
 // a different alignment parameter convention (see Geometry::Plane).
 static Matrix26 jacobianOffsetAlignment(const Storage::TrackState& state)
 {
-  auto offsetU = state.offset()[0];
-  auto offsetV = state.offset()[1];
-  auto slopeU = state.slope()[0];
-  auto slopeV = state.slope()[1];
+  auto u = state.loc0();
+  auto v = state.loc1();
+  auto slopeU = state.slopeLoc0();
+  auto slopeV = state.slopeLoc1();
 
   Matrix26 jac;
-  jac(0, 0) = -1;                // d u / d du
-  jac(0, 1) = 0;                 // d u / d dv
-  jac(0, 2) = slopeU;            // d u / d dw
-  jac(0, 3) = slopeU * offsetV;  // d u / d dalpha
-  jac(0, 4) = -slopeU * offsetU; // d u / d dbeta
-  jac(0, 5) = offsetV;           // d u / d dgamma
-  jac(1, 0) = 0;                 // d v / d du
-  jac(1, 1) = -1;                // d v / d dv
-  jac(1, 2) = slopeV;            // d v / d dw
-  jac(1, 3) = slopeV * offsetV;  // d v / d dalpha
-  jac(1, 4) = -slopeV * offsetU; // d v / d dbeta
-  jac(1, 5) = -offsetU;          // d v / d dgamma
+  jac(0, 0) = -1;          // d u / d du
+  jac(0, 1) = 0;           // d u / d dv
+  jac(0, 2) = slopeU;      // d u / d dw
+  jac(0, 3) = slopeU * v;  // d u / d dalpha
+  jac(0, 4) = -slopeU * u; // d u / d dbeta
+  jac(0, 5) = v;           // d u / d dgamma
+  jac(1, 0) = 0;           // d v / d du
+  jac(1, 1) = -1;          // d v / d dv
+  jac(1, 2) = slopeV;      // d v / d dw
+  jac(1, 3) = slopeV * v;  // d v / d dalpha
+  jac(1, 4) = -slopeV * u; // d v / d dbeta
+  jac(1, 5) = -u;          // d v / d dgamma
   return jac;
 }
 
@@ -54,9 +54,9 @@ static Matrix26 jacobianOffsetAlignment(const Storage::TrackState& state)
 
 static DiagMatrix6 jacobianScaling(const Mechanics::Sensor& sensor)
 {
-  auto area = sensor.sensitiveAreaLocal();
-  auto l_alpha = area.length(1);
-  auto l_beta = area.length(0);
+  auto box = sensor.sensitiveVolume();
+  auto l_alpha = box.length(kU);
+  auto l_beta = box.length(kV);
   auto l_gamma = std::hypot(l_alpha, l_beta);
 
   DiagMatrix6 scaling;
@@ -124,20 +124,14 @@ bool Alignment::LocalChi2PlaneFitter::addTrack(
 {
   // the track fitter sometimes yields NaN as fit values; unclear why, but
   // these values must be ignored otherwise the normal equations become invalid.
-  std::array<double, 10> inputs = {
-      track.params()[0],
-      track.params()[1],
-      track.params()[2],
-      track.params()[3],
-      measurement.posLocal()[0],
-      measurement.posLocal()[1],
-      weight(0, 0),
-      weight(0, 1),
-      weight(1, 0),
-      weight(1, 1),
+  double inputs[] = {
+      track.loc0(),      track.loc1(),      track.time(),    track.slopeLoc0(),
+      track.slopeLoc1(), track.slopeTime(), measurement.u(), measurement.v(),
+      weight(0, 0),      weight(0, 1),      weight(1, 0),    weight(1, 1),
   };
-  bool allInputsAreFinite = std::all_of(
-      inputs.begin(), inputs.end(), [](double x) { return std::isfinite(x); });
+  bool allInputsAreFinite =
+      std::all_of(std::begin(inputs), std::end(inputs),
+                  [](double x) { return std::isfinite(x); });
   if (!allInputsAreFinite) {
     return false;
   }
@@ -146,8 +140,9 @@ bool Alignment::LocalChi2PlaneFitter::addTrack(
   auto jac = jacobianOffsetAlignment(track);
   // m_scaling is diagonal, no need to transpose it
   m_fr += m_scaling * jac.transpose() * weight * jac * m_scaling;
-  m_y += m_scaling * jac.transpose() * weight *
-         (measurement.posLocal() - track.offset());
+  m_y +=
+      m_scaling * jac.transpose() * weight *
+      Vector2(measurement.u() - track.loc0(), measurement.v() - track.loc1());
   m_numTracks += 1;
   return true;
 }
@@ -246,7 +241,8 @@ std::string Alignment::LocalChi2Aligner::name() const
 void Alignment::LocalChi2Aligner::execute(const Storage::Event& event)
 {
   for (auto& f : m_fitters) {
-    const Storage::SensorEvent& sensorEvent = event.getSensorEvent(f.first);
+    auto sensorId = f.first;
+    const Storage::SensorEvent& sensorEvent = event.getSensorEvent(sensorId);
     LocalChi2PlaneFitter& fitter = f.second;
 
     for (Index iclu = 0; iclu < sensorEvent.numClusters(); ++iclu) {
@@ -258,10 +254,10 @@ void Alignment::LocalChi2Aligner::execute(const Storage::Event& event)
 
       // unbiased residuals have a contribution from
       // the cluster uncertainty and the tracking uncertainty
-      SymMatrix2 weight = (cluster.covLocal() + state.covOffset()).inverse();
+      SymMatrix2 weight = (cluster.uvCov() + state.loc01Cov()).inverse();
       if (!fitter.addTrack(state, cluster, weight)) {
         ERROR("Invalid track/cluster input event=", event.frame(),
-              " sensor=", sensorEvent.sensor(), " track=", cluster.track());
+              " sensor=", sensorId, " track=", cluster.track());
       }
     }
   }

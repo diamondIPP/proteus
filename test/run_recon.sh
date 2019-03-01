@@ -16,4 +16,4 @@ echo "=== using $(which pt-recon)"
 
 pt-recon -g ${geo} ${flags} ${datadir}/${dataset}.root output/${dataset}/recon
 
-./root-checker expected/${dataset}-recon.txt output/${dataset}/recon-hists.root
+./root-checker output/${dataset}/recon-hists.root expected/${dataset}-recon.txt

@@ -53,29 +53,31 @@ Mechanics::Sensor::Sensor(Index id,
                           Measurement measurement,
                           Index numCols,
                           Index numRows,
-                          int timeMin,
-                          int timeMax,
+                          int timestampMin,
+                          int timestampMax,
                           int valueMax,
-                          double pitchCol,
-                          double pitchRow,
-                          double thickness,
-                          double xX0)
+                          Scalar pitchCol,
+                          Scalar pitchRow,
+                          Scalar pitchTimestamp,
+                          Scalar thickness,
+                          Scalar xX0)
     : m_id(id)
     , m_name(name)
     , m_numCols(numCols)
     , m_numRows(numRows)
-    , m_timeRange(timeMin, timeMax)
+    , m_timestampRange(timestampMin, timestampMax)
     , m_valueRange(0, valueMax)
     , m_pitchCol(pitchCol)
     , m_pitchRow(pitchRow)
+    , m_pitchTimestamp(pitchTimestamp)
     , m_thickness(thickness)
     , m_xX0(xX0)
     , m_measurement(measurement)
     // reasonable defaults for geometry-dependent properties. to be updated.
     , m_beamSlope(Vector2::Zero())
-    , m_beamCov(SymMatrix2::Zero())
-    , m_projPitch(pitchCol, pitchRow, 0)
-    , m_projEnvelope(sensitiveVolumeLocal())
+    , m_beamSlopeCov(SymMatrix2::Zero())
+    , m_projPitch(Vector4::Constant(std::numeric_limits<Scalar>::quiet_NaN()))
+    , m_projBoundingBox(Volume::Empty())
 {
 }
 
@@ -85,16 +87,16 @@ void Mechanics::Sensor::addRegion(
   Region region;
   region.name = name;
   // ensure that the region is bounded by the sensor size
-  region.areaPixel = Area(Area::AxisInterval(col_min, col_max),
-                          Area::AxisInterval(row_min, row_max));
-  region.areaPixel = intersection(this->sensitiveAreaPixel(), region.areaPixel);
+  region.colRow = DigitalArea(DigitalRange(col_min, col_max),
+                              DigitalRange(row_min, row_max));
+  region.colRow = intersection(this->colRowArea(), region.colRow);
   // ensure that all regions are uniquely named and areas are exclusive
   for (const auto& other : m_regions) {
     if (other.name == region.name) {
       FAIL("region '", other.name,
            "' already exists and can not be defined again");
     }
-    if (!(intersection(other.areaPixel, region.areaPixel).isEmpty())) {
+    if (!(intersection(other.colRow, region.colRow).isEmpty())) {
       FAIL("region '", other.name, "' intersects with region '", region.name,
            "'");
     }
@@ -103,67 +105,142 @@ void Mechanics::Sensor::addRegion(
   m_regions.push_back(std::move(region));
 }
 
-Vector2 Mechanics::Sensor::transformPixelToLocal(const Vector2& cr) const
+// position of the sensor center in pixel coordinates
+Vector4 Mechanics::Sensor::pixelCenter() const
 {
-  // place sensor center on a pixel edge in the middle of the sensitive area
-  return {m_pitchCol * (cr[0] - std::round(m_numCols / 2.0f)),
-          m_pitchRow * (cr[1] - std::round(m_numRows / 2.0f))};
+  Vector4 c;
+  c[kU] = std::round(m_numCols / Scalar(2)) - Scalar(0.5);
+  c[kV] = std::round(m_numRows / Scalar(2)) - Scalar(0.5);
+  c[kW] = 0;
+  c[kS] = 0;
+  return c;
 }
 
-Vector2 Mechanics::Sensor::transformLocalToPixel(const Vector2& uv) const
+Vector4 Mechanics::Sensor::pitch() const
 {
-  // place sensor center on a pixel edge in the middle of the sensitive area
-  return {(uv[0] / m_pitchCol) + std::round(m_numCols / 2.0f),
-          (uv[1] / m_pitchRow) + std::round(m_numRows / 2.0f)};
+  Vector4 p;
+  p[kU] = m_pitchCol;
+  p[kV] = m_pitchRow;
+  p[kW] = 0; // TODO use thickness here to avoid singularity?
+  p[kS] = m_pitchTimestamp;
+  return p;
 }
 
-Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaPixel() const
+Vector4 Mechanics::Sensor::transformPixelToLocal(Scalar col,
+                                                 Scalar row,
+                                                 Scalar timestamp) const
 {
-  return Area(Area::AxisInterval(0.0, static_cast<double>(m_numCols)),
-              Area::AxisInterval(0.0, static_cast<double>(m_numRows)));
+  Vector4 q;
+  q[kU] = col;
+  q[kV] = row;
+  q[kW] = 0;
+  q[kS] = timestamp;
+  return pitch().cwiseProduct(q - pixelCenter());
 }
 
-Mechanics::Sensor::Area Mechanics::Sensor::sensitiveAreaLocal() const
+Vector4 Mechanics::Sensor::transformLocalToPixel(const Vector4& local) const
 {
-  auto pix = sensitiveAreaPixel();
-  // calculate local sensitive area
-  Vector2 lowerLeft = transformPixelToLocal({pix.min(0), pix.min(1)});
-  Vector2 upperRight = transformPixelToLocal({pix.max(0), pix.max(1)});
-  return Area(Area::AxisInterval(lowerLeft[0], upperRight[0]),
-              Area::AxisInterval(lowerLeft[1], upperRight[1]));
+  return pixelCenter() + local.cwiseQuotient(pitch());
 }
 
-Mechanics::Sensor::Volume Mechanics::Sensor::sensitiveVolumeLocal() const
+Mechanics::Sensor::Volume Mechanics::Sensor::sensitiveVolume() const
 {
-  auto area = sensitiveAreaLocal();
-  // TODO 2017-10 msmk: which way does the thickess grow, w or -w
-  return Volume(area.interval(0), area.interval(1),
-                Volume::AxisInterval(0, m_thickness));
+  // this code assumes local/global coordinates have the same ordering. this is
+  // a canary to alert you that somebody is bold/stupid enough to change it.
+  static_assert(kU == 0, "Congratulations, you broke the code!");
+  static_assert(kV == 1, "Congratulations, you broke the code!");
+  static_assert(kW == 2, "Congratulations, you broke the code!");
+  static_assert(kS == 3, "Congratulations, you broke the code!");
+
+  // digital address/timestamp is bin center, upper edge is exclusive
+  auto col = colRange();
+  auto row = rowRange();
+  auto ts = timestampRange();
+  auto lowerLeft =
+      transformPixelToLocal(col.min() - 0.5, row.min() - 0.5, ts.min() - 0.5);
+  auto upperRight =
+      transformPixelToLocal(col.max() - 0.5, row.max() - 0.5, ts.max() - 0.5);
+
+  Volume::AxisInterval ivU(lowerLeft[kU], upperRight[kU]);
+  Volume::AxisInterval ivV(lowerLeft[kV], upperRight[kV]);
+  Volume::AxisInterval ivW(lowerLeft[kW], upperRight[kW]); // TODO or thickness?
+  Volume::AxisInterval ivS(lowerLeft[kS], upperRight[kS]);
+  return Volume(ivU, ivV, ivW, ivS);
 }
 
-void Mechanics::Sensor::setMaskedPixels(const std::set<ColumnRow>& pixels)
+// update projections of local properties into the global system and vice versa
+void Mechanics::Sensor::updateGeometry(const Geometry& geometry)
 {
-  m_pixelMask = Utils::DenseMask(pixels);
+  // this code assumes local/global coordinates have the same ordering. this is
+  // a canary to alert you that somebody is bold/stupid enough to change it.
+  static_assert(kX == kU, "Come on, are you serious?");
+  static_assert(kY == kV, "Come on, are you serious?");
+  static_assert(kZ == kW, "Come on, are you serious?");
+  static_assert(kT == kS, "Come on, are you serious?");
+
+  const auto& plane = geometry.getPlane(m_id);
+  m_beamSlope = geometry.getBeamSlope(m_id);
+  m_beamSlopeCov = geometry.getBeamSlopeCovariance(m_id);
+
+  // brute-force bounding box projection of the sensor in global coordinates by
+  // transforming each corner into the global system
+  auto volume = sensitiveVolume();
+  Matrix<double, 4, 16> corners;
+  // clang-format off
+  corners <<
+      Vector4(volume.min(0), volume.min(1), volume.min(2), volume.min(3)),
+      Vector4(volume.max(0), volume.min(1), volume.min(2), volume.min(3)),
+      Vector4(volume.min(0), volume.max(1), volume.min(2), volume.min(3)),
+      Vector4(volume.max(0), volume.max(1), volume.min(2), volume.min(3)),
+      Vector4(volume.min(0), volume.min(1), volume.max(2), volume.min(3)),
+      Vector4(volume.max(0), volume.min(1), volume.max(2), volume.min(3)),
+      Vector4(volume.min(0), volume.max(1), volume.max(2), volume.min(3)),
+      Vector4(volume.max(0), volume.max(1), volume.max(2), volume.min(3)),
+      Vector4(volume.min(0), volume.min(1), volume.min(2), volume.max(3)),
+      Vector4(volume.max(0), volume.min(1), volume.min(2), volume.max(3)),
+      Vector4(volume.min(0), volume.max(1), volume.min(2), volume.max(3)),
+      Vector4(volume.max(0), volume.max(1), volume.min(2), volume.max(3)),
+      Vector4(volume.min(0), volume.min(1), volume.max(2), volume.max(3)),
+      Vector4(volume.max(0), volume.min(1), volume.max(2), volume.max(3)),
+      Vector4(volume.min(0), volume.max(1), volume.max(2), volume.max(3)),
+      Vector4(volume.max(0), volume.max(1), volume.max(2), volume.max(3));
+  // clang-format on
+  // convert local corners to global corners
+  for (int i = 0; i < corners.cols(); ++i) {
+    corners.col(i) = plane.toGlobal(corners.col(i));
+  }
+  // determine bounding box of the rotated volume
+  m_projBoundingBox = Volume(Volume::AxisInterval(corners.row(0).minCoeff(),
+                                                  corners.row(0).maxCoeff()),
+                             Volume::AxisInterval(corners.row(1).minCoeff(),
+                                                  corners.row(1).maxCoeff()),
+                             Volume::AxisInterval(corners.row(2).minCoeff(),
+                                                  corners.row(2).maxCoeff()),
+                             Volume::AxisInterval(corners.row(3).minCoeff(),
+                                                  corners.row(3).maxCoeff()));
+  // only absolute pitch is relevant for the projection
+  m_projPitch = (plane.linearToGlobal() * pitch()).cwiseAbs();
 }
 
 void Mechanics::Sensor::print(std::ostream& os, const std::string& prefix) const
 {
   os << prefix << "name: " << m_name << '\n';
   os << prefix << "measurement: " << measurementName(m_measurement) << '\n';
-  os << prefix << "cols: " << m_numCols << '\n';
-  os << prefix << "rows: " << m_numRows << '\n';
-  os << prefix << "time: " << m_timeRange << '\n';
-  os << prefix << "value: " << m_valueRange << '\n';
+  os << prefix << "col: " << colRange() << '\n';
+  os << prefix << "row: " << rowRange() << '\n';
+  os << prefix << "timestamp: " << timestampRange() << '\n';
+  os << prefix << "value: " << valueRange() << '\n';
   os << prefix << "pitch_col: " << m_pitchCol << '\n';
   os << prefix << "pitch_row: " << m_pitchRow << '\n';
+  os << prefix << "pitch_timestamp: " << m_pitchTimestamp << '\n';
   if (!m_regions.empty()) {
     os << prefix << "regions:\n";
     for (size_t iregion = 0; iregion < m_regions.size(); ++iregion) {
       const auto& region = m_regions[iregion];
       os << prefix << "  region " << iregion << ":\n";
       os << prefix << "    name: " << region.name << '\n';
-      os << prefix << "    col: " << region.areaPixel.interval(0) << '\n';
-      os << prefix << "    row: " << region.areaPixel.interval(1) << '\n';
+      os << prefix << "    col: " << region.colRow.interval(0) << '\n';
+      os << prefix << "    row: " << region.colRow.interval(1) << '\n';
     }
   }
   os << prefix << "thickness: " << m_thickness << '\n';

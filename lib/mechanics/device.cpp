@@ -75,9 +75,10 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
   // the values are taken for FEI4 sensors; these values were hardcorded
   // before and are now used as defaults to keep backward compatibility
   auto defaultsType = toml::Table{
-      {"time_min", 0},
-      {"time_max", 15},
+      {"timestamp_min", 0},
+      {"timestamp_max", 15},
       {"value_max", 15},
+      {"pitch_timestamp", 1.0},
   };
   auto defaultsRegion = toml::Table{
       {"col_min", INT_MIN},
@@ -124,10 +125,10 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
         static_cast<Index>(config.get<int>("cols")),
         static_cast<Index>(config.get<int>("rows")),
         // see comments above for +1
-        config.get<int>("time_min"), config.get<int>("time_max") + 1,
+        config.get<int>("timestamp_min"), config.get<int>("timestamp_max") + 1,
         config.get<int>("value_max") + 1, config.get<double>("pitch_col"),
-        config.get<double>("pitch_row"), config.get<double>("thickness"),
-        config.get<double>("x_x0"));
+        config.get<double>("pitch_row"), config.get<double>("pitch_timestamp"),
+        config.get<double>("thickness"), config.get<double>("x_x0"));
 
     // add regions if defined
     for (const auto& r : config.get<toml::Array>("regions")) {
@@ -139,6 +140,24 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
     device.addSensor(std::move(sensor));
   }
   return device;
+}
+
+Mechanics::Sensor::Volume Mechanics::Device::boundingBox() const
+{
+  auto box = Mechanics::Sensor::Volume::Empty();
+  for (const auto& sensor : m_sensors) {
+    box.enclose(sensor.projectedBoundingBox());
+  }
+  return box;
+}
+
+Vector4 Mechanics::Device::minimumPitch() const
+{
+  Vector4 pitch = Vector4::Constant(std::numeric_limits<Scalar>::max());
+  for (const auto& sensor : m_sensors) {
+    pitch = pitch.cwiseMin(sensor.projectedPitch());
+  }
+  return pitch;
 }
 
 void Mechanics::Device::addSensor(Sensor&& sensor)
@@ -153,36 +172,7 @@ void Mechanics::Device::setGeometry(const Geometry& geometry)
   m_geometry = geometry;
   // update geometry-dependent sensor properties
   for (auto& sensor : m_sensors) {
-    const auto& plane = m_geometry.getPlane(sensor.id());
-    auto pitch = Vector3(sensor.pitchCol(), sensor.pitchRow(), 0);
-    auto volume = sensor.sensitiveVolumeLocal();
-
-    sensor.m_beamSlope = m_geometry.getBeamSlope(sensor.id());
-    sensor.m_beamCov = m_geometry.getBeamCovariance(sensor.id());
-    // only absolute pitch is relevant here
-    sensor.m_projPitch = (plane.rotationToGlobal() * pitch).cwiseAbs();
-    // corners of the local bounding box converted into the global system
-    Matrix<double, 3, 8> corners;
-    corners << plane.toGlobal(
-        Vector3(volume.min(0), volume.min(1), volume.min(2))),
-        plane.toGlobal(Vector3(volume.min(0), volume.min(1), volume.max(2))),
-        plane.toGlobal(Vector3(volume.min(0), volume.max(1), volume.min(2))),
-        plane.toGlobal(Vector3(volume.min(0), volume.max(1), volume.max(2))),
-        plane.toGlobal(Vector3(volume.max(0), volume.min(1), volume.min(2))),
-        plane.toGlobal(Vector3(volume.max(0), volume.min(1), volume.max(2))),
-        plane.toGlobal(Vector3(volume.max(0), volume.max(1), volume.min(2))),
-        plane.toGlobal(Vector3(volume.max(0), volume.max(1), volume.max(2)));
-    // determine bounding box of the rotated volume
-    auto xmin = corners.row(0).minCoeff();
-    auto xmax = corners.row(0).maxCoeff();
-    auto ymin = corners.row(1).minCoeff();
-    auto ymax = corners.row(1).maxCoeff();
-    auto zmin = corners.row(2).minCoeff();
-    auto zmax = corners.row(2).maxCoeff();
-    sensor.m_projEnvelope =
-        Sensor::Volume(Sensor::Volume::AxisInterval(xmin, xmax),
-                       Sensor::Volume::AxisInterval(ymin, ymax),
-                       Sensor::Volume::AxisInterval(zmin, zmax));
+    sensor.updateGeometry(m_geometry);
   }
   // TODO 2016-08-18 msmk: check number of sensors / id consistency
 }
@@ -192,7 +182,8 @@ void Mechanics::Device::applyPixelMasks(const PixelMasks& pixelMasks)
   m_pixelMasks = pixelMasks;
 
   for (auto id : m_sensorIds) {
-    getSensor(id).setMaskedPixels(m_pixelMasks.getMaskedPixels(id));
+    getSensor(id).m_pixelMask =
+        Utils::DenseMask(m_pixelMasks.getMaskedPixels(id));
   }
   // TODO 2016-08-18 msmk: check number of sensors / id consistency
 }

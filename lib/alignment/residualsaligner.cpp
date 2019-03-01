@@ -63,10 +63,10 @@ void Alignment::ResidualsAligner::execute(const Storage::Event& event)
 
       const Storage::TrackState& state =
           sensorEvent.getLocalState(cluster.track());
-      double u = state.offset()[0];
-      double v = state.offset()[1];
-      double ru = cluster.posLocal()[0] - u;
-      double rv = cluster.posLocal()[1] - v;
+      double u = state.loc0();
+      double v = state.loc1();
+      double ru = cluster.u() - u;
+      double rv = cluster.v() - v;
       // if we have no measurement uncertainties, the measured residuals are
       // fully defined by the three alignment corrections du, dv, dgamma as
       //
@@ -112,15 +112,18 @@ Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
     auto varDGamma = resDGamma.second;
 
     // enforce vanishing dz
-    Vector3 offsetGlobal = plane.rotationToGlobal() * Vector3(du, dv, 0.0);
-    offsetGlobal[2] = 0.0;
-    Vector3 offsetLocal = plane.rotationToLocal() * offsetGlobal;
+    Vector4 offsetLocal = Vector4::Zero();
+    offsetLocal[kU] = du;
+    offsetLocal[kV] = dv;
+    Vector4 offsetGlobal = plane.linearToGlobal() * offsetLocal;
+    offsetGlobal[kZ] = 0.0;
+    offsetLocal = plane.linearToLocal() * offsetGlobal;
 
     // combined local corrections
     Vector6 delta = Vector6::Zero();
-    delta[0] = m_damping * offsetLocal[0];
-    delta[1] = m_damping * offsetLocal[1];
-    delta[2] = m_damping * offsetLocal[2];
+    delta[0] = m_damping * offsetLocal[kU];
+    delta[1] = m_damping * offsetLocal[kV];
+    delta[2] = m_damping * offsetLocal[kW];
     delta[5] = m_damping * dgamma;
     SymMatrix6 cov = SymMatrix6::Zero();
     cov(0, 0) = varDU;

@@ -12,16 +12,17 @@
 
 namespace Mechanics {
 
-/** A two-dimensional plane in three-dimensional space.
+/** A two-dimensional plane in three-dimensional space with time.
  *
  * The plane is defined by two internal, orthogonal axes, and the origin of
  * the plane in the global coordinates. The normal direction to the plane is
- * already defined by its two internal axes.
+ * defined by the additional third orthogonal vector in the right-handed
+ * coordinate system. A fourth coordinate measures time.
  *
  * The unit vectors corresponding to the internal axes and the normal direction
- * are the columns of the local-to-global rotation matrix Q. The transformation
- * from local coordinates q=(u,v,w) to global coordinates r=(x,y,z) follows
- * as
+ * are the columns of the local-to-global linear transformation matrix Q.
+ * The transformation from local coordinates q to global coordinates r
+ * follows as
  *
  *     r = r0 + Q * q ,
  *
@@ -29,19 +30,22 @@ namespace Mechanics {
  *
  *     q = R * (r - r0) = Q^T * (r - r0)  ,
  *
- * with r0 being the plane offset. Representing the plane orientation with
- * a rotation matrix allows for easy, direct calculations, but is not a
- * minimal set of parameters. The minimal set of six parameters contains only
- * three offsets and three rotation angles that define the rotation matrix.
+ * with r0 being the local origin, both spatial and temporal, in global
+ * coordinates, and s,t being the temporal coordinates in the local and global
+ * system respectively. Representing the plane orientation with a linear
+ * transformation matrix allows for easy, direct calculations, but is not a
+ * minimal set of parameters. The minimal set of six parameters (seven if an
+ * additional time offset is considered) contains only three offsets and three
+ * rotation angles that define the rotation matrix.
  * Multiple conventions exists to define the three rotations. Here, the
- * 3-2-1 convention is used to build the rotation matrix as a product of
+ * 3-2-1 convention is used to define the rotation matrix as a product of
  * three elementary right-handed rotations
  *
  *     Q = R1(alpha) * R2(beta) * R3(gamma)  ,
  *
- * i.e. first a rotation by gamma around the local third axis
- * (normal axis), then a rotation by beta around the updated second
- * axis, followed with a rotation by alpha around the first axis.
+ * i.e. first a rotation by gamma around the local third spatial axis
+ * (normal axis), then a rotation by beta around the updated second spatial
+ * axis, followed with a rotation by alpha around the first spatial axis.
  *
  * Alignment of a plane corresponds to the multiplication of an additional
  * rotation matrix and a change of the plane offset. This can be defined
@@ -49,7 +53,7 @@ namespace Mechanics {
  *
  *     r  -> r' = r0 + Q * (dq + dQ * q) = r0' + Q' * q  ,
  *
- * or
+ * or with respect to the global coordinate system
  *
  *     q  -> q' = dR * R * (r - r0 - dr) = R' * (r - r0')  ,
  *
@@ -67,7 +71,7 @@ namespace Mechanics {
  *     dQ = R1(dalpha) * R2(dbeta) * R3(dgamma)  ,
  *
  * with small alignment angles (dalpha,dbeta,dgamma). Usually the alignment
- * angles are small enough to warant a linear approximation with results
+ * angles are small enough to warant a linear approximation which results
  * in the following approximate correction matrix
  *
  *          |       1  -dgamma    dbeta |
@@ -83,73 +87,58 @@ namespace Mechanics {
  *     dR = | -dgamma        1   dalpha | = dQ^T  .
  *          |   dbeta  -dalpha        1 |
  *
- * A fixed position r in global coordinates changes its local coordinates
- * after alignment as follows
- *
- *     q' = Q'^T * (r - r0')
- *        = dQ^T * Q^T * (r - r0 - dr)
- *        = dQ^T * Q^T * (r - r0) - dQ^T * Q^T * dr
- *        = dQ^T q - dq  .
- *
  */
 class Plane {
 public:
   /** Construct a plane consistent with the global system. */
-  Plane() : m_rotation(Matrix3::Identity()), m_offset(Vector3::Zero()) {}
+  Plane() : m_origin(Vector4::Zero()), m_linear(Matrix4::Identity()) {}
   /** Construct a plane from 3-2-1 rotation angles. */
   static Plane
-  fromAngles321(double gamma, double beta, double alpha, const Vector3& offset);
+  fromAngles321(double gamma, double beta, double alpha, const Vector3& origin);
   /** Construct a plane from two direction vectors for the local axes. */
   static Plane fromDirections(const Vector3& dirU,
                               const Vector3& dirV,
-                              const Vector3& offset);
+                              const Vector3& origin);
 
   /** Create a corrected plane from [dx, dy, dz, dalpha, dbeta, dgamma]. */
   Plane correctedGlobal(const Vector6& delta) const;
   /** Create a corrected plane from [du, dv, dw, dalpha, dbeta, dgamma]. */
   Plane correctedLocal(const Vector6& delta) const;
 
-  auto rotationToGlobal() const { return m_rotation; }
-  auto rotationToLocal() const { return m_rotation.transpose(); }
-  auto unitU() const { return m_rotation.col(0); }
-  auto unitV() const { return m_rotation.col(1); }
-  auto unitNormal() const { return m_rotation.col(2); }
-  auto offset() const { return m_offset; }
+  const Vector4& origin() const { return m_origin; }
+  const Matrix4& linearToGlobal() const { return m_linear; }
+  auto linearToLocal() const { return m_linear.transpose(); }
   /** Compute minimal parameters [x0, y0, z0, alpha, beta, gamma]. */
   Vector6 asParams() const;
 
-  /** Transform a local position into global coordinates.
-   *
-   * For local positions with less than 3 coordinates the missing components
-   * are assumed to be zero.
-   */
+  /** Transform a local position into global coordinates. */
   template <typename Position>
-  auto toGlobal(const Eigen::MatrixBase<Position>& uvw) const
+  auto toGlobal(const Eigen::MatrixBase<Position>& local) const
   {
-    return m_offset + m_rotation.leftCols<Position::RowsAtCompileTime>() * uvw;
+    return m_origin + m_linear * local;
   }
   /** Transform a global position into local coordinates. */
   template <typename Position>
-  auto toLocal(const Eigen::MatrixBase<Position>& xyz) const
+  auto toLocal(const Eigen::MatrixBase<Position>& global) const
   {
-    return m_rotation.transpose() * (xyz - m_offset);
+    return m_linear.transpose() * (global - m_origin);
   }
 
 private:
-  template <typename Offset, typename Rotation>
-  Plane(const Eigen::MatrixBase<Offset>& off,
-        const Eigen::MatrixBase<Rotation>& rot)
-      : m_rotation(rot), m_offset(off)
+  template <typename Offset, typename Linear>
+  Plane(const Eigen::MatrixBase<Offset>& origin,
+        const Eigen::MatrixBase<Linear>& linear)
+      : m_origin(origin), m_linear(linear)
   {
-    // ensure orthogonality of rotation matrix
+    // ensure orthogonality of the linear transformation matrix
     // https://en.wikipedia.org/wiki/Orthogonal_matrix#Nearest_orthogonal_matrix
-    Eigen::JacobiSVD<Matrix3, Eigen::NoQRPreconditioner> svd(
-        rot, Eigen::ComputeFullU | Eigen::ComputeFullV);
-    m_rotation = svd.matrixU() * svd.matrixV().transpose();
+    Eigen::JacobiSVD<Matrix4, Eigen::NoQRPreconditioner> svd(
+        linear, Eigen::ComputeFullU | Eigen::ComputeFullV);
+    m_linear = svd.matrixU() * svd.matrixV().transpose();
   }
 
-  Matrix3 m_rotation; // from local to global coordinates
-  Vector3 m_offset;   // position of the origin in global coordinates
+  Vector4 m_origin; // position of the origin in global coordinates
+  Matrix4 m_linear; // from local to global coordinates
 };
 
 /** Store and process the geometry of the telescope setup.
@@ -192,31 +181,36 @@ public:
   SymMatrix6 getParamsCov(Index sensorId) const;
 
   /** Set the beam slope along the z axis. */
-  void setBeamSlope(double slopeX, double slopeY);
+  void setBeamSlope(const Vector2& slopeXY) { m_beamSlope = slopeXY; }
   /** Set the beam divergence/ standard deviation along the z axis. */
-  void setBeamDivergence(double divergenceX, double divergenceY);
+  void setBeamDivergence(const Vector2& divXY) { m_beamSlopeStdev = divXY; }
   /** Beam energy. */
-  double beamEnergy() const { return m_beamEnergy; }
+  auto beamEnergy() const { return m_beamEnergy; }
   /** Beam slope in the global coordinate system. */
-  Vector2 beamSlope() const { return {m_beamSlopeX, m_beamSlopeY}; }
-  /** Beam slope divergence along the z axis in global x and y coordinates. */
-  Vector2 beamDivergence() const { return {m_beamStdevX, m_beamStdevY}; }
+  auto beamSlope() const { return m_beamSlope; }
+  /** Beam slope covariance in the global coordinate system. */
+  SymMatrix2 beamSlopeCovariance() const;
   /** Beam direction in the local coordinate system of the sensor. */
   Vector2 getBeamSlope(Index sensorId) const;
   /** Beam slope covariance in the local coordinate system of the sensor. */
-  SymMatrix2 getBeamCovariance(Index sensorId) const;
+  SymMatrix2 getBeamSlopeCovariance(Index sensorId) const;
 
   void print(std::ostream& os, const std::string& prefix = std::string()) const;
 
 private:
+  /** Beam tangent in the global coordinate system. */
+  Vector4 beamTangent() const;
+
   std::map<Index, Plane> m_planes;
   std::map<Index, SymMatrix6> m_covs;
-  double m_beamSlopeX, m_beamSlopeY;
-  double m_beamStdevX, m_beamStdevY;
-  double m_beamEnergy;
+  Vector2 m_beamSlope;
+  Vector2 m_beamSlopeStdev;
+  Scalar m_beamEnergy;
 };
 
 /** Sort the sensor indices by their position along the beam direction. */
+void sortAlongBeam(const Geometry& geo, std::vector<Index>& sensorIds);
+/** Return a copy of the indices sorted along the beam direction. */
 std::vector<Index> sortedAlongBeam(const Geometry& geo,
                                    const std::vector<Index>& sensorIds);
 

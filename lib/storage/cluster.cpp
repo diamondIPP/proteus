@@ -12,32 +12,34 @@
 PT_SETUP_LOCAL_LOGGER(Cluster)
 
 Storage::Cluster::Cluster()
-    : m_col(std::numeric_limits<float>::quiet_NaN())
-    , m_row(std::numeric_limits<float>::quiet_NaN())
-    , m_u(std::numeric_limits<float>::quiet_NaN())
-    , m_v(std::numeric_limits<float>::quiet_NaN())
-    , m_time(std::numeric_limits<float>::quiet_NaN())
-    , m_value(std::numeric_limits<float>::quiet_NaN())
-    , m_crCov(SymMatrix2::Zero())
-    , m_uvCov(SymMatrix2::Zero())
+    : m_col(std::numeric_limits<Scalar>::quiet_NaN())
+    , m_row(std::numeric_limits<Scalar>::quiet_NaN())
+    , m_timestamp(std::numeric_limits<Scalar>::quiet_NaN())
+    , m_value(std::numeric_limits<Scalar>::quiet_NaN())
+    , m_colVar(0)
+    , m_rowVar(0)
+    , m_colRowCov(0)
+    , m_timestampVar(0)
+    , m_pos(Vector4::Constant(std::numeric_limits<Scalar>::quiet_NaN()))
+    , m_posCov(SymMatrix4::Constant(std::numeric_limits<Scalar>::quiet_NaN()))
     , m_index(kInvalidIndex)
     , m_track(kInvalidIndex)
     , m_matchedState(kInvalidIndex)
 {
 }
 
-void Storage::Cluster::setPixel(const Vector2& cr, const SymMatrix2& cov)
+void Storage::Cluster::setPixel(const Vector2& cr,
+                                const SymMatrix2& crCov,
+                                Scalar timestamp,
+                                Scalar timestampVar)
 {
   m_col = cr[0];
   m_row = cr[1];
-  m_crCov = cov.selfadjointView<Eigen::Lower>();
-}
-
-void Storage::Cluster::setLocal(const Vector2& uv, const SymMatrix2& cov)
-{
-  m_u = uv[0];
-  m_v = uv[1];
-  m_uvCov = cov.selfadjointView<Eigen::Lower>();
+  m_timestamp = timestamp;
+  m_colVar = crCov(0, 0);
+  m_rowVar = crCov(1, 1);
+  m_colRowCov = crCov(1, 0);
+  m_timestampVar = timestampVar;
 }
 
 bool Storage::Cluster::hasRegion() const
@@ -59,14 +61,12 @@ void Storage::Cluster::setTrack(Index track)
 Storage::Cluster::Area Storage::Cluster::areaPixel() const
 {
   auto grow = [](Area a, const Hit& hit) {
-    a.enclose(hit.areaPixel());
+    a.enclose(Area(Area::AxisInterval(hit.col(), hit.col() + 1),
+                   Area::AxisInterval(hit.row(), hit.row() + 1)));
     return a;
   };
   return std::accumulate(m_hits.begin(), m_hits.end(), Area::Empty(), grow);
 }
-
-int Storage::Cluster::sizeCol() const { return areaPixel().length(0); }
-int Storage::Cluster::sizeRow() const { return areaPixel().length(1); }
 
 void Storage::Cluster::addHit(Storage::Hit& hit)
 {
@@ -74,23 +74,15 @@ void Storage::Cluster::addHit(Storage::Hit& hit)
   m_hits.push_back(std::ref(hit));
 }
 
-void Storage::Cluster::print(std::ostream& os, const std::string& prefix) const
-{
-  auto stdevCR = extractStdev(m_crCov);
-  auto stdevUV = extractStdev(m_uvCov);
-  os << prefix << "size: " << size() << '\n';
-  os << prefix << "pixel: [" << m_col << ", " << m_row << "]\n";
-  os << prefix << "pixel stdev: [" << stdevCR.transpose() << "]\n";
-  os << prefix << "local: [" << m_u << ", " << m_v << "]\n";
-  os << prefix << "local stdev: [" << stdevUV.transpose() << "]\n";
-  os.flush();
-}
-
 std::ostream& Storage::operator<<(std::ostream& os, const Cluster& cluster)
 {
-  os << "size=" << cluster.size();
-  os << " pixel=[" << cluster.posPixel().transpose() << "]";
-  os << " local=[" << cluster.posLocal().transpose() << "]";
+  os << "col=" << cluster.col();
+  os << " row=" << cluster.row();
+  os << " u=" << cluster.u();
+  os << " v=" << cluster.v();
+  os << " time=" << cluster.time();
+  os << " value=" << cluster.value();
+  os << " size=" << cluster.size();
   if (cluster.isInTrack()) {
     os << " track=" << cluster.track();
   }

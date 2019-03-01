@@ -11,92 +11,91 @@
 
 PT_SETUP_LOCAL_LOGGER(Propagation)
 
-// Jacobian from slope [u', v'] to normalized direction [tu, tv, tw]
-//
-// \param t Normalized direction vector
-//
-// The tangent vector is [u'/f, v'/f, 1/f] with f = sqrt(1 + u'^2 + v'^2)
-template <typename Tangent>
-static inline Matrix32 jacobianSlopeTangent(const Eigen::MatrixBase<Tangent>& t)
+Matrix2 Tracking::jacobianSlopeSlope(const Vector4& tangent,
+                                     const Matrix4& toTarget)
 {
-  Matrix32 jac;
-  jac(0, 0) = (1 - t[0] * t[0]) * t[2];
-  jac(1, 0) = -t[0] * t[1] * t[2];
-  jac(2, 0) = -t[0] * t[2] * t[2];
-  jac(0, 1) = -t[0] * t[1] * t[2];
-  jac(1, 1) = (1 - t[1] * t[1]) * t[2];
-  jac(2, 1) = -t[1] * t[2] * t[2];
-  return jac;
+  // map source track parameters to unrestricted target tangent
+  Matrix42 R;
+  R.col(0) = toTarget.col(kU);
+  R.col(1) = toTarget.col(kV);
+  // source tangent in slope parametrization -> target tangent w/ same length
+  Vector4 S = toTarget * tangent * (1 / tangent[kW]);
+  // map changes in target tangent to slope changes restricted to plane
+  Matrix24 F = Matrix24::Zero();
+  F(0, kU) = 1 / S(kW);
+  F(1, kV) = 1 / S(kW);
+  F(0, kW) = -S[kU] / (S[kW] * S[kW]);
+  F(1, kW) = -S[kV] / (S[kW] * S[kW]);
+  return F * R;
 }
 
-// Jacobian from normalized direction [tu, tv, tw] to slope [u', v']
-//
-// \param t Normalized direction vector
-//
-// The slope vector is [tu / tw, tv / tw]
-template <typename Tangent>
-static inline Matrix23 jacobianTangentSlope(const Eigen::MatrixBase<Tangent>& t)
+Matrix6 Tracking::jacobianState(const Vector4& tangent,
+                                const Matrix4& toTarget,
+                                Scalar w0)
 {
-  Matrix23 jac;
-  jac(0, 0) = 1 / t[2];
-  jac(1, 0) = 0;
-  jac(0, 1) = 0;
-  jac(1, 1) = 1 / t[2];
-  jac(0, 2) = -t[0] / (t[2] * t[2]);
-  jac(1, 2) = -t[1] / (t[2] * t[2]);
-  return jac;
-}
+  // the code assumes that the parameter vector is split into three
+  // position-like and three tangent-like parameters with the same relative
+  // ordering in each subvector.
+  // the asserts are here as a code canary to blow up if someone (me) at some
+  // point decides to change the parameter ordering in an incompatible way.
+  static_assert(kLoc0 < 3,
+                "Tangent-like parameters are before position-like ones");
+  static_assert(kLoc1 < 3,
+                "Tangent-like parameters are before position-like ones");
+  static_assert(kTime < 3,
+                "Tangent-like parameters are before position-like ones");
+  static_assert((kTime - kLoc0) == (kSlopeTime - kSlopeLoc0),
+                "Inconsistent parameter ordering");
+  static_assert((kTime - kLoc1) == (kSlopeTime - kSlopeLoc1),
+                "Inconsistent parameter ordering");
+  static_assert((kLoc1 - kLoc0) == (kSlopeLoc1 - kSlopeLoc0),
+                "Inconsistent parameter ordering");
 
-Matrix2 Tracking::jacobianSlopeSlope(const Vector3& direction,
-                                     const Matrix3& rotation)
-{
-  // local and global tangent unit vector
-  auto tan0 = direction.normalized();
-  auto tan1 = rotation * tan0;
-  auto A = jacobianSlopeTangent(tan0);
-  auto D = jacobianTangentSlope(tan1);
-  // target slope <- target tangent <- source tangent <- source slope
-  auto jac = D * rotation * A;
-  DEBUG("tangent source: [", tan0[0], ", ", tan0[1], ", ", tan0[2], "]");
-  DEBUG("tangent target: [", tan1[0], ", ", tan0[1], ", ", tan1[2], "]");
-  DEBUG("matrix A:\n", A);
-  DEBUG("matrix D:\n", D);
-  DEBUG("jacobian:\n", jac);
-  return jac;
-}
-
-Matrix4 Tracking::jacobianState(const Vector3& direction,
-                                const Matrix3& rotation)
-{
-  // WARNING
-  // current implementation assumes vanishing slopes and needs to be amended.
-  // TODO 2017-10-10 msmk add full jacobian for all parameters
-
-  Matrix4 jac;
+  // target tangent derived from the source tangent in slope normalization
+  Vector4 S = toTarget * tangent * (1 / tangent[kW]);
+  // map source track parameters to unrestricted target coordinates (pos or tan)
+  Matrix43 R;
+  R.col(kLoc0) = toTarget.col(kU);
+  R.col(kLoc1) = toTarget.col(kV);
+  R.col(kTime) = toTarget.col(kS);
+  // map changes in unrestricted target coords to changes restricted to plane
+  Matrix34 F = Matrix34::Zero();
+  F(kLoc0, kU) = 1;
+  F(kLoc1, kV) = 1;
+  F(kTime, kS) = 1;
+  F(kLoc0, kW) = -S[kU] / S[kW];
+  F(kLoc1, kW) = -S[kV] / S[kW];
+  F(kTime, kW) = -S[kS] / S[kW];
+  Matrix6 jac;
   // clang-format off
-  jac << rotation.topLeftCorner<2,2>(), Matrix2::Zero(),
-         Matrix2::Zero(),               jacobianSlopeSlope(direction, rotation);
+  jac <<              F * R, (-w0 / S[kW]) * F * R,
+            Matrix3::Zero(), (  1 / S[kW]) * F * R;
   // clang-format on
-
   return jac;
 }
 
-Storage::TrackState Tracking::propagate_to(const Storage::TrackState& state,
-                                           const Mechanics::Plane& source,
-                                           const Mechanics::Plane& target)
+Storage::TrackState Tracking::propagateTo(const Storage::TrackState& state,
+                                          const Mechanics::Plane& source,
+                                          const Mechanics::Plane& target)
 {
-  // combined rotation from source to target system
-  Matrix3 combinedRotation =
-      target.rotationToLocal() * source.rotationToGlobal();
-  // Transform to target local coordinates
-  Vector3 uvw = target.toLocal(source.toGlobal(state.offset()));
-  Vector3 dir = combinedRotation * state.direction();
-  // Move to intersection w/ the target plane
-  uvw -= dir * uvw[2] / dir[2];
-
-  Matrix4 jac = jacobianState(state.direction(), combinedRotation);
-
-  Storage::TrackState propagated(uvw.head<2>(), dir.head<2>() / dir[2]);
-  propagated.setCov(transformCovariance(jac, state.cov()));
-  return propagated;
+  // combined transformation matrix from source to target system
+  Matrix4 toTarget = target.linearToLocal() * source.linearToGlobal();
+  // initial unrestricted track state in the target system
+  Vector4 pos = target.toLocal(source.toGlobal(state.position()));
+  Vector4 tan = toTarget * state.tangent();
+  // build propagation jacobian
+  Matrix6 jacobian = jacobianState(state.tangent(), toTarget, pos[kW]);
+  // scale target tangent to slope parametrization
+  tan /= tan[kW];
+  // move position to intersection w/ the target plane
+  pos -= tan * pos[kW];
+  // build propagated parameter vector
+  Vector6 params;
+  params[kLoc0] = pos[kU];
+  params[kLoc1] = pos[kV];
+  params[kTime] = pos[kS];
+  params[kSlopeLoc0] = tan[kU];
+  params[kSlopeLoc1] = tan[kV];
+  params[kSlopeTime] = tan[kS];
+  return {params, transformCovariance(jacobian, state.cov())};
 }

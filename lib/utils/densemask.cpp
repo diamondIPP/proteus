@@ -9,6 +9,8 @@
 #include <limits>
 #include <ostream>
 
+Utils::DenseMask::DenseMask() : DenseMask(0, 0, 0, 0) {}
+
 // create an empty mask, i.e. no masked pixels, for the given area
 Utils::DenseMask::DenseMask(int col0, int row0, int sizeCol, int sizeRow)
     : m_col0(col0)
@@ -20,8 +22,6 @@ Utils::DenseMask::DenseMask(int col0, int row0, int sizeCol, int sizeRow)
   assert(0 <= sizeCol);
   assert(0 <= sizeRow);
 }
-
-Utils::DenseMask::DenseMask() : DenseMask(0, 0, 0, 0) {}
 
 Utils::DenseMask::DenseMask(const std::set<ColumnRow>& masked)
     : m_col0(std::numeric_limits<int>::max())
@@ -38,8 +38,9 @@ Utils::DenseMask::DenseMask(const std::set<ColumnRow>& masked)
   }
   // second iteration to fill the mask
   m_mask.resize((m_col1 - m_col0) * (m_row1 - m_row0), false);
-  for (const auto& pos : masked)
+  for (const auto& pos : masked) {
     m_mask[index(std::get<0>(pos), std::get<1>(pos))] = true;
+  }
 }
 
 Utils::DenseMask Utils::DenseMask::protruded(int offset) const

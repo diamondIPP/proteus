@@ -1,30 +1,51 @@
 #include "trackstate.h"
 
-#include <cassert>
-#include <limits>
+#include <ostream>
 
-Storage::TrackState::TrackState()
-    : m_params(Vector4::Constant(std::numeric_limits<double>::quiet_NaN()))
-    , m_cov(SymMatrix4::Zero())
-    , m_matchedCluster(kInvalidIndex)
+#include "utils/logger.h"
+
+Storage::TrackState::TrackState(Scalar location0,
+                                Scalar location1,
+                                Scalar slope0,
+                                Scalar slope1)
+    : TrackState()
 {
+  m_params[kLoc0] = location0;
+  m_params[kLoc1] = location1;
+  m_params[kSlopeLoc0] = slope0;
+  m_params[kSlopeLoc1] = slope1;
 }
 
-Storage::TrackState::TrackState(float u, float v, float dU, float dV)
-    : m_params(u, v, dU, dV)
-    , m_cov(SymMatrix4::Zero())
-    , m_matchedCluster(kInvalidIndex)
+Storage::TrackState::TrackState(const Vector4& position,
+                                const SymMatrix4& positionCov,
+                                const Vector2& slope,
+                                const SymMatrix2& slopeCov)
+    : TrackState(Vector6::Zero(), SymMatrix6::Zero())
 {
-}
-
-Storage::TrackState::TrackState(const Vector2& offset, const Vector2& slope)
-    : TrackState(offset[0], offset[1], slope[0], slope[1])
-{
+  m_params[kLoc0] = position[kU];
+  m_params[kLoc1] = position[kV];
+  m_params[kTime] = position[kS];
+  m_params[kSlopeLoc0] = slope[0];
+  m_params[kSlopeLoc1] = slope[1];
+  m_cov(kLoc0, kLoc0) = positionCov(kU, kU);
+  m_cov(kLoc1, kLoc0) = m_cov(kLoc0, kLoc1) = positionCov(kV, kU);
+  m_cov(kTime, kLoc0) = m_cov(kLoc0, kTime) = positionCov(kS, kU);
+  m_cov(kLoc1, kLoc1) = positionCov(kV, kV);
+  m_cov(kTime, kLoc1) = m_cov(kLoc1, kTime) = positionCov(kS, kV);
+  m_cov(kTime, kTime) = positionCov(kS, kS);
+  m_cov(kSlopeLoc0, kSlopeLoc0) = slopeCov(0, 0);
+  m_cov(kSlopeLoc1, kSlopeLoc0) = m_cov(kSlopeLoc0, kSlopeLoc1) =
+      slopeCov(1, 0);
+  m_cov(kSlopeLoc1, kSlopeLoc1) = slopeCov(1, 1);
 }
 
 std::ostream& Storage::operator<<(std::ostream& os, const TrackState& state)
 {
-  os << "offset=[" << state.offset().transpose() << "]";
-  os << " slope=[" << state.slope().transpose() << "]";
+  os << "loc0=" << state.loc0();
+  os << " loc1=" << state.loc1();
+  os << " time=" << state.time();
+  os << " dloc0=" << state.slopeLoc0();
+  os << " dloc1=" << state.slopeLoc1();
+  os << " dtime=" << state.slopeTime();
   return os;
 }

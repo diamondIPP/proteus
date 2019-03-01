@@ -59,37 +59,33 @@ void Analyzers::Correlations::addHist(const Mechanics::Sensor& sensor0,
 
   TDirectory* sub = makeDir(dir, sensor0.name() + "-" + sensor1.name());
 
-  auto makeCorr = [&](int axis) {
-    std::string axisName = (axis == 0) ? "x" : "y";
-    std::string histName = "correlation_" + axisName;
-    std::string xlabel = sensor0.name() + " cluster " + axisName;
-    std::string ylabel = sensor1.name() + " cluster " + axisName;
-    auto range0 = sensor0.projectedEnvelope().interval(axis);
-    auto range1 = sensor1.projectedEnvelope().interval(axis);
-    int bins0 = range0.length() / sensor0.projectedPitch()[axis];
-    int bins1 = range1.length() / sensor1.projectedPitch()[axis];
-    return makeH2(sub, histName, {range0, bins0, xlabel},
-                  {range1, bins1, ylabel});
+  auto makeCorr = [&](int dim, std::string name, std::string label) {
+    auto range0 = sensor0.projectedBoundingBox().interval(dim);
+    auto range1 = sensor1.projectedBoundingBox().interval(dim);
+    int bins0 = range0.length() / sensor0.projectedPitch()[dim];
+    int bins1 = range1.length() / sensor1.projectedPitch()[dim];
+    auto axis0 = HistAxis{range0, bins0, sensor0.name() + " cluster " + label};
+    auto axis1 = HistAxis{range1, bins1, sensor1.name() + " cluster " + label};
+    return makeH2(sub, "correlation_" + name, axis0, axis1);
   };
-  auto makeDiff = [&](int axis) {
-    std::string axisName = (axis == 0) ? "x" : "y";
-    std::string histName = "diff_" + axisName;
-    std::string xlabel =
-        sensor0.name() + " - " + sensor1.name() + " cluster " + axisName;
-    double length0 = sensor0.projectedEnvelope().length(axis);
-    double length1 = sensor1.projectedEnvelope().length(axis);
-    double maxDist = (length0 + length1) / 4;
-    double pitch0 = sensor0.projectedPitch()[axis];
-    double pitch1 = sensor1.projectedPitch()[axis];
-    int bins = 2 * maxDist / std::min(pitch0, pitch1);
-    return makeH1(sub, histName, {-maxDist, maxDist, bins, xlabel});
+  auto makeDiff = [&](int dim, std::string name, std::string label) {
+    auto range0 = sensor0.projectedBoundingBox().interval(dim);
+    auto range1 = sensor1.projectedBoundingBox().interval(dim);
+    auto pitch0 = sensor0.projectedPitch()[dim];
+    auto pitch1 = sensor1.projectedPitch()[dim];
+    auto axis = HistAxis::Difference(range0, pitch0, range1, pitch1,
+                                     sensor1.name() + " - " + sensor0.name() +
+                                         " cluster " + label);
+    return makeH1(sub, "difference_" + name, axis);
   };
 
   Hists hist;
-  hist.corrX = makeCorr(0);
-  hist.corrY = makeCorr(1);
-  hist.diffX = makeDiff(0);
-  hist.diffY = makeDiff(1);
+  hist.corrX = makeCorr(kX, "x", "position x");
+  hist.corrY = makeCorr(kY, "y", "position y");
+  hist.corrT = makeCorr(kT, "time", "global time");
+  hist.diffX = makeDiff(kX, "x", "position x");
+  hist.diffY = makeDiff(kY, "y", "position y");
+  hist.diffT = makeDiff(kT, "time", "global time");
   m_hists[std::make_pair(sensor0.id(), sensor1.id())] = hist;
 }
 
@@ -105,15 +101,17 @@ void Analyzers::Correlations::execute(const Storage::Event& event)
     const Storage::SensorEvent& sensor1 = event.getSensorEvent(id1);
 
     for (Index c0 = 0; c0 < sensor0.numClusters(); ++c0) {
-      Vector3 xyz0 = plane0.toGlobal(sensor0.getCluster(c0).posLocal());
+      Vector4 global0 = plane0.toGlobal(sensor0.getCluster(c0).position());
 
       for (Index c1 = 0; c1 < sensor1.numClusters(); ++c1) {
-        Vector3 xyz1 = plane1.toGlobal(sensor1.getCluster(c1).posLocal());
+        Vector4 global1 = plane1.toGlobal(sensor1.getCluster(c1).position());
 
-        hist.corrX->Fill(xyz0[0], xyz1[0]);
-        hist.corrY->Fill(xyz0[1], xyz1[1]);
-        hist.diffX->Fill(xyz1[0] - xyz0[0]);
-        hist.diffY->Fill(xyz1[1] - xyz0[1]);
+        hist.corrX->Fill(global0[kX], global1[kX]);
+        hist.corrY->Fill(global0[kY], global1[kY]);
+        hist.corrT->Fill(global0[kT], global1[kT]);
+        hist.diffX->Fill(global1[kX] - global0[kX]);
+        hist.diffY->Fill(global1[kY] - global0[kY]);
+        hist.diffT->Fill(global1[kT] - global0[kT]);
       }
     }
   }
