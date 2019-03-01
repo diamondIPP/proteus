@@ -21,7 +21,7 @@ static void fitLocal(const Storage::Track& track,
                      int& dof,
                      Index ignoreSensorId = kInvalidIndex)
 {
-  Tracking::LineFitter4D fitter;
+  Tracking::LineFitter3D fitter;
   auto time = std::numeric_limits<Scalar>::max();
 
   for (const auto& ci : track.clusters()) {
