@@ -82,14 +82,16 @@ private:
 template <typename... HitParams>
 inline Storage::Hit& Storage::SensorEvent::addHit(HitParams&&... params)
 {
-  m_hits.emplace_back(new Hit(std::forward<HitParams>(params)...));
+  m_hits.emplace_back(
+      std::make_unique<Hit>(std::forward<HitParams>(params)...));
   return *m_hits.back();
 }
 
 template <typename... Params>
 inline Storage::Cluster& Storage::SensorEvent::addCluster(Params&&... params)
 {
-  m_clusters.emplace_back(new Cluster(std::forward<Params>(params)...));
+  m_clusters.emplace_back(
+      std::make_unique<Cluster>(std::forward<Params>(params)...));
   m_clusters.back()->m_index = m_clusters.size() - 1;
   return *m_clusters.back();
 }
