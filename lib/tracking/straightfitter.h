@@ -16,7 +16,6 @@ namespace Mechanics {
 class Device;
 class Geometry;
 } // namespace Mechanics
-
 namespace Tracking {
 
 /** Estimate local track parameters using a straight line track model.
@@ -33,7 +32,6 @@ public:
 
 private:
   const Mechanics::Geometry& m_geo;
-  std::vector<Index> m_sensorIds;
 };
 
 /** Estimate local track parameters w/o the local information.
@@ -52,7 +50,6 @@ public:
 
 private:
   const Mechanics::Geometry& m_geo;
-  std::vector<Index> m_sensorIds;
 };
 
 } // namespace Tracking
