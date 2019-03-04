@@ -19,7 +19,7 @@
 #include "processors/applygeometry.h"
 #include "processors/setupsensors.h"
 #include "storage/event.h"
-#include "tracking/straightfitter.h"
+#include "tracking/setupfitter.h"
 #include "tracking/trackfinder.h"
 #include "utils/application.h"
 #include "utils/logger.h"
@@ -134,11 +134,13 @@ int main(int argc, char const* argv[])
   using namespace Analyzers;
   using namespace Mechanics;
   using namespace Processors;
+  using namespace Tracking;
 
   toml::Table defaults = {
       // tracking settings
       {"search_sigma_max", 5.},
       {"reduced_chi2_max", -1.},
+      {"track_fitter", "straight3d"},
       // alignment settings
       {"num_steps", 1},
       {"damping", 0.9},
@@ -154,6 +156,7 @@ int main(int argc, char const* argv[])
   auto damping = app.config().get<double>("damping");
   auto searchSigmaMax = app.config().get<double>("search_sigma_max");
   auto redChi2Max = app.config().get<double>("reduced_chi2_max");
+  auto fitter = app.config().get<std::string>("track_fitter");
 
   // split sensors into fixed and alignable set
   std::vector<Index> fixedSensorIds;
@@ -210,8 +213,7 @@ int main(int argc, char const* argv[])
       // use unbiased track residuals to align
       loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
           dev, sensorIds, sensorIds.size(), searchSigmaMax, redChi2Max));
-      loop.addProcessor(
-          std::make_shared<Tracking::UnbiasedStraightFitter>(dev));
+      setupUnbiasedTrackFitter(dev, fitter, loop);
       loop.addAnalyzer(std::make_shared<Residuals>(stepDir, dev, sensorIds,
                                                    "unbiased_residuals"));
       tracks = std::make_shared<Tracks>(stepDir, dev);
@@ -222,8 +224,7 @@ int main(int argc, char const* argv[])
       // use unbiased track residuals to align
       loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
           dev, sensorIds, sensorIds.size(), searchSigmaMax, redChi2Max));
-      loop.addProcessor(
-          std::make_shared<Tracking::UnbiasedStraightFitter>(dev));
+      setupUnbiasedTrackFitter(dev, fitter, loop);
       loop.addAnalyzer(std::make_shared<Residuals>(stepDir, dev, sensorIds,
                                                    "unbiased_residuals"));
       tracks = std::make_shared<Tracks>(stepDir, dev);
@@ -266,7 +267,7 @@ int main(int argc, char const* argv[])
     loop.addProcessor(std::make_shared<ApplyGeometry>(dev));
     loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
         dev, sensorIds, sensorIds.size(), searchSigmaMax, redChi2Max));
-    loop.addProcessor(std::make_shared<Tracking::StraightFitter>(dev));
+    setupUnbiasedTrackFitter(dev, fitter, loop);
 
     // minimal set of analyzers
     loop.addAnalyzer(std::make_shared<GlobalOccupancy>(subDir, dev));
