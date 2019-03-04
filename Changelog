@@ -150,6 +150,12 @@ User-visible changes
     two options are available, ``straight4d`` and ``straight3d``, that setup a
     straight line fit with or without a fitted time component. The default
     setting is ``straight3d``.
+*   Beam parameters estimation is now optional during alignment.
+
+    The estimation of beam slope and divergence is configurable via the
+    ``estimate_beam_parameters`` option in the ``align`` configuration section.
+    If not given, the option defaults to ``true`` to retain the previous
+    behaviour. This might be changed in future releases.
 
 Bugfixes
 --------
