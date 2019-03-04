@@ -68,29 +68,33 @@ executeImpl(const Geometry& geo, const bool fitUnbiased, Event& event)
   }
 }
 
-Tracking::StraightFitter::StraightFitter(const Device& device)
+Tracking::Straight3dFitter::Straight3dFitter(const Device& device)
     : m_geo(device.geometry())
 {
 }
 
-std::string Tracking::StraightFitter::name() const { return "StraightFitter"; }
+std::string Tracking::Straight3dFitter::name() const
+{
+  return "Straight3dFitter";
+}
 
-void Tracking::StraightFitter::execute(Event& event) const
+void Tracking::Straight3dFitter::execute(Event& event) const
 {
   executeImpl<LineFitter3D>(m_geo, false, event);
 }
 
-Tracking::UnbiasedStraightFitter::UnbiasedStraightFitter(const Device& device)
+Tracking::UnbiasedStraight3dFitter::UnbiasedStraight3dFitter(
+    const Device& device)
     : m_geo(device.geometry())
 {
 }
 
-std::string Tracking::UnbiasedStraightFitter::name() const
+std::string Tracking::UnbiasedStraight3dFitter::name() const
 {
-  return "UnbiasedStraightFitter";
+  return "UnbiasedStraight3dFitter";
 }
 
-void Tracking::UnbiasedStraightFitter::execute(Event& event) const
+void Tracking::UnbiasedStraight3dFitter::execute(Event& event) const
 {
   executeImpl<LineFitter3D>(m_geo, true, event);
 }

@@ -23,9 +23,9 @@ namespace Tracking {
  * This calculates new global track parameters and goodness-of-fit and
  * calculates the local track parameters on the all sensor planes.
  */
-class StraightFitter : public Loop::Processor {
+class Straight3dFitter : public Loop::Processor {
 public:
-  StraightFitter(const Mechanics::Device& device);
+  Straight3dFitter(const Mechanics::Device& device);
 
   std::string name() const;
   void execute(Storage::Event& event) const;
@@ -41,9 +41,9 @@ private:
  * If the track has cluster information on the local sensor, it is ignored
  * only for calculating the track parameters on that sensor.
  */
-class UnbiasedStraightFitter : public Loop::Processor {
+class UnbiasedStraight3dFitter : public Loop::Processor {
 public:
-  UnbiasedStraightFitter(const Mechanics::Device& device);
+  UnbiasedStraight3dFitter(const Mechanics::Device& device);
 
   std::string name() const;
   void execute(Storage::Event& event) const;
