@@ -179,6 +179,11 @@ Bugfixes
 *   Fix incorrect slope-to-slope Jacobian calculation.
 
     It is unclear if and how this affected the tracking results.
+*   Allow vanishing beam divergence in the geometry configuration.
+
+    This was considered an error before but can be a sensible, if rare, setting.
+    Configuring a vanishing beam divergence will of course affect the
+    performance of the tracking.
 
 Internal changes
 ----------------
