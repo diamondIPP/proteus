@@ -30,6 +30,9 @@ Analyzers::detail::SensorResidualHists::SensorResidualHists(
   auto box = sensor.sensitiveVolume();
   auto pitch = sensor.pitch();
   Vector2 slopeStdev = extractStdev(sensor.beamSlopeCovariance());
+  // ensure sensible histogram limits even for vanishing divergence
+  slopeStdev =
+      (slopeStdev.array() <= 0).select(Vector2::Constant(1.25e-3), slopeStdev);
   Vector2 slopeMin = sensor.beamSlope() - rangeStd * slopeStdev;
   Vector2 slopeMax = sensor.beamSlope() + rangeStd * slopeStdev;
 
