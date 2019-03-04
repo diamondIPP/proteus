@@ -17,50 +17,70 @@
 
 PT_SETUP_GLOBAL_LOGGER
 
+using namespace Storage;
+
 // return true if both hits are connected, i.e. share one edge
 //
 // WARNING: hits w/ the same position are counted as connected
-static bool connected(const Storage::Hit& hit0, const Storage::Hit& hit1)
+static inline bool connected(const Hit& hit0, const Hit& hit1)
 {
   auto dc = std::abs(hit1.col() - hit0.col());
   auto dr = std::abs(hit1.row() - hit0.row());
-  bool sameRegion = (hit0.region() == hit1.region());
-  return sameRegion && (((dc == 0) && (dr <= 1)) || ((dc <= 1) && (dr == 0)));
+  return (hit0.region() == hit1.region()) and
+         (((dc == 0) and (dr <= 1)) or ((dc <= 1) and (dr == 0)));
 }
 
-static void cluster(std::vector<std::reference_wrapper<Storage::Hit>>& hits,
-                    Storage::SensorEvent& sensorEvent)
+// return true if the hit is connected to any hit in the range
+template <typename HitIterator>
+static inline bool
+connected(HitIterator clusterBegin, HitIterator clusterEnd, const Hit& hit)
 {
-  while (!hits.empty()) {
-    auto clusterStart = --hits.end();
-    auto clusterEnd = hits.end();
+  bool flag = false;
+  for (; clusterBegin != clusterEnd; ++clusterBegin) {
+    flag = (flag or connected(*clusterBegin->get(), hit));
+  }
+  return flag;
+}
 
-    // accumulate all connected hits at the end of the vector until
-    // no more compatible hits can be found.
-    // each iteration can only pick up the next neighboring pixels, so we
+// rearange the input hit range so that pixels in a cluster are neighbours.
+template <typename HitIterator>
+static inline void inplaceCluster(HitIterator hitsBegin,
+                                  HitIterator hitsEnd,
+                                  Storage::SensorEvent& sensorEvent)
+{
+  auto clusterBegin = hitsBegin;
+  while (clusterBegin != hitsEnd) {
+    // every cluster has at least one member
+    auto clusterEnd = std::next(clusterBegin);
+
+    // each iteration can only pick up the nearest-neighboring pixels, so we
     // need to iterate until we find no more connected pixels.
-    while (true) {
-      auto unconnected = [&](const Storage::Hit& hit) {
-        using namespace std::placeholders;
-        return std::none_of(clusterStart, clusterEnd,
-                            std::bind(connected, hit, _1));
-      };
-      // connected hits end up in [moreHits, clusterStart)
-      auto moreHits = std::partition(hits.begin(), clusterStart, unconnected);
-      if (moreHits == clusterStart) {
+    while (clusterEnd != hitsEnd) {
+      // accumulate all connected hits to the beginning of the range
+      auto moreHits = std::partition(clusterEnd, hitsEnd, [=](const auto& hit) {
+        return connected(clusterBegin, clusterEnd, *hit);
+      });
+      // no connected hits were found -> cluster is complete
+      if (moreHits == clusterEnd) {
         break;
       }
-      clusterStart = moreHits;
+      // some connected hits were found -> extend cluster
+      clusterEnd = moreHits;
     }
 
-    // construct cluster from connected hits
-    Storage::Cluster& cluster = sensorEvent.addCluster();
-    for (auto hit = clusterStart; hit != clusterEnd; ++hit) {
-      cluster.addHit(*hit);
+    // sort cluster hits by value and time
+    std::sort(clusterBegin, clusterEnd, [](const auto& hit0, const auto& hit1) {
+      return (hit1->value() < hit0->value()) or
+             (hit0->timestamp() < hit1->timestamp());
+    });
+    // add cluster to event
+    auto& cluster = sensorEvent.addCluster();
+    for (auto hit = clusterBegin; hit != clusterEnd; ++hit) {
+      cluster.addHit(*hit->get());
     }
 
-    // remove clustered hits from further consideration
-    hits.erase(clusterStart, clusterEnd);
+    // only consider the remaining hits for the next cluster
+    clusterBegin = clusterEnd;
   }
 }
 
@@ -75,19 +95,15 @@ std::string Processors::BaseClusterizer::name() const { return m_name; }
 void Processors::BaseClusterizer::execute(Storage::Event& event) const
 {
   auto& sensorEvent = event.getSensorEvent(m_sensor.id());
-  std::vector<std::reference_wrapper<Storage::Hit>> hits;
 
-  // do not cluster masked pixels
-  hits.clear();
-  hits.reserve(sensorEvent.numHits());
-  for (Index ihit = 0; ihit < sensorEvent.numHits(); ++ihit) {
-    Storage::Hit& hit = sensorEvent.getHit(ihit);
-    if (m_sensor.pixelMask().isMasked(hit.col(), hit.row()))
-      continue;
-    hits.push_back(std::ref(hit));
-  }
-  cluster(hits, sensorEvent);
-
+  // move masked pixels to the back of the hit vector
+  auto hitsEnd = std::partition(sensorEvent.m_hits.begin(),
+                                sensorEvent.m_hits.end(), [&](const auto& hit) {
+                                  return not m_sensor.pixelMask().isMasked(
+                                      hit->col(), hit->row());
+                                });
+  // group pixels into clusters by rearanging the hit vector
+  inplaceCluster(sensorEvent.m_hits.begin(), hitsEnd, sensorEvent);
   // estimate cluster properties
   for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
     estimateProperties(sensorEvent.getCluster(icluster));

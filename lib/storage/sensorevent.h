@@ -12,6 +12,9 @@
 #include "storage/trackstate.h"
 #include "utils/definitions.h"
 
+namespace Processors {
+class BaseClusterizer;
+}
 namespace Storage {
 
 /** An event for a single sensor containing only local information.
@@ -60,6 +63,7 @@ private:
   TrackStates m_states;
 
   friend class Event;
+  friend class Processors::BaseClusterizer;
 };
 
 } // namespace Storage
