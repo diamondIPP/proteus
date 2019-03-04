@@ -4,11 +4,11 @@
 #include <vector>
 
 #include "loop/processor.h"
+#include "mechanics/geometry.h"
 #include "utils/definitions.h"
 
 namespace Mechanics {
 class Device;
-class Geometry;
 } // namespace Mechanics
 namespace Storage {
 class SensorEvent;
@@ -20,7 +20,7 @@ namespace Tracking {
 /** Find tracks assuming straight propagation along the beam direction.
  *
  * Matching clusters are searched for only on the selected sensors ordered
- * along the beam direction. In case of ambiguities, the track bifurcates info
+ * along the beam direction. In case of ambiguities, the track bifurcates into
  * multiple candidates. Ambiguities are resolved after all track candidates
  * have been found by associating clusters exclusively to the best candidate,
  * i.e. the one with the highest number of hits and the lowest chi2 value, to
@@ -34,32 +34,38 @@ namespace Tracking {
 class TrackFinder : public Loop::Processor {
 public:
   /**
-   * \param numClustersMin Selection cut on number of required clusters
-   * \param searchSigmaMax Association cut on clusters, negative to disable
-   * \param redChi2Max Selection cut on chi2/d.o.f, negative to disable
+   * \param trackingIds     Ids of sensors that should be used for tracking
+   * \param sizeMin         Selection cut on number of clusters
+   * \param searchSigmaMax  Selection cut on clusters, negative to disable
+   * \param redChi2Max      Selection cut on chi2/d.o.f, negative to disable
    */
   TrackFinder(const Mechanics::Device& device,
-              const std::vector<Index>& sensors,
-              const Index numClustersMin,
-              const double searchSigmaMax = -1,
-              const double redChi2Max = -1);
+              std::vector<Index> trackingIds,
+              size_t sizeMin = 0,
+              double searchSigmaMax = -1,
+              double redChi2Max = -1);
 
   std::string name() const;
   /** Find tracks and add them to the event. */
   void execute(Storage::Event& event) const;
 
 private:
-  void searchSensor(Storage::Event& event,
-                    Index iSearchSensor,
-                    std::vector<Storage::Track>& candidates) const;
-  void selectTracks(std::vector<Storage::Track>& candidates,
-                    Storage::Event& event) const;
+  struct Step {
+    Index isensor = kInvalidIndex;
+    bool useForTracking = false;
+    bool useForSeeding = false;
+    size_t remainingTrackingSteps;
+    Mechanics::Plane plane;
+    SymMatrix6 processNoise = SymMatrix6::Zero();
+    Vector2 beamSlope = Vector2::Zero();
+    SymMatrix2 beamSlopeCovariance = SymMatrix2::Zero();
 
-  const Mechanics::Geometry& m_geo;
-  std::vector<Index> m_sensorIds;
-  Index m_numClustersMin;
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  };
+  std::vector<Step> m_steps;
+  size_t m_sizeMin;
   double m_d2Max;
-  double m_redChi2Max;
+  double m_reducedChi2Max;
 };
 
 } // namespace Tracking
