@@ -189,7 +189,7 @@ Vector6 Mechanics::Plane::asParams() const
 
 Mechanics::Geometry::Geometry()
     : m_beamSlope(Vector2::Zero())
-    , m_beamSlopeStdev(Vector2::Constant(0.00125f))
+    , m_beamSlopeStdev(Vector2::Zero())
     , m_beamEnergy(0)
 {
 }
@@ -215,8 +215,9 @@ Mechanics::Geometry Mechanics::Geometry::fromConfig(const toml::Value& cfg)
   // stay backward compatible w/ old slope_x/slope_y beam parameters
   if (cfg.has("beam.slope")) {
     auto slope = cfg.get<std::vector<double>>("beam.slope");
-    if (slope.size() != 2)
+    if (slope.size() != 2) {
       FAIL("beam.slope has ", slope.size(), " != 2 entries");
+    }
     geo.setBeamSlope({slope[0], slope[1]});
   } else if (cfg.has("beam.slope_x") || cfg.has("beam.slope_y")) {
     ERROR("beam.slope_{x,y} is deprecated, use beam.slope instead");
@@ -225,10 +226,12 @@ Mechanics::Geometry Mechanics::Geometry::fromConfig(const toml::Value& cfg)
   }
   if (cfg.has("beam.divergence")) {
     auto div = cfg.get<std::vector<double>>("beam.divergence");
-    if (div.size() != 2)
+    if (div.size() != 2) {
       FAIL("beam.divergence has ", div.size(), " != 2 entries");
-    if (!(0 < div[0]) || !(0 < div[1]))
-      FAIL("beam.divergence must have non-zero, positive values");
+    }
+    if ((div[0] < 0) or (div[1] < 0)) {
+      FAIL("beam.divergence must have non-negative values");
+    }
     geo.setBeamDivergence({div[0], div[1]});
   }
   if (cfg.has("beam.energy")) {
