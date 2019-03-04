@@ -17,7 +17,7 @@ using namespace Storage;
 
 template <typename Fitter>
 static inline void
-executeImpl(const Geometry& geo, const bool fitUnbiased, Event& event)
+executeImpl(const Geometry& geo, bool fitUnbiased, Event& event)
 {
   for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
     Track& track = event.getTrack(itrack);
@@ -68,6 +68,8 @@ executeImpl(const Geometry& geo, const bool fitUnbiased, Event& event)
   }
 }
 
+// straight 3d
+
 Tracking::Straight3dFitter::Straight3dFitter(const Device& device)
     : m_geo(device.geometry())
 {
@@ -83,6 +85,25 @@ void Tracking::Straight3dFitter::execute(Event& event) const
   executeImpl<LineFitter3D>(m_geo, false, event);
 }
 
+// straight 4d
+
+Tracking::Straight4dFitter::Straight4dFitter(const Device& device)
+    : m_geo(device.geometry())
+{
+}
+
+std::string Tracking::Straight4dFitter::name() const
+{
+  return "Straight4dFitter";
+}
+
+void Tracking::Straight4dFitter::execute(Event& event) const
+{
+  executeImpl<LineFitter4D>(m_geo, false, event);
+}
+
+// unbiased straight 3d
+
 Tracking::UnbiasedStraight3dFitter::UnbiasedStraight3dFitter(
     const Device& device)
     : m_geo(device.geometry())
@@ -97,4 +118,22 @@ std::string Tracking::UnbiasedStraight3dFitter::name() const
 void Tracking::UnbiasedStraight3dFitter::execute(Event& event) const
 {
   executeImpl<LineFitter3D>(m_geo, true, event);
+}
+
+// unbiased straight 4d
+
+Tracking::UnbiasedStraight4dFitter::UnbiasedStraight4dFitter(
+    const Device& device)
+    : m_geo(device.geometry())
+{
+}
+
+std::string Tracking::UnbiasedStraight4dFitter::name() const
+{
+  return "UnbiasedStraight4dFitter";
+}
+
+void Tracking::UnbiasedStraight4dFitter::execute(Event& event) const
+{
+  executeImpl<LineFitter4D>(m_geo, true, event);
 }
