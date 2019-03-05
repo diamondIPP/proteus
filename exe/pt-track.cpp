@@ -50,7 +50,7 @@ int main(int argc, char const* argv[])
 
   auto loop = app.makeEventLoop();
 
-  // per-sensor processing
+  // local per-sensor processing
   setupHitPreprocessing(app.device(), loop);
   setupClusterizers(app.device(), loop);
   loop.addProcessor(std::make_shared<ApplyGeometry>(app.device()));
@@ -65,7 +65,7 @@ int main(int argc, char const* argv[])
   // tracking
   loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
       app.device(), sensorIds, numPointsMin, searchSigmaMax, redChi2Max));
-  setupUnbiasedTrackFitter(app.device(), fitter, loop);
+  setupTrackFitter(app.device(), fitter, loop);
   loop.addAnalyzer(std::make_shared<Tracks>(hists.get(), app.device()));
   loop.addAnalyzer(
       std::make_shared<Residuals>(hists.get(), app.device(), sensorIds));
