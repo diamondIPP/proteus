@@ -51,12 +51,12 @@ int main(int argc, char const* argv[])
 
   auto loop = app.makeEventLoop();
 
-  // per-sensor processing
+  // local per-sensor processing
   setupHitPreprocessing(app.device(), loop);
   setupClusterizers(app.device(), loop);
+  loop.addProcessor(std::make_shared<ApplyGeometry>(app.device()));
   loop.addAnalyzer(std::make_shared<Hits>(hists.get(), app.device()));
   loop.addAnalyzer(std::make_shared<Clusters>(hists.get(), app.device()));
-  loop.addProcessor(std::make_shared<ApplyGeometry>(app.device()));
 
   // geometry analyzers
   loop.addAnalyzer(
