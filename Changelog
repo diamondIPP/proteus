@@ -137,6 +137,19 @@ User-visible changes
 
     This might impact the output data values and will shift the boundaries for
     some histograms.
+*   Enable support for configurable track fitters.
+
+    Different track fitter implementations can be chosen by setting the
+
+        [recon]
+        ...
+        track_fitter = "straight4d"
+        ...
+
+    setting in the appropriate analysis configuration section. At the moment
+    two options are available, ``straight4d`` and ``straight3d``, that setup a
+    straight line fit with or without a fitted time component. The default
+    setting is ``straight3d``.
 
 Bugfixes
 --------

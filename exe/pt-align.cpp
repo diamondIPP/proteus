@@ -134,6 +134,7 @@ int main(int argc, char const* argv[])
   using namespace Analyzers;
   using namespace Mechanics;
   using namespace Processors;
+  using namespace Tracking;
 
   toml::Table defaults = {
       // tracking settings
@@ -207,11 +208,12 @@ int main(int argc, char const* argv[])
           stepDir, dev, fixedSensorIds.front(), alignIds);
 
     } else if (method == "residuals") {
-      // use unbiased track residuals to align
+      // use unbiased track residuals to align. this means we need a specific
+      // track fitter and should not use the automatic fitter selection.
       loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
           dev, sensorIds, sensorIds.size(), searchSigmaMax, redChi2Max));
       loop.addProcessor(
-          std::make_shared<Tracking::UnbiasedStraightFitter>(dev));
+          std::make_shared<Tracking::UnbiasedStraight3dFitter>(dev));
       loop.addAnalyzer(std::make_shared<Residuals>(stepDir, dev, sensorIds,
                                                    "unbiased_residuals"));
       tracks = std::make_shared<Tracks>(stepDir, dev);
@@ -219,11 +221,12 @@ int main(int argc, char const* argv[])
           std::make_shared<ResidualsAligner>(stepDir, dev, alignIds, damping);
 
     } else if (method == "localchi2") {
-      // use unbiased track residuals to align
+      // use unbiased track residuals to align. this means we need a specific
+      // track fitter and should not use the automatic fitter selection.
       loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
           dev, sensorIds, sensorIds.size(), searchSigmaMax, redChi2Max));
       loop.addProcessor(
-          std::make_shared<Tracking::UnbiasedStraightFitter>(dev));
+          std::make_shared<Tracking::UnbiasedStraight3dFitter>(dev));
       loop.addAnalyzer(std::make_shared<Residuals>(stepDir, dev, sensorIds,
                                                    "unbiased_residuals"));
       tracks = std::make_shared<Tracks>(stepDir, dev);
@@ -266,7 +269,8 @@ int main(int argc, char const* argv[])
     loop.addProcessor(std::make_shared<ApplyGeometry>(dev));
     loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
         dev, sensorIds, sensorIds.size(), searchSigmaMax, redChi2Max));
-    loop.addProcessor(std::make_shared<Tracking::StraightFitter>(dev));
+    loop.addProcessor(
+        std::make_shared<Tracking::UnbiasedStraight3dFitter>(dev));
 
     // minimal set of analyzers
     loop.addAnalyzer(std::make_shared<GlobalOccupancy>(subDir, dev));

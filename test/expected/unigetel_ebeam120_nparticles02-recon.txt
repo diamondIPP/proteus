@@ -935,8 +935,8 @@ tracks/position_y	entries	182780.0
 tracks/position_y	mean	0.04062206383232113
 tracks/position_y	stddev	3.480211985410741
 tracks/reduced_chi2	entries	182780.0
-tracks/reduced_chi2	mean	0.9540906263164852
-tracks/reduced_chi2	stddev	0.7600995225611163
+tracks/reduced_chi2	mean	0.6570788709711273
+tracks/reduced_chi2	stddev	0.6453828018653045
 tracks/size	entries	182780.0
 tracks/size	mean	5.934210526315789
 tracks/size	stddev	0.24791373265023006

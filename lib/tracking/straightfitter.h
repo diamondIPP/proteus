@@ -16,43 +16,74 @@ namespace Mechanics {
 class Device;
 class Geometry;
 } // namespace Mechanics
-
 namespace Tracking {
 
-/** Estimate local track parameters using a straight line track model.
+/** Estimate local track parameters using a straight line fit.
  *
- * This calculates new global track parameters and goodness-of-fit and
- * calculates the local track parameters on the all sensor planes.
+ * This calculates global track parameters and global goodness-of-fit and
+ * the local track parameters on the all sensor planes.
  */
-class StraightFitter : public Loop::Processor {
+class Straight3dFitter : public Loop::Processor {
 public:
-  StraightFitter(const Mechanics::Device& device);
+  Straight3dFitter(const Mechanics::Device& device);
 
   std::string name() const;
   void execute(Storage::Event& event) const;
 
 private:
   const Mechanics::Geometry& m_geo;
-  std::vector<Index> m_sensorIds;
 };
 
-/** Estimate local track parameters w/o the local information.
+/** Estimate local track parameters including time using a straight line fit.
  *
- * This calculates new global track parameters and goodness-of-fit and
- * calculates the local track parameters on the all sensor planes.
- * If the track has cluster information on the local sensor, it is ignored
- * only for calculating the track parameters on that sensor.
+ * This calculates global track parameters and global goodness-of-fit and
+ * the local track parameters on the all sensor planes.
  */
-class UnbiasedStraightFitter : public Loop::Processor {
+class Straight4dFitter : public Loop::Processor {
 public:
-  UnbiasedStraightFitter(const Mechanics::Device& device);
+  Straight4dFitter(const Mechanics::Device& device);
 
   std::string name() const;
   void execute(Storage::Event& event) const;
 
 private:
   const Mechanics::Geometry& m_geo;
-  std::vector<Index> m_sensorIds;
+};
+
+/** Estimate local track parameters without local information.
+ *
+ * This calculates new global track parameters and global goodness-of-fit and
+ * the local track parameters on the all sensor planes. If the track has any
+ * measurement information on a sensor, this measurement is ignored when
+ * estimating the local track parameters on that sensor.
+ */
+class UnbiasedStraight3dFitter : public Loop::Processor {
+public:
+  UnbiasedStraight3dFitter(const Mechanics::Device& device);
+
+  std::string name() const;
+  void execute(Storage::Event& event) const;
+
+private:
+  const Mechanics::Geometry& m_geo;
+};
+
+/** Estimate local track parameters including time without local information.
+ *
+ * This calculates new global track parameters and global goodness-of-fit and
+ * the local track parameters on the all sensor planes. If the track has any
+ * measurement information on a sensor, this measurement is ignored when
+ * estimating the local track parameters on that sensor.
+ */
+class UnbiasedStraight4dFitter : public Loop::Processor {
+public:
+  UnbiasedStraight4dFitter(const Mechanics::Device& device);
+
+  std::string name() const;
+  void execute(Storage::Event& event) const;
+
+private:
+  const Mechanics::Geometry& m_geo;
 };
 
 } // namespace Tracking

@@ -29,7 +29,11 @@ public:
   Track(const TrackState& global);
 
   void setGoodnessOfFit(Scalar chi2, int dof) { m_chi2 = chi2, m_dof = dof; }
-  void setGlobalState(const TrackState& state) { m_state = state; }
+  template <typename... Params>
+  void setGlobalState(Params&&... params)
+  {
+    m_state = TrackState(std::forward<Params>(params)...);
+  }
 
   Scalar chi2() const { return m_chi2; }
   Scalar reducedChi2() const { return m_chi2 / m_dof; }

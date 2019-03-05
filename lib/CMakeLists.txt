@@ -36,6 +36,7 @@ set(proteus_SOURCES
     storage/trackstate.cpp
     tracking/propagation.cpp
     tracking/trackfinder.cpp
+    tracking/setupfitter.cpp
     tracking/straightfitter.cpp
     utils/application.cpp
     utils/arguments.cpp
