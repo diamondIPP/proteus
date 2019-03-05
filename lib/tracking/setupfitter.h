@@ -22,11 +22,6 @@ void setupTrackFitter(const Mechanics::Device& device,
                       const std::string& type,
                       Loop::EventLoop& loop);
 
-/** Select a unbiased track fitter implementation by name. */
-void setupUnbiasedTrackFitter(const Mechanics::Device& device,
-                              const std::string& type,
-                              Loop::EventLoop& loop);
-
 } // namespace Tracking
 
 #endif // PT_SETUPFITTER_H
