@@ -150,6 +150,12 @@ User-visible changes
     two options are available, ``straight4d`` and ``straight3d``, that setup a
     straight line fit with or without a fitted time component. The default
     setting is ``straight3d``.
+*   Beam parameters estimation is now optional during alignment.
+
+    The estimation of beam slope and divergence is configurable via the
+    ``estimate_beam_parameters`` option in the ``align`` configuration section.
+    If not given, the option defaults to ``true`` to retain the previous
+    behaviour. This might be changed in future releases.
 
 Bugfixes
 --------
@@ -179,6 +185,11 @@ Bugfixes
 *   Fix incorrect slope-to-slope Jacobian calculation.
 
     It is unclear if and how this affected the tracking results.
+*   Allow vanishing beam divergence in the geometry configuration.
+
+    This was considered an error before but can be a sensible, if rare, setting.
+    Configuring a vanishing beam divergence will of course affect the
+    performance of the tracking.
 
 Internal changes
 ----------------

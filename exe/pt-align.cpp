@@ -143,6 +143,7 @@ int main(int argc, char const* argv[])
       // alignment settings
       {"num_steps", 1},
       {"damping", 0.9},
+      {"estimate_beam_parameters", true},
   };
   Utils::Application app("align", "align selected sensors", defaults);
   app.initialize(argc, argv);
@@ -153,6 +154,8 @@ int main(int argc, char const* argv[])
   auto method = app.config().get<std::string>("method");
   auto numSteps = app.config().get<int>("num_steps");
   auto damping = app.config().get<double>("damping");
+  auto estimateBeamParameters =
+      app.config().get<bool>("estimate_beam_parameters");
   auto searchSigmaMax = app.config().get<double>("search_sigma_max");
   auto redChi2Max = app.config().get<double>("reduced_chi2_max");
 
@@ -241,9 +244,9 @@ int main(int argc, char const* argv[])
     loop.addAnalyzer(aligner);
     loop.run();
 
-    // new geometry w/ updated sensor placement and beam parameters
+    // new geometry w/ updated sensor placement and beam parameters (optional)
     auto geo = aligner->updatedGeometry();
-    if (tracks) {
+    if (estimateBeamParameters and tracks) {
       updateBeamParameters(*tracks, geo);
     }
     // update device for next iteration and write to prevent information loss
@@ -284,12 +287,13 @@ int main(int argc, char const* argv[])
 
     loop.run();
 
-    // update beam parameters one more time using the final geometry
     auto geo = dev.geometry();
-    updateBeamParameters(*tracks, geo);
-    geo.writeFile(app.outputPath("geo.toml"));
-    // no need to update the device; it will not be used again
-
+    // update beam parameters one more time using the final geometry (optional)
+    if (estimateBeamParameters) {
+      updateBeamParameters(*tracks, geo);
+      geo.writeFile(app.outputPath("geo.toml"));
+      // no need to update the device; it will not be used again
+    }
     // close alignment monitoring w/ the final validation step geometry
     steps.addStep(alignIds, geo, tracks->avgNumTracks());
   }

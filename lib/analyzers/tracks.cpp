@@ -25,6 +25,9 @@ Analyzers::Tracks::Tracks(TDirectory* dir,
   auto pitch = device.minimumPitch();
   Vector2 slope = device.geometry().beamSlope();
   Vector2 slopeStdev = extractStdev(device.geometry().beamSlopeCovariance());
+  // ensure sensible histogram limits even for vanishing divergence
+  slopeStdev =
+      (slopeStdev.array() <= 0).select(Vector2::Constant(1.25e-3), slopeStdev);
   Vector2 slopeMin = slope - slopeRangeStd * slopeStdev;
   Vector2 slopeMax = slope + slopeRangeStd * slopeStdev;
 
