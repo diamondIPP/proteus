@@ -1,5 +1,7 @@
 [beam]
 energy = 120.0
+slope = [0.0, 0.0]
+divergence = [0.00125, 0.00125]
 
 [[sensors]]
 id = 0
