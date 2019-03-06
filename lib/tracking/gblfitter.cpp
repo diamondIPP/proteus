@@ -31,74 +31,41 @@ Tracking::GblFitter::GblFitter(const Mechanics::Device& device)
 
 std::string Tracking::GblFitter::name() const { return "GBLFitter"; }
 
-/// Construct a GBL Jacobian for the propagation between two planes.
+namespace {
+
+/// Mapping matrices between the proteus and the GBL parameter ordering
 ///
-/// \param tangent   Track tangent vector in the source system
-/// \param toTarget  Transformation matrix from the source to the target system
-/// \param w         Propagation distance along the target normal axis
-///
-static Matrix5
-buildJacobian(const Vector4& tangent, const Matrix4& toTarget, Scalar w)
-{
-  // Full Jacobian w/ Proteus parameter ordering
-  Matrix6 jacPt = Tracking::jacobianState(tangent, toTarget, w);
-  // Reduce to Jacobian w/ GBL ordering [q/p, u', v', u, v] and no time
-  Matrix5 jacGbl = Matrix5::Zero();
-  jacGbl(0, 0) = 1;
-  jacGbl(1, 1) = jacPt(kSlopeLoc0, kSlopeLoc0);
-  jacGbl(1, 2) = jacPt(kSlopeLoc0, kSlopeLoc1);
-  jacGbl(1, 3) = jacPt(kSlopeLoc0, kLoc0);
-  jacGbl(1, 4) = jacPt(kSlopeLoc0, kLoc1);
-  jacGbl(2, 1) = jacPt(kSlopeLoc1, kSlopeLoc0);
-  jacGbl(2, 2) = jacPt(kSlopeLoc1, kSlopeLoc1);
-  jacGbl(2, 3) = jacPt(kSlopeLoc1, kLoc0);
-  jacGbl(2, 4) = jacPt(kSlopeLoc1, kLoc1);
-  jacGbl(3, 1) = jacPt(kLoc0, kSlopeLoc0);
-  jacGbl(3, 2) = jacPt(kLoc0, kSlopeLoc1);
-  jacGbl(3, 3) = jacPt(kLoc0, kLoc0);
-  jacGbl(3, 4) = jacPt(kLoc0, kLoc1);
-  jacGbl(4, 1) = jacPt(kLoc1, kSlopeLoc0);
-  jacGbl(4, 2) = jacPt(kLoc1, kSlopeLoc1);
-  jacGbl(4, 3) = jacPt(kLoc1, kLoc0);
-  jacGbl(4, 4) = jacPt(kLoc1, kLoc1);
-  return jacGbl;
-}
+/// GBL expects parameter ordering [q/p, u', v', u, v].
+struct Reorder {
+  Matrix<Scalar, 5, 6> toGbl;
+  Matrix<Scalar, 6, 5> toProteus;
 
-/// Construct a full track state from reference parameters and GBL fit results.
-///
-/// This also handles the conversion from the GBL parameter order to the
-/// Proteus parameter ordering used everywhere else.
-static Storage::TrackState
-buildCorrectedState(const Vector6& reference,
-                    const Eigen::VectorXd& correction,
-                    const Eigen::MatrixXd& covariance)
-{
-  // ensure code assumptions stay valid
-  static_assert((kLoc0 + 1 == kLoc1), "Who changed the order?");
-  static_assert((kSlopeLoc0 + 1 == kSlopeLoc1), "Who changed the order?");
-  assert(correction.size() == 5);
-  assert((covariance.cols() == 5) and (covariance.rows() == 5));
+  Reorder()
+      : toGbl(Matrix<Scalar, 5, 6>::Zero())
+      , toProteus(Matrix<Scalar, 6, 5>::Zero())
+  {
+    // map time slope to q/p to avoid singularities
+    toGbl(0, kSlopeTime) = 1;
+    toGbl(1, kSlopeLoc0) = 1;
+    toGbl(2, kSlopeLoc1) = 1;
+    toGbl(3, kLoc0) = 1;
+    toGbl(4, kLoc1) = 1;
+    toProteus(kLoc0, 3) = 1;
+    toProteus(kLoc1, 4) = 1;
+    toProteus(kSlopeLoc0, 1) = 1;
+    toProteus(kSlopeLoc1, 2) = 1;
+    toProteus(kSlopeTime, 0) = 1;
+  }
+};
 
-  Vector6 params = reference;
-  // GBL ordering is [q/p, u', v', u, v]
-  params[kLoc0] -= correction[3];
-  params[kLoc1] -= correction[4];
-  params[kSlopeLoc0] -= correction[1];
-  params[kSlopeLoc1] -= correction[2];
-
-  SymMatrix6 cov = Matrix6::Zero();
-  cov.block<2, 2>(kLoc0, kLoc0) = covariance.block<2, 2>(3, 3);
-  cov.block<2, 2>(kLoc0, kSlopeLoc0) = covariance.block<2, 2>(3, 1);
-  cov.block<2, 2>(kSlopeLoc0, kSlopeLoc0) = covariance.block<2, 2>(1, 1);
-  cov.block<2, 2>(kSlopeLoc0, kLoc0) = covariance.block<2, 2>(1, 3);
-
-  return {params, cov};
-}
+} // namespace
 
 void Tracking::GblFitter::execute(Storage::Event& event) const
 {
   using gbl::GblPoint;
   using gbl::GblTrajectory;
+
+  Reorder reorder;
 
   // INIT: Loop over all the sensors to get the total radiation length
   // TODO not sure why this is needed
@@ -109,8 +76,8 @@ void Tracking::GblFitter::execute(Storage::Event& event) const
   DEBUG("total x/X0: ", totalRadLength);
 
   // temporary (resuable) storage
-  std::vector<Vector6> referenceParams(m_device.numSensors());
-  std::vector<GblPoint> gblPoints(m_device.numSensors(), {Matrix5::Identity()});
+  Eigen::MatrixXd referenceParams(6, m_propagationIds.size());
+  std::vector<GblPoint> gblPoints(m_propagationIds.size(), {Matrix5::Zero()});
   Eigen::VectorXd gblCorrection(5);
   Eigen::MatrixXd gblCovariance(5, 5);
   Eigen::VectorXd gblResiduals(2);
@@ -121,17 +88,13 @@ void Tracking::GblFitter::execute(Storage::Event& event) const
   for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
     Storage::Track& track = event.getTrack(itrack);
 
-    // Clear temporary storage
-    referenceParams.clear();
-    gblPoints.clear();
-
     // Reference track in global coordinates
     Vector4 globalPos = track.globalState().position();
     Vector4 globalTan = track.globalState().tangent();
-    Index prevSensorId = kInvalidIndex;
 
     // Propagate reference track through all sensor to define GBL trajectory
-    for (auto sensorId : m_propagationIds) {
+    for (size_t ipoint = 0; ipoint < m_propagationIds.size(); ++ipoint) {
+      auto sensorId = m_propagationIds[ipoint];
       const auto& plane = m_device.geometry().getPlane(sensorId);
 
       // 1. Propagate track state to the plane intersection
@@ -139,63 +102,62 @@ void Tracking::GblFitter::execute(Storage::Event& event) const
       // equivalent state in local parameters
       Vector4 localPos = plane.toLocal(globalPos);
       Vector4 localTan = plane.linearToLocal() * globalTan;
-      // propagation distance to intersection along the plane normal
-      Scalar dw = -localPos[kW];
+      // distance of initial point to the intersection along the plane normal
+      Scalar w0 = localPos[kW];
       // convert tangent to slope parametrization
       localTan /= localTan[kW];
       // propagate position to the intersection, tangent is invariant
-      localPos += dw * localTan;
+      localPos -= w0 * localTan;
 
       // 2. Compute local track parameters to be used as reference later on
 
-      Vector6 params;
-      params[kLoc0] = localPos[kU];
-      params[kLoc1] = localPos[kV];
-      params[kTime] = localPos[kS];
+      referenceParams(kLoc0, ipoint) = localPos[kU];
+      referenceParams(kLoc1, ipoint) = localPos[kV];
+      referenceParams(kTime, ipoint) = localPos[kS];
       // tangent is already in slope parametrization
-      params[kSlopeLoc0] = localTan[kU];
-      params[kSlopeLoc1] = localTan[kV];
-      params[kSlopeTime] = localTan[kS];
-      referenceParams.push_back(params);
+      referenceParams(kSlopeLoc0, ipoint) = localTan[kU];
+      referenceParams(kSlopeLoc1, ipoint) = localTan[kV];
+      referenceParams(kSlopeTime, ipoint) = localTan[kS];
 
       // 3. Compute Jacobian from previous to current plane
-      // Note: this is already computed in the GBL parameter ordering which is
-      // different from the parameter ordering in the rest of the code base.
 
-      Matrix5 jac;
-      if (prevSensorId == kInvalidIndex) {
-        // first plane has no predecessor and no propagation Jacobian.
-        jac = Matrix5::Identity();
+      Matrix6 jac;
+      if (ipoint == 0) {
+        // first point has no predecessor and no propagation Jacobian.
+        jac = Matrix6::Identity();
       } else {
+        auto prevSensorId = m_propagationIds[ipoint - 1];
         const auto& prev = m_device.geometry().getPlane(prevSensorId);
         Vector4 prevTan = prev.linearToLocal() * globalTan;
         Matrix4 prevToLocal = plane.linearToLocal() * prev.linearToGlobal();
-        jac = buildJacobian(prevTan, prevToLocal, dw);
+        jac = Tracking::jacobianState(prevTan, prevToLocal, w0);
       }
 
       // 4. Create a GBL point for this step
 
-      GblPoint point(jac);
+      auto& point = gblPoints[ipoint];
+      point = GblPoint(reorder.toGbl * jac * reorder.toProteus);
 
-      // 4a. Always add a scatterer
+      // 4a. Add a scatterer for all inner points
 
-      // Get theta from the Highland formula
-      // TODO: Seems like we need to adapt this formula for our case
-      // Need energy for the calculation
-      double radLength = m_device.getSensor(sensorId).xX0();
-      double energy = 180;
-      double theta =
-          0.0136 * sqrt(radLength) / energy * (1 + 0.038 * log(totalRadLength));
+      if ((0 < ipoint) and ((ipoint + 1) < m_propagationIds.size())) {
+        // Get theta from the Highland formula
+        // TODO: Seems like we need to adapt this formula for our case
+        // Need energy for the calculation
+        double radLength = m_device.getSensor(sensorId).xX0();
+        double energy = 180;
+        double theta = 0.0136 * sqrt(radLength) / energy *
+                       (1 + 0.038 * log(totalRadLength));
 
-      // Get the scattering uncertainity
-      // TODO this is incorrect for rotated planes
-      Vector2 scatPrec;
-      scatPrec(0) = 1 / (theta * theta);
-      scatPrec(1) = scatPrec(0);
+        // Get the scattering uncertainity
+        // TODO this is incorrect for rotated planes
+        Vector2 scatPrec;
+        scatPrec(0) = 1 / (theta * theta);
+        scatPrec(1) = scatPrec(0);
 
-      // Add scatterer to the defined GblPoint
-      // Expected scattering angle vanishes
-      point.addScatterer(Vector2::Zero(), scatPrec);
+        // Expected scattering angle vanishes
+        point.addScatterer(Vector2::Zero(), scatPrec);
+      }
 
       // 4b. If available, add a measurement
 
@@ -204,7 +166,7 @@ void Tracking::GblFitter::execute(Storage::Event& event) const
         const Storage::Cluster& cluster = ic->second;
 
         // Get the measurement (residuals)
-        Vector2 meas(localPos[kU] - cluster.u(), localPos[kV] - cluster.v());
+        Vector2 meas(cluster.u() - localPos[kU], cluster.v() - localPos[kV]);
         // Get the measurement precision
         Matrix2 measPrec = cluster.uvCov().inverse();
 
@@ -213,15 +175,10 @@ void Tracking::GblFitter::execute(Storage::Event& event) const
         point.addMeasurement(meas, measPrec);
       }
 
-      // 5. Add GBL point to the trajectory
-
-      gblPoints.push_back(point);
-
-      // 6. Update starting point for the next step
+      // 5. Update starting point for the next step
 
       globalPos = plane.toGlobal(localPos);
       // the tangent is a constant of the motion and remains unchanged
-      prevSensorId = sensorId;
     }
 
     // fit the GBL trajectory w/o track curvature
@@ -231,21 +188,23 @@ void Tracking::GblFitter::execute(Storage::Event& event) const
     double lostWeight;
     int dof;
     // TODO what to do for errors?
-    traj.fit(chi2, dof, lostWeight);
+    auto ret = traj.fit(chi2, dof, lostWeight);
     track.setGoodnessOfFit(chi2, dof);
+    DEBUG("fit ret: ", ret);
 
     // extract fitted local track states for all sensors
 
-    for (unsigned int ipoint = 0; ipoint < m_propagationIds.size(); ++ipoint) {
+    for (size_t ipoint = 0; ipoint < m_propagationIds.size(); ++ipoint) {
       auto sensorId = m_propagationIds[ipoint];
       // GBL label starts counting at 1, w/ positive values indicating that
       // we want to get the parameters before the scatterer.
       auto label = ipoint + 1;
 
       traj.getResults(label, gblCorrection, gblCovariance);
-      auto state = buildCorrectedState(referenceParams[ipoint], gblCorrection,
-                                       gblCovariance);
-      event.getSensorEvent(sensorId).setLocalState(itrack, std::move(state));
+      event.getSensorEvent(sensorId).setLocalState(
+          itrack,
+          referenceParams.col(ipoint) + reorder.toProteus * gblCorrection,
+          transformCovariance(reorder.toProteus, gblCovariance));
     }
 
     // debug output of the full trajectory w/ input and results
@@ -257,10 +216,7 @@ void Tracking::GblFitter::execute(Storage::Event& event) const
     for (unsigned int ipoint = 0; ipoint < gblPoints.size(); ++ipoint) {
       auto sensorId = m_propagationIds[ipoint];
       auto label = ipoint + 1;
-
       const auto& point = gblPoints[ipoint];
-      const auto& reference = referenceParams[ipoint];
-      const auto& state = event.getSensorEvent(sensorId).getLocalState(itrack);
 
       DEBUG("sensor ", sensorId, ":");
 
@@ -269,7 +225,9 @@ void Tracking::GblFitter::execute(Storage::Event& event) const
 
       // track parameters
 
-      DEBUG("  params:");
+      const auto& reference = referenceParams.col(ipoint);
+      const auto& state = event.getSensorEvent(sensorId).getLocalState(itrack);
+      DEBUG("  params (proteus):");
       DEBUG("    reference: ", format(reference));
       DEBUG("    correction: ", format(state.params() - reference));
       DEBUG("    covariance:\n", format(state.cov()));
