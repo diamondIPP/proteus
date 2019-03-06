@@ -1,9 +1,11 @@
-Proteus --- Pixel telescope reconstruction
-==========================================
+Proteus beam telescope reconstruction
+=====================================
 
-Proteus is a software to reconstruct and analyze data from beam telescopes. It
-started as a fork of the [Judith][judith] software but has evolved into an
-independent package.
+Proteus is a software to reconstruct and analyze data from beam
+telescopes. It takes the raw data, groups hits into clusters, finds
+tracks from clusters on multiple planes, estimates optimal track
+parameters on selected planes, and provides output data for further
+analysis.
 
 Dependencies
 ------------
@@ -29,8 +31,6 @@ compiler and compatible depedencies via the following command
 
 Building
 --------
-
-[![build status](https://gitlab.cern.ch/unige-fei4tel/proteus/badges/master/build.svg)](https://gitlab.cern.ch/unige-fei4tel/proteus/commits/master)
 
 Use the following commands to build the software using [CMake][cmake] in a
 separate build directory:
@@ -77,6 +77,10 @@ documents using the following command inside the build directory:
 Authors
 -------
 
+Proteus is written and maintained by:
+
+*   Moritz Kiehn
+
 Proteus has seen contributions from (in alphabetical order):
 
 *   Javier Bilbao de Mendizabal
@@ -89,39 +93,55 @@ Proteus has seen contributions from (in alphabetical order):
 *   Sergio Gonzalez Sevilla
 *   Simon Spannagel
 *   Morag William
+*   Mateus Vicente
+*   Ettore Zaffaroni
 
-The original Judith software was written by
+Citation
+--------
+
+Users of the software are expected to respect the rules of good
+scientific practice. To cite the software, use either the common
+identifier for the whole software
+[doi:10.5281/zenodo.2579153][proteus-doi] or choose the identifier for a
+specific version e.g.
+
+    Kiehn, Moritz et al., Proteus beam telescope reconstruction (Version v1.3.0), doi:10.5281/zenodo.2579154
+
+History
+-------
+
+Proteus initially started as a fork of the [Judith][judith-sw] software
+written by
 
 *   Garrin McGoldrick
 *   Matevž Červ
 *   Andrej Gorišek
 
-Citations
----------
-
-Users of the software are expected to respect the rules of good
-scientific practice. Publications that use this software should cite the
-relevant publications:
-
-*   G. McGoldrick et al, [NIM A765 140--145, Nov. 2014][paper2014]
+and described in
+[G. McGoldrick et al., NIM A765 140--145, Nov. 2014][judith-paper2014].
 
 License
 -------
 
-The software is distributed under the terms of the MIT license. The
-documentation is distributed under the terms of the [CC-BY-4.0][ccby4] license.
-The licenses can be found in the `LICENSE` file. Contributions are expected to
-be submitted under the same license terms.
+The software is distributed under the terms of the
+[MIT license][license-mit]. The documentation is distributed under the
+terms of the [CC-BY-4.0][license-ccby4] license.  The licenses can be
+found in the `LICENSE` file. Contributions are expected to be submitted
+under the same license terms.
 
-Proteus includes a copy of the [tinytoml][tinytoml]. [Tinytoml][tinytoml] is
-distributed under the simplified BSD License.
+Proteus includes a copy of the [tinytoml][tinytoml]
+library. [Tinytoml][tinytoml] is distributed under the
+[Simplified BSD License][license-bsd].
 
 
-[ccby4]: https://creativecommons.org/licenses/by/4.0/
 [cmake]: http://www.cmake.org
 [eigen]: http://eigen.tuxfamily.org
 [eudaq]: http://eudaq.github.io
-[judith]: https://github.com/gmcgoldr/judith
-[paper2014]: http://dx.doi.org/10.1016/j.nima.2014.05.033
+[judith-sw]: https://github.com/gmcgoldr/judith
+[judith-paper2014]: http://dx.doi.org/10.1016/j.nima.2014.05.033
+[license-bsd]: https://spdx.org/licenses/BSD-2-Clause.html
+[license-ccby4]: https://creativecommons.org/licenses/by/4.0/
+[license-mit]: https://spdx.org/licenses/MIT.html
+[proteus-doi]: https://doi.org/10.5281/zenodo.2579153
 [root]: https://root.cern.ch
 [tinytoml]: https://github.com/mayah/tinytoml
