@@ -10,32 +10,13 @@ v1.4.0 (to be released)
 User-visible changes
 --------------------
 
-*   Increased compression in the output data and histogam root
-    files. The RCE files will be a factor of 3 smaller than before.
-*   Use the Eigen library for linear algebra and geometry calculations.
+*   Increase the required C++ version to C++14.
+*   Use the Eigen library for all linear algebra and geometry calculations.
 
     This replaces the internal usage of ``ROOT::SMatrix`` and
     ``ROOT::GenVector`` and adds the Eigen library as a new external
     dependency.
-*   Increase the required C++ version to C++14.
-*   Remove ``event/...`` histograms that showed the
-    ``Trigger{Offset,Phase}`` variables.
-*   Add occupancy histograms in the global coordinate system. They can be
-    found in the ``global/<sensor>/...`` directories.
-*   Add combinatorial cluster to cluster distances in
-    ``sensors/<sensor>/distances``.
-*   Add histograms of matching parameters vs track parameters in a new
-    ``sensors/<sensor>/matching`` folder.
-*   Residual histograms are produced only for the sensors used for track
-    building.
-*   Remove support for event-level ``Trigger{Info,Offset,Phase}`` variables
-    in RCE ROOT.
 
-    The RCE ROOT reader will ignore these variables when they are
-    present and the RCE ROOT writer will not create them. These
-    variables were unused anywhere in the code base and their content
-    was unclear.
-*   Alignment using the ``residuals`` method enforces a fixed z-position.
 *   Add combined reconstruction tool ``pt-recon``.
 
     This tool performs per-sensor processing, track finding, track fitting
@@ -46,21 +27,27 @@ User-visible changes
     that contain the fully reconstructed data. For ``pt-recon`` the
     reconstructed events exists only transiently and only the required data
     is stored.
-*   Sensor regions in the device configuration must set the ``name``.
-*   Make sensor timestamp and value range configurable.
 
-    These values were hardcoded to the FE-I4 values. They can now be configured
-    by setting the following keys in the relevant sensor type section
+*   Add support for per-track time information. Yeah, 4-d tracking!
 
-        [sensor_types.some_sensor]
+    The track time is exported as an additional branch in the match
+    trees output produced by ``pt-recon`` and ``pt-match``. All tools
+    also produce additional histograms related to the track time.
+
+*   Add support for configurable track fitters.
+
+    Different track fitter implementations can be chosen by setting the
+
+        [recon]
         ...
-        timestamp_min = 0
-        timestamp_max = 31
-        value_max = 63
+        track_fitter = "straight4d"
         ...
 
-    All values are exclusive and should be set to the minimum and maximum
-    value that can occur in the data.
+    setting in the appropriate analysis configuration section. At the moment
+    two options are available, ``straight4d`` and ``straight3d``, that setup a
+    straight line fit with or without a fitted time component. The default
+    setting is ``straight3d``.
+
 *   Add support for sensor-specific timestamp frequencies.
 
     For each sensor type the time period for a single timestamp bin, i.e.
@@ -79,21 +66,36 @@ User-visible changes
     The timestamp pitch is then used to convert the digital hit timestamp into
     metric time, similarly to how the spatial pitch is used to convert
     digital pixel addresses to metric coordinates.
-*   Add histograms for hit timing within a cluster in
-    ``sensors/<sensor>/cluster`` folder.
-*   Add ``--print-events`` flag to most tools that enables the printing of
-    event information independent of the verbosity settings.
-*   Rename ``--debug`` flag to ``--verbose`` and add a ``-v`` short flag.
-*   ``pt-align`` runs an additional verification step after all alignment
-    steps have been performed.
 
-    The verification step computes correlations, finds tracks, and calculates
-    residuals to allow a simpler crosscheck of the final geometry. It also
-    computes the beam parameters using the final geometry.
-*   ``pt-cfg`` shows rotation angles in addition to the local unit vectors.
-*   The six per-plane alignment parameters are consistently labelled as
-    ``x``, ``y``, ``z``, ``alpha``, ``beta``, ``gamma``. This changes
-    various histogram names as well as log output.
+*   Make sensor timestamp and value range configurable.
+
+    These values were hardcoded to the FE-I4 values. They can now be configured
+    by setting the following keys in the relevant sensor type section
+
+        [sensor_types.some_sensor]
+        ...
+        timestamp_min = 0
+        timestamp_max = 31
+        value_max = 63
+        ...
+
+    All values are exclusive and should be set to the minimum and maximum
+    value that can occur in the data.
+
+*   Digital coordinates now always refer to the bin center.
+
+    Previously, the pixel address (0,0) would correspond to the lower-left
+    corner of a pixel that covers the area [0,1) along both column and row
+    axis, with the position (0.5,0.5) describing the pixel center. This
+    behaviour was different from timestamp or value bins. To simplify
+    conversions and unify behaviour, now the pixel address (0,0) corresponds
+    directly to the pixel center and the pixel covers an area [-0.5,0.5) along
+    each axis.
+
+    This might impact the output data values and will shift the boundaries for
+    some histograms.
+
+*   Sensor regions in the device configuration must set the ``name``.
 *   Add a new alignment algorithm based on
     ``V. Karimaeki et al., 2003, arXiv:physics/0306034`` that uses a
     local least square minimization to align all six plane parameters.
@@ -108,8 +110,28 @@ User-visible changes
 
     The remaining parameters are the same as for the existing ``residuals``
     method.
+
+*   Beam parameters estimation is now optional during alignment.
+
+    The estimation of beam slope and divergence is configurable via the
+    ``estimate_beam_parameters`` option in the ``align`` configuration section.
+    If not given, the option defaults to ``true`` to retain the previous
+    behaviour. This might be changed in future releases.
+
+*   Alignment using the ``residuals`` method enforces a fixed z-position.
+*   ``pt-align`` runs an additional verification step after all alignment
+    steps have been performed.
+
+    The verification step computes correlations, finds tracks, and calculates
+    residuals to allow a simpler crosscheck of the final geometry. It also
+    computes the beam parameters, if requested, using the final geometry.
+
 *   Move alignment summary graphs to the ``summary`` directory and add
     graphs for the beam slope and number of reconstructed tracks per event.
+*   The six per-plane geometry parameters are consistently labelled as
+    ``x``, ``y``, ``z``, ``alpha``, ``beta``, ``gamma``. This changes
+    various histogram names as well as log output.
+
 *   Use a global absolute and a local relative rate cut for the noise scan.
 
     In the first step, all pixels with a hit rate above the global rate cute
@@ -119,50 +141,42 @@ User-visible changes
     to the local expected variations. While the output histograms contain
     the masks generated from both steps separately only a single combined
     mask file is produced.
-*   Add support for per-track time information. Yeah, 4-d tracking!
 
-    The per-track time is derived from the earliest constituent cluster of
-    the track. The track time is exported as an additional branch in the
-    match trees output produced by ``pt-recon`` and ``pt-match``. All tools
-    also produce additional histograms related to the track time.
-*   Digital coordinates now always refer to the bin center.
+*   Remove support for event-level ``Trigger{Info,Offset,Phase}`` variables
+    in RCE ROOT.
 
-    Previously, the pixel address (0,0) would correspond to the lower-left
-    corner of a pixel that covers the area [0,1) along both column and row
-    axis, with the position (0.5,0.5) describing the pixel center. This
-    behaviour was different from timestamp or value bins. To simplify
-    conversions and unify behaviour, now the pixel address (0,0) corresponds
-    directly to the pixel center and the pixel covers an area [-0.5,0.5) along
-    each axis.
+    The RCE ROOT reader will ignore these variables when they are
+    present and the RCE ROOT writer will not create them. These
+    variables were unused anywhere in the code base and their content
+    was unclear.
 
-    This might impact the output data values and will shift the boundaries for
-    some histograms.
-*   Enable support for configurable track fitters.
+*   Remove ``event/...`` histograms that showed the
+    ``Trigger{Offset,Phase}`` variables.
+*   Add occupancy histograms in the global coordinate system. They can be
+    found in the ``global/<sensor>/...`` directories.
+*   Add histograms for hit timing within a cluster in
+    ``sensors/<sensor>/cluster`` folder.
+*   Add combinatorial cluster to cluster distances in
+    ``sensors/<sensor>/distances``.
+*   Add histograms of matching parameters vs track parameters in a new
+    ``sensors/<sensor>/matching`` folder.
+*   Residual histograms are produced only for the sensors used for track
+    building.
+*   Increased compression in the output data and histogam root
+    files. The RCE files will be a factor of 3 smaller than before.
 
-    Different track fitter implementations can be chosen by setting the
-
-        [recon]
-        ...
-        track_fitter = "straight4d"
-        ...
-
-    setting in the appropriate analysis configuration section. At the moment
-    two options are available, ``straight4d`` and ``straight3d``, that setup a
-    straight line fit with or without a fitted time component. The default
-    setting is ``straight3d``.
-*   Beam parameters estimation is now optional during alignment.
-
-    The estimation of beam slope and divergence is configurable via the
-    ``estimate_beam_parameters`` option in the ``align`` configuration section.
-    If not given, the option defaults to ``true`` to retain the previous
-    behaviour. This might be changed in future releases.
+*   Add ``--print-events`` flag to most tools that enables the printing of
+    event information independent of the verbosity settings.
+*   Rename ``--debug`` flag to ``--verbose`` and add a ``-v`` short flag.
+*   ``pt-cfg`` shows rotation angles in addition to the local unit vectors.
 
 Bugfixes
 --------
 
 *   Fixed cluster value in the binary clusterizer.
 
-    Previously it would use the cluster size, now it uses the sum of the hits value.
+    Previously it would use the cluster size, now it uses the sum of
+    the hits value.
 
 *   Set event number and timestamp when using with ``pt-combine``.
 
@@ -171,20 +185,21 @@ Bugfixes
     input stream are copied to the merged event and written to
     disk. The event number and timestamp off the other data streams is
     discarded.
+
 *   Add progress bar to ``pt-combine``.
 
     The progress bar is shown by default and can be deactivated using the
     ``--no-progress`` option. This is the same behaviour as for all other
     tools.
-*   Ensure the histogram files only contain a single version of each histogram
-    and existing objects are correctly overwritten.
+
+*   Ensure the histogram files only contain a single version of each
+    histogram and existing objects are correctly overwritten.
 *   Beam direction and divergence is calculated using the final geometry.
 
     Previously, this was calculated during the last alignment step and was
     therefore using the second-to-last geometry and not the final one.
-*   Fix incorrect slope-to-slope Jacobian calculation.
 
-    It is unclear if and how this affected the tracking results.
+*   Fix incorrect slope-to-slope Jacobian calculation.
 *   Allow vanishing beam divergence in the geometry configuration.
 
     This was considered an error before but can be a sensible, if rare, setting.
