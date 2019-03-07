@@ -72,6 +72,8 @@ Mechanics::Sensor::Sensor(Index id,
     , m_pitchTimestamp(pitchTimestamp)
     , m_thickness(thickness)
     , m_xX0(xX0)
+    // this is geometry dependent
+    , m_theta0(0)
     , m_measurement(measurement)
     // reasonable defaults for geometry-dependent properties. to be updated.
     , m_beamSlope(Vector2::Zero())
@@ -168,6 +170,29 @@ Mechanics::Sensor::Volume Mechanics::Sensor::sensitiveVolume() const
   return Volume(ivU, ivV, ivW, ivS);
 }
 
+// Compute scattering angle standard deviation using the updated PDG formula
+//
+// Assumes that the momentum is given in GeV and |charge| = 1e.
+static Scalar scatteringStdev(Scalar t, Scalar momentum, Scalar mass)
+{
+  // return zero scattering for invalid inputs as sensible fallback
+  if (not((0 < t) and (0 < momentum))) {
+    return 0;
+  }
+  //    beta      = pc / E
+  // -> 1 / beta² = E² / (pc)²
+  //              = ((pc)² + m²) / (pc)²
+  //              = 1² + (m/pc)²
+  auto betaInv = std::hypot(1, mass / momentum);
+  // square root of the reduced material thickness, i.e. sqrt(x / (beta² X0))
+  auto sqrtD = std::sqrt(t) * betaInv;
+  // uses log(x²) = 2 log(x)
+  auto fromThickness = sqrtD * (1 + Scalar(0.038) * 2 * std::log(sqrtD));
+  // assumes momentum in GeV;
+  auto fromMomentum = (Scalar(0.0136) / momentum);
+  return fromMomentum * fromThickness;
+}
+
 // update projections of local properties into the global system and vice versa
 void Mechanics::Sensor::updateGeometry(const Geometry& geometry)
 {
@@ -181,6 +206,13 @@ void Mechanics::Sensor::updateGeometry(const Geometry& geometry)
   const auto& plane = geometry.getPlane(m_id);
   m_beamSlope = geometry.getBeamSlope(m_id);
   m_beamSlopeCov = geometry.getBeamSlopeCovariance(m_id);
+
+  // update expected scattering angle
+  // scaling due to non-zero incidence
+  auto incidence = std::sqrt(1 + m_beamSlope.squaredNorm());
+  // TODO store beam momentum + mass not energy
+  // For now this assumes massless beam particles
+  m_theta0 = scatteringStdev(m_xX0 * incidence, geometry.beamEnergy(), 0);
 
   // brute-force bounding box projection of the sensor in global coordinates by
   // transforming each corner into the global system
@@ -222,6 +254,31 @@ void Mechanics::Sensor::updateGeometry(const Geometry& geometry)
   m_projPitch = (plane.linearToGlobal() * pitch()).cwiseAbs();
 }
 
+SymMatrix2 Mechanics::Sensor::scatteringSlopeCovariance() const
+{
+  SymMatrix2 cov;
+  // projection from comoving frame to local frame
+  cov(0, 0) = 1 + m_beamSlope[0] * m_beamSlope[0];
+  cov(1, 1) = 1 + m_beamSlope[1] * m_beamSlope[1];
+  cov(0, 1) = cov(1, 0) = m_beamSlope[0] * m_beamSlope[1];
+  // overall scaling
+  cov *= m_theta0 * m_theta0 * (1 + m_beamSlope.squaredNorm());
+  return cov;
+}
+
+SymMatrix2 Mechanics::Sensor::scatteringSlopePrecision() const
+{
+  SymMatrix2 prec;
+  // projection from comoving frame to local frame
+  prec(0, 0) = 1 + m_beamSlope[1] * m_beamSlope[1];
+  prec(1, 1) = 1 + m_beamSlope[0] * m_beamSlope[0];
+  prec(0, 1) = prec(1, 0) = -m_beamSlope[0] * m_beamSlope[1];
+  // overall scaling
+  auto scale = 1 / (m_theta0 * (1 + m_beamSlope.squaredNorm()));
+  prec *= scale * scale;
+  return prec;
+}
+
 void Mechanics::Sensor::print(std::ostream& os, const std::string& prefix) const
 {
   os << prefix << "name: " << m_name << '\n';
@@ -245,5 +302,6 @@ void Mechanics::Sensor::print(std::ostream& os, const std::string& prefix) const
   }
   os << prefix << "thickness: " << m_thickness << '\n';
   os << prefix << "x/X0: " << m_xX0 << '\n';
+  os << prefix << "theta0: " << m_theta0 * 1000 << " mrad\n";
   os.flush();
 }

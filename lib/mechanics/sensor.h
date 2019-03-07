@@ -98,23 +98,35 @@ public:
   Scalar pitchCol() const { return m_pitchCol; }
   Scalar pitchRow() const { return m_pitchRow; }
   Scalar pitchTimestamp() const { return m_pitchTimestamp; }
-  Scalar thickness() const { return m_thickness; }
-  Scalar xX0() const { return m_xX0; }
-
   /** Pitch in local coordinates. */
   Vector4 pitch() const;
+  /** Sensitive volume in local coordinates. */
+  Volume sensitiveVolume() const;
+
   /** Transform pixel matrix position to local coordinates. */
   Vector4 transformPixelToLocal(Scalar col, Scalar row, Scalar timestamp) const;
   /** Transform local coordinates to pixel matrix position. */
   Vector4 transformLocalToPixel(const Vector4& local) const;
 
-  /** Sensitive volume in local coordinates. */
-  Volume sensitiveVolume() const;
+  // geometry dependent local properties
+  /** Slope covariance due to multiple scattering.
+   *
+   * This is the additional covariance on the track slope induced by multiple
+   * scattering. Calculated assuming that a particle with the mean beam slope
+   * and beam energy passed through the sensor material.
+   */
+  SymMatrix2 scatteringSlopeCovariance() const;
+  /** Slope precision due to multiple scattering.
+   *
+   * \see scatteringCovariance
+   */
+  SymMatrix2 scatteringSlopePrecision() const;
   /** Beam slope in the local coordinate system. */
   const Vector2& beamSlope() const { return m_beamSlope; }
   /** Beam slope covariance in the local coordinate system. */
   const SymMatrix2& beamSlopeCovariance() const { return m_beamSlopeCov; }
 
+  // geometry dependent global properties
   /** Projected pitch in the global system. */
   const Vector4& projectedPitch() const { return m_projPitch; }
   /** Bounding box of the detector in the global system. */
@@ -141,12 +153,13 @@ private:
   Scalar m_pitchTimestamp;       // digital timestamp to metric time
   Scalar m_thickness;            // sensor thickness
   Scalar m_xX0;                  // X/X0 (thickness in radiation lengths)
+  Scalar m_theta0;
   Measurement m_measurement;
   std::vector<Region> m_regions;
   Utils::DenseMask m_pixelMask;
   // geometry-dependent information
-  Vector2 m_beamSlope;       // beam slope in the local system
-  SymMatrix2 m_beamSlopeCov; // beam slope covariance in the local system
+  Vector2 m_beamSlope;         // beam slope in the local system
+  SymMatrix2 m_beamSlopeCov;   // beam slope covariance in the local system
   Vector4 m_projPitch;
   Volume m_projBoundingBox;
 
