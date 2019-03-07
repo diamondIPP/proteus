@@ -88,6 +88,7 @@ Proteus has seen contributions from (in alphabetical order):
 *   Francesco Di Bello
 *   Mateusz Dyndal
 *   Moritz Kiehn
+*   Salman Maqbool
 *   Lingxin Meng
 *   Marco Rimoldi
 *   Branislav Ristic
