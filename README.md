@@ -92,7 +92,7 @@ Proteus has seen contributions from (in alphabetical order):
 *   Branislav Ristic
 *   Sergio Gonzalez Sevilla
 *   Simon Spannagel
-*   Morag William
+*   Morag Williams
 *   Mateus Vicente
 *   Ettore Zaffaroni
 
