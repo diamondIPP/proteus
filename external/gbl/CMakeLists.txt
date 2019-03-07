@@ -1,6 +1,6 @@
 set(gbl_VERSION_MAJOR 2)
 set(gbl_VERSION_MINOR 1)
-set(gbl_VERSION_PATCH 3)
+set(gbl_VERSION_PATCH 5)
 set(gbl_SOURCES src/BorderedBandMatrix.cpp
                 src/GblData.cpp
                 src/GblPoint.cpp
