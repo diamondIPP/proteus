@@ -66,15 +66,6 @@ void Tracking::GblFitter::execute(Storage::Event& event) const
   using gbl::GblTrajectory;
 
   Reorder reorder;
-
-  // INIT: Loop over all the sensors to get the total radiation length
-  // TODO not sure why this is needed
-  double totalRadLength = 0;
-  for (Index isns = 0; isns < m_device.numSensors(); ++isns) {
-    totalRadLength += m_device.getSensor(isns).xX0();
-  }
-  DEBUG("total x/X0: ", totalRadLength);
-
   // temporary (resuable) storage
   Eigen::MatrixXd referenceParams(6, m_propagationIds.size());
   std::vector<GblPoint> gblPoints(m_propagationIds.size(), {Matrix5::Zero()});
@@ -141,22 +132,9 @@ void Tracking::GblFitter::execute(Storage::Event& event) const
       // 4a. Add a scatterer for all inner points
 
       if ((0 < ipoint) and ((ipoint + 1) < m_propagationIds.size())) {
-        // Get theta from the Highland formula
-        // TODO: Seems like we need to adapt this formula for our case
-        // Need energy for the calculation
-        double radLength = m_device.getSensor(sensorId).xX0();
-        double energy = 180;
-        double theta = 0.0136 * sqrt(radLength) / energy *
-                       (1 + 0.038 * log(totalRadLength));
-
-        // Get the scattering uncertainity
-        // TODO this is incorrect for rotated planes
-        Vector2 scatPrec;
-        scatPrec(0) = 1 / (theta * theta);
-        scatPrec(1) = scatPrec(0);
-
-        // Expected scattering angle vanishes
-        point.addScatterer(Vector2::Zero(), scatPrec);
+        const auto& sensor = m_device.getSensor(sensorId);
+        // Define scattering in the local system w/ vanishing initial kink
+        point.addScatterer(Vector2::Zero(), sensor.scatteringSlopePrecision());
       }
 
       // 4b. If available, add a measurement
@@ -227,7 +205,7 @@ void Tracking::GblFitter::execute(Storage::Event& event) const
 
       const auto& reference = referenceParams.col(ipoint);
       const auto& state = event.getSensorEvent(sensorId).getLocalState(itrack);
-      DEBUG("  params (proteus):");
+      DEBUG("  params:");
       DEBUG("    reference: ", format(reference));
       DEBUG("    correction: ", format(state.params() - reference));
       DEBUG("    covariance:\n", format(state.cov()));
