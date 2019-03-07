@@ -69,7 +69,7 @@ Documentation
 -------------
 
 The documentation for Proteus is provided in the `rst` file format and can
-either be read directly on the repository website or translated to HTMl
+either be read directly on the repository website or translated to HTML
 documents using the following command inside the build directory:
 
     make doc
@@ -100,12 +100,12 @@ Citation
 --------
 
 Users of the software are expected to respect the rules of good
-scientific practice. To cite the software, use either the common
-identifier for the whole software
-[doi:10.5281/zenodo.2579153][proteus-doi] or choose the identifier for a
-specific version e.g.
+scientific practice. The software can be cited either as
 
-    Kiehn, Moritz et al., Proteus beam telescope reconstruction (Version v1.3.0), doi:10.5281/zenodo.2579154
+    Kiehn, Moritz et al., Proteus beam telescope reconstruction, doi:10.5281/zenodo.2579153
+
+or using a version specific DOI from the
+[Proteus Zenodo record][proteus-zenodo].
 
 History
 -------
@@ -142,6 +142,6 @@ library. [Tinytoml][tinytoml] is distributed under the
 [license-bsd]: https://spdx.org/licenses/BSD-2-Clause.html
 [license-ccby4]: https://creativecommons.org/licenses/by/4.0/
 [license-mit]: https://spdx.org/licenses/MIT.html
-[proteus-doi]: https://doi.org/10.5281/zenodo.2579153
+[proteus-zenodo]: https://zenodo.org/record/2579153
 [root]: https://root.cern.ch
 [tinytoml]: https://github.com/mayah/tinytoml
