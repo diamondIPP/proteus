@@ -4,22 +4,16 @@
 
 set -ex
 
-datadir=${DATADIR:-data}
 nalign=${NALIGN:-25000}
-dataset=$1; shift
-flags=$@
-
-mkdir -p output/${dataset}-chain
-
-echo "=== using $(which pt-align)"
+source ./run_common.sh
 
 pt-align ${flags} -u dut_correlations \
-  -g output/${dataset}-chain/align_tel_fine-geo.toml \
-  -m output/${dataset}-chain/noisescan-mask.toml \
+  -g ${output_prefix}chain-align_tel_fine-geo.toml \
+  -m ${output_prefix}chain-noisescan-mask.toml \
   -n ${nalign} \
-  ${datadir}/${dataset}.root output/${dataset}-chain/align_dut_coarse
+  ${data} ${output_prefix}chain-align_dut_coarse
 pt-align ${flags} -u dut_residuals \
-  -g output/${dataset}-chain/align_dut_coarse-geo.toml \
-  -m output/${dataset}-chain/noisescan-mask.toml \
+  -g ${output_prefix}chain-align_dut_coarse-geo.toml \
+  -m ${output_prefix}chain-noisescan-mask.toml \
   -n ${nalign} \
-  ${datadir}/${dataset}.root output/${dataset}-chain/align_dut_fine
+  ${data} ${output_prefix}chain-align_dut_fine

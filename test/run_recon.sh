@@ -4,16 +4,11 @@
 
 set -ex
 
-datadir=${DATADIR:-data}
-dataset=$1; shift
-flags=$@ # e.g. -n 10000, to process only the first 10k events
+source ./run_common.sh
 
-mkdir -p output/${dataset}
+pt-recon ${flags} -g ${datasetdir}/geometry.toml \
+  ${data} ${output_prefix}recon
 
-geo="geometry/${dataset}.toml"
-
-echo "=== using $(which pt-recon)"
-
-pt-recon -g ${geo} ${flags} ${datadir}/${dataset}.root output/${dataset}/recon
-
-./root-checker output/${dataset}/recon-hists.root expected/${dataset}-recon.txt
+if test -e ${datasetdir}/expected-recon.txt; then
+  ./root-checker ${output_prefix}recon-hists.root ${datasetdir}/expected-recon.txt
+fi
