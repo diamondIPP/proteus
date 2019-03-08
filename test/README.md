@@ -1,9 +1,9 @@
 # Test datasets and scripts
 
-This directory contains example configurations and scripts for different
-setups. This is used to verify new functionality and check for
-regressions on internal changes. The files are organized into folders by
-setup and dataset as
+This directory contains example data, configurations and scripts for
+different setups. This can be used to verify new functionality and check
+for regressions on internal changes. The configuration files are
+organized into folders by setup and dataset as
 
     <setup0>/<dataset0>/
             /<dataset1>/
@@ -11,11 +11,28 @@ setup and dataset as
     <setup1>/<dataset0>/
     ...
 
-For a setup the device configuration, i.e. number and type of sensors,
-is kept fix. The datasets can differ in geometry and beam
+and the input data files are stored as
+
+    data/<setup0>/<dataset0>.root # or other extension
+                  <dataset1>.root
+    ...
+
+Since the data files are binary files, potentially large, and are
+expected to only change rarely, they are stored in a separated git
+repository and linked to this repository as a
+[git submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules). To
+make the data available run the following commands:
+
+    git submodule init   # once per clone or if submodule config changes
+    git submodule update
+
+
+Within a setup the device configuration, i.e. number and type of
+sensors, is kept fix. Datasets can differ in geometry and beam
 conditions. Each setup folder needs to have a `device.toml` file to
 configure the device, and a `analysis.toml` file to configure the tools.
-Each dataset folder should contain the following geometry files:
+Each dataset folder should contain a `data.*` file and the following
+geometry files:
 
 *   `geometry.toml` is the best geometry description for the full
     device, i.e. the true geometry from the simulation. If the alignment
@@ -36,7 +53,6 @@ Depending on which scripts will be used, only a subset of the geometry
 files need to be available. The following commands will download the
 example data and run all parts of a typical analysis chain:
 
-    ./download_data.py # only needed once
     ./run_noisescan.sh <setup> <dataset> # uses `geometry.toml`
     ./run_align_tel.sh <setup> <dataset> # uses `geometry-telescope_first_last.toml`
     ./run_align_dut.sh <setup> <dataset> # uses `geometry-telescope.toml`
@@ -52,7 +68,6 @@ Another set of commands runs the full analysis chain, i.e. starting from
 an unaligned geometry with each step depending on the output of the
 previous step. Either run each step separately
 
-    ./download_data.py # only needed once
     ./run_chain_noisescan.sh <setup> <dataset> # uses `geometry-initial.toml`
     ./run_chain_align_tel.sh <setup> <dataset> # uses `geometry-initial.toml`
     ./run_chain_align_dut.sh <setup> <dataset>
@@ -60,7 +75,6 @@ previous step. Either run each step separately
 
 or in one combined command
 
-    ./download_data.py # only needed once
     ./run_chain_all.sh <setup> <dataset> # uses `geometry-initial.toml`
 
 All scripts assume that the environment is setup such that the `pt-...`
