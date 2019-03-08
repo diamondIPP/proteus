@@ -4,11 +4,8 @@ stages:
   - build
   - test
 
-# global cache that should be shared among all jobs
-cache:
-  key: data
-  paths:
-    - test/data/
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
 
 # default build environment w/ minimal version requirements
 before_script:
@@ -112,40 +109,9 @@ test-combine:
   script:
     - source install/activate.sh
     - cd test
-    - ./download_data.py unigetel_ebeam012_nparticles01 unigetel_ebeam120_nparticles02
     - ./check_combine.sh --no-progress
 
 # templates for dataset tests
-
-.align_dut: &template_align_dut
-  stage: test
-  tags:
-    - cvmfs
-  script:
-    - source install/activate.sh
-    - cd test
-    - ./download_data.py ${DATASET}
-    - ./run_align_dut.sh ${DATASET} --no-progress
-
-.align_tel: &template_align_tel
-  stage: test
-  tags:
-    - cvmfs
-  script:
-    - source install/activate.sh
-    - cd test
-    - ./download_data.py ${DATASET}
-    - ./run_align_tel.sh ${DATASET} --no-progress
-
-.noisescan: &template_noisescan
-  stage: test
-  tags:
-    - cvmfs
-  script:
-    - source install/activate.sh
-    - cd test
-    - ./download_data.py ${DATASET}
-    - ./run_noisescan.sh ${DATASET} --no-progress
 
 .recon: &template_recon
   stage: test
@@ -154,7 +120,6 @@ test-combine:
   script:
     - source install/activate.sh
     - cd test
-    - ./download_data.py ${DATASET}
     - ./run_recon.sh ${DATASET} --no-progress
   artifacts:
     paths:
@@ -168,86 +133,52 @@ test-combine:
   script:
     - source install/activate.sh
     - cd test
-    - ./download_data.py ${DATASET}
     - ./run_chain_all.sh ${DATASET} --no-progress
 
-# tests for UNIGEtel ebeam=12GeV nparticles=1
-
-test-unigetel_ebeam012_nparticles01-align_dut:
-  <<: *template_align_dut
-  variables:
-    DATASET: unigetel_ebeam012_nparticles01
-
-test-unigetel_ebeam012_nparticles01-align_tel:
-  <<: *template_align_tel
-  variables:
-    DATASET: unigetel_ebeam012_nparticles01
-
-test-unigetel_ebeam012_nparticles01-noisescan:
-  <<: *template_noisescan
-  variables:
-    DATASET: unigetel_ebeam012_nparticles01
+# tests for UNIGEtel w/ dummy dut ebeam=12GeV nparticles=1
 
 test-unigetel_ebeam012_nparticles01-recon:
   <<: *template_recon
   variables:
-    DATASET: unigetel_ebeam012_nparticles01
+    DATASET: unigetel_dummy ebeam012_nparticles01
 
-test-unigetel_ebeam012_nparticles01-chain:
+test-unigetel_dummy-ebeam012_nparticles01-chain:
   <<: *template_chain
   variables:
-    DATASET: unigetel_ebeam012_nparticles01
+    DATASET: unigetel_dummy ebeam012_nparticles01
 
-# tests for UNIGEtel ebeam=120GeV nparticles=1
+# tests for UNIGEtel w/ dummy dut ebeam=120GeV nparticles=1
 
-test-unigetel_ebeam120_nparticles01-align_dut:
-  <<: *template_align_dut
-  variables:
-    DATASET: unigetel_ebeam120_nparticles01
-
-test-unigetel_ebeam120_nparticles01-align_tel:
-  <<: *template_align_tel
-  variables:
-    DATASET: unigetel_ebeam120_nparticles01
-
-test-unigetel_ebeam120_nparticles01-noisescan:
-  <<: *template_noisescan
-  variables:
-    DATASET: unigetel_ebeam120_nparticles01
-
-test-unigetel_ebeam120_nparticles01-recon:
+test-unigetel_dummy-ebeam120_nparticles01-recon:
   <<: *template_recon
   variables:
-    DATASET: unigetel_ebeam120_nparticles01
+    DATASET: unigetel_dummy ebeam120_nparticles01
 
-test-unigetel_ebeam120_nparticles01-chain:
+test-unigetel_dummy-ebeam120_nparticles01-chain:
   <<: *template_chain
   variables:
-    DATASET: unigetel_ebeam120_nparticles01
+    DATASET: unigetel_dummy ebeam120_nparticles01
 
-# tests for UNIGEtel ebeam=120GeV nparticles=2
+# tests for UNIGEtel w/ dummy dut ebeam=120GeV nparticles=1 x,y,gamma misalignment
 
-test-unigetel_ebeam120_nparticles02-align_dut:
-  <<: *template_align_dut
-  variables:
-    DATASET: unigetel_ebeam120_nparticles02
-
-test-unigetel_ebeam120_nparticles02-align_tel:
-  <<: *template_align_tel
-  variables:
-    DATASET: unigetel_ebeam120_nparticles02
-
-test-unigetel_ebeam120_nparticles02-noisescan:
-  <<: *template_noisescan
-  variables:
-    DATASET: unigetel_ebeam120_nparticles02
-
-test-unigetel_ebeam120_nparticles02-recon:
+test-unigetel_dummy-ebeam120_nparticles01_xygamma-recon:
   <<: *template_recon
   variables:
-    DATASET: unigetel_ebeam120_nparticles02
+    DATASET: unigetel_dummy ebeam120_nparticles01_xygamma
 
-test-unigetel_ebeam120_nparticles02-chain:
+test-unigetel_dummy-ebeam120_nparticles01_xygamma-chain:
   <<: *template_chain
   variables:
-    DATASET: unigetel_ebeam120_nparticles02
+    DATASET: unigetel_dummy ebeam120_nparticles01_xygamma
+
+# tests for UNIGEtel w/ dummy dut ebeam=120GeV nparticles=2
+
+test-unigetel_dummy-ebeam120_nparticles02-recon:
+  <<: *template_recon
+  variables:
+    DATASET: unigetel_dummy ebeam120_nparticles02
+
+test-unigetel_dummy-ebeam120_nparticles02-chain:
+  <<: *template_chain
+  variables:
+    DATASET: unigetel_dummy ebeam120_nparticles02
