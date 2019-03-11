@@ -205,13 +205,13 @@ static void searchSensor(Scalar d2Max,
       if (numMatchedClusters == 0) {
         // first matched cluster; update existing track
         auto& track = candidates[itrack];
-        track.setGlobalState({xf, Cf});
+        track.setGlobalState(xf, Cf);
         track.setGoodnessOfFit(chi2 + chi2Update, 2 * track.size() - 6);
         track.addCluster(isensor, icluster);
       } else {
         // additional matched cluster; duplicate track w/ different content
         Track track = candidates[itrack];
-        track.setGlobalState({xf, Cf});
+        track.setGlobalState(xf, Cf);
         track.setGoodnessOfFit(chi2 + chi2Update, 2 * track.size() - 6);
         // this replaces a previous cluster for the same sensor
         track.addCluster(isensor, icluster);
