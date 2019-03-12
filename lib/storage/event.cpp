@@ -75,8 +75,7 @@ void Storage::Event::print(std::ostream& os, const std::string& prefix) const
   if (!m_tracks.empty()) {
     os << prefix << "tracks:\n";
     for (size_t itrack = 0; itrack < m_tracks.size(); ++itrack) {
-      os << prefix << "  " << itrack << ":\n";
-      m_tracks[itrack]->print(os, prefix + "    ");
+      os << prefix << "  " << itrack << ": " << *m_tracks[itrack] << '\n';
     }
   }
   os.flush();

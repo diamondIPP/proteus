@@ -934,6 +934,9 @@ tracks/position_xy	entries	89947.0
 tracks/position_y	entries	89947.0
 tracks/position_y	mean	0.14019284888737135
 tracks/position_y	stddev	3.455302845306132
+tracks/probability	entries	89947.0
+tracks/probability	mean	0.6572726967359476
+tracks/probability	stddev	0.29434964156926086
 tracks/reduced_chi2	entries	89947.0
 tracks/reduced_chi2	mean	0.865072120450355
 tracks/reduced_chi2	stddev	0.7383448491603084

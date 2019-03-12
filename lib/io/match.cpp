@@ -48,6 +48,7 @@ void Io::MatchWriter::TrackData::addToTree(TTree* tree)
   tree->Branch("trk_col", &col);
   tree->Branch("trk_row", &row);
   tree->Branch("trk_timestamp", &timestamp);
+  tree->Branch("trk_prob", &prob);
   tree->Branch("trk_chi2", &chi2);
   tree->Branch("trk_dof", &dof);
   tree->Branch("trk_size", &size);
@@ -70,6 +71,7 @@ void Io::MatchWriter::TrackData::set(const Storage::Track& track,
   col = posPixel[kU];
   row = posPixel[kV];
   timestamp = posPixel[kS];
+  prob = track.probability();
   chi2 = track.chi2();
   dof = track.degreesOfFreedom();
   size = track.size();
