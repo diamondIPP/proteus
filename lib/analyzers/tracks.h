@@ -36,7 +36,7 @@ public:
   std::string name() const;
   void execute(const Storage::Event& event);
 
-  /** Average nmber of tracks per event. */
+  /** Average number of tracks per event. */
   double avgNumTracks() const;
   /** The beam slope (mean track slope) in global coordinates. */
   Vector2 beamSlope() const;
@@ -47,6 +47,7 @@ private:
   TH1D* m_nTracks;
   TH1D* m_size;
   TH1D* m_reducedChi2;
+  TH1D* m_prob;
   TH1D* m_posX;
   TH1D* m_posY;
   TH2D* m_posXY;

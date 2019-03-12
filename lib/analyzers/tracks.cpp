@@ -48,6 +48,7 @@ Analyzers::Tracks::Tracks(TDirectory* dir,
   m_nTracks = makeH1(sub, "ntracks", axNTracks);
   m_size = makeH1(sub, "size", axSize);
   m_reducedChi2 = makeH1(sub, "reduced_chi2", axChi2);
+  m_prob = makeH1(sub, "probability", {0.0, 1.0, bins, "Track probability"});
   m_posX = makeH1(sub, "position_x", axPosX);
   m_posY = makeH1(sub, "position_y", axPosY);
   m_posXY = makeH2(sub, "position_xy", axPosX, axPosY);
@@ -69,6 +70,7 @@ void Analyzers::Tracks::execute(const Storage::Event& event)
 
     m_size->Fill(track.size());
     m_reducedChi2->Fill(track.reducedChi2());
+    m_prob->Fill(track.probability());
     m_posX->Fill(state.loc0());
     m_posY->Fill(state.loc1());
     m_posXY->Fill(state.loc0(), state.loc1());
