@@ -4,7 +4,6 @@
 #include <functional>
 #include <iosfwd>
 #include <map>
-#include <string>
 
 #include "storage/trackstate.h"
 #include "utils/definitions.h"
@@ -56,8 +55,6 @@ public:
   size_t size() const { return m_clusters.size(); }
   const Clusters& clusters() const { return m_clusters; }
 
-  void print(std::ostream& os, const std::string& prefix = std::string()) const;
-
 private:
   /** Inform all track clusters that they belong to this track now. */
   void freezeClusterAssociation();
@@ -70,6 +67,8 @@ private:
 
   friend class Event;
 };
+
+std::ostream& operator<<(std::ostream& os, const Track& track);
 
 } // namespace Storage
 

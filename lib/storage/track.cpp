@@ -32,10 +32,10 @@ void Storage::Track::freezeClusterAssociation()
     c.second.get().setTrack(m_index);
 }
 
-void Storage::Track::print(std::ostream& os, const std::string& prefix) const
+std::ostream& Storage::operator<<(std::ostream& os, const Storage::Track& track)
 {
-  os << prefix << "chi2/dof: " << m_chi2 << " / " << m_dof << '\n';
-  os << prefix << "probability: " << probability() << '\n';
-  os << prefix << "size: " << m_clusters.size() << '\n';
-  os << prefix << "global: " << m_state << '\n';
+  os << "chi2/dof=" << track.chi2() << "/" << track.degreesOfFreedom();
+  os << " prob=" << track.probability();
+  os << " size=" << track.size();
+  return os;
 }
