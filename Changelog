@@ -4,6 +4,16 @@
 Changelog
 =========
 
+v1.5.0 (to be released)
+=======================
+
+Internal changes
+----------------
+
+*   Add support for multiple device setups in the test directory.
+*   Store test data files in a separate repository embedded as a git
+    submodule.
+
 v1.4.0 (2019-03-07)
 ===================
 

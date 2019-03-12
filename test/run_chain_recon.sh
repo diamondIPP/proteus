@@ -4,16 +4,11 @@
 
 set -ex
 
-datadir=${DATADIR:-data}
 nalign=${NALIGN:-25000}
-dataset=$1; shift
-flags=$@
-
-mkdir -p output/${dataset}-chain
-
-echo "=== using $(which pt-recon)"
+source ./run_common.sh
 
 pt-recon ${flags} \
-  -g output/${dataset}-chain/align_dut_fine-geo.toml \
+  -g ${output_prefix}chain-align_dut_fine-geo.toml \
+  -m ${output_prefix}chain-noisescan-mask.toml \
   -s ${nalign} \
-  ${datadir}/${dataset}.root output/${dataset}-chain/recon
+  ${data} ${output_prefix}chain-recon

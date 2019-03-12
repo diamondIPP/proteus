@@ -4,21 +4,16 @@
 
 set -ex
 
-datadir=${DATADIR:-data}
-dataset=$1; shift
-flags=$@ # e.g. -n 10000, to process only the first 10k events
+source ./run_common.sh
 
-mkdir -p output/${dataset}
-
-echo "=== using $(which pt-align)"
-
+# rough align w/ correlations
 pt-align ${flags} -u dut_correlations \
-  -g geometry/${dataset}-telescope.toml \
-  ${datadir}/${dataset}.root output/${dataset}/align_dut_correlations
-# align the device-under-test independently using multiple methods
+  -g ${datasetdir}/geometry-telescope.toml \
+  ${data} ${output_prefix}align_dut_correlations
+# fine align w/ multiple independent methods
 pt-align ${flags} -u dut_residuals \
-  -g output/${dataset}/align_dut_correlations-geo.toml \
-  ${datadir}/${dataset}.root output/${dataset}/align_dut_residuals
+  -g ${output_prefix}align_dut_correlations-geo.toml \
+  ${data} ${output_prefix}align_dut_residuals
 pt-align ${flags} -u dut_localchi2 \
-  -g output/${dataset}/align_dut_correlations-geo.toml \
-  ${datadir}/${dataset}.root output/${dataset}/align_dut_localchi2
+  -g ${output_prefix}align_dut_correlations-geo.toml \
+  ${data} ${output_prefix}align_dut_localchi2

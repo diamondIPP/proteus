@@ -4,17 +4,11 @@
 
 set -ex
 
-datadir=${DATADIR:-data}
-dataset=$1; shift
-flags=$@ # e.g. -n 10000, to process only the first 10k events
-
-mkdir -p output/${dataset}
-
-echo "=== using $(which pt-align)"
+source ./run_common.sh
 
 pt-align ${flags} -u dut_residuals \
-  -g geometry/${dataset}.toml \
-  ${datadir}/${dataset}.root output/${dataset}/fakealign_dut_residuals
+  -g ${datasetdir}/geometry.toml \
+  ${data} ${output_prefix}fakealign_dut_residuals
 pt-align ${flags} -u dut_localchi2 \
-  -g geometry/${dataset}.toml \
-  ${datadir}/${dataset}.root output/${dataset}/fakealign_dut_localchi2
+  -g ${datasetdir}/geometry.toml \
+  ${data} ${output_prefix}fakealign_dut_localchi2
