@@ -4,15 +4,19 @@
 # that can be checked later on, e.g. in the ci system.
 
 datasets="
-  unigetel_ebeam012_nparticles01
-  unigetel_ebeam120_nparticles01
-  unigetel_ebeam120_nparticles01_xygamma
-  unigetel_ebeam120_nparticles02
+unigetel_dummy/ebeam012_nparticles01
+unigetel_dummy/ebeam120_nparticles01
+unigetel_dummy/ebeam120_nparticles01_xygamma
+unigetel_dummy/ebeam120_nparticles02
 "
 
-for dataset in ${datasets}; do
-  ./run_recon.sh ${dataset}
+IFS='
+'
+for path in ${datasets}; do
+  setup=$(echo ${path} | cut -f1 -d/)
+  dataset=$(echo ${path} | cut -f2 -d/)
+  ./run_recon.sh ${setup} ${dataset} --no-progress
   ./root-checker --generate \
-    output/${dataset}/recon-hists.root \
-    expected/${dataset}-recon.txt
+    output/${path}/recon-hists.root \
+    ${path}/expected-recon.txt
 done
