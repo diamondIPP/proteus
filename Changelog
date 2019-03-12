@@ -7,6 +7,14 @@ Changelog
 v1.5.0 (to be released)
 =======================
 
+User-visible changes
+--------------------
+
+*   Add track fit probability to outputs.
+
+    Adds ``tracks/probability`` histogram to ``...-hists.root`` files
+    and ``trk_prob`` branch to match ROOT trees.
+
 Internal changes
 ----------------
 
