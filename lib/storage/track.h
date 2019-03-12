@@ -27,13 +27,8 @@ public:
   /** Construct a track without hits but with known global parameters. */
   Track(const TrackState& global);
 
+  /** Update the goodness-of-fit via χ² and degrees-of-freedom. */
   void setGoodnessOfFit(Scalar chi2, int dof) { m_chi2 = chi2, m_dof = dof; }
-  template <typename... Params>
-  void setGlobalState(Params&&... params)
-  {
-    m_state = TrackState(std::forward<Params>(params)...);
-  }
-
   Scalar chi2() const { return m_chi2; }
   Scalar reducedChi2() const { return m_chi2 / m_dof; }
   int degreesOfFreedom() const { return m_dof; }
@@ -45,6 +40,13 @@ public:
    * to a good fit with smaller residuals.
    */
   Scalar probability() const;
+
+  /** Update the global track state. */
+  template <typename... Params>
+  void setGlobalState(Params&&... params)
+  {
+    m_state = TrackState(std::forward<Params>(params)...);
+  }
   const TrackState& globalState() const { return m_state; }
 
   /** Adds a cluster on the given sensor to the track.
