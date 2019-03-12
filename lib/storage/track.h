@@ -38,6 +38,14 @@ public:
   Scalar chi2() const { return m_chi2; }
   Scalar reducedChi2() const { return m_chi2 / m_dof; }
   int degreesOfFreedom() const { return m_dof; }
+  /** Track fit probability.
+   *
+   * This is computed as 1 - CDF_{df}(χ²), i.e. assuming a χ² distribution
+   * with df degrees of freedom. A small value close to 0 corresponds to a
+   * bad fit with large residuals while a large value close to 1 corresponds
+   * to a good fit with smaller residuals.
+   */
+  Scalar probability() const;
   const TrackState& globalState() const { return m_state; }
 
   /** Adds a cluster on the given sensor to the track.
