@@ -49,8 +49,8 @@ public:
   void execute(Storage::Event& event) const;
 
 private:
-  void searchSensor(Index sensorId,
-                    Storage::SensorEvent& sensorEvent,
+  void searchSensor(Storage::Event& event,
+                    Index iSearchSensor,
                     std::vector<Storage::Track>& candidates) const;
   void selectTracks(std::vector<Storage::Track>& candidates,
                     Storage::Event& event) const;
