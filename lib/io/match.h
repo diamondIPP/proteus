@@ -54,6 +54,7 @@ private:
     float stdU, stdV, stdTime;
     float corrUV;
     float col, row, timestamp;
+    float prob;
     float chi2;
     int16_t dof;
     int16_t size;
