@@ -11,35 +11,28 @@
 
 PT_SETUP_LOCAL_LOGGER(Cluster)
 
-Storage::Cluster::Cluster()
-    : m_col(std::numeric_limits<Scalar>::quiet_NaN())
-    , m_row(std::numeric_limits<Scalar>::quiet_NaN())
-    , m_timestamp(std::numeric_limits<Scalar>::quiet_NaN())
-    , m_value(std::numeric_limits<Scalar>::quiet_NaN())
-    , m_colVar(0)
-    , m_rowVar(0)
-    , m_colRowCov(0)
-    , m_timestampVar(0)
+Storage::Cluster::Cluster(Scalar col,
+                          Scalar row,
+                          Scalar timestamp,
+                          Scalar value,
+                          Scalar colVar,
+                          Scalar rowVar,
+                          Scalar timestampVar,
+                          Scalar colRowCov)
+    : m_col(col)
+    , m_row(row)
+    , m_timestamp(timestamp)
+    , m_value(value)
+    , m_colVar(colVar)
+    , m_rowVar(rowVar)
+    , m_colRowCov(colRowCov)
+    , m_timestampVar(timestampVar)
     , m_pos(Vector4::Constant(std::numeric_limits<Scalar>::quiet_NaN()))
     , m_posCov(SymMatrix4::Constant(std::numeric_limits<Scalar>::quiet_NaN()))
     , m_index(kInvalidIndex)
     , m_track(kInvalidIndex)
     , m_matchedState(kInvalidIndex)
 {
-}
-
-void Storage::Cluster::setPixel(const Vector2& cr,
-                                const SymMatrix2& crCov,
-                                Scalar timestamp,
-                                Scalar timestampVar)
-{
-  m_col = cr[0];
-  m_row = cr[1];
-  m_timestamp = timestamp;
-  m_colVar = crCov(0, 0);
-  m_rowVar = crCov(1, 1);
-  m_colRowCov = crCov(1, 0);
-  m_timestampVar = timestampVar;
 }
 
 bool Storage::Cluster::hasRegion() const

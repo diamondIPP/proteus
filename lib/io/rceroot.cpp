@@ -294,14 +294,10 @@ bool Io::RceRootReader::read(Storage::Event& event)
         FAIL("could not read 'Clusters' entry ", ievent);
 
       for (Int_t icluster = 0; icluster < numClusters; ++icluster) {
-        Vector2 pos(clusterCol[icluster], clusterRow[icluster]);
-        SymMatrix2 cov = SymMatrix2::Zero();
-        cov(0, 0) = clusterVarCol[icluster];
-        cov(1, 1) = clusterVarRow[icluster];
-        cov(0, 1) = cov(1, 0) = clusterCovColRow[icluster];
-        Storage::Cluster& cluster = sensorEvent.addCluster();
-        cluster.setPixel(pos, cov, clusterTiming[icluster]);
-        cluster.setValue(clusterValue[icluster]);
+        Storage::Cluster& cluster = sensorEvent.addCluster(
+            clusterCol[icluster], clusterRow[icluster], clusterTiming[icluster],
+            clusterValue[icluster], clusterVarCol[icluster],
+            clusterVarRow[icluster], 1.0 / 12.0, clusterCovColRow[icluster]);
         // Fix cluster/track relationship if possible
         if (m_tracks && (0 <= clusterTrack[icluster])) {
           Storage::Track& track = event.getTrack(clusterTrack[icluster]);

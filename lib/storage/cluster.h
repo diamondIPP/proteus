@@ -18,12 +18,16 @@ public:
   using Area = Utils::Box<2, int>;
   using Hits = std::vector<std::reference_wrapper<Hit>>;
 
-  Cluster();
+  /** Construct a cluster using pixel coordinates. */
+  Cluster(Scalar col,
+          Scalar row,
+          Scalar timestamp,
+          Scalar value,
+          Scalar colVar,
+          Scalar rowVar,
+          Scalar timestampVar,
+          Scalar colRowCov = 0);
 
-  void setPixel(const Vector2& cr,
-                const SymMatrix2& crCov,
-                Scalar timestamp,
-                Scalar timestampVar = static_cast<Scalar>(1.0 / 12.0));
   template <typename Position, typename Covariance>
   void setLocal(const Eigen::MatrixBase<Position>& loc,
                 const Eigen::MatrixBase<Covariance>& cov)
@@ -31,7 +35,6 @@ public:
     m_pos = loc;
     m_posCov = cov.template selfadjointView<Eigen::Lower>();
   }
-  void setValue(Scalar value) { m_value = value; }
   void setTrack(Index track);
 
   // properties in the pixel system
