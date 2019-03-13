@@ -1,0 +1,54 @@
+# global settings **must** appear before any [section]
+
+geometry = "/eos/home-p/pfreeman/AllPix2/MALTAscope/outputs/RCEWriter/rce-geo.toml"
+pixel_masks = [] # no masked pixels
+
+# pitch and thickness in um
+
+[device]
+time_unit = "ns"
+space_unit = "um"
+window = 1
+clock = 1.
+name = "sss"
+
+[sensor_types.MALTA]
+measurement = "pixel_binary"
+cols = 512
+rows = 512
+pitch_col = 36.4
+pitch_row = 36.4
+thickness = 300.0
+x_x0 = 0.0021772
+
+# sensors in the order as they appear in the data file
+# the index in this list corresponds to the sensor id in other configs
+
+[[sensors]]
+type = "MALTA"
+name = "MALTAplane0"
+
+[[sensors]]
+type = "MALTA"
+name = "MALTAplane1"
+
+[[sensors]]
+type = "MALTA"
+name = "MALTAplane2"
+
+[[sensors]]
+type = "MALTA"
+name = "MALTAplane3"
+
+[[sensors]]
+type = "MALTA"
+name = "MALTAplane4"
+
+#[[sensors]]
+#type = "MALTA"
+#name = "MALTAplane5"
+
+#[[sensors]]
+#type = "MALTA"
+#name = "MALTAplane6"
+

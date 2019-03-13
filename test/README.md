@@ -104,3 +104,10 @@ available:
 | ebeam180_pionp_nparticles01_inc | 180GeV π+ | 1 | Inclined telescope planes |
 | ebeam180_pionp_nparticles01_inc_xygamma | 180GeV π+ | 1 | Inclined telescope planes, misalignment only in x,y,gamma |
 | ebeam180_pionp_nparticles01_upr | 180GeV π+ | 1 | Upright telescope planes |
+
+## MALTAscope
+
+512x512 Malta sensors with 50mumx50mum pitch size.
+The following datasets are
+available:
+* 3GeV_electrons_50_50mum
