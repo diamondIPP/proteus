@@ -18,6 +18,10 @@ User-visible changes
 Internal changes
 ----------------
 
+*   Use an in-place clustering algorithm.
+
+    The new clusterizer implementation requires no additional memory but can
+    change the order of hits within a ``SensorEvent``.
 *   Add support for multiple device setups in the test directory.
 *   Store test data files in a separate repository embedded as a git
     submodule.
