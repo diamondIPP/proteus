@@ -13,60 +13,50 @@
 namespace Mechanics {
 class Sensor;
 }
-namespace Storage {
-class Cluster;
-}
-
 namespace Processors {
-
-/** Cluster neighboring hits and calculate cluster properties. */
-class BaseClusterizer : public Loop::Processor {
-public:
-  std::string name() const;
-  void execute(Storage::Event& event) const;
-
-protected:
-  BaseClusterizer(const std::string& namePrefix,
-                  const Mechanics::Sensor& sensor);
-
-private:
-  virtual void estimateProperties(Storage::Cluster& cluster) const = 0;
-
-  const Mechanics::Sensor& m_sensor;
-  std::string m_name;
-};
 
 /** Cluster hits and average the position with equal weights for all hits.
  *
  * The fastest hit time is used as the cluster time.
  */
-class BinaryClusterizer : public BaseClusterizer {
+class BinaryClusterizer : public Loop::Processor {
 public:
-  BinaryClusterizer(const Mechanics::Sensor& sensor);
+  BinaryClusterizer(const Mechanics::Sensor& sensor) : m_sensor(sensor) {}
+
+  std::string name() const;
+  void execute(Storage::Event& event) const;
 
 private:
-  void estimateProperties(Storage::Cluster& cluster) const;
+  const Mechanics::Sensor& m_sensor;
 };
 
 /** Cluster hits and calculate position by weighting each hit with its value.
  *
  * The fastest hit time is used as the cluster time.
  */
-class ValueWeightedClusterizer : public BaseClusterizer {
+class ValueWeightedClusterizer : public Loop::Processor {
 public:
-  ValueWeightedClusterizer(const Mechanics::Sensor& sensor);
+  ValueWeightedClusterizer(const Mechanics::Sensor& sensor) : m_sensor(sensor)
+  {
+  }
+
+  std::string name() const;
+  void execute(Storage::Event& event) const;
 
 private:
-  void estimateProperties(Storage::Cluster& cluster) const;
+  const Mechanics::Sensor& m_sensor;
 };
 
 /** Cluster hits and take position and timing only from the fastest hit. */
-class FastestHitClusterizer : public BaseClusterizer {
+class FastestHitClusterizer : public Loop::Processor {
 public:
-  FastestHitClusterizer(const Mechanics::Sensor& sensor);
+  FastestHitClusterizer(const Mechanics::Sensor& sensor) : m_sensor(sensor) {}
+
+  std::string name() const;
+  void execute(Storage::Event& event) const;
 
 private:
-  void estimateProperties(Storage::Cluster& cluster) const;
+  const Mechanics::Sensor& m_sensor;
 };
 
 } // namespace Processors

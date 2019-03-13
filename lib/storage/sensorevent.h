@@ -13,8 +13,10 @@
 #include "utils/definitions.h"
 
 namespace Processors {
-class BaseClusterizer;
-}
+class BinaryClusterizer;
+class ValueWeightedClusterizer;
+class FastestHitClusterizer;
+} // namespace Processors
 namespace Storage {
 
 /** An event for a single sensor containing only local information.
@@ -63,7 +65,9 @@ private:
   TrackStates m_states;
 
   friend class Event;
-  friend class Processors::BaseClusterizer;
+  friend class Processors::BinaryClusterizer;
+  friend class Processors::ValueWeightedClusterizer;
+  friend class Processors::FastestHitClusterizer;
 };
 
 } // namespace Storage

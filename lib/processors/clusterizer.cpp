@@ -13,11 +13,18 @@
 #include "loop/eventloop.h"
 #include "mechanics/device.h"
 #include "storage/event.h"
+#include "utils/interval.h"
 #include "utils/logger.h"
 
 PT_SETUP_GLOBAL_LOGGER
 
 using namespace Storage;
+using namespace Utils;
+
+using DigitalRange = Interval<int>;
+
+// scaling from uniform with to equivalent Gaussian standard deviation
+constexpr Scalar kVar = 1.0 / 12.0;
 
 // return true if both hits are connected, i.e. share one edge
 //
@@ -43,11 +50,19 @@ connected(HitIterator clusterBegin, HitIterator clusterEnd, const Hit& hit)
 }
 
 // rearange the input hit range so that pixels in a cluster are neighbours.
-template <typename HitIterator>
-static inline void inplaceCluster(HitIterator hitsBegin,
-                                  HitIterator hitsEnd,
-                                  Storage::SensorEvent& sensorEvent)
+template <typename HitIterator, typename ClusterMaker>
+static inline void clusterize(const DenseMask& mask,
+                              SensorEvent& sensorEvent,
+                              HitIterator hitsBegin,
+                              HitIterator hitsEnd,
+                              ClusterMaker makeCluster)
 {
+  // move masked pixels to the back of the hit vector
+  hitsEnd = std::partition(hitsBegin, hitsEnd, [&](const auto& hit) {
+    return not mask.isMasked(hit->col(), hit->row());
+  });
+
+  // group all connected hits starting from an arbitrary seed hit (first hit).
   auto clusterBegin = hitsBegin;
   while (clusterBegin != hitsEnd) {
     // every cluster has at least one member
@@ -74,7 +89,8 @@ static inline void inplaceCluster(HitIterator hitsBegin,
              (hit0->timestamp() < hit1->timestamp());
     });
     // add cluster to event
-    auto& cluster = sensorEvent.addCluster();
+    auto& cluster =
+        sensorEvent.addCluster(makeCluster(clusterBegin, clusterEnd));
     for (auto hit = clusterBegin; hit != clusterEnd; ++hit) {
       cluster.addHit(*hit->get());
     }
@@ -84,112 +100,109 @@ static inline void inplaceCluster(HitIterator hitsBegin,
   }
 }
 
-Processors::BaseClusterizer::BaseClusterizer(const std::string& namePrefix,
-                                             const Mechanics::Sensor& sensor)
-    : m_sensor(sensor), m_name(namePrefix + '(' + sensor.name() + ')')
+std::string Processors::BinaryClusterizer::name() const
 {
+  return "BinaryClusterizer(" + m_sensor.name() + ")";
 }
 
-std::string Processors::BaseClusterizer::name() const { return m_name; }
-
-void Processors::BaseClusterizer::execute(Storage::Event& event) const
+void Processors::BinaryClusterizer::execute(Event& event) const
 {
-  auto& sensorEvent = event.getSensorEvent(m_sensor.id());
+  auto makeCluster = [](auto h0, auto h1) {
+    Scalar col = 0;
+    Scalar row = 0;
+    int ts = std::numeric_limits<int>::max();
+    int value = 0;
+    int size = 0;
+    DigitalRange rangeCol = DigitalRange::Empty();
+    DigitalRange rangeRow = DigitalRange::Empty();
 
-  // move masked pixels to the back of the hit vector
-  auto hitsEnd = std::partition(sensorEvent.m_hits.begin(),
-                                sensorEvent.m_hits.end(), [&](const auto& hit) {
-                                  return not m_sensor.pixelMask().isMasked(
-                                      hit->col(), hit->row());
-                                });
-  // group pixels into clusters by rearanging the hit vector
-  inplaceCluster(sensorEvent.m_hits.begin(), hitsEnd, sensorEvent);
-  // estimate cluster properties
-  for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
-    estimateProperties(sensorEvent.getCluster(icluster));
-  }
-}
-
-Processors::BinaryClusterizer::BinaryClusterizer(
-    const Mechanics::Sensor& sensor)
-    : BaseClusterizer("BinaryClusterizer", sensor)
-{
-  DEBUG("binary clustering for ", sensor.name());
-}
-
-void Processors::BinaryClusterizer::estimateProperties(
-    Storage::Cluster& cluster) const
-{
-  Vector2 pos = Vector2::Zero();
-  int ts = std::numeric_limits<int>::max();
-  int value = 0;
-
-  for (const Storage::Hit& hit : cluster.hits()) {
-    pos += Vector2(hit.col(), hit.row());
-    ts = std::min(ts, hit.timestamp());
-    value += hit.value();
-  }
-  pos /= cluster.size();
-
-  // 1/12 factor from pixel size to stdev of equivalent gaussian
-  Vector2 var(1.0f / (12.0f * cluster.sizeCol()),
-              1.0f / (12.0f * cluster.sizeRow()));
-  cluster.setPixel(pos, var.asDiagonal(), ts);
-  cluster.setValue(value);
-}
-
-Processors::ValueWeightedClusterizer::ValueWeightedClusterizer(
-    const Mechanics::Sensor& sensor)
-    : BaseClusterizer("ValueWeightedClusterizer", sensor)
-{
-  DEBUG("value weighted clustering for ", sensor.name());
-}
-
-void Processors::ValueWeightedClusterizer::estimateProperties(
-    Storage::Cluster& cluster) const
-{
-  Vector2 pos = Vector2::Zero();
-  int ts = std::numeric_limits<int>::max();
-  int value = 0;
-
-  for (const Storage::Hit& hit : cluster.hits()) {
-    pos += hit.value() * Vector2(hit.col(), hit.row());
-    ts = std::min(ts, hit.timestamp());
-    value += hit.value();
-  }
-  pos /= value;
-
-  // TODO 2016-11-14 msmk: consider also the value weighting
-  // 1/12 factor from pixel size to stdev of equivalent gaussian
-  Vector2 var(1.0f / (12.0f * cluster.sizeCol()),
-              1.0f / (12.0f * cluster.sizeRow()));
-  cluster.setPixel(pos, var.asDiagonal(), ts);
-  cluster.setValue(value);
-}
-
-Processors::FastestHitClusterizer::FastestHitClusterizer(
-    const Mechanics::Sensor& sensor)
-    : BaseClusterizer("FastestHitClusterizer", sensor)
-{
-  DEBUG("fastest hit (non-)clustering for ", sensor.name());
-}
-
-void Processors::FastestHitClusterizer::estimateProperties(
-    Storage::Cluster& cluster) const
-{
-  Vector2 pos = Vector2::Zero();
-  int ts = std::numeric_limits<int>::max();
-  int value = 0;
-
-  for (const Storage::Hit& hit : cluster.hits()) {
-    if (hit.timestamp() < ts) {
-      pos = Vector2(hit.col(), hit.row());
-      ts = hit.timestamp();
-      value = hit.value();
+    for (; h0 != h1; ++h0) {
+      const Hit& hit = *(h0->get());
+      col += hit.col();
+      row += hit.row();
+      ts = std::min(ts, hit.timestamp());
+      value += hit.value();
+      size += 1;
+      rangeCol.enclose(DigitalRange(hit.col(), hit.col() + 1));
+      rangeRow.enclose(DigitalRange(hit.row(), hit.row() + 1));
     }
-  }
+    col /= size;
+    row /= size;
 
-  // 1/12 factor from pixel size to stdev of equivalent gaussian
-  cluster.setPixel(pos, Vector2::Constant(1.0 / 12.0f).asDiagonal(), ts);
-  cluster.setValue(value);
+    auto colVar = kVar / rangeCol.length();
+    auto rowVar = kVar / rangeRow.length();
+    auto tsVar = kVar;
+    return Cluster(col, row, ts, value, colVar, rowVar, tsVar);
+  };
+  auto& sensorEvent = event.getSensorEvent(m_sensor.id());
+  clusterize(m_sensor.pixelMask(), sensorEvent, sensorEvent.m_hits.begin(),
+             sensorEvent.m_hits.end(), makeCluster);
+}
+
+std::string Processors::ValueWeightedClusterizer::name() const
+{
+  return "ValueWeightedClusterizer(" + m_sensor.name() + ")";
+}
+
+void Processors::ValueWeightedClusterizer::execute(Event& event) const
+{
+  auto makeCluster = [](auto h0, auto h1) {
+    Scalar col = 0;
+    Scalar row = 0;
+    int ts = std::numeric_limits<int>::max();
+    int value = 0;
+    DigitalRange rangeCol = DigitalRange::Empty();
+    DigitalRange rangeRow = DigitalRange::Empty();
+
+    for (; h0 != h1; ++h0) {
+      const Hit& hit = *(h0->get());
+      // TODO how to handle zero value?
+      col += hit.value() * hit.col();
+      row += hit.value() * hit.row();
+      ts = std::min(ts, hit.timestamp());
+      value += hit.value();
+      rangeCol.enclose(DigitalRange(hit.col(), hit.col() + 1));
+      rangeRow.enclose(DigitalRange(hit.row(), hit.row() + 1));
+    }
+    col /= value;
+    row /= value;
+
+    auto colVar = kVar / rangeCol.length();
+    auto rowVar = kVar / rangeRow.length();
+    auto tsVar = kVar;
+    return Cluster(col, row, ts, value, colVar, rowVar, tsVar);
+  };
+  auto& sensorEvent = event.getSensorEvent(m_sensor.id());
+  clusterize(m_sensor.pixelMask(), sensorEvent, sensorEvent.m_hits.begin(),
+             sensorEvent.m_hits.end(), makeCluster);
+}
+
+std::string Processors::FastestHitClusterizer::name() const
+{
+  return "FastestHitClusterizer(" + m_sensor.name() + ")";
+}
+
+void Processors::FastestHitClusterizer::execute(Event& event) const
+{
+  auto makeCluster = [](auto h0, auto h1) {
+    Scalar col = 0;
+    Scalar row = 0;
+    int ts = std::numeric_limits<int>::max();
+    int value = 0;
+
+    for (; h0 != h1; ++h0) {
+      const Hit& hit = *(h0->get());
+      if (hit.timestamp() < ts) {
+        col = hit.col();
+        row = hit.row();
+        ts = hit.timestamp();
+        value = hit.value();
+      }
+    }
+
+    return Cluster(col, row, ts, value, kVar, kVar, kVar);
+  };
+  auto& sensorEvent = event.getSensorEvent(m_sensor.id());
+  clusterize(m_sensor.pixelMask(), sensorEvent, sensorEvent.m_hits.begin(),
+             sensorEvent.m_hits.end(), makeCluster);
 }
