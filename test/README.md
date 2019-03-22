@@ -26,7 +26,6 @@ make the data available run the following commands:
     git submodule init   # once per clone or if submodule config changes
     git submodule update
 
-
 Within a setup the device configuration, i.e. number and type of
 sensors, is kept fix. Datasets can differ in geometry and beam
 conditions. Each setup folder needs to have a `device.toml` file to
@@ -53,10 +52,10 @@ Depending on which scripts will be used, only a subset of the geometry
 files need to be available. The following commands will download the
 example data and run all parts of a typical analysis chain:
 
-    ./run_noisescan.sh <setup> <dataset> # uses `geometry.toml`
-    ./run_align_tel.sh <setup> <dataset> # uses `geometry-telescope_first_last.toml`
-    ./run_align_dut.sh <setup> <dataset> # uses `geometry-telescope.toml`
-    ./run_recon.sh <setup> <dataset> # uses `geometry.toml`
+    ./run_noisescan.sh <setup>/<dataset> # uses `geometry.toml`
+    ./run_align_tel.sh <setup>/<dataset> # uses `geometry-telescope_first_last.toml`
+    ./run_align_dut.sh <setup>/<dataset> # uses `geometry-telescope.toml`
+    ./run_recon.sh <setup>/<dataset> # uses `geometry.toml`
 
 To simplify tests, each script is independent from previous steps and
 can be run on its own. E.g. the dut alignment will start from an initial
@@ -68,14 +67,14 @@ Another set of commands runs the full analysis chain, i.e. starting from
 an unaligned geometry with each step depending on the output of the
 previous step. Either run each step separately
 
-    ./run_chain_noisescan.sh <setup> <dataset> # uses `geometry-initial.toml`
-    ./run_chain_align_tel.sh <setup> <dataset> # uses `geometry-initial.toml`
-    ./run_chain_align_dut.sh <setup> <dataset>
-    ./run_chain_recon.sh <setup> <dataset>
+    ./run_chain_noisescan.sh <setup>/<dataset> # uses `geometry-initial.toml`
+    ./run_chain_align_tel.sh <setup>/<dataset> # uses `geometry-initial.toml`
+    ./run_chain_align_dut.sh <setup>/<dataset>
+    ./run_chain_recon.sh <setup>/<dataset>
 
 or in one combined command
 
-    ./run_chain_all.sh <setup> <dataset> # uses `geometry-initial.toml`
+    ./run_chain_all.sh <setup>/<dataset> # uses `geometry-initial.toml`
 
 All scripts assume that the environment is setup such that the `pt-...`
 binaries can be called directly, e.g. by sourcing the `activate.sh`
