@@ -111,9 +111,9 @@ test-combine:
     - cd test
     - ./check_combine.sh --no-progress
 
-# templates for dataset tests
+# template for dataset tests
 
-.recon: &template_recon
+.test_dataset: &template_test_dataset
   stage: test
   tags:
     - cvmfs
@@ -121,64 +121,43 @@ test-combine:
     - source install/activate.sh
     - cd test
     - ./run_recon.sh ${DATASET} --no-progress
+    - ./run_chain_all.sh ${DATASET} --no-progress
   artifacts:
     paths:
       - test/output
     expire_in: 1 week
 
-.chain: &template_chain
-  stage: test
-  tags:
-    - cvmfs
-  script:
-    - source install/activate.sh
-    - cd test
-    - ./run_chain_all.sh ${DATASET} --no-progress
-
-# tests for UNIGEtel w/ dummy dut ebeam=12GeV nparticles=1
-
-test-unigetel_ebeam012_nparticles01-recon:
-  <<: *template_recon
+test-unigetel_dummy-ebeam005_positron_nparticles01_inc:
+  <<: *template_test_dataset
   variables:
-    DATASET: unigetel_dummy ebeam012_nparticles01
+    DATASET: unigetel_dummy/ebeam005_positron_nparticles01_inc
 
-test-unigetel_dummy-ebeam012_nparticles01-chain:
-  <<: *template_chain
+test-unigetel_dummy-ebeam005_positron_nparticles01_upr:
+  <<: *template_test_dataset
   variables:
-    DATASET: unigetel_dummy ebeam012_nparticles01
+    DATASET: unigetel_dummy/ebeam005_positron_nparticles01_upr
 
-# tests for UNIGEtel w/ dummy dut ebeam=120GeV nparticles=1
-
-test-unigetel_dummy-ebeam120_nparticles01-recon:
-  <<: *template_recon
+test-unigetel_dummy-ebeam120_pionp_nparticles01_inc:
+  <<: *template_test_dataset
   variables:
-    DATASET: unigetel_dummy ebeam120_nparticles01
+    DATASET: unigetel_dummy/ebeam120_pionp_nparticles01_inc
 
-test-unigetel_dummy-ebeam120_nparticles01-chain:
-  <<: *template_chain
+test-unigetel_dummy-ebeam120_pionp_nparticles01_upr:
+  <<: *template_test_dataset
   variables:
-    DATASET: unigetel_dummy ebeam120_nparticles01
+    DATASET: unigetel_dummy/ebeam120_pionp_nparticles01_upr
 
-# tests for UNIGEtel w/ dummy dut ebeam=120GeV nparticles=1 x,y,gamma misalignment
-
-test-unigetel_dummy-ebeam120_nparticles01_xygamma-recon:
-  <<: *template_recon
+test-unigetel_dummy-ebeam180_pionp_nparticles01_inc:
+  <<: *template_test_dataset
   variables:
-    DATASET: unigetel_dummy ebeam120_nparticles01_xygamma
+    DATASET: unigetel_dummy/ebeam180_pionp_nparticles01_inc
 
-test-unigetel_dummy-ebeam120_nparticles01_xygamma-chain:
-  <<: *template_chain
+test-unigetel_dummy-ebeam180_pionp_nparticles01_inc_xygamma:
+  <<: *template_test_dataset
   variables:
-    DATASET: unigetel_dummy ebeam120_nparticles01_xygamma
+    DATASET: unigetel_dummy/ebeam180_pionp_nparticles01_inc_xygamma
 
-# tests for UNIGEtel w/ dummy dut ebeam=120GeV nparticles=2
-
-test-unigetel_dummy-ebeam120_nparticles02-recon:
-  <<: *template_recon
+test-unigetel_dummy-ebeam180_pionp_nparticles01_upr:
+  <<: *template_test_dataset
   variables:
-    DATASET: unigetel_dummy ebeam120_nparticles02
-
-test-unigetel_dummy-ebeam120_nparticles02-chain:
-  <<: *template_chain
-  variables:
-    DATASET: unigetel_dummy ebeam120_nparticles02
+    DATASET: unigetel_dummy/ebeam180_pionp_nparticles01_upr
