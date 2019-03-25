@@ -97,7 +97,10 @@ available:
 
 | Name | Beam | Particles/event | Comment |
 | ---- | ---- | --------------- | ------- |
-| ebeam012_nparticles01         | 12 GeV pi+  | 1 | |
-| ebeam120_nparticles01_xygamma | 120 GeV pi+ | 1 | Only misalignment in x,y,gamma |
-| ebeam120_nparticles01         | 120 GeV pi+ | 1 | |
-| ebeam120_nparticles02         | 120 GeV pi+ | 2 | |
+| ebeam005_positron_nparticles01_inc | 5GeV e+ | 1 | Inclined telescope planes |
+| ebeam005_positron_nparticles01_upr | 5GeV e+ | 1 | Upright telescope planes |
+| ebeam120_pionp_nparticles01_inc | 120GeV π+ | 1 | Inclined telescope planes |
+| ebeam120_pionp_nparticles01_upr | 120GeV π+ | 1 | Upright telescope planes |
+| ebeam180_pionp_nparticles01_inc | 180GeV π+ | 1 | Inclined telescope planes |
+| ebeam180_pionp_nparticles01_inc_xygamma | 180GeV π+ | 1 | Inclined telescope planes, misalignment only in x,y,gamma |
+| ebeam180_pionp_nparticles01_upr | 180GeV π+ | 1 | Upright telescope planes |
