@@ -107,7 +107,9 @@ available:
 
 ## MALTAscope
 
-512x512 Malta sensors with 50mumx50mum pitch size.
-The following datasets are
-available:
-* 3GeV_electrons_50_50mum
+A simulated setup with 5 MALTA sensors; each with 512x512 pixels and
+36.4µmx36.4µm pitch. The following datasets are available:
+
+| Name | Beam | Particles/event | Comment |
+| ---- | ---- | --------------- | ------- |
+| 3GeV_electrons | 3GeV e- | 1 | |
