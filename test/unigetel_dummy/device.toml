@@ -1,4 +1,4 @@
-geometry = "ebeam012_nparticles01/geometry-initial.toml"
+geometry = "ebeam180_pionp_nparticles01_inc/geometry-initial.toml"
 pixel_masks = ["masks/telescope_empty.toml", "masks/dut_empty.toml"]
 
 [sensor_types.ibl_planar]

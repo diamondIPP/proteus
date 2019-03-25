@@ -26,7 +26,6 @@ make the data available run the following commands:
     git submodule init   # once per clone or if submodule config changes
     git submodule update
 
-
 Within a setup the device configuration, i.e. number and type of
 sensors, is kept fix. Datasets can differ in geometry and beam
 conditions. Each setup folder needs to have a `device.toml` file to
@@ -53,10 +52,10 @@ Depending on which scripts will be used, only a subset of the geometry
 files need to be available. The following commands will download the
 example data and run all parts of a typical analysis chain:
 
-    ./run_noisescan.sh <setup> <dataset> # uses `geometry.toml`
-    ./run_align_tel.sh <setup> <dataset> # uses `geometry-telescope_first_last.toml`
-    ./run_align_dut.sh <setup> <dataset> # uses `geometry-telescope.toml`
-    ./run_recon.sh <setup> <dataset> # uses `geometry.toml`
+    ./run_noisescan.sh <setup>/<dataset> # uses `geometry.toml`
+    ./run_align_tel.sh <setup>/<dataset> # uses `geometry-telescope_first_last.toml`
+    ./run_align_dut.sh <setup>/<dataset> # uses `geometry-telescope.toml`
+    ./run_recon.sh <setup>/<dataset> # uses `geometry.toml`
 
 To simplify tests, each script is independent from previous steps and
 can be run on its own. E.g. the dut alignment will start from an initial
@@ -68,14 +67,14 @@ Another set of commands runs the full analysis chain, i.e. starting from
 an unaligned geometry with each step depending on the output of the
 previous step. Either run each step separately
 
-    ./run_chain_noisescan.sh <setup> <dataset> # uses `geometry-initial.toml`
-    ./run_chain_align_tel.sh <setup> <dataset> # uses `geometry-initial.toml`
-    ./run_chain_align_dut.sh <setup> <dataset>
-    ./run_chain_recon.sh <setup> <dataset>
+    ./run_chain_noisescan.sh <setup>/<dataset> # uses `geometry-initial.toml`
+    ./run_chain_align_tel.sh <setup>/<dataset> # uses `geometry-initial.toml`
+    ./run_chain_align_dut.sh <setup>/<dataset>
+    ./run_chain_recon.sh <setup>/<dataset>
 
 or in one combined command
 
-    ./run_chain_all.sh <setup> <dataset> # uses `geometry-initial.toml`
+    ./run_chain_all.sh <setup>/<dataset> # uses `geometry-initial.toml`
 
 All scripts assume that the environment is setup such that the `pt-...`
 binaries can be called directly, e.g. by sourcing the `activate.sh`
@@ -98,7 +97,19 @@ available:
 
 | Name | Beam | Particles/event | Comment |
 | ---- | ---- | --------------- | ------- |
-| ebeam012_nparticles01         | 12 GeV pi+  | 1 | |
-| ebeam120_nparticles01_xygamma | 120 GeV pi+ | 1 | Only misalignment in x,y,gamma |
-| ebeam120_nparticles01         | 120 GeV pi+ | 1 | |
-| ebeam120_nparticles02         | 120 GeV pi+ | 2 | |
+| ebeam005_positron_nparticles01_inc | 5GeV e+ | 1 | Inclined telescope planes |
+| ebeam005_positron_nparticles01_upr | 5GeV e+ | 1 | Upright telescope planes |
+| ebeam120_pionp_nparticles01_inc | 120GeV π+ | 1 | Inclined telescope planes |
+| ebeam120_pionp_nparticles01_upr | 120GeV π+ | 1 | Upright telescope planes |
+| ebeam180_pionp_nparticles01_inc | 180GeV π+ | 1 | Inclined telescope planes |
+| ebeam180_pionp_nparticles01_inc_xygamma | 180GeV π+ | 1 | Inclined telescope planes, misalignment only in x,y,gamma |
+| ebeam180_pionp_nparticles01_upr | 180GeV π+ | 1 | Upright telescope planes |
+
+## MALTAscope
+
+A simulated setup with 5 MALTA sensors; each with 512x512 pixels and
+36.4µmx36.4µm pitch. The following datasets are available:
+
+| Name | Beam | Particles/event | Comment |
+| ---- | ---- | --------------- | ------- |
+| 3GeV_electrons | 3GeV e- | 1 | |

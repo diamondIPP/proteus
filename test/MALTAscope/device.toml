@@ -1,0 +1,33 @@
+geometry = "3GeV_electrons/geometry.toml"
+
+[sensor_types.MALTA]
+measurement = "pixel_binary"
+cols = 512
+rows = 512
+pitch_col = 0.0364
+pitch_row = 0.0364
+thickness = 0.300
+x_x0 = 0.0021772
+
+# sensors in the order as they appear in the data file
+# the index in this list corresponds to the sensor id in other configs
+
+[[sensors]]
+type = "MALTA"
+name = "MALTAplane0"
+
+[[sensors]]
+type = "MALTA"
+name = "MALTAplane1"
+
+[[sensors]]
+type = "MALTA"
+name = "MALTAplane2"
+
+[[sensors]]
+type = "MALTA"
+name = "MALTAplane3"
+
+[[sensors]]
+type = "MALTA"
+name = "MALTAplane4"
