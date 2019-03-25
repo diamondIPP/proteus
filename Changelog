@@ -25,6 +25,14 @@ Internal changes
 *   Add support for multiple device setups in the test directory.
 *   Store test data files in a separate repository embedded as a git
     submodule.
+*   Replace and extend the test datasets for the UNIGE telescope.
+
+    The new simulation datasets use the correct inclination direction
+    for rotated planes in the inclined geometries, additional beam
+    options, and corresponding upright geometries for all
+    configurations.
+
+*   Add a simulated test dataset for the MALTAscope.
 
 v1.4.0 (2019-03-07)
 ===================
