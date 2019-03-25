@@ -10,6 +10,30 @@ v1.5.0 (to be released)
 User-visible changes
 --------------------
 
+*   Add a GeneralBrokenLines-based track fitter.
+
+    The track fitter uses the GBL algorithm described in
+    ``C. Kleinwort, NIM A, 673 (2012), 107-110,
+    doi:10.1016/j.nima.2012.01.024`` to estimate optimal track
+    parameters on every plane. Both spatial uncertainties and effects
+    from multiple scattering are accounted for. Sensors without a
+    measurement, i.e. a device-under-test, are taken into account as
+    dead material. Time measurements are not used.
+
+    To use the fitter, set the following configuration for the
+    ``pt-recon`` tool
+
+        [recon]
+        ...
+        track_fitter = "gbl3d"
+        ...
+
+    or for the ``pt-track`` tool.
+
+    Internally, the fitter uses the `GeneralBrokenLines
+    <https://www.terascale.de/wiki/generalbrokenlines>` library. A
+    private copy is shipped in the repository.
+
 *   Add track fit probability to outputs.
 
     Adds ``tracks/probability`` histogram to ``...-hists.root`` files
