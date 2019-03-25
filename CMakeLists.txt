@@ -40,6 +40,7 @@ include_directories(external/tinytoml/include)
 if(PROTEUS_ENABLE_DOC)
   add_subdirectory(doc)
 endif()
+add_subdirectory(external/gbl)
 add_subdirectory(lib)
 add_subdirectory(exe)
 

@@ -88,6 +88,7 @@ Proteus has seen contributions from (in alphabetical order):
 *   Francesco Di Bello
 *   Mateusz Dyndal
 *   Moritz Kiehn
+*   Salman Maqbool
 *   Lingxin Meng
 *   Marco Rimoldi
 *   Branislav Ristic
@@ -130,14 +131,17 @@ terms of the [CC-BY-4.0][license-ccby4] license.  The licenses can be
 found in the `LICENSE` file. Contributions are expected to be submitted
 under the same license terms.
 
-Proteus includes a copy of the [tinytoml][tinytoml]
-library. [Tinytoml][tinytoml] is distributed under the
-[Simplified BSD License][license-bsd].
+Proteus includes a copy of the [tinytoml][tinytoml] which is distributed under
+the simplified BSD License.
+
+Proteus includes a copy of the [GeneralBrokenLines][gbl] library which is
+distributed under the LGPL version 2 license.
 
 
 [cmake]: http://www.cmake.org
 [eigen]: http://eigen.tuxfamily.org
 [eudaq]: http://eudaq.github.io
+[gbl]: https://www.terascale.de/wiki/generalbrokenlines
 [judith-sw]: https://github.com/gmcgoldr/judith
 [judith-paper2014]: http://dx.doi.org/10.1016/j.nima.2014.05.033
 [license-bsd]: https://spdx.org/licenses/BSD-2-Clause.html

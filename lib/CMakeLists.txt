@@ -34,6 +34,7 @@ set(proteus_SOURCES
     storage/sensorevent.cpp
     storage/track.cpp
     storage/trackstate.cpp
+    tracking/gblfitter.cpp
     tracking/propagation.cpp
     tracking/trackfinder.cpp
     tracking/setupfitter.cpp
@@ -64,4 +65,5 @@ endif()
 add_library(proteus STATIC ${proteus_SOURCES} ${proteus_HEADERS})
 target_compile_definitions(proteus PUBLIC ${proteus_DEFINITIONS})
 target_include_directories(proteus PUBLIC ${proteus_INCLUDES})
+target_link_libraries(proteus PRIVATE gbl)
 target_link_libraries(proteus PUBLIC ${proteus_LIBRARIES})

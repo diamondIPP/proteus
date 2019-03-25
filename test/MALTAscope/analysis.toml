@@ -3,6 +3,13 @@ tracking_ids = [0,1,2,3]
 num_points_min = 4
 search_sigma_max = 1000.0
 extrapolation_ids = [4]
+track_fitter = "gbl3d"
+
+[recon.straight3d]
+tracking_ids = [0,1,2,3]
+num_points_min = 4
+search_sigma_max = 1000.0
+extrapolation_ids = [4]
 track_fitter = "straight3d"
 
 # coarse alignment using cluster correlation
