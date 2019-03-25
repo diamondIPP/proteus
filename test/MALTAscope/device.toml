@@ -1,4 +1,4 @@
-geometry = "3GeV_electrons_50_50mum/geometry.toml"
+geometry = "3GeV_electrons/geometry.toml"
 
 [sensor_types.MALTA]
 measurement = "pixel_binary"
