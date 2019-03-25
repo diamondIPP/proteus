@@ -1,3 +1,6 @@
+DATADIR=${DATADIR:-data}
+OUTPUTDIR=${OUTPUTDIR:-output}
+
 path=$1; shift
 # assumes data path is <setup>/<dataset>
 setup=$(echo ${path} | cut -f1 -d'/' -)
@@ -8,7 +11,7 @@ dev=${setup}/device.toml
 flags="-c ${cfg} -d ${dev} $@"
 
 datasetdir=${path}
-data=data/${path}.root
-output_prefix=output/${path}/
+data=${DATADIR}/${path}.root
+output_prefix=${OUTPUTDIR}/${path}/
 
 mkdir -p ${output_prefix}
