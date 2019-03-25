@@ -4,9 +4,9 @@ geometry = "3GeV_electrons_50_50mum/geometry.toml"
 measurement = "pixel_binary"
 cols = 512
 rows = 512
-pitch_col = 36.4
-pitch_row = 36.4
-thickness = 300.0
+pitch_col = 0.0364
+pitch_row = 0.0364
+thickness = 0.300
 x_x0 = 0.0021772
 
 # sensors in the order as they appear in the data file
