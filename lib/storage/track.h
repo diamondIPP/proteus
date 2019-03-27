@@ -56,7 +56,13 @@ public:
    * the new one.
    */
   void addCluster(Index sensor, Index cluster);
+  /** The size of the track, i.e. the number of associated clusters. */
   size_t size() const { return m_clusters.size(); }
+  /** Check if the track contains a cluster on the given sensor. */
+  bool hasClusterOn(Index sensor) const;
+  /** Get the cluster on the requested sensor. */
+  Index getClusterOn(Index sensor) const;
+  /** Get the list of all associated clusters. */
   const std::vector<TrackCluster>& clusters() const { return m_clusters; }
 
 private:
