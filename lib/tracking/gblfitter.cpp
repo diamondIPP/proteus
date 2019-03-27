@@ -138,10 +138,10 @@ void Tracking::GblFitter::execute(Storage::Event& event) const
       }
 
       // 4b. If available, add a measurement
-
-      auto ic = track.clusters().find(sensorId);
-      if (ic != track.clusters().end()) {
-        const Storage::Cluster& cluster = ic->second;
+      if (track.hasClusterOn(sensorId)) {
+        const Storage::Cluster& cluster =
+            event.getSensorEvent(sensorId).getCluster(
+                track.getClusterOn(sensorId));
 
         // Get the measurement (residuals)
         Vector2 meas(cluster.u() - localPos[kU], cluster.v() - localPos[kV]);
