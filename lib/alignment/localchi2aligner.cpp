@@ -24,14 +24,15 @@ PT_SETUP_LOCAL_LOGGER(LocalChi2Aligner)
 // This Jacobian is equivalent to eq. 17 from V. Karimaeki et al., 2003,
 // arXiv:physics/0306034 w/ some sign modifications to adjust for
 // a different alignment parameter convention (see Geometry::Plane).
-static Matrix26 jacobianOffsetAlignment(const Storage::TrackState& state)
+static Matrix<Scalar, 2, 6>
+jacobianOffsetAlignment(const Storage::TrackState& state)
 {
   auto u = state.loc0();
   auto v = state.loc1();
   auto slopeU = state.slopeLoc0();
   auto slopeV = state.slopeLoc1();
 
-  Matrix26 jac;
+  Matrix<Scalar, 2, 6> jac;
   jac(0, 0) = -1;          // d u / d du
   jac(0, 1) = 0;           // d u / d dv
   jac(0, 2) = slopeU;      // d u / d dw
