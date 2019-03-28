@@ -67,11 +67,18 @@ enum CoordinateIndex {
   kS = kT,
 };
 enum TrackParameterIndex {
-  kLoc0 = 0,
-  kLoc1 = 1,
-  kTime = 2,
-  kSlopeLoc0 = 3,
-  kSlopeLoc1 = 4,
+  // start of the 3-element on-plane spatial and temporal parameters block
+  kOnPlane = 0,
+  // on-plane single element access
+  kLoc0 = kOnPlane + 0,
+  kLoc1 = kOnPlane + 1,
+  kTime = kOnPlane + 2,
+  // start of the 2-element spatial slope parameters block
+  kSlope = 3,
+  // single slope access
+  kSlopeLoc0 = kSlope + 0,
+  kSlopeLoc1 = kSlope + 1,
+  // inverse velocity
   kSlopeTime = 5,
 };
 
