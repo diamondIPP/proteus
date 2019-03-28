@@ -51,19 +51,23 @@ public:
 
 private:
   struct Step {
-    Index isensor = kInvalidIndex;
+    // Copy of the local-global transformation to avoid lookup
+    Mechanics::Plane plane;
+    // Propagation uncertainty, e.g. from scattering
+    SymMatrix6 processNoise = SymMatrix6::Zero();
+    // Corresponding sensor
+    Index sensorId = kInvalidIndex;
     bool useForTracking = false;
     bool useForSeeding = false;
-    size_t remainingTrackingSteps;
-    Mechanics::Plane plane;
-    SymMatrix6 processNoise = SymMatrix6::Zero();
-    Vector2 beamSlope = Vector2::Zero();
-    SymMatrix2 beamSlopeCovariance = SymMatrix2::Zero();
+    // Mininum size of viable candidates after this step
+    size_t candidateSizeMin = 0;
+    // Initial direction for seeds generated during this step
+    Vector2 seedSlope = Vector2::Zero();
+    SymMatrix2 seedSlopeCovariance = SymMatrix2::Zero();
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   };
   std::vector<Step> m_steps;
-  size_t m_sizeMin;
   double m_d2Max;
   double m_reducedChi2Max;
 };
