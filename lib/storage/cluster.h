@@ -60,6 +60,10 @@ public:
   Scalar time() const { return m_pos[kS]; }
   /** Local time variance. */
   Scalar timeVar() const { return m_posCov(kS, kS); }
+  /** On-plane position and time in local coordinates. */
+  Vector3 onPlane() const;
+  /** On-plane position and time covariance in local coordinates. */
+  SymMatrix3 onPlaneCov() const;
   /** Full position in local coordinates. */
   const Vector4& position() const { return m_pos; }
   /** Full position covariance in local coordinates. */
