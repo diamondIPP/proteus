@@ -88,6 +88,8 @@ public:
   Scalar time() const { return m_params[kTime]; }
   /** Track time variance. */
   Scalar timeVar() const { return m_cov(kTime, kTime); }
+  auto onPlane() const { return m_params.segment<3>(kOnPlane); }
+  auto onPlaneCov() const { return m_cov.block<3, 3>(kOnPlane, kOnPlane); }
   /** Full track position. */
   Vector4 position() const;
   /** Full track position covariance. */
