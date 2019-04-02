@@ -42,10 +42,10 @@ public:
    */
   TrackFinder(const Mechanics::Device& device,
               std::vector<Index> trackingIds,
-              double searchSpatialSigmaMax = -1,
-              double searchTemporalSigmaMax = -1,
-              size_t sizeMin = 0,
-              double redChi2Max = -1);
+              double searchSpatialSigmaMax,
+              double searchTemporalSigmaMax,
+              size_t sizeMin,
+              double redChi2Max);
 
   std::string name() const;
   /** Find tracks and add them to the event. */
