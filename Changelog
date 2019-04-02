@@ -57,6 +57,8 @@ Internal changes
     configurations.
 
 *   Add a simulated test dataset for the MALTAscope.
+*   The Mahalanobis distance calculation uses the square root free
+    :math:`L\,D\L^T` Cholesky decomposition for better numerical stability.
 
 v1.4.0 (2019-03-07)
 ===================

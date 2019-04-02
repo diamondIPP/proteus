@@ -112,6 +112,9 @@ inline auto extractStdev(const Eigen::EigenBase<Covariance>& cov)
 
 /** Squared Mahalanobis distance / norm of a vector.
  *
+ * \param cov Covariance matrix; only the lower-left triangular values are used.
+ * \param x   Value vector;
+ *
  * The vector elements are weighted with the inverse of a covariance matrix.
  * This is a multi-dimensional generalization of the pull / significance
  * measure.
@@ -121,7 +124,7 @@ inline auto mahalanobisSquared(const Eigen::MatrixBase<T>& cov,
                                const Eigen::MatrixBase<U>& x)
 {
   // compute `x^T C^-1 x` via `x^T y` where `y` is the solution to `C y = x`
-  return x.dot(cov.template selfadjointView<Eigen::Lower>().llt().solve(x));
+  return x.dot(cov.template selfadjointView<Eigen::Lower>().ldlt().solve(x));
 }
 
 /** Mahalanobis distance / norm of a vector. */
