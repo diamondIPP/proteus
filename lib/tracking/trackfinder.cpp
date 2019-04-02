@@ -23,11 +23,17 @@ PT_SETUP_LOCAL_LOGGER(TrackFinder)
 
 Tracking::TrackFinder::TrackFinder(const Mechanics::Device& device,
                                    std::vector<Index> trackingIds,
+                                   double searchSpatialSigmaMax,
+                                   double searchTemporalSigmaMax,
                                    size_t sizeMin,
-                                   double searchSigmaMax,
                                    double redChi2Max)
     // 2-d Mahalanobis distance peaks at 2 and not at 1
-    : m_d2Max((0 < searchSigmaMax) ? (2 * searchSigmaMax * searchSigmaMax) : -1)
+    : m_d2LocMax((0 < searchSpatialSigmaMax)
+                     ? (2 * searchSpatialSigmaMax * searchSpatialSigmaMax)
+                     : -1)
+    , m_d2TimeMax((0 < searchTemporalSigmaMax)
+                      ? (searchTemporalSigmaMax * searchTemporalSigmaMax)
+                      : -1)
     , m_reducedChi2Max(redChi2Max)
 {
   if (trackingIds.size() < 2) {
@@ -70,8 +76,11 @@ Tracking::TrackFinder::TrackFinder(const Mechanics::Device& device,
 
     // geometry and propagation uncertainty is always needed
     step.plane = device.geometry().getPlane(*first);
-    // TODO add multiple scattering
+    // at the moment only multiple scattering is considered
+    // TODO what else? beam energy spread? alignment uncertainty?
     step.processNoise = SymMatrix6::Zero();
+    step.processNoise.block<2, 2>(kSlope, kSlope) =
+        device.getSensor(*first).scatteringSlopeCovariance();
     step.sensorId = *first;
 
     // check if the sensor is a tracking sensor or just dead material
@@ -91,6 +100,8 @@ Tracking::TrackFinder::TrackFinder(const Mechanics::Device& device,
         remainingSeedSensors -= 1;
       }
     }
+
+    // how large has a candidate be at this point to be viable?
     step.candidateSizeMin = (remainingTrackingSensors < sizeMin)
                                 ? (sizeMin - remainingTrackingSensors)
                                 : 0;
@@ -111,7 +122,6 @@ Tracking::TrackFinder::TrackFinder(const Mechanics::Device& device,
       VERBOSE(sensor.name(), " id=", sensor.id(), " is dead material");
     }
     DEBUG("  minimum candidate size: ", step.candidateSizeMin);
-    DEBUG("  process noise:\n", format(step.processNoise));
   }
 }
 
@@ -150,19 +160,13 @@ static void propagateToGlobal(const Plane& local,
 // Ambiguities are not resolved but result in additional track candidates.
 // Track states are updated using the Kalman filter method based on the
 // additional information from the added cluster.
-static void searchSensor(Scalar d2Max,
+static void searchSensor(Scalar d2LocMax,
+                         Scalar d2TimeMax,
                          Index sensorId,
                          const SensorEvent& sensorEvent,
                          std::vector<Track>& candidates,
-                         std::vector<bool>& clusterMask)
+                         std::vector<bool>& usedClusters)
 {
-  // Projection from track state into local measurement plane
-  // TODO can we just use a projection matrix?
-  // TODO extend to time
-  Matrix26 H = Matrix26::Zero();
-  H(kU, kLoc0) = 1;
-  H(kV, kLoc1) = 1;
-
   // loop only over the initial candidates and not the added ones
   //
   // WARNING
@@ -173,64 +177,82 @@ static void searchSensor(Scalar d2Max,
   // trying to figure out why a call to std::map segfaults).
   size_t numTracks = candidates.size();
   for (size_t itrack = 0; itrack < numTracks; ++itrack) {
+    // keep a copy; candidate state will be modified, but the original
+    // state is needed to check for further compatible clusters.
     TrackState state = candidates[itrack].globalState();
     Scalar chi2 = candidates[itrack].chi2();
     int numMatchedClusters = 0;
 
     for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
       auto& cluster = sensorEvent.getCluster(icluster);
+
+      // in principle, there could already be tracks in the event,
+      // e.g. running multiple track finders with different settings, and we
+      // should only consider free clusters. a bit academic, i know.
       if (cluster.isInTrack()) {
-        clusterMask[icluster] = true;
+        usedClusters[icluster] = true;
         continue;
       }
 
       // predicted residuals and covariance
-      Vector2 r = cluster.uv() - H * state.params();
-      Matrix2 R = cluster.uvCov() + transformCovariance(H, state.cov());
+      Vector3 r = cluster.onPlane() - state.onPlane();
+      SymMatrix3 R = cluster.onPlaneCov() + state.onPlaneCov();
 
-      // check if the cluster is compatible
-      if ((0 <= d2Max) and (d2Max < mahalanobisSquared(R, r))) {
+      // check if the cluster is compatible in space
+      Scalar d2Loc =
+          mahalanobisSquared(R.block<2, 2>(kLoc0 - kOnPlane, kLoc0 - kOnPlane),
+                             r.segment<2>(kLoc0));
+      if ((0 <= d2LocMax) and (d2LocMax < d2Loc)) {
+        continue;
+      }
+      // check if the cluster is compatible in time
+      Scalar d2Time =
+          mahalanobisSquared(R.block<1, 1>(kTime - kOnPlane, kTime - kOnPlane),
+                             r.segment<1>(kTime - kOnPlane));
+      if ((0 <= d2TimeMax) and (d2TimeMax < d2Time)) {
         continue;
       }
 
-      // update track state using this cluster
-      // Kalman gain matrix
-      Matrix<Scalar, 6, 2> K = state.cov() * H.transpose() * R.inverse();
+      // optimal Kalman gain matrix
+      Matrix<Scalar, 6, 3> K =
+          state.cov().block<6, 3>(0, kOnPlane) * R.inverse();
       // filtered local state and covariance
-      // use numerically superior (but slower formula) for covariance update
-      Vector6 xf = state.params() + K * r;
-      SymMatrix6 Cf =
-          transformCovariance(SymMatrix6::Identity() - K * H, state.cov()) +
-          transformCovariance(K, cluster.uvCov());
+      TrackState filtered(state.params() + K * r,
+                          state.cov() -
+                              K * state.cov().block<3, 6>(kOnPlane, 0));
       // filtered residuals and covariance
-      r = cluster.uv() - H * xf;
-      R = cluster.uvCov() - transformCovariance(H, Cf);
-      // resulting change in chi²
+      r = cluster.onPlane() - filtered.onPlane();
+      R = cluster.onPlaneCov() - filtered.onPlaneCov();
+      // chi^2 update
       Scalar chi2Update = mahalanobisSquared(R, r);
 
       if (numMatchedClusters == 0) {
         // first matched cluster; update existing track
         auto& track = candidates[itrack];
-        track.setGlobalState(xf, Cf);
-        track.setGoodnessOfFit(chi2 + chi2Update, 2 * track.size() - 6);
         track.addCluster(sensorId, icluster);
+        track.setGlobalState(std::move(filtered));
+        track.setGoodnessOfFit(chi2 + chi2Update, 3 * track.size() - 6);
       } else {
         // additional matched cluster; duplicate track w/ different content
         Track track = candidates[itrack];
-        track.setGlobalState(xf, Cf);
-        track.setGoodnessOfFit(chi2 + chi2Update, 2 * track.size() - 6);
-        // this replaces a previous cluster for the same sensor
+        // this replaces any previously added cluster for the same sensor
         track.addCluster(sensorId, icluster);
+        track.setGlobalState(std::move(filtered));
+        track.setGoodnessOfFit(chi2 + chi2Update, 3 * track.size() - 6);
         candidates.push_back(std::move(track));
       }
       numMatchedClusters += 1;
 
+      DEBUG("sensor ", sensorId, " added cluster ", icluster, " to candidate ",
+            itrack, " w/ d2loc=", d2Loc, " d2time=", d2Time,
+            " dchi2=", chi2Update);
+
       // mark cluster as in-use for the seeding.
-      clusterMask[icluster] = true;
+      usedClusters[icluster] = true;
     }
   }
 
-  auto numClusters = std::count(clusterMask.begin(), clusterMask.end(), true);
+  auto numClusters = std::count(usedClusters.begin(), usedClusters.end(), true);
   auto numBifurcations = (candidates.size() - numTracks);
   if (0 < numBifurcations) {
     DEBUG("sensor ", sensorId, " added ", numClusters, " clusters to ",
@@ -241,20 +263,30 @@ static void searchSensor(Scalar d2Max,
   }
 }
 
+// make seeds using the beam information for the initial direction
 static void makeSeedsFromUnusedClusters(Index sensorId,
                                         const SensorEvent& sensorEvent,
-                                        const std::vector<bool>& clusterMask,
                                         const Vector2& seedSlope,
                                         const SymMatrix2& seedSlopeCovariance,
-                                        std::vector<Track>& candidates)
+                                        std::vector<Track>& candidates,
+                                        std::vector<bool>& usedClusters)
 {
   size_t numSeeds = 0;
 
   for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
-    if (clusterMask[icluster]) {
+    const auto& cluster = sensorEvent.getCluster(icluster);
+
+    if (usedClusters[icluster]) {
       continue;
     }
-    const auto& cluster = sensorEvent.getCluster(icluster);
+    // in principle, there could already be tracks in the event,
+    // e.g. running multiple track finders with different settings, and we
+    // should only consider free clusters. a bit academic, i know.
+    if (cluster.isInTrack()) {
+      usedClusters[icluster] = true;
+      continue;
+    }
+
     // abuse global state to store the state on the current plane
     TrackState seedState(cluster.position(), cluster.positionCov(), seedSlope,
                          seedSlopeCovariance);
@@ -264,7 +296,9 @@ static void makeSeedsFromUnusedClusters(Index sensorId,
     numSeeds += 1;
   }
 
-  DEBUG("sensor ", sensorId, " added ", numSeeds, " seeds");
+  if (0 < numSeeds) {
+    DEBUG("sensor ", sensorId, " added ", numSeeds, " seeds");
+  }
 }
 
 // remove track candidates that are too short
@@ -348,13 +382,14 @@ static void addTracksToEvent(const std::vector<Track>& candidates, Event& event)
 void Tracking::TrackFinder::execute(Event& event) const
 {
   std::vector<Track> candidates;
-  std::vector<bool> clusterMask;
+  std::vector<bool> usedClusters;
 
   for (size_t istep = 0; istep < m_steps.size(); ++istep) {
     const auto& curr = m_steps[istep];
     auto& sensorEvent = event.getSensorEvent(curr.sensorId);
+
     // initialize usage mask, all clusters are assumed unused at the beginning
-    clusterMask.assign(sensorEvent.numClusters(), false);
+    usedClusters.assign(sensorEvent.numClusters(), false);
 
     // propagate states onto the current plane w/ material effects
     if (0 < istep) {
@@ -366,8 +401,8 @@ void Tracking::TrackFinder::execute(Event& event) const
     // by design, there are no candidates on the first one plane.
     if ((0 < istep) and (curr.useForTracking)) {
       // updates/extends candidates and sets clustersUsed flags
-      searchSensor(m_d2Max, curr.sensorId, sensorEvent, candidates,
-                   clusterMask);
+      searchSensor(m_d2LocMax, m_d2TimeMax, curr.sensorId, sensorEvent,
+                   candidates, usedClusters);
       // ignore candidates that can never fullfill the final size cut
       removeShortCandidates(curr.candidateSizeMin, candidates);
     }
@@ -376,9 +411,9 @@ void Tracking::TrackFinder::execute(Event& event) const
     // this has to happen last so clusters are picked up first by existing
     // candidates generated on earlier seeding planes.
     if (curr.useForSeeding) {
-      makeSeedsFromUnusedClusters(curr.sensorId, sensorEvent, clusterMask,
-                                  curr.seedSlope, curr.seedSlopeCovariance,
-                                  candidates);
+      makeSeedsFromUnusedClusters(curr.sensorId, sensorEvent, curr.seedSlope,
+                                  curr.seedSlopeCovariance, candidates,
+                                  usedClusters);
     }
   }
 

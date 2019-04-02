@@ -34,15 +34,17 @@ namespace Tracking {
 class TrackFinder : public Loop::Processor {
 public:
   /**
-   * \param trackingIds     Ids of sensors that should be used for tracking
-   * \param sizeMin         Selection cut on number of clusters
-   * \param searchSigmaMax  Selection cut on clusters, negative to disable
-   * \param redChi2Max      Selection cut on chi2/d.o.f, negative to disable
+   * \param trackingIds            Ids of tracking sensors
+   * \param searchSpatialSigmaMax  Spatial search cut, negative to disable
+   * \param searchTemporalSigmaMax Temporal search cut, negative to disable
+   * \param sizeMin                Selection cut on number of clusters
+   * \param redChi2Max             Cut on track chi2/d.o.f, negative to disable
    */
   TrackFinder(const Mechanics::Device& device,
               std::vector<Index> trackingIds,
+              double searchSpatialSigmaMax = -1,
+              double searchTemporalSigmaMax = -1,
               size_t sizeMin = 0,
-              double searchSigmaMax = -1,
               double redChi2Max = -1);
 
   std::string name() const;
@@ -68,7 +70,8 @@ private:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   };
   std::vector<Step> m_steps;
-  double m_d2Max;
+  double m_d2LocMax;
+  double m_d2TimeMax;
   double m_reducedChi2Max;
 };
 
