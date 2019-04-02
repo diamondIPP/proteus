@@ -28,7 +28,7 @@ User-visible changes
         track_fitter = "gbl3d"
         ...
 
-    or for the ``pt-track`` tool.
+    or in the ``track`` section for the ``pt-track`` tool.
 
     Internally, the fitter uses the `GeneralBrokenLines
     <https://www.terascale.de/wiki/generalbrokenlines>` library. A
