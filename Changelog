@@ -57,6 +57,12 @@ Internal changes
 
     The new clusterizer implementation requires no additional memory but can
     change the order of hits within a ``SensorEvent``.
+*   The ``Event``, ``SensorEvent``, and ``Track`` storage classes use flat
+    storage based on ``std::vector`` internally for all stored elements to
+    reduce allocations and increase memory locality.
+*   ``Event``s stores tracks by value instead of managing them via a
+    ``std::unique_ptr``.
+*   ``Track``s store the constituent clusters by index instead of by pointer.
 *   The Mahalanobis distance calculation uses the square root free
     :math:`L\,D\L^T` Cholesky decomposition for better numerical stability.
 
