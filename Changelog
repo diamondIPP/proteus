@@ -34,6 +34,36 @@ User-visible changes
     <https://www.terascale.de/wiki/generalbrokenlines>` library. A
     private copy is shipped in the repository.
 
+*   Support spatial and temporal search cuts in the track finder.
+
+    During the track search, candidates are build from all compatible clusters.
+    Compatibility is defined by a maximum distance from the extrapolated
+    position in space and time. These can be configured by setting e.g.
+
+        ...
+        search_spatial_sigma_max = 5.0   # 5 sigma cut on spatial distance
+        search_temporal_sigma_max = 4.0  # 4 sigma cut on temporal distance
+        ...
+
+    in the relevant ``recon``, ``track``, or ``align`` tool configuration
+    section. Both settings are significance cuts measured in number of standard
+    deviations and scale automatically with the extrapolation and measurement
+    precision. Setting either one to a negative value disables the cut, i.e.
+    all clusters will be considered compatible. The ``search_spatial_sigma_max``
+    setting replaces the previous ``search_sigma_max`` setting. The old
+    setting will be removed in a future version.
+
+*   Implement the track finder as a single-pass combinatorial Kalman filter.
+
+    Initial track seeds are build from cluster positions and the beam
+    information on selected sensors. During the track search, the information
+    from additional clusters are used to continuously refine the candidate
+    parameter estimates and reduce their uncertainty, thereby reducing
+    the possible combinations that need to be considered. The extrapolation
+    takes both parameter and interaction uncertainties, e.g. from multiple
+    scattering, into account. In the case of multiple compatible clusters,
+    additional track candidates with different parameter estimates are created.
+
 *   Add track fit probability to outputs.
 
     Adds ``tracks/probability`` histogram to ``...-hists.root`` files
