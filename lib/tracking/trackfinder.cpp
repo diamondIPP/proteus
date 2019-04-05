@@ -234,12 +234,12 @@ static void searchSensor(Scalar d2LocMax,
         track.setGoodnessOfFit(chi2 + chi2Update, 3 * track.size() - 6);
       } else {
         // additional matched cluster; duplicate track w/ different content
-        Track track = candidates[itrack];
+        candidates.emplace_back(candidates[itrack]);
+        auto& track = candidates.back();
         // this replaces any previously added cluster for the same sensor
         track.addCluster(sensorId, icluster);
         track.setGlobalState(std::move(filtered));
         track.setGoodnessOfFit(chi2 + chi2Update, 3 * track.size() - 6);
-        candidates.push_back(std::move(track));
       }
       numMatchedClusters += 1;
 
@@ -349,10 +349,30 @@ static void removeBadCandidates(Scalar reducedChi2Max,
 // sort longest tracks w/ smallest chi2 first
 static void sortCandidates(std::vector<Track>& candidates)
 {
-  std::sort(candidates.begin(), candidates.end(),
-            [](const auto& a, const auto& b) {
-              return (a.size() > b.size()) or (a.chi2() < b.chi2());
-            });
+  // WARNING
+  // compare has to fullfil (from C++ standard)
+  //   1. compare(a, a) == false
+  //   2. compare(a, b) == true -> compare(b, a) == false
+  //   3. compare(a, b) == true && compare(b, c) == true -> compare(a, c) ==
+  //   true
+  // if it does not, std::sort will corrupt the heap.
+  // NOTE to future self:
+  // do not try to be smart or optimize this. you got burnt once already.
+  auto compare = [](const Track& a, const Track& b) {
+    // first sort by length, longest first
+    if (a.size() < b.size())
+      return false;
+    if (b.size() < a.size())
+      return true;
+    // second sort by chi2, smallest first
+    if (a.chi2() < b.chi2())
+      return true;
+    if (b.chi2() < a.chi2())
+      return false;
+    // equivalent objects
+    return false;
+  };
+  std::sort(candidates.begin(), candidates.end(), compare);
 }
 
 // add all tracks w/ exclusive cluster-to-track association to the event
