@@ -21,38 +21,33 @@ check-format:
     - cmake ..
     - cmake --build . -- check-format
 
+# plain debug build
 build-debug:
   stage: build
   tags:
     - cvmfs
-  variables:
-    CMAKE_ARGS: -GNinja -DCMAKE_BUILD_TYPE=DEBUG -DCMAKE_INSTALL_PREFIX=${CI_PROJECT_DIR}/install
   script:
-    - mkdir build_external && cd build_external
-    - cmake ${CMAKE_ARGS} ../ci/external
-    # external tools are installed already during build step
-    - cmake --build .
-    - mkdir ../build && cd ../build
-    - cmake ${CMAKE_ARGS} -DPROTEUS_USE_EUDAQ=on ..
+    - mkdir build
+    - cd build
+    - cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=../install ..
     - cmake --build . -- install
   artifacts:
     paths:
       - install
 
+# plain release build
 build-release:
   stage: build
   tags:
     - cvmfs
-  variables:
-    CMAKE_ARGS: -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${CI_PROJECT_DIR}/install
   script:
-    - mkdir build-external && cd build-external
-    - cmake ${CMAKE_ARGS} ../ci/external
-    # external tools are installed already during build step
-    - cmake --build .
-    - mkdir ../build && cd ../build
-    - cmake ${CMAKE_ARGS} -DPROTEUS_USE_EUDAQ=on ..
-    - cmake --build .
+    - mkdir build
+    - cd build
+    - cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../install ..
+    - cmake --build . -- install
+  artifacts:
+    paths:
+      - install
 
 doc:
   allow_failure: true
