@@ -35,6 +35,31 @@ build-debug:
     paths:
       - install
 
+# debug builds w/ eudaq
+.build-debug-eudaq: &template-build-debug-eudaq
+  stage: build
+  tags:
+    - cvmfs
+  script:
+    - mkdir build build-eudaq
+    - cd build-eudaq
+    - cmake -GNinja -DCMAKE_INSTALL_PREFIX=../install ${EUDAQ_SOURCE}
+    - cmake --build . # installs automatically
+    - cd ../build
+    - cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=../install -DPROTEUS_USE_EUDAQ=on ..
+    - cmake --build . -- install
+  artifacts:
+    paths:
+      - install
+build-debug-eudaq1:
+  <<: *template-build-debug-eudaq
+  variables:
+    EUDAQ_SOURCE: ../external/eudaq1
+build-debug-eudaq2:
+  <<: *template-build-debug-eudaq
+  variables:
+    EUDAQ_SOURCE: ../external/eudaq2
+
 # plain release build
 build-release:
   stage: build
