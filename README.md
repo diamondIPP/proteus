@@ -15,7 +15,7 @@ and [ROOT][root] for its core functionality. Optional components might require
 additional software. A full list of dependencies and their minimum version
 required is listed below.
 
-*   A C++14-compatible compiler, e.g. gcc 5 or clang 3.4
+*   A C++14-compatible compiler, e.g. gcc 6.2 or clang 3.4
 *   [CMake][cmake] 2.8.12
 *   [Eigen][eigen] 3.2.9
 *   [ROOT][root] 6.08
@@ -25,9 +25,10 @@ required is listed below.
 *   Breathe (optional, for the documentation generation)
 
 On CERN lxplus machines you can setup a LCG release to provide a recent
-compiler and compatible depedencies via the following command
+compiler and compatible depedencies by sourcing the following script
+from the repository root
 
-    source /cvmfs/sft.cern.ch/lcg/views/LCG_88/x86_64-slc6-gcc7-opt/setup.sh
+    source ci/lcg_setup.sh
 
 Building
 --------
