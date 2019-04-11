@@ -1,5 +1,3 @@
-image: gitlab-registry.cern.ch/ci-tools/ci-worker:slc6
-
 stages:
   - build
   - test
@@ -9,8 +7,7 @@ variables:
 
 # default build environment w/ minimal version requirements
 before_script:
-  - source ci/lcg_view.sh
-  - source ${lcg_view}/setup.sh
+  - source ci/lcg_setup.sh
 
 check-format:
   # clang-format on ci yields different output from local installation
@@ -24,14 +21,12 @@ check-format:
     - cmake ..
     - cmake --build . -- check-format
 
-build-slc6-dbg:
+build-debug:
   stage: build
   tags:
     - cvmfs
   variables:
-    # Build type=Debug: activates compilation of asserts and
-    # includes debug symbols (See issue #43)
-    CMAKE_ARGS: -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${CI_PROJECT_DIR}/install
+    CMAKE_ARGS: -GNinja -DCMAKE_BUILD_TYPE=DEBUG -DCMAKE_INSTALL_PREFIX=${CI_PROJECT_DIR}/install
   script:
     - mkdir build_external && cd build_external
     - cmake ${CMAKE_ARGS} ../ci/external
@@ -44,12 +39,12 @@ build-slc6-dbg:
     paths:
       - install
 
-build-slc6-opt:
+build-release:
   stage: build
   tags:
     - cvmfs
   variables:
-    CMAKE_ARGS: -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${CI_PROJECT_DIR}/install-slc6-opt
+    CMAKE_ARGS: -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${CI_PROJECT_DIR}/install
   script:
     - mkdir build-external && cd build-external
     - cmake ${CMAKE_ARGS} ../ci/external
@@ -59,29 +54,8 @@ build-slc6-opt:
     - cmake ${CMAKE_ARGS} -DPROTEUS_USE_EUDAQ=on ..
     - cmake --build .
 
-build-cc7-dbg:
-  image: gitlab-registry.cern.ch/ci-tools/ci-worker:cc7
-  stage: build
-  tags:
-    - cvmfs
-  script:
-    - mkdir build && cd build
-    - cmake -GNinja -DCMAKE_BUILD_TYPE=Debug ..
-    - cmake --build .
-
-build-cc7-opt:
-  image: gitlab-registry.cern.ch/ci-tools/ci-worker:cc7
-  stage: build
-  tags:
-    - cvmfs
-  script:
-    - mkdir build && cd build
-    - cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
-    - cmake --build .
-
 doc:
   allow_failure: true
-  image: gitlab-registry.cern.ch/unige-fei4tel/proteus:cc7
   stage: build
   tags:
     - cvmfs
@@ -97,6 +71,8 @@ test-configs:
   stage: test
   tags:
     - cvmfs
+  dependencies:
+    - build-debug
   script:
     - source install/activate.sh
     - cd test
@@ -106,6 +82,8 @@ test-combine:
   stage: test
   tags:
     - cvmfs
+  dependencies:
+    - build-debug
   script:
     - source install/activate.sh
     - cd test
@@ -117,6 +95,8 @@ test-combine:
   stage: test
   tags:
     - cvmfs
+  dependencies:
+    - build-debug
   script:
     - source install/activate.sh
     - cd test
