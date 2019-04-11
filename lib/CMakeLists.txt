@@ -46,24 +46,31 @@ set(proteus_SOURCES
     utils/logger.cpp
     utils/root.cpp)
 file(GLOB_RECURSE proteus_HEADERS LIST_DIRECTORIES false *.h)
-set(proteus_DEFINITIONS)
-set(proteus_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR} ${ROOT_INCLUDE_DIRS} ${EIGEN_INCLUDE_DIRS})
-set(proteus_LIBRARIES ${ROOT_LIBRARIES})
 
+# optional components
+set(proteus_EXTRA_DEFINITIONS)
+set(proteus_EXTRA_LIBRARIES)
 if(PROTEUS_USE_EUDAQ)
   if(EUDAQ_VERSION VERSION_LESS "2")
-    list(APPEND proteus_DEFINITIONS -DPT_USE_EUDAQ1)
-    list(APPEND proteus_LIBRARIES ${EUDAQ_LIBRARIES})
     list(APPEND proteus_SOURCES io/eudaq1.cpp)
+    list(APPEND proteus_EXTRA_DEFINITIONS -DPT_USE_EUDAQ1)
+    list(APPEND proteus_EXTRA_LIBRARIES ${EUDAQ_LIBRARIES})
   else()
-    list(APPEND proteus_DEFINITIONS -DPT_USE_EUDAQ2)
-    list(APPEND proteus_LIBRARIES ${EUDAQ_LIBRARIES})
     list(APPEND proteus_SOURCES io/eudaq2.cpp)
+    list(APPEND proteus_EXTRA_DEFINITIONS -DPT_USE_EUDAQ2)
+    list(APPEND proteus_EXTRA_LIBRARIES ${EUDAQ_LIBRARIES})
   endif()
 endif()
 
 add_library(proteus STATIC ${proteus_SOURCES} ${proteus_HEADERS})
-target_compile_definitions(proteus PUBLIC ${proteus_DEFINITIONS})
-target_include_directories(proteus PUBLIC ${proteus_INCLUDES})
-target_link_libraries(proteus PRIVATE gbl)
-target_link_libraries(proteus PUBLIC ${proteus_LIBRARIES})
+target_compile_definitions(proteus PRIVATE ${proteus_PRIVATE_DEFINITIONS})
+# Eigen as SYSTEM include to suppress warnings
+target_include_directories(proteus SYSTEM PUBLIC ${EIGEN_INCLUDE_DIRS})
+target_include_directories(
+  proteus
+  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${ROOT_INCLUDE_DIRS}
+  PRIVATE ${proteus_EXTRA_INCLUDES})
+target_link_libraries(
+  proteus
+  PUBLIC ${ROOT_LIBRARIES}
+  PRIVATE gbl ${proteus_PRIVATE_LIBRARIES})
