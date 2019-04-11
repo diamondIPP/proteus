@@ -63,14 +63,16 @@ if(PROTEUS_USE_EUDAQ)
 endif()
 
 add_library(proteus STATIC ${proteus_SOURCES} ${proteus_HEADERS})
-target_compile_definitions(proteus PRIVATE ${proteus_PRIVATE_DEFINITIONS})
+target_compile_definitions(
+  proteus
+  PRIVATE ${proteus_PRIVATE_DEFINITIONS})
 # Eigen as SYSTEM include to suppress warnings
-target_include_directories(proteus SYSTEM PUBLIC ${EIGEN_INCLUDE_DIRS})
 target_include_directories(
   proteus
+  SYSTEM PUBLIC ${EIGEN_INCLUDE_DIRS}
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${ROOT_INCLUDE_DIRS}
   PRIVATE ${proteus_EXTRA_INCLUDES})
 target_link_libraries(
   proteus
-  PUBLIC ${ROOT_LIBRARIES}
+  PUBLIC ROOT::Hist ROOT::Tree
   PRIVATE gbl ${proteus_PRIVATE_LIBRARIES})

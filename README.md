@@ -18,7 +18,7 @@ required is listed below.
 *   A C++14-compatible compiler, e.g. gcc 6.2 or clang 3.4
 *   [CMake][cmake] 2.8.12
 *   [Eigen][eigen] 3.2.9
-*   [ROOT][root] 6.08
+*   [ROOT][root] 6.10
 *   [EUDAQ][eudaq] 1.7 (optional, for the EUDAQ reader)
 *   Doxygen 1.6 (optional, for the documentation generation)
 *   Sphinx (optional, for the documentation generation)
