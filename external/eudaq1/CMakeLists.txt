@@ -7,6 +7,8 @@ project(proteus-external-eudaq1 NONE)
 include(ExternalProject)
 ExternalProject_Add(
   eudaq1
+  # build in source so git picks up the correct version/tag
+  BUILD_IN_SOURCE on
   GIT_REPOSITORY "https://github.com/eudaq/eudaq.git"
   GIT_TAG "v1.9.1"
   CMAKE_ARGS "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
