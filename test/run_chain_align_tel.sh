@@ -5,7 +5,7 @@
 set -ex
 
 nalign=${NALIGN:-25000}
-source ./run_common.sh
+. ./run_common.sh
 
 pt-align ${flags} -u tel_correlations \
   -g ${datasetdir}/geometry-initial.toml \

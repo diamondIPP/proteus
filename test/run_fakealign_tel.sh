@@ -4,7 +4,7 @@
 
 set -ex
 
-source ./run_common.sh
+. ./run_common.sh
 
 pt-align ${flags} -u tel_residuals \
   -g ${datasetdir}/geometry.toml \

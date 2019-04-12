@@ -4,7 +4,7 @@
 
 set -ex
 
-source ./run_common.sh
+. ./run_common.sh
 
 pt-noisescan ${flags} -g ${datasetdir}/geometry-initial.toml \
   ${data} ${output_prefix}chain-noisescan
