@@ -35,7 +35,7 @@ namespace {
 struct Format {
   using EventReaderPtr = std::shared_ptr<Loop::Reader>;
 
-  std::string name;
+  const char* name;
   std::function<int(const std::string&)> check;
   std::function<EventReaderPtr(const std::string&, const toml::Value&)> open;
 };
@@ -69,7 +69,8 @@ static std::vector<Format> s_formats = {
     {"eudaq2", Eudaq2Reader::check, Eudaq2Reader::open},
 #endif
     {"rceroot", RceRootReader::check, RceRootReader::open},
-    {"timepix3", Timepix3Reader::check, Timepix3Reader::open}};
+    {"timepix3", Timepix3Reader::check, Timepix3Reader::open},
+};
 
 } // namespace
 } // namespace Io
@@ -87,8 +88,9 @@ std::shared_ptr<Loop::Reader> Io::openRead(const std::string& path,
   // the set automatically sorts them with the most probably format first.
   for (const auto& fmt : s_formats) {
     ScoredFormat sf = {fmt, fmt.check(path)};
-    if (0 < sf.score)
+    if (0 < sf.score) {
       scoredFormats.emplace(std::move(sf));
+    }
   }
 
   // start w/ highest score format until the file is opened or list is exhausted

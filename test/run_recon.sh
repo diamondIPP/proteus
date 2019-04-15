@@ -4,7 +4,7 @@
 
 set -ex
 
-source ./run_common.sh
+. ./run_common.sh
 
 pt-recon ${flags} -g ${datasetdir}/geometry.toml \
   ${data} ${output_prefix}recon

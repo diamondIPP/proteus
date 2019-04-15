@@ -28,24 +28,58 @@ User-visible changes
         track_fitter = "gbl3d"
         ...
 
-    or for the ``pt-track`` tool.
+    or in the ``track`` section for the ``pt-track`` tool.
 
     Internally, the fitter uses the `GeneralBrokenLines
     <https://www.terascale.de/wiki/generalbrokenlines>` library. A
     private copy is shipped in the repository.
+
+*   Support spatial and temporal search cuts in the track finder.
+
+    During the track search, candidates are build from all compatible clusters.
+    Compatibility is defined by a maximum distance from the extrapolated
+    position in space and time. These can be configured by setting e.g.
+
+        ...
+        search_spatial_sigma_max = 5.0   # 5 sigma cut on spatial distance
+        search_temporal_sigma_max = 4.0  # 4 sigma cut on temporal distance
+        ...
+
+    in the relevant ``recon``, ``track``, or ``align`` tool configuration
+    section. Both settings are significance cuts measured in number of standard
+    deviations and scale automatically with the extrapolation and measurement
+    precision. Setting either one to a negative value disables the cut, i.e.
+    all clusters will be considered compatible. The ``search_spatial_sigma_max``
+    setting replaces the previous ``search_sigma_max`` setting. The old
+    setting will be removed in a future version.
+
+*   Implement the track finder as a single-pass combinatorial Kalman filter.
+
+    Initial track seeds are build from cluster positions and the beam
+    information on selected sensors. During the track search, the information
+    from additional clusters are used to continuously refine the candidate
+    parameter estimates and reduce their uncertainty, thereby reducing
+    the possible combinations that need to be considered. The extrapolation
+    takes both parameter and interaction uncertainties, e.g. from multiple
+    scattering, into account. In the case of multiple compatible clusters,
+    additional track candidates with different parameter estimates are created.
 
 *   Add track fit probability to outputs.
 
     Adds ``tracks/probability`` histogram to ``...-hists.root`` files
     and ``trk_prob`` branch to match ROOT trees.
 
+Bugfixes
+--------
+
+*   Fix an invalid comparison function in the ``Clusterizer`` that lead to heap
+    corruption a high hit multiplicities.
+*   Fix an invalid comparison function during the track candidate selection
+    that lead to heap corruption at high event multiplicities.
+
 Internal changes
 ----------------
 
-*   Use an in-place clustering algorithm.
-
-    The new clusterizer implementation requires no additional memory but can
-    change the order of hits within a ``SensorEvent``.
 *   Add support for multiple device setups in the test directory.
 *   Store test data files in a separate repository embedded as a git
     submodule.
@@ -57,6 +91,18 @@ Internal changes
     configurations.
 
 *   Add a simulated test dataset for the MALTAscope.
+*   Use an in-place clustering algorithm.
+
+    The new clusterizer implementation requires no additional memory but can
+    change the order of hits within a ``SensorEvent``.
+*   The ``Event``, ``SensorEvent``, and ``Track`` storage classes use flat
+    storage based on ``std::vector`` internally for all stored elements to
+    reduce allocations and increase memory locality.
+*   ``Event``s stores tracks by value instead of managing them via a
+    ``std::unique_ptr``.
+*   ``Track``s store the constituent clusters by index instead of by pointer.
+*   The Mahalanobis distance calculation uses the square root free
+    :math:`L\,D\L^T` Cholesky decomposition for better numerical stability.
 
 v1.4.0 (2019-03-07)
 ===================

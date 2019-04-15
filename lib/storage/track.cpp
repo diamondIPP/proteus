@@ -1,15 +1,12 @@
 #include "track.h"
 
 #include <ostream>
+#include <stdexcept>
 
 #include <Math/ProbFunc.h>
 
-#include "cluster.h"
-
-Storage::Track::Track() : m_chi2(-1), m_dof(-1), m_index(-1) {}
-
-Storage::Track::Track(const TrackState& global)
-    : m_state(global), m_chi2(-1), m_dof(-1), m_index(-1)
+Storage::Track::Track(const TrackState& global, Scalar chi2, int dof)
+    : m_state(global), m_chi2(chi2), m_dof(dof)
 {
 }
 
@@ -20,16 +17,41 @@ Scalar Storage::Track::probability() const
              : std::numeric_limits<Scalar>::quiet_NaN();
 }
 
-// NOTE: this doesn't tell the cluster about the track
-void Storage::Track::addCluster(Index sensor, Cluster& cluster)
+namespace {
+/** Helper functor struct to find a track cluster on a specific sensor. */
+struct OnSensor {
+  Index sensorId;
+
+  bool operator()(const Storage::Track::TrackCluster& tc) const
+  {
+    return tc.sensor == sensorId;
+  }
+};
+} // namespace
+
+void Storage::Track::addCluster(Index sensor, Index cluster)
 {
-  m_clusters.emplace(sensor, cluster);
+  auto c = std::find_if(m_clusters.begin(), m_clusters.end(), OnSensor{sensor});
+  if (c != m_clusters.end()) {
+    c->cluster = cluster;
+  } else {
+    m_clusters.push_back({sensor, cluster});
+  }
 }
 
-void Storage::Track::freezeClusterAssociation()
+bool Storage::Track::hasClusterOn(Index sensor) const
 {
-  for (const auto& c : m_clusters)
-    c.second.get().setTrack(m_index);
+  auto c = std::find_if(m_clusters.begin(), m_clusters.end(), OnSensor{sensor});
+  return (c != m_clusters.end());
+}
+
+Index Storage::Track::getClusterOn(Index sensor) const
+{
+  auto c = std::find_if(m_clusters.begin(), m_clusters.end(), OnSensor{sensor});
+  if (c == m_clusters.end()) {
+    throw std::out_of_range("No cluster exists on requested sensor");
+  }
+  return c->cluster;
 }
 
 std::ostream& Storage::operator<<(std::ostream& os, const Storage::Track& track)

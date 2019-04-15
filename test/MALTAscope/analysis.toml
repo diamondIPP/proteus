@@ -1,14 +1,14 @@
 [recon]
 tracking_ids = [0,1,2,3]
 num_points_min = 4
-search_sigma_max = 1000.0
+search_spatial_sigma_max = 1000.0
 extrapolation_ids = [4]
 track_fitter = "gbl3d"
 
 [recon.straight3d]
 tracking_ids = [0,1,2,3]
 num_points_min = 4
-search_sigma_max = 1000.0
+search_spatial_sigma_max = 1000.0
 extrapolation_ids = [4]
 track_fitter = "straight3d"
 
@@ -40,7 +40,7 @@ align_ids = [1,2,3]
 # number of iterative alignment steps
 num_steps = 60
 # search window to find additional track clusters (track-based alignment only)
-search_sigma_max = 50.0
+search_spatial_sigma_max = 50.0
 # only consider tracks with a chi2 value (track-based alignment only)
 reduced_chi2_max = 1000.0
 
@@ -54,7 +54,7 @@ align_ids = [0,2]
 # number of iterative alignment steps
 num_steps = 60
 # search window to find additional track clusters (track-based alignment only)
-search_sigma_max = 1000.0
+search_spatial_sigma_max = 1000.0
 # only consider tracks with a chi2 value (track-based alignment only)
 reduced_chi2_max = 1000.0
 
@@ -68,7 +68,7 @@ align_ids = [1,3]
 # number of iterative alignment steps
 num_steps = 60
 # search window to find additional track clusters (track-based alignment only)
-search_sigma_max = 10000.0
+search_spatial_sigma_max = 10000.0
 # only consider tracks with a chi2 value (track-based alignment only)
 reduced_chi2_max = 1000.0
 
@@ -82,6 +82,6 @@ align_ids = [4]
 # number of iterative alignment steps
 num_steps = 60
 # search window to find additional track clusters (track-based alignment only)
-search_sigma_max = 1000.0
+search_spatial_sigma_max = 1000.0
 # only consider tracks with a chi2 value (track-based alignment only)
 reduced_chi2_max = 1000.0

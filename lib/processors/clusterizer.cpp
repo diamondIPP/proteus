@@ -84,10 +84,33 @@ static inline void clusterize(const DenseMask& mask,
     }
 
     // sort cluster hits by value and time
-    std::sort(clusterBegin, clusterEnd, [](const auto& hit0, const auto& hit1) {
-      return (hit1->value() < hit0->value()) or
-             (hit0->timestamp() < hit1->timestamp());
-    });
+    // WARNING compare has to fullfil (from C++ standard)
+    //   1. compare(a, a) == false
+    //   2. compare(a, b) == true -> compare(b, a) == false
+    //   3. compare(a, b) == true && compare(b, c) == true -> compare(a, c) ==
+    //   true
+    // if it does not, std::sort will corrupt the heap.
+    // NOTE to future self:
+    // do not try to be smart; the same problem broke the trackfinder.
+    auto compare = [](const std::unique_ptr<Hit>& hptr0,
+                      const std::unique_ptr<Hit>& hptr1) {
+      const auto& hit0 = *hptr0;
+      const auto& hit1 = *hptr1;
+      // 1. sort by value, highest first
+      if (hit0.value() > hit1.value())
+        return true;
+      if (hit1.value() > hit0.value())
+        return false;
+      // 2. sort by timestamp, lowest first
+      if (hit0.timestamp() < hit1.timestamp())
+        return true;
+      if (hit1.timestamp() < hit0.timestamp())
+        return false;
+      // equivalent hits w/ respect to value and time
+      return false;
+    };
+    std::sort(clusterBegin, clusterEnd, compare);
+
     // add cluster to event
     auto& cluster =
         sensorEvent.addCluster(makeCluster(clusterBegin, clusterEnd));

@@ -51,6 +51,25 @@ void Storage::Cluster::setTrack(Index track)
   m_track = track;
 }
 
+static Matrix<Scalar, 3, 4> projectionOntoPlane()
+{
+  Matrix<Scalar, 3, 4> proj = Matrix<Scalar, 3, 4>::Zero();
+  proj(kLoc0 - kOnPlane, kU) = 1;
+  proj(kLoc1 - kOnPlane, kV) = 1;
+  proj(kTime - kOnPlane, kS) = 1;
+  return proj;
+}
+
+Vector3 Storage::Cluster::onPlane() const
+{
+  return projectionOntoPlane() * m_pos;
+}
+
+SymMatrix3 Storage::Cluster::onPlaneCov() const
+{
+  return transformCovariance(projectionOntoPlane(), m_posCov);
+}
+
 Storage::Cluster::Area Storage::Cluster::areaPixel() const
 {
   auto grow = [](Area a, const Hit& hit) {

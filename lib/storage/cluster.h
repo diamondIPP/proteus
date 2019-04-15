@@ -52,12 +52,18 @@ public:
   Scalar u() const { return m_pos[kU]; }
   /** On-plane spatial v coordinate. */
   Scalar v() const { return m_pos[kV]; }
+  /** On-plane spatial coordinates. */
+  auto uv() const { return m_pos.segment<2>(kU); }
   /** On-plane spatial covariance. */
   auto uvCov() const { return m_posCov.block<2, 2>(kU, kU); }
   /** Local time. */
   Scalar time() const { return m_pos[kS]; }
   /** Local time variance. */
   Scalar timeVar() const { return m_posCov(kS, kS); }
+  /** On-plane position and time in local coordinates. */
+  Vector3 onPlane() const;
+  /** On-plane position and time covariance in local coordinates. */
+  SymMatrix3 onPlaneCov() const;
   /** Full position in local coordinates. */
   const Vector4& position() const { return m_pos; }
   /** Full position covariance in local coordinates. */
@@ -78,7 +84,6 @@ public:
   size_t size() const { return m_hits.size(); }
   const Hits& hits() const { return m_hits; }
 
-  Index index() const { return m_index; }
   bool isInTrack() const { return m_track != kInvalidIndex; }
   Index track() const { return m_track; }
   bool isMatched() const { return m_matchedState != kInvalidIndex; }
@@ -103,6 +108,9 @@ private:
   Index m_matchedState;
 
   friend class SensorEvent;
+
+public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 std::ostream& operator<<(std::ostream& os, const Cluster& cluster);

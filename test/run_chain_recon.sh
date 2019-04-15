@@ -5,7 +5,7 @@
 set -ex
 
 nalign=${NALIGN:-25000}
-source ./run_common.sh
+. ./run_common.sh
 
 pt-recon ${flags} \
   -g ${output_prefix}chain-align_dut_fine-geo.toml \

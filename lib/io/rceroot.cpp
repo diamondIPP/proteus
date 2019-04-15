@@ -263,9 +263,7 @@ bool Io::RceRootReader::read(Storage::Event& event)
       Storage::TrackState state(trackX[itrack], trackY[itrack],
                                 trackSlopeX[itrack], trackSlopeY[itrack]);
       state.setCovSpatialPacked(trackCov[itrack]);
-      std::unique_ptr<Storage::Track> track(new Storage::Track(state));
-      track->setGoodnessOfFit(trackChi2[itrack], trackDof[itrack]);
-      event.addTrack(std::move(track));
+      event.addTrack({state, trackChi2[itrack], trackDof[itrack]});
     }
   }
 
@@ -284,7 +282,7 @@ bool Io::RceRootReader::read(Storage::Event& event)
             interceptU[iintercept], interceptV[iintercept],
             interceptSlopeU[iintercept], interceptSlopeV[iintercept]);
         local.setCovSpatialPacked(interceptCov[iintercept]);
-        sensorEvent.setLocalState(interceptTrack[iintercept], std::move(local));
+        sensorEvent.setLocalState(interceptTrack[iintercept], local);
       }
     }
 
@@ -300,9 +298,8 @@ bool Io::RceRootReader::read(Storage::Event& event)
             clusterVarRow[icluster], 1.0 / 12.0, clusterCovColRow[icluster]);
         // Fix cluster/track relationship if possible
         if (m_tracks && (0 <= clusterTrack[icluster])) {
-          Storage::Track& track = event.getTrack(clusterTrack[icluster]);
-          track.addCluster(isensor, cluster);
           cluster.setTrack(clusterTrack[icluster]);
+          event.getTrack(clusterTrack[icluster]).addCluster(isensor, icluster);
         }
       }
     }
@@ -484,16 +481,15 @@ void Io::RceRootWriter::append(const Storage::Event& event)
     // local track states
     if (trees.intercepts) {
       numIntercepts = 0;
-      for (const auto& s : sensorEvent.localStates()) {
+      for (const auto& local : sensorEvent.localStates()) {
         if (kMaxTracks < static_cast<Index>(numIntercepts + 1))
           FAIL("intercepts exceed MAX_TRACKS");
-        const Storage::TrackState& local = s.second;
         interceptU[numIntercepts] = local.loc0();
         interceptV[numIntercepts] = local.loc1();
         interceptSlopeU[numIntercepts] = local.slopeLoc0();
         interceptSlopeV[numIntercepts] = local.slopeLoc1();
         local.getCovSpatialPacked(interceptCov[numIntercepts]);
-        interceptTrack[numIntercepts] = s.first;
+        interceptTrack[numIntercepts] = local.track();
         numIntercepts += 1;
       }
       trees.intercepts->Fill();

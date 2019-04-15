@@ -88,6 +88,8 @@ public:
   Scalar time() const { return m_params[kTime]; }
   /** Track time variance. */
   Scalar timeVar() const { return m_cov(kTime, kTime); }
+  auto onPlane() const { return m_params.segment<3>(kOnPlane); }
+  auto onPlaneCov() const { return m_cov.block<3, 3>(kOnPlane, kOnPlane); }
   /** Full track position. */
   Vector4 position() const;
   /** Full track position covariance. */
@@ -102,16 +104,22 @@ public:
   /** Full track tangent in slope parametrization. */
   Vector4 tangent() const;
 
+  Index track() const { return m_track; }
+
   bool isMatched() const { return (m_matchedCluster != kInvalidIndex); }
   Index matchedCluster() const { return m_matchedCluster; }
 
 private:
   Vector6 m_params;
   SymMatrix6 m_cov;
+  Index m_track;
   Index m_matchedCluster;
 
   friend class SensorEvent;
   friend class Track;
+
+public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 std::ostream& operator<<(std::ostream& os, const TrackState& state);
@@ -121,6 +129,7 @@ std::ostream& operator<<(std::ostream& os, const TrackState& state);
 inline TrackState::TrackState()
     : m_params(Vector6::Constant(std::numeric_limits<Scalar>::quiet_NaN()))
     , m_cov(SymMatrix6::Constant(std::numeric_limits<Scalar>::quiet_NaN()))
+    , m_track(kInvalidIndex)
     , m_matchedCluster(kInvalidIndex)
 {
 }
@@ -130,6 +139,7 @@ inline TrackState::TrackState(const Eigen::MatrixBase<Params>& params,
                               const Eigen::MatrixBase<Covariance>& cov)
     : m_params(params)
     , m_cov(cov.template selfadjointView<Eigen::Lower>())
+    , m_track(kInvalidIndex)
     , m_matchedCluster(kInvalidIndex)
 {
 }

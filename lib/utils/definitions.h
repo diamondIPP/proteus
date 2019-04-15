@@ -40,13 +40,8 @@ using Vector = Eigen::Matrix<T, kSize, 1>;
 // For non-quadratic matrices the first number is the target dimensionality and
 // the second number is the source dimensionality.
 using Matrix2 = Matrix<Scalar, 2, 2>;
-using Matrix24 = Matrix<Scalar, 2, 4>;
-using Matrix26 = Matrix<Scalar, 2, 6>;
 using Matrix3 = Matrix<Scalar, 3, 3>;
-using Matrix34 = Matrix<Scalar, 3, 4>;
 using Matrix4 = Matrix<Scalar, 4, 4>;
-using Matrix42 = Matrix<Scalar, 4, 2>;
-using Matrix43 = Matrix<Scalar, 4, 3>;
 using Matrix5 = Matrix<Scalar, 5, 5>;
 using Matrix6 = Matrix<Scalar, 6, 6>;
 using DiagMatrix4 = DiagMatrix<Scalar, 4>;
@@ -72,11 +67,18 @@ enum CoordinateIndex {
   kS = kT,
 };
 enum TrackParameterIndex {
-  kLoc0 = 0,
-  kLoc1 = 1,
-  kTime = 2,
-  kSlopeLoc0 = 3,
-  kSlopeLoc1 = 4,
+  // start of the 3-element on-plane spatial and temporal parameters block
+  kOnPlane = 0,
+  // on-plane single element access
+  kLoc0 = kOnPlane + 0,
+  kLoc1 = kOnPlane + 1,
+  kTime = kOnPlane + 2,
+  // start of the 2-element spatial slope parameters block
+  kSlope = 3,
+  // single slope access
+  kSlopeLoc0 = kSlope + 0,
+  kSlopeLoc1 = kSlope + 1,
+  // inverse velocity
   kSlopeTime = 5,
 };
 
@@ -110,6 +112,9 @@ inline auto extractStdev(const Eigen::EigenBase<Covariance>& cov)
 
 /** Squared Mahalanobis distance / norm of a vector.
  *
+ * \param cov Covariance matrix; only the lower-left triangular values are used.
+ * \param x   Value vector;
+ *
  * The vector elements are weighted with the inverse of a covariance matrix.
  * This is a multi-dimensional generalization of the pull / significance
  * measure.
@@ -119,7 +124,7 @@ inline auto mahalanobisSquared(const Eigen::MatrixBase<T>& cov,
                                const Eigen::MatrixBase<U>& x)
 {
   // compute `x^T C^-1 x` via `x^T y` where `y` is the solution to `C y = x`
-  return x.dot(cov.template selfadjointView<Eigen::Lower>().llt().solve(x));
+  return x.dot(cov.template selfadjointView<Eigen::Lower>().ldlt().solve(x));
 }
 
 /** Mahalanobis distance / norm of a vector. */

@@ -210,9 +210,8 @@ void Io::MatchWriter::append(const Storage::Event& event)
   m_event.set(sensorEvent);
 
   // export tracks and possible matched clusters
-  for (const auto& s : sensorEvent.localStates()) {
-    const Storage::TrackState& state = s.second;
-    const Storage::Track& track = event.getTrack(s.first);
+  for (const auto& state : sensorEvent.localStates()) {
+    const Storage::Track& track = event.getTrack(state.track());
 
     // always export track data
     m_track.set(track, state, m_sensor.transformLocalToPixel(state.position()));

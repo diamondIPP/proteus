@@ -27,23 +27,38 @@ id = 6
 [recon]
 tracking_ids = [1,2,3,4,5,6]
 extrapolation_ids = [0]
-search_sigma_max = 10.0
+search_spatial_sigma_max = 10.0
+search_temporal_sigma_max = 10.0
 num_points_min = 5
 track_fitter = "straight4d"
 
 [recon.gbl3d]
 tracking_ids = [1,2,3,4,5,6]
 extrapolation_ids = [0]
-search_sigma_max = 10.0
+search_spatial_sigma_max = 10.0
+# disable search cut in time
+search_temporal_sigma_max = -1.0
 num_points_min = 5
 track_fitter = "gbl3d"
 
 [recon.straight3d]
 tracking_ids = [1,2,3,4,5,6]
 extrapolation_ids = [0]
-search_sigma_max = 10.0
+search_spatial_sigma_max = 10.0
+# disable search cut in time
+search_temporal_sigma_max = -1.0
 num_points_min = 5
 track_fitter = "straight3d"
+
+# trackfinder only w/o a subsequent fitter
+[recon.finder]
+tracking_ids = [1,2,3,4,5,6]
+extrapolation_ids = [0]
+search_spatial_sigma_max = 10.0
+# disable search cut in time
+search_temporal_sigma_max = -1.0
+num_points_min = 5
+track_fitter = ""
 
 [track]
 sensor_ids = [1,2,3,4,5,6]
@@ -72,7 +87,7 @@ method = "residuals"
 sensor_ids = [1,2,3,4,5,6] # sensors to build tracks
 align_ids = [2,3,4,5] # sensors to align
 num_steps = 25 # number of iterative steps
-search_sigma_max = 10.0 # distance search window for track finding
+search_spatial_sigma_max = 10.0 # distance search window for track finding
 reduced_chi2_max = 10.0 # chi2 cut for track finding
 estimate_beam_parameters = true
 
@@ -82,7 +97,7 @@ method = "localchi2"
 sensor_ids = [1,2,3,4,5,6] # sensors to build tracks
 align_ids = [2,3,4,5] # sensors to align
 num_steps = 25 # number of iterative steps
-search_sigma_max = 10.0 # distance search window for track finding
+search_spatial_sigma_max = 10.0 # distance search window for track finding
 reduced_chi2_max = 10.0 # chi2 cut for track finding
 estimate_beam_parameters = true
 
@@ -99,7 +114,7 @@ method = "residuals"
 sensor_ids = [0,1,2,3,4,5,6] # sensors to build tracks
 align_ids = [0] # align dut plane
 num_steps = 20 # number of iterative steps
-search_sigma_max = 10.0 # distance search window for track finding
+search_spatial_sigma_max = 10.0 # distance search window for track finding
 reduced_chi2_max = 10.0 # chi2 cut for track finding
 estimate_beam_parameters = false
 
@@ -109,6 +124,6 @@ method = "localchi2"
 sensor_ids = [0,1,2,3,4,5,6] # sensors to build tracks
 align_ids = [0] # align dut plane
 num_steps = 20 # number of iterative steps
-search_sigma_max = 10.0 # distance search window for track finding
+search_spatial_sigma_max = 10.0 # distance search window for track finding
 reduced_chi2_max = 10.0 # chi2 cut for track finding
 estimate_beam_parameters = false

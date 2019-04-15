@@ -11,215 +11,435 @@
 #include "tracking/propagation.h"
 #include "utils/logger.h"
 
+using Mechanics::Plane;
 using Storage::Cluster;
 using Storage::Event;
 using Storage::SensorEvent;
 using Storage::Track;
 using Storage::TrackState;
+using Tracking::propagateTo;
 
 PT_SETUP_LOCAL_LOGGER(TrackFinder)
 
 Tracking::TrackFinder::TrackFinder(const Mechanics::Device& device,
-                                   const std::vector<Index>& sensors,
-                                   const Index numClustersMin,
-                                   const double searchSigmaMax,
-                                   const double redChi2Max)
-    : m_geo(device.geometry())
-    , m_sensorIds(Mechanics::sortedAlongBeam(device.geometry(), sensors))
-    , m_numClustersMin(numClustersMin)
+                                   std::vector<Index> trackingIds,
+                                   double searchSpatialSigmaMax,
+                                   double searchTemporalSigmaMax,
+                                   size_t sizeMin,
+                                   double redChi2Max)
     // 2-d Mahalanobis distance peaks at 2 and not at 1
-    , m_d2Max((searchSigmaMax < 0) ? -1 : (2 * searchSigmaMax * searchSigmaMax))
-    , m_redChi2Max(redChi2Max)
+    : m_d2LocMax((0 < searchSpatialSigmaMax)
+                     ? (2 * searchSpatialSigmaMax * searchSpatialSigmaMax)
+                     : -1)
+    , m_d2TimeMax((0 < searchTemporalSigmaMax)
+                      ? (searchTemporalSigmaMax * searchTemporalSigmaMax)
+                      : -1)
+    , m_reducedChi2Max(redChi2Max)
 {
-  if (m_sensorIds.size() < 2)
+  if (trackingIds.size() < 2) {
     throw std::runtime_error("Need at least two sensors two find tracks");
-  if (m_sensorIds.size() < m_numClustersMin)
+  }
+  if (trackingIds.size() < sizeMin) {
     throw std::runtime_error(
         "Number of tracking sensors < minimum number of clusters");
-  // TODO 2016-11 msmk: check that sensor ids are unique
+  }
+  // ensure the requested tracking sensors are unique
+  std::sort(trackingIds.begin(), trackingIds.end());
+  if (std::unique(trackingIds.begin(), trackingIds.end()) !=
+      trackingIds.end()) {
+    throw std::runtime_error("Found duplicate tracking sensor ids");
+  }
+  // ensure the requested tracking sensors are valid
+  std::vector<Index> allIds = device.sensorIds();
+  std::sort(allIds.begin(), allIds.end());
+  if (!std::includes(allIds.begin(), allIds.end(), trackingIds.begin(),
+                     trackingIds.end())) {
+    throw std::runtime_error("Found invalid tracking sensor ids");
+  }
+
+  // Build the search steps along the beam direction.
+  //
+  // Ingore sensors before and after, but keep unused intermediates onces.
+  // These are e.g. devices-under-test that do not provide measurements but
+  // give rise to additional uncertainty from material interactions.
+
+  // Determine the range of sensors to be searched/propagated to.
+  Mechanics::sortAlongBeam(device.geometry(), trackingIds);
+  Mechanics::sortAlongBeam(device.geometry(), allIds);
+  auto first = std::find(allIds.begin(), allIds.end(), trackingIds.front());
+  auto last = std::next(std::find(first, allIds.end(), trackingIds.back()));
+
+  size_t remainingTrackingSensors = trackingIds.size();
+  size_t remainingSeedSensors = 1 + (trackingIds.size() - sizeMin);
+  for (; first != last; ++first) {
+    Step step;
+
+    // geometry and propagation uncertainty is always needed
+    step.plane = device.geometry().getPlane(*first);
+    // at the moment only multiple scattering is considered
+    // TODO what else? beam energy spread? alignment uncertainty?
+    step.processNoise = SymMatrix6::Zero();
+    step.processNoise.block<2, 2>(kSlope, kSlope) =
+        device.getSensor(*first).scatteringSlopeCovariance();
+    step.sensorId = *first;
+
+    // check if the sensor is a tracking sensor or just dead material
+    if ((0 < remainingTrackingSensors) and
+        std::find(trackingIds.begin(), trackingIds.end(), step.sensorId) !=
+            trackingIds.end()) {
+      step.useForTracking = true;
+      remainingTrackingSensors -= 1;
+
+      // the first n tracking sensors are also used for seeding
+      if (0 < remainingSeedSensors) {
+        step.useForSeeding = true;
+        // use beam information for seed direction
+        step.seedSlope = device.geometry().getBeamSlope(step.sensorId);
+        step.seedSlopeCovariance =
+            device.geometry().getBeamSlopeCovariance(step.sensorId);
+        remainingSeedSensors -= 1;
+      }
+    }
+
+    // how large has a candidate be at this point to be viable?
+    step.candidateSizeMin = (remainingTrackingSensors < sizeMin)
+                                ? (sizeMin - remainingTrackingSensors)
+                                : 0;
+
+    m_steps.push_back(std::move(step));
+  }
+
+  // (debug) output
+  for (const auto& step : m_steps) {
+    const auto& sensor = device.getSensor(step.sensorId);
+    if (step.useForTracking) {
+      if (step.useForSeeding) {
+        VERBOSE(sensor.name(), " id=", sensor.id(), " is a seeding plane");
+      } else {
+        VERBOSE(sensor.name(), " id=", sensor.id(), " is a tracking plane");
+      }
+    } else {
+      VERBOSE(sensor.name(), " id=", sensor.id(), " is dead material");
+    }
+    DEBUG("  minimum candidate size: ", step.candidateSizeMin);
+  }
 }
 
 std::string Tracking::TrackFinder::name() const { return "TrackFinder"; }
 
-void Tracking::TrackFinder::execute(Storage::Event& event) const
+// Propagate all states from the previous plane to the current plane.
+// This incorporates uncertainties from material interactions.
+static void propagateToCurrent(const SymMatrix6& processNoise,
+                               const Plane& previousPlane,
+                               const Plane& currentPlane,
+                               std::vector<Track>& candidates)
 {
-  std::vector<TrackPtr> candidates;
-
-  // first iteration over all seed sensors
-  size_t numSeedSeensors = 1 + (m_sensorIds.size() - m_numClustersMin);
-  for (size_t i = 0; i < numSeedSeensors; ++i) {
-    Index seedSensor = m_sensorIds[i];
-    SensorEvent& seedEvent = event.getSensorEvent(seedSensor);
-
-    // generate track candidates from all unused clusters on the seed sensor
-    candidates.clear();
-    for (Index icluster = 0; icluster < seedEvent.numClusters(); ++icluster) {
-      Cluster& cluster = seedEvent.getCluster(icluster);
-      if (cluster.isInTrack())
-        continue;
-      candidates.push_back(TrackPtr(new Track()));
-      candidates.back()->addCluster(seedSensor, cluster);
-    }
-
-    // second iteration over remaining sensors to find compatible points
-    for (size_t j = i + 1; j < m_sensorIds.size(); ++j) {
-      searchSensor(m_sensorIds[j], event.getSensorEvent(m_sensorIds[j]),
-                   candidates);
-
-      // remove seeds that are already too short
-      size_t remainingSensors = m_sensorIds.size() - (j + 1);
-      auto isLongEnough = [&](const TrackPtr& cand) {
-        return (m_numClustersMin <= (cand->size() + remainingSensors));
-      };
-      auto beginBad =
-          std::partition(candidates.begin(), candidates.end(), isLongEnough);
-      candidates.erase(beginBad, candidates.end());
-    }
-
-    // select final tracks after all possible candidates have been found to
-    // allow a more global selection of track candidates.
-    selectTracks(candidates, event);
-
-    // TODO 2017-05-10 msmk:
-    // ideally we would find all candidates starting from all seed planes first
-    // and only then select the final tracks. this should avoid cases where
-    // a bad 6-hit track, e.g. with one noise hit, shadows a good 5-hit track
-    // with the same cluster content.
-    // this would require a combined metric that sorts both by number of hits
-    // and by track quality. defining such a combined metric is always a bit
-    // arbitrary and introduces additional corner cases that i would prefer
-    // to avoid.
-    // just sorting by chi2 along results yields 50% 5-hit tracks in the
-    // test samples; compared to 90% 6-hit tracks with the default algorithm.
-    // a single misaligned sensor will always result in a better track with
-    // less hits.
+  for (auto& track : candidates) {
+    // include material interactions at the prev plane
+    TrackState state(track.globalState().params(),
+                     track.globalState().cov() + processNoise);
+    state = propagateTo(state, previousPlane, currentPlane);
+    track.setGlobalState(state);
   }
 }
 
-/** Search for matching clusters for all candidates on the given sensor.
- *
- * Ambiguities are not resolved but result in additional track candidates.
- */
-void Tracking::TrackFinder::searchSensor(
-    Index sensorId,
-    Storage::SensorEvent& sensorEvent,
-    std::vector<TrackPtr>& candidates) const
+// Propagate all states from the local plane into the global plane.
+static void propagateToGlobal(const Plane& local,
+                              std::vector<Track>& candidates)
 {
-  const Mechanics::Plane& target = m_geo.getPlane(sensorId);
+  for (auto& track : candidates) {
+    // no additional uncertainty since we want the equivalent state
+    // default plane constructor yields the global plane
+    TrackState state = propagateTo(track.globalState(), local, Plane{});
+    track.setGlobalState(state);
+  }
+}
 
+// Search for matching clusters for all candidates on the given sensor.
+//
+// Ambiguities are not resolved but result in additional track candidates.
+// Track states are updated using the Kalman filter method based on the
+// additional information from the added cluster.
+static void searchSensor(Scalar d2LocMax,
+                         Scalar d2TimeMax,
+                         Index sensorId,
+                         const SensorEvent& sensorEvent,
+                         std::vector<Track>& candidates,
+                         std::vector<bool>& usedClusters)
+{
   // loop only over the initial candidates and not the added ones
-  Index numTracks = static_cast<Index>(candidates.size());
-  for (Index itrack = 0; itrack < numTracks; ++itrack) {
-    Storage::Track& track = *candidates[itrack];
-    Storage::Cluster& lastCluster = track.clusters().rbegin()->second;
-    Index lastSensor = track.clusters().rbegin()->first;
-    Index matched = kInvalidIndex;
-
-    // estimated track on the source plane using last cluster and beam
-    Storage::TrackState onSource(lastCluster.position(),
-                                 lastCluster.positionCov(),
-                                 m_geo.getBeamSlope(lastSensor),
-                                 m_geo.getBeamSlopeCovariance(lastSensor));
-    // propagate track to the target plane
-    Storage::TrackState onTarget =
-        Tracking::propagateTo(onSource, m_geo.getPlane(lastSensor), target);
+  //
+  // WARNING
+  // we are modifying the list of candidates while iterating over it.
+  // always access candidates through the index and not via a reference or
+  // an iterator. If the underlying memory gets reallocated we will access
+  // random memory and break the heap (and you will spent about a day
+  // trying to figure out why a call to std::map segfaults).
+  size_t numTracks = candidates.size();
+  for (size_t itrack = 0; itrack < numTracks; ++itrack) {
+    // keep a copy; candidate state will be modified, but the original
+    // state is needed to check for further compatible clusters.
+    TrackState state = candidates[itrack].globalState();
+    Scalar chi2 = candidates[itrack].chi2();
+    int numMatchedClusters = 0;
 
     for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
-      Storage::Cluster& curr = sensorEvent.getCluster(icluster);
+      auto& cluster = sensorEvent.getCluster(icluster);
 
-      // clusters already in use must be ignored
-      if (curr.isInTrack())
-        continue;
-
-      Vector2 delta(curr.u() - onTarget.loc0(), curr.v() - onTarget.loc1());
-      SymMatrix2 cov = curr.uvCov() + onTarget.loc01Cov();
-      auto d2 = mahalanobisSquared(cov, delta);
-
-      if ((0 < m_d2Max) && (m_d2Max < d2))
-        continue;
-
-      if (matched == kInvalidIndex) {
-        // first matching cluster
-        matched = icluster;
-      } else {
-        // matching ambiguity -> bifurcate track
-        candidates.push_back(TrackPtr(new Track(track)));
-        candidates.back()->addCluster(sensorId, curr);
-      }
-    }
-    // first matched cluster can be only be added after all other clusters
-    // have been considered. otherwise it would be already added to the
-    // candidate when it bifurcates and the new candidate would have two
-    // clusters on this sensor.
-    if (matched != kInvalidIndex)
-      track.addCluster(sensorId, sensorEvent.getCluster(matched));
-  }
-}
-
-// Fit track in the global system and store chi2 and global state.
-static void fitGlobal(const Mechanics::Geometry& geo, Storage::Track& track)
-{
-  Tracking::LineFitter3D fitter;
-
-  for (const auto& ci : track.clusters()) {
-    const auto& plane = geo.getPlane(ci.first);
-    const Storage::Cluster& cluster = ci.second;
-    // convert to global system
-    Vector4 global = plane.toGlobal(cluster.position());
-    Vector4 weight =
-        transformCovariance(plane.linearToGlobal(), cluster.positionCov())
-            .diagonal()
-            .cwiseInverse();
-    fitter.addPoint(global, weight);
-  }
-  fitter.fit();
-  track.setGlobalState(fitter.params(), fitter.cov());
-  track.setGoodnessOfFit(fitter.chi2(), fitter.dof());
-}
-
-// compare tracks by number of clusters and chi2. high n, low chi2 comes first
-struct CompareNumClusterChi2 {
-  bool operator()(const std::unique_ptr<Storage::Track>& a,
-                  const std::unique_ptr<Storage::Track>& b)
-  {
-    if (a->size() == b->size())
-      return (a->reducedChi2() < b->reducedChi2());
-    return (b->size() < a->size());
-  }
-};
-
-/** Add tracks selected by chi2 and unique cluster association to the event. */
-void Tracking::TrackFinder::selectTracks(std::vector<TrackPtr>& candidates,
-                                         Storage::Event& event) const
-{
-  // ensure chi2 value is up-to-date
-  for (auto& candidate : candidates) {
-    fitGlobal(m_geo, *candidate);
-  }
-  // sort good candidates first, i.e. longest track and smallest chi2
-  std::sort(candidates.begin(), candidates.end(), CompareNumClusterChi2());
-
-  // fix cluster assignment starting w/ best tracks first
-  for (auto& track : candidates) {
-
-    // apply track cuts
-    if ((0 < m_redChi2Max) && (m_redChi2Max < track->reducedChi2()))
-      continue;
-
-    // check that all constituent clusters are still unused
-    bool hasUsedClusters = false;
-    for (const auto& c : track->clusters()) {
-      const Storage::Cluster& cluster = c.second;
+      // in principle, there could already be tracks in the event,
+      // e.g. running multiple track finders with different settings, and we
+      // should only consider free clusters. a bit academic, i know.
       if (cluster.isInTrack()) {
-        hasUsedClusters = true;
-        break;
+        usedClusters[icluster] = true;
+        continue;
       }
-    }
-    // some clusters are already used by other tracks
-    if (hasUsedClusters)
-      continue;
 
-    // add new, good track to the event; also fixes cluster-track association
-    event.addTrack(TrackPtr(track.release()));
+      // predicted residuals and covariance
+      Vector3 r = cluster.onPlane() - state.onPlane();
+      SymMatrix3 R = cluster.onPlaneCov() + state.onPlaneCov();
+
+      // check if the cluster is compatible in space
+      Scalar d2Loc =
+          mahalanobisSquared(R.block<2, 2>(kLoc0 - kOnPlane, kLoc0 - kOnPlane),
+                             r.segment<2>(kLoc0));
+      if ((0 <= d2LocMax) and (d2LocMax < d2Loc)) {
+        continue;
+      }
+      // check if the cluster is compatible in time
+      Scalar d2Time =
+          mahalanobisSquared(R.block<1, 1>(kTime - kOnPlane, kTime - kOnPlane),
+                             r.segment<1>(kTime - kOnPlane));
+      if ((0 <= d2TimeMax) and (d2TimeMax < d2Time)) {
+        continue;
+      }
+
+      // optimal Kalman gain matrix
+      Matrix<Scalar, 6, 3> K =
+          state.cov().block<6, 3>(0, kOnPlane) * R.inverse();
+      // filtered local state and covariance
+      TrackState filtered(state.params() + K * r,
+                          state.cov() -
+                              K * state.cov().block<3, 6>(kOnPlane, 0));
+      // filtered residuals and covariance
+      r = cluster.onPlane() - filtered.onPlane();
+      R = cluster.onPlaneCov() - filtered.onPlaneCov();
+      // chi^2 update
+      Scalar chi2Update = mahalanobisSquared(R, r);
+
+      if (numMatchedClusters == 0) {
+        // first matched cluster; update existing track
+        auto& track = candidates[itrack];
+        track.addCluster(sensorId, icluster);
+        track.setGlobalState(std::move(filtered));
+        track.setGoodnessOfFit(chi2 + chi2Update, 3 * track.size() - 6);
+      } else {
+        // additional matched cluster; duplicate track w/ different content
+        candidates.emplace_back(candidates[itrack]);
+        auto& track = candidates.back();
+        // this replaces any previously added cluster for the same sensor
+        track.addCluster(sensorId, icluster);
+        track.setGlobalState(std::move(filtered));
+        track.setGoodnessOfFit(chi2 + chi2Update, 3 * track.size() - 6);
+      }
+      numMatchedClusters += 1;
+
+      DEBUG("sensor ", sensorId, " added cluster ", icluster, " to candidate ",
+            itrack, " w/ d2loc=", d2Loc, " d2time=", d2Time,
+            " dchi2=", chi2Update);
+
+      // mark cluster as in-use for the seeding.
+      usedClusters[icluster] = true;
+    }
   }
+
+  auto numClusters = std::count(usedClusters.begin(), usedClusters.end(), true);
+  auto numBifurcations = (candidates.size() - numTracks);
+  if (0 < numBifurcations) {
+    DEBUG("sensor ", sensorId, " added ", numClusters, " clusters to ",
+          numTracks, "+", numBifurcations, " candidates+bifurcations");
+  } else {
+    DEBUG("sensor ", sensorId, " added ", numClusters, " clusters to ",
+          numTracks, " candidates");
+  }
+}
+
+// make seeds using the beam information for the initial direction
+static void makeSeedsFromUnusedClusters(Index sensorId,
+                                        const SensorEvent& sensorEvent,
+                                        const Vector2& seedSlope,
+                                        const SymMatrix2& seedSlopeCovariance,
+                                        std::vector<Track>& candidates,
+                                        std::vector<bool>& usedClusters)
+{
+  size_t numSeeds = 0;
+
+  for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
+    const auto& cluster = sensorEvent.getCluster(icluster);
+
+    if (usedClusters[icluster]) {
+      continue;
+    }
+    // in principle, there could already be tracks in the event,
+    // e.g. running multiple track finders with different settings, and we
+    // should only consider free clusters. a bit academic, i know.
+    if (cluster.isInTrack()) {
+      usedClusters[icluster] = true;
+      continue;
+    }
+
+    // abuse global state to store the state on the current plane
+    TrackState seedState(cluster.position(), cluster.positionCov(), seedSlope,
+                         seedSlopeCovariance);
+    // no fit yet -> no chi2, undefined degrees-of-freedom
+    candidates.emplace_back(seedState, 0, -1);
+    candidates.back().addCluster(sensorId, icluster);
+    numSeeds += 1;
+  }
+
+  if (0 < numSeeds) {
+    DEBUG("sensor ", sensorId, " added ", numSeeds, " seeds");
+  }
+}
+
+// remove track candidates that are too short
+static void removeShortCandidates(size_t sizeMin,
+                                  std::vector<Track>& candidates)
+{
+  auto isTooShort = [=](const Track& t) { return t.size() < sizeMin; };
+  auto rm = std::remove_if(candidates.begin(), candidates.end(), isTooShort);
+  auto n = std::distance(rm, candidates.end());
+  candidates.erase(rm, candidates.end());
+
+  if (0 < n) {
+    DEBUG("removed ", n, " short candidates");
+  }
+}
+
+// remove candidates that do not pass quality cuts
+static void removeBadCandidates(Scalar reducedChi2Max,
+                                std::vector<Track>& candidates)
+{
+  // drop bad candidates
+  auto isBad = [=](const Track& t) {
+    // numerical crosschecks
+    if (t.degreesOfFreedom() < 0) {
+      return true;
+    }
+    if (not std::isfinite(t.chi2())) {
+      return true;
+    }
+    if (not std::isfinite(t.reducedChi2())) {
+      return true;
+    }
+    // negative value disables the cut
+    if ((0 < reducedChi2Max) and (reducedChi2Max <= t.reducedChi2())) {
+      return true;
+    }
+    return false;
+  };
+  auto rm = std::remove_if(candidates.begin(), candidates.end(), isBad);
+  auto n = std::distance(rm, candidates.end());
+  candidates.erase(rm, candidates.end());
+
+  if (0 < n) {
+    DEBUG("removed ", n, " bad candidates");
+  }
+}
+
+// sort longest tracks w/ smallest chi2 first
+static void sortCandidates(std::vector<Track>& candidates)
+{
+  // WARNING
+  // compare has to fullfil (from C++ standard)
+  //   1. compare(a, a) == false
+  //   2. compare(a, b) == true -> compare(b, a) == false
+  //   3. compare(a, b) == true && compare(b, c) == true -> compare(a, c) ==
+  //   true
+  // if it does not, std::sort will corrupt the heap.
+  // NOTE to future self:
+  // do not try to be smart or optimize this. you got burnt once already.
+  auto compare = [](const Track& a, const Track& b) {
+    // first sort by length, longest first
+    if (a.size() < b.size())
+      return false;
+    if (b.size() < a.size())
+      return true;
+    // second sort by chi2, smallest first
+    if (a.chi2() < b.chi2())
+      return true;
+    if (b.chi2() < a.chi2())
+      return false;
+    // equivalent objects
+    return false;
+  };
+  std::sort(candidates.begin(), candidates.end(), compare);
+}
+
+// add all tracks w/ exclusive cluster-to-track association to the event
+static void addTracksToEvent(const std::vector<Track>& candidates, Event& event)
+{
+  size_t numAddedTracks = 0;
+
+  for (const auto& track : candidates) {
+    // all clusters of the track must be unused
+    bool hasUsedClusters = std::any_of(
+        track.clusters().begin(), track.clusters().end(), [&](const auto& c) {
+          return event.getSensorEvent(c.sensor)
+              .getCluster(c.cluster)
+              .isInTrack();
+        });
+    if (hasUsedClusters) {
+      continue;
+    }
+    // add new, good track to the event; also fixes cluster-track association
+    event.addTrack(track);
+    numAddedTracks += 1;
+  }
+
+  DEBUG(numAddedTracks, " tracks added to event");
+}
+
+void Tracking::TrackFinder::execute(Event& event) const
+{
+  std::vector<Track> candidates;
+  std::vector<bool> usedClusters;
+
+  for (size_t istep = 0; istep < m_steps.size(); ++istep) {
+    const auto& curr = m_steps[istep];
+    auto& sensorEvent = event.getSensorEvent(curr.sensorId);
+
+    // initialize usage mask, all clusters are assumed unused at the beginning
+    usedClusters.assign(sensorEvent.numClusters(), false);
+
+    // propagate states onto the current plane w/ material effects
+    if (0 < istep) {
+      const auto& prev = m_steps[istep - 1];
+      propagateToCurrent(prev.processNoise, prev.plane, curr.plane, candidates);
+    }
+
+    // search for compatible clusters only on tracking planes.
+    // by design, there are no candidates on the first one plane.
+    if ((0 < istep) and (curr.useForTracking)) {
+      // updates/extends candidates and sets clustersUsed flags
+      searchSensor(m_d2LocMax, m_d2TimeMax, curr.sensorId, sensorEvent,
+                   candidates, usedClusters);
+      // ignore candidates that can never fullfill the final size cut
+      removeShortCandidates(curr.candidateSizeMin, candidates);
+    }
+
+    // generate track candidates from unused clusters on seeding planes
+    // this has to happen last so clusters are picked up first by existing
+    // candidates generated on earlier seeding planes.
+    if (curr.useForSeeding) {
+      makeSeedsFromUnusedClusters(curr.sensorId, sensorEvent, curr.seedSlope,
+                                  curr.seedSlopeCovariance, candidates,
+                                  usedClusters);
+    }
+  }
+
+  // final track selection and transformations
+  removeBadCandidates(m_reducedChi2Max, candidates);
+  sortCandidates(candidates);
+  propagateToGlobal(m_steps.back().plane, candidates);
+  addTracksToEvent(candidates, event);
 }

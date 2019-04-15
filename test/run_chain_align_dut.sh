@@ -5,7 +5,7 @@
 set -ex
 
 nalign=${NALIGN:-25000}
-source ./run_common.sh
+. ./run_common.sh
 
 pt-align ${flags} -u dut_correlations \
   -g ${output_prefix}chain-align_tel_fine-geo.toml \

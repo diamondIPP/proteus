@@ -4,7 +4,7 @@
 
 set -ex
 
-source ./run_common.sh
+. ./run_common.sh
 
 # rough align w/ correlations
 pt-align ${flags} -u dut_correlations \

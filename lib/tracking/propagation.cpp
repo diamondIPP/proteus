@@ -15,13 +15,13 @@ Matrix2 Tracking::jacobianSlopeSlope(const Vector4& tangent,
                                      const Matrix4& toTarget)
 {
   // map source track parameters to unrestricted target tangent
-  Matrix42 R;
+  Matrix<Scalar, 4, 2> R;
   R.col(0) = toTarget.col(kU);
   R.col(1) = toTarget.col(kV);
   // source tangent in slope parametrization -> target tangent w/ same length
   Vector4 S = toTarget * tangent * (1 / tangent[kW]);
   // map changes in target tangent to slope changes restricted to plane
-  Matrix24 F = Matrix24::Zero();
+  Matrix<Scalar, 2, 4> F = Matrix<Scalar, 2, 4>::Zero();
   F(0, kU) = 1 / S(kW);
   F(1, kV) = 1 / S(kW);
   F(0, kW) = -S[kU] / (S[kW] * S[kW]);
@@ -54,12 +54,12 @@ Matrix6 Tracking::jacobianState(const Vector4& tangent,
   // target tangent derived from the source tangent in slope normalization
   Vector4 S = toTarget * tangent * (1 / tangent[kW]);
   // map source track parameters to unrestricted target coordinates (pos or tan)
-  Matrix43 R;
+  Matrix<Scalar, 4, 3> R;
   R.col(kLoc0) = toTarget.col(kU);
   R.col(kLoc1) = toTarget.col(kV);
   R.col(kTime) = toTarget.col(kS);
   // map changes in unrestricted target coords to changes restricted to plane
-  Matrix34 F = Matrix34::Zero();
+  Matrix<Scalar, 3, 4> F = Matrix<Scalar, 3, 4>::Zero();
   F(kLoc0, kU) = 1;
   F(kLoc1, kV) = 1;
   F(kTime, kS) = 1;

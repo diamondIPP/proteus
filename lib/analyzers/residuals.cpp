@@ -133,9 +133,8 @@ void Analyzers::Residuals::execute(const Storage::Event& event)
     for (Index icluster = 0; icluster < sev.numClusters(); ++icluster) {
       const Storage::Cluster& cluster = sev.getCluster(icluster);
 
-      if (cluster.isInTrack()) {
-        const Storage::TrackState& state = sev.getLocalState(cluster.track());
-        hists.fill(state, cluster);
+      if (cluster.isInTrack() and sev.hasLocalState(cluster.track())) {
+        hists.fill(sev.getLocalState(cluster.track()), cluster);
       }
     }
   }
@@ -156,8 +155,7 @@ void Analyzers::Matching::execute(const Storage::Event& event)
   const Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
 
   // iterate over all matched pairs
-  for (const auto& s : sensorEvent.localStates()) {
-    const Storage::TrackState& state = s.second;
+  for (const auto& state : sensorEvent.localStates()) {
     if (state.isMatched()) {
       const Storage::Cluster& cluster =
           sensorEvent.getCluster(state.matchedCluster());

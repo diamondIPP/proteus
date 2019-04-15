@@ -120,8 +120,7 @@ void Analyzers::Efficiency::execute(const Storage::Event& event)
 {
   const Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensor.id());
 
-  for (const auto& s : sensorEvent.localStates()) {
-    const Storage::TrackState& state = s.second;
+  for (const auto& state : sensorEvent.localStates()) {
     auto pix = m_sensor.transformLocalToPixel(state.position());
     auto col = pix[kU];
     auto row = pix[kV];

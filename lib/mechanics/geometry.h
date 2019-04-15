@@ -139,6 +139,9 @@ private:
 
   Vector4 m_origin; // position of the origin in global coordinates
   Matrix4 m_linear; // from local to global coordinates
+
+public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 /** Store and process the geometry of the telescope setup.
@@ -206,6 +209,9 @@ private:
   Vector2 m_beamSlope;
   Vector2 m_beamSlopeStdev;
   Scalar m_beamEnergy;
+
+public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
 
 /** Sort the sensor indices by their position along the beam direction. */

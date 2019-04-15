@@ -101,6 +101,7 @@ public:
   {
     if (isActive(lvl)) {
       detail::print(stream(lvl), prefix(lvl), things..., kReset);
+      stream(lvl).flush();
     }
   }
   /** Log information using an objects print(...) function. */
@@ -112,6 +113,7 @@ public:
     if (isActive(lvl)) {
       thing.print(stream(lvl), prefix(lvl) + extraPrefix);
       stream(lvl) << kReset;
+      stream(lvl).flush();
     }
   }
   bool isActive(Level lvl) { return (lvl <= s_level); }

@@ -75,8 +75,8 @@ void Utils::Application::initialize(int argc, char const* argv[])
   // load device w/ optional geometry override
   auto pathDev = args.get("device");
   auto pathGeo = (args.has("geometry") ? args.get("geometry") : std::string());
-  auto dev = Mechanics::Device::fromFile(pathDev, pathGeo);
-  m_dev.reset(new Mechanics::Device(std::move(dev)));
+  m_dev = std::make_unique<Mechanics::Device>(
+      Mechanics::Device::fromFile(pathDev, pathGeo));
 
   // load additional pixel masks
   if (args.has("mask")) {

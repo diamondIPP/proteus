@@ -138,26 +138,35 @@ int main(int argc, char const* argv[])
 
   toml::Table defaults = {
       // tracking settings
-      {"search_sigma_max", 5.},
+      {"search_spatial_sigma_max", 5.},
+      // disabled by default for backward compatibility
+      {"search_temporal_sigma_max", -1.},
       {"reduced_chi2_max", -1.},
       // alignment settings
       {"num_steps", 1},
       {"damping", 0.9},
+      // true by default for backward compatibility
       {"estimate_beam_parameters", true},
   };
   Utils::Application app("align", "align selected sensors", defaults);
   app.initialize(argc, argv);
 
   // configuration
-  auto sensorIds = app.config().get<std::vector<Index>>("sensor_ids");
-  auto alignIds = app.config().get<std::vector<Index>>("align_ids");
-  auto method = app.config().get<std::string>("method");
-  auto numSteps = app.config().get<int>("num_steps");
-  auto damping = app.config().get<double>("damping");
-  auto estimateBeamParameters =
-      app.config().get<bool>("estimate_beam_parameters");
-  auto searchSigmaMax = app.config().get<double>("search_sigma_max");
-  auto redChi2Max = app.config().get<double>("reduced_chi2_max");
+  const auto& cfg = app.config();
+  auto sensorIds = cfg.get<std::vector<Index>>("sensor_ids");
+  auto alignIds = cfg.get<std::vector<Index>>("align_ids");
+  auto searchSpatialSigmaMax = cfg.get<double>("search_spatial_sigma_max");
+  if (cfg.has("search_sigma_max")) {
+    ERROR("The `search_sigma_max` setting is deprecated. Use "
+          "`search_spatial_sigma_max` instead.");
+    searchSpatialSigmaMax = cfg.get<double>("search_sigma_max");
+  }
+  auto searchTemporalSigmaMax = cfg.get<double>("search_temporal_sigma_max");
+  auto redChi2Max = cfg.get<double>("reduced_chi2_max");
+  auto method = cfg.get<std::string>("method");
+  auto numSteps = cfg.get<int>("num_steps");
+  auto damping = cfg.get<double>("damping");
+  auto estimateBeamParameters = cfg.get<bool>("estimate_beam_parameters");
 
   // split sensors into fixed and alignable set
   std::vector<Index> fixedSensorIds;
@@ -214,7 +223,8 @@ int main(int argc, char const* argv[])
       // use unbiased track residuals to align. this means we need a specific
       // track fitter and should not use the automatic fitter selection.
       loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
-          dev, sensorIds, sensorIds.size(), searchSigmaMax, redChi2Max));
+          dev, sensorIds, searchSpatialSigmaMax, searchTemporalSigmaMax,
+          sensorIds.size(), redChi2Max));
       loop.addProcessor(
           std::make_shared<Tracking::UnbiasedStraight3dFitter>(dev));
       loop.addAnalyzer(std::make_shared<Residuals>(stepDir, dev, sensorIds,
@@ -227,7 +237,8 @@ int main(int argc, char const* argv[])
       // use unbiased track residuals to align. this means we need a specific
       // track fitter and should not use the automatic fitter selection.
       loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
-          dev, sensorIds, sensorIds.size(), searchSigmaMax, redChi2Max));
+          dev, sensorIds, searchSpatialSigmaMax, searchTemporalSigmaMax,
+          sensorIds.size(), redChi2Max));
       loop.addProcessor(
           std::make_shared<Tracking::UnbiasedStraight3dFitter>(dev));
       loop.addAnalyzer(std::make_shared<Residuals>(stepDir, dev, sensorIds,
@@ -271,7 +282,8 @@ int main(int argc, char const* argv[])
     setupClusterizers(dev, loop);
     loop.addProcessor(std::make_shared<ApplyGeometry>(dev));
     loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
-        dev, sensorIds, sensorIds.size(), searchSigmaMax, redChi2Max));
+        dev, sensorIds, searchSpatialSigmaMax, searchTemporalSigmaMax,
+        sensorIds.size(), redChi2Max));
     loop.addProcessor(
         std::make_shared<Tracking::UnbiasedStraight3dFitter>(dev));
 

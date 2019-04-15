@@ -45,7 +45,7 @@ int main(int argc, char const* argv[])
   app.initialize(argc, argv);
 
   // output
-  auto hists = Utils::openRootWrite(app.outputPath("hists.root").c_str());
+  auto hists = Utils::openRootWrite(app.outputPath("hists.root"));
 
   // construct per-sensor configuration
   // construct per-sensor noise analyzer

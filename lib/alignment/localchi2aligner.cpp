@@ -24,14 +24,15 @@ PT_SETUP_LOCAL_LOGGER(LocalChi2Aligner)
 // This Jacobian is equivalent to eq. 17 from V. Karimaeki et al., 2003,
 // arXiv:physics/0306034 w/ some sign modifications to adjust for
 // a different alignment parameter convention (see Geometry::Plane).
-static Matrix26 jacobianOffsetAlignment(const Storage::TrackState& state)
+static Matrix<Scalar, 2, 6>
+jacobianOffsetAlignment(const Storage::TrackState& state)
 {
   auto u = state.loc0();
   auto v = state.loc1();
   auto slopeU = state.slopeLoc0();
   auto slopeV = state.slopeLoc1();
 
-  Matrix26 jac;
+  Matrix<Scalar, 2, 6> jac;
   jac(0, 0) = -1;          // d u / d du
   jac(0, 1) = 0;           // d u / d dv
   jac(0, 2) = slopeU;      // d u / d dw
@@ -109,7 +110,8 @@ static DiagMatrix6 jacobianScaling(const Mechanics::Sensor& sensor)
 // robust singular value decomposition, ignore vanishing singular values,
 // and do not have to bother with the whole regularization scheme at all.
 
-Alignment::LocalChi2PlaneFitter::LocalChi2PlaneFitter(const DiagMatrix6 scaling)
+Alignment::LocalChi2PlaneFitter::LocalChi2PlaneFitter(
+    const DiagMatrix6& scaling)
     : m_scaling(scaling)
     , m_fr(SymMatrix6::Zero())
     , m_y(Vector6::Zero())

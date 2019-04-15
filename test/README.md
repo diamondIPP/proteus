@@ -81,6 +81,8 @@ binaries can be called directly, e.g. by sourcing the `activate.sh`
 script in the build directory. Please see the `README.md` file in the
 main directory for build instructions.
 
+The script `root-checker` assumes that the default python command works with ROOT.
+
 ## UNIGE telescope with a FE-I4 dummy dut (unigetel_dummy)
 
 A simulated setup modelled after the UNIGE telescope: six IBL FE-I4
