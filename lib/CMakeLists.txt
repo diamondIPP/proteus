@@ -48,18 +48,19 @@ set(proteus_SOURCES
 file(GLOB_RECURSE proteus_HEADERS LIST_DIRECTORIES false *.h)
 
 # optional components
-set(proteus_EXTRA_DEFINITIONS)
-set(proteus_EXTRA_LIBRARIES)
+set(proteus_PRIVATE_DEFINITIONS)
+set(proteus_PRIVATE_INCLUDE_DIRS)
+set(proteus_PRIVATE_LIBRARIES)
 if(PROTEUS_USE_EUDAQ)
   if(EUDAQ_VERSION VERSION_LESS "2")
     list(APPEND proteus_SOURCES io/eudaq1.cpp)
-    list(APPEND proteus_EXTRA_DEFINITIONS -DPT_USE_EUDAQ1)
-    list(APPEND proteus_EXTRA_LIBRARIES ${EUDAQ_LIBRARIES})
+    list(APPEND proteus_PRIVATE_DEFINITIONS -DPT_USE_EUDAQ1)
   else()
     list(APPEND proteus_SOURCES io/eudaq2.cpp)
-    list(APPEND proteus_EXTRA_DEFINITIONS -DPT_USE_EUDAQ2)
-    list(APPEND proteus_EXTRA_LIBRARIES ${EUDAQ_LIBRARIES})
+    list(APPEND proteus_PRIVATE_DEFINITIONS -DPT_USE_EUDAQ2)
   endif()
+  list(APPEND proteus_PRIVATE_INCLUDE_DIRS ${EUDAQ_INCLUDE_DIRS})
+  list(APPEND proteus_PRIVATE_LIBRARIES ${EUDAQ_LIBRARIES})
 endif()
 
 add_library(proteus STATIC ${proteus_SOURCES} ${proteus_HEADERS})
@@ -71,7 +72,7 @@ target_include_directories(
   proteus
   SYSTEM PUBLIC ${EIGEN_INCLUDE_DIRS}
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${ROOT_INCLUDE_DIRS}
-  PRIVATE ${proteus_EXTRA_INCLUDES})
+  PRIVATE ${proteus_PRIVATE_INCLUDE_DIRS})
 target_link_libraries(
   proteus
   PUBLIC ROOT::Hist ROOT::Tree
