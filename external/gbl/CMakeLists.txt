@@ -15,7 +15,7 @@ set(gbl_HEADERS include/BorderedBandMatrix.h
                 include/VMatrix.h)
 
 # include headers to make them visible in QtCreator
-add_library(
-    gbl STATIC ${gbl_SOURCES} ${gbl_HEADERS})
-target_include_directories(
-    gbl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${EIGEN_INCLUDE_DIRS})
+add_library(gbl STATIC ${gbl_SOURCES} ${gbl_HEADERS})
+# Eigen as SYSTEM include to suppress warnings
+target_include_directories(gbl SYSTEM PUBLIC ${EIGEN_INCLUDE_DIRS})
+target_include_directories(gbl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

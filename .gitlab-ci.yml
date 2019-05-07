@@ -1,4 +1,5 @@
-image: gitlab-registry.cern.ch/ci-tools/ci-worker:slc6
+# build w/ default CentOS7 image
+image: gitlab-registry.cern.ch/ci-tools/ci-worker:cc7
 
 stages:
   - build
@@ -9,8 +10,7 @@ variables:
 
 # default build environment w/ minimal version requirements
 before_script:
-  - source ci/lcg_view.sh
-  - source ${lcg_view}/setup.sh
+  - source ci/lcg_setup.sh
 
 check-format:
   # clang-format on ci yields different output from local installation
@@ -24,64 +24,58 @@ check-format:
     - cmake ..
     - cmake --build . -- check-format
 
-build-slc6-dbg:
+# plain debug build
+build-debug:
   stage: build
   tags:
     - cvmfs
-  variables:
-    # Build type=Debug: activates compilation of asserts and
-    # includes debug symbols (See issue #43)
-    CMAKE_ARGS: -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${CI_PROJECT_DIR}/install
   script:
-    - mkdir build_external && cd build_external
-    - cmake ${CMAKE_ARGS} ../ci/external
-    # external tools are installed already during build step
-    - cmake --build .
-    - mkdir ../build && cd ../build
-    - cmake ${CMAKE_ARGS} -DPROTEUS_USE_EUDAQ=on ..
+    - mkdir build
+    - cd build
+    - cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=../install ..
     - cmake --build . -- install
   artifacts:
     paths:
       - install
 
-build-slc6-opt:
+# debug builds w/ eudaq v1
+build-debug-eudaq1:
   stage: build
   tags:
     - cvmfs
-  variables:
-    CMAKE_ARGS: -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${CI_PROJECT_DIR}/install-slc6-opt
   script:
-    - mkdir build-external && cd build-external
-    - cmake ${CMAKE_ARGS} ../ci/external
-    # external tools are installed already during build step
-    - cmake --build .
-    - mkdir ../build && cd ../build
-    - cmake ${CMAKE_ARGS} -DPROTEUS_USE_EUDAQ=on ..
-    - cmake --build .
+    - ./ci/install_with_eudaq.sh eudaq1 install -DCMAKE_BUILD_TYPE=Debug
+  artifacts:
+    paths:
+      - install
 
-build-cc7-dbg:
-  image: gitlab-registry.cern.ch/ci-tools/ci-worker:cc7
+# debug builds w/ eudaq v2
+build-debug-eudaq2:
   stage: build
   tags:
     - cvmfs
   script:
-    - mkdir build && cd build
-    - cmake -GNinja -DCMAKE_BUILD_TYPE=Debug ..
-    - cmake --build .
+    - ./ci/install_with_eudaq.sh eudaq2 install -DCMAKE_BUILD_TYPE=Debug
+  artifacts:
+    paths:
+      - install
 
-build-cc7-opt:
-  image: gitlab-registry.cern.ch/ci-tools/ci-worker:cc7
+# plain release build
+build-release:
   stage: build
   tags:
     - cvmfs
   script:
-    - mkdir build && cd build
-    - cmake -GNinja -DCMAKE_BUILD_TYPE=Release ..
-    - cmake --build .
+    - mkdir build
+    - cd build
+    - cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../install ..
+    - cmake --build . -- install
+  artifacts:
+    paths:
+      - install
 
 doc:
   allow_failure: true
-  image: gitlab-registry.cern.ch/unige-fei4tel/proteus:cc7
   stage: build
   tags:
     - cvmfs
@@ -97,6 +91,8 @@ test-configs:
   stage: test
   tags:
     - cvmfs
+  dependencies:
+    - build-debug
   script:
     - source install/activate.sh
     - cd test
@@ -106,6 +102,8 @@ test-combine:
   stage: test
   tags:
     - cvmfs
+  dependencies:
+    - build-debug
   script:
     - source install/activate.sh
     - cd test
@@ -117,6 +115,8 @@ test-combine:
   stage: test
   tags:
     - cvmfs
+  dependencies:
+    - build-debug
   script:
     - source install/activate.sh
     - cd test

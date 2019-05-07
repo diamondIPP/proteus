@@ -1,4 +1,4 @@
-# Copyright 2017 Moritz Kiehn <msmk@cern.ch>
+# Copyright 2017,2019 Moritz Kiehn <msmk@cern.ch>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,56 +24,78 @@
 #
 # Find a EUDAQ installation. Searches common system directories by default.
 # This can be changed by setting the ``EUDAQ_DIR`` environment variable to
-# point to the EUDAQ root directory. For EUDAQ 1 this should be the path to
-# the source directory and for EUDAQ 2 the path to the installation prefix.
+# point to the EUDAQ root directory.
 #
 # The following variables will be defined::
 #
-#   EUDAQ_FOUND     - True if the EUDAQ installation was found
-#   EUDAQ_VERSION   - The EUDAQ version, at the moment either 1 or 2
-#   EUDAQ_LIBRARIES - The EUDAQ library target
+#   EUDAQ_FOUND        - True if a EUDAQ installation was found
+#   EUDAQ_INCLUDE_DIRS - The EUDAQ include directories
+#   EUDAQ_LIBRARIES    - The EUDAQ library target(s)
+#   EUDAQ_VERION       - The EUDAQ version
 #
-# Include directories are handled automatically via target properties.
 
-find_path(
-  EUDAQ_INCLUDE_DIR
-  NAMES eudaq/Config.hh eudaq/Platform.hh
-  PATH_SUFFIXES include main/include
-  PATHS ENV EUDAQ_DIR)
-find_library(
-  EUDAQ_LIBRARY
-  NAMES EUDAQ eudaq_core
-  PATH_SUFFIXES lib
-  PATHS ENV EUDAQ_DIR)
+# ensure EUDAQ_DIR and install directory are in search
+list(APPEND CMAKE_PREFIX_PATH $ENV{EUDAQ_DIR} ${CMAKE_INSTALL_PREFIX})
 
-if(EXISTS "${EUDAQ_INCLUDE_DIR}/eudaq/Config.hh")
-  file(
-    STRINGS "${EUDAQ_INCLUDE_DIR}/eudaq/Config.hh" _eudaq_version_raw
-    REGEX "^#define[ \t]PACKAGE_VERSION[ \t].*$"
-    LIMIT_COUNT 1)
-  string(
-    REGEX REPLACE "^#define[ \t]PACKAGE_VERSION[ \t]+\"v(.*)\"$" "\\1"
-    EUDAQ_VERSION "${_eudaq_version_raw}")
+# try to find eudaq v2 that already comes with a cmake config
+find_package(eudaq QUIET CONFIG)
+
+if(eudaq_FOUND)
+  # cmake has found a config file for eudaq
+  # EUDAQ_INCLUDE_DIRS, EUDAQ_LIBRARIES, eudaq_core target already set
+  message(STATUS "Found EUDAQ_INCLUDE_DIRS=${EUDAQ_INCLUDE_DIRS}")
+  message(STATUS "Found EUDAQ_LIBRARIES=${EUDAQ_LIBRARIES}")
+
+  # set core library for common found check later
+  set(EUDAQ_CORE_LIBRARY eudaq_core)
+
+  # identify the core include directory and prune non-existing dirs
+  set(EUDAQ_INCLUDE_DIR)
+  set(_existing_incdirs)
+  foreach(_dir IN LISTS EUDAQ_INCLUDE_DIRS)
+    if(EXISTS "${_dir}" AND IS_DIRECTORY "${_dir}")
+      list(APPEND _existing_incdirs ${_dir})
+    endif()
+    if(EXISTS "${_dir}/eudaq/Config.hh")
+      set(EUDAQ_INCLUDE_DIR ${_dir})
+    endif()
+  endforeach()
+  set(EUDAQ_INCLUDE_DIRS ${_existing_incdirs})
+
+  # try to extract the version
+  set(EUDAQ_VERSION)
+  if(EXISTS "${EUDAQ_INCLUDE_DIR}/eudaq/Config.hh")
+    file(
+      STRINGS "${EUDAQ_INCLUDE_DIR}/eudaq/Config.hh" _version_raw
+      REGEX "^#define[ \t]PACKAGE_VERSION[ \t].*$"
+      LIMIT_COUNT 1)
+    string(
+      REGEX REPLACE "^#define[ \t]+PACKAGE_VERSION[ \t]+\"(.*)\"" "\\1"
+      EUDAQ_VERSION "${_version_raw}")
+  endif()
+
 else()
+  # no config file found, try to find eudaq v1 manually
+  find_library(
+    EUDAQ_CORE_LIBRARY
+    NAMES EUDAQ
+    PATH_SUFFIXES lib)
+  find_path(
+    EUDAQ_INCLUDE_DIR
+    NAMES eudaq/Config.hh eudaq/Platform.hh
+    PATH_SUFFIXES include main/include)
+
+  set(EUDAQ_INCLUDE_DIRS ${EUDAQ_INCLUDE_DIR})
+  set(EUDAQ_LIBRARIES ${EUDAQ_CORE_LIBRARY})
   set(EUDAQ_VERSION "1")
+
 endif()
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(
   EUDAQ
   FOUND_VAR EUDAQ_FOUND
-  REQUIRED_VARS EUDAQ_LIBRARY EUDAQ_INCLUDE_DIR
+  REQUIRED_VARS EUDAQ_CORE_LIBRARY EUDAQ_INCLUDE_DIR
   VERSION_VAR EUDAQ_VERSION)
 
-if(EUDAQ_FOUND)
-  if(NOT TARGET EUDAQ::EUDAQ)
-    add_library(EUDAQ::EUDAQ UNKNOWN IMPORTED)
-    set_target_properties(
-      EUDAQ::EUDAQ PROPERTIES
-      IMPORTED_LOCATION "${EUDAQ_LIBRARY}"
-      INTERFACE_INCLUDE_DIRECTORIES "${EUDAQ_INCLUDE_DIR}")
-  endif()
-  set(EUDAQ_LIBRARIES "EUDAQ::EUDAQ")
-endif()
-
-mark_as_advanced(EUDAQ_INCLUDE_DIR EUDAQ_LIBRARY)
+mark_as_advanced(EUDAQ_CORE_LIBRARY EUDAQ_INCLUDE_DIR)
