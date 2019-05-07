@@ -63,8 +63,17 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
 {
   using Utils::Config::withDefaults;
 
-  if (cfg.has("device"))
-    ERROR("device configuration is deprecated and will not be used");
+  // deprecation checks
+  if (cfg.has("device")) {
+    ERROR("The '[device]' configuration section is deprecated and will not be "
+          "used");
+  }
+  for (const auto& it : cfg.get<toml::Table>("sensor_types")) {
+    if (it.second.has("thickness")) {
+      ERROR("The 'thickness' setting for sensor type '" + it.first +
+            "' is deprecated and will not be used");
+    }
+  }
 
   // WARNING
   // upper limits in the configuration file are inclusive, but in
@@ -128,7 +137,7 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
         config.get<int>("timestamp_min"), config.get<int>("timestamp_max") + 1,
         config.get<int>("value_max") + 1, config.get<double>("pitch_col"),
         config.get<double>("pitch_row"), config.get<double>("pitch_timestamp"),
-        config.get<double>("thickness"), config.get<double>("x_x0"));
+        config.get<double>("x_x0"));
 
     // add regions if defined
     for (const auto& r : config.get<toml::Array>("regions")) {
