@@ -1,3 +1,6 @@
+# build w/ default CentOS7 image
+image: gitlab-registry.cern.ch/ci-tools/ci-worker:cc7
+
 stages:
   - build
   - test
