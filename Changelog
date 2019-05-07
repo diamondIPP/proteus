@@ -69,6 +69,8 @@ User-visible changes
     Adds ``tracks/probability`` histogram to ``...-hists.root`` files
     and ``trk_prob`` branch to match ROOT trees.
 
+*   Increase required ROOT version to 6.10 and EUDAQ to 1.9.
+
 Bugfixes
 --------
 
