@@ -76,7 +76,6 @@ public:
          Scalar pitchCol,
          Scalar pitchRow,
          Scalar pitchTimestamp,
-         Scalar thickness,
          Scalar xX0);
 
   // identification
@@ -151,15 +150,14 @@ private:
   DigitalRange m_valueRange;
   Scalar m_pitchCol, m_pitchRow; // digital col/row address to metric location
   Scalar m_pitchTimestamp;       // digital timestamp to metric time
-  Scalar m_thickness;            // sensor thickness
   Scalar m_xX0;                  // X/X0 (thickness in radiation lengths)
   Scalar m_theta0;
   Measurement m_measurement;
   std::vector<Region> m_regions;
   Utils::DenseMask m_pixelMask;
   // geometry-dependent information
-  Vector2 m_beamSlope;         // beam slope in the local system
-  SymMatrix2 m_beamSlopeCov;   // beam slope covariance in the local system
+  Vector2 m_beamSlope;       // beam slope in the local system
+  SymMatrix2 m_beamSlopeCov; // beam slope covariance in the local system
   Vector4 m_projPitch;
   Volume m_projBoundingBox;
 

@@ -4,7 +4,6 @@ cols = 80
 rows = 336
 pitch_col = 0.250
 pitch_row = 0.050
-thickness = 0.250
 x_x0 = 0.005443
 
 [[sensor_types.bad_regions.regions]]

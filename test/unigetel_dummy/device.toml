@@ -10,7 +10,6 @@ value_max = 15
 pitch_col = 0.250
 pitch_row = 0.050
 pitch_timestamp = 25.0
-thickness = 0.250
 x_x0 = 0.005443
 
 [sensor_types.ibl_like_dut]
@@ -23,7 +22,6 @@ value_max = 32767
 pitch_col = 0.250
 pitch_row = 0.050
 pitch_timestamp = 12.5
-thickness = 0.250
 x_x0 = 0.005443
 
 [[sensor_types.ibl_like_dut.regions]]

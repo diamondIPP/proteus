@@ -109,14 +109,33 @@ test-combine:
     - cd test
     - ./check_combine.sh --no-progress
 
-# template for dataset tests
+# run reconstruction using a debug build with an example dataset
+
+test-unigetel_dummy-ebeam005_positron_nparticles01_inc-recon-debug:
+  stage: test
+  tags:
+    - cvmfs
+  dependencies:
+    - build-debug
+  variables:
+    DATASET: unigetel_dummy/ebeam005_positron_nparticles01_inc
+  script:
+    - source install/activate.sh
+    - cd test
+    - ./run_recon.sh ${DATASET} --no-progress
+  artifacts:
+    paths:
+      - test/output
+    expire_in: 1 week
+
+# template for full dataset reconstruction chain using the release build
 
 .test_dataset: &template_test_dataset
   stage: test
   tags:
     - cvmfs
   dependencies:
-    - build-debug
+    - build-release
   script:
     - source install/activate.sh
     - cd test

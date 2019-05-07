@@ -59,7 +59,6 @@ Mechanics::Sensor::Sensor(Index id,
                           Scalar pitchCol,
                           Scalar pitchRow,
                           Scalar pitchTimestamp,
-                          Scalar thickness,
                           Scalar xX0)
     : m_id(id)
     , m_name(name)
@@ -70,7 +69,6 @@ Mechanics::Sensor::Sensor(Index id,
     , m_pitchCol(pitchCol)
     , m_pitchRow(pitchRow)
     , m_pitchTimestamp(pitchTimestamp)
-    , m_thickness(thickness)
     , m_xX0(xX0)
     // this is geometry dependent
     , m_theta0(0)
@@ -300,7 +298,6 @@ void Mechanics::Sensor::print(std::ostream& os, const std::string& prefix) const
       os << prefix << "    row: " << region.colRow.interval(1) << '\n';
     }
   }
-  os << prefix << "thickness: " << m_thickness << '\n';
   os << prefix << "x/X0: " << m_xX0 << '\n';
   os << prefix << "theta0: " << m_theta0 * 1000 << " mrad\n";
   os.flush();

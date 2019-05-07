@@ -3,13 +3,12 @@ geometry = "../geometry/unigetel_nominal.toml"
 [sensor_types.some_sensor]
 measurement = "pixel_tot"
 cols = 80
-rows = 336
+#rows = 336
 time_min = -23
 time_max = 42
 value_max = 666
 #pitch_col = 0.050
 pitch_row = 0.050
-#thickness = 0.150
 x_x0 = 0.005443
 
 [[sensors]]
