@@ -105,6 +105,8 @@ Internal changes
 *   ``Track``s store the constituent clusters by index instead of by pointer.
 *   The Mahalanobis distance calculation uses the square root free
     :math:`L\,D\L^T` Cholesky decomposition for better numerical stability.
+*   Switch the continous integration to use the default CentOS7 worker
+    and remove the custom build images.
 
 v1.4.0 (2019-03-07)
 ===================
