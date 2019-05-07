@@ -69,6 +69,14 @@ User-visible changes
     Adds ``tracks/probability`` histogram to ``...-hists.root`` files
     and ``trk_prob`` branch to match ROOT trees.
 
+*   Remove the ``thickness`` setting in the sensor type configuration.
+
+    This setting should have described the physical thickness of the
+    sensor, but this value was not used anywhere in the code. It also
+    lead to confusion with the relative scattering thickness ``x_x0``
+    that is used. If the setting is found, an error message will be
+    shown and its value will be ignored.
+
 *   Increase required ROOT version to 6.10 and EUDAQ to 1.9.
 
 Bugfixes
