@@ -107,6 +107,8 @@ Internal changes
     :math:`L\,D\L^T` Cholesky decomposition for better numerical stability.
 *   Switch the continous integration to use the default CentOS7 worker
     and remove the custom build images.
+*   Build proteus with both EUDAQ v1 and v2 in the continous
+    integration.
 
 v1.4.0 (2019-03-07)
 ===================
