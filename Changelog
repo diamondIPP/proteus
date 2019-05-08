@@ -7,6 +7,21 @@ Changelog
 v1.5.0 (to be released)
 =======================
 
+.. note::
+
+   The main proteus repository has moved to
+   https://gitlab.cern.ch/proteus/proteus. If you already have a local
+   clone of the repository you should update the remote urls. The test
+   data submodule now uses a relative url so it automatically uses the
+   same access protocol as the main repository. It might be necessary
+   to run
+
+       git submodule sync
+       git submodule update
+
+   once after the remote url for the main repository has been updated
+   to ensure the update relative url is used.
+
 User-visible changes
 --------------------
 
