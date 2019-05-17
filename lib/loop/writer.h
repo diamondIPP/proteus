@@ -8,10 +8,9 @@
 
 #include <string>
 
-namespace Storage {
+namespace proteus {
+
 class Event;
-}
-namespace Loop {
 
 /** Event writer interface. */
 class Writer {
@@ -23,9 +22,9 @@ public:
    * The reference to the event is only valid for the duration of the call.
    * Errors must be handled by throwing an appropriate exception.
    */
-  virtual void append(const Storage::Event& event) = 0;
+  virtual void append(const Event& event) = 0;
 };
 
-} // namespace Loop
+} // namespace proteus
 
 #endif // PT_WRITER_H

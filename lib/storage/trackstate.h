@@ -12,7 +12,7 @@
 
 #include "utils/definitions.h"
 
-namespace Storage {
+namespace proteus {
 
 /** Track state on a plane.
  *
@@ -124,7 +124,7 @@ public:
 
 std::ostream& operator<<(std::ostream& os, const TrackState& state);
 
-// implementations
+// inline implementations
 
 inline TrackState::TrackState()
     : m_params(Vector6::Constant(std::numeric_limits<Scalar>::quiet_NaN()))
@@ -222,6 +222,6 @@ inline Vector4 TrackState::tangent() const
   return tgt;
 }
 
-} // namespace Storage
+} // namespace proteus
 
 #endif // PT_TRACKSTATE_H

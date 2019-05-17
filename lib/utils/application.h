@@ -14,11 +14,9 @@
 #include "loop/eventloop.h"
 #include "utils/config.h"
 
-namespace Mechanics {
-class Device;
-}
+namespace proteus {
 
-namespace Utils {
+class Device;
 
 /** Common application class.
  *
@@ -40,7 +38,7 @@ public:
   void initialize(int argc, char const* argv[]);
 
   /** Device setup w/ updated geometry. */
-  const Mechanics::Device& device() const { return *m_dev; }
+  const Device& device() const { return *m_dev; }
   /** Tool configuration w/ defaults. */
   const toml::Value& config() const { return m_cfg; }
   /** Generate the output path for the given file name. */
@@ -50,12 +48,12 @@ public:
    *
    * Automatically opens the input file and adds it to the event loop.
    */
-  Loop::EventLoop makeEventLoop() const;
+  EventLoop makeEventLoop() const;
 
 private:
   std::string m_name;
   std::string m_desc;
-  std::unique_ptr<Mechanics::Device> m_dev;
+  std::unique_ptr<Device> m_dev;
   toml::Value m_cfg;
   std::string m_inputPath;
   std::string m_outputPrefix;
@@ -65,6 +63,6 @@ private:
   bool m_showProgress;
 };
 
-} // namespace Utils
+} // namespace proteus
 
 #endif // PT_APPLICATION_H

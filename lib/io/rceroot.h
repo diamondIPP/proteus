@@ -16,12 +16,12 @@
 namespace toml {
 class Value;
 }
-namespace Io {
+namespace proteus {
 
 /** Common data for RceRoot{Reader,Writer}. */
 class RceRootCommon {
 protected:
-  RceRootCommon(Utils::RootFilePtr&& file);
+  RceRootCommon(RootFilePtr&& file);
   ~RceRootCommon() = default;
 
   /* NOTE: these sizes are used to initialize arrays of track, cluster and
@@ -38,7 +38,7 @@ protected:
     int64_t entries = 0;
   };
 
-  Utils::RootFilePtr m_file;
+  RootFilePtr m_file;
   int64_t m_entries;
   int64_t m_next;
   // Trees global to the entire event
@@ -89,7 +89,7 @@ protected:
 };
 
 /** Read events from a RCE ROOT file. */
-class RceRootReader : public RceRootCommon, public Loop::Reader {
+class RceRootReader : public RceRootCommon, public Reader {
 public:
   /** Return a score of how likely the given path is an RCE Root file. */
   static int check(const std::string& path);
@@ -105,14 +105,14 @@ public:
   size_t numSensors() const override final;
 
   void skip(uint64_t n) override final;
-  bool read(Storage::Event& event) override final;
+  bool read(Event& event) override final;
 
 private:
   int64_t addSensor(TDirectory* dir);
 };
 
 /** Write event in the RCE ROOT file format. */
-class RceRootWriter : public RceRootCommon, public Loop::Writer {
+class RceRootWriter : public RceRootCommon, public Writer {
 public:
   /** Open a new file and truncate existing content. */
   RceRootWriter(const std::string& path, size_t numSensors);
@@ -120,12 +120,12 @@ public:
 
   std::string name() const;
 
-  void append(const Storage::Event& event);
+  void append(const Event& event);
 
 private:
   void addSensor(TDirectory* dir);
 };
 
-} // namespace Io
+} // namespace proteus
 
 #endif // PT_RCEROOT_H

@@ -18,10 +18,10 @@ class FileReader;
 namespace toml {
 class Value;
 }
-namespace Io {
+namespace proteus {
 
 /** Read Eudaq1 native raw files. */
-class Eudaq1Reader : public Loop::Reader {
+class Eudaq1Reader : public Reader {
 public:
   static int check(const std::string& path);
   static std::shared_ptr<Eudaq1Reader> open(const std::string& path,
@@ -35,14 +35,14 @@ public:
   size_t numSensors() const override final;
 
   void skip(uint64_t n) override final;
-  bool read(Storage::Event& event) override final;
+  bool read(Event& event) override final;
 
 private:
-  std::unique_ptr<eudaq::FileReader> m_reader;
+  std::unique_ptr<::eudaq::FileReader> m_reader;
   std::map<unsigned, Index> m_mapIdIndex;
   bool m_thatsIt;
 };
 
-} // namespace Io
+} // namespace proteus
 
 #endif // PT_EUDAQ1_H

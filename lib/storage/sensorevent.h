@@ -11,12 +11,11 @@
 #include "storage/trackstate.h"
 #include "utils/definitions.h"
 
-namespace Processors {
+namespace proteus {
+
 class BinaryClusterizer;
 class ValueWeightedClusterizer;
 class FastestHitClusterizer;
-} // namespace Processors
-namespace Storage {
 
 /** An event for a single sensor containing only local information.
  *
@@ -71,15 +70,15 @@ private:
   std::vector<TrackState> m_states;
 
   friend class Event;
-  friend class Processors::BinaryClusterizer;
-  friend class Processors::ValueWeightedClusterizer;
-  friend class Processors::FastestHitClusterizer;
+  friend class BinaryClusterizer;
+  friend class ValueWeightedClusterizer;
+  friend class FastestHitClusterizer;
 };
 
-} // namespace Storage
+// inline implementations
 
 template <typename... HitParams>
-inline Storage::Hit& Storage::SensorEvent::addHit(HitParams&&... params)
+inline Hit& SensorEvent::addHit(HitParams&&... params)
 {
   m_hits.emplace_back(
       std::make_unique<Hit>(std::forward<HitParams>(params)...));
@@ -87,7 +86,7 @@ inline Storage::Hit& Storage::SensorEvent::addHit(HitParams&&... params)
 }
 
 template <typename... Params>
-inline Storage::Cluster& Storage::SensorEvent::addCluster(Params&&... params)
+inline Cluster& SensorEvent::addCluster(Params&&... params)
 {
   m_clusters.emplace_back(
       std::make_unique<Cluster>(std::forward<Params>(params)...));
@@ -96,8 +95,7 @@ inline Storage::Cluster& Storage::SensorEvent::addCluster(Params&&... params)
 }
 
 template <typename... Params>
-inline void Storage::SensorEvent::setLocalState(Index itrack,
-                                                Params&&... params)
+inline void SensorEvent::setLocalState(Index itrack, Params&&... params)
 {
   auto it = std::find_if(
       m_states.begin(), m_states.end(),
@@ -110,5 +108,7 @@ inline void Storage::SensorEvent::setLocalState(Index itrack,
     m_states.back().m_track = itrack;
   }
 }
+
+} // namespace proteus
 
 #endif // PT_SENSOREVENT_H

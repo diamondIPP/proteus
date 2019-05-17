@@ -3,8 +3,9 @@
 #include <cassert>
 #include <iostream>
 
-Storage::Event::Event(size_t sensors)
-    : m_frame(UINT64_MAX), m_timestamp(UINT64_MAX)
+namespace proteus {
+
+Event::Event(size_t sensors) : m_frame(UINT64_MAX), m_timestamp(UINT64_MAX)
 {
   m_sensors.reserve(sensors);
   for (size_t isensor = 0; isensor < sensors; ++isensor) {
@@ -12,7 +13,7 @@ Storage::Event::Event(size_t sensors)
   }
 }
 
-void Storage::Event::clear(uint64_t frame, uint64_t timestamp)
+void Event::clear(uint64_t frame, uint64_t timestamp)
 {
   m_frame = frame;
   m_timestamp = timestamp;
@@ -22,20 +23,20 @@ void Storage::Event::clear(uint64_t frame, uint64_t timestamp)
   m_tracks.clear();
 }
 
-void Storage::Event::setSensorData(Index isensor, SensorEvent&& sensorEvent)
+void Event::setSensorData(Index isensor, SensorEvent&& sensorEvent)
 {
   m_sensors.at(isensor) = std::move(sensorEvent);
   m_sensors.at(isensor).m_states.clear();
 }
 
-void Storage::Event::setSensorData(Index first, Event&& event)
+void Event::setSensorData(Index first, Event&& event)
 {
   for (Index isensor = 0, n = event.m_sensors.size(); isensor < n; ++isensor) {
     setSensorData(first + isensor, std::move(event.m_sensors[isensor]));
   }
 }
 
-void Storage::Event::addTrack(const Track& track)
+void Event::addTrack(const Track& track)
 {
   Index trackId = static_cast<Index>(m_tracks.size());
   m_tracks.push_back(track);
@@ -45,7 +46,7 @@ void Storage::Event::addTrack(const Track& track)
   }
 }
 
-size_t Storage::Event::getNumHits() const
+size_t Event::getNumHits() const
 {
   size_t n = 0;
   for (const auto& se : m_sensors) {
@@ -54,7 +55,7 @@ size_t Storage::Event::getNumHits() const
   return n;
 }
 
-size_t Storage::Event::getNumClusters() const
+size_t Event::getNumClusters() const
 {
   size_t n = 0;
   for (const auto& se : m_sensors) {
@@ -63,7 +64,7 @@ size_t Storage::Event::getNumClusters() const
   return n;
 }
 
-void Storage::Event::print(std::ostream& os, const std::string& prefix) const
+void Event::print(std::ostream& os, const std::string& prefix) const
 {
   os << prefix << "frame: " << frame() << '\n';
   os << prefix << "timestamp: " << timestamp() << '\n';
@@ -83,3 +84,5 @@ void Storage::Event::print(std::ostream& os, const std::string& prefix) const
   }
   os.flush();
 }
+
+} // namespace proteus

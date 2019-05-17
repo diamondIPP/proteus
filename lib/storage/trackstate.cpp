@@ -4,10 +4,12 @@
 
 #include "utils/logger.h"
 
-Storage::TrackState::TrackState(Scalar location0,
-                                Scalar location1,
-                                Scalar slope0,
-                                Scalar slope1)
+namespace proteus {
+
+TrackState::TrackState(Scalar location0,
+                       Scalar location1,
+                       Scalar slope0,
+                       Scalar slope1)
     : TrackState()
 {
   m_params[kLoc0] = location0;
@@ -16,10 +18,10 @@ Storage::TrackState::TrackState(Scalar location0,
   m_params[kSlopeLoc1] = slope1;
 }
 
-Storage::TrackState::TrackState(const Vector4& position,
-                                const SymMatrix4& positionCov,
-                                const Vector2& slope,
-                                const SymMatrix2& slopeCov)
+TrackState::TrackState(const Vector4& position,
+                       const SymMatrix4& positionCov,
+                       const Vector2& slope,
+                       const SymMatrix2& slopeCov)
     : TrackState(Vector6::Zero(), SymMatrix6::Zero())
 {
   m_params[kLoc0] = position[kU];
@@ -39,7 +41,7 @@ Storage::TrackState::TrackState(const Vector4& position,
   m_cov(kSlopeLoc1, kSlopeLoc1) = slopeCov(1, 1);
 }
 
-std::ostream& Storage::operator<<(std::ostream& os, const TrackState& state)
+std::ostream& operator<<(std::ostream& os, const TrackState& state)
 {
   os << "loc0=" << state.loc0();
   os << " loc1=" << state.loc1();
@@ -49,3 +51,5 @@ std::ostream& Storage::operator<<(std::ostream& os, const TrackState& state)
   os << " dtime=" << state.slopeTime();
   return os;
 }
+
+} // namespace proteus

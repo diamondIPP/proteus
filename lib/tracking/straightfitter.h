@@ -10,28 +10,26 @@
 #include <vector>
 
 #include "loop/processor.h"
-#include "utils/definitions.h"
 
-namespace Mechanics {
+namespace proteus {
+
 class Device;
 class Geometry;
-} // namespace Mechanics
-namespace Tracking {
 
 /** Estimate local track parameters using a straight line fit.
  *
  * This calculates global track parameters and global goodness-of-fit and
  * the local track parameters on the all sensor planes.
  */
-class Straight3dFitter : public Loop::Processor {
+class Straight3dFitter : public Processor {
 public:
-  Straight3dFitter(const Mechanics::Device& device);
+  Straight3dFitter(const Device& device);
 
   std::string name() const;
-  void execute(Storage::Event& event) const;
+  void execute(Event& event) const;
 
 private:
-  const Mechanics::Geometry& m_geo;
+  const Geometry& m_geo;
 };
 
 /** Estimate local track parameters including time using a straight line fit.
@@ -39,15 +37,15 @@ private:
  * This calculates global track parameters and global goodness-of-fit and
  * the local track parameters on the all sensor planes.
  */
-class Straight4dFitter : public Loop::Processor {
+class Straight4dFitter : public Processor {
 public:
-  Straight4dFitter(const Mechanics::Device& device);
+  Straight4dFitter(const Device& device);
 
   std::string name() const;
-  void execute(Storage::Event& event) const;
+  void execute(Event& event) const;
 
 private:
-  const Mechanics::Geometry& m_geo;
+  const Geometry& m_geo;
 };
 
 /** Estimate local track parameters without local information.
@@ -57,15 +55,15 @@ private:
  * measurement information on a sensor, this measurement is ignored when
  * estimating the local track parameters on that sensor.
  */
-class UnbiasedStraight3dFitter : public Loop::Processor {
+class UnbiasedStraight3dFitter : public Processor {
 public:
-  UnbiasedStraight3dFitter(const Mechanics::Device& device);
+  UnbiasedStraight3dFitter(const Device& device);
 
   std::string name() const;
-  void execute(Storage::Event& event) const;
+  void execute(Event& event) const;
 
 private:
-  const Mechanics::Geometry& m_geo;
+  const Geometry& m_geo;
 };
 
 /** Estimate local track parameters including time without local information.
@@ -75,17 +73,17 @@ private:
  * measurement information on a sensor, this measurement is ignored when
  * estimating the local track parameters on that sensor.
  */
-class UnbiasedStraight4dFitter : public Loop::Processor {
+class UnbiasedStraight4dFitter : public Processor {
 public:
-  UnbiasedStraight4dFitter(const Mechanics::Device& device);
+  UnbiasedStraight4dFitter(const Device& device);
 
   std::string name() const;
-  void execute(Storage::Event& event) const;
+  void execute(Event& event) const;
 
 private:
-  const Mechanics::Geometry& m_geo;
+  const Geometry& m_geo;
 };
 
-} // namespace Tracking
+} // namespace proteus
 
 #endif // PT_STRAIGHTFITTER_H

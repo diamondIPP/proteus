@@ -12,7 +12,7 @@
 #include <ostream>
 #include <type_traits>
 
-namespace Utils {
+namespace proteus {
 
 /** Interval on a single ordered axes.
  *
@@ -229,6 +229,6 @@ inline std::ostream& operator<<(std::ostream& os, const Interval<T>& interval)
   return os;
 }
 
-} // namespace Utils
+} // namespace proteus
 
 #endif // PT_INTERVAL_H

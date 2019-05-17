@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-namespace Utils {
+namespace proteus {
 
 /** Command line argument parser. */
 class Arguments {
@@ -97,13 +97,11 @@ private:
   std::map<std::string, std::string> m_values;
 };
 
-} // namespace Utils
+// inline implementations
 
 template <typename T>
-inline void Utils::Arguments::addOption(char key,
-                                        std::string name,
-                                        std::string help,
-                                        T value)
+inline void
+Arguments::addOption(char key, std::string name, std::string help, T value)
 {
   // value is always stored as string
   std::ostringstream sval;
@@ -117,8 +115,7 @@ inline void Utils::Arguments::addOption(char key,
 }
 
 template <typename T>
-inline void
-Utils::Arguments::addOptional(std::string name, std::string help, T value)
+inline void Arguments::addOptional(std::string name, std::string help, T value)
 {
   // value is always stored as string
   std::ostringstream sval;
@@ -130,24 +127,24 @@ Utils::Arguments::addOptional(std::string name, std::string help, T value)
   m_optionals.push_back(std::move(opt));
 }
 
-inline bool Utils::Arguments::has(const std::string& name) const
+inline bool Arguments::has(const std::string& name) const
 {
   return (m_values.count(name) == 1);
 }
 
-inline const std::string& Utils::Arguments::get(const std::string& name) const
+inline const std::string& Arguments::get(const std::string& name) const
 {
   return m_values.at(name);
 }
 
 template <typename T>
-inline void Utils::Arguments::fromString(const std::string& in, T& out)
+inline void Arguments::fromString(const std::string& in, T& out)
 {
   std::istringstream(in) >> out;
 }
 
 template <typename T>
-void Utils::Arguments::fromString(const std::string& in, std::vector<T>& out)
+inline void Arguments::fromString(const std::string& in, std::vector<T>& out)
 {
   // multiple values are stored in a single string separated by kommas,
   size_t start = 0;
@@ -170,7 +167,7 @@ void Utils::Arguments::fromString(const std::string& in, std::vector<T>& out)
 }
 
 template <typename T>
-inline T Utils::Arguments::get(const std::string& name) const
+inline T Arguments::get(const std::string& name) const
 {
   if (!has(name))
     throw std::runtime_error("Arguments: unknown argument '" + name + "'");
@@ -178,5 +175,6 @@ inline T Utils::Arguments::get(const std::string& name) const
   fromString(m_values.at(name), ret);
   return ret;
 }
+} // namespace proteus
 
 #endif // PT_ARGUMENTS_H

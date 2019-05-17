@@ -11,22 +11,23 @@
 
 PT_SETUP_GLOBAL_LOGGER
 
-Processors::CCPDv4HitMapper::CCPDv4HitMapper(Index sensorId)
-    : m_sensorId(sensorId)
+namespace proteus {
+
+CCPDv4HitMapper::CCPDv4HitMapper(Index sensorId) : m_sensorId(sensorId)
 {
   DEBUG("map FE-I4 to CCPDv4 for sensor ", sensorId);
 }
 
-std::string Processors::CCPDv4HitMapper::name() const
+std::string CCPDv4HitMapper::name() const
 {
   return "CCPDv4HitMapper(sensorId=" + std::to_string(m_sensorId) + ")";
 }
 
-void Processors::CCPDv4HitMapper::execute(Storage::Event& event) const
+void CCPDv4HitMapper::execute(Event& event) const
 {
-  Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
+  SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
   for (Index ihit = 0; ihit < sensorEvent.numHits(); ++ihit) {
-    Storage::Hit& hit = sensorEvent.getHit(ihit);
+    Hit& hit = sensorEvent.getHit(ihit);
 
     // two hits in digital column correspond to two hits in a sensor row.
     // * lower digital hit -> left sensor hit
@@ -51,3 +52,5 @@ void Processors::CCPDv4HitMapper::execute(Storage::Event& event) const
     hit.setPhysicalAddress(col, row);
   }
 }
+
+} // namespace proteus

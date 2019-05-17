@@ -16,6 +16,8 @@
 
 PT_SETUP_LOCAL_LOGGER(Io);
 
+namespace proteus {
+
 // Reader format registry
 //
 // Two methods need to be provided for each file format:
@@ -29,25 +31,26 @@ PT_SETUP_LOCAL_LOGGER(Io);
 // to a file of the selected format. A returned score above 0 should indicate a
 // possible match. The file is then tried to be opened with all matched
 // formats starting from the highest score.
-namespace Io {
 namespace {
-
 struct Format {
-  using EventReaderPtr = std::shared_ptr<Loop::Reader>;
+  using EventReaderPtr = std::shared_ptr<Reader>;
 
   const char* name;
   std::function<int(const std::string&)> check;
   std::function<EventReaderPtr(const std::string&, const toml::Value&)> open;
 };
+
 struct ScoredFormat {
   const Format& format;
   int score;
 };
+
 // A format with a higher score should come before one with a lower score
-bool operator<(const ScoredFormat& a, const ScoredFormat& b)
+inline bool operator<(const ScoredFormat& a, const ScoredFormat& b)
 {
   return b.score < a.score;
 }
+} // namespace
 
 // The global list of available readers that is considered for the automatic
 // file type deduction when using `openRead(...)`
@@ -61,7 +64,7 @@ bool operator<(const ScoredFormat& a, const ScoredFormat& b)
 // be removed by the linker and their constructors will never be called.
 //
 // This version requires manual registration, but just works (tm).
-static std::vector<Format> s_formats = {
+static const std::vector<Format> s_formats = {
 #ifdef PT_USE_EUDAQ1
     {"eudaq1", Eudaq1Reader::check, Eudaq1Reader::open},
 #endif
@@ -72,11 +75,8 @@ static std::vector<Format> s_formats = {
     {"timepix3", Timepix3Reader::check, Timepix3Reader::open},
 };
 
-} // namespace
-} // namespace Io
-
-std::shared_ptr<Loop::Reader> Io::openRead(const std::string& path,
-                                           const toml::Value& cfg)
+std::shared_ptr<Reader> openRead(const std::string& path,
+                                 const toml::Value& cfg)
 {
   std::set<ScoredFormat> scoredFormats;
 
@@ -116,3 +116,5 @@ std::shared_ptr<Loop::Reader> Io::openRead(const std::string& path,
   // this should never be reached but makes the compiler happy
   return nullptr;
 }
+
+} // namespace proteus

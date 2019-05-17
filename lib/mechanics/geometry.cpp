@@ -10,6 +10,8 @@
 
 PT_SETUP_LOCAL_LOGGER(Geometry)
 
+namespace proteus {
+
 // Construct rotation matrix Q321 = R1(𝛼) * R2(𝛽) * R3(𝛾).
 //
 // The rotation matrix in 3-2-1 convention mapping the spatial coordinates
@@ -118,10 +120,10 @@ static Matrix3 jacobianCorrectionsToAngles(const Matrix4& q)
   return jac;
 }
 
-Mechanics::Plane Mechanics::Plane::fromAngles321(double gamma,
-                                                 double beta,
-                                                 double alpha,
-                                                 const Vector3& origin)
+Plane Plane::fromAngles321(double gamma,
+                           double beta,
+                           double alpha,
+                           const Vector3& origin)
 {
   Vector4 r0;
   r0[kX] = origin[0];
@@ -131,9 +133,9 @@ Mechanics::Plane Mechanics::Plane::fromAngles321(double gamma,
   return {r0, makeRotation321(alpha, beta, gamma)};
 }
 
-Mechanics::Plane Mechanics::Plane::fromDirections(const Vector3& dirU,
-                                                  const Vector3& dirV,
-                                                  const Vector3& origin)
+Plane Plane::fromDirections(const Vector3& dirU,
+                            const Vector3& dirV,
+                            const Vector3& origin)
 {
   // code assumes x, y, z are stored continously
   static_assert(kX + 1 == kY, "Spatial coordinates must be continous");
@@ -155,7 +157,7 @@ Mechanics::Plane Mechanics::Plane::fromDirections(const Vector3& dirU,
   return {r0, q};
 }
 
-Mechanics::Plane Mechanics::Plane::correctedGlobal(const Vector6& delta) const
+Plane Plane::correctedGlobal(const Vector6& delta) const
 {
   Vector4 dr;
   dr[kX] = delta[0];
@@ -166,7 +168,7 @@ Mechanics::Plane Mechanics::Plane::correctedGlobal(const Vector6& delta) const
           m_linear * makeRotation321(delta[3], delta[4], delta[5])};
 }
 
-Mechanics::Plane Mechanics::Plane::correctedLocal(const Vector6& delta) const
+Plane Plane::correctedLocal(const Vector6& delta) const
 {
   Vector4 dr;
   dr[kX] = delta[0];
@@ -177,7 +179,7 @@ Mechanics::Plane Mechanics::Plane::correctedLocal(const Vector6& delta) const
           m_linear * makeRotation321(delta[3], delta[4], delta[5])};
 }
 
-Vector6 Mechanics::Plane::asParams() const
+Vector6 Plane::asParams() const
 {
   Vector6 params;
   params[0] = m_origin[kX];
@@ -187,27 +189,27 @@ Vector6 Mechanics::Plane::asParams() const
   return params;
 }
 
-Mechanics::Geometry::Geometry()
+Geometry::Geometry()
     : m_beamSlope(Vector2::Zero())
     , m_beamSlopeStdev(Vector2::Zero())
     , m_beamEnergy(0)
 {
 }
 
-Mechanics::Geometry Mechanics::Geometry::fromFile(const std::string& path)
+Geometry Geometry::fromFile(const std::string& path)
 {
-  auto cfg = Utils::Config::readConfig(path);
+  auto cfg = configRead(path);
   INFO("read geometry from '", path, "'");
   return fromConfig(cfg);
 }
 
-void Mechanics::Geometry::writeFile(const std::string& path) const
+void Geometry::writeFile(const std::string& path) const
 {
-  Utils::Config::writeConfig(toConfig(), path);
+  configWrite(toConfig(), path);
   INFO("wrote geometry to '", path, "'");
 }
 
-Mechanics::Geometry Mechanics::Geometry::fromConfig(const toml::Value& cfg)
+Geometry Geometry::fromConfig(const toml::Value& cfg)
 {
   Geometry geo;
 
@@ -283,7 +285,7 @@ Mechanics::Geometry Mechanics::Geometry::fromConfig(const toml::Value& cfg)
   return geo;
 }
 
-toml::Value Mechanics::Geometry::toConfig() const
+toml::Value Geometry::toConfig() const
 {
   toml::Value cfg;
 
@@ -308,10 +310,10 @@ toml::Value Mechanics::Geometry::toConfig() const
   return cfg;
 }
 
-void Mechanics::Geometry::correctGlobalOffset(Index sensorId,
-                                              double dx,
-                                              double dy,
-                                              double dz)
+void Geometry::correctGlobalOffset(Index sensorId,
+                                   double dx,
+                                   double dy,
+                                   double dz)
 {
   Vector6 delta;
   delta[0] = dx;
@@ -324,9 +326,9 @@ void Mechanics::Geometry::correctGlobalOffset(Index sensorId,
   plane = plane.correctedGlobal(delta);
 }
 
-void Mechanics::Geometry::correctGlobal(Index sensorId,
-                                        const Vector6& delta,
-                                        const SymMatrix6& cov)
+void Geometry::correctGlobal(Index sensorId,
+                             const Vector6& delta,
+                             const SymMatrix6& cov)
 {
   const auto& plane = m_planes.at(sensorId);
 
@@ -341,9 +343,9 @@ void Mechanics::Geometry::correctGlobal(Index sensorId,
   m_covs[sensorId] = transformCovariance(jac, cov);
 }
 
-void Mechanics::Geometry::correctLocal(Index sensorId,
-                                       const Vector6& delta,
-                                       const SymMatrix6& cov)
+void Geometry::correctLocal(Index sensorId,
+                            const Vector6& delta,
+                            const SymMatrix6& cov)
 {
   const auto& plane = m_planes.at(sensorId);
 
@@ -358,17 +360,17 @@ void Mechanics::Geometry::correctLocal(Index sensorId,
   m_covs[sensorId] = transformCovariance(jac, cov);
 }
 
-const Mechanics::Plane& Mechanics::Geometry::getPlane(Index sensorId) const
+const Plane& Geometry::getPlane(Index sensorId) const
 {
   return m_planes.at(sensorId);
 }
 
-Vector6 Mechanics::Geometry::getParams(Index sensorId) const
+Vector6 Geometry::getParams(Index sensorId) const
 {
   return m_planes.at(sensorId).asParams();
 }
 
-SymMatrix6 Mechanics::Geometry::getParamsCov(Index sensorId) const
+SymMatrix6 Geometry::getParamsCov(Index sensorId) const
 {
   auto it = m_covs.find(sensorId);
   if (it != m_covs.end()) {
@@ -377,7 +379,7 @@ SymMatrix6 Mechanics::Geometry::getParamsCov(Index sensorId) const
   return SymMatrix6::Zero();
 }
 
-Vector4 Mechanics::Geometry::beamTangent() const
+Vector4 Geometry::beamTangent() const
 {
   Vector4 tangent;
   tangent[kX] = m_beamSlope[0];
@@ -387,12 +389,12 @@ Vector4 Mechanics::Geometry::beamTangent() const
   return tangent;
 }
 
-SymMatrix2 Mechanics::Geometry::beamSlopeCovariance() const
+SymMatrix2 Geometry::beamSlopeCovariance() const
 {
   return m_beamSlopeStdev.cwiseProduct(m_beamSlopeStdev).asDiagonal();
 }
 
-Vector2 Mechanics::Geometry::getBeamSlope(Index sensorId) const
+Vector2 Geometry::getBeamSlope(Index sensorId) const
 {
   Vector4 tgtLocal = m_planes.at(sensorId).linearToLocal() * beamTangent();
   Vector2 slopeLocal(tgtLocal[kU] / tgtLocal[kW], tgtLocal[kV] / tgtLocal[kW]);
@@ -402,11 +404,10 @@ Vector2 Mechanics::Geometry::getBeamSlope(Index sensorId) const
   return slopeLocal;
 }
 
-SymMatrix2 Mechanics::Geometry::getBeamSlopeCovariance(Index sensorId) const
+SymMatrix2 Geometry::getBeamSlopeCovariance(Index sensorId) const
 {
   const auto& plane = m_planes.at(sensorId);
-  auto jac =
-      Tracking::jacobianSlopeSlope(beamTangent(), plane.linearToGlobal());
+  auto jac = jacobianSlopeSlope(beamTangent(), plane.linearToGlobal());
   SymMatrix2 cov = transformCovariance(jac, beamSlopeCovariance());
   DEBUG("global beam divergence: [",
         extractStdev(beamSlopeCovariance()).transpose(), "]");
@@ -418,8 +419,7 @@ SymMatrix2 Mechanics::Geometry::getBeamSlopeCovariance(Index sensorId) const
   return cov;
 }
 
-void Mechanics::Geometry::print(std::ostream& os,
-                                const std::string& prefix) const
+void Geometry::print(std::ostream& os, const std::string& prefix) const
 {
   os << prefix << "beam:\n";
   os << prefix << "  energy: " << m_beamEnergy << '\n';
@@ -457,8 +457,7 @@ void Mechanics::Geometry::print(std::ostream& os,
   os.flush();
 }
 
-void Mechanics::sortAlongBeam(const Mechanics::Geometry& geo,
-                              std::vector<Index>& sensorIds)
+void sortAlongBeam(const Geometry& geo, std::vector<Index>& sensorIds)
 {
   // TODO 2017-10 msmk: actually sort along beam direction and not just along
   //                    z-axis as proxy.
@@ -467,11 +466,12 @@ void Mechanics::sortAlongBeam(const Mechanics::Geometry& geo,
   });
 }
 
-std::vector<Index>
-Mechanics::sortedAlongBeam(const Mechanics::Geometry& geo,
-                           const std::vector<Index>& sensorIds)
+std::vector<Index> sortedAlongBeam(const Geometry& geo,
+                                   const std::vector<Index>& sensorIds)
 {
   std::vector<Index> sorted(std::begin(sensorIds), std::end(sensorIds));
   sortAlongBeam(geo, sorted);
   return sorted;
 }
+
+} // namespace proteus

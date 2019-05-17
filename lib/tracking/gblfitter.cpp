@@ -21,15 +21,17 @@
 
 PT_SETUP_LOCAL_LOGGER(GblFitter)
 
-Tracking::GblFitter::GblFitter(const Mechanics::Device& device)
+namespace proteus {
+
+GblFitter::GblFitter(const Device& device)
     : m_device(device)
     // sensor ids sorted along the expected propagation order
     , m_propagationIds(
-          Mechanics::sortedAlongBeam(m_device.geometry(), m_device.sensorIds()))
+          sortedAlongBeam(m_device.geometry(), m_device.sensorIds()))
 {
 }
 
-std::string Tracking::GblFitter::name() const { return "GBLFitter"; }
+std::string GblFitter::name() const { return "GBLFitter"; }
 
 namespace {
 
@@ -60,7 +62,7 @@ struct Reorder {
 
 } // namespace
 
-void Tracking::GblFitter::execute(Storage::Event& event) const
+void GblFitter::execute(Event& event) const
 {
   using gbl::GblPoint;
   using gbl::GblTrajectory;
@@ -77,7 +79,7 @@ void Tracking::GblFitter::execute(Storage::Event& event) const
   Eigen::VectorXd gblDownWeights(2);
 
   for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
-    Storage::Track& track = event.getTrack(itrack);
+    Track& track = event.getTrack(itrack);
 
     // Reference track in global coordinates
     Vector4 globalPos = track.globalState().position();
@@ -121,7 +123,7 @@ void Tracking::GblFitter::execute(Storage::Event& event) const
         const auto& prev = m_device.geometry().getPlane(prevSensorId);
         Vector4 prevTan = prev.linearToLocal() * globalTan;
         Matrix4 prevToLocal = plane.linearToLocal() * prev.linearToGlobal();
-        jac = Tracking::jacobianState(prevTan, prevToLocal, w0);
+        jac = jacobianState(prevTan, prevToLocal, w0);
       }
 
       // 4. Create a GBL point for this step
@@ -139,9 +141,8 @@ void Tracking::GblFitter::execute(Storage::Event& event) const
 
       // 4b. If available, add a measurement
       if (track.hasClusterOn(sensorId)) {
-        const Storage::Cluster& cluster =
-            event.getSensorEvent(sensorId).getCluster(
-                track.getClusterOn(sensorId));
+        const Cluster& cluster = event.getSensorEvent(sensorId).getCluster(
+            track.getClusterOn(sensorId));
 
         // Get the measurement (residuals)
         Vector2 meas(cluster.u() - localPos[kU], cluster.v() - localPos[kV]);
@@ -264,3 +265,5 @@ void Tracking::GblFitter::execute(Storage::Event& event) const
     // traj.printData();
   }
 }
+
+} // namespace proteus

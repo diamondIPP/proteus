@@ -11,11 +11,10 @@
 #include "processors/clusterizer.h"
 #include "processors/hitmapper.h"
 
-void Processors::setupHitPreprocessing(const Mechanics::Device& device,
-                                       Loop::EventLoop& loop)
-{
-  using namespace Mechanics;
+namespace proteus {
 
+void setupHitPreprocessing(const Device& device, EventLoop& loop)
+{
   for (auto isensor : device.sensorIds()) {
     const Sensor& sensor = device.getSensor(isensor);
 
@@ -30,11 +29,8 @@ void Processors::setupHitPreprocessing(const Mechanics::Device& device,
   }
 }
 
-void Processors::setupClusterizers(const Mechanics::Device& device,
-                                   Loop::EventLoop& loop)
+void setupClusterizers(const Device& device, EventLoop& loop)
 {
-  using namespace Mechanics;
-
   for (auto isensor : device.sensorIds()) {
     const Sensor& sensor = device.getSensor(isensor);
     switch (sensor.measurement()) {
@@ -48,3 +44,5 @@ void Processors::setupClusterizers(const Mechanics::Device& device,
     }
   }
 }
+
+} // namespace proteus

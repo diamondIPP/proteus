@@ -15,15 +15,14 @@
 
 PT_SETUP_GLOBAL_LOGGER
 
-Analyzers::detail::SensorResidualHists::SensorResidualHists(
-    TDirectory* dir,
-    const Mechanics::Sensor& sensor,
-    double rangeStd,
-    int bins,
-    const std::string& name)
-{
-  using namespace Utils;
+namespace proteus {
 
+detail::SensorResidualHists::SensorResidualHists(TDirectory* dir,
+                                                 const Sensor& sensor,
+                                                 double rangeStd,
+                                                 int bins,
+                                                 const std::string& name)
+{
   // always use odd number of bins to have a central bin for zero residual
   bins += ((bins % 2) ? 0 : 1);
 
@@ -79,8 +78,8 @@ Analyzers::detail::SensorResidualHists::SensorResidualHists(
   resD2 = makeH1(sub, "res_d2", axD2);
 }
 
-void Analyzers::detail::SensorResidualHists::fill(
-    const Storage::TrackState& state, const Storage::Cluster& cluster)
+void detail::SensorResidualHists::fill(const TrackState& state,
+                                       const Cluster& cluster)
 {
   Vector4 res = cluster.position() - state.position();
   SymMatrix2 locCov = cluster.uvCov() + state.loc01Cov();
@@ -103,12 +102,12 @@ void Analyzers::detail::SensorResidualHists::fill(
   slopeVResV->Fill(state.slopeLoc1(), res[kV]);
 }
 
-Analyzers::Residuals::Residuals(TDirectory* dir,
-                                const Mechanics::Device& device,
-                                const std::vector<Index>& sensorIds,
-                                const std::string& subdir,
-                                double rangeStd,
-                                int bins)
+Residuals::Residuals(TDirectory* dir,
+                     const Device& device,
+                     const std::vector<Index>& sensorIds,
+                     const std::string& subdir,
+                     double rangeStd,
+                     int bins)
 {
   for (auto isensor : sensorIds) {
     m_hists_map.emplace(
@@ -117,12 +116,12 @@ Analyzers::Residuals::Residuals(TDirectory* dir,
   }
 }
 
-std::string Analyzers::Residuals::name() const { return "Residuals"; }
+std::string Residuals::name() const { return "Residuals"; }
 
-void Analyzers::Residuals::execute(const Storage::Event& event)
+void Residuals::execute(const Event& event)
 {
   for (Index isensor = 0; isensor < event.numSensorEvents(); ++isensor) {
-    const Storage::SensorEvent& sev = event.getSensorEvent(isensor);
+    const SensorEvent& sev = event.getSensorEvent(isensor);
 
     if (!m_hists_map.count(isensor)) {
       continue;
@@ -131,7 +130,7 @@ void Analyzers::Residuals::execute(const Storage::Event& event)
     auto& hists = m_hists_map[isensor];
 
     for (Index icluster = 0; icluster < sev.numClusters(); ++icluster) {
-      const Storage::Cluster& cluster = sev.getCluster(icluster);
+      const Cluster& cluster = sev.getCluster(icluster);
 
       if (cluster.isInTrack() and sev.hasLocalState(cluster.track())) {
         hists.fill(sev.getLocalState(cluster.track()), cluster);
@@ -140,26 +139,27 @@ void Analyzers::Residuals::execute(const Storage::Event& event)
   }
 }
 
-Analyzers::Matching::Matching(TDirectory* dir,
-                              const Mechanics::Sensor& sensor,
-                              const double rangeStd,
-                              const int bins)
+Matching::Matching(TDirectory* dir,
+                   const Sensor& sensor,
+                   const double rangeStd,
+                   const int bins)
     : m_sensorId(sensor.id()), m_hists(dir, sensor, rangeStd, bins, "matching")
 {
 }
 
-std::string Analyzers::Matching::name() const { return "Matching"; }
+std::string Matching::name() const { return "Matching"; }
 
-void Analyzers::Matching::execute(const Storage::Event& event)
+void Matching::execute(const Event& event)
 {
-  const Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
+  const SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
 
   // iterate over all matched pairs
   for (const auto& state : sensorEvent.localStates()) {
     if (state.isMatched()) {
-      const Storage::Cluster& cluster =
-          sensorEvent.getCluster(state.matchedCluster());
+      const Cluster& cluster = sensorEvent.getCluster(state.matchedCluster());
       m_hists.fill(state, cluster);
     }
   }
 }
+
+} // namespace proteus

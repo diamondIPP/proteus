@@ -14,12 +14,14 @@
 
 PT_SETUP_LOCAL_LOGGER(Config)
 
-bool Utils::Config::pathIsAbsolute(const std::string& path)
+namespace proteus {
+
+bool pathIsAbsolute(const std::string& path)
 {
   return !path.empty() && (path.front() == '/');
 }
 
-std::string Utils::Config::pathDirname(const std::string& path)
+std::string pathDirname(const std::string& path)
 {
   auto pos = path.find_last_of('/');
   // no slash means the path contains only a filename
@@ -29,14 +31,14 @@ std::string Utils::Config::pathDirname(const std::string& path)
   return path.substr(0, path.find_last_not_of('/', pos) + 1);
 }
 
-std::string Utils::Config::pathExtension(const std::string& path)
+std::string pathExtension(const std::string& path)
 {
   auto pos = path.find_last_of('.');
   return ((pos != std::string::npos) ? path.substr(pos + 1) : std::string());
 }
 
-std::string Utils::Config::pathRebaseIfRelative(const std::string& path,
-                                                const std::string& dir)
+std::string pathRebaseIfRelative(const std::string& path,
+                                 const std::string& dir)
 {
   if (pathIsAbsolute(path))
     return path;
@@ -49,7 +51,7 @@ std::string Utils::Config::pathRebaseIfRelative(const std::string& path,
   return full;
 }
 
-toml::Value Utils::Config::readConfig(const std::string& path)
+toml::Value configRead(const std::string& path)
 {
   std::ifstream file(path, std::ifstream::in | std::ifstream::binary);
   if (!file)
@@ -64,7 +66,7 @@ toml::Value Utils::Config::readConfig(const std::string& path)
   return std::move(result.value);
 }
 
-void Utils::Config::writeConfig(const toml::Value& cfg, const std::string& path)
+void configWrite(const toml::Value& cfg, const std::string& path)
 {
   std::ofstream file(path, std::ofstream::out | std::ofstream::binary);
   if (!file.good())
@@ -75,8 +77,8 @@ void Utils::Config::writeConfig(const toml::Value& cfg, const std::string& path)
   file.close();
 }
 
-toml::Value Utils::Config::withDefaults(const toml::Value& cfg,
-                                        const toml::Value& defaults)
+toml::Value configWithDefaults(const toml::Value& cfg,
+                               const toml::Value& defaults)
 {
   toml::Value combined(defaults);
   if (!combined.merge(cfg)) {
@@ -88,8 +90,8 @@ toml::Value Utils::Config::withDefaults(const toml::Value& cfg,
   return combined;
 }
 
-std::vector<toml::Value> Utils::Config::perSensor(const toml::Value& cfg,
-                                                  const toml::Value& defaults)
+std::vector<toml::Value> configPerSensor(const toml::Value& cfg,
+                                         const toml::Value& defaults)
 {
   std::vector<toml::Value> sensors =
       cfg.get<std::vector<toml::Value>>("sensors");
@@ -106,3 +108,5 @@ std::vector<toml::Value> Utils::Config::perSensor(const toml::Value& cfg,
   }
   return sensors;
 }
+
+} // namespace proteus

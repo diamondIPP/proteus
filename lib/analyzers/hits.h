@@ -9,22 +9,18 @@ class TDirectory;
 class TH1D;
 class TH2D;
 
-namespace Mechanics {
+namespace proteus {
+
 class Device;
 class Sensor;
-} // namespace Mechanics
-namespace Storage {
 class SensorEvent;
-}
-
-namespace Analyzers {
 
 /** Hit histograms for a single sensor. */
 class SensorHits {
 public:
-  SensorHits(TDirectory* dir, const Mechanics::Sensor& sensor);
+  SensorHits(TDirectory* dir, const Sensor& sensor);
 
-  void execute(const Storage::SensorEvent& sensorEvent);
+  void execute(const SensorEvent& sensorEvent);
   void finalize();
 
 private:
@@ -46,18 +42,18 @@ private:
 };
 
 /** Hit histograms for all sensors in the device. */
-class Hits : public Loop::Analyzer {
+class Hits : public Analyzer {
 public:
-  Hits(TDirectory* dir, const Mechanics::Device& device);
+  Hits(TDirectory* dir, const Device& device);
 
   std::string name() const;
-  void execute(const Storage::Event& event);
+  void execute(const Event& event);
   void finalize();
 
 private:
   std::vector<SensorHits> m_sensors;
 };
 
-} // namespace Analyzers
+} // namespace proteus
 
 #endif // PT_HITS_H

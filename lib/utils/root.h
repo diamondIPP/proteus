@@ -15,7 +15,7 @@
 #include <TH1.h>
 #include <TH2.h>
 
-namespace Utils {
+namespace proteus {
 
 using RootFilePtr = std::unique_ptr<TFile, void (*)(TFile*)>;
 
@@ -120,30 +120,27 @@ void fillDist(const TH2D* values, TH1D* dist);
  */
 std::pair<double, double> getRestrictedMean(const TH1D* h1, int offset);
 
-} // namespace Utils
-
-// implementations
+// inline implementations
 
 template <typename Interval>
-inline Utils::HistAxis::HistAxis(const Interval& i, int n, std::string l)
+inline HistAxis::HistAxis(const Interval& i, int n, std::string l)
     : HistAxis(i.min(), i.max(), n, std::move(l))
 {
 }
 
 template <typename Interval>
-inline Utils::HistAxis Utils::HistAxis::Integer(const Interval& i,
-                                                std::string l)
+inline HistAxis HistAxis::Integer(const Interval& i, std::string l)
 {
   // ensure we end up with integer bins even w/ non-integer limits
   return Integer(std::floor(i.min()), std::ceil(i.max()), std::move(l));
 }
 
 template <typename Interval0, typename Interval1>
-inline Utils::HistAxis Utils::HistAxis::Difference(const Interval0& i0,
-                                                   double pitch0,
-                                                   const Interval1& i1,
-                                                   double pitch1,
-                                                   std::string l)
+inline HistAxis HistAxis::Difference(const Interval0& i0,
+                                     double pitch0,
+                                     const Interval1& i1,
+                                     double pitch1,
+                                     std::string l)
 {
   double dmin = i1.min() - i0.max();
   double dmax = i1.max() - i0.min();
@@ -174,10 +171,12 @@ inline Utils::HistAxis Utils::HistAxis::Difference(const Interval0& i0,
 }
 
 template <typename Interval>
-inline Utils::HistAxis
-Utils::HistAxis::Difference(const Interval& i, double pitch, std::string l)
+inline HistAxis
+HistAxis::Difference(const Interval& i, double pitch, std::string l)
 {
   return Difference(i, pitch, i, pitch, std::move(l));
 }
+
+} // namespace proteus
 
 #endif // PT_ROOT_H

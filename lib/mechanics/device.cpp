@@ -7,19 +7,20 @@
 #include <string>
 #include <vector>
 
+#include "utils/config.h"
 #include "utils/logger.h"
 
 PT_SETUP_LOCAL_LOGGER(Device)
 
-Mechanics::Device Mechanics::Device::fromFile(const std::string& path,
-                                              const std::string& pathGeometry)
-{
-  using namespace Utils::Config;
+namespace proteus {
 
+Device Device::fromFile(const std::string& path,
+                        const std::string& pathGeometry)
+{
   auto dir = pathDirname(path);
   DEBUG("config base dir '", dir, "'");
 
-  auto cfg = readConfig(path);
+  auto cfg = configRead(path);
   INFO("read device from '", path, "'");
 
   Device dev = fromConfig(cfg);
@@ -59,10 +60,8 @@ Mechanics::Device Mechanics::Device::fromFile(const std::string& path,
   return dev;
 }
 
-Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
+Device Device::fromConfig(const toml::Value& cfg)
 {
-  using Utils::Config::withDefaults;
-
   // deprecation checks
   if (cfg.has("device")) {
     ERROR("The '[device]' configuration section is deprecated and will not be "
@@ -98,11 +97,12 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
   // fill defaults for optional sensor type settings
   auto configTypes = toml::Table{};
   for (const auto& it : cfg.get<toml::Table>("sensor_types")) {
-    auto configType = withDefaults(it.second, defaultsType);
+    auto configType = configWithDefaults(it.second, defaultsType);
     auto configRegions = toml::Array{};
     if (configType.has("regions")) {
       for (const auto& configRegion : configType.get<toml::Array>("regions")) {
-        configRegions.push_back(withDefaults(configRegion, defaultsRegion));
+        configRegions.push_back(
+            configWithDefaults(configRegion, defaultsRegion));
       }
     }
     configType["regions"] = std::move(configRegions);
@@ -151,16 +151,16 @@ Mechanics::Device Mechanics::Device::fromConfig(const toml::Value& cfg)
   return device;
 }
 
-Mechanics::Sensor::Volume Mechanics::Device::boundingBox() const
+Sensor::Volume Device::boundingBox() const
 {
-  auto box = Mechanics::Sensor::Volume::Empty();
+  auto box = Sensor::Volume::Empty();
   for (const auto& sensor : m_sensors) {
     box.enclose(sensor.projectedBoundingBox());
   }
   return box;
 }
 
-Vector4 Mechanics::Device::minimumPitch() const
+Vector4 Device::minimumPitch() const
 {
   Vector4 pitch = Vector4::Constant(std::numeric_limits<Scalar>::max());
   for (const auto& sensor : m_sensors) {
@@ -169,14 +169,14 @@ Vector4 Mechanics::Device::minimumPitch() const
   return pitch;
 }
 
-void Mechanics::Device::addSensor(Sensor&& sensor)
+void Device::addSensor(Sensor&& sensor)
 {
   // TODO 2017-02-07 msmk: assumes ids are indices from 0 to n_sensors w/o gaps
   m_sensors.emplace_back(std::move(sensor));
   m_sensorIds.emplace_back(m_sensors.back().id());
 }
 
-void Mechanics::Device::setGeometry(const Geometry& geometry)
+void Device::setGeometry(const Geometry& geometry)
 {
   m_geometry = geometry;
   // update geometry-dependent sensor properties
@@ -186,18 +186,17 @@ void Mechanics::Device::setGeometry(const Geometry& geometry)
   // TODO 2016-08-18 msmk: check number of sensors / id consistency
 }
 
-void Mechanics::Device::applyPixelMasks(const PixelMasks& pixelMasks)
+void Device::applyPixelMasks(const PixelMasks& pixelMasks)
 {
   m_pixelMasks = pixelMasks;
 
   for (auto id : m_sensorIds) {
-    getSensor(id).m_pixelMask =
-        Utils::DenseMask(m_pixelMasks.getMaskedPixels(id));
+    getSensor(id).m_pixelMask = DenseMask(m_pixelMasks.getMaskedPixels(id));
   }
   // TODO 2016-08-18 msmk: check number of sensors / id consistency
 }
 
-void Mechanics::Device::print(std::ostream& os, const std::string& prefix) const
+void Device::print(std::ostream& os, const std::string& prefix) const
 {
   for (auto sensorId : m_sensorIds) {
     os << prefix << "sensor " << sensorId << ":\n";
@@ -209,3 +208,5 @@ void Mechanics::Device::print(std::ostream& os, const std::string& prefix) const
   m_pixelMasks.print(os, prefix + "  ");
   os.flush();
 }
+
+} // namespace proteus

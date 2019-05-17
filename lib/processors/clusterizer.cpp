@@ -18,8 +18,7 @@
 
 PT_SETUP_GLOBAL_LOGGER
 
-using namespace Storage;
-using namespace Utils;
+namespace proteus {
 
 using DigitalRange = Interval<int>;
 
@@ -123,12 +122,12 @@ static inline void clusterize(const DenseMask& mask,
   }
 }
 
-std::string Processors::BinaryClusterizer::name() const
+std::string BinaryClusterizer::name() const
 {
   return "BinaryClusterizer(" + m_sensor.name() + ")";
 }
 
-void Processors::BinaryClusterizer::execute(Event& event) const
+void BinaryClusterizer::execute(Event& event) const
 {
   auto makeCluster = [](auto h0, auto h1) {
     Scalar col = 0;
@@ -162,12 +161,12 @@ void Processors::BinaryClusterizer::execute(Event& event) const
              sensorEvent.m_hits.end(), makeCluster);
 }
 
-std::string Processors::ValueWeightedClusterizer::name() const
+std::string ValueWeightedClusterizer::name() const
 {
   return "ValueWeightedClusterizer(" + m_sensor.name() + ")";
 }
 
-void Processors::ValueWeightedClusterizer::execute(Event& event) const
+void ValueWeightedClusterizer::execute(Event& event) const
 {
   auto makeCluster = [](auto h0, auto h1) {
     Scalar col = 0;
@@ -200,12 +199,12 @@ void Processors::ValueWeightedClusterizer::execute(Event& event) const
              sensorEvent.m_hits.end(), makeCluster);
 }
 
-std::string Processors::FastestHitClusterizer::name() const
+std::string FastestHitClusterizer::name() const
 {
   return "FastestHitClusterizer(" + m_sensor.name() + ")";
 }
 
-void Processors::FastestHitClusterizer::execute(Event& event) const
+void FastestHitClusterizer::execute(Event& event) const
 {
   auto makeCluster = [](auto h0, auto h1) {
     Scalar col = 0;
@@ -229,3 +228,5 @@ void Processors::FastestHitClusterizer::execute(Event& event) const
   clusterize(m_sensor.pixelMask(), sensorEvent, sensorEvent.m_hits.begin(),
              sensorEvent.m_hits.end(), makeCluster);
 }
+
+} // namespace proteus

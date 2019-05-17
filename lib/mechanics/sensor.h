@@ -10,7 +10,7 @@
 #include "utils/densemask.h"
 #include "utils/interval.h"
 
-namespace Mechanics {
+namespace proteus {
 
 class Geometry;
 
@@ -50,11 +50,11 @@ public:
   static std::string measurementName(Measurement measurement);
 
   /** One-dimensional range of digital values, e.g. for time and value. */
-  using DigitalRange = Utils::Interval<int>;
+  using DigitalRange = Interval<int>;
   /** Two-dimensional area of digital matrix positions, i.e. column and row. */
-  using DigitalArea = Utils::Box<2, int>;
+  using DigitalArea = Box<2, int>;
   /** Four-dimensional bounding box type for projected volume. */
-  using Volume = Utils::Box<4, Scalar>;
+  using Volume = Box<4, Scalar>;
   /** A named region on the sensor. */
   struct Region {
     std::string name;
@@ -91,7 +91,7 @@ public:
   DigitalRange valueRange() const { return m_valueRange; }
   bool hasRegions() const { return !m_regions.empty(); }
   const std::vector<Region>& regions() const { return m_regions; }
-  const Utils::DenseMask& pixelMask() const { return m_pixelMask; }
+  const DenseMask& pixelMask() const { return m_pixelMask; }
 
   // local physical properties
   Scalar pitchCol() const { return m_pitchCol; }
@@ -154,7 +154,7 @@ private:
   Scalar m_theta0;
   Measurement m_measurement;
   std::vector<Region> m_regions;
-  Utils::DenseMask m_pixelMask;
+  DenseMask m_pixelMask;
   // geometry-dependent information
   Vector2 m_beamSlope;       // beam slope in the local system
   SymMatrix2 m_beamSlopeCov; // beam slope covariance in the local system
@@ -164,6 +164,6 @@ private:
   friend class Device;
 };
 
-} // namespace Mechanics
+} // namespace proteus
 
 #endif // PT_SENSOR_H

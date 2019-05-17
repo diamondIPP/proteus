@@ -10,10 +10,12 @@
 #include "mechanics/geometry.h"
 #include "mechanics/pixelmasks.h"
 #include "mechanics/sensor.h"
-#include "utils/config.h"
 #include "utils/definitions.h"
 
-namespace Mechanics {
+namespace toml {
+class Value;
+}
+namespace proteus {
 
 class Device {
 public:
@@ -60,6 +62,6 @@ private:
   PixelMasks m_pixelMasks;
 };
 
-} // namespace Mechanics
+} // namespace proteus
 
 #endif // PT_DEVICE_H

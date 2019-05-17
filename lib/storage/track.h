@@ -7,7 +7,7 @@
 #include "storage/trackstate.h"
 #include "utils/definitions.h"
 
-namespace Storage {
+namespace proteus {
 
 /** A particle track.
  *
@@ -79,6 +79,6 @@ public:
 
 std::ostream& operator<<(std::ostream& os, const Track& track);
 
-} // namespace Storage
+} // namespace proteus
 
 #endif // PT_TRACK_H

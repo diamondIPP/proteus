@@ -9,13 +9,13 @@
 #include "utils/definitions.h"
 #include "utils/interval.h"
 
-namespace Storage {
+namespace proteus {
 
 class Hit;
 
 class Cluster {
 public:
-  using Area = Utils::Box<2, int>;
+  using Area = Box<2, int>;
   using Hits = std::vector<std::reference_wrapper<Hit>>;
 
   /** Construct a cluster using pixel coordinates. */
@@ -115,6 +115,6 @@ public:
 
 std::ostream& operator<<(std::ostream& os, const Cluster& cluster);
 
-} // namespace Storage
+} // namespace proteus
 
 #endif // PT_CLUSTER_H

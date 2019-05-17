@@ -4,12 +4,16 @@
 
 #include "storage/event.h"
 
-Analyzers::EventPrinter::EventPrinter() : m_logger("EventPrinter") {}
+namespace proteus {
 
-std::string Analyzers::EventPrinter::name() const { return "EventPrinter"; }
+EventPrinter::EventPrinter() : m_logger("EventPrinter") {}
 
-void Analyzers::EventPrinter::execute(const Storage::Event& event)
+std::string EventPrinter::name() const { return "EventPrinter"; }
+
+void EventPrinter::execute(const Event& event)
 {
-  m_logger.log(Utils::Logger::Level::Info, "event:\n");
-  m_logger.logp(Utils::Logger::Level::Info, event, "  ");
+  m_logger.log(Logger::Level::Info, "event:\n");
+  m_logger.logp(Logger::Level::Info, event, "  ");
 }
+
+} // namespace proteus

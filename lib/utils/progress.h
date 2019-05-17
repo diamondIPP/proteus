@@ -15,7 +15,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-namespace Utils {
+namespace proteus {
 
 /** Display a progress indicator on a single output line */
 class Progress {
@@ -138,6 +138,6 @@ private:
   int m_length;
 };
 
-} // namespace Utils
+} // namespace proteus
 
 #endif // PT_PROGRESS_H

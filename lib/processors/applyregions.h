@@ -9,31 +9,26 @@
 
 #include "loop/processor.h"
 
-namespace Mechanics {
+namespace proteus {
+
 class Device;
-class Sensor;
-} // namespace Mechanics
-
-namespace Loop {
 class EventLoop;
-}
-
-namespace Processors {
+class Sensor;
 
 /** Assign region ids to hits using the sensor region information. */
-class ApplyRegions : public Loop::Processor {
+class ApplyRegions : public Processor {
 public:
-  ApplyRegions(const Mechanics::Sensor& sensor);
+  ApplyRegions(const Sensor& sensor);
 
   std::string name() const;
-  void execute(Storage::Event& event) const;
+  void execute(Event& event) const;
 
 private:
-  const Mechanics::Sensor& m_sensor;
+  const Sensor& m_sensor;
 };
 
-void setupRegions(const Mechanics::Device& device, Loop::EventLoop& loop);
+void setupRegions(const Device& device, EventLoop& loop);
 
-} // namespace Processors
+} // namespace proteus
 
 #endif // PT_APPLYREGIONS_H

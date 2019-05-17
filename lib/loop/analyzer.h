@@ -8,21 +8,20 @@
 
 #include <string>
 
-namespace Storage {
+namespace proteus {
+
 class Event;
-}
-namespace Loop {
 
 /** Interface for algorithms to analyze events. */
 class Analyzer {
 public:
   virtual ~Analyzer() = default;
   virtual std::string name() const = 0;
-  virtual void execute(const Storage::Event&) = 0;
+  virtual void execute(const Event&) = 0;
   /** The finalize method is optional. */
   virtual void finalize() {}
 };
 
-} // namespace Loop
+} // namespace proteus
 
 #endif // PT_ANALYZER_H

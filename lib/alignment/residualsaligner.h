@@ -8,10 +8,9 @@
 class TDirectory;
 class TH1D;
 
-namespace Mechanics {
+namespace proteus {
+
 class Device;
-}
-namespace Alignment {
 
 /** Sensor alignment in the local plane using track residual histograms. */
 class ResidualsAligner : public Aligner {
@@ -23,7 +22,7 @@ public:
    * \param bins       Number of histogram bins
    */
   ResidualsAligner(TDirectory* dir,
-                   const Mechanics::Device& device,
+                   const Device& device,
                    const std::vector<Index>& alignIds,
                    const double damping = 1,
                    const double pixelRange = 1.0,
@@ -32,9 +31,9 @@ public:
   ~ResidualsAligner() = default;
 
   std::string name() const;
-  void execute(const Storage::Event& event);
+  void execute(const Event& event);
 
-  Mechanics::Geometry updatedGeometry() const;
+  Geometry updatedGeometry() const;
 
 private:
   struct SensorHists {
@@ -45,10 +44,10 @@ private:
   };
 
   std::vector<SensorHists> m_hists;
-  const Mechanics::Device& m_device;
+  const Device& m_device;
   double m_damping;
 };
 
-} // namespace Alignment
+} // namespace proteus
 
 #endif /* end of include guard: PT_RESIDUALSALIGNER_H */

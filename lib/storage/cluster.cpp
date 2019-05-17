@@ -11,14 +11,16 @@
 
 PT_SETUP_LOCAL_LOGGER(Cluster)
 
-Storage::Cluster::Cluster(Scalar col,
-                          Scalar row,
-                          Scalar timestamp,
-                          Scalar value,
-                          Scalar colVar,
-                          Scalar rowVar,
-                          Scalar timestampVar,
-                          Scalar colRowCov)
+namespace proteus {
+
+Cluster::Cluster(Scalar col,
+                 Scalar row,
+                 Scalar timestamp,
+                 Scalar value,
+                 Scalar colVar,
+                 Scalar rowVar,
+                 Scalar timestampVar,
+                 Scalar colRowCov)
     : m_col(col)
     , m_row(row)
     , m_timestamp(timestamp)
@@ -35,17 +37,17 @@ Storage::Cluster::Cluster(Scalar col,
 {
 }
 
-bool Storage::Cluster::hasRegion() const
+bool Cluster::hasRegion() const
 {
   return !m_hits.empty() && m_hits.front().get().hasRegion();
 }
 
-Index Storage::Cluster::region() const
+Index Cluster::region() const
 {
   return m_hits.empty() ? kInvalidIndex : m_hits.front().get().region();
 }
 
-void Storage::Cluster::setTrack(Index track)
+void Cluster::setTrack(Index track)
 {
   assert((m_track == kInvalidIndex) && "cluster can only be in one track");
   m_track = track;
@@ -60,17 +62,14 @@ static Matrix<Scalar, 3, 4> projectionOntoPlane()
   return proj;
 }
 
-Vector3 Storage::Cluster::onPlane() const
-{
-  return projectionOntoPlane() * m_pos;
-}
+Vector3 Cluster::onPlane() const { return projectionOntoPlane() * m_pos; }
 
-SymMatrix3 Storage::Cluster::onPlaneCov() const
+SymMatrix3 Cluster::onPlaneCov() const
 {
   return transformCovariance(projectionOntoPlane(), m_posCov);
 }
 
-Storage::Cluster::Area Storage::Cluster::areaPixel() const
+Cluster::Area Cluster::areaPixel() const
 {
   auto grow = [](Area a, const Hit& hit) {
     a.enclose(Area(Area::AxisInterval(hit.col(), hit.col() + 1),
@@ -80,13 +79,13 @@ Storage::Cluster::Area Storage::Cluster::areaPixel() const
   return std::accumulate(m_hits.begin(), m_hits.end(), Area::Empty(), grow);
 }
 
-void Storage::Cluster::addHit(Storage::Hit& hit)
+void Cluster::addHit(Hit& hit)
 {
   hit.setCluster(m_index);
   m_hits.push_back(std::ref(hit));
 }
 
-std::ostream& Storage::operator<<(std::ostream& os, const Cluster& cluster)
+std::ostream& operator<<(std::ostream& os, const Cluster& cluster)
 {
   os << "col=" << cluster.col();
   os << " row=" << cluster.row();
@@ -103,3 +102,5 @@ std::ostream& Storage::operator<<(std::ostream& os, const Cluster& cluster)
   }
   return os;
 }
+
+} // namespace proteus

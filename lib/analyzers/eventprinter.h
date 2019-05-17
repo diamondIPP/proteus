@@ -4,20 +4,20 @@
 #include "loop/analyzer.h"
 #include "utils/logger.h"
 
-namespace Analyzers {
+namespace proteus {
 
 /** Print detailed information for each event. */
-class EventPrinter : public Loop::Analyzer {
+class EventPrinter : public Analyzer {
 public:
   EventPrinter();
 
   std::string name() const;
-  void execute(const Storage::Event& event);
+  void execute(const Event& event);
 
 private:
-  Utils::Logger m_logger;
+  Logger m_logger;
 };
 
-} // namespace Analyzers
+} // namespace proteus
 
 #endif // PT_EVENTPRINTER_H

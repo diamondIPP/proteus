@@ -12,8 +12,7 @@
 #include "storage/event.h"
 #include "tracking/linefitter.h"
 
-using namespace Mechanics;
-using namespace Storage;
+namespace proteus {
 
 template <typename Fitter>
 static inline void
@@ -71,70 +70,64 @@ executeImpl(const Geometry& geo, bool fitUnbiased, Event& event)
 }
 // straight 3d
 
-Tracking::Straight3dFitter::Straight3dFitter(const Device& device)
+Straight3dFitter::Straight3dFitter(const Device& device)
     : m_geo(device.geometry())
 {
 }
 
-std::string Tracking::Straight3dFitter::name() const
-{
-  return "Straight3dFitter";
-}
+std::string Straight3dFitter::name() const { return "Straight3dFitter"; }
 
-void Tracking::Straight3dFitter::execute(Event& event) const
+void Straight3dFitter::execute(Event& event) const
 {
   executeImpl<LineFitter3D>(m_geo, false, event);
 }
 
 // straight 4d
 
-Tracking::Straight4dFitter::Straight4dFitter(const Device& device)
+Straight4dFitter::Straight4dFitter(const Device& device)
     : m_geo(device.geometry())
 {
 }
 
-std::string Tracking::Straight4dFitter::name() const
-{
-  return "Straight4dFitter";
-}
+std::string Straight4dFitter::name() const { return "Straight4dFitter"; }
 
-void Tracking::Straight4dFitter::execute(Event& event) const
+void Straight4dFitter::execute(Event& event) const
 {
   executeImpl<LineFitter4D>(m_geo, false, event);
 }
 
 // unbiased straight 3d
 
-Tracking::UnbiasedStraight3dFitter::UnbiasedStraight3dFitter(
-    const Device& device)
+UnbiasedStraight3dFitter::UnbiasedStraight3dFitter(const Device& device)
     : m_geo(device.geometry())
 {
 }
 
-std::string Tracking::UnbiasedStraight3dFitter::name() const
+std::string UnbiasedStraight3dFitter::name() const
 {
   return "UnbiasedStraight3dFitter";
 }
 
-void Tracking::UnbiasedStraight3dFitter::execute(Event& event) const
+void UnbiasedStraight3dFitter::execute(Event& event) const
 {
   executeImpl<LineFitter3D>(m_geo, true, event);
 }
 
 // unbiased straight 4d
 
-Tracking::UnbiasedStraight4dFitter::UnbiasedStraight4dFitter(
-    const Device& device)
+UnbiasedStraight4dFitter::UnbiasedStraight4dFitter(const Device& device)
     : m_geo(device.geometry())
 {
 }
 
-std::string Tracking::UnbiasedStraight4dFitter::name() const
+std::string UnbiasedStraight4dFitter::name() const
 {
   return "UnbiasedStraight4dFitter";
 }
 
-void Tracking::UnbiasedStraight4dFitter::execute(Event& event) const
+void UnbiasedStraight4dFitter::execute(Event& event) const
 {
   executeImpl<LineFitter4D>(m_geo, true, event);
 }
+
+} // namespace proteus

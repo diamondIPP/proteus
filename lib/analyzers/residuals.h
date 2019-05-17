@@ -11,16 +11,13 @@ class TDirectory;
 class TH1D;
 class TH2D;
 
-namespace Storage {
-class Cluster;
-class TrackState;
-} // namespace Storage
-namespace Mechanics {
-class Device;
-class Sensor;
-} // namespace Mechanics
+namespace proteus {
 
-namespace Analyzers {
+class Device;
+class Cluster;
+class Sensor;
+class TrackState;
+
 namespace detail {
 
 struct SensorResidualHists {
@@ -43,17 +40,17 @@ struct SensorResidualHists {
 
   SensorResidualHists() = default;
   SensorResidualHists(TDirectory* dir,
-                      const Mechanics::Sensor& sensor,
+                      const Sensor& sensor,
                       double rangeStd,
                       int bins,
                       const std::string& name);
 
-  void fill(const Storage::TrackState& state, const Storage::Cluster& cluster);
+  void fill(const TrackState& state, const Cluster& cluster);
 };
 
 } // namespace detail
 
-class Residuals : public Loop::Analyzer {
+class Residuals : public Analyzer {
 public:
   /** Construct a residual analyzer.
    *
@@ -65,20 +62,20 @@ public:
    * \param bins      Number of histogram bins
    */
   Residuals(TDirectory* dir,
-            const Mechanics::Device& device,
+            const Device& device,
             const std::vector<Index>& sensorIds,
             const std::string& subdir = std::string("residuals"),
             double rangeStd = 5.0,
             int bins = 127);
 
   std::string name() const;
-  void execute(const Storage::Event& refEvent);
+  void execute(const Event& refEvent);
 
 private:
   std::unordered_map<Index, detail::SensorResidualHists> m_hists_map;
 };
 
-class Matching : public Loop::Analyzer {
+class Matching : public Analyzer {
 public:
   /** Construct a matching analyzer.
    *
@@ -89,18 +86,18 @@ public:
    * \param bins      Number of histogram bins
    */
   Matching(TDirectory* dir,
-           const Mechanics::Sensor& sensor,
+           const Sensor& sensor,
            double rangeStd = 8.0,
            int bins = 255);
 
   std::string name() const;
-  void execute(const Storage::Event& refEvent);
+  void execute(const Event& refEvent);
 
 private:
   Index m_sensorId;
   detail::SensorResidualHists m_hists;
 };
 
-} // namespace Analyzers
+} // namespace proteus
 
 #endif // PT_RESIDUALS_H

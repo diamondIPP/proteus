@@ -11,12 +11,12 @@
 #include <memory>
 #include <vector>
 
-#include "analyzer.h"
-#include "processor.h"
-#include "reader.h"
-#include "writer.h"
+namespace proteus {
 
-namespace Loop {
+class Analyzer;
+class Processor;
+class Reader;
+class Writer;
 
 /** A generic event processing loop.
  *
@@ -52,6 +52,6 @@ private:
   bool m_showProgress;
 };
 
-} // namespace Loop
+} // namespace proteus
 
 #endif // PT_EVENTLOOP_H

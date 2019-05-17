@@ -5,12 +5,11 @@
 
 #include "storage/track.h"
 
-Storage::SensorEvent::SensorEvent()
-    : m_frame(UINT64_MAX), m_timestamp(UINT64_MAX)
-{
-}
+namespace proteus {
 
-void Storage::SensorEvent::clear(uint64_t frame, uint64_t timestamp)
+SensorEvent::SensorEvent() : m_frame(UINT64_MAX), m_timestamp(UINT64_MAX) {}
+
+void SensorEvent::clear(uint64_t frame, uint64_t timestamp)
 {
   m_frame = frame;
   m_timestamp = timestamp;
@@ -19,7 +18,7 @@ void Storage::SensorEvent::clear(uint64_t frame, uint64_t timestamp)
   m_states.clear();
 }
 
-bool Storage::SensorEvent::hasLocalState(Index itrack) const
+bool SensorEvent::hasLocalState(Index itrack) const
 {
   return (std::find_if(m_states.begin(), m_states.end(),
                        [=](const TrackState& state) {
@@ -27,8 +26,7 @@ bool Storage::SensorEvent::hasLocalState(Index itrack) const
                        }) != m_states.end());
 }
 
-const Storage::TrackState&
-Storage::SensorEvent::getLocalState(Index itrack) const
+const TrackState& SensorEvent::getLocalState(Index itrack) const
 {
   auto it = std::find_if(
       m_states.begin(), m_states.end(),
@@ -39,7 +37,7 @@ Storage::SensorEvent::getLocalState(Index itrack) const
   return *it;
 }
 
-void Storage::SensorEvent::addMatch(Index icluster, Index itrack)
+void SensorEvent::addMatch(Index icluster, Index itrack)
 {
   auto isInTrack = [=](const TrackState& state) {
     return (state.track() == itrack);
@@ -66,8 +64,7 @@ void Storage::SensorEvent::addMatch(Index icluster, Index itrack)
   state->m_matchedCluster = icluster;
 }
 
-void Storage::SensorEvent::print(std::ostream& os,
-                                 const std::string& prefix) const
+void SensorEvent::print(std::ostream& os, const std::string& prefix) const
 {
   os << prefix << "frame: " << m_frame << '\n';
   os << prefix << "timestamp: " << m_timestamp << '\n';
@@ -89,3 +86,5 @@ void Storage::SensorEvent::print(std::ostream& os,
   }
   os.flush();
 }
+
+} // namespace proteus

@@ -17,15 +17,11 @@ class TDirectory;
 class TH1D;
 class TH2D;
 
-namespace Mechanics {
-class Sensor;
-}
-namespace Storage {
-class Cluster;
-class TrackState;
-} // namespace Storage
+namespace proteus {
 
-namespace Analyzers {
+class Cluster;
+class Sensor;
+class TrackState;
 
 /** Efficiency calculation using tracks and matched clusters.
  *
@@ -43,7 +39,7 @@ namespace Analyzers {
  * The in-pixel efficiencies are only calculated for tracks fully within the
  * region-of-interest excluding the additional edges.
  */
-class Efficiency : public Loop::Analyzer {
+class Efficiency : public Analyzer {
 public:
   /**
    * \param sensor Sensor for which efficiencies should be calculated
@@ -55,7 +51,7 @@ public:
    * \param efficiencyDistBins Number of bins in the efficiency distribution
    */
   Efficiency(TDirectory* dir,
-             const Mechanics::Sensor& sensor,
+             const Sensor& sensor,
              const int maskedPixelRange = 1,
              const int increaseArea = 0,
              const int inPixelPeriod = 2,
@@ -63,12 +59,12 @@ public:
              const int efficiencyDistBins = 128);
 
   std::string name() const;
-  void execute(const Storage::Event& event);
+  void execute(const Event& event);
   void finalize();
 
 private:
-  using DigitalArea = Utils::Box<2, int>;
-  using Area = Utils::Box<2, Scalar>;
+  using DigitalArea = Box<2, int>;
+  using Area = Box<2, Scalar>;
   struct Hists {
     DigitalArea areaPixel; // region-of-interest area + edge bins
     DigitalArea roiPixel;  // only the region-of-interest
@@ -96,23 +92,23 @@ private:
 
     Hists() = default;
     Hists(TDirectory* dir,
-          const Mechanics::Sensor& sensor,
+          const Sensor& sensor,
           const DigitalArea& roi,
           const int increaseArea,
           const int inPixelPeriod,
           const int inPixelBinsMin,
           const int efficiencyDistBins);
-    void fill(const Storage::TrackState& state, Scalar col, Scalar row);
-    void fill(const Storage::Cluster& cluster);
+    void fill(const TrackState& state, Scalar col, Scalar row);
+    void fill(const Cluster& cluster);
     void finalize();
   };
 
-  const Mechanics::Sensor& m_sensor;
-  Utils::DenseMask m_mask;
+  const Sensor& m_sensor;
+  DenseMask m_mask;
   Hists m_sensorHists;
   std::vector<Hists> m_regionsHists;
 };
 
-} // namespace Analyzers
+} // namespace proteus
 
 #endif // PT_EFFICIENCY_H

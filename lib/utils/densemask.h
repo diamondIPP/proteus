@@ -14,7 +14,7 @@
 
 #include "utils/definitions.h"
 
-namespace Utils {
+namespace proteus {
 
 /** Dense pixel mask.
  *
@@ -49,21 +49,23 @@ private:
 
 std::ostream& operator<<(std::ostream& os, const DenseMask& pm);
 
-} // namespace Utils
+// inline implementations
 
 // linear index into the boolean mask
-inline size_t Utils::DenseMask::index(int col, int row) const
+inline size_t DenseMask::index(int col, int row) const
 {
   assert((m_col0 <= col) and (col < m_col1));
   assert((m_row0 <= row) and (row < m_row1));
   return (m_row1 - m_row0) * (col - m_col0) + (row - m_row0);
 }
 
-inline bool Utils::DenseMask::isMasked(int col, int row) const
+inline bool DenseMask::isMasked(int col, int row) const
 {
   bool isInsideMask =
       (m_col0 <= col) and (col < m_col1) and (m_row0 <= row) and (row < m_row1);
   return isInsideMask and m_mask[index(col, row)];
 }
+
+} // namespace proteus
 
 #endif // PT_DENSEMASK_H

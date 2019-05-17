@@ -9,19 +9,16 @@
 
 #include <string>
 
-namespace Mechanics {
+namespace proteus {
+
 class Device;
-}
-namespace Loop {
 class EventLoop;
-}
-namespace Tracking {
 
 /** Select a track fitter implementation by name. */
-void setupTrackFitter(const Mechanics::Device& device,
+void setupTrackFitter(const Device& device,
                       const std::string& type,
-                      Loop::EventLoop& loop);
+                      EventLoop& loop);
 
-} // namespace Tracking
+} // namespace proteus
 
 #endif // PT_SETUPFITTER_H

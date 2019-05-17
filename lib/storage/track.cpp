@@ -5,12 +5,14 @@
 
 #include <Math/ProbFunc.h>
 
-Storage::Track::Track(const TrackState& global, Scalar chi2, int dof)
+namespace proteus {
+
+Track::Track(const TrackState& global, Scalar chi2, int dof)
     : m_state(global), m_chi2(chi2), m_dof(dof)
 {
 }
 
-Scalar Storage::Track::probability() const
+Scalar Track::probability() const
 {
   return ((0 < m_dof) and (0 <= m_chi2))
              ? ROOT::Math::chisquared_cdf_c(m_chi2, m_dof)
@@ -22,14 +24,14 @@ namespace {
 struct OnSensor {
   Index sensorId;
 
-  bool operator()(const Storage::Track::TrackCluster& tc) const
+  bool operator()(const Track::TrackCluster& tc) const
   {
     return tc.sensor == sensorId;
   }
 };
 } // namespace
 
-void Storage::Track::addCluster(Index sensor, Index cluster)
+void Track::addCluster(Index sensor, Index cluster)
 {
   auto c = std::find_if(m_clusters.begin(), m_clusters.end(), OnSensor{sensor});
   if (c != m_clusters.end()) {
@@ -39,13 +41,13 @@ void Storage::Track::addCluster(Index sensor, Index cluster)
   }
 }
 
-bool Storage::Track::hasClusterOn(Index sensor) const
+bool Track::hasClusterOn(Index sensor) const
 {
   auto c = std::find_if(m_clusters.begin(), m_clusters.end(), OnSensor{sensor});
   return (c != m_clusters.end());
 }
 
-Index Storage::Track::getClusterOn(Index sensor) const
+Index Track::getClusterOn(Index sensor) const
 {
   auto c = std::find_if(m_clusters.begin(), m_clusters.end(), OnSensor{sensor});
   if (c == m_clusters.end()) {
@@ -54,10 +56,12 @@ Index Storage::Track::getClusterOn(Index sensor) const
   return c->cluster;
 }
 
-std::ostream& Storage::operator<<(std::ostream& os, const Storage::Track& track)
+std::ostream& operator<<(std::ostream& os, const Track& track)
 {
   os << "chi2/dof=" << track.chi2() << "/" << track.degreesOfFreedom();
   os << " prob=" << track.probability();
   os << " size=" << track.size();
   return os;
 }
+
+} // namespace proteus

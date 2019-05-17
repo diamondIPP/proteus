@@ -9,7 +9,7 @@
 #include "storage/sensorevent.h"
 #include "storage/track.h"
 
-namespace Storage {
+namespace proteus {
 
 /** An event containing all global and local information for one trigger.
  *
@@ -60,6 +60,6 @@ private:
   std::vector<Track> m_tracks;
 };
 
-} // namespace Storage
+} // namespace proteus
 
 #endif // PT_EVENT_H

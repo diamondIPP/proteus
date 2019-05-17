@@ -7,12 +7,12 @@
 #ifndef PT_PROPAGATION_H
 #define PT_PROPAGATION_H
 
-#include <utility>
-
-#include "mechanics/geometry.h"
 #include "storage/trackstate.h"
+#include "utils/definitions.h"
 
-namespace Tracking {
+namespace proteus {
+
+class Plane;
 
 /** Spatial slope [slope0,slope1] transport jacobian between two systems.
  *
@@ -36,10 +36,9 @@ jacobianState(const Vector4& tangent, const Matrix4& toTarget, Scalar w0);
  * \param source  Source plane
  * \param target  Target plane
  */
-Storage::TrackState propagateTo(const Storage::TrackState& state,
-                                const Mechanics::Plane& source,
-                                const Mechanics::Plane& target);
+TrackState
+propagateTo(const TrackState& state, const Plane& source, const Plane& target);
 
-} // namespace Tracking
+} // namespace proteus
 
 #endif // PT_PROPAGATION_H

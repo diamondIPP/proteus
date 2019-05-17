@@ -8,19 +8,18 @@
 
 #include <string>
 
-namespace Storage {
+namespace proteus {
+
 class Event;
-}
-namespace Loop {
 
 /** Interface for algorithms to process and modify events. */
 class Processor {
 public:
   virtual ~Processor() = default;
   virtual std::string name() const = 0;
-  virtual void execute(Storage::Event&) const = 0;
+  virtual void execute(Event&) const = 0;
 };
 
-} // namespace Loop
+} // namespace proteus
 
 #endif // PT_PROCESSOR_H

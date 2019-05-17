@@ -8,57 +8,53 @@
 #define PT_CLUSTERIZER_H
 
 #include "loop/processor.h"
-#include "utils/definitions.h"
 
-namespace Mechanics {
+namespace proteus {
+
 class Sensor;
-}
-namespace Processors {
 
 /** Cluster hits and average the position with equal weights for all hits.
  *
  * The fastest hit time is used as the cluster time.
  */
-class BinaryClusterizer : public Loop::Processor {
+class BinaryClusterizer : public Processor {
 public:
-  BinaryClusterizer(const Mechanics::Sensor& sensor) : m_sensor(sensor) {}
+  BinaryClusterizer(const Sensor& sensor) : m_sensor(sensor) {}
 
   std::string name() const;
-  void execute(Storage::Event& event) const;
+  void execute(Event& event) const;
 
 private:
-  const Mechanics::Sensor& m_sensor;
+  const Sensor& m_sensor;
 };
 
 /** Cluster hits and calculate position by weighting each hit with its value.
  *
  * The fastest hit time is used as the cluster time.
  */
-class ValueWeightedClusterizer : public Loop::Processor {
+class ValueWeightedClusterizer : public Processor {
 public:
-  ValueWeightedClusterizer(const Mechanics::Sensor& sensor) : m_sensor(sensor)
-  {
-  }
+  ValueWeightedClusterizer(const Sensor& sensor) : m_sensor(sensor) {}
 
   std::string name() const;
-  void execute(Storage::Event& event) const;
+  void execute(Event& event) const;
 
 private:
-  const Mechanics::Sensor& m_sensor;
+  const Sensor& m_sensor;
 };
 
 /** Cluster hits and take position and timing only from the fastest hit. */
-class FastestHitClusterizer : public Loop::Processor {
+class FastestHitClusterizer : public Processor {
 public:
-  FastestHitClusterizer(const Mechanics::Sensor& sensor) : m_sensor(sensor) {}
+  FastestHitClusterizer(const Sensor& sensor) : m_sensor(sensor) {}
 
   std::string name() const;
-  void execute(Storage::Event& event) const;
+  void execute(Event& event) const;
 
 private:
-  const Mechanics::Sensor& m_sensor;
+  const Sensor& m_sensor;
 };
 
-} // namespace Processors
+} // namespace proteus
 
 #endif // PT_CLUSTERIZER_H

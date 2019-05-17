@@ -9,25 +9,21 @@ class TDirectory;
 class TH1D;
 class TH2D;
 
-namespace Storage {
-class SensorEvent;
-}
-namespace Mechanics {
+namespace proteus {
+
 class Device;
 class Sensor;
-} // namespace Mechanics
-
-namespace Analyzers {
+class SensorEvent;
 
 /** Cluster histograms for a single sensor. */
 class SensorClusters {
 public:
   SensorClusters(TDirectory* dir,
-                 const Mechanics::Sensor& sensor,
+                 const Sensor& sensor,
                  const int sizeMax,
                  const int binsUncertainty);
 
-  void execute(const Storage::SensorEvent& sensorEvent);
+  void execute(const SensorEvent& sensorEvent);
   void finalize();
 
 private:
@@ -57,21 +53,21 @@ private:
 };
 
 /** Cluster histograms for all sensors in the device. */
-class Clusters : public Loop::Analyzer {
+class Clusters : public Analyzer {
 public:
   Clusters(TDirectory* dir,
-           const Mechanics::Device& device,
+           const Device& device,
            const int sizeMax = 9,
            const int binsUncertainty = 32);
 
   std::string name() const;
-  void execute(const Storage::Event& event);
+  void execute(const Event& event);
   void finalize();
 
 private:
   std::vector<SensorClusters> m_sensors;
 };
 
-} // namespace Analyzers
+} // namespace proteus
 
 #endif // PT_CLUSTERINFO_H

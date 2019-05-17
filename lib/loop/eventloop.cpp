@@ -10,7 +10,10 @@
 #include <numeric>
 #include <sstream>
 
-#include "io/rceroot.h"
+#include "loop/analyzer.h"
+#include "loop/processor.h"
+#include "loop/reader.h"
+#include "loop/writer.h"
 #include "storage/event.h"
 #include "utils/logger.h"
 #include "utils/progress.h"
@@ -18,6 +21,7 @@
 
 PT_SETUP_LOCAL_LOGGER(EventLoop)
 
+namespace proteus {
 namespace {
 
 // Timing measurements for the different parts of the event loop
@@ -110,7 +114,7 @@ struct StopWatch {
 // Summary statistics for basic event information.
 struct Statistics {
   uint64_t events = 0;
-  Utils::StatAccumulator<uint64_t> hits, clusters, tracks;
+  StatAccumulator<uint64_t> hits, clusters, tracks;
 
   void fill(uint64_t nHits, uint64_t nClusters, uint64_t nTracks)
   {
@@ -127,13 +131,14 @@ struct Statistics {
     VERBOSE("  tracks/event: ", tracks);
   }
 };
+
 } // namespace
 
-Loop::EventLoop::EventLoop(std::shared_ptr<Loop::Reader> reader,
-                           size_t sensors,
-                           uint64_t start,
-                           uint64_t events,
-                           bool showProgress)
+EventLoop::EventLoop(std::shared_ptr<Reader> reader,
+                     size_t sensors,
+                     uint64_t start,
+                     uint64_t events,
+                     bool showProgress)
     : m_reader(std::move(reader))
     , m_start(start)
     , m_events(0)
@@ -171,28 +176,28 @@ Loop::EventLoop::EventLoop(std::shared_ptr<Loop::Reader> reader,
   }
 }
 
-Loop::EventLoop::~EventLoop() {}
+EventLoop::~EventLoop() {}
 
-void Loop::EventLoop::addWriter(std::shared_ptr<Loop::Writer> writer)
+void EventLoop::addWriter(std::shared_ptr<Writer> writer)
 {
   m_writers.emplace_back(std::move(writer));
 }
 
-void Loop::EventLoop::addProcessor(std::shared_ptr<Loop::Processor> processor)
+void EventLoop::addProcessor(std::shared_ptr<Processor> processor)
 {
   m_processors.emplace_back(std::move(processor));
 }
 
-void Loop::EventLoop::addAnalyzer(std::shared_ptr<Loop::Analyzer> analyzer)
+void EventLoop::addAnalyzer(std::shared_ptr<Analyzer> analyzer)
 {
   m_analyzers.emplace_back(std::move(analyzer));
 }
 
-void Loop::EventLoop::run()
+void EventLoop::run()
 {
   Timing timing(m_processors.size(), m_analyzers.size(), m_writers.size());
   Statistics stats;
-  Storage::Event event(m_sensors);
+  Event event(m_sensors);
 
   DEBUG("configured readers:");
   DEBUG("  ", m_reader->name());
@@ -209,7 +214,7 @@ void Loop::EventLoop::run()
     DEBUG("  ", writer->name());
   }
 
-  Utils::Progress progress(m_showProgress ? m_events : 0);
+  Progress progress(m_showProgress ? m_events : 0);
   progress.update(0);
   timing.start();
   {
@@ -246,3 +251,5 @@ void Loop::EventLoop::run()
   timing.summarize(processed + 1, m_processors, m_analyzers, m_writers);
   stats.summarize();
 }
+
+} // namespace proteus

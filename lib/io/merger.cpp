@@ -5,7 +5,9 @@
 
 PT_SETUP_LOCAL_LOGGER(EventMerger)
 
-Io::EventMerger::EventMerger(std::vector<std::shared_ptr<Loop::Reader>> readers)
+namespace proteus {
+
+EventMerger::EventMerger(std::vector<std::shared_ptr<Reader>> readers)
     : m_readers(std::move(readers)), m_events(UINT64_MAX), m_sensors(0)
 {
   // define available events and count sensors
@@ -22,15 +24,15 @@ Io::EventMerger::EventMerger(std::vector<std::shared_ptr<Loop::Reader>> readers)
   }
 }
 
-std::string Io::EventMerger::name() const { return "EventMerger"; }
+std::string EventMerger::name() const { return "EventMerger"; }
 
-void Io::EventMerger::skip(uint64_t n)
+void EventMerger::skip(uint64_t n)
 {
   for (auto& reader : m_readers)
     reader->skip(n);
 }
 
-bool Io::EventMerger::read(Storage::Event& event)
+bool EventMerger::read(Event& event)
 {
   size_t ireader = 0;
   Index isensor = 0;
@@ -38,7 +40,7 @@ bool Io::EventMerger::read(Storage::Event& event)
   for (auto& reader : m_readers) {
     Index nsensors = reader->numSensors();
     // read sub-event
-    Storage::Event sub(nsensors);
+    Event sub(nsensors);
     if (!reader->read(sub))
       return false;
     // use first reader to define event number and timestamp
@@ -54,3 +56,5 @@ bool Io::EventMerger::read(Storage::Event& event)
   // no more events to read if we have no readers to begin with
   return !m_readers.empty();
 }
+
+} // namespace proteus

@@ -15,6 +15,8 @@
 
 PT_SETUP_LOCAL_LOGGER(Root)
 
+namespace proteus {
+
 static void closeTFileRead(TFile* f)
 {
   if (!f) {
@@ -50,7 +52,7 @@ static void closeTFileWrite(TFile* f)
   delete f;
 }
 
-Utils::RootFilePtr Utils::openRootRead(const std::string& path)
+RootFilePtr openRootRead(const std::string& path)
 {
   RootFilePtr f(TFile::Open(path.c_str(), "READ"), &closeTFileRead);
   if (!f) {
@@ -62,7 +64,7 @@ Utils::RootFilePtr Utils::openRootRead(const std::string& path)
   return f;
 }
 
-Utils::RootFilePtr Utils::openRootWrite(const std::string& path)
+RootFilePtr openRootWrite(const std::string& path)
 {
   // always use better, non-standard compression
   RootFilePtr f(TFile::Open(path.c_str(), "RECREATE", "",
@@ -77,7 +79,7 @@ Utils::RootFilePtr Utils::openRootWrite(const std::string& path)
   return f;
 }
 
-TDirectory* Utils::makeDir(TDirectory* parent, const std::string& path)
+TDirectory* makeDir(TDirectory* parent, const std::string& path)
 {
   assert(parent && "Parent directory must be non-NULL");
 
@@ -96,19 +98,19 @@ TDirectory* Utils::makeDir(TDirectory* parent, const std::string& path)
   return dir;
 }
 
-Utils::HistAxis::HistAxis(double a, double b, int n, std::string l)
-  : limit0(a), limit1(b), bins(n), label(std::move(l))
+HistAxis::HistAxis(double a, double b, int n, std::string l)
+    : limit0(a), limit1(b), bins(n), label(std::move(l))
 {
   assert((0 < n) and "Axis must have at least one bin");
 }
 
-Utils::HistAxis Utils::HistAxis::Integer(int a, int b, std::string l)
+HistAxis HistAxis::Integer(int a, int b, std::string l)
 {
   // integer values are placed at bin centers
   return {a - 0.5, b - 0.5, std::abs(b - a), std::move(l)};
 }
 
-TH1D* Utils::makeH1(TDirectory* dir, const std::string& name, HistAxis axis)
+TH1D* makeH1(TDirectory* dir, const std::string& name, HistAxis axis)
 {
   assert(dir && "Directory must be non-NULL");
 
@@ -118,10 +120,10 @@ TH1D* Utils::makeH1(TDirectory* dir, const std::string& name, HistAxis axis)
   return h;
 }
 
-TH2D* Utils::makeH2(TDirectory* dir,
-                    const std::string& name,
-                    HistAxis axis0,
-                    HistAxis axis1)
+TH2D* makeH2(TDirectory* dir,
+             const std::string& name,
+             HistAxis axis0,
+             HistAxis axis1)
 {
   assert(dir && "Directory must be non-NULL");
 
@@ -133,7 +135,7 @@ TH2D* Utils::makeH2(TDirectory* dir,
   return h;
 }
 
-TH1D* Utils::makeTransientH1(HistAxis axis)
+TH1D* makeTransientH1(HistAxis axis)
 {
   // try to generate a (unique) name. not sure if needed
   std::string name;
@@ -148,7 +150,7 @@ TH1D* Utils::makeTransientH1(HistAxis axis)
   return h;
 }
 
-TH2D* Utils::makeTransientH2(HistAxis axis0, HistAxis axis1)
+TH2D* makeTransientH2(HistAxis axis0, HistAxis axis1)
 {
   // try to generate a (unique) name. not sure if needed
   std::string name;
@@ -169,7 +171,7 @@ TH2D* Utils::makeTransientH2(HistAxis axis0, HistAxis axis1)
   return h;
 }
 
-void Utils::fillDist(const TH2D* values, TH1D* dist)
+void fillDist(const TH2D* values, TH1D* dist)
 {
   for (int icol = 1; icol <= values->GetNbinsX(); ++icol) {
     for (int irow = 1; irow <= values->GetNbinsY(); ++irow) {
@@ -181,7 +183,7 @@ void Utils::fillDist(const TH2D* values, TH1D* dist)
   }
 }
 
-std::pair<double, double> Utils::getRestrictedMean(const TH1D* h1, int offset)
+std::pair<double, double> getRestrictedMean(const TH1D* h1, int offset)
 {
   assert((0 <= offset) && "Offset must be zero or positive");
 
@@ -195,3 +197,5 @@ std::pair<double, double> Utils::getRestrictedMean(const TH1D* h1, int offset)
 
   return std::make_pair(tmp.GetMean(), tmp.GetMeanError() * tmp.GetMeanError());
 }
+
+} // namespace proteus

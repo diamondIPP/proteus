@@ -12,13 +12,15 @@
 
 PT_SETUP_LOCAL_LOGGER(Arguments)
 
-Utils::Arguments::Arguments(std::string description)
+namespace proteus {
+
+Arguments::Arguments(std::string description)
     : m_description(std::move(description))
 {
   addFlag('h', "help", "print this help text");
 }
 
-void Utils::Arguments::addFlag(char key, std::string name, std::string help)
+void Arguments::addFlag(char key, std::string name, std::string help)
 {
   Option opt;
   opt.abbreviation = key;
@@ -28,7 +30,7 @@ void Utils::Arguments::addFlag(char key, std::string name, std::string help)
   m_options.emplace_back(std::move(opt));
 }
 
-void Utils::Arguments::addOption(char key, std::string name, std::string help)
+void Arguments::addOption(char key, std::string name, std::string help)
 {
   Option opt;
   opt.abbreviation = key;
@@ -38,9 +40,7 @@ void Utils::Arguments::addOption(char key, std::string name, std::string help)
   m_options.emplace_back(std::move(opt));
 }
 
-void Utils::Arguments::addOptionMulti(char key,
-                                      std::string name,
-                                      std::string help)
+void Arguments::addOptionMulti(char key, std::string name, std::string help)
 {
   Option opt;
   opt.abbreviation = key;
@@ -50,7 +50,7 @@ void Utils::Arguments::addOptionMulti(char key,
   m_options.emplace_back(std::move(opt));
 }
 
-void Utils::Arguments::addRequired(std::string name, std::string help)
+void Arguments::addRequired(std::string name, std::string help)
 {
   RequiredArgument arg;
   arg.name = std::move(name);
@@ -58,13 +58,13 @@ void Utils::Arguments::addRequired(std::string name, std::string help)
   m_requireds.emplace_back(std::move(arg));
 }
 
-void Utils::Arguments::addVariable(std::string name, std::string help)
+void Arguments::addVariable(std::string name, std::string help)
 {
   m_variable.name = std::move(name);
   m_variable.help = std::move(help);
 }
 
-std::string Utils::Arguments::Option::description() const
+std::string Arguments::Option::description() const
 {
   std::string desc;
   if (this->abbreviation != kNoAbbr) {
@@ -77,7 +77,7 @@ std::string Utils::Arguments::Option::description() const
   return desc;
 }
 
-void Utils::Arguments::printHelp(const std::string& arg0) const
+void Arguments::printHelp(const std::string& arg0) const
 {
   using std::cerr;
 
@@ -129,7 +129,7 @@ static inline bool args_fail(const std::string& msg)
   return true;
 }
 
-bool Utils::Arguments::parse(int argc, char const* argv[])
+bool Arguments::parse(int argc, char const* argv[])
 {
   size_t numArgs = 0;
 
@@ -229,8 +229,7 @@ bool Utils::Arguments::parse(int argc, char const* argv[])
   return false;
 }
 
-const Utils::Arguments::Option*
-Utils::Arguments::find(const std::string& name) const
+const Arguments::Option* Arguments::find(const std::string& name) const
 {
   for (const auto& opt : m_options) {
     if (opt.name == name)
@@ -239,7 +238,7 @@ Utils::Arguments::find(const std::string& name) const
   return NULL;
 }
 
-const Utils::Arguments::Option* Utils::Arguments::find(char abbreviation) const
+const Arguments::Option* Arguments::find(char abbreviation) const
 {
   for (const auto& opt : m_options) {
     if ((opt.abbreviation != kNoAbbr) && (opt.abbreviation == abbreviation))
@@ -247,3 +246,5 @@ const Utils::Arguments::Option* Utils::Arguments::find(char abbreviation) const
   }
   return NULL;
 }
+
+} // namespace proteus

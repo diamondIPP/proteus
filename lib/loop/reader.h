@@ -9,10 +9,9 @@
 #include <cstdint>
 #include <string>
 
-namespace Storage {
+namespace proteus {
+
 class Event;
-}
-namespace Loop {
 
 /** Event reader interface. */
 class Reader {
@@ -45,9 +44,9 @@ public:
    * clearing previous contents. Errors must be handled by throwing an
    * appropriate exception.
    */
-  virtual bool read(Storage::Event& event) = 0;
+  virtual bool read(Event& event) = 0;
 };
 
-} // namespace Loop
+} // namespace proteus
 
 #endif // PT_READER_H

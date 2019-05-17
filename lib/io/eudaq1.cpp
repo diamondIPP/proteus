@@ -18,10 +18,12 @@
 
 PT_SETUP_LOCAL_LOGGER(Eudaq1Reader);
 
+namespace proteus {
+
 // local helper functions
 
 // determine the list of all sensor ids
-static std::vector<unsigned> listIds(const eudaq::StandardEvent& sevent)
+static std::vector<unsigned> listIds(const ::eudaq::StandardEvent& sevent)
 {
   std::vector<unsigned> ids;
   for (size_t iplane = 0; iplane < sevent.NumPlanes(); ++iplane)
@@ -30,23 +32,23 @@ static std::vector<unsigned> listIds(const eudaq::StandardEvent& sevent)
 }
 
 // convert a EUDAQ StandardEvent into a Proteus Event
-static void convert(const eudaq::StandardEvent& sevent,
+static void convert(const ::eudaq::StandardEvent& sevent,
                     const std::map<unsigned, Index>& mapIdIndex,
-                    Storage::Event& event)
+                    Event& event)
 {
   uint64_t frame = sevent.GetEventNumber();
   uint64_t timestamp = sevent.GetTimestamp();
   event.clear(frame, timestamp);
 
   for (size_t iplane = 0; iplane < sevent.NumPlanes(); ++iplane) {
-    const eudaq::StandardPlane& spl = sevent.GetPlane(iplane);
+    const ::eudaq::StandardPlane& spl = sevent.GetPlane(iplane);
 
     // find the corresponding sensor index
     auto it = mapIdIndex.find(spl.ID());
     if (it == mapIdIndex.end())
       FAIL("unknown EUDAQ sensor id ", spl.ID());
 
-    Storage::SensorEvent& sensorEvent = event.getSensorEvent(it->second);
+    SensorEvent& sensorEvent = event.getSensorEvent(it->second);
     // fill hits into the sensor event
     for (unsigned i = 0; i < spl.HitPixels(); ++i) {
       auto col = spl.GetX(i);
@@ -60,36 +62,37 @@ static void convert(const eudaq::StandardEvent& sevent,
 
 // automatic filetype deduction/ global registry
 
-int Io::Eudaq1Reader::check(const std::string& path)
+int Eudaq1Reader::check(const std::string& path)
 {
-  if (Utils::Config::pathExtension(path) == "raw")
+  if (pathExtension(path) == "raw") {
     return 10;
+  }
   return 0;
 }
 
-std::shared_ptr<Io::Eudaq1Reader>
-Io::Eudaq1Reader::open(const std::string& path,
-                       const toml::Value& /* unused configuration */)
+std::shared_ptr<Eudaq1Reader>
+Eudaq1Reader::open(const std::string& path,
+                   const toml::Value& /* unused configuration */)
 {
   return std::make_shared<Eudaq1Reader>(path);
 }
 
 // FileReader proper
 
-Io::Eudaq1Reader::Eudaq1Reader(const std::string& path)
-    : m_reader(new eudaq::FileReader(path)), m_thatsIt(false)
+Eudaq1Reader::Eudaq1Reader(const std::string& path)
+    : m_reader(new ::eudaq::FileReader(path)), m_thatsIt(false)
 {
   // opening the reader immediately reads the first event
   // collect all beginning of run events (BOREs)
   size_t numBORE = 0;
   do {
-    const eudaq::Event& ev = m_reader->GetEvent();
+    const ::eudaq::Event& ev = m_reader->GetEvent();
     // quit loop since we reached the first data/ non-BORE event
     if (!ev.IsBORE())
       break;
     // use BOREs to initialize the plugin manager
-    if (const auto* dev = dynamic_cast<const eudaq::DetectorEvent*>(&ev)) {
-      eudaq::PluginManager::Initialize(*dev);
+    if (const auto* dev = dynamic_cast<const ::eudaq::DetectorEvent*>(&ev)) {
+      ::eudaq::PluginManager::Initialize(*dev);
     }
     numBORE += 1;
   } while (m_reader->NextEvent());
@@ -104,11 +107,12 @@ Io::Eudaq1Reader::Eudaq1Reader(const std::string& path)
   // from sorted eudaq sensor ids to the Proteus sensor index.
   // TODO 2017-10-14 msmk: can this contain duplicate entries?
   std::vector<unsigned int> eudaqIds;
-  const eudaq::Event& ev = m_reader->GetEvent();
-  if (const auto* sev = dynamic_cast<const eudaq::StandardEvent*>(&ev)) {
+  const ::eudaq::Event& ev = m_reader->GetEvent();
+  if (const auto* sev = dynamic_cast<const ::eudaq::StandardEvent*>(&ev)) {
     eudaqIds = listIds(*sev);
-  } else if (const auto* dev = dynamic_cast<const eudaq::DetectorEvent*>(&ev)) {
-    eudaqIds = listIds(eudaq::PluginManager::ConvertToStandard(*dev));
+  } else if (const auto* dev =
+                 dynamic_cast<const ::eudaq::DetectorEvent*>(&ev)) {
+    eudaqIds = listIds(::eudaq::PluginManager::ConvertToStandard(*dev));
   } else {
     THROW("could not convert event ", ev.GetEventNumber(), " to StandardEvent");
   }
@@ -120,20 +124,20 @@ Io::Eudaq1Reader::Eudaq1Reader(const std::string& path)
 }
 
 // required for std::unique_ptr<...> w/ forward-defined classes to work
-Io::Eudaq1Reader::~Eudaq1Reader() {}
+Eudaq1Reader::~Eudaq1Reader() {}
 
-std::string Io::Eudaq1Reader::name() const { return "Eudaq1Reader"; }
+std::string Eudaq1Reader::name() const { return "Eudaq1Reader"; }
 
-uint64_t Io::Eudaq1Reader::numEvents() const { return UINT64_MAX; }
-size_t Io::Eudaq1Reader::numSensors() const { return m_mapIdIndex.size(); }
+uint64_t Eudaq1Reader::numEvents() const { return UINT64_MAX; }
+size_t Eudaq1Reader::numSensors() const { return m_mapIdIndex.size(); }
 
-void Io::Eudaq1Reader::skip(uint64_t n)
+void Eudaq1Reader::skip(uint64_t n)
 {
   if (!m_reader->NextEvent(n))
     m_thatsIt = true;
 }
 
-bool Io::Eudaq1Reader::read(Storage::Event& event)
+bool Eudaq1Reader::read(Event& event)
 {
   // due to BORE handling and id number determination, the first event must
   // be read already in the constructor. The internal event reading is
@@ -145,7 +149,7 @@ bool Io::Eudaq1Reader::read(Storage::Event& event)
   if (m_thatsIt)
     return false;
 
-  const eudaq::Event& ev = m_reader->GetEvent();
+  const ::eudaq::Event& ev = m_reader->GetEvent();
 
   // reached end-of-run
   if (ev.IsEORE())
@@ -153,10 +157,12 @@ bool Io::Eudaq1Reader::read(Storage::Event& event)
 
   // event must be either already a StandardEvent or a DetectorEvent
   // that can be converted to one using the PluginManager
-  if (const auto* sev = dynamic_cast<const eudaq::StandardEvent*>(&ev)) {
+  if (const auto* sev = dynamic_cast<const ::eudaq::StandardEvent*>(&ev)) {
     convert(*sev, m_mapIdIndex, event);
-  } else if (const auto* dev = dynamic_cast<const eudaq::DetectorEvent*>(&ev)) {
-    convert(eudaq::PluginManager::ConvertToStandard(*dev), m_mapIdIndex, event);
+  } else if (const auto* dev =
+                 dynamic_cast<const ::eudaq::DetectorEvent*>(&ev)) {
+    convert(::eudaq::PluginManager::ConvertToStandard(*dev), m_mapIdIndex,
+            event);
   } else {
     FAIL("could not convert event ", ev.GetEventNumber(), " to StandardEvent");
   }
@@ -167,3 +173,5 @@ bool Io::Eudaq1Reader::read(Storage::Event& event)
 
   return true;
 }
+
+} // namespace proteus

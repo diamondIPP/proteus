@@ -10,7 +10,7 @@
 #include "utils/config.h"
 #include "utils/definitions.h"
 
-namespace Mechanics {
+namespace proteus {
 
 /** A two-dimensional plane in three-dimensional space with time.
  *
@@ -220,6 +220,6 @@ void sortAlongBeam(const Geometry& geo, std::vector<Index>& sensorIds);
 std::vector<Index> sortedAlongBeam(const Geometry& geo,
                                    const std::vector<Index>& sensorIds);
 
-} // namespace Mechanics
+} // namespace proteus
 
 #endif // PT_GEOMETRY_H

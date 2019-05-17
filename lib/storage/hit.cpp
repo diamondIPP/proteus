@@ -5,7 +5,9 @@
 
 #include "cluster.h"
 
-Storage::Hit::Hit(int col, int row, int timestamp, int value)
+namespace proteus {
+
+Hit::Hit(int col, int row, int timestamp, int value)
     : m_digitalCol(col)
     , m_digitalRow(row)
     , m_col(col)
@@ -17,19 +19,19 @@ Storage::Hit::Hit(int col, int row, int timestamp, int value)
 {
 }
 
-void Storage::Hit::setPhysicalAddress(int col, int row)
+void Hit::setPhysicalAddress(int col, int row)
 {
   m_col = col;
   m_row = row;
 }
 
-void Storage::Hit::setCluster(Index cluster)
+void Hit::setCluster(Index cluster)
 {
   assert((m_cluster == kInvalidIndex) && "hit can only be in one cluster");
   m_cluster = cluster;
 }
 
-std::ostream& Storage::operator<<(std::ostream& os, const Storage::Hit& hit)
+std::ostream& operator<<(std::ostream& os, const Hit& hit)
 {
   if ((hit.digitalCol() != hit.col()) || (hit.digitalRow() != hit.row())) {
     os << "addr0=" << hit.digitalCol();
@@ -48,3 +50,5 @@ std::ostream& Storage::operator<<(std::ostream& os, const Storage::Hit& hit)
   }
   return os;
 }
+
+} // namespace proteus

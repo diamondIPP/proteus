@@ -9,14 +9,12 @@
 #include "storage/event.h"
 #include "utils/root.h"
 
-Analyzers::Distances::Distances(TDirectory* dir,
-                                const Mechanics::Sensor& sensor)
+namespace proteus {
+
+Distances::Distances(TDirectory* dir, const Sensor& sensor)
     : m_sensorId(sensor.id())
 {
-  using namespace Utils;
-
-  TDirectory* subDir =
-      Utils::makeDir(dir, "sensors/" + sensor.name() + "/distances");
+  TDirectory* subDir = makeDir(dir, "sensors/" + sensor.name() + "/distances");
 
   auto makeDeltaHist = [&](int dim, std::string name, std::string label) {
     auto iv = sensor.sensitiveVolume().interval(dim);
@@ -44,14 +42,14 @@ Analyzers::Distances::Distances(TDirectory* dir,
   m_clusterCluster = makeHists("cluster_cluster-", "Cluster - cluster ");
 }
 
-std::string Analyzers::Distances::name() const
+std::string Distances::name() const
 {
   return "Distances(" + std::to_string(m_sensorId) + ')';
 }
 
-void Analyzers::Distances::execute(const Storage::Event& event)
+void Distances::execute(const Event& event)
 {
-  const Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
+  const SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
 
   auto fillDelta = [](Hists& hs, const Vector4& delta) {
     hs.deltaU->Fill(delta[kU]);
@@ -77,7 +75,7 @@ void Analyzers::Distances::execute(const Storage::Event& event)
   // combinatorics: all clusters to all tracks
   for (const auto& state : sensorEvent.localStates()) {
     for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
-      const Storage::Cluster& cluster = sensorEvent.getCluster(icluster);
+      const Cluster& cluster = sensorEvent.getCluster(icluster);
 
       fillDelta(m_trackCluster, cluster.position() - state.position());
     }
@@ -96,3 +94,5 @@ void Analyzers::Distances::execute(const Storage::Event& event)
     }
   }
 }
+
+} // namespace proteus

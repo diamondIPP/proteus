@@ -11,8 +11,7 @@
 
 #include <toml/toml.h>
 
-namespace Utils {
-namespace Config {
+namespace proteus {
 
 /** Check if the given path is an absolute path. */
 bool pathIsAbsolute(const std::string& path);
@@ -25,14 +24,12 @@ std::string pathRebaseIfRelative(const std::string& path,
                                  const std::string& dir);
 
 /** Read a toml config file with automatic error handling. */
-toml::Value readConfig(const std::string& path);
-
+toml::Value configRead(const std::string& path);
 /** Write a toml::Value to file. */
-void writeConfig(const toml::Value& cfg, const std::string& path);
-
+void configWrite(const toml::Value& cfg, const std::string& path);
 /** Set missing values using the given defaults. */
-toml::Value withDefaults(const toml::Value& cfg, const toml::Value& defaults);
-
+toml::Value configWithDefaults(const toml::Value& cfg,
+                               const toml::Value& defaults);
 /** Construct per-sensor configuration with optional defaults.
  *
  * The input configuration **must** have a list of objects named `sensors`.
@@ -41,10 +38,9 @@ toml::Value withDefaults(const toml::Value& cfg, const toml::Value& defaults);
  * part of the input configuration (without `sensors`), and the per-sensor
  * configuration.
  */
-std::vector<toml::Value> perSensor(const toml::Value& cfg,
-                                   const toml::Value& defaults);
+std::vector<toml::Value> configPerSensor(const toml::Value& cfg,
+                                         const toml::Value& defaults);
 
-} // namespace Config
-} // namespace Utils
+} // namespace proteus
 
 #endif // PT_CONFIG_H

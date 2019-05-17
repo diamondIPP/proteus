@@ -9,10 +9,12 @@
 
 PT_SETUP_LOCAL_LOGGER(RceRoot)
 
+namespace proteus {
+
 // -----------------------------------------------------------------------------
 // common
 
-Io::RceRootCommon::RceRootCommon(Utils::RootFilePtr&& file)
+RceRootCommon::RceRootCommon(RootFilePtr&& file)
     : m_file(std::move(file))
     , m_entries(0)
     , m_next(0)
@@ -24,7 +26,7 @@ Io::RceRootCommon::RceRootCommon(Utils::RootFilePtr&& file)
 // -----------------------------------------------------------------------------
 // reader
 
-int Io::RceRootReader::check(const std::string& path)
+int RceRootReader::check(const std::string& path)
 {
   std::unique_ptr<TFile> file(TFile::Open(path.c_str(), "READ"));
   if (!file)
@@ -40,15 +42,15 @@ int Io::RceRootReader::check(const std::string& path)
   return score;
 }
 
-std::shared_ptr<Io::RceRootReader>
-Io::RceRootReader::open(const std::string& path,
-                        const toml::Value& /* unused configuration */)
+std::shared_ptr<RceRootReader>
+RceRootReader::open(const std::string& path,
+                    const toml::Value& /* unused configuration */)
 {
-  return std::make_shared<Io::RceRootReader>(path);
+  return std::make_shared<RceRootReader>(path);
 }
 
-Io::RceRootReader::RceRootReader(const std::string& path)
-    : RceRootCommon(Utils::openRootRead(path.c_str()))
+RceRootReader::RceRootReader(const std::string& path)
+    : RceRootCommon(openRootRead(path.c_str()))
 {
   int64_t entriesEvent = INT64_MAX;
   int64_t entriesTracks = INT64_MAX;
@@ -129,7 +131,7 @@ Io::RceRootReader::RceRootReader(const std::string& path)
  *
  * Throws on inconsistent number of entries.
  */
-int64_t Io::RceRootReader::addSensor(TDirectory* dir)
+int64_t RceRootReader::addSensor(TDirectory* dir)
 {
   assert(dir && "Directory must be non-null");
 
@@ -206,16 +208,16 @@ int64_t Io::RceRootReader::addSensor(TDirectory* dir)
   return trees.entries;
 }
 
-std::string Io::RceRootReader::name() const { return "RceRootReader"; }
+std::string RceRootReader::name() const { return "RceRootReader"; }
 
-uint64_t Io::RceRootReader::numEvents() const
+uint64_t RceRootReader::numEvents() const
 {
   return static_cast<uint64_t>(m_entries);
 }
 
-size_t Io::RceRootReader::numSensors() const { return m_sensors.size(); }
+size_t RceRootReader::numSensors() const { return m_sensors.size(); }
 
-void Io::RceRootReader::skip(uint64_t n)
+void RceRootReader::skip(uint64_t n)
 {
   if (m_entries <= static_cast<int64_t>(m_next + n)) {
     ERROR("skipping ", n, " events goes beyond available events");
@@ -225,7 +227,7 @@ void Io::RceRootReader::skip(uint64_t n)
   }
 }
 
-bool Io::RceRootReader::read(Storage::Event& event)
+bool RceRootReader::read(Event& event)
 {
   /* Note: fill in reversed order: tracks first, hits last. This is so that
    * once a hit is produced, it can immediately recieve the address of its
@@ -260,8 +262,8 @@ bool Io::RceRootReader::read(Storage::Event& event)
     if (m_tracks->GetEntry(ievent) <= 0)
       FAIL("could not read 'Tracks' entry ", ievent);
     for (Int_t itrack = 0; itrack < numTracks; ++itrack) {
-      Storage::TrackState state(trackX[itrack], trackY[itrack],
-                                trackSlopeX[itrack], trackSlopeY[itrack]);
+      TrackState state(trackX[itrack], trackY[itrack], trackSlopeX[itrack],
+                       trackSlopeY[itrack]);
       state.setCovSpatialPacked(trackCov[itrack]);
       event.addTrack({state, trackChi2[itrack], trackDof[itrack]});
     }
@@ -270,7 +272,7 @@ bool Io::RceRootReader::read(Storage::Event& event)
   // per-sensor data
   for (size_t isensor = 0; isensor < numSensors(); ++isensor) {
     SensorTrees& trees = m_sensors[isensor];
-    Storage::SensorEvent& sensorEvent = event.getSensorEvent(isensor);
+    SensorEvent& sensorEvent = event.getSensorEvent(isensor);
 
     // local track states
     if (trees.intercepts) {
@@ -278,9 +280,9 @@ bool Io::RceRootReader::read(Storage::Event& event)
         FAIL("could not read 'Intercepts' entry ", ievent);
 
       for (Int_t iintercept = 0; iintercept < numIntercepts; ++iintercept) {
-        Storage::TrackState local(
-            interceptU[iintercept], interceptV[iintercept],
-            interceptSlopeU[iintercept], interceptSlopeV[iintercept]);
+        TrackState local(interceptU[iintercept], interceptV[iintercept],
+                         interceptSlopeU[iintercept],
+                         interceptSlopeV[iintercept]);
         local.setCovSpatialPacked(interceptCov[iintercept]);
         sensorEvent.setLocalState(interceptTrack[iintercept], local);
       }
@@ -292,7 +294,7 @@ bool Io::RceRootReader::read(Storage::Event& event)
         FAIL("could not read 'Clusters' entry ", ievent);
 
       for (Int_t icluster = 0; icluster < numClusters; ++icluster) {
-        Storage::Cluster& cluster = sensorEvent.addCluster(
+        Cluster& cluster = sensorEvent.addCluster(
             clusterCol[icluster], clusterRow[icluster], clusterTiming[icluster],
             clusterValue[icluster], clusterVarCol[icluster],
             clusterVarRow[icluster], 1.0 / 12.0, clusterCovColRow[icluster]);
@@ -310,8 +312,8 @@ bool Io::RceRootReader::read(Storage::Event& event)
         FAIL("could not read 'Hits' entry ", ievent);
 
       for (Int_t ihit = 0; ihit < numHits; ++ihit) {
-        Storage::Hit& hit = sensorEvent.addHit(hitPixX[ihit], hitPixY[ihit],
-                                               hitTiming[ihit], hitValue[ihit]);
+        Hit& hit = sensorEvent.addHit(hitPixX[ihit], hitPixY[ihit],
+                                      hitTiming[ihit], hitValue[ihit]);
         // Fix hit/cluster relationship is possibl
         if (trees.clusters && hitInCluster[ihit] >= 0)
           sensorEvent.getCluster(hitInCluster[ihit]).addHit(hit);
@@ -324,8 +326,8 @@ bool Io::RceRootReader::read(Storage::Event& event)
 // -----------------------------------------------------------------------------
 // writer
 
-Io::RceRootWriter::RceRootWriter(const std::string& path, size_t numSensors)
-    : RceRootCommon(Utils::openRootWrite(path))
+RceRootWriter::RceRootWriter(const std::string& path, size_t numSensors)
+    : RceRootCommon(openRootWrite(path))
 {
   m_file->cd();
 
@@ -357,7 +359,7 @@ Io::RceRootWriter::RceRootWriter(const std::string& path, size_t numSensors)
   }
 }
 
-void Io::RceRootWriter::addSensor(TDirectory* dir)
+void RceRootWriter::addSensor(TDirectory* dir)
 {
   dir->cd();
 
@@ -397,16 +399,16 @@ void Io::RceRootWriter::addSensor(TDirectory* dir)
   m_sensors.emplace_back(trees);
 }
 
-Io::RceRootWriter::~RceRootWriter()
+RceRootWriter::~RceRootWriter()
 {
   if (m_file) {
     INFO("wrote ", m_sensors.size(), " sensors to '", m_file->GetPath(), "'");
   }
 }
 
-std::string Io::RceRootWriter::name() const { return "RceRootWriter"; }
+std::string RceRootWriter::name() const { return "RceRootWriter"; }
 
-void Io::RceRootWriter::append(const Storage::Event& event)
+void RceRootWriter::append(const Event& event)
 {
   if (event.numSensorEvents() != m_sensors.size())
     FAIL("inconsistent sensors numbers. events has ", event.numSensorEvents(),
@@ -425,10 +427,10 @@ void Io::RceRootWriter::append(const Storage::Event& event)
       FAIL("tracks exceed MAX_TRACKS");
     numTracks = event.numTracks();
     for (Index itrack = 0; itrack < event.numTracks(); ++itrack) {
-      const Storage::Track& track = event.getTrack(itrack);
+      const Track& track = event.getTrack(itrack);
       trackChi2[itrack] = track.chi2();
       trackDof[itrack] = track.degreesOfFreedom();
-      const Storage::TrackState& state = track.globalState();
+      const TrackState& state = track.globalState();
       trackX[itrack] = state.loc0();
       trackY[itrack] = state.loc1();
       trackSlopeX[itrack] = state.slopeLoc0();
@@ -449,7 +451,7 @@ void Io::RceRootWriter::append(const Storage::Event& event)
         FAIL("hits exceed MAX_HITS");
       numHits = sensorEvent.numHits();
       for (Index ihit = 0; ihit < sensorEvent.numHits(); ++ihit) {
-        const Storage::Hit hit = sensorEvent.getHit(ihit);
+        const Hit hit = sensorEvent.getHit(ihit);
         hitPixX[ihit] = hit.digitalCol();
         hitPixY[ihit] = hit.digitalRow();
         hitTiming[ihit] = hit.timestamp();
@@ -465,7 +467,7 @@ void Io::RceRootWriter::append(const Storage::Event& event)
         FAIL("clusters exceed MAX_HITS");
       numClusters = sensorEvent.numClusters();
       for (Index iclu = 0; iclu < sensorEvent.numClusters(); ++iclu) {
-        const Storage::Cluster& cluster = sensorEvent.getCluster(iclu);
+        const Cluster& cluster = sensorEvent.getCluster(iclu);
         clusterCol[iclu] = cluster.col();
         clusterRow[iclu] = cluster.row();
         clusterVarCol[iclu] = cluster.colVar();
@@ -497,3 +499,5 @@ void Io::RceRootWriter::append(const Storage::Event& event)
   }
   m_entries += 1;
 }
+
+} // namespace proteus

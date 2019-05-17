@@ -11,7 +11,7 @@
 #include <limits>
 #include <ostream>
 
-namespace Utils {
+namespace proteus {
 
 /** Accumulate summary statistics for a single variable. */
 template <typename T>
@@ -53,6 +53,8 @@ private:
   T m_min, m_max;
 };
 
+// inline implementations
+
 template <typename T>
 inline std::ostream& operator<<(std::ostream& os, const StatAccumulator<T>& acc)
 {
@@ -61,6 +63,6 @@ inline std::ostream& operator<<(std::ostream& os, const StatAccumulator<T>& acc)
   return os;
 }
 
-} // namespace Utils
+} // namespace proteus
 
 #endif // PT_STATISTICS_H

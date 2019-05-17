@@ -10,13 +10,11 @@ class TDirectory;
 class TH1D;
 class TH2D;
 
-namespace Mechanics {
+namespace proteus {
+
 class Device;
-}
 
-namespace Analyzers {
-
-class Tracks : public Loop::Analyzer {
+class Tracks : public Analyzer {
 public:
   /** Construct a tracks analyzer.
    *
@@ -26,7 +24,7 @@ public:
    * \param bins            Number of histogram bins
    */
   Tracks(TDirectory* dir,
-         const Mechanics::Device& device,
+         const Device& device,
          /* Histogram options */
          const int numTracksMax = 16,
          const double reducedChi2Max = 10,
@@ -34,7 +32,7 @@ public:
          const int bins = 128);
 
   std::string name() const;
-  void execute(const Storage::Event& event);
+  void execute(const Event& event);
 
   /** Average number of tracks per event. */
   double avgNumTracks() const;
@@ -57,6 +55,6 @@ private:
   TH2D* m_slopeXY;
 };
 
-} // namespace Analyzers
+} // namespace proteus
 
 #endif // PT_TRACKS_H

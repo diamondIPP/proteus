@@ -9,7 +9,7 @@
 #include "utils/config.h"
 #include "utils/definitions.h"
 
-namespace Mechanics {
+namespace proteus {
 
 /** Store and process masked pixels. */
 class PixelMasks {
@@ -39,6 +39,6 @@ private:
   std::map<Index, std::set<ColumnRow>> m_maskedPixels;
 };
 
-} // namespace Mechanics
+} // namespace proteus
 
 #endif // PT_NOISEMASK_H

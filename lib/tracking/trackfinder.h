@@ -7,15 +7,11 @@
 #include "mechanics/geometry.h"
 #include "utils/definitions.h"
 
-namespace Mechanics {
+namespace proteus {
+
 class Device;
-} // namespace Mechanics
-namespace Storage {
 class SensorEvent;
 class Track;
-} // namespace Storage
-
-namespace Tracking {
 
 /** Find tracks assuming straight propagation along the beam direction.
  *
@@ -31,7 +27,7 @@ namespace Tracking {
  * and an estimate of the global track parameters. Local track states are
  * not estimated and must be computed using one of the fitter processors.
  */
-class TrackFinder : public Loop::Processor {
+class TrackFinder : public Processor {
 public:
   /**
    * \param trackingIds            Ids of tracking sensors
@@ -40,7 +36,7 @@ public:
    * \param sizeMin                Selection cut on number of clusters
    * \param redChi2Max             Cut on track chi2/d.o.f, negative to disable
    */
-  TrackFinder(const Mechanics::Device& device,
+  TrackFinder(const Device& device,
               std::vector<Index> trackingIds,
               double searchSpatialSigmaMax,
               double searchTemporalSigmaMax,
@@ -49,12 +45,12 @@ public:
 
   std::string name() const;
   /** Find tracks and add them to the event. */
-  void execute(Storage::Event& event) const;
+  void execute(Event& event) const;
 
 private:
   struct Step {
     // Copy of the local-global transformation to avoid lookup
-    Mechanics::Plane plane;
+    Plane plane;
     // Propagation uncertainty, e.g. from scattering
     SymMatrix6 processNoise = SymMatrix6::Zero();
     // Corresponding sensor
@@ -75,6 +71,6 @@ private:
   double m_reducedChi2Max;
 };
 
-} // namespace Tracking
+} // namespace proteus
 
 #endif // PT_TRACKFINDER_H

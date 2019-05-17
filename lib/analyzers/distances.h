@@ -15,18 +15,16 @@
 class TDirectory;
 class TH1D;
 
-namespace Mechanics {
+namespace proteus {
+
 class Sensor;
-}
 
-namespace Analyzers {
-
-class Distances : public Loop::Analyzer {
+class Distances : public Analyzer {
 public:
-  Distances(TDirectory* dir, const Mechanics::Sensor& sensor);
+  Distances(TDirectory* dir, const Sensor& sensor);
 
   std::string name() const;
-  void execute(const Storage::Event& event);
+  void execute(const Event& event);
 
 private:
   struct Hists {
@@ -42,6 +40,6 @@ private:
   Hists m_clusterCluster;
 };
 
-} // namespace Analyzers
+} // namespace proteus
 
 #endif // PT_DISTANCES_H

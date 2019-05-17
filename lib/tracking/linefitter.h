@@ -12,7 +12,7 @@
 
 #include "utils/definitions.h"
 
-namespace Tracking {
+namespace proteus {
 
 /** Fit a line using linear weighted regression.
  *
@@ -128,7 +128,7 @@ struct LineFitter4D : LineFitterND<kZ, kX, kY, kT> {
   SymMatrix6 cov() const { return getCov(OutputIndices{}); }
 };
 
-// implementations
+// inline implementations
 
 template <size_t I, size_t... Ds>
 template <typename Point, typename Weight>
@@ -205,6 +205,6 @@ LineFitterND<I, Ds...>::getCov(std::index_sequence<Os...>) const
   return out;
 }
 
-} // namespace Tracking
+} // namespace proteus
 
 #endif // PT_LINEFITTER_H

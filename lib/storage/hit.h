@@ -5,7 +5,7 @@
 
 #include "utils/definitions.h"
 
-namespace Storage {
+namespace proteus {
 
 /** A sensor hit identified by its address, timestamp, and value.
  *
@@ -51,6 +51,6 @@ private:
 
 std::ostream& operator<<(std::ostream& os, const Hit& hit);
 
-} // namespace Storage
+} // namespace proteus
 
 #endif // PT_HIT_H
