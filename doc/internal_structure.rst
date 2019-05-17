@@ -16,16 +16,16 @@ geometry class stores the positions of the sensors and their local coordinate
 systems in the global laboratory system. There are no distinctions made between
 sensors belonging to the telescope and devices-under-test.
 
-.. doxygenclass:: Mechanics::Device
+.. doxygenclass:: proteus::Device
     :outline:
     :members:
-.. doxygenclass:: Mechanics::Sensor
+.. doxygenclass:: proteus::Sensor
     :outline:
     :members:
-.. doxygenclass:: Mechanics::Geometry
+.. doxygenclass:: proteus::Geometry
     :outline:
     :members:
-.. doxygenstruct:: Mechanics::Plane
+.. doxygenstruct:: proteus::Plane
     :outline:
     :members:
 
@@ -43,22 +43,22 @@ device. Each sensor event stores hits, clusters, and extrapolated track states
 for the given sensor. Clusters are list of hits with additional combined
 properties.
 
-.. doxygenclass:: Storage::Event
+.. doxygenclass:: proteus::Event
     :outline:
     :members:
-.. doxygenclass:: Storage::SensorEvent
+.. doxygenclass:: proteus::SensorEvent
     :outline:
     :members:
-.. doxygenclass:: Storage::Hit
+.. doxygenclass:: proteus::Hit
     :outline:
     :members:
-.. doxygenclass:: Storage::Cluster
+.. doxygenclass:: proteus::Cluster
     :outline:
     :members:
-.. doxygenclass:: Storage::Track
+.. doxygenclass:: proteus::Track
     :outline:
     :members:
-.. doxygenclass:: Storage::TrackState
+.. doxygenclass:: proteus::TrackState
     :outline:
     :members:
 
@@ -87,11 +87,11 @@ executed.
 The processed event data can be written to disk using an arbitrary number of
 writers.
 
-.. doxygenclass:: Loop::Reader
+.. doxygenclass:: proteus::Reader
     :members:
-.. doxygenclass:: Loop::Writer
+.. doxygenclass:: proteus::Writer
     :members:
-.. doxygenclass:: Loop::Processor
+.. doxygenclass:: proteus::Processor
     :members:
-.. doxygenclass:: Loop::Analyzer
+.. doxygenclass:: proteus::Analyzer
     :members:
