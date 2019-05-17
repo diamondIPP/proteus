@@ -29,9 +29,7 @@ PT_SETUP_GLOBAL_LOGGER
 
 int main(int argc, char const* argv[])
 {
-  using namespace Analyzers;
-  using namespace Processors;
-  using namespace Tracking;
+  using namespace proteus;
 
   toml::Table defaults = {
       {"search_spatial_sigma_max", 5.},
@@ -41,7 +39,7 @@ int main(int argc, char const* argv[])
       {"reduced_chi2_max", -1.},
       {"track_fitter", "straight3d"},
   };
-  Utils::Application app("recon", "preprocess, cluster, and track", defaults);
+  Application app("recon", "preprocess, cluster, and track", defaults);
   app.initialize(argc, argv);
 
   // configuration
@@ -59,7 +57,7 @@ int main(int argc, char const* argv[])
   auto fitter = cfg.get<std::string>("track_fitter");
 
   // output
-  auto hists = Utils::openRootWrite(app.outputPath("hists.root"));
+  auto hists = openRootWrite(app.outputPath("hists.root"));
 
   auto loop = app.makeEventLoop();
 
@@ -76,7 +74,7 @@ int main(int argc, char const* argv[])
   loop.addAnalyzer(std::make_shared<Correlations>(hists.get(), app.device()));
 
   // tracking
-  loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
+  loop.addProcessor(std::make_shared<TrackFinder>(
       app.device(), sensorIds, searchSpatialSigmaMax, searchTemporalSigmaMax,
       numPointsMin, redChi2Max));
   setupTrackFitter(app.device(), fitter, loop);
@@ -85,8 +83,8 @@ int main(int argc, char const* argv[])
       std::make_shared<Residuals>(hists.get(), app.device(), sensorIds));
 
   // data writing
-  loop.addWriter(std::make_shared<Io::RceRootWriter>(
-      app.outputPath("data.root"), app.device().numSensors()));
+  loop.addWriter(std::make_shared<RceRootWriter>(app.outputPath("data.root"),
+                                                 app.device().numSensors()));
 
   loop.run();
 

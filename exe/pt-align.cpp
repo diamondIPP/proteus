@@ -27,6 +27,8 @@
 
 PT_SETUP_LOCAL_LOGGER(align)
 
+using namespace proteus;
+
 /** Store values for every step and produce a graph at the end. */
 struct StepsGraph {
   std::vector<double> values;
@@ -91,7 +93,7 @@ struct StepsGraphs {
   StepsGraph numTracks;
 
   void addStep(const std::vector<Index>& sensorIds,
-               const Mechanics::Geometry& geo,
+               const Geometry& geo,
                double ntracks = 0.0)
   {
     for (auto id : sensorIds) {
@@ -103,10 +105,10 @@ struct StepsGraphs {
     beamY.addStep(slope[1], slopeStdev[1]);
     numTracks.addStep(ntracks);
   }
-  void write(const Mechanics::Device& device, TDirectory* dir) const
+  void write(const Device& device, TDirectory* dir) const
   {
     for (const auto& g : sensors) {
-      g.second.write(Utils::makeDir(dir, device.getSensor(g.first).name()));
+      g.second.write(makeDir(dir, device.getSensor(g.first).name()));
     }
     beamX.write("beam_slope_x", "Beam slope x", dir);
     beamY.write("beam_slope_y", "Beam slope y", dir);
@@ -114,8 +116,7 @@ struct StepsGraphs {
   }
 };
 
-void updateBeamParameters(const Analyzers::Tracks& tracks,
-                          Mechanics::Geometry& geo)
+void updateBeamParameters(const Tracks& tracks, Geometry& geo)
 {
   auto beamSlope = tracks.beamSlope();
   auto beamDivergence = tracks.beamDivergence();
@@ -130,12 +131,6 @@ void updateBeamParameters(const Analyzers::Tracks& tracks,
 
 int main(int argc, char const* argv[])
 {
-  using namespace Alignment;
-  using namespace Analyzers;
-  using namespace Mechanics;
-  using namespace Processors;
-  using namespace Tracking;
-
   toml::Table defaults = {
       // tracking settings
       {"search_spatial_sigma_max", 5.},
@@ -148,7 +143,7 @@ int main(int argc, char const* argv[])
       // true by default for backward compatibility
       {"estimate_beam_parameters", true},
   };
-  Utils::Application app("align", "align selected sensors", defaults);
+  Application app("align", "align selected sensors", defaults);
   app.initialize(argc, argv);
 
   // configuration
@@ -188,7 +183,7 @@ int main(int argc, char const* argv[])
   }
 
   // output
-  auto hists = Utils::openRootWrite(app.outputPath("hists.root"));
+  auto hists = openRootWrite(app.outputPath("hists.root"));
 
   // copy device to allow modifications after each alignment step
   auto dev = app.device();
@@ -199,8 +194,7 @@ int main(int argc, char const* argv[])
 
   // iterative alignment steps
   for (int step = 1; step <= numSteps; ++step) {
-    TDirectory* stepDir =
-        Utils::makeDir(hists.get(), "step" + std::to_string(step));
+    TDirectory* stepDir = makeDir(hists.get(), "step" + std::to_string(step));
 
     INFO("alignment step ", step, "/", numSteps);
 
@@ -222,11 +216,10 @@ int main(int argc, char const* argv[])
     } else if (method == "residuals") {
       // use unbiased track residuals to align. this means we need a specific
       // track fitter and should not use the automatic fitter selection.
-      loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
+      loop.addProcessor(std::make_shared<TrackFinder>(
           dev, sensorIds, searchSpatialSigmaMax, searchTemporalSigmaMax,
           sensorIds.size(), redChi2Max));
-      loop.addProcessor(
-          std::make_shared<Tracking::UnbiasedStraight3dFitter>(dev));
+      loop.addProcessor(std::make_shared<UnbiasedStraight3dFitter>(dev));
       loop.addAnalyzer(std::make_shared<Residuals>(stepDir, dev, sensorIds,
                                                    "unbiased_residuals"));
       tracks = std::make_shared<Tracks>(stepDir, dev);
@@ -236,11 +229,10 @@ int main(int argc, char const* argv[])
     } else if (method == "localchi2") {
       // use unbiased track residuals to align. this means we need a specific
       // track fitter and should not use the automatic fitter selection.
-      loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
+      loop.addProcessor(std::make_shared<TrackFinder>(
           dev, sensorIds, searchSpatialSigmaMax, searchTemporalSigmaMax,
           sensorIds.size(), redChi2Max));
-      loop.addProcessor(
-          std::make_shared<Tracking::UnbiasedStraight3dFitter>(dev));
+      loop.addProcessor(std::make_shared<UnbiasedStraight3dFitter>(dev));
       loop.addAnalyzer(std::make_shared<Residuals>(stepDir, dev, sensorIds,
                                                    "unbiased_residuals"));
       tracks = std::make_shared<Tracks>(stepDir, dev);
@@ -273,7 +265,7 @@ int main(int argc, char const* argv[])
   {
     INFO("validation step");
 
-    TDirectory* subDir = Utils::makeDir(hists.get(), "validation");
+    TDirectory* subDir = makeDir(hists.get(), "validation");
 
     auto loop = app.makeEventLoop();
 
@@ -281,17 +273,16 @@ int main(int argc, char const* argv[])
     setupHitPreprocessing(dev, loop);
     setupClusterizers(dev, loop);
     loop.addProcessor(std::make_shared<ApplyGeometry>(dev));
-    loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
+    loop.addProcessor(std::make_shared<TrackFinder>(
         dev, sensorIds, searchSpatialSigmaMax, searchTemporalSigmaMax,
         sensorIds.size(), redChi2Max));
-    loop.addProcessor(
-        std::make_shared<Tracking::UnbiasedStraight3dFitter>(dev));
+    loop.addProcessor(std::make_shared<UnbiasedStraight3dFitter>(dev));
 
     // minimal set of analyzers
     loop.addAnalyzer(std::make_shared<GlobalOccupancy>(subDir, dev));
     // correlations analyzer does **not** sort an explicit list of sensors
     loop.addAnalyzer(std::make_shared<Correlations>(
-        subDir, dev, Mechanics::sortedAlongBeam(dev.geometry(), sensorIds)));
+        subDir, dev, sortedAlongBeam(dev.geometry(), sensorIds)));
     auto tracks = std::make_shared<Tracks>(subDir, dev);
     loop.addAnalyzer(tracks);
     loop.addAnalyzer(
@@ -309,7 +300,7 @@ int main(int argc, char const* argv[])
     // close alignment monitoring w/ the final validation step geometry
     steps.addStep(alignIds, geo, tracks->avgNumTracks());
   }
-  steps.write(dev, Utils::makeDir(hists.get(), "summary"));
+  steps.write(dev, makeDir(hists.get(), "summary"));
 
   return EXIT_SUCCESS;
 }

@@ -20,18 +20,16 @@
 
 int main(int argc, char const* argv[])
 {
-  using namespace Analyzers;
-  using namespace Mechanics;
-  using namespace Processors;
+  using namespace proteus;
 
-  Utils::Application app("match", "match tracks and clusters");
+  Application app("match", "match tracks and clusters");
   app.initialize(argc, argv);
 
   // configuration
   auto sensorIds = app.config().get<std::vector<Index>>("sensor_ids");
   // output
-  auto hists = Utils::openRootWrite(app.outputPath("hists.root"));
-  auto trees = Utils::openRootWrite(app.outputPath("trees.root"));
+  auto hists = openRootWrite(app.outputPath("hists.root"));
+  auto trees = openRootWrite(app.outputPath("trees.root"));
 
   auto loop = app.makeEventLoop();
   setupHitPreprocessing(app.device(), loop);
@@ -44,7 +42,7 @@ int main(int argc, char const* argv[])
     loop.addAnalyzer(std::make_shared<Distances>(hists.get(), sensor));
     loop.addAnalyzer(std::make_shared<Matching>(hists.get(), sensor));
     loop.addAnalyzer(std::make_shared<Efficiency>(hists.get(), sensor));
-    loop.addWriter(std::make_shared<Io::MatchWriter>(trees.get(), sensor));
+    loop.addWriter(std::make_shared<MatchWriter>(trees.get(), sensor));
   }
   loop.run();
 

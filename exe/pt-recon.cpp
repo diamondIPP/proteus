@@ -27,9 +27,7 @@ PT_SETUP_GLOBAL_LOGGER
 
 int main(int argc, char const* argv[])
 {
-  using namespace Analyzers;
-  using namespace Processors;
-  using namespace Tracking;
+  using namespace proteus;
 
   toml::Table defaults = {
       {"search_spatial_sigma_max", 5.},
@@ -39,7 +37,7 @@ int main(int argc, char const* argv[])
       {"reduced_chi2_max", -1.},
       {"track_fitter", "straight3d"},
   };
-  Utils::Application app("recon", "preprocess, cluster, and track", defaults);
+  Application app("recon", "preprocess, cluster, and track", defaults);
   app.initialize(argc, argv);
 
   // configuration
@@ -58,8 +56,8 @@ int main(int argc, char const* argv[])
   auto fitter = cfg.get<std::string>("track_fitter");
 
   // output
-  auto hists = Utils::openRootWrite(app.outputPath("hists.root"));
-  auto trees = Utils::openRootWrite(app.outputPath("trees.root"));
+  auto hists = openRootWrite(app.outputPath("hists.root"));
+  auto trees = openRootWrite(app.outputPath("trees.root"));
 
   auto loop = app.makeEventLoop();
 
@@ -76,7 +74,7 @@ int main(int argc, char const* argv[])
   loop.addAnalyzer(std::make_shared<Correlations>(hists.get(), app.device()));
 
   // tracking
-  loop.addProcessor(std::make_shared<Tracking::TrackFinder>(
+  loop.addProcessor(std::make_shared<TrackFinder>(
       app.device(), trackingIds, searchSpatialSigmaMax, searchTemporalSigmaMax,
       numPointsMin, redChi2Max));
   setupTrackFitter(app.device(), fitter, loop);
@@ -91,7 +89,7 @@ int main(int argc, char const* argv[])
     loop.addAnalyzer(std::make_shared<Distances>(hists.get(), sensor));
     loop.addAnalyzer(std::make_shared<Matching>(hists.get(), sensor));
     loop.addAnalyzer(std::make_shared<Efficiency>(hists.get(), sensor));
-    loop.addWriter(std::make_shared<Io::MatchWriter>(trees.get(), sensor));
+    loop.addWriter(std::make_shared<MatchWriter>(trees.get(), sensor));
   }
 
   loop.run();

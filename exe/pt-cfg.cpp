@@ -16,6 +16,8 @@ PT_SETUP_GLOBAL_LOGGER
 
 int main(int argc, char const* argv[])
 {
+  using namespace proteus;
+
   if (argc != 2) {
     std::string arg0(argv[0]);
     std::string name(arg0.substr(arg0.find_last_of('/') + 1));
@@ -27,22 +29,22 @@ int main(int argc, char const* argv[])
   }
   std::string path(argv[1]);
 
-  Utils::Logger::setGlobalLevel(Utils::Logger::Level::Error);
+  Logger::setGlobalLevel(Logger::Level::Error);
   // try different types of configurations
   try {
-    Mechanics::Device::fromFile(path).print(std::cout);
+    Device::fromFile(path).print(std::cout);
     return EXIT_SUCCESS;
   } catch (const std::exception& e) {
     INFO("not a device config: ", e.what());
   }
   try {
-    Mechanics::Geometry::fromFile(path).print(std::cout);
+    Geometry::fromFile(path).print(std::cout);
     return EXIT_SUCCESS;
   } catch (const std::exception& e) {
     INFO("not a geometry config: ", e.what());
   }
   try {
-    Mechanics::PixelMasks::fromFile(path).print(std::cout);
+    PixelMasks::fromFile(path).print(std::cout);
     return EXIT_SUCCESS;
   } catch (const std::exception& e) {
     INFO("not a masks file: ", e.what());
