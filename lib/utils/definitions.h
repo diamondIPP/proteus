@@ -15,6 +15,8 @@
 #include <Eigen/Geometry>
 #include <Eigen/LU>
 
+namespace proteus {
+
 // Use to number and identify things, e.g. hits, sensors
 using Index = unsigned int;
 constexpr Index kInvalidIndex = static_cast<Index>(-1);
@@ -152,5 +154,7 @@ inline Eigen::WithFormat<T> format(const Eigen::DenseBase<T>& mtx)
     return mtx.format(Eigen::IOFormat(4, 0, ",", "\n", "", ",", "[", "]"));
   }
 }
+
+} // namespace proteus
 
 #endif // PT_DEFINITIONS_H
