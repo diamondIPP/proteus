@@ -132,6 +132,7 @@ Internal changes
     and remove the custom build images.
 *   Build proteus with both EUDAQ v1 and v2 in the continous
     integration.
+*   Move all library code into a single ``namespace proteus``.
 
 v1.4.0 (2019-03-07)
 ===================
