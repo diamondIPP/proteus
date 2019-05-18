@@ -22,8 +22,8 @@ EventMerger::EventMerger(std::vector<std::shared_ptr<Reader>> readers)
   for (size_t i = 0; i < m_readers.size(); ++i) {
     uint64_t eventsReader = m_readers[i]->numEvents();
     if (eventsReader != m_events)
-      ERROR("reader ", i, " with inconsistent events reader=", eventsReader,
-            " expected=", m_events);
+      WARN("reader ", i, " with inconsistent events reader=", eventsReader,
+           " expected=", m_events);
   }
 }
 

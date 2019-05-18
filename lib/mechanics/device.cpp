@@ -67,13 +67,13 @@ Device Device::fromConfig(const toml::Value& cfg)
 {
   // deprecation checks
   if (cfg.has("device")) {
-    ERROR("The '[device]' configuration section is deprecated and will not be "
-          "used");
+    WARN("The '[device]' configuration section is deprecated and will not be "
+         "used");
   }
   for (const auto& it : cfg.get<toml::Table>("sensor_types")) {
     if (it.second.has("thickness")) {
-      ERROR("The 'thickness' setting for sensor type '" + it.first +
-            "' is deprecated and will not be used");
+      WARN("The 'thickness' setting for sensor type '" + it.first +
+           "' is deprecated and will not be used");
     }
   }
 

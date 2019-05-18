@@ -255,8 +255,8 @@ void LocalChi2Aligner::execute(const Event& event)
       // the cluster uncertainty and the tracking uncertainty
       SymMatrix2 weight = (cluster.uvCov() + state.loc01Cov()).inverse();
       if (!fitter.addTrack(state, cluster, weight)) {
-        ERROR("Invalid track/cluster input event=", event.frame(),
-              " sensor=", sensorId, " track=", cluster.track());
+        WARN("Invalid track/cluster input event=", event.frame(),
+             " sensor=", sensorId, " track=", cluster.track());
       }
     }
   }

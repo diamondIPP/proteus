@@ -248,8 +248,8 @@ bool Timepix3Reader::getSensorEvent(SensorEvent& sensorEvent)
 
   // Clear the event if we have more than 10% chip occupancy
   if (sensorEvent.numHits() > 6553) {
-    ERROR("Frame ", m_eventNumber, " has ", sensorEvent.numHits(),
-          " hits. Cleared.");
+    WARN("Frame ", m_eventNumber, " has ", sensorEvent.numHits(),
+         " hits. Cleared.");
     sensorEvent.clear(m_eventNumber, m_nextEventTimestamp);
   }
 

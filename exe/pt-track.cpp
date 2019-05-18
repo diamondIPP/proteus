@@ -50,8 +50,8 @@ int main(int argc, char const* argv[])
   auto sensorIds = cfg.get<std::vector<Index>>("sensor_ids");
   auto searchSpatialSigmaMax = cfg.get<double>("search_spatial_sigma_max");
   if (cfg.has("search_sigma_max")) {
-    ERROR("The `search_sigma_max` setting is deprecated. Use "
-          "`search_spatial_sigma_max` instead.");
+    WARN("The `search_sigma_max` setting is deprecated. Use "
+         "`search_spatial_sigma_max` instead.");
     searchSpatialSigmaMax = cfg.get<double>("search_sigma_max");
   }
   auto searchTemporalSigmaMax = cfg.get<double>("search_temporal_sigma_max");

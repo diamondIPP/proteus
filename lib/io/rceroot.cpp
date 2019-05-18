@@ -116,17 +116,20 @@ RceRootReader::RceRootReader(const std::string& path)
   // we only report these cases as errrors here instead of failing altogether.
 
   // verify consistent number of entries between all trees
-  if ((entriesEvent != INT64_MAX) && (entriesEvent != m_entries))
-    ERROR("Event tree has inconsistent entries=", entriesEvent,
-          " expected=", m_entries);
-  if ((entriesTracks != INT64_MAX) && (entriesTracks != m_entries))
-    ERROR("Tracks tree has inconsistent entries=", entriesTracks,
-          " expected=", m_entries);
+  if ((entriesEvent != INT64_MAX) && (entriesEvent != m_entries)) {
+    WARN("Event tree has inconsistent entries=", entriesEvent,
+         " expected=", m_entries);
+  }
+  if ((entriesTracks != INT64_MAX) && (entriesTracks != m_entries)) {
+    WARN("Tracks tree has inconsistent entries=", entriesTracks,
+         " expected=", m_entries);
+  }
   for (size_t isensor = 0; isensor < m_sensors.size(); ++isensor) {
-    if (m_sensors[isensor].entries != m_entries)
-      ERROR("sensor ", isensor,
-            " has inconsistent entries=", m_sensors[isensor].entries,
-            " expected=", m_entries);
+    if (m_sensors[isensor].entries != m_entries) {
+      WARN("sensor ", isensor,
+           " has inconsistent entries=", m_sensors[isensor].entries,
+           " expected=", m_entries);
+    }
   }
 }
 
@@ -223,7 +226,7 @@ size_t RceRootReader::numSensors() const { return m_sensors.size(); }
 void RceRootReader::skip(uint64_t n)
 {
   if (m_entries <= static_cast<int64_t>(m_next + n)) {
-    ERROR("skipping ", n, " events goes beyond available events");
+    WARN("skipping ", n, " events goes beyond available events");
     m_next = m_entries;
   } else {
     m_next += n;
