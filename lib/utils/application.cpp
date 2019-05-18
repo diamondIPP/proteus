@@ -54,7 +54,7 @@ void Application::initialize(int argc, char const* argv[])
 
   // logging level
   if (args.has("quiet")) {
-    Logger::setGlobalLevel(Logger::Level::Error);
+    Logger::setGlobalLevel(Logger::Level::Warning);
   } else if (args.has("verbose")) {
     Logger::setGlobalLevel(Logger::Level::Verbose);
   } else {

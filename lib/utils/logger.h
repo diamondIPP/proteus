@@ -73,32 +73,23 @@ inline void unreferenced(Ts&&...)
  */
 class Logger {
 public:
-  enum class Level { Error = 0, Info = 1, Verbose = 2 };
+  enum class Level {
+    Error = 0,   // fatal error that always stops the program
+    Warning = 1, // non-fatal warning that indicate e.g. degraded performance
+    Info = 2,    // nice-to-have information
+    Verbose = 3, // additional (debug) information
+  };
 
   static void setGlobalLevel(Level lvl) { s_level = lvl; }
   static Logger& globalLogger();
 
   Logger(std::string name);
 
-  template <typename... Ts>
-  void error(const Ts&... things)
-  {
-    log(Level::Error, things...);
-  }
-  template <typename... Ts>
-  void info(const Ts&... things)
-  {
-    log(Level::Info, things...);
-  }
-  template <typename... Ts>
-  void verbose(const Ts&... things)
-  {
-    log(Level::Verbose, things...);
-  }
-
+  /** Check whether messages at the give loggging level are active. */
+  bool isActive(Level lvl) const { return (lvl <= s_level); }
   /** Log information with a given log level. */
   template <typename... Ts>
-  void log(Level lvl, const Ts&... things)
+  void log(Level lvl, const Ts&... things) const
   {
     if (isActive(lvl)) {
       detail::print(stream(lvl), prefix(lvl), things..., kReset);
@@ -109,7 +100,7 @@ public:
   template <typename T>
   void logp(Level lvl,
             const T& thing,
-            const std::string& extraPrefix = std::string())
+            const std::string& extraPrefix = std::string()) const
   {
     if (isActive(lvl)) {
       thing.print(stream(lvl), prefix(lvl) + extraPrefix);
@@ -117,7 +108,6 @@ public:
       stream(lvl).flush();
     }
   }
-  bool isActive(Level lvl) { return (lvl <= s_level); }
 
 private:
   static std::ostream& stream(Level lvl)
@@ -125,7 +115,7 @@ private:
     return (lvl == Level::Error) ? std::cerr : std::cout;
   }
 
-  static const char* const kLevelPrefix[3];
+  static const char* const kLevelPrefix[4];
   static const char* const kReset;
   static Logger s_global;
   static Level s_level;
@@ -172,28 +162,26 @@ private:
  * at file scope by using the `PT_SETUP_..._LOGGER` macros or by implementing
  * a private class method to use a class-specific logger.
  */
+/** `FAIL(...)` should be prefered instead to also terminate the application. */
 #define ERROR(...)                                                             \
   do {                                                                         \
-    if (logger().isActive(Logger::Level::Error)) {                             \
-      logger().error(__VA_ARGS__, '\n');                                       \
-    }                                                                          \
+    logger().log(Logger::Level::Error, __VA_ARGS__, '\n');                     \
+  } while (false)
+#define WARN(...)                                                              \
+  do {                                                                         \
+    logger().log(Logger::Level::Warning, __VA_ARGS__, '\n');                   \
   } while (false)
 #define INFO(...)                                                              \
   do {                                                                         \
-    if (logger().isActive(Logger::Level::Info)) {                              \
-      logger().info(__VA_ARGS__, '\n');                                        \
-    }                                                                          \
+    logger().log(Logger::Level::Info, __VA_ARGS__, '\n');                      \
   } while (false)
 #define VERBOSE(...)                                                           \
   do {                                                                         \
-    if (logger().isActive(Logger::Level::Verbose)) {                           \
-      logger().verbose(__VA_ARGS__, '\n');                                     \
-    }                                                                          \
+    logger().log(Logger::Level::Verbose, __VA_ARGS__, '\n');                   \
   } while (false)
-
 /* Debug messages are logged with the verbose level but are only shown in
  * a debug build. They become noops in a release build. In a release build
- * arguments should not be evaluated and no warning for unused variables
+ * the arguments should not be evaluated and no warning for unused variables
  * should be emitted.
  */
 #ifdef NDEBUG
@@ -208,10 +196,9 @@ private:
 /** Write the error message to the logger and quit the application. */
 #define FAIL(...)                                                              \
   do {                                                                         \
-    logger().error(__VA_ARGS__, '\n');                                         \
+    logger().log(Logger::Level::Error, __VA_ARGS__, '\n');                     \
     std::exit(EXIT_FAILURE);                                                   \
   } while (false)
-
 /** Throw an exception of the given type with a custom error message. */
 #define THROWX(ExceptionType, ...)                                             \
   do {                                                                         \

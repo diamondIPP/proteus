@@ -12,17 +12,17 @@
 #define ANSI_BOLD "\x1B[1m"
 #define ANSI_ITALIC "\x1B[3m"
 #define ANSI_RED "\x1B[31m"
+#define ANSI_YELLOW "\x1B[33m"
 
 namespace proteus {
 
 // per-level prefix
-// clang-format off
-const char* const Logger::kLevelPrefix[3] = {
+const char* const Logger::kLevelPrefix[4] = {
     ANSI_BOLD ANSI_RED "E|",
-                       "I|",
-    ANSI_ITALIC        "V|",
+    ANSI_BOLD ANSI_YELLOW "W|",
+    "I|",
+    ANSI_ITALIC "V|",
 };
-// clang-format on
 const char* const Logger::kReset = ANSI_RESET;
 
 // global logger w/o specific name
