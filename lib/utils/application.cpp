@@ -16,8 +16,6 @@
 #include "utils/arguments.h"
 #include "utils/logger.h"
 
-PT_SETUP_LOCAL_LOGGER(Application)
-
 namespace proteus {
 
 Application::Application(const std::string& name,

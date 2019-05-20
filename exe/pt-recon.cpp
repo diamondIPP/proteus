@@ -26,8 +26,6 @@
 #include "utils/logger.h"
 #include "utils/root.h"
 
-PT_SETUP_GLOBAL_LOGGER
-
 int main(int argc, char const* argv[])
 {
   using namespace proteus;

@@ -6,8 +6,6 @@
 #include "storage/event.h"
 #include "utils/logger.h"
 
-PT_SETUP_LOCAL_LOGGER(EventMerger)
-
 namespace proteus {
 
 EventMerger::EventMerger(std::vector<std::shared_ptr<Reader>> readers)

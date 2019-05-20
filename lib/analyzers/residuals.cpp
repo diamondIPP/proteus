@@ -16,8 +16,6 @@
 #include "utils/logger.h"
 #include "utils/root.h"
 
-PT_SETUP_GLOBAL_LOGGER
-
 namespace proteus {
 
 detail::SensorResidualHists::SensorResidualHists(TDirectory* dir,

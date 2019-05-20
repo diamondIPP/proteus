@@ -10,8 +10,6 @@
 #include "storage/event.h"
 #include "utils/logger.h"
 
-PT_SETUP_LOCAL_LOGGER(RceRoot)
-
 namespace proteus {
 
 // -----------------------------------------------------------------------------

@@ -13,8 +13,6 @@
 #include "utils/config.h"
 #include "utils/logger.h"
 
-PT_SETUP_LOCAL_LOGGER(Device)
-
 namespace proteus {
 
 Device Device::fromFile(const std::string& path,

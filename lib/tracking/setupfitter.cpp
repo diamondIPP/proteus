@@ -15,8 +15,6 @@
 #include "tracking/straightfitter.h"
 #include "utils/logger.h"
 
-PT_SETUP_GLOBAL_LOGGER
-
 namespace proteus {
 
 void setupTrackFitter(const Device& device,

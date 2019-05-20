@@ -12,8 +12,6 @@
 #include "utils/logger.h"
 #include "utils/root.h"
 
-PT_SETUP_LOCAL_LOGGER(ResidualsAligner)
-
 namespace proteus {
 
 ResidualsAligner::ResidualsAligner(TDirectory* dir,

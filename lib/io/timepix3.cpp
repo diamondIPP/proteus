@@ -10,8 +10,6 @@
 #include "storage/sensorevent.h"
 #include "utils/logger.h"
 
-PT_SETUP_LOCAL_LOGGER(Timepix3)
-
 namespace proteus {
 
 int Timepix3Reader::check(const std::string& path)

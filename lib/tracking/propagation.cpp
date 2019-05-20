@@ -11,8 +11,6 @@
 #include "mechanics/geometry.h"
 #include "utils/logger.h"
 
-PT_SETUP_LOCAL_LOGGER(Propagation)
-
 namespace proteus {
 
 Matrix2 jacobianSlopeSlope(const Vector4& tangent, const Matrix4& toTarget)

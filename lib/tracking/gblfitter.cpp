@@ -21,8 +21,6 @@
 #include "tracking/propagation.h"
 #include "utils/logger.h"
 
-PT_SETUP_LOCAL_LOGGER(GblFitter)
-
 namespace proteus {
 
 GblFitter::GblFitter(const Device& device)

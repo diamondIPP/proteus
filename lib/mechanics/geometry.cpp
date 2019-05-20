@@ -11,8 +11,6 @@
 #include "tracking/propagation.h"
 #include "utils/logger.h"
 
-PT_SETUP_LOCAL_LOGGER(Geometry)
-
 namespace proteus {
 
 // Construct rotation matrix Q321 = R1(𝛼) * R2(𝛽) * R3(𝛾).

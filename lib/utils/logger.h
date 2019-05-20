@@ -57,21 +57,18 @@ inline void unreferenced(Ts&&...)
 
 } // namespace detail
 
-/** A logger object with global log level.
+/** A logger object with adjustable log level.
  *
- * The logger provides logging functions for each predefined log level. Each
- * function, `error`, `info`, debug` can be called with a variable number of
- * arguments. They will be printed in the given order to a predefined stream.
- * Any type for which an `operator<<(std::ostream&, ...)` is defined can be
- * used, e.g.
+ * The logger provides a `.log(...)` function that can be called with a
+ * variable number of arguments. They will be printed in the given order to
+ * a level-dependent stream. Any type for which an
+ * `operator<<(std::ostream&, ...)` is defined can be used, e.g.
  *
  *     Logger log;
  *     double x = 1.2;
  *     int y = 100;
- *     log.error("x = ", x, " y = ", y, '\n');
+ *     log.log(Logger::Level::Warning, "x = ", x, " y = ", y, '\n');
  *
- * Each logger has an optional prefix to easily identify the information
- * source. The log level is global and shared among all loggers.
  */
 class Logger {
 public:
@@ -142,53 +139,32 @@ Logger& globalLogger();
 
 } // namespace proteus
 
-/* Define a `logger()` function that returns either the global logger
- * or a static local logger so the convenience logger macros can be used.
- *
- * Depending on the compile definitions, i.e. when using a debug build with
- * only debug log statements, the functions might be unused and are marked
- * as such to avoid false-positive compiler warnings.
- */
-
-#define PT_SETUP_GLOBAL_LOGGER                                                 \
-  namespace {                                                                  \
-  inline __attribute__((unused))::proteus::Logger& logger()                    \
-  {                                                                            \
-    return ::proteus::globalLogger();                                          \
-  }                                                                            \
-  }
-#define PT_SETUP_LOCAL_LOGGER(name)                                            \
-  namespace {                                                                  \
-  inline __attribute__((unused))::proteus::Logger& logger()                    \
-  {                                                                            \
-    return ::proteus::globalLogger();                                          \
-  }                                                                            \
-  }
-
 /* Convenience macros to log a message via the logger.
  *
  * The macros should be used to log a single message. The message **must not**
- * end in a newline. These macros expect a `logger()` function to be available
- * that returns a reference to a `Logger` object. This can be either defined
- * at file scope by using the `PT_SETUP_..._LOGGER` macros or by implementing
- * a private class method to use a class-specific logger.
+ * end in a newline. These macros expect a `globalLogger()` function to be
+ * available that returns a reference to a `Logger` object.
  */
-/** `FAIL(...)` should be prefered instead to also terminate the application. */
+/** `FAIL(...)` should be prefered which also terminates the application. */
 #define ERROR(...)                                                             \
   do {                                                                         \
-    logger().log(Logger::Level::Error, __VA_ARGS__, '\n');                     \
+    ::proteus::globalLogger().log(::proteus::Logger::Level::Error,             \
+                                  __VA_ARGS__, '\n');                          \
   } while (false)
 #define WARN(...)                                                              \
   do {                                                                         \
-    logger().log(Logger::Level::Warning, __VA_ARGS__, '\n');                   \
+    ::proteus::globalLogger().log(::proteus::Logger::Level::Warning,           \
+                                  __VA_ARGS__, '\n');                          \
   } while (false)
 #define INFO(...)                                                              \
   do {                                                                         \
-    logger().log(Logger::Level::Info, __VA_ARGS__, '\n');                      \
+    ::proteus::globalLogger().log(::proteus::Logger::Level::Info, __VA_ARGS__, \
+                                  '\n');                                       \
   } while (false)
 #define VERBOSE(...)                                                           \
   do {                                                                         \
-    logger().log(Logger::Level::Verbose, __VA_ARGS__, '\n');                   \
+    ::proteus::globalLogger().log(::proteus::Logger::Level::Verbose,           \
+                                  __VA_ARGS__, '\n');                          \
   } while (false)
 /* Debug messages are logged with the verbose level but are only shown in
  * a debug build. They become noops in a release build. In a release build
@@ -198,7 +174,7 @@ Logger& globalLogger();
 #ifdef NDEBUG
 #define DEBUG(...)                                                             \
   do {                                                                         \
-    (decltype(detail::unreferenced(__VA_ARGS__)))0;                            \
+    (decltype(::proteus::detail::unreferenced(__VA_ARGS__)))0;                 \
   } while (false)
 #else
 #define DEBUG(...) VERBOSE(__VA_ARGS__)
@@ -207,14 +183,15 @@ Logger& globalLogger();
 /** Write the error message to the logger and quit the application. */
 #define FAIL(...)                                                              \
   do {                                                                         \
-    logger().log(Logger::Level::Error, __VA_ARGS__, '\n');                     \
+    ::proteus::globalLogger().log(::proteus::Logger::Level::Error,             \
+                                  __VA_ARGS__, '\n');                          \
     std::exit(EXIT_FAILURE);                                                   \
   } while (false)
 /** Throw an exception of the given type with a custom error message. */
 #define THROWX(ExceptionType, ...)                                             \
   do {                                                                         \
     std::ostringstream os;                                                     \
-    detail::print(os, __VA_ARGS__);                                            \
+    ::proteus::detail::print(os, __VA_ARGS__);                                 \
     throw ExceptionType(os.str());                                             \
   } while (false)
 /** Throw a std::runtime_error with a custom error message. */

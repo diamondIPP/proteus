@@ -14,8 +14,6 @@
 #include "mechanics/pixelmasks.h"
 #include "utils/logger.h"
 
-PT_SETUP_GLOBAL_LOGGER
-
 int main(int argc, char const* argv[])
 {
   using namespace proteus;

@@ -16,8 +16,6 @@
 #include "utils/logger.h"
 #include "utils/root.h"
 
-PT_SETUP_LOCAL_LOGGER(LocalChi2Aligner)
-
 namespace proteus {
 
 // local helper functions

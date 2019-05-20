@@ -13,8 +13,6 @@
 
 #include "utils/logger.h"
 
-PT_SETUP_LOCAL_LOGGER(Arguments)
-
 namespace proteus {
 
 Arguments::Arguments(std::string description)

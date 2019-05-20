@@ -14,8 +14,6 @@
 #include "tracking/propagation.h"
 #include "utils/logger.h"
 
-PT_SETUP_LOCAL_LOGGER(TrackFinder)
-
 namespace proteus {
 
 TrackFinder::TrackFinder(const Device& device,

@@ -21,8 +21,6 @@
 #include "utils/progress.h"
 #include "utils/statistics.h"
 
-PT_SETUP_LOCAL_LOGGER(EventLoop)
-
 namespace proteus {
 namespace {
 

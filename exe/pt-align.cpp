@@ -28,8 +28,6 @@
 #include "utils/logger.h"
 #include "utils/root.h"
 
-PT_SETUP_LOCAL_LOGGER(align)
-
 using namespace proteus;
 
 /** Store values for every step and produce a graph at the end. */

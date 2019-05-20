@@ -13,8 +13,6 @@
 #include "mechanics/sensor.h"
 #include "utils/logger.h"
 
-PT_SETUP_LOCAL_LOGGER(PixelMasks)
-
 namespace proteus {
 
 PixelMasks PixelMasks::fromFile(const std::string& path)
