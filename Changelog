@@ -94,6 +94,13 @@ User-visible changes
 
 *   Increase required ROOT version to 6.10 and EUDAQ to 1.9.
 
+*   Use a simpler logging output format.
+
+    Log messages only show the logging level and the time of the message. The
+    logging levels have been updated to ``Error`` for fatal errors,
+    ``Warning`` for non-fatal, but significant issues, ``Info`` for regular
+    information, and ``Verbose`` for additional or debug information.
+
 Bugfixes
 --------
 
@@ -133,6 +140,8 @@ Internal changes
 *   Build proteus with both EUDAQ v1 and v2 in the continous
     integration.
 *   Move all library code into a single ``namespace proteus``.
+*   Use a single, global logger object and remove the need for the per-module
+    ``PT_SETUP_..._LOGGER`` macros.
 
 v1.4.0 (2019-03-07)
 ===================
