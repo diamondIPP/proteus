@@ -1,5 +1,4 @@
-#ifndef PT_EVENTPRINTER_H
-#define PT_EVENTPRINTER_H
+#pragma once
 
 #include "loop/analyzer.h"
 #include "utils/logger.h"
@@ -19,5 +18,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_EVENTPRINTER_H

@@ -4,8 +4,7 @@
  * \date 2016-12
  */
 
-#ifndef PT_DISTANCES_H
-#define PT_DISTANCES_H
+#pragma once
 
 #include <string>
 
@@ -41,5 +40,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_DISTANCES_H

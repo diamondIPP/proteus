@@ -1,5 +1,4 @@
-#ifndef PT_CLUSTERS_H
-#define PT_CLUSTERS_H
+#pragma once
 
 #include <vector>
 
@@ -69,5 +68,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_CLUSTERINFO_H

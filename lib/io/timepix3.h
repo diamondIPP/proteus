@@ -1,5 +1,4 @@
-#ifndef PT_TIMEPIX3_H
-#define PT_TIMEPIX3_H
+#pragma once
 
 #include <cstdint>
 #include <fstream>
@@ -54,5 +53,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_TIMEPIX3_H

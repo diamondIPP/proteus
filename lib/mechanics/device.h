@@ -1,5 +1,4 @@
-#ifndef PT_DEVICE_H
-#define PT_DEVICE_H
+#pragma once
 
 #include <cmath>
 #include <cstdint>
@@ -63,5 +62,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_DEVICE_H

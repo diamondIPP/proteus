@@ -4,8 +4,7 @@
  * \date 2016-10-14
  */
 
-#ifndef PT_ARGUMENTS_H
-#define PT_ARGUMENTS_H
+#pragma once
 
 #include <cstdint>
 #include <map>
@@ -176,5 +175,3 @@ inline T Arguments::get(const std::string& name) const
   return ret;
 }
 } // namespace proteus
-
-#endif // PT_ARGUMENTS_H

@@ -1,5 +1,4 @@
-#ifndef PT_HITS_H
-#define PT_HITS_H
+#pragma once
 
 #include <vector>
 
@@ -55,5 +54,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_HITS_H

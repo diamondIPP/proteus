@@ -4,8 +4,7 @@
  * \date 2016-08
  */
 
-#ifndef PT_PROGRESS_H
-#define PT_PROGRESS_H
+#pragma once
 
 #include <chrono>
 #include <cstdlib>
@@ -109,7 +108,7 @@ private:
     return ts.ws_col;
 #else
     return 50; // fallback
-#endif /* TIOCGSIZE */
+#endif
   }
 
   void drawBar(Size current)
@@ -139,5 +138,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_PROGRESS_H

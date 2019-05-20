@@ -1,5 +1,4 @@
-#ifndef PT_LOCALCHI2ALIGNER_H
-#define PT_LOCALCHI2ALIGNER_H
+#pragma once
 
 #include <memory>
 #include <utility>
@@ -81,5 +80,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif /* end of include guard: PT_LOCALCHI2ALIGNER_H */

@@ -1,5 +1,4 @@
-#ifndef PT_SENSOREVENT_H
-#define PT_SENSOREVENT_H
+#pragma once
 
 #include <iosfwd>
 #include <memory>
@@ -110,5 +109,3 @@ inline void SensorEvent::setLocalState(Index itrack, Params&&... params)
 }
 
 } // namespace proteus
-
-#endif // PT_SENSOREVENT_H

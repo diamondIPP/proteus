@@ -1,5 +1,4 @@
-#ifndef PT_APPLYGEOMETRY_H
-#define PT_APPLYGEOMETRY_H
+#pragma once
 
 #include "loop/processor.h"
 
@@ -24,5 +23,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_APPLYGEOMETRY_H

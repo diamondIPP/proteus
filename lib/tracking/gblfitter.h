@@ -4,8 +4,7 @@
  * \date 2016-10
  */
 
-#ifndef PT_GBLFITTER_H
-#define PT_GBLFITTER_H
+#pragma once
 
 #include <vector>
 
@@ -34,5 +33,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_GBLFITTER_H

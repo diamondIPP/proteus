@@ -4,8 +4,7 @@
  * \date 2017-02
  */
 
-#ifndef PT_APPLYREGIONS_H
-#define PT_APPLYREGIONS_H
+#pragma once
 
 #include "loop/processor.h"
 
@@ -30,5 +29,3 @@ private:
 void setupRegions(const Device& device, EventLoop& loop);
 
 } // namespace proteus
-
-#endif // PT_APPLYREGIONS_H

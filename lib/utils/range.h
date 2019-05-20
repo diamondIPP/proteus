@@ -4,8 +4,7 @@
  * \date 2018-12
  */
 
-#ifndef PT_RANGE_H
-#define PT_RANGE_H
+#pragma once
 
 #include <iterator>
 

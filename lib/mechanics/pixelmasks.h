@@ -1,5 +1,4 @@
-#ifndef PT_NOISEMASK_H
-#define PT_NOISEMASK_H
+#pragma once
 
 #include <iosfwd>
 #include <map>
@@ -40,5 +39,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_NOISEMASK_H

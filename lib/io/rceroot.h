@@ -1,5 +1,4 @@
-#ifndef PT_RCEROOT_H
-#define PT_RCEROOT_H
+#pragma once
 
 #include <cstdint>
 #include <memory>
@@ -127,5 +126,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_RCEROOT_H

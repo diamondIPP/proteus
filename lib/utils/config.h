@@ -4,8 +4,7 @@
  * \date 2016-09
  */
 
-#ifndef PT_CONFIG_H
-#define PT_CONFIG_H
+#pragma once
 
 #include <string>
 
@@ -42,5 +41,3 @@ std::vector<toml::Value> configPerSensor(const toml::Value& cfg,
                                          const toml::Value& defaults);
 
 } // namespace proteus
-
-#endif // PT_CONFIG_H

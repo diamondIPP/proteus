@@ -4,8 +4,7 @@
  * \date 2019-03
  */
 
-#ifndef PT_SETUPFITTER_H
-#define PT_SETUPFITTER_H
+#pragma once
 
 #include <string>
 
@@ -20,5 +19,3 @@ void setupTrackFitter(const Device& device,
                       EventLoop& loop);
 
 } // namespace proteus
-
-#endif // PT_SETUPFITTER_H

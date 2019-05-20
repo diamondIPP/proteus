@@ -3,8 +3,7 @@
  * \date    2018-07
  */
 
-#ifndef PT_OPEN_H
-#define PT_OPEN_H
+#pragma once
 
 #include <memory>
 #include <string>
@@ -25,5 +24,3 @@ std::shared_ptr<Reader> openRead(const std::string& path,
                                  const toml::Value& cfg);
 
 } // namespace proteus
-
-#endif // PT_OPEN_H

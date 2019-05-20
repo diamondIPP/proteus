@@ -3,8 +3,7 @@
  * \date 2016-08-24
  */
 
-#ifndef PT_ANALYZER_H
-#define PT_ANALYZER_H
+#pragma once
 
 #include <string>
 
@@ -23,5 +22,3 @@ public:
 };
 
 } // namespace proteus
-
-#endif // PT_ANALYZER_H

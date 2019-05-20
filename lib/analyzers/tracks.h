@@ -1,5 +1,4 @@
-#ifndef PT_TRACKS_H
-#define PT_TRACKS_H
+#pragma once
 
 #include <vector>
 
@@ -56,5 +55,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_TRACKS_H

@@ -3,8 +3,7 @@
  * \date 2016-08-24
  */
 
-#ifndef PT_PROCESSOR_H
-#define PT_PROCESSOR_H
+#pragma once
 
 #include <string>
 
@@ -21,5 +20,3 @@ public:
 };
 
 } // namespace proteus
-
-#endif // PT_PROCESSOR_H

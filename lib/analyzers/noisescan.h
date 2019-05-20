@@ -6,8 +6,7 @@
  * reusable analyzer.
  */
 
-#ifndef PT_NOISESCAN_H
-#define PT_NOISESCAN_H
+#pragma once
 
 #include <vector>
 
@@ -63,5 +62,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_NOISESCAN_H

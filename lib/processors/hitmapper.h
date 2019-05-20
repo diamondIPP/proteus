@@ -4,8 +4,7 @@
  * \date 2016-10
  */
 
-#ifndef PT_HITMAPPER_H
-#define PT_HITMAPPER_H
+#pragma once
 
 #include "loop/processor.h"
 #include "utils/definitions.h"
@@ -25,5 +24,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_HITMAPPER_H

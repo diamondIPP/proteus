@@ -1,5 +1,4 @@
-#ifndef PT_GEOMETRY_H
-#define PT_GEOMETRY_H
+#pragma once
 
 #include <iosfwd>
 #include <map>
@@ -221,5 +220,3 @@ std::vector<Index> sortedAlongBeam(const Geometry& geo,
                                    const std::vector<Index>& sensorIds);
 
 } // namespace proteus
-
-#endif // PT_GEOMETRY_H

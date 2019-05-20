@@ -1,5 +1,4 @@
-#ifndef PT_GLOBALOCCUPANCY_H
-#define PT_GLOBALOCCUPANCY_H
+#pragma once
 
 #include <vector>
 
@@ -35,5 +34,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_GLOBALOCCUPANCY_H

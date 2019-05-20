@@ -1,5 +1,4 @@
-#ifndef PT_CORRELATION_H
-#define PT_CORRELATION_H
+#pragma once
 
 #include <map>
 
@@ -64,5 +63,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_CORRELATION_H

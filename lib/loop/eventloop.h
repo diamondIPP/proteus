@@ -4,8 +4,7 @@
  * \date 2016-08
  */
 
-#ifndef PT_EVENTLOOP_H
-#define PT_EVENTLOOP_H
+#pragma once
 
 #include <cstdint>
 #include <memory>
@@ -53,5 +52,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_EVENTLOOP_H

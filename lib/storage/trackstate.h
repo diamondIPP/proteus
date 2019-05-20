@@ -4,8 +4,7 @@
  * \date 2016-12
  */
 
-#ifndef PT_TRACKSTATE_H
-#define PT_TRACKSTATE_H
+#pragma once
 
 #include <iosfwd>
 #include <limits>
@@ -223,5 +222,3 @@ inline Vector4 TrackState::tangent() const
 }
 
 } // namespace proteus
-
-#endif // PT_TRACKSTATE_H

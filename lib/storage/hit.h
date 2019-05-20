@@ -1,5 +1,4 @@
-#ifndef PT_HIT_H
-#define PT_HIT_H
+#pragma once
 
 #include <iosfwd>
 
@@ -52,5 +51,3 @@ private:
 std::ostream& operator<<(std::ostream& os, const Hit& hit);
 
 } // namespace proteus
-
-#endif // PT_HIT_H

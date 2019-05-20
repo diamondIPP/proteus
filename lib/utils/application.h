@@ -4,8 +4,7 @@
  * \date 2016-12-12
  */
 
-#ifndef PT_APPLICATION_H
-#define PT_APPLICATION_H
+#pragma once
 
 #include <cstdint>
 #include <memory>
@@ -64,5 +63,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_APPLICATION_H

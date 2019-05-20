@@ -4,8 +4,7 @@
  * \author Moritz Kiehn (msmk@cern.ch)
  */
 
-#ifndef PT_LINEFITTER_H
-#define PT_LINEFITTER_H
+#pragma once
 
 #include <array>
 #include <utility>
@@ -206,5 +205,3 @@ LineFitterND<I, Ds...>::getCov(std::index_sequence<Os...>) const
 }
 
 } // namespace proteus
-
-#endif // PT_LINEFITTER_H

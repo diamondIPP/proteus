@@ -1,5 +1,4 @@
-#ifndef PT_MATCHER_H
-#define PT_MATCHER_H
+#pragma once
 
 #include <string>
 
@@ -36,5 +35,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_MATCHER_H

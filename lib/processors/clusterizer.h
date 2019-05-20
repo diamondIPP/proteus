@@ -4,8 +4,7 @@
  * \date 2016-10
  */
 
-#ifndef PT_CLUSTERIZER_H
-#define PT_CLUSTERIZER_H
+#pragma once
 
 #include "loop/processor.h"
 
@@ -56,5 +55,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_CLUSTERIZER_H

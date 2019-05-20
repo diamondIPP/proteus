@@ -1,5 +1,4 @@
-#ifndef PT_EVENT_H
-#define PT_EVENT_H
+#pragma once
 
 #include <cstdint>
 #include <iosfwd>
@@ -61,5 +60,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_EVENT_H

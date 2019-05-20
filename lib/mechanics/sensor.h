@@ -1,5 +1,4 @@
-#ifndef PT_SENSOR_H
-#define PT_SENSOR_H
+#pragma once
 
 #include <iosfwd>
 #include <set>
@@ -165,5 +164,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_SENSOR_H

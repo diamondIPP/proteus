@@ -1,5 +1,4 @@
-#ifndef PT_TRACKFINDER_H
-#define PT_TRACKFINDER_H
+#pragma once
 
 #include <vector>
 
@@ -72,5 +71,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_TRACKFINDER_H

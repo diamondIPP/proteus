@@ -1,5 +1,4 @@
-#ifndef PT_CORRELATIONALIGNER_H
-#define PT_CORRELATIONALIGNER_H
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -49,5 +48,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif /* end of include guard: PT_CORRELATIONALIGNER_H */

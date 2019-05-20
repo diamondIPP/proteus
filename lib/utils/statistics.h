@@ -4,8 +4,7 @@
  * \date 2016-09
  */
 
-#ifndef PT_STATISTICS_H
-#define PT_STATISTICS_H
+#pragma once
 
 #include <cmath>
 #include <limits>
@@ -64,5 +63,3 @@ inline std::ostream& operator<<(std::ostream& os, const StatAccumulator<T>& acc)
 }
 
 } // namespace proteus
-
-#endif // PT_STATISTICS_H

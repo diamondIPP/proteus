@@ -3,8 +3,7 @@
  * \date    2017-03
  */
 
-#ifndef PT_WRITER_H
-#define PT_WRITER_H
+#pragma once
 
 #include <string>
 
@@ -26,5 +25,3 @@ public:
 };
 
 } // namespace proteus
-
-#endif // PT_WRITER_H

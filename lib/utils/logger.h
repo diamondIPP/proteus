@@ -4,8 +4,7 @@
  * \date 2016-08
  */
 
-#ifndef PT_LOGGER_H
-#define PT_LOGGER_H
+#pragma once
 
 #include <cstdlib>
 #include <iostream>
@@ -146,6 +145,7 @@ private:
  * only debug log statements, the functions might be unused and are marked
  * as such to avoid false-positive compiler warnings.
  */
+
 #define PT_SETUP_GLOBAL_LOGGER                                                 \
   namespace {                                                                  \
   inline __attribute__((unused))::proteus::Logger& logger()                    \
@@ -219,5 +219,3 @@ private:
   } while (false)
 /** Throw a std::runtime_error with a custom error message. */
 #define THROW(...) THROWX(std::runtime_error, __VA_ARGS__)
-
-#endif // PT_LOGGER_H

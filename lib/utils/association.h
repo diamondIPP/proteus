@@ -4,8 +4,7 @@
  * \date 2018-12
  */
 
-#ifndef PT_ASSOCIATION_H
-#define PT_ASSOCIATION_H
+#pragma once
 
 #include <algorithm>
 #include <set>

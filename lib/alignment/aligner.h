@@ -1,5 +1,4 @@
-#ifndef PT_ALIGNER_H
-#define PT_ALIGNER_H
+#pragma once
 
 #include "loop/analyzer.h"
 #include "mechanics/geometry.h"
@@ -18,5 +17,3 @@ public:
 };
 
 } // namespace proteus
-
-#endif /* end of include guard: PT_ALIGNER_H */

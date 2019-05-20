@@ -3,8 +3,7 @@
  * \date 2017-02-16
  */
 
-#ifndef PT_EFFICIENCY_H
-#define PT_EFFICIENCY_H
+#pragma once
 
 #include <vector>
 
@@ -110,5 +109,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_EFFICIENCY_H

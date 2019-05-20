@@ -4,8 +4,7 @@
  * \date 2017-10
  */
 
-#ifndef PT_PROPAGATION_H
-#define PT_PROPAGATION_H
+#pragma once
 
 #include "storage/trackstate.h"
 #include "utils/definitions.h"
@@ -40,5 +39,3 @@ TrackState
 propagateTo(const TrackState& state, const Plane& source, const Plane& target);
 
 } // namespace proteus
-
-#endif // PT_PROPAGATION_H

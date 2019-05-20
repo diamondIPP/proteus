@@ -4,8 +4,7 @@
  * \date 2016-10
  */
 
-#ifndef PT_STRAIGHTFITTER_H
-#define PT_STRAIGHTFITTER_H
+#pragma once
 
 #include <vector>
 
@@ -85,5 +84,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_STRAIGHTFITTER_H

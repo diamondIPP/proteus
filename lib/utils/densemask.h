@@ -4,8 +4,7 @@
  * \date 2017-02
  */
 
-#ifndef PT_DENSEMASK_H
-#define PT_DENSEMASK_H
+#pragma once
 
 #include <cassert>
 #include <iosfwd>
@@ -67,5 +66,3 @@ inline bool DenseMask::isMasked(int col, int row) const
 }
 
 } // namespace proteus
-
-#endif // PT_DENSEMASK_H

@@ -5,8 +5,7 @@
  * \date 2016-09
  */
 
-#ifndef PT_DEFINITIONS_H
-#define PT_DEFINITIONS_H
+#pragma once
 
 #include <utility>
 
@@ -156,5 +155,3 @@ inline Eigen::WithFormat<T> format(const Eigen::DenseBase<T>& mtx)
 }
 
 } // namespace proteus
-
-#endif // PT_DEFINITIONS_H

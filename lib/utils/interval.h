@@ -3,8 +3,7 @@
  * \date 2016-08
  */
 
-#ifndef PT_INTERVAL_H
-#define PT_INTERVAL_H
+#pragma once
 
 #include <algorithm>
 #include <array>
@@ -230,5 +229,3 @@ inline std::ostream& operator<<(std::ostream& os, const Interval<T>& interval)
 }
 
 } // namespace proteus
-
-#endif // PT_INTERVAL_H

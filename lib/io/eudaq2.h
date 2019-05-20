@@ -3,8 +3,7 @@
  * \date    2017-10
  */
 
-#ifndef PT_EUDAQ2_H
-#define PT_EUDAQ2_H
+#pragma once
 
 #include <functional>
 #include <map>
@@ -48,5 +47,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_EUDAQ2_H

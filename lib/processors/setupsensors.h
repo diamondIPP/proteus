@@ -4,8 +4,7 @@
  * \date 2017-02
  */
 
-#ifndef PT_SETUPSENSORS_H
-#define PT_SETUPSENSORS_H
+#pragma once
 
 namespace proteus {
 
@@ -19,5 +18,3 @@ void setupHitPreprocessing(const Device& device, EventLoop& loop);
 void setupClusterizers(const Device& device, EventLoop& loop);
 
 } // namespace proteus
-
-#endif // PT_SETUPSENSORS_H

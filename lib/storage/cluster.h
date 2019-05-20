@@ -1,5 +1,4 @@
-#ifndef PT_CLUSTER_H
-#define PT_CLUSTER_H
+#pragma once
 
 #include <functional>
 #include <iosfwd>
@@ -116,5 +115,3 @@ public:
 std::ostream& operator<<(std::ostream& os, const Cluster& cluster);
 
 } // namespace proteus
-
-#endif // PT_CLUSTER_H

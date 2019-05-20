@@ -1,5 +1,4 @@
-#ifndef PT_RESIDUALSALIGNER_H
-#define PT_RESIDUALSALIGNER_H
+#pragma once
 
 #include <vector>
 
@@ -49,5 +48,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif /* end of include guard: PT_RESIDUALSALIGNER_H */

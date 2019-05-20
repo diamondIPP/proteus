@@ -3,8 +3,7 @@
  * \date    2017-09
  */
 
-#ifndef PT_MERGER_H
-#define PT_MERGER_H
+#pragma once
 
 #include <cstdint>
 #include <memory>
@@ -43,5 +42,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_MERGER_H

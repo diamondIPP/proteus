@@ -4,8 +4,7 @@
  * \date 2016-11-09
  */
 
-#ifndef PT_MATCHEXPORTER_H
-#define PT_MATCHEXPORTER_H
+#pragma once
 
 #include <cstdint>
 #include <string>
@@ -100,5 +99,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_NOISESCAN_H

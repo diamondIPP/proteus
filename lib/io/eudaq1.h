@@ -3,8 +3,7 @@
  * \date    2017-10
  */
 
-#ifndef PT_EUDAQ1_H
-#define PT_EUDAQ1_H
+#pragma once
 
 #include <map>
 #include <memory>
@@ -44,5 +43,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_EUDAQ1_H

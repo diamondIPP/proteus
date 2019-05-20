@@ -1,5 +1,4 @@
-#ifndef PT_TRACK_H
-#define PT_TRACK_H
+#pragma once
 
 #include <iosfwd>
 #include <vector>
@@ -80,5 +79,3 @@ public:
 std::ostream& operator<<(std::ostream& os, const Track& track);
 
 } // namespace proteus
-
-#endif // PT_TRACK_H

@@ -3,8 +3,7 @@
  * \date 2016-08
  */
 
-#ifndef PT_ROOT_H
-#define PT_ROOT_H
+#pragma once
 
 #include <cmath>
 #include <memory>
@@ -178,5 +177,3 @@ HistAxis::Difference(const Interval& i, double pitch, std::string l)
 }
 
 } // namespace proteus
-
-#endif // PT_ROOT_H

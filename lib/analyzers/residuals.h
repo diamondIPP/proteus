@@ -1,5 +1,4 @@
-#ifndef PT_RESIDUALS_H
-#define PT_RESIDUALS_H
+#pragma once
 
 #include <unordered_map>
 #include <vector>
@@ -99,5 +98,3 @@ private:
 };
 
 } // namespace proteus
-
-#endif // PT_RESIDUALS_H

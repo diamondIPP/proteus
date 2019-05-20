@@ -3,8 +3,7 @@
  * \date    2017-03
  */
 
-#ifndef PT_READER_H
-#define PT_READER_H
+#pragma once
 
 #include <cstdint>
 #include <string>
@@ -48,5 +47,3 @@ public:
 };
 
 } // namespace proteus
-
-#endif // PT_READER_H
