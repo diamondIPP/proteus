@@ -1,3 +1,5 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \file
  * \brief Tools for simple line fits in two and three dimensions

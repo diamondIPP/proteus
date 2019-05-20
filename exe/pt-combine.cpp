@@ -1,3 +1,5 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \brief Combine multiple raw data files into a single data stream
  * \file

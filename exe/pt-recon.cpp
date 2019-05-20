@@ -1,3 +1,6 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
 #include <Compression.h>
 #include <TFile.h>
 #include <TTree.h>
