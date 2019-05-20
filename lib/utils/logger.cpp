@@ -8,6 +8,9 @@
 
 #include "logger.h"
 
+#include <ctime>
+#include <iomanip>
+
 #define ANSI_RESET "\x1B[0m"
 #define ANSI_BOLD "\x1B[1m"
 #define ANSI_ITALIC "\x1B[3m"
@@ -18,10 +21,10 @@ namespace proteus {
 
 // per-level prefix
 const char* const Logger::kLevelPrefix[4] = {
-    ANSI_BOLD ANSI_RED "E|",
-    ANSI_BOLD ANSI_YELLOW "W|",
-    "I|",
-    ANSI_ITALIC "V|",
+    ANSI_BOLD ANSI_RED "E",
+    ANSI_BOLD ANSI_YELLOW "W",
+    "I",
+    ANSI_ITALIC "V",
 };
 const char* const Logger::kReset = ANSI_RESET;
 
@@ -39,5 +42,15 @@ Logger::Logger(std::string name) : m_prefix(std::move(name))
 }
 
 Logger& Logger::globalLogger() { return s_global; }
+
+void Logger::print_prefix(std::ostream& os, Level lvl)
+{
+  std::time_t now = std::time(nullptr);
+
+  os << kLevelPrefix[static_cast<int>(lvl)];
+  os << "|";
+  os << std::put_time(std::localtime(&now), "%T");
+  os << "| ";
+}
 
 } // namespace proteus

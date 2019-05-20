@@ -18,11 +18,7 @@
 namespace proteus {
 namespace detail {
 
-template <typename T>
-inline void print_impl(std::ostream& os, const T& thing)
-{
-  os << thing;
-}
+// enable direct printing of std::vector's
 template <typename T>
 inline void print_impl(std::ostream& os, const std::vector<T>& things)
 {
@@ -38,7 +34,11 @@ inline void print_impl(std::ostream& os, const std::vector<T>& things)
   }
   os << ']';
 }
-
+template <typename T>
+inline void print_impl(std::ostream& os, const T& thing)
+{
+  os << thing;
+}
 // shorter printing w/o << operators
 template <typename... Ts>
 inline void print(std::ostream& os, const Ts&... things)
@@ -85,15 +85,16 @@ public:
 
   Logger(std::string name);
 
-  /** Check whether messages at the give loggging level are active. */
-  bool isActive(Level lvl) const { return (lvl <= s_level); }
   /** Log information with a given log level. */
   template <typename... Ts>
   void log(Level lvl, const Ts&... things) const
   {
     if (isActive(lvl)) {
-      detail::print(stream(lvl), prefix(lvl), things..., kReset);
-      stream(lvl).flush();
+      std::ostream& os = stream(lvl);
+      print_prefix(os, lvl);
+      detail::print(os, things...);
+      os << kReset;
+      os.flush();
     }
   }
   /** Log information using an objects print(...) function. */
@@ -103,27 +104,29 @@ public:
             const std::string& extraPrefix = std::string()) const
   {
     if (isActive(lvl)) {
-      thing.print(stream(lvl), prefix(lvl) + extraPrefix);
-      stream(lvl) << kReset;
-      stream(lvl).flush();
+      std::ostream& os = stream(lvl);
+      std::ostringstream prefix;
+      print_prefix(prefix, lvl);
+      prefix << extraPrefix;
+      thing.print(os, prefix.str());
+      os << kReset;
+      os.flush();
     }
   }
 
 private:
-  static std::ostream& stream(Level lvl)
+  /** Check whether messages at the give loggging level are active. */
+  bool isActive(Level lvl) const { return (lvl <= s_level); }
+  static constexpr std::ostream& stream(Level lvl)
   {
     return (lvl == Level::Error) ? std::cerr : std::cout;
   }
+  static void print_prefix(std::ostream& os, Level lvl);
 
   static const char* const kLevelPrefix[4];
   static const char* const kReset;
   static Logger s_global;
   static Level s_level;
-
-  std::string prefix(Level lvl) const
-  {
-    return kLevelPrefix[static_cast<int>(lvl)] + m_prefix;
-  }
 
   std::string m_prefix;
 };
