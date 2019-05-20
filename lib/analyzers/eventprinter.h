@@ -4,7 +4,6 @@
 #pragma once
 
 #include "loop/analyzer.h"
-#include "utils/logger.h"
 
 namespace proteus {
 
@@ -15,9 +14,6 @@ public:
 
   std::string name() const;
   void execute(const Event& event);
-
-private:
-  Logger m_logger;
 };
 
 } // namespace proteus

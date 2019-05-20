@@ -31,7 +31,7 @@ int main(int argc, char const* argv[])
   }
   std::string path(argv[1]);
 
-  Logger::setGlobalLevel(Logger::Level::Error);
+  globalLogger().setMinimalLevel(Logger::Level::Warning);
   // try different types of configurations
   try {
     Device::fromFile(path).print(std::cout);

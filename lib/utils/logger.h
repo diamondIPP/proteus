@@ -9,6 +9,8 @@
 #pragma once
 
 #include <cstdlib>
+#include <ctime>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -80,10 +82,10 @@ public:
     Verbose = 3, // additional (debug) information
   };
 
-  static void setGlobalLevel(Level lvl) { s_level = lvl; }
-  static Logger& globalLogger();
+  Logger(Level level = Level::Warning);
 
-  Logger(std::string name);
+  /** Set the minimal logging level for which messages are shown. */
+  void setMinimalLevel(Level level) { m_level = level; }
 
   /** Log information with a given log level. */
   template <typename... Ts>
@@ -92,8 +94,7 @@ public:
     if (isActive(lvl)) {
       std::ostream& os = stream(lvl);
       print_prefix(os, lvl);
-      detail::print(os, things...);
-      os << kReset;
+      detail::print(os, things..., m_reset);
       os.flush();
     }
   }
@@ -109,27 +110,35 @@ public:
       print_prefix(prefix, lvl);
       prefix << extraPrefix;
       thing.print(os, prefix.str());
-      os << kReset;
+      os << m_reset;
       os.flush();
     }
   }
 
 private:
   /** Check whether messages at the give loggging level are active. */
-  bool isActive(Level lvl) const { return (lvl <= s_level); }
-  static constexpr std::ostream& stream(Level lvl)
+  bool isActive(Level level) const { return (level <= m_level); }
+  std::ostream& stream(Level level) const
   {
-    return (lvl == Level::Error) ? std::cerr : std::cout;
+    return *(m_streams[static_cast<int>(level)]);
   }
-  static void print_prefix(std::ostream& os, Level lvl);
+  void print_prefix(std::ostream& os, Level level) const
+  {
+    std::time_t now = std::time(nullptr);
+    os << m_prefixes[static_cast<int>(level)];
+    os << "|";
+    os << std::put_time(std::localtime(&now), "%T");
+    os << "| ";
+  }
 
-  static const char* const kLevelPrefix[4];
-  static const char* const kReset;
-  static Logger s_global;
-  static Level s_level;
-
-  std::string m_prefix;
+  Level m_level;
+  std::ostream* const m_streams[4];
+  const char* const m_prefixes[4];
+  const char* const m_reset;
 };
+
+/** Return the global logger. */
+Logger& globalLogger();
 
 } // namespace proteus
 
@@ -145,15 +154,14 @@ private:
   namespace {                                                                  \
   inline __attribute__((unused))::proteus::Logger& logger()                    \
   {                                                                            \
-    return ::proteus::Logger::globalLogger();                                  \
+    return ::proteus::globalLogger();                                          \
   }                                                                            \
   }
 #define PT_SETUP_LOCAL_LOGGER(name)                                            \
   namespace {                                                                  \
-  ::proteus::Logger name##LocalLogger(#name);                                  \
   inline __attribute__((unused))::proteus::Logger& logger()                    \
   {                                                                            \
-    return name##LocalLogger;                                                  \
+    return ::proteus::globalLogger();                                          \
   }                                                                            \
   }
 
