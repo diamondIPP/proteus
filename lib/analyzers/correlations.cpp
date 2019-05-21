@@ -1,3 +1,6 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
 #include "correlations.h"
 
 #include <cassert>
@@ -15,10 +18,12 @@
 
 PT_SETUP_LOCAL_LOGGER(Correlations)
 
-Analyzers::Correlations::Correlations(TDirectory* dir,
-                                      const Mechanics::Device& dev,
-                                      const std::vector<Index>& sensorIds,
-                                      const int neighbors)
+namespace proteus {
+
+Correlations::Correlations(TDirectory* dir,
+                           const Device& dev,
+                           const std::vector<Index>& sensorIds,
+                           const int neighbors)
     : m_geo(dev.geometry())
 {
   if (sensorIds.size() < 2)
@@ -26,22 +31,22 @@ Analyzers::Correlations::Correlations(TDirectory* dir,
   if (neighbors < 1)
     FAIL("need at least one neighbor but ", neighbors, " given");
 
-  TDirectory* sub = Utils::makeDir(dir, "correlations");
+  TDirectory* sub = makeDir(dir, "correlations");
 
   // correlation between selected number of neighboring sensors
   const size_t n = sensorIds.size();
   for (size_t i = 0; i < n; ++i) {
     for (size_t j = 1 + i; j < std::min(n, 1 + i + neighbors); ++j) {
-      const Mechanics::Sensor& sensor0 = dev.getSensor(sensorIds[i]);
-      const Mechanics::Sensor& sensor1 = dev.getSensor(sensorIds[j]);
+      const Sensor& sensor0 = dev.getSensor(sensorIds[i]);
+      const Sensor& sensor1 = dev.getSensor(sensorIds[j]);
       addHist(sensor0, sensor1, sub);
     }
   }
 }
 
-Analyzers::Correlations::Correlations(TDirectory* dir,
-                                      const Mechanics::Device& device,
-                                      const int neighbors)
+Correlations::Correlations(TDirectory* dir,
+                           const Device& device,
+                           const int neighbors)
     : Correlations(dir,
                    device,
                    sortedAlongBeam(device.geometry(), device.sensorIds()),
@@ -49,13 +54,12 @@ Analyzers::Correlations::Correlations(TDirectory* dir,
 {
 }
 
-std::string Analyzers::Correlations::name() const { return "Correlations"; }
+std::string Correlations::name() const { return "Correlations"; }
 
-void Analyzers::Correlations::addHist(const Mechanics::Sensor& sensor0,
-                                      const Mechanics::Sensor& sensor1,
-                                      TDirectory* dir)
+void Correlations::addHist(const Sensor& sensor0,
+                           const Sensor& sensor1,
+                           TDirectory* dir)
 {
-  using namespace Utils;
 
   TDirectory* sub = makeDir(dir, sensor0.name() + "-" + sensor1.name());
 
@@ -89,16 +93,16 @@ void Analyzers::Correlations::addHist(const Mechanics::Sensor& sensor0,
   m_hists[std::make_pair(sensor0.id(), sensor1.id())] = hist;
 }
 
-void Analyzers::Correlations::execute(const Storage::Event& event)
+void Correlations::execute(const Event& event)
 {
   for (auto& entry : m_hists) {
     Index id0 = entry.first.first;
     Index id1 = entry.first.second;
     Hists& hist = entry.second;
-    const Mechanics::Plane& plane0 = m_geo.getPlane(id0);
-    const Mechanics::Plane& plane1 = m_geo.getPlane(id1);
-    const Storage::SensorEvent& sensor0 = event.getSensorEvent(id0);
-    const Storage::SensorEvent& sensor1 = event.getSensorEvent(id1);
+    const Plane& plane0 = m_geo.getPlane(id0);
+    const Plane& plane1 = m_geo.getPlane(id1);
+    const SensorEvent& sensor0 = event.getSensorEvent(id0);
+    const SensorEvent& sensor1 = event.getSensorEvent(id1);
 
     for (Index c0 = 0; c0 < sensor0.numClusters(); ++c0) {
       Vector4 global0 = plane0.toGlobal(sensor0.getCluster(c0).position());
@@ -117,14 +121,14 @@ void Analyzers::Correlations::execute(const Storage::Event& event)
   }
 }
 
-const TH1D* Analyzers::Correlations::getHistDiffX(Index sensorId0,
-                                                  Index sensorId1) const
+const TH1D* Correlations::getHistDiffX(Index sensorId0, Index sensorId1) const
 {
   return m_hists.at(std::make_pair(sensorId0, sensorId1)).diffX;
 }
 
-const TH1D* Analyzers::Correlations::getHistDiffY(Index sensorId0,
-                                                  Index sensorId1) const
+const TH1D* Correlations::getHistDiffY(Index sensorId0, Index sensorId1) const
 {
   return m_hists.at(std::make_pair(sensorId0, sensorId1)).diffY;
 }
+
+} // namespace proteus

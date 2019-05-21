@@ -1,10 +1,11 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \author  Moritz Kiehn <msmk@cern.ch>
  * \date    2017-09
  */
 
-#ifndef PT_MERGER_H
-#define PT_MERGER_H
+#pragma once
 
 #include <cstdint>
 #include <memory>
@@ -13,7 +14,7 @@
 
 #include "loop/reader.h"
 
-namespace Io {
+namespace proteus {
 
 /** Event merger that combines data from multiple readers.
  *
@@ -26,22 +27,20 @@ namespace Io {
  * Only sensor data, i.e. hits and clusters, are merged. Reconstructed data
  * is dropped.
  */
-class EventMerger : public Loop::Reader {
+class EventMerger : public Reader {
 public:
-  EventMerger(std::vector<std::shared_ptr<Loop::Reader>> readers);
+  EventMerger(std::vector<std::shared_ptr<Reader>> readers);
 
   std::string name() const override final;
   uint64_t numEvents() const override final { return m_events; }
   size_t numSensors() const override final { return m_sensors; }
   void skip(uint64_t n) override final;
-  bool read(Storage::Event& event) override final;
+  bool read(Event& event) override final;
 
 private:
-  std::vector<std::shared_ptr<Loop::Reader>> m_readers;
+  std::vector<std::shared_ptr<Reader>> m_readers;
   uint64_t m_events;
   size_t m_sensors;
 };
 
-} // namespace Io
-
-#endif // PT_MERGER_H
+} // namespace proteus

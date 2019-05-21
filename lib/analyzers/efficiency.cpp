@@ -1,3 +1,5 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \author Moritz Kiehn <msmk@cern.ch>
  * \date 2017-02-16
@@ -17,13 +19,15 @@
 
 PT_SETUP_LOCAL_LOGGER(Efficiency)
 
-Analyzers::Efficiency::Efficiency(TDirectory* dir,
-                                  const Mechanics::Sensor& sensor,
-                                  const int maskedPixelRange,
-                                  const int increaseArea,
-                                  const int inPixelPeriod,
-                                  const int inPixelBinsMin,
-                                  const int efficiencyDistBins)
+namespace proteus {
+
+Efficiency::Efficiency(TDirectory* dir,
+                       const Sensor& sensor,
+                       const int maskedPixelRange,
+                       const int increaseArea,
+                       const int inPixelPeriod,
+                       const int inPixelBinsMin,
+                       const int efficiencyDistBins)
     : m_sensor(sensor)
 {
   if (maskedPixelRange < 0)
@@ -41,33 +45,31 @@ Analyzers::Efficiency::Efficiency(TDirectory* dir,
     m_mask = sensor.pixelMask().protruded(maskedPixelRange - 1);
   }
 
-  TDirectory* sub =
-      Utils::makeDir(dir, "sensors/" + sensor.name() + "/efficiency");
+  TDirectory* sub = makeDir(dir, "sensors/" + sensor.name() + "/efficiency");
 
   // one set of histograms for the whole sensor
   m_sensorHists = Hists(sub, sensor, sensor.colRowArea(), increaseArea,
                         inPixelPeriod, inPixelBinsMin, efficiencyDistBins);
   // one additional set for each region
   for (const auto& region : sensor.regions()) {
-    TDirectory* rsub = Utils::makeDir(sub, region.name);
+    TDirectory* rsub = makeDir(sub, region.name);
     m_regionsHists.emplace_back(rsub, sensor, region.colRow, increaseArea,
                                 inPixelPeriod, inPixelBinsMin,
                                 efficiencyDistBins);
   }
 }
 
-Analyzers::Efficiency::Hists::Hists(TDirectory* dir,
-                                    const Mechanics::Sensor& sensor,
-                                    const DigitalArea& roi,
-                                    const int increaseArea,
-                                    const int inPixelPeriod,
-                                    const int inPixelBinsMin,
-                                    const int efficiencyDistBins)
+Efficiency::Hists::Hists(TDirectory* dir,
+                         const Sensor& sensor,
+                         const DigitalArea& roi,
+                         const int increaseArea,
+                         const int inPixelPeriod,
+                         const int inPixelBinsMin,
+                         const int efficiencyDistBins)
     : areaPixel(enlarged(roi, increaseArea))
     , roiPixel(roi)
     , edgeBins(increaseArea)
 {
-  using namespace Utils;
 
   // define in-pixel submatrix where positions will be folded back to
   Vector4 lowerLeft =
@@ -111,14 +113,14 @@ Analyzers::Efficiency::Hists::Hists(TDirectory* dir,
   clustersFail = makeH2(dir, "clusters_fail", axCol, axRow);
 }
 
-std::string Analyzers::Efficiency::name() const
+std::string Efficiency::name() const
 {
   return "Efficiency(" + std::to_string(m_sensor.id()) + ')';
 }
 
-void Analyzers::Efficiency::execute(const Storage::Event& event)
+void Efficiency::execute(const Event& event)
 {
-  const Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensor.id());
+  const SensorEvent& sensorEvent = event.getSensorEvent(m_sensor.id());
 
   for (const auto& state : sensorEvent.localStates()) {
     auto pix = m_sensor.transformLocalToPixel(state.position());
@@ -148,16 +150,14 @@ void Analyzers::Efficiency::execute(const Storage::Event& event)
     }
   }
   for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
-    const Storage::Cluster& cluster = sensorEvent.getCluster(icluster);
+    const Cluster& cluster = sensorEvent.getCluster(icluster);
     m_sensorHists.fill(cluster);
     if (cluster.hasRegion())
       m_regionsHists[cluster.region()].fill(cluster);
   }
 }
 
-void Analyzers::Efficiency::Hists::fill(const Storage::TrackState& state,
-                                        Scalar col,
-                                        Scalar row)
+void Efficiency::Hists::fill(const TrackState& state, Scalar col, Scalar row)
 {
   bool isMatched = state.isMatched();
 
@@ -195,7 +195,7 @@ void Analyzers::Efficiency::Hists::fill(const Storage::TrackState& state,
   }
 }
 
-void Analyzers::Efficiency::Hists::fill(const Storage::Cluster& cluster)
+void Efficiency::Hists::fill(const Cluster& cluster)
 {
   if (cluster.isMatched()) {
     clustersPass->Fill(cluster.col(), cluster.row());
@@ -204,7 +204,7 @@ void Analyzers::Efficiency::Hists::fill(const Storage::Cluster& cluster)
   }
 }
 
-void Analyzers::Efficiency::finalize()
+void Efficiency::finalize()
 {
   INFO(m_sensor.name(), " efficiency:");
   m_sensorHists.finalize();
@@ -218,7 +218,7 @@ void Analyzers::Efficiency::finalize()
   }
 }
 
-void Analyzers::Efficiency::Hists::finalize()
+void Efficiency::Hists::finalize()
 {
   // we just need the plain number differences w/o sumw2
   fail->Add(total, pass, 1, -1);
@@ -269,3 +269,5 @@ void Analyzers::Efficiency::Hists::finalize()
   INFO("  tracks (pass/fail/total): ", trkPass, "/", trkFail, "/", trkTotal);
   INFO("  pixel eff (median/mean/min): ", effMedian, "/", effMean, "/", effMin);
 }
+
+} // namespace proteus

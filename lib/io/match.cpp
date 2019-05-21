@@ -1,3 +1,6 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
 #include "match.h"
 
 #include <cassert>
@@ -13,7 +16,9 @@
 
 PT_SETUP_GLOBAL_LOGGER
 
-void Io::MatchWriter::EventData::addToTree(TTree* tree)
+namespace proteus {
+
+void MatchWriter::EventData::addToTree(TTree* tree)
 {
   assert(tree);
 
@@ -23,7 +28,7 @@ void Io::MatchWriter::EventData::addToTree(TTree* tree)
   tree->Branch("evt_ntracks", &nTracks);
 }
 
-void Io::MatchWriter::EventData::set(const Storage::SensorEvent& e)
+void MatchWriter::EventData::set(const SensorEvent& e)
 {
   frame = e.frame();
   timestamp = e.timestamp();
@@ -31,7 +36,7 @@ void Io::MatchWriter::EventData::set(const Storage::SensorEvent& e)
   nTracks = e.localStates().size();
 }
 
-void Io::MatchWriter::TrackData::addToTree(TTree* tree)
+void MatchWriter::TrackData::addToTree(TTree* tree)
 {
   assert(tree);
 
@@ -54,9 +59,9 @@ void Io::MatchWriter::TrackData::addToTree(TTree* tree)
   tree->Branch("trk_size", &size);
 }
 
-void Io::MatchWriter::TrackData::set(const Storage::Track& track,
-                                     const Storage::TrackState& state,
-                                     const Vector4& posPixel)
+void MatchWriter::TrackData::set(const Track& track,
+                                 const TrackState& state,
+                                 const Vector4& posPixel)
 {
   u = state.loc0();
   v = state.loc1();
@@ -77,7 +82,7 @@ void Io::MatchWriter::TrackData::set(const Storage::Track& track,
   size = track.size();
 }
 
-void Io::MatchWriter::ClusterData::addToTree(TTree* tree)
+void MatchWriter::ClusterData::addToTree(TTree* tree)
 {
   assert(tree);
 
@@ -102,7 +107,7 @@ void Io::MatchWriter::ClusterData::addToTree(TTree* tree)
   tree->Branch("hit_value", &hitValue, "hit_value[clu_size]/S");
 }
 
-void Io::MatchWriter::ClusterData::set(const Storage::Cluster& cluster)
+void MatchWriter::ClusterData::set(const Cluster& cluster)
 {
   u = cluster.u();
   v = cluster.v();
@@ -121,7 +126,7 @@ void Io::MatchWriter::ClusterData::set(const Storage::Cluster& cluster)
   sizeRow = cluster.sizeRow();
   const auto& hits = cluster.hits();
   for (int16_t ihit = 0; ihit < size; ++ihit) {
-    const Storage::Hit& hit = hits[ihit];
+    const Hit& hit = hits[ihit];
     hitCol[ihit] = hit.col();
     hitRow[ihit] = hit.row();
     hitTimestamp[ihit] = hit.timestamp();
@@ -129,7 +134,7 @@ void Io::MatchWriter::ClusterData::set(const Storage::Cluster& cluster)
   }
 }
 
-void Io::MatchWriter::ClusterData::invalidate()
+void MatchWriter::ClusterData::invalidate()
 {
   u = std::numeric_limits<float>::quiet_NaN();
   v = std::numeric_limits<float>::quiet_NaN();
@@ -147,7 +152,7 @@ void Io::MatchWriter::ClusterData::invalidate()
   sizeRow = 0;
 }
 
-void Io::MatchWriter::MaskData::addToTree(TTree* tree)
+void MatchWriter::MaskData::addToTree(TTree* tree)
 {
   assert(tree);
 
@@ -155,14 +160,14 @@ void Io::MatchWriter::MaskData::addToTree(TTree* tree)
   tree->Branch("row", &row);
 }
 
-void Io::MatchWriter::DistData::addToTree(TTree* tree)
+void MatchWriter::DistData::addToTree(TTree* tree)
 {
   assert(tree);
 
   tree->Branch("mat_d2", &d2);
 }
 
-Io::MatchWriter::MatchWriter(TDirectory* dir, const Mechanics::Sensor& sensor)
+MatchWriter::MatchWriter(TDirectory* dir, const Sensor& sensor)
     : m_sensor(sensor)
     , m_sensorId(sensor.id())
     , m_name("MatchWriter(" + sensor.name() + ')')
@@ -201,9 +206,9 @@ Io::MatchWriter::MatchWriter(TDirectory* dir, const Mechanics::Sensor& sensor)
   }
 }
 
-std::string Io::MatchWriter::name() const { return m_name; }
+std::string MatchWriter::name() const { return m_name; }
 
-void Io::MatchWriter::append(const Storage::Event& event)
+void MatchWriter::append(const Event& event)
 {
   const auto& sensorEvent = event.getSensorEvent(m_sensorId);
 
@@ -211,15 +216,14 @@ void Io::MatchWriter::append(const Storage::Event& event)
 
   // export tracks and possible matched clusters
   for (const auto& state : sensorEvent.localStates()) {
-    const Storage::Track& track = event.getTrack(state.track());
+    const Track& track = event.getTrack(state.track());
 
     // always export track data
     m_track.set(track, state, m_sensor.transformLocalToPixel(state.position()));
 
     // export matched cluster data if it exists
     if (state.isMatched()) {
-      const Storage::Cluster& cluster =
-          sensorEvent.getCluster(state.matchedCluster());
+      const Cluster& cluster = sensorEvent.getCluster(state.matchedCluster());
       // set cluster information
       m_matchedCluster.set(cluster);
       // set matching information
@@ -236,7 +240,7 @@ void Io::MatchWriter::append(const Storage::Event& event)
 
   // export unmatched clusters
   for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
-    const Storage::Cluster& cluster = sensorEvent.getCluster(icluster);
+    const Cluster& cluster = sensorEvent.getCluster(icluster);
 
     // already exported during track iteration
     if (cluster.isMatched())
@@ -246,3 +250,5 @@ void Io::MatchWriter::append(const Storage::Event& event)
     m_unmatchTree->Fill();
   }
 }
+
+} // namespace proteus

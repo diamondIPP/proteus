@@ -1,3 +1,6 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
 #include "matcher.h"
 
 #include <algorithm>
@@ -8,9 +11,9 @@
 #include "mechanics/device.h"
 #include "storage/event.h"
 
-Processors::Matcher::Matcher(const Mechanics::Device& device,
-                             Index sensorId,
-                             double distanceSigmaMax)
+namespace proteus {
+
+Matcher::Matcher(const Device& device, Index sensorId, double distanceSigmaMax)
     : m_sensorId(sensorId)
     , m_distSquaredMax(
           (distanceSigmaMax < 0) ? -1 : (distanceSigmaMax * distanceSigmaMax))
@@ -18,7 +21,7 @@ Processors::Matcher::Matcher(const Mechanics::Device& device,
 {
 }
 
-std::string Processors::Matcher::name() const { return m_name; }
+std::string Matcher::name() const { return m_name; }
 
 namespace {
 struct PossibleMatch {
@@ -28,9 +31,9 @@ struct PossibleMatch {
 };
 } // namespace
 
-void Processors::Matcher::execute(Storage::Event& event) const
+void Matcher::execute(Event& event) const
 {
-  Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
+  SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
 
   std::vector<PossibleMatch> possibleMatches;
   std::set<Index> matchedClusters;
@@ -39,7 +42,7 @@ void Processors::Matcher::execute(Storage::Event& event) const
   // preselect possible track state / cluster pairs
   for (const auto& state : sensorEvent.localStates()) {
     for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
-      const Storage::Cluster& cluster = sensorEvent.getCluster(icluster);
+      const Cluster& cluster = sensorEvent.getCluster(icluster);
 
       // compute mahalanobis distance between state/cluster
       Vector2 delta(cluster.u() - state.loc0(), cluster.v() - state.loc1());
@@ -66,3 +69,5 @@ void Processors::Matcher::execute(Storage::Event& event) const
     sensorEvent.addMatch(match.cluster, match.track);
   }
 }
+
+} // namespace proteus

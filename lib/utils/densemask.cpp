@@ -1,3 +1,5 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \author Moritz Kiehn <msmk@cern.ch>
  * \date 2017-02
@@ -9,10 +11,12 @@
 #include <limits>
 #include <ostream>
 
-Utils::DenseMask::DenseMask() : DenseMask(0, 0, 0, 0) {}
+namespace proteus {
+
+DenseMask::DenseMask() : DenseMask(0, 0, 0, 0) {}
 
 // create an empty mask, i.e. no masked pixels, for the given area
-Utils::DenseMask::DenseMask(int col0, int row0, int sizeCol, int sizeRow)
+DenseMask::DenseMask(int col0, int row0, int sizeCol, int sizeRow)
     : m_col0(col0)
     , m_col1(col0 + sizeCol)
     , m_row0(row0)
@@ -23,7 +27,7 @@ Utils::DenseMask::DenseMask(int col0, int row0, int sizeCol, int sizeRow)
   assert(0 <= sizeRow);
 }
 
-Utils::DenseMask::DenseMask(const std::set<ColumnRow>& masked)
+DenseMask::DenseMask(const std::set<ColumnRow>& masked)
     : m_col0(std::numeric_limits<int>::max())
     , m_col1(std::numeric_limits<int>::min())
     , m_row0(std::numeric_limits<int>::max())
@@ -43,7 +47,7 @@ Utils::DenseMask::DenseMask(const std::set<ColumnRow>& masked)
   }
 }
 
-Utils::DenseMask Utils::DenseMask::protruded(int offset) const
+DenseMask DenseMask::protruded(int offset) const
 {
   assert(0 <= offset);
 
@@ -66,7 +70,7 @@ Utils::DenseMask Utils::DenseMask::protruded(int offset) const
   return bigger;
 }
 
-std::ostream& Utils::operator<<(std::ostream& os, const DenseMask& pm)
+std::ostream& operator<<(std::ostream& os, const DenseMask& pm)
 {
   // print header line w/ column numbers
   os << "     ";
@@ -93,3 +97,5 @@ std::ostream& Utils::operator<<(std::ostream& os, const DenseMask& pm)
     os << std::setw(4) << std::left << c << ' ';
   return os;
 }
+
+} // namespace proteus

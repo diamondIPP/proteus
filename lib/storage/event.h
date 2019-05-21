@@ -1,5 +1,7 @@
-#ifndef PT_EVENT_H
-#define PT_EVENT_H
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
+#pragma once
 
 #include <cstdint>
 #include <iosfwd>
@@ -9,7 +11,7 @@
 #include "storage/sensorevent.h"
 #include "storage/track.h"
 
-namespace Storage {
+namespace proteus {
 
 /** An event containing all global and local information for one trigger.
  *
@@ -60,6 +62,4 @@ private:
   std::vector<Track> m_tracks;
 };
 
-} // namespace Storage
-
-#endif // PT_EVENT_H
+} // namespace proteus

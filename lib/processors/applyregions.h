@@ -1,39 +1,33 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \file
  * \author Moritz Kiehn (msmk@cern.ch)
  * \date 2017-02
  */
 
-#ifndef PT_APPLYREGIONS_H
-#define PT_APPLYREGIONS_H
+#pragma once
 
 #include "loop/processor.h"
 
-namespace Mechanics {
+namespace proteus {
+
 class Device;
-class Sensor;
-} // namespace Mechanics
-
-namespace Loop {
 class EventLoop;
-}
-
-namespace Processors {
+class Sensor;
 
 /** Assign region ids to hits using the sensor region information. */
-class ApplyRegions : public Loop::Processor {
+class ApplyRegions : public Processor {
 public:
-  ApplyRegions(const Mechanics::Sensor& sensor);
+  ApplyRegions(const Sensor& sensor);
 
   std::string name() const;
-  void execute(Storage::Event& event) const;
+  void execute(Event& event) const;
 
 private:
-  const Mechanics::Sensor& m_sensor;
+  const Sensor& m_sensor;
 };
 
-void setupRegions(const Mechanics::Device& device, Loop::EventLoop& loop);
+void setupRegions(const Device& device, EventLoop& loop);
 
-} // namespace Processors
-
-#endif // PT_APPLYREGIONS_H
+} // namespace proteus

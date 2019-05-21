@@ -1,5 +1,7 @@
-#ifndef PT_CORRELATIONALIGNER_H
-#define PT_CORRELATIONALIGNER_H
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -8,14 +10,10 @@
 
 class TDirectory;
 
-namespace Analyzers {
-class Correlations;
-}
-namespace Mechanics {
-class Device;
-}
+namespace proteus {
 
-namespace Alignment {
+class Correlations;
+class Device;
 
 /** Align sensors in the xy-plane using only cluster correlations.
  *
@@ -33,25 +31,23 @@ public:
    * \warning This will add a `Correlations`-analyzer internally.
    */
   CorrelationsAligner(TDirectory* dir,
-                      const Mechanics::Device& device,
+                      const Device& device,
                       const Index fixedId,
                       const std::vector<Index>& alignIds);
   ~CorrelationsAligner();
 
   std::string name() const;
-  void execute(const Storage::Event& event);
+  void execute(const Event& event);
   void finalize();
 
-  Mechanics::Geometry updatedGeometry() const;
+  Geometry updatedGeometry() const;
 
 private:
-  const Mechanics::Device& m_device;
-  std::unique_ptr<Analyzers::Correlations> m_corr;
+  const Device& m_device;
+  std::unique_ptr<Correlations> m_corr;
   std::vector<Index> m_backwardIds;
   std::vector<Index> m_forwardIds;
   Index m_fixedId;
 };
 
-} // namespace Alignment
-
-#endif /* end of include guard: PT_CORRELATIONALIGNER_H */
+} // namespace proteus

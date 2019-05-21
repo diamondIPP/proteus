@@ -1,27 +1,29 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
 #include "applygeometry.h"
 
 #include "mechanics/device.h"
 #include "storage/event.h"
 
-Processors::ApplyGeometry::ApplyGeometry(const Mechanics::Device& device)
-    : m_device(device)
-{
-}
+namespace proteus {
 
-std::string Processors::ApplyGeometry::name() const { return "ApplyGeometry"; }
+ApplyGeometry::ApplyGeometry(const Device& device) : m_device(device) {}
 
-void Processors::ApplyGeometry::execute(Storage::Event& event) const
+std::string ApplyGeometry::name() const { return "ApplyGeometry"; }
+
+void ApplyGeometry::execute(Event& event) const
 {
   assert(event.numSensorEvents() == m_device.numSensors() &&
          "Processors: plane / sensor mismatch");
 
   for (Index iplane = 0; iplane < event.numSensorEvents(); iplane++) {
-    Storage::SensorEvent& sensorEvent = event.getSensorEvent(iplane);
-    const Mechanics::Sensor& sensor = m_device.getSensor(iplane);
+    SensorEvent& sensorEvent = event.getSensorEvent(iplane);
+    const Sensor& sensor = m_device.getSensor(iplane);
     DiagMatrix4 scalePitch = sensor.pitch().asDiagonal();
 
     for (Index icluster = 0; icluster < sensorEvent.numClusters(); icluster++) {
-      Storage::Cluster& cluster = sensorEvent.getCluster(icluster);
+      Cluster& cluster = sensorEvent.getCluster(icluster);
 
       SymMatrix4 cov = SymMatrix4::Zero();
       cov(kU, kU) = cluster.colVar();
@@ -34,3 +36,5 @@ void Processors::ApplyGeometry::execute(Storage::Event& event) const
     }
   }
 }
+
+} // namespace proteus

@@ -1,18 +1,19 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \file
  * \brief Tools for simple line fits in two and three dimensions
  * \author Moritz Kiehn (msmk@cern.ch)
  */
 
-#ifndef PT_LINEFITTER_H
-#define PT_LINEFITTER_H
+#pragma once
 
 #include <array>
 #include <utility>
 
 #include "utils/definitions.h"
 
-namespace Tracking {
+namespace proteus {
 
 /** Fit a line using linear weighted regression.
  *
@@ -128,7 +129,7 @@ struct LineFitter4D : LineFitterND<kZ, kX, kY, kT> {
   SymMatrix6 cov() const { return getCov(OutputIndices{}); }
 };
 
-// implementations
+// inline implementations
 
 template <size_t I, size_t... Ds>
 template <typename Point, typename Weight>
@@ -205,6 +206,4 @@ LineFitterND<I, Ds...>::getCov(std::index_sequence<Os...>) const
   return out;
 }
 
-} // namespace Tracking
-
-#endif // PT_LINEFITTER_H
+} // namespace proteus

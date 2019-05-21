@@ -1,3 +1,6 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
 #include "hits.h"
 
 #include <cassert>
@@ -12,13 +15,12 @@
 #include "storage/event.h"
 #include "utils/root.h"
 
-Analyzers::SensorHits::SensorHits(TDirectory* dir,
-                                  const Mechanics::Sensor& sensor)
+namespace proteus {
+
+SensorHits::SensorHits(TDirectory* dir, const Sensor& sensor)
 
 {
-  using namespace Utils;
-
-  TDirectory* sub = Utils::makeDir(dir, "sensors/" + sensor.name() + "/hits");
+  TDirectory* sub = makeDir(dir, "sensors/" + sensor.name() + "/hits");
 
   // time/value are digital values, bin 0 = [-0.5, 0.5)
   auto axCol = HistAxis::Integer(sensor.colRange(), "Hit column");
@@ -35,7 +37,7 @@ Analyzers::SensorHits::SensorHits(TDirectory* dir,
   m_meanTimestampMap = makeH2(sub, "mean_timestamp_map", axCol, axRow);
   m_meanValueMap = makeH2(sub, "mean_value_map", axCol, axRow);
   for (const auto& region : sensor.regions()) {
-    TDirectory* rsub = Utils::makeDir(sub, region.name);
+    TDirectory* rsub = makeDir(sub, region.name);
     RegionHists rh;
     rh.timestamp = makeH1(rsub, "timestamp", axTs);
     rh.valueTimestamp = makeH2(rsub, "timestamp-value", axValue, axTs);
@@ -44,12 +46,12 @@ Analyzers::SensorHits::SensorHits(TDirectory* dir,
   }
 }
 
-void Analyzers::SensorHits::execute(const Storage::SensorEvent& sensorEvent)
+void SensorHits::execute(const SensorEvent& sensorEvent)
 {
   m_nHits->Fill(sensorEvent.numHits());
 
   for (Index ihit = 0; ihit < sensorEvent.numHits(); ++ihit) {
-    const Storage::Hit& hit = sensorEvent.getHit(ihit);
+    const Hit& hit = sensorEvent.getHit(ihit);
 
     m_colRow->Fill(hit.col(), hit.row());
     m_timestamp->Fill(hit.timestamp());
@@ -66,7 +68,7 @@ void Analyzers::SensorHits::execute(const Storage::SensorEvent& sensorEvent)
   }
 }
 
-void Analyzers::SensorHits::finalize()
+void SensorHits::finalize()
 {
   // rescale rate histogram to available range
   auto numEvents = m_nHits->GetEntries();
@@ -94,25 +96,27 @@ void Analyzers::SensorHits::finalize()
   m_meanValueMap->Divide(m_colRow);
 }
 
-Analyzers::Hits::Hits(TDirectory* dir, const Mechanics::Device& device)
+Hits::Hits(TDirectory* dir, const Device& device)
 {
   for (auto isensor : device.sensorIds()) {
     m_sensors.emplace_back(dir, device.getSensor(isensor));
   }
 }
 
-std::string Analyzers::Hits::name() const { return "Hits"; }
+std::string Hits::name() const { return "Hits"; }
 
-void Analyzers::Hits::execute(const Storage::Event& event)
+void Hits::execute(const Event& event)
 {
   for (Index isensor = 0; isensor < event.numSensorEvents(); ++isensor) {
     m_sensors[isensor].execute(event.getSensorEvent(isensor));
   }
 }
 
-void Analyzers::Hits::finalize()
+void Hits::finalize()
 {
   for (auto& sensor : m_sensors) {
     sensor.finalize();
   }
 }
+
+} // namespace proteus

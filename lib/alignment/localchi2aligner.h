@@ -1,17 +1,20 @@
-#ifndef PT_LOCALCHI2ALIGNER_H
-#define PT_LOCALCHI2ALIGNER_H
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
+#pragma once
 
 #include <memory>
 #include <utility>
 #include <vector>
 
 #include "aligner.h"
-#include "mechanics/device.h"
-#include "storage/cluster.h"
-#include "storage/trackstate.h"
 #include "utils/definitions.h"
 
-namespace Alignment {
+namespace proteus {
+
+class Cluster;
+class Device;
+class TrackState;
 
 /** Fit alignment parameters using a chi^2 minimization of track residuals.
  *
@@ -38,8 +41,8 @@ public:
    * \returns true  On successful addition of the track
    * \returns false On failure due to non-finite input values
    */
-  bool addTrack(const Storage::TrackState& track,
-                const Storage::Cluster& measurement,
+  bool addTrack(const TrackState& track,
+                const Cluster& measurement,
                 const SymMatrix2& weight);
   /** Calculate alignment parameters from all tracks added so far.
    *
@@ -63,22 +66,20 @@ public:
    * \param alignIds Which sensors should be aligned
    * \param damping  Scale factor for corrections to avoid oscillations
    */
-  LocalChi2Aligner(const Mechanics::Device& device,
+  LocalChi2Aligner(const Device& device,
                    const std::vector<Index>& alignIds,
                    const double damping);
   ~LocalChi2Aligner() = default;
 
   std::string name() const;
-  void execute(const Storage::Event& event);
+  void execute(const Event& event);
 
-  Mechanics::Geometry updatedGeometry() const;
+  Geometry updatedGeometry() const;
 
 private:
   std::vector<std::pair<Index, LocalChi2PlaneFitter>> m_fitters;
-  const Mechanics::Device& m_device;
+  const Device& m_device;
   const double m_damping;
 };
 
-} // namespace Alignment
-
-#endif /* end of include guard: PT_LOCALCHI2ALIGNER_H */
+} // namespace proteus

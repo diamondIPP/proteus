@@ -1,3 +1,6 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
 #include "timepix3.h"
 
 #include <sstream>
@@ -9,7 +12,9 @@
 
 PT_SETUP_LOCAL_LOGGER(Timepix3)
 
-int Io::Timepix3Reader::check(const std::string& path)
+namespace proteus {
+
+int Timepix3Reader::check(const std::string& path)
 {
   std::ifstream file;
   file.open(path, std::ios::binary);
@@ -34,14 +39,14 @@ int Io::Timepix3Reader::check(const std::string& path)
   return 20;
 }
 
-std::shared_ptr<Io::Timepix3Reader>
-Io::Timepix3Reader::open(const std::string& path,
-                         const toml::Value& /* unused configuration */)
+std::shared_ptr<Timepix3Reader>
+Timepix3Reader::open(const std::string& path,
+                     const toml::Value& /* unused configuration */)
 {
-  return std::make_shared<Io::Timepix3Reader>(path);
+  return std::make_shared<Timepix3Reader>(path);
 }
 
-Io::Timepix3Reader::Timepix3Reader(const std::string& path)
+Timepix3Reader::Timepix3Reader(const std::string& path)
     : m_file()
     , m_syncTime(0)
     , m_prevTime(0)
@@ -73,12 +78,12 @@ Io::Timepix3Reader::Timepix3Reader(const std::string& path)
   INFO("Reading ''", path, "', skipped ", headerSize, " header bytes");
 }
 
-std::string Io::Timepix3Reader::name() const { return "Timepix3Reader"; }
+std::string Timepix3Reader::name() const { return "Timepix3Reader"; }
 
-void Io::Timepix3Reader::skip(uint64_t n)
+void Timepix3Reader::skip(uint64_t n)
 {
 
-  Storage::SensorEvent evt;
+  SensorEvent evt;
   for (uint64_t i = 0; i < n; i++) {
     evt.clear(0, 0);
     if (!getSensorEvent(evt)) {
@@ -87,10 +92,10 @@ void Io::Timepix3Reader::skip(uint64_t n)
   }
 }
 
-bool Io::Timepix3Reader::read(Storage::Event& event)
+bool Timepix3Reader::read(Event& event)
 {
 
-  Storage::SensorEvent sensorEvent;
+  SensorEvent sensorEvent;
   bool status = getSensorEvent(sensorEvent);
   // INFO("Frame ", sensorEvent.frame(), " with ", sensorEvent.numHits(), " hits
   // at ", ((double)sensorEvent.timestamp() / (4096. * 40000000.)), "sec");
@@ -99,7 +104,7 @@ bool Io::Timepix3Reader::read(Storage::Event& event)
   return status;
 }
 
-bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent)
+bool Timepix3Reader::getSensorEvent(SensorEvent& sensorEvent)
 {
 
   // Initialize the SensorEvent:
@@ -232,8 +237,8 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent)
       }
 
       // Otherwise create a new pixel object
-      Storage::Hit& hit = sensorEvent.addHit(
-          col, row, ((float)time / (4096. * 40000000.)), tot);
+      Hit& hit = sensorEvent.addHit(col, row,
+                                    ((float)time / (4096. * 40000000.)), tot);
 
       DEBUG("Pixel #", npixels, ": ", hit);
       npixels++;
@@ -257,3 +262,5 @@ bool Io::Timepix3Reader::getSensorEvent(Storage::SensorEvent& sensorEvent)
     return true;
   }
 }
+
+} // namespace proteus

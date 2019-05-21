@@ -1,22 +1,23 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \file
  * \author Moritz Kiehn <msmk@cern.ch>
  * \date 2016-08
  */
 
-#ifndef PT_EVENTLOOP_H
-#define PT_EVENTLOOP_H
+#pragma once
 
 #include <cstdint>
 #include <memory>
 #include <vector>
 
-#include "analyzer.h"
-#include "processor.h"
-#include "reader.h"
-#include "writer.h"
+namespace proteus {
 
-namespace Loop {
+class Analyzer;
+class Processor;
+class Reader;
+class Writer;
 
 /** A generic event processing loop.
  *
@@ -52,6 +53,4 @@ private:
   bool m_showProgress;
 };
 
-} // namespace Loop
-
-#endif // PT_EVENTLOOP_H
+} // namespace proteus

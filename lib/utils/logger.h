@@ -1,11 +1,12 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \file
  * \author Moritz Kiehn <msmk@cern.ch>
  * \date 2016-08
  */
 
-#ifndef PT_LOGGER_H
-#define PT_LOGGER_H
+#pragma once
 
 #include <cstdlib>
 #include <iostream>
@@ -14,7 +15,7 @@
 #include <string>
 #include <vector>
 
-namespace Utils {
+namespace proteus {
 namespace detail {
 
 template <typename T>
@@ -62,7 +63,7 @@ inline void unreferenced(Ts&&...)
  * Any type for which an `operator<<(std::ostream&, ...)` is defined can be
  * used, e.g.
  *
- *     Utils::Logger log;
+ *     Logger log;
  *     double x = 1.2;
  *     int y = 100;
  *     log.error("x = ", x, " y = ", y, '\n');
@@ -137,7 +138,7 @@ private:
   std::string m_prefix;
 };
 
-} // namespace Utils
+} // namespace proteus
 
 /* Define a `logger()` function that returns either the global logger
  * or a static local logger so the convenience logger macros can be used.
@@ -146,17 +147,18 @@ private:
  * only debug log statements, the functions might be unused and are marked
  * as such to avoid false-positive compiler warnings.
  */
+
 #define PT_SETUP_GLOBAL_LOGGER                                                 \
   namespace {                                                                  \
-  inline __attribute__((unused)) Utils::Logger& logger()                       \
+  inline __attribute__((unused))::proteus::Logger& logger()                    \
   {                                                                            \
-    return Utils::Logger::globalLogger();                                      \
+    return ::proteus::Logger::globalLogger();                                  \
   }                                                                            \
   }
 #define PT_SETUP_LOCAL_LOGGER(name)                                            \
   namespace {                                                                  \
-  Utils::Logger name##LocalLogger(#name);                                      \
-  inline __attribute__((unused)) Utils::Logger& logger()                       \
+  ::proteus::Logger name##LocalLogger(#name);                                  \
+  inline __attribute__((unused))::proteus::Logger& logger()                    \
   {                                                                            \
     return name##LocalLogger;                                                  \
   }                                                                            \
@@ -172,19 +174,19 @@ private:
  */
 #define ERROR(...)                                                             \
   do {                                                                         \
-    if (logger().isActive(Utils::Logger::Level::Error)) {                      \
+    if (logger().isActive(Logger::Level::Error)) {                             \
       logger().error(__VA_ARGS__, '\n');                                       \
     }                                                                          \
   } while (false)
 #define INFO(...)                                                              \
   do {                                                                         \
-    if (logger().isActive(Utils::Logger::Level::Info)) {                       \
+    if (logger().isActive(Logger::Level::Info)) {                              \
       logger().info(__VA_ARGS__, '\n');                                        \
     }                                                                          \
   } while (false)
 #define VERBOSE(...)                                                           \
   do {                                                                         \
-    if (logger().isActive(Utils::Logger::Level::Verbose)) {                    \
+    if (logger().isActive(Logger::Level::Verbose)) {                           \
       logger().verbose(__VA_ARGS__, '\n');                                     \
     }                                                                          \
   } while (false)
@@ -197,7 +199,7 @@ private:
 #ifdef NDEBUG
 #define DEBUG(...)                                                             \
   do {                                                                         \
-    (decltype(Utils::detail::unreferenced(__VA_ARGS__)))0;                     \
+    (decltype(detail::unreferenced(__VA_ARGS__)))0;                            \
   } while (false)
 #else
 #define DEBUG(...) VERBOSE(__VA_ARGS__)
@@ -214,10 +216,8 @@ private:
 #define THROWX(ExceptionType, ...)                                             \
   do {                                                                         \
     std::ostringstream os;                                                     \
-    Utils::detail::print(os, __VA_ARGS__);                                     \
+    detail::print(os, __VA_ARGS__);                                            \
     throw ExceptionType(os.str());                                             \
   } while (false)
 /** Throw a std::runtime_error with a custom error message. */
 #define THROW(...) THROWX(std::runtime_error, __VA_ARGS__)
-
-#endif // PT_LOGGER_H

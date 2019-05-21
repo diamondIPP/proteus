@@ -1,3 +1,6 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
 #include "clusters.h"
 
 #include <cassert>
@@ -10,16 +13,15 @@
 #include "storage/event.h"
 #include "utils/root.h"
 
-Analyzers::SensorClusters::SensorClusters(TDirectory* dir,
-                                          const Mechanics::Sensor& sensor,
-                                          const int sizeMax,
-                                          const int binsUncertainty)
-{
-  using namespace Utils;
+namespace proteus {
 
-  auto makeAreaHists = [&](const Mechanics::Sensor& sensor,
-                           const Mechanics::Sensor::DigitalArea& area,
-                           TDirectory* sub) {
+SensorClusters::SensorClusters(TDirectory* dir,
+                               const Sensor& sensor,
+                               const int sizeMax,
+                               const int binsUncertainty)
+{
+  auto makeAreaHists = [&](const Sensor& sensor,
+                           const Sensor::DigitalArea& area, TDirectory* sub) {
     auto ts = sensor.timestampRange();
     auto value = sensor.valueRange();
 
@@ -76,14 +78,14 @@ Analyzers::SensorClusters::SensorClusters(TDirectory* dir,
              HistAxis::Integer(sensor.rowRange(), "Cluster row position"));
   m_whole = makeAreaHists(sensor, sensor.colRowArea(), sub);
   for (const auto& region : sensor.regions()) {
-    TDirectory* rsub = Utils::makeDir(sub, region.name);
+    TDirectory* rsub = makeDir(sub, region.name);
     m_regions.push_back(makeAreaHists(sensor, region.colRow, rsub));
   }
 }
 
-void Analyzers::SensorClusters::execute(const Storage::SensorEvent& sensorEvent)
+void SensorClusters::execute(const SensorEvent& sensorEvent)
 {
-  auto fill = [](const Storage::Cluster& cluster, AreaHists& hists) {
+  auto fill = [](const Cluster& cluster, AreaHists& hists) {
     hists.timestamp->Fill(cluster.timestamp());
     hists.value->Fill(cluster.value());
     hists.size->Fill(cluster.size());
@@ -96,7 +98,7 @@ void Analyzers::SensorClusters::execute(const Storage::SensorEvent& sensorEvent)
     hists.uncertaintyU->Fill(stdev[kU]);
     hists.uncertaintyV->Fill(stdev[kV]);
     hists.uncertaintyTime->Fill(stdev[kS]);
-    for (const Storage::Hit& hit : cluster.hits()) {
+    for (const Hit& hit : cluster.hits()) {
       hists.sizeHitTimestamp->Fill(cluster.size(), hit.timestamp());
       auto timedelta = hit.timestamp() - cluster.timestamp();
       hists.hitTimedelta->Fill(timedelta);
@@ -107,7 +109,7 @@ void Analyzers::SensorClusters::execute(const Storage::SensorEvent& sensorEvent)
 
   m_nClusters->Fill(sensorEvent.numClusters());
   for (Index icluster = 0; icluster < sensorEvent.numClusters(); ++icluster) {
-    const Storage::Cluster& cluster = sensorEvent.getCluster(icluster);
+    const Cluster& cluster = sensorEvent.getCluster(icluster);
     m_colRow->Fill(cluster.col(), cluster.row());
     fill(cluster, m_whole);
     if (cluster.hasRegion()) {
@@ -116,7 +118,7 @@ void Analyzers::SensorClusters::execute(const Storage::SensorEvent& sensorEvent)
   }
 }
 
-void Analyzers::SensorClusters::finalize()
+void SensorClusters::finalize()
 {
   // rescale rate histogram to available range
   auto numEvents = m_nClusters->GetEntries();
@@ -141,10 +143,10 @@ void Analyzers::SensorClusters::finalize()
   }
 }
 
-Analyzers::Clusters::Clusters(TDirectory* dir,
-                              const Mechanics::Device& device,
-                              const int sizeMax,
-                              const int binsUncertainty)
+Clusters::Clusters(TDirectory* dir,
+                   const Device& device,
+                   const int sizeMax,
+                   const int binsUncertainty)
 {
   for (auto isensor : device.sensorIds()) {
     m_sensors.emplace_back(dir, device.getSensor(isensor), sizeMax,
@@ -152,18 +154,20 @@ Analyzers::Clusters::Clusters(TDirectory* dir,
   }
 }
 
-std::string Analyzers::Clusters::name() const { return "ClusterInfo"; }
+std::string Clusters::name() const { return "ClusterInfo"; }
 
-void Analyzers::Clusters::execute(const Storage::Event& event)
+void Clusters::execute(const Event& event)
 {
   for (Index isensor = 0; isensor < m_sensors.size(); ++isensor) {
     m_sensors[isensor].execute(event.getSensorEvent(isensor));
   }
 }
 
-void Analyzers::Clusters::finalize()
+void Clusters::finalize()
 {
   for (auto& sensor : m_sensors) {
     sensor.finalize();
   }
 }
+
+} // namespace proteus

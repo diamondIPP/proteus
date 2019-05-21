@@ -1,5 +1,7 @@
-#ifndef PT_CLUSTER_H
-#define PT_CLUSTER_H
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
+#pragma once
 
 #include <functional>
 #include <iosfwd>
@@ -9,13 +11,13 @@
 #include "utils/definitions.h"
 #include "utils/interval.h"
 
-namespace Storage {
+namespace proteus {
 
 class Hit;
 
 class Cluster {
 public:
-  using Area = Utils::Box<2, int>;
+  using Area = Box<2, int>;
   using Hits = std::vector<std::reference_wrapper<Hit>>;
 
   /** Construct a cluster using pixel coordinates. */
@@ -115,6 +117,4 @@ public:
 
 std::ostream& operator<<(std::ostream& os, const Cluster& cluster);
 
-} // namespace Storage
-
-#endif // PT_CLUSTER_H
+} // namespace proteus

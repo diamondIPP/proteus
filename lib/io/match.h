@@ -1,11 +1,12 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \file
  * \author Moritz Kiehn <msmk@cern.ch>
  * \date 2016-11-09
  */
 
-#ifndef PT_MATCHEXPORTER_H
-#define PT_MATCHEXPORTER_H
+#pragma once
 
 #include <cstdint>
 #include <string>
@@ -16,26 +17,22 @@
 class TDirectory;
 class TTree;
 
-namespace Mechanics {
-class Sensor;
-} // namespace Mechanics
-namespace Storage {
+namespace proteus {
+
 class Cluster;
 class Event;
 class Track;
 class TrackState;
+class Sensor;
 class SensorEvent;
-} // namespace Storage
-
-namespace Io {
 
 /** Export matched (and unmatched) tracks and clusters to a TTree. */
-class MatchWriter : public Loop::Writer {
+class MatchWriter : public Writer {
 public:
-  MatchWriter(TDirectory* dir, const Mechanics::Sensor& sensor);
+  MatchWriter(TDirectory* dir, const Sensor& sensor);
 
   std::string name() const override final;
-  void append(const Storage::Event& event) override final;
+  void append(const Event& event) override final;
 
 private:
   static constexpr size_t kMaxClusterSize = 1024;
@@ -47,7 +44,7 @@ private:
     int16_t nTracks;
 
     void addToTree(TTree* tree);
-    void set(const Storage::SensorEvent& e);
+    void set(const SensorEvent& e);
   };
   struct TrackData {
     float u, v, time, du, dv, dtime;
@@ -60,9 +57,8 @@ private:
     int16_t size;
 
     void addToTree(TTree* tree);
-    void set(const Storage::Track& track,
-             const Storage::TrackState& state,
-             const Vector4& posPixel);
+    void
+    set(const Track& track, const TrackState& state, const Vector4& posPixel);
   };
   struct ClusterData {
     float u, v, time;
@@ -77,7 +73,7 @@ private:
     int16_t hitValue[kMaxClusterSize];
 
     void addToTree(TTree* tree);
-    void set(const Storage::Cluster& cluster);
+    void set(const Cluster& cluster);
     void invalidate();
   };
   struct DistData {
@@ -92,7 +88,7 @@ private:
     void addToTree(TTree* tree);
   };
 
-  const Mechanics::Sensor& m_sensor;
+  const Sensor& m_sensor;
   Index m_sensorId;
   EventData m_event;
   TrackData m_track;
@@ -104,6 +100,4 @@ private:
   std::string m_name;
 };
 
-} // namespace Io
-
-#endif // PT_NOISESCAN_H
+} // namespace proteus

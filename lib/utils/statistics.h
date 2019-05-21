@@ -1,17 +1,18 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \file
  * \author Moritz Kiehn <msmk@cern.ch>
  * \date 2016-09
  */
 
-#ifndef PT_STATISTICS_H
-#define PT_STATISTICS_H
+#pragma once
 
 #include <cmath>
 #include <limits>
 #include <ostream>
 
-namespace Utils {
+namespace proteus {
 
 /** Accumulate summary statistics for a single variable. */
 template <typename T>
@@ -53,6 +54,8 @@ private:
   T m_min, m_max;
 };
 
+// inline implementations
+
 template <typename T>
 inline std::ostream& operator<<(std::ostream& os, const StatAccumulator<T>& acc)
 {
@@ -61,6 +64,4 @@ inline std::ostream& operator<<(std::ostream& os, const StatAccumulator<T>& acc)
   return os;
 }
 
-} // namespace Utils
-
-#endif // PT_STATISTICS_H
+} // namespace proteus

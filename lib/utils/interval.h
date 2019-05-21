@@ -1,10 +1,11 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \author Moritz Kiehn <msmk@cern.ch>
  * \date 2016-08
  */
 
-#ifndef PT_INTERVAL_H
-#define PT_INTERVAL_H
+#pragma once
 
 #include <algorithm>
 #include <array>
@@ -12,7 +13,7 @@
 #include <ostream>
 #include <type_traits>
 
-namespace Utils {
+namespace proteus {
 
 /** Interval on a single ordered axes.
  *
@@ -229,6 +230,4 @@ inline std::ostream& operator<<(std::ostream& os, const Interval<T>& interval)
   return os;
 }
 
-} // namespace Utils
-
-#endif // PT_INTERVAL_H
+} // namespace proteus

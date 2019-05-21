@@ -1,3 +1,5 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \author Morit Kiehn <msmk@cern.ch>
  * \date 2016-08
@@ -16,20 +18,20 @@
 
 PT_SETUP_LOCAL_LOGGER(NoiseScan)
 
-Analyzers::NoiseScan::NoiseScan(TDirectory* dir,
-                                const Mechanics::Sensor& sensor,
-                                const double bandwidth,
-                                const double sigmaMax,
-                                const double rateMax,
-                                const Area& regionOfInterest,
-                                const int binsOccupancy)
+namespace proteus {
+
+NoiseScan::NoiseScan(TDirectory* dir,
+                     const Sensor& sensor,
+                     const double bandwidth,
+                     const double sigmaMax,
+                     const double rateMax,
+                     const Area& regionOfInterest,
+                     const int binsOccupancy)
     : m_sensorId(sensor.id())
     , m_sigmaMax(sigmaMax)
     , m_rateMax(rateMax)
     , m_numEvents(0)
 {
-  using namespace Utils;
-
   // adjust per-axis bandwith for pixel pitch along each axis such that the
   // covered area is approximately circular in metric coordinates.
   double scale = std::hypot(sensor.pitchCol(), sensor.pitchRow()) / M_SQRT2;
@@ -57,8 +59,7 @@ Analyzers::NoiseScan::NoiseScan(TDirectory* dir,
   HistAxis axSig(-2 * sigmaMax, 2 * sigmaMax, binsOccupancy,
                  "Local significance");
 
-  TDirectory* sub =
-      Utils::makeDir(dir, "sensors/" + sensor.name() + "/noisescan");
+  TDirectory* sub = makeDir(dir, "sensors/" + sensor.name() + "/noisescan");
   m_occupancy = makeH2(sub, "occupancy", axCol, axRow);
   m_occupancyDist = makeH1(sub, "occupancy_dist", axOcc);
   m_density = makeH2(sub, "density", axCol, axRow);
@@ -69,17 +70,17 @@ Analyzers::NoiseScan::NoiseScan(TDirectory* dir,
   m_mask = makeH2(sub, "mask", axCol, axRow);
 }
 
-std::string Analyzers::NoiseScan::name() const
+std::string NoiseScan::name() const
 {
   return "NoiseScan(sensorId=" + std::to_string(m_sensorId) + ')';
 }
 
-void Analyzers::NoiseScan::execute(const Storage::Event& event)
+void NoiseScan::execute(const Event& event)
 {
-  const Storage::SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
+  const SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
 
   for (Index i = 0; i < sensorEvent.numHits(); ++i) {
-    const Storage::Hit& hit = sensorEvent.getHit(i);
+    const Hit& hit = sensorEvent.getHit(i);
     m_occupancy->Fill(hit.col(), hit.row());
   }
   m_numEvents += 1;
@@ -189,7 +190,7 @@ static void computeSignificance(const TH2D* observed,
   significance->SetEntries(observed->GetEntries());
 }
 
-void Analyzers::NoiseScan::finalize()
+void NoiseScan::finalize()
 {
   // mask pixels above the absolute rate cut
   auto entriesMax = m_numEvents * m_rateMax;
@@ -227,8 +228,8 @@ void Analyzers::NoiseScan::finalize()
   m_density->Scale(1.0 / m_numEvents);
 
   // fill per-pixel distributions
-  Utils::fillDist(m_occupancy, m_occupancyDist);
-  Utils::fillDist(m_significance, m_significanceDist);
+  fillDist(m_occupancy, m_occupancyDist);
+  fillDist(m_significance, m_significanceDist);
 
   INFO("noise scan sensor ", m_sensorId, ":");
   INFO("  max occupancy: ", m_occupancy->GetMaximum(), " hits/pixel/event");
@@ -239,9 +240,9 @@ void Analyzers::NoiseScan::finalize()
   INFO("  pixels masked: ", m_mask->GetEntries());
 }
 
-Mechanics::PixelMasks Analyzers::NoiseScan::constructMasks() const
+PixelMasks NoiseScan::constructMasks() const
 {
-  Mechanics::PixelMasks pixelMask;
+  PixelMasks pixelMask;
 
   auto extractMaskedPixels = [&](const TH2D* mask) {
     for (int i = 1; i <= mask->GetNbinsX(); ++i) {
@@ -259,3 +260,5 @@ Mechanics::PixelMasks Analyzers::NoiseScan::constructMasks() const
   extractMaskedPixels(m_maskRelative);
   return pixelMask;
 }
+
+} // namespace proteus

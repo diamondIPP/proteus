@@ -1,5 +1,7 @@
-#ifndef PT_GLOBALOCCUPANCY_H
-#define PT_GLOBALOCCUPANCY_H
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
+#pragma once
 
 #include <vector>
 
@@ -11,18 +13,17 @@ class TDirectory;
 class TH1D;
 class TH2D;
 
-namespace Mechanics {
+namespace proteus {
+
 class Device;
-}
-namespace Analyzers {
 
 /** Global occupancy histograms for all sensors in the device. */
-class GlobalOccupancy : public Loop::Analyzer {
+class GlobalOccupancy : public Analyzer {
 public:
-  GlobalOccupancy(TDirectory* dir, const Mechanics::Device& device);
+  GlobalOccupancy(TDirectory* dir, const Device& device);
 
   std::string name() const;
-  void execute(const Storage::Event& event);
+  void execute(const Event& event);
 
 private:
   struct SensorHists {
@@ -31,10 +32,8 @@ private:
     TH1D* clustersT = nullptr;
   };
 
-  const Mechanics::Geometry& m_geo;
+  const Geometry& m_geo;
   std::vector<SensorHists> m_sensorHists;
 };
 
-} // namespace Analyzers
-
-#endif // PT_GLOBALOCCUPANCY_H
+} // namespace proteus

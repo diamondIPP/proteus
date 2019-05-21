@@ -1,30 +1,28 @@
-#ifndef PT_APPLYGEOMETRY_H
-#define PT_APPLYGEOMETRY_H
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
+#pragma once
 
 #include "loop/processor.h"
 
-namespace Mechanics {
-class Device;
-}
+namespace proteus {
 
-namespace Processors {
+class Device;
 
 /** Use device geometry to set global positions for clusters.
  *
  * \warning This does **not** update existing track parameters. This must be
  *          updated by refitting the track.
  */
-class ApplyGeometry : public Loop::Processor {
+class ApplyGeometry : public Processor {
 public:
-  ApplyGeometry(const Mechanics::Device& device);
+  ApplyGeometry(const Device& device);
 
   std::string name() const;
-  void execute(Storage::Event& event) const;
+  void execute(Event& event) const;
 
 private:
-  const Mechanics::Device& m_device;
+  const Device& m_device;
 };
 
-} // namespace Processors
-
-#endif // PT_APPLYGEOMETRY_H
+} // namespace proteus

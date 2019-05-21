@@ -1,10 +1,11 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \author  Moritz Kiehn <msmk@cern.ch>
  * \date    2018-07
  */
 
-#ifndef PT_OPEN_H
-#define PT_OPEN_H
+#pragma once
 
 #include <memory>
 #include <string>
@@ -14,17 +15,14 @@
 namespace toml {
 class Value;
 }
-
-namespace Io {
+namespace proteus {
 
 /** Open an event file with automatic determination of the file type.
  *
  * \param path  Path to the file to be opened
  * \param cfg   Configuration that will be passed to the reader
  */
-std::shared_ptr<Loop::Reader> openRead(const std::string& path,
-                                       const toml::Value& cfg);
+std::shared_ptr<Reader> openRead(const std::string& path,
+                                 const toml::Value& cfg);
 
-} // namespace Io
-
-#endif // PT_OPEN_H
+} // namespace proteus

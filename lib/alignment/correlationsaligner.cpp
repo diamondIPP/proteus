@@ -1,3 +1,6 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
 #include "correlationsaligner.h"
 
 #include <algorithm>
@@ -9,11 +12,12 @@
 
 PT_SETUP_LOCAL_LOGGER(CorrelationsAligner)
 
-Alignment::CorrelationsAligner::CorrelationsAligner(
-    TDirectory* dir,
-    const Mechanics::Device& device,
-    const Index fixedId,
-    const std::vector<Index>& alignIds)
+namespace proteus {
+
+CorrelationsAligner::CorrelationsAligner(TDirectory* dir,
+                                         const Device& device,
+                                         const Index fixedId,
+                                         const std::vector<Index>& alignIds)
     : m_device(device), m_fixedId(fixedId)
 {
   // All sensors sorted along beam
@@ -22,7 +26,7 @@ Alignment::CorrelationsAligner::CorrelationsAligner(
   sortedIds = sortedAlongBeam(device.geometry(), sortedIds);
 
   // we only need correlations between direct neighbors
-  m_corr.reset(new Analyzers::Correlations(dir, device, sortedIds, 1));
+  m_corr.reset(new Correlations(dir, device, sortedIds, 1));
 
   // split sensors into two groups: before and after the fixed sensor
   auto itFixed = std::find(sortedIds.begin(), sortedIds.end(), fixedId);
@@ -33,26 +37,23 @@ Alignment::CorrelationsAligner::CorrelationsAligner(
 }
 
 // required to make correlations unique_ptr work
-Alignment::CorrelationsAligner::~CorrelationsAligner() {}
+CorrelationsAligner::~CorrelationsAligner() {}
 
-std::string Alignment::CorrelationsAligner::name() const
-{
-  return "CorrelationsAligner";
-}
+std::string CorrelationsAligner::name() const { return "CorrelationsAligner"; }
 
-void Alignment::CorrelationsAligner::execute(const Storage::Event& event)
+void CorrelationsAligner::execute(const Event& event)
 {
   m_corr->execute(event);
 }
 
-void Alignment::CorrelationsAligner::finalize() { m_corr->finalize(); }
+void CorrelationsAligner::finalize() { m_corr->finalize(); }
 
-Mechanics::Geometry Alignment::CorrelationsAligner::updatedGeometry() const
+Geometry CorrelationsAligner::updatedGeometry() const
 {
   // how many bins are used to calculated the means
   static constexpr int kBinsRestricted = 3;
 
-  Mechanics::Geometry geo = m_device.geometry();
+  Geometry geo = m_device.geometry();
 
   // align sensors that are located before the fixed sensor
   Index nextId = m_fixedId;
@@ -67,10 +68,10 @@ Mechanics::Geometry Alignment::CorrelationsAligner::updatedGeometry() const
 
     // correlation was calculated in reverse order and we get an
     // additional sign for the correction
-    auto resultX = Utils::getRestrictedMean(hX, kBinsRestricted);
+    auto resultX = getRestrictedMean(hX, kBinsRestricted);
     deltaX += resultX.first;
     deltaXVar += resultX.second;
-    auto resultY = Utils::getRestrictedMean(hY, kBinsRestricted);
+    auto resultY = getRestrictedMean(hY, kBinsRestricted);
     deltaY += resultY.first;
     deltaYVar += resultY.second;
 
@@ -94,11 +95,11 @@ Mechanics::Geometry Alignment::CorrelationsAligner::updatedGeometry() const
     const TH1D* hX = m_corr->getHistDiffX(prevId, currId);
     const TH1D* hY = m_corr->getHistDiffY(prevId, currId);
 
-    auto resultX = Utils::getRestrictedMean(hX, kBinsRestricted);
+    auto resultX = getRestrictedMean(hX, kBinsRestricted);
     deltaX -= resultX.first;
     deltaXVar += resultX.second;
 
-    auto resultY = Utils::getRestrictedMean(hY, kBinsRestricted);
+    auto resultY = getRestrictedMean(hY, kBinsRestricted);
     deltaY -= resultY.first;
     deltaYVar += resultY.second;
 
@@ -112,3 +113,5 @@ Mechanics::Geometry Alignment::CorrelationsAligner::updatedGeometry() const
   }
   return geo;
 }
+
+} // namespace proteus

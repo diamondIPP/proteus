@@ -1,3 +1,6 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
 #include "localchi2aligner.h"
 
 #include <algorithm>
@@ -7,12 +10,15 @@
 
 #include <Eigen/SVD>
 
+#include "mechanics/device.h"
 #include "mechanics/sensor.h"
 #include "storage/event.h"
 #include "utils/logger.h"
 #include "utils/root.h"
 
 PT_SETUP_LOCAL_LOGGER(LocalChi2Aligner)
+
+namespace proteus {
 
 // local helper functions
 
@@ -24,8 +30,7 @@ PT_SETUP_LOCAL_LOGGER(LocalChi2Aligner)
 // This Jacobian is equivalent to eq. 17 from V. Karimaeki et al., 2003,
 // arXiv:physics/0306034 w/ some sign modifications to adjust for
 // a different alignment parameter convention (see Geometry::Plane).
-static Matrix<Scalar, 2, 6>
-jacobianOffsetAlignment(const Storage::TrackState& state)
+static Matrix<Scalar, 2, 6> jacobianOffsetAlignment(const TrackState& state)
 {
   auto u = state.loc0();
   auto v = state.loc1();
@@ -53,7 +58,7 @@ jacobianOffsetAlignment(const Storage::TrackState& state)
 // distances (using the sensor dimensions). It must be applied to the jacobian
 // and later to the covariance matrix and to the offset vector.
 
-static DiagMatrix6 jacobianScaling(const Mechanics::Sensor& sensor)
+static DiagMatrix6 jacobianScaling(const Sensor& sensor)
 {
   auto box = sensor.sensitiveVolume();
   auto l_alpha = box.length(kU);
@@ -110,8 +115,7 @@ static DiagMatrix6 jacobianScaling(const Mechanics::Sensor& sensor)
 // robust singular value decomposition, ignore vanishing singular values,
 // and do not have to bother with the whole regularization scheme at all.
 
-Alignment::LocalChi2PlaneFitter::LocalChi2PlaneFitter(
-    const DiagMatrix6& scaling)
+LocalChi2PlaneFitter::LocalChi2PlaneFitter(const DiagMatrix6& scaling)
     : m_scaling(scaling)
     , m_fr(SymMatrix6::Zero())
     , m_y(Vector6::Zero())
@@ -119,10 +123,9 @@ Alignment::LocalChi2PlaneFitter::LocalChi2PlaneFitter(
 {
 }
 
-bool Alignment::LocalChi2PlaneFitter::addTrack(
-    const Storage::TrackState& track,
-    const Storage::Cluster& measurement,
-    const SymMatrix2& weight)
+bool LocalChi2PlaneFitter::addTrack(const TrackState& track,
+                                    const Cluster& measurement,
+                                    const SymMatrix2& weight)
 {
   // the track fitter sometimes yields NaN as fit values; unclear why, but
   // these values must be ignored otherwise the normal equations become invalid.
@@ -191,8 +194,7 @@ printEffectiveParameter(const Eigen::MatrixBase<Unit>& unit)
   return out;
 }
 
-bool Alignment::LocalChi2PlaneFitter::minimize(Vector6& a,
-                                               SymMatrix6& cov) const
+bool LocalChi2PlaneFitter::minimize(Vector6& a, SymMatrix6& cov) const
 {
   DEBUG("num tracks: ", m_numTracks);
   DEBUG("normal vector:\n", m_y);
@@ -223,10 +225,9 @@ bool Alignment::LocalChi2PlaneFitter::minimize(Vector6& a,
   return (2 <= svd.rank());
 }
 
-Alignment::LocalChi2Aligner::LocalChi2Aligner(
-    const Mechanics::Device& device,
-    const std::vector<Index>& alignIds,
-    const double damping)
+LocalChi2Aligner::LocalChi2Aligner(const Device& device,
+                                   const std::vector<Index>& alignIds,
+                                   const double damping)
     : m_device(device), m_damping(damping)
 {
   for (auto isensor : alignIds) {
@@ -235,24 +236,20 @@ Alignment::LocalChi2Aligner::LocalChi2Aligner(
   }
 }
 
-std::string Alignment::LocalChi2Aligner::name() const
-{
-  return "LocalChi2Aligner";
-}
+std::string LocalChi2Aligner::name() const { return "LocalChi2Aligner"; }
 
-void Alignment::LocalChi2Aligner::execute(const Storage::Event& event)
+void LocalChi2Aligner::execute(const Event& event)
 {
   for (auto& f : m_fitters) {
     auto sensorId = f.first;
-    const Storage::SensorEvent& sensorEvent = event.getSensorEvent(sensorId);
+    const SensorEvent& sensorEvent = event.getSensorEvent(sensorId);
     LocalChi2PlaneFitter& fitter = f.second;
 
     for (Index iclu = 0; iclu < sensorEvent.numClusters(); ++iclu) {
-      const Storage::Cluster& cluster = sensorEvent.getCluster(iclu);
+      const Cluster& cluster = sensorEvent.getCluster(iclu);
       if (!cluster.isInTrack())
         continue;
-      const Storage::TrackState& state =
-          sensorEvent.getLocalState(cluster.track());
+      const TrackState& state = sensorEvent.getLocalState(cluster.track());
 
       // unbiased residuals have a contribution from
       // the cluster uncertainty and the tracking uncertainty
@@ -265,14 +262,14 @@ void Alignment::LocalChi2Aligner::execute(const Storage::Event& event)
   }
 }
 
-Mechanics::Geometry Alignment::LocalChi2Aligner::updatedGeometry() const
+Geometry LocalChi2Aligner::updatedGeometry() const
 {
-  Mechanics::Geometry geo = m_device.geometry();
+  Geometry geo = m_device.geometry();
 
   for (const auto& f : m_fitters) {
     Index isensor = f.first;
     const LocalChi2PlaneFitter& fitter = f.second;
-    const Mechanics::Sensor& sensor = m_device.getSensor(isensor);
+    const Sensor& sensor = m_device.getSensor(isensor);
 
     // solve the chi2 minimization for optimal parameters
     Vector6 delta;
@@ -297,3 +294,5 @@ Mechanics::Geometry Alignment::LocalChi2Aligner::updatedGeometry() const
   }
   return geo;
 }
+
+} // namespace proteus

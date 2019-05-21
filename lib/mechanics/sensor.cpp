@@ -1,3 +1,6 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
 #include "sensor.h"
 
 #include <algorithm>
@@ -15,18 +18,23 @@
 
 PT_SETUP_LOCAL_LOGGER(Sensor)
 
+namespace proteus {
+
 // mapping between measurement enum and names
+namespace {
 struct MeasurementName {
-  Mechanics::Sensor::Measurement measurement;
+  Sensor::Measurement measurement;
   const char* name;
 };
-static const MeasurementName MEAS_NAMES[] = {
-    {Mechanics::Sensor::Measurement::PixelBinary, "pixel_binary"},
-    {Mechanics::Sensor::Measurement::PixelTot, "pixel_tot"},
-    {Mechanics::Sensor::Measurement::Ccpdv4Binary, "ccpdv4_binary"}};
+} // namespace
 
-Mechanics::Sensor::Measurement
-Mechanics::Sensor::measurementFromName(const std::string& name)
+static const MeasurementName MEAS_NAMES[] = {
+    {Sensor::Measurement::PixelBinary, "pixel_binary"},
+    {Sensor::Measurement::PixelTot, "pixel_tot"},
+    {Sensor::Measurement::Ccpdv4Binary, "ccpdv4_binary"},
+};
+
+Sensor::Measurement Sensor::measurementFromName(const std::string& name)
 {
   for (auto mn = std::begin(MEAS_NAMES); mn != std::end(MEAS_NAMES); ++mn) {
     if (name.compare(mn->name) == 0) {
@@ -36,7 +44,7 @@ Mechanics::Sensor::measurementFromName(const std::string& name)
   throw std::invalid_argument("invalid sensor measurement name '" + name + "'");
 }
 
-std::string Mechanics::Sensor::measurementName(Measurement measurement)
+std::string Sensor::measurementName(Measurement measurement)
 {
   for (auto mn = std::begin(MEAS_NAMES); mn != std::end(MEAS_NAMES); ++mn) {
     if (mn->measurement == measurement) {
@@ -48,18 +56,18 @@ std::string Mechanics::Sensor::measurementName(Measurement measurement)
   return "invalid_measurement";
 }
 
-Mechanics::Sensor::Sensor(Index id,
-                          const std::string& name,
-                          Measurement measurement,
-                          Index numCols,
-                          Index numRows,
-                          int timestampMin,
-                          int timestampMax,
-                          int valueMax,
-                          Scalar pitchCol,
-                          Scalar pitchRow,
-                          Scalar pitchTimestamp,
-                          Scalar xX0)
+Sensor::Sensor(Index id,
+               const std::string& name,
+               Measurement measurement,
+               Index numCols,
+               Index numRows,
+               int timestampMin,
+               int timestampMax,
+               int valueMax,
+               Scalar pitchCol,
+               Scalar pitchRow,
+               Scalar pitchTimestamp,
+               Scalar xX0)
     : m_id(id)
     , m_name(name)
     , m_numCols(numCols)
@@ -81,7 +89,7 @@ Mechanics::Sensor::Sensor(Index id,
 {
 }
 
-void Mechanics::Sensor::addRegion(
+void Sensor::addRegion(
     const std::string& name, int col_min, int col_max, int row_min, int row_max)
 {
   Region region;
@@ -106,7 +114,7 @@ void Mechanics::Sensor::addRegion(
 }
 
 // position of the sensor center in pixel coordinates
-Vector4 Mechanics::Sensor::pixelCenter() const
+Vector4 Sensor::pixelCenter() const
 {
   Vector4 c;
   c[kU] = std::round(m_numCols / Scalar(2)) - Scalar(0.5);
@@ -116,7 +124,7 @@ Vector4 Mechanics::Sensor::pixelCenter() const
   return c;
 }
 
-Vector4 Mechanics::Sensor::pitch() const
+Vector4 Sensor::pitch() const
 {
   Vector4 p;
   p[kU] = m_pitchCol;
@@ -126,9 +134,8 @@ Vector4 Mechanics::Sensor::pitch() const
   return p;
 }
 
-Vector4 Mechanics::Sensor::transformPixelToLocal(Scalar col,
-                                                 Scalar row,
-                                                 Scalar timestamp) const
+Vector4
+Sensor::transformPixelToLocal(Scalar col, Scalar row, Scalar timestamp) const
 {
   Vector4 q;
   q[kU] = col;
@@ -138,12 +145,12 @@ Vector4 Mechanics::Sensor::transformPixelToLocal(Scalar col,
   return pitch().cwiseProduct(q - pixelCenter());
 }
 
-Vector4 Mechanics::Sensor::transformLocalToPixel(const Vector4& local) const
+Vector4 Sensor::transformLocalToPixel(const Vector4& local) const
 {
   return pixelCenter() + local.cwiseQuotient(pitch());
 }
 
-Mechanics::Sensor::Volume Mechanics::Sensor::sensitiveVolume() const
+Sensor::Volume Sensor::sensitiveVolume() const
 {
   // this code assumes local/global coordinates have the same ordering. this is
   // a canary to alert you that somebody is bold/stupid enough to change it.
@@ -192,7 +199,7 @@ static Scalar scatteringStdev(Scalar t, Scalar momentum, Scalar mass)
 }
 
 // update projections of local properties into the global system and vice versa
-void Mechanics::Sensor::updateGeometry(const Geometry& geometry)
+void Sensor::updateGeometry(const Geometry& geometry)
 {
   // this code assumes local/global coordinates have the same ordering. this is
   // a canary to alert you that somebody is bold/stupid enough to change it.
@@ -252,7 +259,7 @@ void Mechanics::Sensor::updateGeometry(const Geometry& geometry)
   m_projPitch = (plane.linearToGlobal() * pitch()).cwiseAbs();
 }
 
-SymMatrix2 Mechanics::Sensor::scatteringSlopeCovariance() const
+SymMatrix2 Sensor::scatteringSlopeCovariance() const
 {
   SymMatrix2 cov;
   // projection from comoving frame to local frame
@@ -264,7 +271,7 @@ SymMatrix2 Mechanics::Sensor::scatteringSlopeCovariance() const
   return cov;
 }
 
-SymMatrix2 Mechanics::Sensor::scatteringSlopePrecision() const
+SymMatrix2 Sensor::scatteringSlopePrecision() const
 {
   SymMatrix2 prec;
   // projection from comoving frame to local frame
@@ -277,7 +284,7 @@ SymMatrix2 Mechanics::Sensor::scatteringSlopePrecision() const
   return prec;
 }
 
-void Mechanics::Sensor::print(std::ostream& os, const std::string& prefix) const
+void Sensor::print(std::ostream& os, const std::string& prefix) const
 {
   os << prefix << "name: " << m_name << '\n';
   os << prefix << "measurement: " << measurementName(m_measurement) << '\n';
@@ -302,3 +309,5 @@ void Mechanics::Sensor::print(std::ostream& os, const std::string& prefix) const
   os << prefix << "theta0: " << m_theta0 * 1000 << " mrad\n";
   os.flush();
 }
+
+} // namespace proteus

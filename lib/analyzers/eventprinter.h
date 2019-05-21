@@ -1,23 +1,23 @@
-#ifndef PT_EVENTPRINTER_H
-#define PT_EVENTPRINTER_H
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
+#pragma once
 
 #include "loop/analyzer.h"
 #include "utils/logger.h"
 
-namespace Analyzers {
+namespace proteus {
 
 /** Print detailed information for each event. */
-class EventPrinter : public Loop::Analyzer {
+class EventPrinter : public Analyzer {
 public:
   EventPrinter();
 
   std::string name() const;
-  void execute(const Storage::Event& event);
+  void execute(const Event& event);
 
 private:
-  Utils::Logger m_logger;
+  Logger m_logger;
 };
 
-} // namespace Analyzers
-
-#endif // PT_EVENTPRINTER_H
+} // namespace proteus

@@ -1,18 +1,19 @@
-﻿/**
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+/**
  * \file
  * \author Moritz Kiehn (msmk@cern.ch)
  * \date 2016-12
  */
 
-#ifndef PT_TRACKSTATE_H
-#define PT_TRACKSTATE_H
+#pragma once
 
 #include <iosfwd>
 #include <limits>
 
 #include "utils/definitions.h"
 
-namespace Storage {
+namespace proteus {
 
 /** Track state on a plane.
  *
@@ -124,7 +125,7 @@ public:
 
 std::ostream& operator<<(std::ostream& os, const TrackState& state);
 
-// implementations
+// inline implementations
 
 inline TrackState::TrackState()
     : m_params(Vector6::Constant(std::numeric_limits<Scalar>::quiet_NaN()))
@@ -222,6 +223,4 @@ inline Vector4 TrackState::tangent() const
   return tgt;
 }
 
-} // namespace Storage
-
-#endif // PT_TRACKSTATE_H
+} // namespace proteus

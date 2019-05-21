@@ -1,3 +1,6 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
 #include "globaloccupancy.h"
 
 #include <cassert>
@@ -9,12 +12,11 @@
 #include "storage/event.h"
 #include "utils/root.h"
 
-Analyzers::GlobalOccupancy::GlobalOccupancy(TDirectory* dir,
-                                            const Mechanics::Device& device)
+namespace proteus {
+
+GlobalOccupancy::GlobalOccupancy(TDirectory* dir, const Device& device)
     : m_geo(device.geometry())
 {
-  using namespace Utils;
-
   auto box = device.boundingBox();
   // create per-sensor histograms
   for (auto isensor : device.sensorIds()) {
@@ -37,16 +39,13 @@ Analyzers::GlobalOccupancy::GlobalOccupancy(TDirectory* dir,
   }
 }
 
-std::string Analyzers::GlobalOccupancy::name() const
-{
-  return "GlobalOccupancy";
-}
+std::string GlobalOccupancy::name() const { return "GlobalOccupancy"; }
 
-void Analyzers::GlobalOccupancy::execute(const Storage::Event& event)
+void GlobalOccupancy::execute(const Event& event)
 {
   for (auto& hists : m_sensorHists) {
-    const Storage::SensorEvent& se = event.getSensorEvent(hists.id);
-    const Mechanics::Plane& plane = m_geo.getPlane(hists.id);
+    const SensorEvent& se = event.getSensorEvent(hists.id);
+    const Plane& plane = m_geo.getPlane(hists.id);
 
     for (Index ic = 0; ic < se.numClusters(); ++ic) {
       Vector4 global = plane.toGlobal(se.getCluster(ic).position());
@@ -55,3 +54,5 @@ void Analyzers::GlobalOccupancy::execute(const Storage::Event& event)
     }
   }
 }
+
+} // namespace proteus

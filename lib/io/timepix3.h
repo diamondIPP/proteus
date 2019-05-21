@@ -1,5 +1,7 @@
-#ifndef PT_TIMEPIX3_H
-#define PT_TIMEPIX3_H
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
+#pragma once
 
 #include <cstdint>
 #include <fstream>
@@ -13,11 +15,10 @@
 namespace toml {
 class Value;
 }
-
-namespace Io {
+namespace proteus {
 
 /** Read events from a Timepix3 raw data file. */
-class Timepix3Reader : public Loop::Reader {
+class Timepix3Reader : public Reader {
 public:
   /** Return a score of how likely the given path is an Timepix3 SPDR data file.
    */
@@ -34,14 +35,14 @@ public:
   size_t numSensors() const { return 1; };
 
   void skip(uint64_t n);
-  bool read(Storage::Event& event);
+  bool read(Event& event);
 
 private:
   /** Returns one decoded sensorEvent for the current detector
    *
    * \returns SensorEvent for the current detector
    */
-  bool getSensorEvent(Storage::SensorEvent& sensorEvent);
+  bool getSensorEvent(SensorEvent& sensorEvent);
 
   /** File stream for the binary data file */
   std::ifstream m_file;
@@ -54,6 +55,4 @@ private:
   double m_nextEventTimestamp;
 };
 
-} // namespace Io
-
-#endif // PT_TIMEPIX3_H
+} // namespace proteus

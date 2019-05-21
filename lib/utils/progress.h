@@ -1,11 +1,12 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \file
  * \author Moritz Kiehn (msmk@cern.ch)
  * \date 2016-08
  */
 
-#ifndef PT_PROGRESS_H
-#define PT_PROGRESS_H
+#pragma once
 
 #include <chrono>
 #include <cstdlib>
@@ -15,7 +16,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-namespace Utils {
+namespace proteus {
 
 /** Display a progress indicator on a single output line */
 class Progress {
@@ -109,7 +110,7 @@ private:
     return ts.ws_col;
 #else
     return 50; // fallback
-#endif /* TIOCGSIZE */
+#endif
   }
 
   void drawBar(Size current)
@@ -138,6 +139,4 @@ private:
   int m_length;
 };
 
-} // namespace Utils
-
-#endif // PT_PROGRESS_H
+} // namespace proteus

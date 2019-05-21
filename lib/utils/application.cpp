@@ -1,3 +1,5 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \file
  * \author Moritz Kiehn (msmk@cern.ch)
@@ -16,9 +18,11 @@
 
 PT_SETUP_LOCAL_LOGGER(Application)
 
-Utils::Application::Application(const std::string& name,
-                                const std::string& description,
-                                const toml::Table& defaults)
+namespace proteus {
+
+Application::Application(const std::string& name,
+                         const std::string& description,
+                         const toml::Table& defaults)
     : m_name(name)
     , m_desc(description)
     , m_cfg(defaults)
@@ -27,9 +31,9 @@ Utils::Application::Application(const std::string& name,
 {
 }
 
-void Utils::Application::initialize(int argc, char const* argv[])
+void Application::initialize(int argc, char const* argv[])
 {
-  Utils::Arguments args(m_desc);
+  Arguments args(m_desc);
   args.addOption('d', "device", "device configuration file", "device.toml");
   args.addOption('g', "geometry", "use a different geometry file");
   args.addOptionMulti('m', "mask", "load additional pixel mask file");
@@ -50,11 +54,11 @@ void Utils::Application::initialize(int argc, char const* argv[])
 
   // logging level
   if (args.has("quiet")) {
-    Utils::Logger::setGlobalLevel(Utils::Logger::Level::Error);
+    Logger::setGlobalLevel(Logger::Level::Error);
   } else if (args.has("verbose")) {
-    Utils::Logger::setGlobalLevel(Utils::Logger::Level::Verbose);
+    Logger::setGlobalLevel(Logger::Level::Verbose);
   } else {
-    Utils::Logger::setGlobalLevel(Utils::Logger::Level::Info);
+    Logger::setGlobalLevel(Logger::Level::Info);
   }
   // event printing
   if (args.has("print-events")) {
@@ -75,22 +79,21 @@ void Utils::Application::initialize(int argc, char const* argv[])
   // load device w/ optional geometry override
   auto pathDev = args.get("device");
   auto pathGeo = (args.has("geometry") ? args.get("geometry") : std::string());
-  m_dev = std::make_unique<Mechanics::Device>(
-      Mechanics::Device::fromFile(pathDev, pathGeo));
+  m_dev = std::make_unique<Device>(Device::fromFile(pathDev, pathGeo));
 
   // load additional pixel masks
   if (args.has("mask")) {
     for (const auto& maskPath : args.get<std::vector<std::string>>("mask")) {
-      m_dev->applyPixelMasks(Mechanics::PixelMasks::fromFile(maskPath));
+      m_dev->applyPixelMasks(PixelMasks::fromFile(maskPath));
     }
   }
 
   // read analysis configuration w/ automatic handling of defaults
-  const toml::Value cfgAll = Utils::Config::readConfig(args.get("config"));
+  const toml::Value cfgAll = configRead(args.get("config"));
   const toml::Value* cfg = cfgAll.find(section);
   if (!cfg)
     FAIL("configuration section '", section, "' is missing");
-  m_cfg = Utils::Config::withDefaults(*cfg, m_cfg);
+  m_cfg = configWithDefaults(*cfg, m_cfg);
   INFO("read configuration '", section, "' from '", args.get("config"), "'");
 
   // setup paths and i/o settings
@@ -100,21 +103,22 @@ void Utils::Application::initialize(int argc, char const* argv[])
   m_numEvents = args.get<uint64_t>("num_events");
 }
 
-std::string Utils::Application::outputPath(const std::string& name) const
+std::string Application::outputPath(const std::string& name) const
 {
   return m_outputPrefix + '-' + name;
 }
 
-Loop::EventLoop Utils::Application::makeEventLoop() const
+EventLoop Application::makeEventLoop() const
 {
   // NOTE open the file just when the event loop is created to ensure that the
   //      input reader always starts at the beginning of the file.
-  Loop::EventLoop loop(Io::openRead(m_inputPath, toml::Value()),
-                       m_dev->numSensors(), m_skipEvents, m_numEvents,
-                       m_showProgress);
+  EventLoop loop(openRead(m_inputPath, toml::Value()), m_dev->numSensors(),
+                 m_skipEvents, m_numEvents, m_showProgress);
   // full-event output in debug mode
   if (m_printEvents) {
-    loop.addAnalyzer(std::make_shared<Analyzers::EventPrinter>());
+    loop.addAnalyzer(std::make_shared<EventPrinter>());
   }
   return loop;
 }
+
+} // namespace proteus

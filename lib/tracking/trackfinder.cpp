@@ -1,3 +1,6 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
 #include "trackfinder.h"
 
 #include <algorithm>
@@ -11,22 +14,16 @@
 #include "tracking/propagation.h"
 #include "utils/logger.h"
 
-using Mechanics::Plane;
-using Storage::Cluster;
-using Storage::Event;
-using Storage::SensorEvent;
-using Storage::Track;
-using Storage::TrackState;
-using Tracking::propagateTo;
-
 PT_SETUP_LOCAL_LOGGER(TrackFinder)
 
-Tracking::TrackFinder::TrackFinder(const Mechanics::Device& device,
-                                   std::vector<Index> trackingIds,
-                                   double searchSpatialSigmaMax,
-                                   double searchTemporalSigmaMax,
-                                   size_t sizeMin,
-                                   double redChi2Max)
+namespace proteus {
+
+TrackFinder::TrackFinder(const Device& device,
+                         std::vector<Index> trackingIds,
+                         double searchSpatialSigmaMax,
+                         double searchTemporalSigmaMax,
+                         size_t sizeMin,
+                         double redChi2Max)
     // 2-d Mahalanobis distance peaks at 2 and not at 1
     : m_d2LocMax((0 < searchSpatialSigmaMax)
                      ? (2 * searchSpatialSigmaMax * searchSpatialSigmaMax)
@@ -64,8 +61,8 @@ Tracking::TrackFinder::TrackFinder(const Mechanics::Device& device,
   // give rise to additional uncertainty from material interactions.
 
   // Determine the range of sensors to be searched/propagated to.
-  Mechanics::sortAlongBeam(device.geometry(), trackingIds);
-  Mechanics::sortAlongBeam(device.geometry(), allIds);
+  sortAlongBeam(device.geometry(), trackingIds);
+  sortAlongBeam(device.geometry(), allIds);
   auto first = std::find(allIds.begin(), allIds.end(), trackingIds.front());
   auto last = std::next(std::find(first, allIds.end(), trackingIds.back()));
 
@@ -125,7 +122,7 @@ Tracking::TrackFinder::TrackFinder(const Mechanics::Device& device,
   }
 }
 
-std::string Tracking::TrackFinder::name() const { return "TrackFinder"; }
+std::string TrackFinder::name() const { return "TrackFinder"; }
 
 // Propagate all states from the previous plane to the current plane.
 // This incorporates uncertainties from material interactions.
@@ -399,7 +396,7 @@ static void addTracksToEvent(const std::vector<Track>& candidates, Event& event)
   DEBUG(numAddedTracks, " tracks added to event");
 }
 
-void Tracking::TrackFinder::execute(Event& event) const
+void TrackFinder::execute(Event& event) const
 {
   std::vector<Track> candidates;
   std::vector<bool> usedClusters;
@@ -443,3 +440,5 @@ void Tracking::TrackFinder::execute(Event& event) const
   propagateToGlobal(m_steps.back().plane, candidates);
   addTracksToEvent(candidates, event);
 }
+
+} // namespace proteus

@@ -1,5 +1,7 @@
-#ifndef PT_DEVICE_H
-#define PT_DEVICE_H
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
+#pragma once
 
 #include <cmath>
 #include <cstdint>
@@ -10,10 +12,12 @@
 #include "mechanics/geometry.h"
 #include "mechanics/pixelmasks.h"
 #include "mechanics/sensor.h"
-#include "utils/config.h"
 #include "utils/definitions.h"
 
-namespace Mechanics {
+namespace toml {
+class Value;
+}
+namespace proteus {
 
 class Device {
 public:
@@ -60,6 +64,4 @@ private:
   PixelMasks m_pixelMasks;
 };
 
-} // namespace Mechanics
-
-#endif // PT_DEVICE_H
+} // namespace proteus

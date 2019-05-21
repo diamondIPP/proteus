@@ -1,3 +1,5 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \author Moritz Kiehn <msmk@cern.ch>
  * \date 2016-08
@@ -6,8 +8,7 @@
  * reusable analyzer.
  */
 
-#ifndef PT_NOISESCAN_H
-#define PT_NOISESCAN_H
+#pragma once
 
 #include <vector>
 
@@ -20,10 +21,8 @@ class TDirectory;
 class TH1D;
 class TH2D;
 
-namespace Mechanics {
+namespace proteus {
 class Sensor;
-}
-namespace Analyzers {
 
 /** Estimate noisy pixels from hit occupancies.
  *
@@ -31,12 +30,12 @@ namespace Analyzers {
  * find pixels that are a certain number of standard deviations away from
  * this estimate.
  */
-class NoiseScan : public Loop::Analyzer {
+class NoiseScan : public Analyzer {
 public:
-  typedef Utils::Box<2, int> Area;
+  typedef Box<2, int> Area;
 
   NoiseScan(TDirectory* dir,
-            const Mechanics::Sensor& sensor,
+            const Sensor& sensor,
             const double bandwidth,
             const double sigmaMax,
             const double rateMax,
@@ -44,10 +43,10 @@ public:
             const int binsOccupancy = 128);
 
   std::string name() const;
-  void execute(const Storage::Event& event);
+  void execute(const Event& event);
   void finalize();
 
-  Mechanics::PixelMasks constructMasks() const;
+  PixelMasks constructMasks() const;
 
 private:
   Index m_sensorId;
@@ -64,6 +63,4 @@ private:
   TH2D* m_mask;
 };
 
-} // namespace Analyzers
-
-#endif // PT_NOISESCAN_H
+} // namespace proteus

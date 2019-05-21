@@ -1,18 +1,19 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \file
  * \author Moritz Kiehn (msmk@cern.ch)
  * \date 2017-10
  */
 
-#ifndef PT_PROPAGATION_H
-#define PT_PROPAGATION_H
+#pragma once
 
-#include <utility>
-
-#include "mechanics/geometry.h"
 #include "storage/trackstate.h"
+#include "utils/definitions.h"
 
-namespace Tracking {
+namespace proteus {
+
+class Plane;
 
 /** Spatial slope [slope0,slope1] transport jacobian between two systems.
  *
@@ -36,10 +37,7 @@ jacobianState(const Vector4& tangent, const Matrix4& toTarget, Scalar w0);
  * \param source  Source plane
  * \param target  Target plane
  */
-Storage::TrackState propagateTo(const Storage::TrackState& state,
-                                const Mechanics::Plane& source,
-                                const Mechanics::Plane& target);
+TrackState
+propagateTo(const TrackState& state, const Plane& source, const Plane& target);
 
-} // namespace Tracking
-
-#endif // PT_PROPAGATION_H
+} // namespace proteus

@@ -1,3 +1,5 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \file
  * \author Moritz Kiehn <msmk@cern.ch>
@@ -26,7 +28,7 @@
 
 int main(int argc, char const* argv[])
 {
-  using Analyzers::NoiseScan;
+  using namespace proteus;
 
   // clang-format off
   toml::Table defaults = {
@@ -41,16 +43,15 @@ int main(int argc, char const* argv[])
     {"row_min", INT_MIN},
     {"row_max", INT_MAX - 1}};
   // clang-format on
-  Utils::Application app("noisescan", "run noise scan", defaults);
+  Application app("noisescan", "run noise scan", defaults);
   app.initialize(argc, argv);
 
   // output
-  auto hists = Utils::openRootWrite(app.outputPath("hists.root"));
+  auto hists = openRootWrite(app.outputPath("hists.root"));
 
   // construct per-sensor configuration
   // construct per-sensor noise analyzer
-  std::vector<toml::Value> cfg =
-      Utils::Config::perSensor(app.config(), toml::Table());
+  std::vector<toml::Value> cfg = configPerSensor(app.config(), toml::Table());
   std::vector<std::shared_ptr<NoiseScan>> noiseScans;
   for (auto c = cfg.begin(); c != cfg.end(); ++c) {
     using Area = NoiseScan::Area;
@@ -68,15 +69,14 @@ int main(int argc, char const* argv[])
                                     bandwidth, sigmaMax, rateMax, roi));
   }
 
-  Loop::EventLoop loop = app.makeEventLoop();
-  loop.addAnalyzer(
-      std::make_shared<Analyzers::Hits>(hists.get(), app.device()));
+  EventLoop loop = app.makeEventLoop();
+  loop.addAnalyzer(std::make_shared<Hits>(hists.get(), app.device()));
   for (auto noise = noiseScans.begin(); noise != noiseScans.end(); ++noise)
     loop.addAnalyzer(*noise);
   loop.run();
 
   // store combined noise mask
-  Mechanics::PixelMasks newMask;
+  PixelMasks newMask;
   for (auto noise = noiseScans.begin(); noise != noiseScans.end(); ++noise)
     newMask.merge((*noise)->constructMasks());
   newMask.writeFile(app.outputPath("mask.toml"));

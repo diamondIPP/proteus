@@ -1,3 +1,5 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \file
  * \author Moritz Kiehn (msmk@cern.ch)
@@ -6,13 +8,14 @@
 
 #include "propagation.h"
 
-#include "utils/definitions.h"
+#include "mechanics/geometry.h"
 #include "utils/logger.h"
 
 PT_SETUP_LOCAL_LOGGER(Propagation)
 
-Matrix2 Tracking::jacobianSlopeSlope(const Vector4& tangent,
-                                     const Matrix4& toTarget)
+namespace proteus {
+
+Matrix2 jacobianSlopeSlope(const Vector4& tangent, const Matrix4& toTarget)
 {
   // map source track parameters to unrestricted target tangent
   Matrix<Scalar, 4, 2> R;
@@ -29,9 +32,8 @@ Matrix2 Tracking::jacobianSlopeSlope(const Vector4& tangent,
   return F * R;
 }
 
-Matrix6 Tracking::jacobianState(const Vector4& tangent,
-                                const Matrix4& toTarget,
-                                Scalar w0)
+Matrix6
+jacobianState(const Vector4& tangent, const Matrix4& toTarget, Scalar w0)
 {
   // the code assumes that the parameter vector is split into three
   // position-like and three tangent-like parameters with the same relative
@@ -74,9 +76,8 @@ Matrix6 Tracking::jacobianState(const Vector4& tangent,
   return jac;
 }
 
-Storage::TrackState Tracking::propagateTo(const Storage::TrackState& state,
-                                          const Mechanics::Plane& source,
-                                          const Mechanics::Plane& target)
+TrackState
+propagateTo(const TrackState& state, const Plane& source, const Plane& target)
 {
   // combined transformation matrix from source to target system
   Matrix4 toTarget = target.linearToLocal() * source.linearToGlobal();
@@ -99,3 +100,5 @@ Storage::TrackState Tracking::propagateTo(const Storage::TrackState& state,
   params[kSlopeTime] = tan[kS];
   return {params, transformCovariance(jacobian, state.cov())};
 }
+
+} // namespace proteus

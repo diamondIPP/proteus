@@ -1,11 +1,13 @@
-#ifndef PT_HIT_H
-#define PT_HIT_H
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
+#pragma once
 
 #include <iosfwd>
 
 #include "utils/definitions.h"
 
-namespace Storage {
+namespace proteus {
 
 /** A sensor hit identified by its address, timestamp, and value.
  *
@@ -51,6 +53,4 @@ private:
 
 std::ostream& operator<<(std::ostream& os, const Hit& hit);
 
-} // namespace Storage
-
-#endif // PT_HIT_H
+} // namespace proteus

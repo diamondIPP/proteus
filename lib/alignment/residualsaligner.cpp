@@ -1,3 +1,6 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
 #include "residualsaligner.h"
 
 #include <TDirectory.h>
@@ -11,20 +14,20 @@
 
 PT_SETUP_LOCAL_LOGGER(ResidualsAligner)
 
-Alignment::ResidualsAligner::ResidualsAligner(
-    TDirectory* dir,
-    const Mechanics::Device& device,
-    const std::vector<Index>& alignIds,
-    const double damping,
-    const double pixelRange,
-    const double gammaRange,
-    const int bins)
+namespace proteus {
+
+ResidualsAligner::ResidualsAligner(TDirectory* dir,
+                                   const Device& device,
+                                   const std::vector<Index>& alignIds,
+                                   const double damping,
+                                   const double pixelRange,
+                                   const double gammaRange,
+                                   const int bins)
     : m_device(device), m_damping(damping)
 {
-  using namespace Utils;
 
   for (auto id : alignIds) {
-    const Mechanics::Sensor& sensor = device.getSensor(id);
+    const Sensor& sensor = device.getSensor(id);
     double offsetRange =
         pixelRange * std::hypot(sensor.pitchCol(), sensor.pitchRow());
 
@@ -44,25 +47,21 @@ Alignment::ResidualsAligner::ResidualsAligner(
   }
 }
 
-std::string Alignment::ResidualsAligner::name() const
-{
-  return "ResidualsAligner";
-}
+std::string ResidualsAligner::name() const { return "ResidualsAligner"; }
 
-void Alignment::ResidualsAligner::execute(const Storage::Event& event)
+void ResidualsAligner::execute(const Event& event)
 {
   for (auto& hists : m_hists) {
     Index isensor = hists.sensorId;
-    const Storage::SensorEvent& sensorEvent = event.getSensorEvent(isensor);
+    const SensorEvent& sensorEvent = event.getSensorEvent(isensor);
 
     for (Index iclu = 0; iclu < sensorEvent.numClusters(); ++iclu) {
-      const Storage::Cluster& cluster = sensorEvent.getCluster(iclu);
+      const Cluster& cluster = sensorEvent.getCluster(iclu);
 
       if (!cluster.isInTrack())
         continue;
 
-      const Storage::TrackState& state =
-          sensorEvent.getLocalState(cluster.track());
+      const TrackState& state = sensorEvent.getLocalState(cluster.track());
       double u = state.loc0();
       double v = state.loc1();
       double ru = cluster.u() - u;
@@ -90,20 +89,20 @@ void Alignment::ResidualsAligner::execute(const Storage::Event& event)
   }
 }
 
-Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
+Geometry ResidualsAligner::updatedGeometry() const
 {
   // how many bins are used to calculated the means
   static constexpr int kBinsRestricted = 5;
 
-  Mechanics::Geometry geo = m_device.geometry();
+  Geometry geo = m_device.geometry();
 
   for (const auto& hists : m_hists) {
-    const Mechanics::Sensor& sensor = m_device.getSensor(hists.sensorId);
-    const Mechanics::Plane& plane = geo.getPlane(hists.sensorId);
+    const Sensor& sensor = m_device.getSensor(hists.sensorId);
+    const Plane& plane = geo.getPlane(hists.sensorId);
 
-    auto resDU = Utils::getRestrictedMean(hists.corrU, kBinsRestricted);
-    auto resDV = Utils::getRestrictedMean(hists.corrV, kBinsRestricted);
-    auto resDGamma = Utils::getRestrictedMean(hists.corrGamma, kBinsRestricted);
+    auto resDU = getRestrictedMean(hists.corrU, kBinsRestricted);
+    auto resDV = getRestrictedMean(hists.corrV, kBinsRestricted);
+    auto resDGamma = getRestrictedMean(hists.corrGamma, kBinsRestricted);
     auto du = resDU.first;
     auto varDU = resDU.second;
     auto dv = resDV.first;
@@ -141,3 +140,5 @@ Mechanics::Geometry Alignment::ResidualsAligner::updatedGeometry() const
   }
   return geo;
 }
+
+} // namespace proteus

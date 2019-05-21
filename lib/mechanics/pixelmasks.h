@@ -1,5 +1,7 @@
-#ifndef PT_NOISEMASK_H
-#define PT_NOISEMASK_H
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
+#pragma once
 
 #include <iosfwd>
 #include <map>
@@ -9,7 +11,7 @@
 #include "utils/config.h"
 #include "utils/definitions.h"
 
-namespace Mechanics {
+namespace proteus {
 
 /** Store and process masked pixels. */
 class PixelMasks {
@@ -39,6 +41,4 @@ private:
   std::map<Index, std::set<ColumnRow>> m_maskedPixels;
 };
 
-} // namespace Mechanics
-
-#endif // PT_NOISEMASK_H
+} // namespace proteus

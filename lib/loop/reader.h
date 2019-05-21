@@ -1,18 +1,18 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \author  Moritz Kiehn <msmk@cern.ch>
  * \date    2017-03
  */
 
-#ifndef PT_READER_H
-#define PT_READER_H
+#pragma once
 
 #include <cstdint>
 #include <string>
 
-namespace Storage {
+namespace proteus {
+
 class Event;
-}
-namespace Loop {
 
 /** Event reader interface. */
 class Reader {
@@ -45,9 +45,7 @@ public:
    * clearing previous contents. Errors must be handled by throwing an
    * appropriate exception.
    */
-  virtual bool read(Storage::Event& event) = 0;
+  virtual bool read(Event& event) = 0;
 };
 
-} // namespace Loop
-
-#endif // PT_READER_H
+} // namespace proteus

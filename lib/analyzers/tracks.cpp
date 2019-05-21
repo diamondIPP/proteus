@@ -1,3 +1,6 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
 #include "tracks.h"
 
 #include <cassert>
@@ -12,15 +15,15 @@
 #include "storage/event.h"
 #include "utils/root.h"
 
-Analyzers::Tracks::Tracks(TDirectory* dir,
-                          const Mechanics::Device& device,
-                          const int numTracksMax,
-                          const double reducedChi2Max,
-                          const double slopeRangeStd,
-                          const int bins)
-{
-  using namespace Utils;
+namespace proteus {
 
+Tracks::Tracks(TDirectory* dir,
+               const Device& device,
+               const int numTracksMax,
+               const double reducedChi2Max,
+               const double slopeRangeStd,
+               const int bins)
+{
   auto box = device.boundingBox();
   auto pitch = device.minimumPitch();
   Vector2 slope = device.geometry().beamSlope();
@@ -58,15 +61,15 @@ Analyzers::Tracks::Tracks(TDirectory* dir,
   m_slopeXY = makeH2(sub, "slope_xy", axSlopeX, axSlopeY);
 }
 
-std::string Analyzers::Tracks::name() const { return "Tracks"; }
+std::string Tracks::name() const { return "Tracks"; }
 
-void Analyzers::Tracks::execute(const Storage::Event& event)
+void Tracks::execute(const Event& event)
 {
   m_nTracks->Fill(event.numTracks());
 
   for (Index itrack = 0; itrack < event.numTracks(); itrack++) {
-    const Storage::Track& track = event.getTrack(itrack);
-    const Storage::TrackState& state = track.globalState();
+    const Track& track = event.getTrack(itrack);
+    const TrackState& state = track.globalState();
 
     m_size->Fill(track.size());
     m_reducedChi2->Fill(track.reducedChi2());
@@ -81,14 +84,16 @@ void Analyzers::Tracks::execute(const Storage::Event& event)
   }
 }
 
-double Analyzers::Tracks::avgNumTracks() const { return m_nTracks->GetMean(); }
+double Tracks::avgNumTracks() const { return m_nTracks->GetMean(); }
 
-Vector2 Analyzers::Tracks::beamSlope() const
+Vector2 Tracks::beamSlope() const
 {
   return {m_slopeXY->GetMean(1), m_slopeXY->GetMean(2)};
 }
 
-Vector2 Analyzers::Tracks::beamDivergence() const
+Vector2 Tracks::beamDivergence() const
 {
   return {m_slopeXY->GetStdDev(1), m_slopeXY->GetStdDev(2)};
 }
+
+} // namespace proteus

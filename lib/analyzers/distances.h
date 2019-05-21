@@ -1,11 +1,12 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \file
  * \author Moritz Kiehn <msmk@cern.ch>
  * \date 2016-12
  */
 
-#ifndef PT_DISTANCES_H
-#define PT_DISTANCES_H
+#pragma once
 
 #include <string>
 
@@ -15,18 +16,16 @@
 class TDirectory;
 class TH1D;
 
-namespace Mechanics {
+namespace proteus {
+
 class Sensor;
-}
 
-namespace Analyzers {
-
-class Distances : public Loop::Analyzer {
+class Distances : public Analyzer {
 public:
-  Distances(TDirectory* dir, const Mechanics::Sensor& sensor);
+  Distances(TDirectory* dir, const Sensor& sensor);
 
   std::string name() const;
-  void execute(const Storage::Event& event);
+  void execute(const Event& event);
 
 private:
   struct Hists {
@@ -42,6 +41,4 @@ private:
   Hists m_clusterCluster;
 };
 
-} // namespace Analyzers
-
-#endif // PT_DISTANCES_H
+} // namespace proteus

@@ -1,17 +1,17 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \author  Moritz Kiehn <msmk@cern.ch>
  * \date    2017-03
  */
 
-#ifndef PT_WRITER_H
-#define PT_WRITER_H
+#pragma once
 
 #include <string>
 
-namespace Storage {
+namespace proteus {
+
 class Event;
-}
-namespace Loop {
 
 /** Event writer interface. */
 class Writer {
@@ -23,9 +23,7 @@ public:
    * The reference to the event is only valid for the duration of the call.
    * Errors must be handled by throwing an appropriate exception.
    */
-  virtual void append(const Storage::Event& event) = 0;
+  virtual void append(const Event& event) = 0;
 };
 
-} // namespace Loop
-
-#endif // PT_WRITER_H
+} // namespace proteus

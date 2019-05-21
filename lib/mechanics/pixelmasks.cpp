@@ -1,3 +1,6 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
 #include "pixelmasks.h"
 
 #include <algorithm>
@@ -12,20 +15,22 @@
 
 PT_SETUP_LOCAL_LOGGER(PixelMasks)
 
-Mechanics::PixelMasks Mechanics::PixelMasks::fromFile(const std::string& path)
+namespace proteus {
+
+PixelMasks PixelMasks::fromFile(const std::string& path)
 {
-  auto cfg = Utils::Config::readConfig(path);
+  auto cfg = configRead(path);
   INFO("read pixel masks from '", path, "'");
   return fromConfig(cfg);
 }
 
-void Mechanics::PixelMasks::writeFile(const std::string& path) const
+void PixelMasks::writeFile(const std::string& path) const
 {
-  Utils::Config::writeConfig(toConfig(), path);
+  configWrite(toConfig(), path);
   INFO("wrote pixel masks to '", path, "'");
 }
 
-Mechanics::PixelMasks Mechanics::PixelMasks::fromConfig(const toml::Value& cfg)
+PixelMasks PixelMasks::fromConfig(const toml::Value& cfg)
 {
   PixelMasks masks;
 
@@ -44,7 +49,7 @@ Mechanics::PixelMasks Mechanics::PixelMasks::fromConfig(const toml::Value& cfg)
   return masks;
 }
 
-toml::Value Mechanics::PixelMasks::toConfig() const
+toml::Value PixelMasks::toConfig() const
 {
   toml::Value cfg;
   cfg["sensors"] = toml::Array();
@@ -67,7 +72,7 @@ toml::Value Mechanics::PixelMasks::toConfig() const
   return cfg;
 }
 
-void Mechanics::PixelMasks::merge(const PixelMasks& other)
+void PixelMasks::merge(const PixelMasks& other)
 {
   for (auto mask = other.m_maskedPixels.begin();
        mask != other.m_maskedPixels.end(); ++mask) {
@@ -77,13 +82,12 @@ void Mechanics::PixelMasks::merge(const PixelMasks& other)
   }
 }
 
-void Mechanics::PixelMasks::maskPixel(Index sensorId, Index col, Index row)
+void PixelMasks::maskPixel(Index sensorId, Index col, Index row)
 {
   m_maskedPixels[sensorId].emplace(col, row);
 }
 
-const std::set<ColumnRow>&
-Mechanics::PixelMasks::getMaskedPixels(Index sensorId) const
+const std::set<ColumnRow>& PixelMasks::getMaskedPixels(Index sensorId) const
 {
   static const std::set<ColumnRow> EMPTY;
 
@@ -93,7 +97,7 @@ Mechanics::PixelMasks::getMaskedPixels(Index sensorId) const
   return EMPTY;
 }
 
-size_t Mechanics::PixelMasks::getNumMaskedPixels() const
+size_t PixelMasks::getNumMaskedPixels() const
 {
   size_t n = 0;
   for (auto it = m_maskedPixels.begin(); it != m_maskedPixels.end(); ++it)
@@ -101,8 +105,7 @@ size_t Mechanics::PixelMasks::getNumMaskedPixels() const
   return n;
 }
 
-void Mechanics::PixelMasks::print(std::ostream& os,
-                                  const std::string& prefix) const
+void PixelMasks::print(std::ostream& os, const std::string& prefix) const
 {
   if (m_maskedPixels.empty()) {
     os << prefix << "no masked pixels\n";
@@ -123,3 +126,5 @@ void Mechanics::PixelMasks::print(std::ostream& os,
   }
   os.flush();
 }
+
+} // namespace proteus

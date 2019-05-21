@@ -1,3 +1,5 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \file
  * \brief Common typedefs
@@ -5,8 +7,7 @@
  * \date 2016-09
  */
 
-#ifndef PT_DEFINITIONS_H
-#define PT_DEFINITIONS_H
+#pragma once
 
 #include <utility>
 
@@ -14,6 +15,8 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <Eigen/LU>
+
+namespace proteus {
 
 // Use to number and identify things, e.g. hits, sensors
 using Index = unsigned int;
@@ -153,4 +156,4 @@ inline Eigen::WithFormat<T> format(const Eigen::DenseBase<T>& mtx)
   }
 }
 
-#endif // PT_DEFINITIONS_H
+} // namespace proteus

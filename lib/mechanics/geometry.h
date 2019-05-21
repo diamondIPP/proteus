@@ -1,5 +1,7 @@
-#ifndef PT_GEOMETRY_H
-#define PT_GEOMETRY_H
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
+#pragma once
 
 #include <iosfwd>
 #include <map>
@@ -10,7 +12,7 @@
 #include "utils/config.h"
 #include "utils/definitions.h"
 
-namespace Mechanics {
+namespace proteus {
 
 /** A two-dimensional plane in three-dimensional space with time.
  *
@@ -220,6 +222,4 @@ void sortAlongBeam(const Geometry& geo, std::vector<Index>& sensorIds);
 std::vector<Index> sortedAlongBeam(const Geometry& geo,
                                    const std::vector<Index>& sensorIds);
 
-} // namespace Mechanics
-
-#endif // PT_GEOMETRY_H
+} // namespace proteus

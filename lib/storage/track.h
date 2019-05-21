@@ -1,5 +1,7 @@
-#ifndef PT_TRACK_H
-#define PT_TRACK_H
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
+
+#pragma once
 
 #include <iosfwd>
 #include <vector>
@@ -7,7 +9,7 @@
 #include "storage/trackstate.h"
 #include "utils/definitions.h"
 
-namespace Storage {
+namespace proteus {
 
 /** A particle track.
  *
@@ -79,6 +81,4 @@ public:
 
 std::ostream& operator<<(std::ostream& os, const Track& track);
 
-} // namespace Storage
-
-#endif // PT_TRACK_H
+} // namespace proteus

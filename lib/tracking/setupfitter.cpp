@@ -1,3 +1,5 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \file
  * \author Moritz Kiehn (msmk@cern.ch)
@@ -15,9 +17,11 @@
 
 PT_SETUP_GLOBAL_LOGGER
 
-void Tracking::setupTrackFitter(const Mechanics::Device& device,
-                                const std::string& type,
-                                Loop::EventLoop& loop)
+namespace proteus {
+
+void setupTrackFitter(const Device& device,
+                      const std::string& type,
+                      EventLoop& loop)
 {
   if (type.empty()) {
     INFO("no track fitter is configured");
@@ -31,3 +35,5 @@ void Tracking::setupTrackFitter(const Mechanics::Device& device,
     FAIL("unknown configured track fitter '", type, "'");
   }
 }
+
+} // namespace proteus

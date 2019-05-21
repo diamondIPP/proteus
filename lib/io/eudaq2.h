@@ -1,10 +1,11 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \author  Moritz Kiehn <msmk@cern.ch>
  * \date    2017-10
  */
 
-#ifndef PT_EUDAQ2_H
-#define PT_EUDAQ2_H
+#pragma once
 
 #include <functional>
 #include <map>
@@ -20,10 +21,10 @@ class FileReader;
 namespace toml {
 class Value;
 }
-namespace Io {
+namespace proteus {
 
 /** Read Eudaq2 native raw files. */
-class Eudaq2Reader : public Loop::Reader {
+class Eudaq2Reader : public Reader {
 public:
   static int check(const std::string& path);
   static std::shared_ptr<Eudaq2Reader> open(const std::string& path,
@@ -37,15 +38,14 @@ public:
   size_t numSensors() const override final;
 
   void skip(uint64_t n) override final;
-  bool read(Storage::Event& event) override final;
+  bool read(Event& event) override final;
 
 private:
-  std::unique_ptr<eudaq::FileReader, std::function<void(eudaq::FileReader*)>>
+  std::unique_ptr<::eudaq::FileReader,
+                  std::function<void(::eudaq::FileReader*)>>
       m_reader;
-  std::shared_ptr<const eudaq::Event> m_event;
+  std::shared_ptr<const ::eudaq::Event> m_event;
   std::map<unsigned, Index> m_mapIdIndex;
 };
 
-} // namespace Io
-
-#endif // PT_EUDAQ2_H
+} // namespace proteus

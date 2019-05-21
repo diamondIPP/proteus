@@ -1,26 +1,24 @@
+// Copyright (c) 2014-2019 The Proteus authors
+// SPDX-License-Identifier: MIT
 /**
  * \author Moritz Kiehn <msmk@cern.ch>
  * \date 2016-08-24
  */
 
-#ifndef PT_PROCESSOR_H
-#define PT_PROCESSOR_H
+#pragma once
 
 #include <string>
 
-namespace Storage {
+namespace proteus {
+
 class Event;
-}
-namespace Loop {
 
 /** Interface for algorithms to process and modify events. */
 class Processor {
 public:
   virtual ~Processor() = default;
   virtual std::string name() const = 0;
-  virtual void execute(Storage::Event&) const = 0;
+  virtual void execute(Event&) const = 0;
 };
 
-} // namespace Loop
-
-#endif // PT_PROCESSOR_H
+} // namespace proteus
