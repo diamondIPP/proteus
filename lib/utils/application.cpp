@@ -16,8 +16,6 @@
 #include "utils/arguments.h"
 #include "utils/logger.h"
 
-PT_SETUP_LOCAL_LOGGER(Application)
-
 namespace proteus {
 
 Application::Application(const std::string& name,
@@ -54,11 +52,11 @@ void Application::initialize(int argc, char const* argv[])
 
   // logging level
   if (args.has("quiet")) {
-    Logger::setGlobalLevel(Logger::Level::Error);
+    globalLogger().setMinimalLevel(Logger::Level::Warning);
   } else if (args.has("verbose")) {
-    Logger::setGlobalLevel(Logger::Level::Verbose);
+    globalLogger().setMinimalLevel(Logger::Level::Verbose);
   } else {
-    Logger::setGlobalLevel(Logger::Level::Info);
+    globalLogger().setMinimalLevel(Logger::Level::Info);
   }
   // event printing
   if (args.has("print-events")) {

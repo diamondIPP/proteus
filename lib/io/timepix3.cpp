@@ -10,8 +10,6 @@
 #include "storage/sensorevent.h"
 #include "utils/logger.h"
 
-PT_SETUP_LOCAL_LOGGER(Timepix3)
-
 namespace proteus {
 
 int Timepix3Reader::check(const std::string& path)
@@ -248,8 +246,8 @@ bool Timepix3Reader::getSensorEvent(SensorEvent& sensorEvent)
 
   // Clear the event if we have more than 10% chip occupancy
   if (sensorEvent.numHits() > 6553) {
-    ERROR("Frame ", m_eventNumber, " has ", sensorEvent.numHits(),
-          " hits. Cleared.");
+    WARN("Frame ", m_eventNumber, " has ", sensorEvent.numHits(),
+         " hits. Cleared.");
     sensorEvent.clear(m_eventNumber, m_nextEventTimestamp);
   }
 

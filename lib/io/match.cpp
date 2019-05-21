@@ -14,8 +14,6 @@
 #include "storage/event.h"
 #include "utils/logger.h"
 
-PT_SETUP_GLOBAL_LOGGER
-
 namespace proteus {
 
 void MatchWriter::EventData::addToTree(TTree* tree)

@@ -16,8 +16,6 @@
 #include "utils/logger.h"
 #include "utils/root.h"
 
-PT_SETUP_LOCAL_LOGGER(NoiseScan)
-
 namespace proteus {
 
 NoiseScan::NoiseScan(TDirectory* dir,

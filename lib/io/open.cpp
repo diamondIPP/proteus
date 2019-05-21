@@ -17,8 +17,6 @@
 #include "io/timepix3.h"
 #include "utils/logger.h"
 
-PT_SETUP_LOCAL_LOGGER(Io);
-
 namespace proteus {
 
 // Reader format registry

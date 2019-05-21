@@ -11,8 +11,6 @@
 #include "storage/event.h"
 #include "utils/logger.h"
 
-PT_SETUP_GLOBAL_LOGGER
-
 namespace proteus {
 
 CCPDv4HitMapper::CCPDv4HitMapper(Index sensorId) : m_sensorId(sensorId)

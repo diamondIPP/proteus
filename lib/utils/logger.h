@@ -9,6 +9,8 @@
 #pragma once
 
 #include <cstdlib>
+#include <ctime>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -18,11 +20,7 @@
 namespace proteus {
 namespace detail {
 
-template <typename T>
-inline void print_impl(std::ostream& os, const T& thing)
-{
-  os << thing;
-}
+// enable direct printing of std::vector's
 template <typename T>
 inline void print_impl(std::ostream& os, const std::vector<T>& things)
 {
@@ -38,7 +36,11 @@ inline void print_impl(std::ostream& os, const std::vector<T>& things)
   }
   os << ']';
 }
-
+template <typename T>
+inline void print_impl(std::ostream& os, const T& thing)
+{
+  os << thing;
+}
 // shorter printing w/o << operators
 template <typename... Ts>
 inline void print(std::ostream& os, const Ts&... things)
@@ -55,151 +57,124 @@ inline void unreferenced(Ts&&...)
 
 } // namespace detail
 
-/** A logger object with global log level.
+/** A logger object with adjustable log level.
  *
- * The logger provides logging functions for each predefined log level. Each
- * function, `error`, `info`, debug` can be called with a variable number of
- * arguments. They will be printed in the given order to a predefined stream.
- * Any type for which an `operator<<(std::ostream&, ...)` is defined can be
- * used, e.g.
+ * The logger provides a `.log(...)` function that can be called with a
+ * variable number of arguments. They will be printed in the given order to
+ * a level-dependent stream. Any type for which an
+ * `operator<<(std::ostream&, ...)` is defined can be used, e.g.
  *
  *     Logger log;
  *     double x = 1.2;
  *     int y = 100;
- *     log.error("x = ", x, " y = ", y, '\n');
+ *     log.log(Logger::Level::Warning, "x = ", x, " y = ", y, '\n');
  *
- * Each logger has an optional prefix to easily identify the information
- * source. The log level is global and shared among all loggers.
  */
 class Logger {
 public:
-  enum class Level { Error = 0, Info = 1, Verbose = 2 };
+  enum class Level {
+    Error = 0,   // fatal error that always stops the program
+    Warning = 1, // non-fatal warning that indicate e.g. degraded performance
+    Info = 2,    // nice-to-have information
+    Verbose = 3, // additional (debug) information
+  };
 
-  static void setGlobalLevel(Level lvl) { s_level = lvl; }
-  static Logger& globalLogger();
+  Logger(Level level = Level::Warning);
 
-  Logger(std::string name);
-
-  template <typename... Ts>
-  void error(const Ts&... things)
-  {
-    log(Level::Error, things...);
-  }
-  template <typename... Ts>
-  void info(const Ts&... things)
-  {
-    log(Level::Info, things...);
-  }
-  template <typename... Ts>
-  void verbose(const Ts&... things)
-  {
-    log(Level::Verbose, things...);
-  }
+  /** Set the minimal logging level for which messages are shown. */
+  void setMinimalLevel(Level level) { m_level = level; }
 
   /** Log information with a given log level. */
   template <typename... Ts>
-  void log(Level lvl, const Ts&... things)
+  void log(Level lvl, const Ts&... things) const
   {
     if (isActive(lvl)) {
-      detail::print(stream(lvl), prefix(lvl), things..., kReset);
-      stream(lvl).flush();
+      std::ostream& os = stream(lvl);
+      print_prefix(os, lvl);
+      detail::print(os, things..., m_reset);
+      os.flush();
     }
   }
   /** Log information using an objects print(...) function. */
   template <typename T>
   void logp(Level lvl,
             const T& thing,
-            const std::string& extraPrefix = std::string())
+            const std::string& extraPrefix = std::string()) const
   {
     if (isActive(lvl)) {
-      thing.print(stream(lvl), prefix(lvl) + extraPrefix);
-      stream(lvl) << kReset;
-      stream(lvl).flush();
+      std::ostream& os = stream(lvl);
+      std::ostringstream prefix;
+      print_prefix(prefix, lvl);
+      prefix << extraPrefix;
+      thing.print(os, prefix.str());
+      os << m_reset;
+      os.flush();
     }
   }
-  bool isActive(Level lvl) { return (lvl <= s_level); }
 
 private:
-  static std::ostream& stream(Level lvl)
+  /** Check whether messages at the give loggging level are active. */
+  bool isActive(Level level) const { return (level <= m_level); }
+  std::ostream& stream(Level level) const
   {
-    return (lvl == Level::Error) ? std::cerr : std::cout;
+    return *(m_streams[static_cast<int>(level)]);
+  }
+  void print_prefix(std::ostream& os, Level level) const
+  {
+    std::time_t now = std::time(nullptr);
+    os << m_prefixes[static_cast<int>(level)];
+    os << "|";
+    os << std::put_time(std::localtime(&now), "%T");
+    os << "| ";
   }
 
-  static const char* const kLevelPrefix[3];
-  static const char* const kReset;
-  static Logger s_global;
-  static Level s_level;
-
-  std::string prefix(Level lvl) const
-  {
-    return kLevelPrefix[static_cast<int>(lvl)] + m_prefix;
-  }
-
-  std::string m_prefix;
+  Level m_level;
+  std::ostream* const m_streams[4];
+  const char* const m_prefixes[4];
+  const char* const m_reset;
 };
 
+/** Return the global logger. */
+Logger& globalLogger();
+
 } // namespace proteus
-
-/* Define a `logger()` function that returns either the global logger
- * or a static local logger so the convenience logger macros can be used.
- *
- * Depending on the compile definitions, i.e. when using a debug build with
- * only debug log statements, the functions might be unused and are marked
- * as such to avoid false-positive compiler warnings.
- */
-
-#define PT_SETUP_GLOBAL_LOGGER                                                 \
-  namespace {                                                                  \
-  inline __attribute__((unused))::proteus::Logger& logger()                    \
-  {                                                                            \
-    return ::proteus::Logger::globalLogger();                                  \
-  }                                                                            \
-  }
-#define PT_SETUP_LOCAL_LOGGER(name)                                            \
-  namespace {                                                                  \
-  ::proteus::Logger name##LocalLogger(#name);                                  \
-  inline __attribute__((unused))::proteus::Logger& logger()                    \
-  {                                                                            \
-    return name##LocalLogger;                                                  \
-  }                                                                            \
-  }
 
 /* Convenience macros to log a message via the logger.
  *
  * The macros should be used to log a single message. The message **must not**
- * end in a newline. These macros expect a `logger()` function to be available
- * that returns a reference to a `Logger` object. This can be either defined
- * at file scope by using the `PT_SETUP_..._LOGGER` macros or by implementing
- * a private class method to use a class-specific logger.
+ * end in a newline. These macros expect a `globalLogger()` function to be
+ * available that returns a reference to a `Logger` object.
  */
+/** `FAIL(...)` should be prefered which also terminates the application. */
 #define ERROR(...)                                                             \
   do {                                                                         \
-    if (logger().isActive(Logger::Level::Error)) {                             \
-      logger().error(__VA_ARGS__, '\n');                                       \
-    }                                                                          \
+    ::proteus::globalLogger().log(::proteus::Logger::Level::Error,             \
+                                  __VA_ARGS__, '\n');                          \
+  } while (false)
+#define WARN(...)                                                              \
+  do {                                                                         \
+    ::proteus::globalLogger().log(::proteus::Logger::Level::Warning,           \
+                                  __VA_ARGS__, '\n');                          \
   } while (false)
 #define INFO(...)                                                              \
   do {                                                                         \
-    if (logger().isActive(Logger::Level::Info)) {                              \
-      logger().info(__VA_ARGS__, '\n');                                        \
-    }                                                                          \
+    ::proteus::globalLogger().log(::proteus::Logger::Level::Info, __VA_ARGS__, \
+                                  '\n');                                       \
   } while (false)
 #define VERBOSE(...)                                                           \
   do {                                                                         \
-    if (logger().isActive(Logger::Level::Verbose)) {                           \
-      logger().verbose(__VA_ARGS__, '\n');                                     \
-    }                                                                          \
+    ::proteus::globalLogger().log(::proteus::Logger::Level::Verbose,           \
+                                  __VA_ARGS__, '\n');                          \
   } while (false)
-
 /* Debug messages are logged with the verbose level but are only shown in
  * a debug build. They become noops in a release build. In a release build
- * arguments should not be evaluated and no warning for unused variables
+ * the arguments should not be evaluated and no warning for unused variables
  * should be emitted.
  */
 #ifdef NDEBUG
 #define DEBUG(...)                                                             \
   do {                                                                         \
-    (decltype(detail::unreferenced(__VA_ARGS__)))0;                            \
+    (decltype(::proteus::detail::unreferenced(__VA_ARGS__)))0;                 \
   } while (false)
 #else
 #define DEBUG(...) VERBOSE(__VA_ARGS__)
@@ -208,15 +183,15 @@ private:
 /** Write the error message to the logger and quit the application. */
 #define FAIL(...)                                                              \
   do {                                                                         \
-    logger().error(__VA_ARGS__, '\n');                                         \
+    ::proteus::globalLogger().log(::proteus::Logger::Level::Error,             \
+                                  __VA_ARGS__, '\n');                          \
     std::exit(EXIT_FAILURE);                                                   \
   } while (false)
-
 /** Throw an exception of the given type with a custom error message. */
 #define THROWX(ExceptionType, ...)                                             \
   do {                                                                         \
     std::ostringstream os;                                                     \
-    detail::print(os, __VA_ARGS__);                                            \
+    ::proteus::detail::print(os, __VA_ARGS__);                                 \
     throw ExceptionType(os.str());                                             \
   } while (false)
 /** Throw a std::runtime_error with a custom error message. */

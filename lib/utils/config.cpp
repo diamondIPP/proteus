@@ -12,10 +12,6 @@
 #include <fstream>
 #include <stdexcept>
 
-#include "utils/logger.h"
-
-PT_SETUP_LOCAL_LOGGER(Config)
-
 namespace proteus {
 
 bool pathIsAbsolute(const std::string& path)
@@ -57,12 +53,12 @@ toml::Value configRead(const std::string& path)
 {
   std::ifstream file(path, std::ifstream::in | std::ifstream::binary);
   if (!file)
-    throw std::runtime_error("Config: Could not open file '" + path +
+    throw std::runtime_error("Config: could not open file '" + path +
                              "' to read");
 
   toml::ParseResult result = toml::parse(file);
   if (!result.valid())
-    throw std::runtime_error("Config: Could not parse TOML file '" + path +
+    throw std::runtime_error("Config: could not parse TOML file '" + path +
                              "': " + result.errorReason);
 
   return std::move(result.value);
@@ -72,7 +68,7 @@ void configWrite(const toml::Value& cfg, const std::string& path)
 {
   std::ofstream file(path, std::ofstream::out | std::ofstream::binary);
   if (!file.good())
-    throw std::runtime_error("Config: Could not open file '" + path +
+    throw std::runtime_error("Config: could not open file '" + path +
                              "' to write");
 
   cfg.write(&file);
@@ -84,10 +80,7 @@ toml::Value configWithDefaults(const toml::Value& cfg,
 {
   toml::Value combined(defaults);
   if (!combined.merge(cfg)) {
-    ERROR("could not merge config w/ defaults");
-    ERROR("config:\n", cfg);
-    ERROR("defaults:\n", defaults);
-    throw std::runtime_error("Config: could not merge defaults");
+    throw std::runtime_error("Config: could not merge config w/ defaults");
   }
   return combined;
 }

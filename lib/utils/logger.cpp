@@ -12,32 +12,23 @@
 #define ANSI_BOLD "\x1B[1m"
 #define ANSI_ITALIC "\x1B[3m"
 #define ANSI_RED "\x1B[31m"
+#define ANSI_YELLOW "\x1B[33m"
 
 namespace proteus {
 
-// per-level prefix
-// clang-format off
-const char* const Logger::kLevelPrefix[3] = {
-    ANSI_BOLD ANSI_RED "E|",
-                       "I|",
-    ANSI_ITALIC        "V|",
-};
-// clang-format on
-const char* const Logger::kReset = ANSI_RESET;
-
-// global logger w/o specific name
-Logger Logger::s_global("");
-// default global log-level
-Logger::Level Logger::s_level = Logger::Level::Error;
-
-Logger::Logger(std::string name) : m_prefix(std::move(name))
+Logger::Logger(Level level)
+    : m_level(level)
+    , m_streams{&std::cerr, &std::cerr, &std::cout, &std::cout}
+    , m_prefixes{ANSI_BOLD ANSI_RED "E", ANSI_BOLD ANSI_YELLOW "W", "I",
+                 ANSI_ITALIC "V"}
+    , m_reset{ANSI_RESET}
 {
-  constexpr size_t kPrefixMax = 16;
-
-  m_prefix.resize(kPrefixMax, ' ');
-  m_prefix += "| ";
 }
 
-Logger& Logger::globalLogger() { return s_global; }
+Logger& globalLogger()
+{
+  static Logger log;
+  return log;
+}
 
 } // namespace proteus

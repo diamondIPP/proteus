@@ -12,8 +12,6 @@
 #include "storage/hit.h"
 #include "utils/logger.h"
 
-PT_SETUP_LOCAL_LOGGER(Cluster)
-
 namespace proteus {
 
 Cluster::Cluster(Scalar col,

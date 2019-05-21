@@ -11,8 +11,6 @@
 #include "tracking/propagation.h"
 #include "utils/logger.h"
 
-PT_SETUP_LOCAL_LOGGER(Geometry)
-
 namespace proteus {
 
 // Construct rotation matrix Q321 = R1(𝛼) * R2(𝛽) * R3(𝛾).
@@ -78,7 +76,7 @@ static Vector3 extractAngles321(const Matrix4& q)
   auto norm = (Matrix4::Identity() - qAngles.transpose() * q).norm();
   // single epsilon results in too many false-positives.
   if (8 * std::numeric_limits<decltype(norm)>::epsilon() < norm) {
-    ERROR("detected inconsistent matrix to angles conversion");
+    WARN("detected inconsistent matrix to angles conversion");
     INFO("angles:");
     INFO("  alpha: ", degree(alpha), " degree");
     INFO("  beta: ", degree(beta), " degree");
@@ -270,7 +268,7 @@ Geometry Geometry::fromConfig(const toml::Value& cfg)
         FAIL("sensor ", sensorId, " has highly non-orthogonal unit vectors");
       } else if ((8 * std::numeric_limits<decltype(projUV)>::epsilon()) <
                  projUV) {
-        ERROR("sensor ", sensorId, " has non-orthogonal unit vectors");
+        WARN("sensor ", sensorId, " has non-orthogonal unit vectors");
       }
 
       geo.m_planes[sensorId] = Plane::fromDirections(unitU, unitV, offset);

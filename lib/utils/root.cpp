@@ -15,8 +15,6 @@
 
 #include "utils/logger.h"
 
-PT_SETUP_LOCAL_LOGGER(Root)
-
 namespace proteus {
 
 static void closeTFileRead(TFile* f)

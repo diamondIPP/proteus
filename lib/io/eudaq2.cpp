@@ -17,8 +17,6 @@
 #include "utils/config.h"
 #include "utils/logger.h"
 
-PT_SETUP_LOCAL_LOGGER(Eudaq2Reader);
-
 namespace proteus {
 
 // local helper functions

@@ -17,8 +17,6 @@
 #include "utils/logger.h"
 #include "utils/root.h"
 
-PT_SETUP_LOCAL_LOGGER(Efficiency)
-
 namespace proteus {
 
 Efficiency::Efficiency(TDirectory* dir,

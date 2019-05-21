@@ -15,13 +15,11 @@
 #include "utils/config.h"
 #include "utils/logger.h"
 
-PT_SETUP_GLOBAL_LOGGER
-
 int main(int argc, char const* argv[])
 {
   using namespace proteus;
 
-  logger().setGlobalLevel(Logger::Level::Info);
+  globalLogger().setMinimalLevel(Logger::Level::Warning);
 
   // To avoid having unused command line options, argument parsing is
   // implemented manually here w/ a limited amount of options compared to
@@ -43,11 +41,11 @@ int main(int argc, char const* argv[])
 
   // logging level
   if (args.has("quiet")) {
-    Logger::setGlobalLevel(Logger::Level::Error);
+    globalLogger().setMinimalLevel(Logger::Level::Warning);
   } else if (args.has("verbose")) {
-    Logger::setGlobalLevel(Logger::Level::Verbose);
+    globalLogger().setMinimalLevel(Logger::Level::Verbose);
   } else {
-    Logger::setGlobalLevel(Logger::Level::Info);
+    globalLogger().setMinimalLevel(Logger::Level::Info);
   }
 
   // read configuration file
