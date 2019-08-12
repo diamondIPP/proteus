@@ -237,8 +237,22 @@ Geometry Geometry::fromConfig(const toml::Value& cfg)
     }
     geo.setBeamDivergence({div[0], div[1]});
   }
-  if (cfg.has("beam.energy")) {
+  if (cfg.has("beam.energy") && !(cfg.has("beam.momentum") || cfg.has("beam.mass"))) {
     geo.m_beamEnergy = cfg.get<double>("beam.energy");
+    if(geo.m_beamEnergy < 0.0) FAIL("Negative beam energy");
+    //for now flag invalid settings with unphysical numbers (Florian)
+    geo.m_beamMomentum = -1.0;
+    geo.m_beamMass = -1.0;
+  }
+  else if(cfg.has("beam.momentum") && cfg.has("beam.mass") && !cfg.has("beam.energy")) {
+    //for now flag invalid settings with unphysical numbers (Florian)
+    geo.m_beamEnergy = -1.0;
+    geo.m_beamMomentum = cfg.get<double>("beam.momentum");
+    geo.m_beamMass = cfg.get<double>("beam.mass");
+    if(geo.m_beamMomentum < 0.0) FAIL("Negative beam momentum");
+    if(geo.m_beamMass < 0.0) FAIL("Negative beam mass");
+  } else {
+    FAIL("Inconsistent configuration for beam energy or beam mass and momentum");
   }
 
   auto sensors = cfg.get<toml::Array>("sensors");

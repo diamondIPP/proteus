@@ -191,6 +191,10 @@ public:
   void setBeamDivergence(const Vector2& divXY) { m_beamSlopeStdev = divXY; }
   /** Beam energy. */
   auto beamEnergy() const { return m_beamEnergy; }
+  /** Beam momentum */
+  auto beamMomentum() const { return m_beamMomentum; }
+  /** Beam mass */
+  auto beamMass() const { return m_beamMass; }
   /** Beam slope in the global coordinate system. */
   auto beamSlope() const { return m_beamSlope; }
   /** Beam slope covariance in the global coordinate system. */
@@ -211,6 +215,8 @@ private:
   Vector2 m_beamSlope;
   Vector2 m_beamSlopeStdev;
   Scalar m_beamEnergy;
+  Scalar m_beamMass;
+  Scalar m_beamMomentum;
 
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
