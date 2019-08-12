@@ -307,7 +307,13 @@ toml::Value Geometry::toConfig() const
   cfg["beam"]["slope"] = toml::Array{m_beamSlope[0], m_beamSlope[1]};
   cfg["beam"]["divergence"] =
       toml::Array{m_beamSlopeStdev[0], m_beamSlopeStdev[1]};
-  cfg["beam"]["energy"] = m_beamEnergy;
+  if(0.0 < m_beamEnergy && 0.0 > m_beamMomentum && 0.0 > m_beamMass) {
+    cfg["beam"]["energy"] = m_beamEnergy;
+  }
+  else if(0.0 < m_beamMomentum && 0.0 < m_beamMass && 0.0 > m_beamEnergy) {
+    cfg["beam"]["momentum"] = m_beamMomentum;
+    cfg["beam"]["mass"] = m_beamMass;
+  }
 
   cfg["sensors"] = toml::Array();
   for (const auto& ip : m_planes) {
