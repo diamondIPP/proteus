@@ -193,7 +193,8 @@ Vector6 Plane::asParams() const
 Geometry::Geometry()
     : m_beamSlope(Vector2::Zero())
     , m_beamSlopeStdev(Vector2::Zero())
-    , m_beamEnergy(0)
+    , m_particleMomentum(0.0)
+    , m_particleMass(0.0)
 {
 }
 
@@ -237,22 +238,14 @@ Geometry Geometry::fromConfig(const toml::Value& cfg)
     }
     geo.setBeamDivergence({div[0], div[1]});
   }
-  if (cfg.has("beam.energy") && !(cfg.has("beam.momentum") || cfg.has("beam.mass"))) {
-    geo.m_beamEnergy = cfg.get<double>("beam.energy");
-    if(geo.m_beamEnergy < 0.0) FAIL("Negative beam energy");
+  if(cfg.has("beam.particle_momentum") && cfg.has("beam.particle_mass")) {
     //for now flag invalid settings with unphysical numbers (Florian)
-    geo.m_beamMomentum = -1.0;
-    geo.m_beamMass = -1.0;
-  }
-  else if(cfg.has("beam.momentum") && cfg.has("beam.mass") && !cfg.has("beam.energy")) {
-    //for now flag invalid settings with unphysical numbers (Florian)
-    geo.m_beamEnergy = -1.0;
-    geo.m_beamMomentum = cfg.get<double>("beam.momentum");
-    geo.m_beamMass = cfg.get<double>("beam.mass");
-    if(geo.m_beamMomentum < 0.0) FAIL("Negative beam momentum");
-    if(geo.m_beamMass < 0.0) FAIL("Negative beam mass");
+    geo.m_particleMomentum = cfg.get<double>("beam.particle_momentum");
+    geo.m_particleMass = cfg.get<double>("beam.particle_mass");
+    if(geo.m_particleMomentum <= 0.0) FAIL("Invalid particle momentum given: "+std::to_string(geo.m_particleMomentum));
+    if(geo.m_particleMass <= 0.0) FAIL("Invalid particle mass given: "+std::to_string(geo.m_particleMass));
   } else {
-    FAIL("Inconsistent configuration for beam energy or beam mass and momentum");
+    FAIL("Particle momentum and/or mass are missing");
   }
 
   auto sensors = cfg.get<toml::Array>("sensors");
@@ -307,13 +300,8 @@ toml::Value Geometry::toConfig() const
   cfg["beam"]["slope"] = toml::Array{m_beamSlope[0], m_beamSlope[1]};
   cfg["beam"]["divergence"] =
       toml::Array{m_beamSlopeStdev[0], m_beamSlopeStdev[1]};
-  if(0.0 < m_beamEnergy && 0.0 > m_beamMomentum && 0.0 > m_beamMass) {
-    cfg["beam"]["energy"] = m_beamEnergy;
-  }
-  else if(0.0 < m_beamMomentum && 0.0 < m_beamMass && 0.0 > m_beamEnergy) {
-    cfg["beam"]["momentum"] = m_beamMomentum;
-    cfg["beam"]["mass"] = m_beamMass;
-  }
+  cfg["beam"]["particle_momentum"] = m_particleMomentum;
+  cfg["beam"]["particle_mass"] = m_particleMass;
 
   cfg["sensors"] = toml::Array();
   for (const auto& ip : m_planes) {
@@ -443,7 +431,8 @@ SymMatrix2 Geometry::getBeamSlopeCovariance(Index sensorId) const
 void Geometry::print(std::ostream& os, const std::string& prefix) const
 {
   os << prefix << "beam:\n";
-  os << prefix << "  energy: " << m_beamEnergy << '\n';
+  os << prefix << "  momentum: " << m_particleMomentum << '\n';
+  os << prefix << "  mass: " << m_particleMass << '\n';
   os << prefix << "  slope: " << format(m_beamSlope) << '\n';
   os << prefix << "  divergence: " << format(m_beamSlopeStdev) << '\n';
   for (const auto& ip : m_planes) {

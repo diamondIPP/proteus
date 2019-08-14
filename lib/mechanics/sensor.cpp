@@ -216,15 +216,7 @@ void Sensor::updateGeometry(const Geometry& geometry)
   // TODO store beam momentum + mass not energy
   // For now this assumes massless beam particles
   // Implement code for either beam.energy + zero-mass or beam.momentum + beam.mass (Florian)
-  if(0.0 < geometry.beamEnergy() && 0.0 > geometry.beamMass() && 0.0 > geometry.beamMomentum()) {
-    m_theta0 = scatteringStdev(m_xX0 * incidence, geometry.beamEnergy(), 0);
-  }
-  else if(0.0 < geometry.beamMass() && 0.0 < geometry.beamMomentum() && 0.0 > geometry.beamEnergy()) {
-    m_theta0 = scatteringStdev(m_xX0 * incidence, geometry.beamMomentum(), geometry.beamMass());
-  }
-  else {
-    FAIL("Parsed values for beam energy, momentum and/or mass are wrong or inconclusive");
-  }
+  m_theta0 = scatteringStdev(m_xX0 * incidence, geometry.particleMomentum(), geometry.particleMass());
 
   // brute-force bounding box projection of the sensor in global coordinates by
   // transforming each corner into the global system
