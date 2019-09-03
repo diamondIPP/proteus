@@ -48,19 +48,23 @@ connected(HitIterator clusterBegin, HitIterator clusterEnd, const Hit& hit)
   return flag;
 }
 
+// move masked pixels to the back of the range
+template <typename HitIterator>
+static inline HitIterator
+maskHits(const DenseMask& mask, HitIterator hitsBegin, HitIterator hitsEnd)
+{
+  return std::partition(hitsBegin, hitsEnd, [&](const auto& hit) {
+    return not mask.isMasked(hit->col(), hit->row());
+  });
+}
+
 // rearange the input hit range so that pixels in a cluster are neighbours.
 template <typename HitIterator, typename ClusterMaker>
-static inline void clusterize(const DenseMask& mask,
-                              SensorEvent& sensorEvent,
+static inline void clusterize(SensorEvent& sensorEvent,
                               HitIterator hitsBegin,
                               HitIterator hitsEnd,
                               ClusterMaker makeCluster)
 {
-  // move masked pixels to the back of the hit vector
-  hitsEnd = std::partition(hitsBegin, hitsEnd, [&](const auto& hit) {
-    return not mask.isMasked(hit->col(), hit->row());
-  });
-
   // group all connected hits starting from an arbitrary seed hit (first hit).
   auto clusterBegin = hitsBegin;
   while (clusterBegin != hitsEnd) {
@@ -156,8 +160,9 @@ void BinaryClusterizer::execute(SensorEvent& sensorEvent) const
     auto tsVar = kVar;
     return Cluster(col, row, ts, value, colVar, rowVar, tsVar);
   };
-  clusterize(m_sensor.pixelMask(), sensorEvent, sensorEvent.m_hits.begin(),
-             sensorEvent.m_hits.end(), makeCluster);
+  auto hitsEnd = maskHits(m_sensor.pixelMask(), sensorEvent.m_hits.begin(),
+                          sensorEvent.m_hits.end());
+  clusterize(sensorEvent, sensorEvent.m_hits.begin(), hitsEnd, makeCluster);
 }
 
 std::string ValueWeightedClusterizer::name() const
@@ -193,8 +198,9 @@ void ValueWeightedClusterizer::execute(SensorEvent& sensorEvent) const
     auto tsVar = kVar;
     return Cluster(col, row, ts, value, colVar, rowVar, tsVar);
   };
-  clusterize(m_sensor.pixelMask(), sensorEvent, sensorEvent.m_hits.begin(),
-             sensorEvent.m_hits.end(), makeCluster);
+  auto hitsEnd = maskHits(m_sensor.pixelMask(), sensorEvent.m_hits.begin(),
+                          sensorEvent.m_hits.end());
+  clusterize(sensorEvent, sensorEvent.m_hits.begin(), hitsEnd, makeCluster);
 }
 
 std::string FastestHitClusterizer::name() const
@@ -222,8 +228,9 @@ void FastestHitClusterizer::execute(SensorEvent& sensorEvent) const
 
     return Cluster(col, row, ts, value, kVar, kVar, kVar);
   };
-  clusterize(m_sensor.pixelMask(), sensorEvent, sensorEvent.m_hits.begin(),
-             sensorEvent.m_hits.end(), makeCluster);
+  auto hitsEnd = maskHits(m_sensor.pixelMask(), sensorEvent.m_hits.begin(),
+                          sensorEvent.m_hits.end());
+  clusterize(sensorEvent, sensorEvent.m_hits.begin(), hitsEnd, makeCluster);
 }
 
 } // namespace proteus
