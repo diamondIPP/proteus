@@ -11,6 +11,8 @@
 #include <chrono>
 #include <numeric>
 #include <sstream>
+#include <string>
+#include <vector>
 
 #include "loop/analyzer.h"
 #include "loop/processor.h"
@@ -31,39 +33,37 @@ struct Timing {
   using Duration = Clock::duration;
   using Time = Clock::time_point;
 
-  Time start_, stop_;
-  Duration reader = Duration::zero();
+  Time startTime;
+  std::vector<Duration> io;
   std::vector<Duration> processors;
   std::vector<Duration> analyzers;
-  std::vector<Duration> writers;
+  std::vector<std::string> namesIo;
+  std::vector<std::string> namesProcessors;
+  std::vector<std::string> namesAnalyzers;
 
-  Timing(size_t numProcessors, size_t numAnalyzers, size_t numWriters)
-      : processors(numProcessors, Duration::zero())
-      , analyzers(numAnalyzers, Duration::zero())
-      , writers(numWriters, Duration::zero())
+  Timing(std::vector<std::string> namesIo_,
+         std::vector<std::string> namesProcessors_,
+         std::vector<std::string> namesAnalyzers_)
+      : startTime(Clock::now())
+      , io(namesIo_.size(), Duration::zero())
+      , processors(namesProcessors_.size(), Duration::zero())
+      , analyzers(namesAnalyzers_.size(), Duration::zero())
+      , namesIo(std::move(namesIo_))
+      , namesProcessors(std::move(namesProcessors_))
+      , namesAnalyzers(std::move(namesAnalyzers_))
   {
   }
 
-  static Time now() { return Clock::now(); }
-  void start() { start_ = Clock::now(); }
-  void stop() { stop_ = Clock::now(); }
-  template <typename Processors, typename Analyzers, typename Writers>
-  void summarize(uint64_t numEvents,
-                 const Processors& ps,
-                 const Analyzers& as,
-                 const Writers& ws) const
+  void summarize(uint64_t numEvents) const
   {
-    auto pros =
-        std::accumulate(processors.begin(), processors.end(), Duration::zero());
-    auto anas =
-        std::accumulate(analyzers.begin(), analyzers.end(), Duration::zero());
-    auto wrts =
-        std::accumulate(writers.begin(), writers.end(), Duration::zero());
-    auto total = reader + pros + anas + wrts;
-
+    // compute total time spent
+    auto sum_total = [](const std::vector<Duration>& durations) {
+      return std::accumulate(durations.begin(), durations.end(),
+                             Duration::zero());
+    };
     // print timing
     // allow fractional tics when calculating time per event
-    auto time_us_per_event = [&](const Duration& dt) {
+    auto time_per_event_us = [=](const Duration& dt) {
       std::ostringstream s;
       s << (std::chrono::duration<float, std::micro>(dt) / numEvents).count()
         << " us/event";
@@ -77,26 +77,28 @@ struct Timing {
         << " s";
       return s.str();
     };
+    auto print_times = [&](const std::vector<Duration>& durations,
+                           const std::vector<std::string>& names) {
+      for (size_t i = 0; i < std::min(durations.size(), names.size()); ++i) {
+        VERBOSE("    ", names[i], ": ", time_per_event_us(durations[i]));
+      }
+    };
 
-    VERBOSE("time: ", time_us_per_event(total));
-    VERBOSE("  reader: ", time_us_per_event(reader));
-    VERBOSE("  processors: ", time_us_per_event(pros));
-    size_t ip = 0;
-    for (const auto& p : ps) {
-      VERBOSE("    ", p->name(), ": ", time_us_per_event(processors[ip++]));
-    }
-    VERBOSE("  analyzers: ", time_us_per_event(anas));
-    size_t ia = 0;
-    for (const auto& a : as) {
-      VERBOSE("    ", a->name(), ": ", time_us_per_event(analyzers[ia++]));
-    }
-    VERBOSE("  writers: ", time_us_per_event(wrts));
-    size_t iw = 0;
-    for (const auto& w : ws) {
-      VERBOSE("    ", w->name(), ": ", time_us_per_event(writers[iw++]));
-    }
+    auto stopTime = Clock::now();
+    auto total_io = sum_total(io);
+    auto total_processors = sum_total(processors);
+    auto total_analyzers = sum_total(analyzers);
+    auto total = total_io + total_processors + total_analyzers;
+
+    VERBOSE("time: ", time_per_event_us(total));
+    VERBOSE("  io: ", time_per_event_us(total_io));
+    print_times(io, namesIo);
+    VERBOSE("  processors: ", time_per_event_us(total_processors));
+    print_times(processors, namesProcessors);
+    VERBOSE("  analyzers: ", time_per_event_us(total_analyzers));
+    print_times(analyzers, namesAnalyzers);
     VERBOSE("time (clocked): ", time_min_s(total));
-    VERBOSE("time (wall): ", time_min_s(stop_ - start_));
+    VERBOSE("time (wall): ", time_min_s(stopTime - startTime));
   }
 };
 
@@ -202,75 +204,95 @@ void EventLoop::addWriter(std::shared_ptr<Writer> writer)
 
 void EventLoop::run()
 {
-  Timing timing(m_processors.size(), m_analyzers.size(), m_writers.size());
-  Statistics stats;
-  Event event(m_sensors);
-
+  // create list of names for all configured algorithms
+  std::vector<std::string> namesIo;
+  namesIo.emplace_back(m_reader->name());
   DEBUG("configured readers:");
-  DEBUG("  ", m_reader->name());
+  DEBUG("  ", namesIo.back());
+  std::vector<std::string> namesProcessors;
   for (const auto& sp : m_sensorProcessors) {
     DEBUG("configured processors for sensor ", sp.first);
     for (const auto& sensorProcessor : sp.second) {
-      DEBUG("  ", sensorProcessor->name());
+      std::string name = "Sensor(id=";
+      name += std::to_string(sp.first);
+      name += "):";
+      name += sensorProcessor->name();
+      namesProcessors.emplace_back(std::move(name));
+      DEBUG("  ", namesProcessors.back());
     }
   }
   DEBUG("configured processors:");
   for (const auto& processor : m_processors) {
-    DEBUG("  ", processor->name());
+    namesProcessors.emplace_back(processor->name());
+    DEBUG("  ", namesProcessors.back());
   }
+  std::vector<std::string> namesAnalyzers;
   DEBUG("configured analyzers:");
   for (const auto& analyzer : m_analyzers) {
-    DEBUG("  ", analyzer->name());
+    namesAnalyzers.emplace_back(analyzer->name());
+    DEBUG("  ", namesAnalyzers.back());
   }
   DEBUG("configured writers:");
   for (const auto& writer : m_writers) {
-    DEBUG("  ", writer->name());
+    namesIo.emplace_back(writer->name());
+    DEBUG("  ", namesIo.back());
   }
 
+  // setup timing, statistics, and progress
+  Timing timing(namesIo, namesProcessors, namesAnalyzers);
+  Statistics stats;
   Progress progress(m_showProgress ? m_events : 0);
   progress.update(0);
-  timing.start();
+
+  // start event loop proper
+  Event event(m_sensors);
   {
-    StopWatch sw(timing.reader);
+    StopWatch sw(timing.io[0]);
     m_reader->skip(m_start);
   }
   uint64_t processed = 0;
   for (; processed < m_events; ++processed) {
     {
-      StopWatch sw(timing.reader);
+      StopWatch sw(timing.io[0]);
       if (!m_reader->read(event)) {
         break;
       }
     }
+    size_t iprocessor = 0;
     for (auto& sp : m_sensorProcessors) {
       // select the corresponding sensor event
       auto& sensorEvent = event.getSensorEvent(sp.first);
       // and execute all configured per-sensor processors for it
       for (auto& sensorProcessor : sp.second) {
+        StopWatch sw(timing.processors[iprocessor++]);
         sensorProcessor->execute(sensorEvent);
       }
     }
-    for (size_t i = 0; i < m_processors.size(); ++i) {
-      StopWatch sw(timing.processors[i]);
-      m_processors[i]->execute(event);
+    for (auto& processor : m_processors) {
+      StopWatch sw(timing.processors[iprocessor++]);
+      processor->execute(event);
     }
-    for (size_t i = 0; i < m_analyzers.size(); ++i) {
-      StopWatch sw(timing.analyzers[i]);
-      m_analyzers[i]->execute(event);
+    size_t ianalyzer = 0;
+    for (auto& analyzer : m_analyzers) {
+      StopWatch sw(timing.analyzers[ianalyzer++]);
+      analyzer->execute(event);
     }
-    for (size_t i = 0; i < m_writers.size(); ++i) {
-      StopWatch sw(timing.writers[i]);
-      m_writers[i]->append(event);
+    // first io entry is always the reader
+    size_t iio = 1;
+    for (auto& writer : m_writers) {
+      StopWatch sw(timing.io[iio++]);
+      writer->append(event);
     }
     stats.fill(event.getNumHits(), event.getNumClusters(), event.numTracks());
     progress.update(processed + 1);
   }
   progress.clear();
+  size_t ianalyzer = 0;
   for (const auto& analyzer : m_analyzers) {
+    StopWatch sw(timing.analyzers[ianalyzer++]);
     analyzer->finalize();
   }
-  timing.stop();
-  timing.summarize(processed + 1, m_processors, m_analyzers, m_writers);
+  timing.summarize(processed + 1);
   stats.summarize();
 }
 
