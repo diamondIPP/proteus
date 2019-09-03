@@ -15,35 +15,35 @@
 
 namespace proteus {
 
-void setupHitPreprocessing(const Device& device, EventLoop& loop)
+namespace {
+void setupSensor(Index sensorId, const Sensor& sensor, EventLoop& loop)
 {
-  for (auto isensor : device.sensorIds()) {
-    const Sensor& sensor = device.getSensor(isensor);
-
-    // hit mapper
-    if (sensor.measurement() == Sensor::Measurement::Ccpdv4Binary) {
-      loop.addSensorProcessor(isensor, std::make_shared<CCPDv4HitMapper>());
-    }
-    // sensor regions
-    if (sensor.hasRegions()) {
-      loop.addSensorProcessor(isensor, std::make_shared<ApplyRegions>(sensor));
-    }
+  // hit mapper
+  if (sensor.measurement() == Sensor::Measurement::Ccpdv4Binary) {
+    loop.addSensorProcessor(sensorId, std::make_shared<CCPDv4HitMapper>());
+  }
+  // sensor regions
+  if (sensor.hasRegions()) {
+    loop.addSensorProcessor(sensorId, std::make_shared<ApplyRegions>(sensor));
+  }
+  // clusterizer
+  switch (sensor.measurement()) {
+  case Sensor::Measurement::PixelBinary:
+  case Sensor::Measurement::Ccpdv4Binary:
+    loop.addSensorProcessor(sensorId,
+                            std::make_shared<BinaryClusterizer>(sensor));
+    break;
+  case Sensor::Measurement::PixelTot:
+    loop.addSensorProcessor(sensorId,
+                            std::make_shared<ValueWeightedClusterizer>(sensor));
   }
 }
+} // namespace
 
-void setupClusterizers(const Device& device, EventLoop& loop)
+void setupPerSensorProcessing(const Device& device, EventLoop& loop)
 {
   for (auto isensor : device.sensorIds()) {
-    const Sensor& sensor = device.getSensor(isensor);
-    switch (sensor.measurement()) {
-    case Sensor::Measurement::PixelBinary:
-    case Sensor::Measurement::Ccpdv4Binary:
-      loop.addSensorProcessor(isensor, std::make_shared<BinaryClusterizer>(sensor));
-      break;
-    case Sensor::Measurement::PixelTot:
-      loop.addSensorProcessor(isensor, std::make_shared<ValueWeightedClusterizer>(sensor));
-      break;
-    }
+    setupSensor(isensor, device.getSensor(isensor), loop);
   }
 }
 

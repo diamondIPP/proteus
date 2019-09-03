@@ -35,7 +35,7 @@ int main(int argc, char const* argv[])
   auto trees = openRootWrite(app.outputPath("trees.root"));
 
   auto loop = app.makeEventLoop();
-  setupHitPreprocessing(app.device(), loop);
+  setupPerSensorProcessing(app.device(), loop);
   loop.addProcessor(std::make_shared<ApplyGeometry>(app.device()));
   for (auto sensorId : sensorIds)
     loop.addProcessor(std::make_shared<Matcher>(app.device(), sensorId));

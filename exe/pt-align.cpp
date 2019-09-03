@@ -201,8 +201,7 @@ int main(int argc, char const* argv[])
 
     // common event loop elements for all alignment methods
     auto loop = app.makeEventLoop();
-    setupHitPreprocessing(dev, loop);
-    setupClusterizers(dev, loop);
+    setupPerSensorProcessing(dev, loop);
     loop.addProcessor(std::make_shared<ApplyGeometry>(dev));
 
     // setup aligment method specific loop logic
@@ -271,8 +270,7 @@ int main(int argc, char const* argv[])
     auto loop = app.makeEventLoop();
 
     // minimal processors for tracking
-    setupHitPreprocessing(dev, loop);
-    setupClusterizers(dev, loop);
+    setupPerSensorProcessing(dev, loop);
     loop.addProcessor(std::make_shared<ApplyGeometry>(dev));
     loop.addProcessor(std::make_shared<TrackFinder>(
         dev, sensorIds, searchSpatialSigmaMax, searchTemporalSigmaMax,
