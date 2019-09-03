@@ -15,8 +15,8 @@ class EventLoop;
 
 /** Add per-sensor processors to the event loop.
  *
- * Depending on the device configuration this can include hit mappers,
- * hit region application, and/or clusterizers.
+ * Depending on the device configuration this can include hit mapping,
+ * hit region identification, clustering, and digital-to-local transformation.
  */
 void setupPerSensorProcessing(const Device& device, EventLoop& loop);
 

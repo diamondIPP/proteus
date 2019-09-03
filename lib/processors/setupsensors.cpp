@@ -9,6 +9,7 @@
 
 #include "loop/eventloop.h"
 #include "mechanics/device.h"
+#include "processors/applylocaltransform.h"
 #include "processors/applyregions.h"
 #include "processors/clusterizer.h"
 #include "processors/hitmapper.h"
@@ -37,6 +38,9 @@ void setupSensor(Index sensorId, const Sensor& sensor, EventLoop& loop)
     loop.addSensorProcessor(sensorId,
                             std::make_shared<ValueWeightedClusterizer>(sensor));
   }
+  // digital-to-local transform
+  loop.addSensorProcessor(
+      sensorId, std::make_shared<ApplyLocalTransformCartesian>(sensor));
 }
 } // namespace
 

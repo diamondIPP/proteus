@@ -13,7 +13,6 @@
 #include "io/rceroot.h"
 #include "loop/eventloop.h"
 #include "mechanics/device.h"
-#include "processors/applygeometry.h"
 #include "processors/matcher.h"
 #include "processors/setupsensors.h"
 #include "storage/event.h"
@@ -36,7 +35,6 @@ int main(int argc, char const* argv[])
 
   auto loop = app.makeEventLoop();
   setupPerSensorProcessing(app.device(), loop);
-  loop.addProcessor(std::make_shared<ApplyGeometry>(app.device()));
   for (auto sensorId : sensorIds)
     loop.addProcessor(std::make_shared<Matcher>(app.device(), sensorId));
   loop.addAnalyzer(std::make_shared<Tracks>(hists.get(), app.device()));
