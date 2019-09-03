@@ -26,7 +26,7 @@ void setupHitPreprocessing(const Device& device, EventLoop& loop)
     }
     // sensor regions
     if (sensor.hasRegions()) {
-      loop.addProcessor(std::make_shared<ApplyRegions>(sensor));
+      loop.addSensorProcessor(isensor, std::make_shared<ApplyRegions>(sensor));
     }
   }
 }
