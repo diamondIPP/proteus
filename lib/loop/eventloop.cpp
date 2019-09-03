@@ -15,6 +15,7 @@
 #include "loop/analyzer.h"
 #include "loop/processor.h"
 #include "loop/reader.h"
+#include "loop/sensorprocessor.h"
 #include "loop/writer.h"
 #include "storage/event.h"
 #include "utils/logger.h"
@@ -178,9 +179,10 @@ EventLoop::EventLoop(std::shared_ptr<Reader> reader,
 
 EventLoop::~EventLoop() {}
 
-void EventLoop::addWriter(std::shared_ptr<Writer> writer)
+void EventLoop::addSensorProcessor(
+    size_t sensorId, std::shared_ptr<SensorProcessor> sensorProcessor)
 {
-  m_writers.emplace_back(std::move(writer));
+  m_sensorProcessors[sensorId].emplace_back(std::move(sensorProcessor));
 }
 
 void EventLoop::addProcessor(std::shared_ptr<Processor> processor)
@@ -193,6 +195,11 @@ void EventLoop::addAnalyzer(std::shared_ptr<Analyzer> analyzer)
   m_analyzers.emplace_back(std::move(analyzer));
 }
 
+void EventLoop::addWriter(std::shared_ptr<Writer> writer)
+{
+  m_writers.emplace_back(std::move(writer));
+}
+
 void EventLoop::run()
 {
   Timing timing(m_processors.size(), m_analyzers.size(), m_writers.size());
@@ -201,6 +208,12 @@ void EventLoop::run()
 
   DEBUG("configured readers:");
   DEBUG("  ", m_reader->name());
+  for (const auto& sp : m_sensorProcessors) {
+    DEBUG("configured processors for sensor ", sp.first);
+    for (const auto& sensorProcessor : sp.second) {
+      DEBUG("  ", sensorProcessor->name());
+    }
+  }
   DEBUG("configured processors:");
   for (const auto& processor : m_processors) {
     DEBUG("  ", processor->name());
@@ -225,8 +238,17 @@ void EventLoop::run()
   for (; processed < m_events; ++processed) {
     {
       StopWatch sw(timing.reader);
-      if (!m_reader->read(event))
+      if (!m_reader->read(event)) {
         break;
+      }
+    }
+    for (auto& sp : m_sensorProcessors) {
+      // select the corresponding sensor event
+      auto& sensorEvent = event.getSensorEvent(sp.first);
+      // and execute all configured per-sensor processors for it
+      for (auto& sensorProcessor : sp.second) {
+        sensorProcessor->execute(sensorEvent);
+      }
     }
     for (size_t i = 0; i < m_processors.size(); ++i) {
       StopWatch sw(timing.processors[i]);
