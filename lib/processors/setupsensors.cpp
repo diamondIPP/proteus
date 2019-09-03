@@ -22,7 +22,7 @@ void setupHitPreprocessing(const Device& device, EventLoop& loop)
 
     // hit mapper
     if (sensor.measurement() == Sensor::Measurement::Ccpdv4Binary) {
-      loop.addProcessor(std::make_shared<CCPDv4HitMapper>(isensor));
+      loop.addSensorProcessor(isensor, std::make_shared<CCPDv4HitMapper>());
     }
     // sensor regions
     if (sensor.hasRegions()) {
