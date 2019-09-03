@@ -14,7 +14,7 @@
 
 #include "loop/eventloop.h"
 #include "mechanics/device.h"
-#include "storage/event.h"
+#include "storage/sensorevent.h"
 #include "utils/interval.h"
 #include "utils/logger.h"
 
@@ -127,7 +127,7 @@ std::string BinaryClusterizer::name() const
   return "BinaryClusterizer(" + m_sensor.name() + ")";
 }
 
-void BinaryClusterizer::execute(Event& event) const
+void BinaryClusterizer::execute(SensorEvent& sensorEvent) const
 {
   auto makeCluster = [](auto h0, auto h1) {
     Scalar col = 0;
@@ -156,7 +156,6 @@ void BinaryClusterizer::execute(Event& event) const
     auto tsVar = kVar;
     return Cluster(col, row, ts, value, colVar, rowVar, tsVar);
   };
-  auto& sensorEvent = event.getSensorEvent(m_sensor.id());
   clusterize(m_sensor.pixelMask(), sensorEvent, sensorEvent.m_hits.begin(),
              sensorEvent.m_hits.end(), makeCluster);
 }
@@ -166,7 +165,7 @@ std::string ValueWeightedClusterizer::name() const
   return "ValueWeightedClusterizer(" + m_sensor.name() + ")";
 }
 
-void ValueWeightedClusterizer::execute(Event& event) const
+void ValueWeightedClusterizer::execute(SensorEvent& sensorEvent) const
 {
   auto makeCluster = [](auto h0, auto h1) {
     Scalar col = 0;
@@ -194,7 +193,6 @@ void ValueWeightedClusterizer::execute(Event& event) const
     auto tsVar = kVar;
     return Cluster(col, row, ts, value, colVar, rowVar, tsVar);
   };
-  auto& sensorEvent = event.getSensorEvent(m_sensor.id());
   clusterize(m_sensor.pixelMask(), sensorEvent, sensorEvent.m_hits.begin(),
              sensorEvent.m_hits.end(), makeCluster);
 }
@@ -204,7 +202,7 @@ std::string FastestHitClusterizer::name() const
   return "FastestHitClusterizer(" + m_sensor.name() + ")";
 }
 
-void FastestHitClusterizer::execute(Event& event) const
+void FastestHitClusterizer::execute(SensorEvent& sensorEvent) const
 {
   auto makeCluster = [](auto h0, auto h1) {
     Scalar col = 0;
@@ -224,7 +222,6 @@ void FastestHitClusterizer::execute(Event& event) const
 
     return Cluster(col, row, ts, value, kVar, kVar, kVar);
   };
-  auto& sensorEvent = event.getSensorEvent(m_sensor.id());
   clusterize(m_sensor.pixelMask(), sensorEvent, sensorEvent.m_hits.begin(),
              sensorEvent.m_hits.end(), makeCluster);
 }

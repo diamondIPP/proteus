@@ -38,10 +38,10 @@ void setupClusterizers(const Device& device, EventLoop& loop)
     switch (sensor.measurement()) {
     case Sensor::Measurement::PixelBinary:
     case Sensor::Measurement::Ccpdv4Binary:
-      loop.addProcessor(std::make_shared<BinaryClusterizer>(sensor));
+      loop.addSensorProcessor(isensor, std::make_shared<BinaryClusterizer>(sensor));
       break;
     case Sensor::Measurement::PixelTot:
-      loop.addProcessor(std::make_shared<ValueWeightedClusterizer>(sensor));
+      loop.addSensorProcessor(isensor, std::make_shared<ValueWeightedClusterizer>(sensor));
       break;
     }
   }
