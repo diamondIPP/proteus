@@ -133,6 +133,9 @@ Internal changes
 *   ``Event``s stores tracks by value instead of managing them via a
     ``std::unique_ptr``.
 *   ``Track``s store the constituent clusters by index instead of by pointer.
+*   Add a dedicated ``SensorProcessor`` algorithm to the event loop that only
+    processes a single sensor event. Most existing algorithms of this type
+    have been converted to the new interface.
 *   The Mahalanobis distance calculation uses the square root free
     :math:`L\,D\L^T` Cholesky decomposition for better numerical stability.
 *   Switch the continous integration to use the default CentOS7 worker
