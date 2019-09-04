@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.7)
 
-project(Proteus CXX)
-
-set(Proteus_VERSION v1.4.0)
+project(Proteus VERSION 1.4.0 LANGUAGES CXX)
 
 option(PROTEUS_ENABLE_DOC "Enable the documentation build" OFF)
 option(PROTEUS_USE_EUDAQ "Build EUDAQ file reader" OFF)
