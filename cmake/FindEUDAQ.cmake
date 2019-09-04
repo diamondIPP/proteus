@@ -31,7 +31,7 @@
 #   EUDAQ_FOUND        - True if a EUDAQ installation was found
 #   EUDAQ_INCLUDE_DIRS - The EUDAQ include directories
 #   EUDAQ_LIBRARIES    - The EUDAQ library target(s)
-#   EUDAQ_VERION       - The EUDAQ version
+#   EUDAQ_VERSION      - The EUDAQ version
 #
 
 # ensure EUDAQ_DIR and install directory are in search
@@ -62,18 +62,14 @@ if(eudaq_FOUND)
   endforeach()
   set(EUDAQ_INCLUDE_DIRS ${_existing_incdirs})
 
-  # try to extract the version
-  set(EUDAQ_VERSION)
-  if(EXISTS "${EUDAQ_INCLUDE_DIR}/eudaq/Config.hh")
-    file(
-      STRINGS "${EUDAQ_INCLUDE_DIR}/eudaq/Config.hh" _version_raw
-      REGEX "^#define[ \t]PACKAGE_VERSION[ \t].*$"
-      LIMIT_COUNT 1)
-    string(
-      REGEX REPLACE "^#define[ \t]+PACKAGE_VERSION[ \t]+\"(.*)\"" "\\1"
-      EUDAQ_VERSION "${_version_raw}")
+  # eudaq sets 'vX.Y.Z' version string; make cmake-compatible by stripping 'v'
+  if(eudaq_VERSION)
+    string(REGEX REPLACE "v?([0-9.]+)" "\\1" EUDAQ_VERSION "${eudaq_VERSION}")
+    unset(eudaq_VERSION)
+  else()
+    # fallback; since we found EUDAQ via a config file, it must be version 2+
+    set(EUDAQ_VERSION "2")
   endif()
-
 else()
   # no config file found, try to find eudaq v1 manually
   find_library(
@@ -88,7 +84,6 @@ else()
   set(EUDAQ_INCLUDE_DIRS ${EUDAQ_INCLUDE_DIR})
   set(EUDAQ_LIBRARIES ${EUDAQ_CORE_LIBRARY})
   set(EUDAQ_VERSION "1")
-
 endif()
 
 include(FindPackageHandleStandardArgs)
