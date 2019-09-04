@@ -10,6 +10,7 @@ variables:
 
 # default build environment w/ minimal version requirements
 before_script:
+  - yum install --assumeyes libgfortran
   - source ci/lcg_setup.sh
 
 check-format:
