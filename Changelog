@@ -92,7 +92,7 @@ User-visible changes
     that is used. If the setting is found, an error message will be
     shown and its value will be ignored.
 
-*   Increase required ROOT version to 6.10 and EUDAQ to 1.9.
+*   Increase required ROOT version to 6.10, EUDAQ to 1.9, and CMake to 3.7.
 
 *   Use a simpler logging output format.
 
@@ -139,6 +139,7 @@ Internal changes
     and remove the custom build images.
 *   Build proteus with both EUDAQ v1 and v2 in the continous
     integration.
+*   Use LCG91 in the continous integration build.
 *   Move all library code into a single ``namespace proteus``.
 *   Use a single, global logger object and remove the need for the per-module
     ``PT_SETUP_..._LOGGER`` macros.
