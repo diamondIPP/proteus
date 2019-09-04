@@ -7,6 +7,7 @@ stages:
 
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
+  NJOBS: 2
 
 # default build environment w/ minimal version requirements
 before_script:
@@ -25,55 +26,60 @@ check-format:
     - cmake ..
     - cmake --build . -- check-format
 
-# plain debug build
-build-debug:
+.build:
   stage: build
   tags:
     - cvmfs
   script:
     - mkdir build
     - cd build
-    - cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=../install ..
-    - cmake --build . -- install
+    - cmake -GNinja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=../install ..
+    - cmake --build . -- -j ${NJOBS} install
   artifacts:
     paths:
       - install
 
-# debug builds w/ eudaq v1
-build-debug-eudaq1:
-  stage: build
-  tags:
-    - cvmfs
-  script:
-    - ./ci/install_with_eudaq.sh eudaq1 install -DCMAKE_BUILD_TYPE=Debug
-  artifacts:
-    paths:
-      - install
-
-# debug builds w/ eudaq v2
-build-debug-eudaq2:
-  stage: build
-  tags:
-    - cvmfs
-  script:
-    - ./ci/install_with_eudaq.sh eudaq2 install -DCMAKE_BUILD_TYPE=Debug
-  artifacts:
-    paths:
-      - install
+# plain debug build
+build-debug:
+  extends: .build
+  variables:
+    BUILD_TYPE: Debug
 
 # plain release build
 build-release:
+  extends: .build
+  variables:
+    BUILD_TYPE: Release
+
+.build-eudaq:
   stage: build
   tags:
     - cvmfs
   script:
-    - mkdir build
-    - cd build
-    - cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../install ..
-    - cmake --build . -- install
+    - mkdir build build-eudaq
+    - cd build-eudaq
+    - cmake -GNinja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=../install ../external/${EUDAQ}
+    - cmake --build . -- -j ${NJOBS}
+    - cd ../build
+    - cmake -GNinja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=../install -DPROTEUS_USE_EUDAQ=on ..
+    - cmake --build . -- -j ${NJOBS} install
   artifacts:
     paths:
       - install
+
+# eudaq v1 debug build
+build-eudaq1-debug:
+  extends: .build-eudaq
+  variables:
+    BUILD_TYPE: Debug
+    EUDAQ: eudaq1
+
+# eudaq v2 debug build
+build-eudaq2-debug:
+  extends: .build-eudaq
+  variables:
+    BUILD_TYPE: Debug
+    EUDAQ: eudaq2
 
 doc:
   allow_failure: true
