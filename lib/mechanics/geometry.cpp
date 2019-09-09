@@ -262,7 +262,7 @@ Geometry Geometry::fromConfig(const toml::Value& cfg)
       if (unU.size() != 3)
         FAIL("sensor ", sensorId, " has unit_u number of entries != 3");
       if (unV.size() != 3)
-        FAIL("sensor ", sensorId, " has unitv_ number of entries != 3");
+        FAIL("sensor ", sensorId, " has unit_v number of entries != 3");
 
       Vector3 unitU(unU[0], unU[1], unU[2]);
       Vector3 unitV(unV[0], unV[1], unV[2]);
