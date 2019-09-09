@@ -1,0 +1,17 @@
+[beam]
+slope = [0.0, 0.0]
+# either energy or {mass, momentum} but not both
+particle_mass = 1.0
+particle_momentum = -120.0
+
+[[sensors]]
+id = 1
+offset = [0.0, 0.0, 158000.0]
+unit_u = [0.0, 1.0, 0.0]
+unit_v = [-1.0, 0.0, 0.0]
+
+[[sensors]]
+id = 2
+offset = [0.0, 0.0, 208000.0]
+unit_u = [-1.0, 0.0, 0.0]
+unit_v = [0.0, -1.0, 0.0]
