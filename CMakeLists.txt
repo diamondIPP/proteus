@@ -1,8 +1,6 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.7)
 
-project(Proteus CXX)
-
-set(Proteus_VERSION v1.4.0)
+project(Proteus VERSION 1.4.0 LANGUAGES CXX)
 
 option(PROTEUS_ENABLE_DOC "Enable the documentation build" OFF)
 option(PROTEUS_USE_EUDAQ "Build EUDAQ file reader" OFF)
@@ -24,7 +22,8 @@ find_package(Eigen 3.2.9 REQUIRED)
 find_package(ROOT 6.10 REQUIRED COMPONENTS Hist Tree)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXX_FLAGS}")
 if(PROTEUS_USE_EUDAQ)
-  find_package(EUDAQ REQUIRED)
+  # always use the FindEUDAQ module provided in the repo
+  find_package(EUDAQ MODULE REQUIRED)
 endif()
 
 # after setting CMAKE_CXX_FLAGS to be able to pick up existing -std=... flags

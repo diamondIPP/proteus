@@ -15,8 +15,8 @@ and [ROOT][root] for its core functionality. Optional components might require
 additional software. A full list of dependencies and compatible versions
 can be found below.
 
-*   A C++14-compatible compiler, e.g. gcc 6.2 or clang 3.4
-*   [CMake][cmake] 2.8.12
+*   A C++14-compatible compiler, e.g. gcc 7 or clang 3.9
+*   [CMake][cmake] 3.7
 *   [Eigen][eigen] 3.2.9
 *   [ROOT][root] 6.10
 *   [EUDAQ][eudaq] 1.9 (optional, for the EUDAQ reader)
@@ -25,7 +25,7 @@ can be found below.
 *   Breathe (optional, for the documentation generation)
 
 The software is tested on CentOS7 in combination with
-[LCG release 89][lcg89] which should provide the listed versions. Other
+[LCG release 91][lcg91] which should provide the listed versions. Other
 operation systems and versions might work, but are not regularly tested.
 CERN lxplus machines you can setup a compatible LCG release by sourcing
 the following script from the repository root
@@ -147,7 +147,7 @@ distributed under the LGPL version 2 license.
 [gbl]: https://www.terascale.de/wiki/generalbrokenlines
 [judith-sw]: https://github.com/gmcgoldr/judith
 [judith-paper2014]: http://dx.doi.org/10.1016/j.nima.2014.05.033
-[lcg89]: http://lcginfo.cern.ch/release/89/
+[lcg91]: http://lcginfo.cern.ch/release/91/
 [license-bsd]: https://spdx.org/licenses/BSD-2-Clause.html
 [license-ccby4]: https://creativecommons.org/licenses/by/4.0/
 [license-mit]: https://spdx.org/licenses/MIT.html
