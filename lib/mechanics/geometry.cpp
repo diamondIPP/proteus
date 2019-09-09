@@ -193,8 +193,8 @@ Vector6 Plane::asParams() const
 Geometry::Geometry()
     : m_beamSlope(Vector2::Zero())
     , m_beamSlopeStdev(Vector2::Zero())
-    , m_particleMomentum(0.0)
     , m_particleMass(0.0)
+    , m_particleMomentum(0.0)
 {
 }
 
@@ -234,18 +234,33 @@ Geometry Geometry::fromConfig(const toml::Value& cfg)
       FAIL("beam.divergence has ", div.size(), " != 2 entries");
     }
     if ((div[0] < 0) or (div[1] < 0)) {
-      FAIL("beam.divergence must have non-negative values");
+      FAIL("beam.divergence must be non-negative");
     }
     geo.setBeamDivergence({div[0], div[1]});
   }
-  if(cfg.has("beam.particle_momentum") && cfg.has("beam.particle_mass")) {
-    //for now flag invalid settings with unphysical numbers (Florian)
-    geo.m_particleMomentum = cfg.get<double>("beam.particle_momentum");
+  if (cfg.has("beam.energy")) {
+    if (cfg.has("beam.particle_momentum") and cfg.has("beam.particle_mass")) {
+      FAIL("Invalid beam configuration. Set either energy or "
+           "particle_{mass,momentum} but not both.");
+    }
+    geo.m_particleMass = 0.0;
+    geo.m_particleMomentum = cfg.get<double>("beam.energy");
+    // zero is a non-sensible but valid value
+    if (geo.m_particleMomentum < 0.0) {
+      FAIL("beam.energy must be non-negative");
+    }
+  } else if (cfg.has("beam.particle_momentum") and
+             cfg.has("beam.particle_mass")) {
+    // for now flag invalid settings with unphysical numbers (Florian)
     geo.m_particleMass = cfg.get<double>("beam.particle_mass");
-    if(geo.m_particleMomentum <= 0.0) FAIL("Invalid particle momentum given: "+std::to_string(geo.m_particleMomentum));
-    if(geo.m_particleMass <= 0.0) FAIL("Invalid particle mass given: "+std::to_string(geo.m_particleMass));
-  } else {
-    FAIL("Particle momentum and/or mass are missing");
+    geo.m_particleMomentum = cfg.get<double>("beam.particle_momentum");
+    // zero is a non-sensible but valid value
+    if (geo.m_particleMass < 0.0) {
+      FAIL("beam.particle_mass must be non-negative");
+    }
+    if (geo.m_particleMomentum < 0.0) {
+      FAIL("beam.particle_momentum must be non-negative");
+    }
   }
 
   auto sensors = cfg.get<toml::Array>("sensors");
@@ -300,8 +315,8 @@ toml::Value Geometry::toConfig() const
   cfg["beam"]["slope"] = toml::Array{m_beamSlope[0], m_beamSlope[1]};
   cfg["beam"]["divergence"] =
       toml::Array{m_beamSlopeStdev[0], m_beamSlopeStdev[1]};
-  cfg["beam"]["particle_momentum"] = m_particleMomentum;
   cfg["beam"]["particle_mass"] = m_particleMass;
+  cfg["beam"]["particle_momentum"] = m_particleMomentum;
 
   cfg["sensors"] = toml::Array();
   for (const auto& ip : m_planes) {
