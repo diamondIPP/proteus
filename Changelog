@@ -25,12 +25,6 @@ v1.5.0 (to be released)
 User-visible changes
 --------------------
 
-*   Add beam particle momentum and mass to replace beam particle energy
-
-    In the geometry file, instead of energy, the parameters particle_momentum
-    and particle_mass must now be specified. An error will be thrown if the
-    provided paramteters are missing or negative numbers.
-
 *   Add a GeneralBrokenLines-based track fitter.
 
     The track fitter uses the GBL algorithm described in
@@ -97,6 +91,22 @@ User-visible changes
     lead to confusion with the relative scattering thickness ``x_x0``
     that is used. If the setting is found, an error message will be
     shown and its value will be ignored.
+
+*   Add support for separate beam particle mass and particle momentum setting.
+
+    In the geometry file, the beam energy can now also be specified by setting
+    the beam particle mass and beam particle momentum separately via
+
+        [beam]
+        ...
+        particle_mass = 0.938   # proton mass in GeV/c²
+        particle_momentum = 2.0 # momentum in GeV/c
+        ...
+
+    Either ``beam.energy`` or the new parameters can be given, but not both.
+    All values must be non-negative and must be given in units of GeV.
+    This allows more accurate computations, e.g. of the multiple scattering
+    angle, in low-energy setups.
 
 *   Increase required ROOT version to 6.10, EUDAQ to 1.9, and CMake to 3.7.
 
