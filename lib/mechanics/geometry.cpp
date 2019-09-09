@@ -437,8 +437,9 @@ SymMatrix2 Geometry::getBeamSlopeCovariance(Index sensorId) const
 void Geometry::print(std::ostream& os, const std::string& prefix) const
 {
   os << prefix << "beam:\n";
-  os << prefix << "  momentum: " << m_particleMomentum << '\n';
-  os << prefix << "  mass: " << m_particleMass << '\n';
+  os << prefix << "  particle mass: " << m_particleMass << '\n';
+  os << prefix << "  particle momentum: " << m_particleMomentum << '\n';
+  os << prefix << "  particle energy: " << particleEnergy() << '\n';
   os << prefix << "  slope: " << format(m_beamSlope) << '\n';
   os << prefix << "  divergence: " << format(m_beamSlopeStdev) << '\n';
   for (const auto& ip : m_planes) {
