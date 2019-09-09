@@ -88,6 +88,7 @@ Proteus has seen contributions from (in alphabetical order):
 
 *   Javier Bilbao de Mendizabal
 *   Reina Camacho
+*   Florian Dachs
 *   Francesco Di Bello
 *   Mateusz Dyndal
 *   Moritz Kiehn
