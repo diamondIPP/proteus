@@ -398,6 +398,12 @@ Vector4 Geometry::beamTangent() const
   return tangent;
 }
 
+Scalar Geometry::particleEnergy() const
+{
+  // assumes consistent mass/momentum units with c==1
+  return std::hypot(m_particleMass, m_particleMomentum);
+}
+
 SymMatrix2 Geometry::beamSlopeCovariance() const
 {
   return m_beamSlopeStdev.cwiseProduct(m_beamSlopeStdev).asDiagonal();

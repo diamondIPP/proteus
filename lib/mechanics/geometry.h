@@ -189,12 +189,14 @@ public:
   void setBeamSlope(const Vector2& slopeXY) { m_beamSlope = slopeXY; }
   /** Set the beam divergence/ standard deviation along the z axis. */
   void setBeamDivergence(const Vector2& divXY) { m_beamSlopeStdev = divXY; }
-  /** Beam momentum */
-  auto particleMomentum() const { return m_particleMomentum; }
-  /** Beam mass */
-  auto particleMass() const { return m_particleMass; }
+  /** Beam particle mass. */
+  Scalar particleMass() const { return m_particleMass; }
+  /** Beam particle momentum. */
+  Scalar particleMomentum() const { return m_particleMomentum; }
+  /** Beam particle energy. */
+  Scalar particleEnergy() const;
   /** Beam slope in the global coordinate system. */
-  auto beamSlope() const { return m_beamSlope; }
+  const Vector2& beamSlope() const { return m_beamSlope; }
   /** Beam slope covariance in the global coordinate system. */
   SymMatrix2 beamSlopeCovariance() const;
   /** Beam direction in the local coordinate system of the sensor. */
