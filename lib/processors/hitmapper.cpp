@@ -8,24 +8,18 @@
 
 #include "hitmapper.h"
 
-#include "storage/event.h"
+#include "storage/sensorevent.h"
 #include "utils/logger.h"
 
 namespace proteus {
 
-CCPDv4HitMapper::CCPDv4HitMapper(Index sensorId) : m_sensorId(sensorId)
-{
-  DEBUG("map FE-I4 to CCPDv4 for sensor ", sensorId);
-}
-
 std::string CCPDv4HitMapper::name() const
 {
-  return "CCPDv4HitMapper(sensorId=" + std::to_string(m_sensorId) + ")";
+  return "CCPDv4HitMapper";
 }
 
-void CCPDv4HitMapper::execute(Event& event) const
+void CCPDv4HitMapper::execute(SensorEvent& sensorEvent) const
 {
-  SensorEvent& sensorEvent = event.getSensorEvent(m_sensorId);
   for (Index ihit = 0; ihit < sensorEvent.numHits(); ++ihit) {
     Hit& hit = sensorEvent.getHit(ihit);
 

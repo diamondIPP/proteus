@@ -8,21 +8,18 @@
 
 #pragma once
 
-#include "loop/processor.h"
+#include "loop/sensorprocessor.h"
 #include "utils/definitions.h"
 
 namespace proteus {
 
 /** Map FE-I4 digital address to correct CCPDv4 sensor pixel address. */
-class CCPDv4HitMapper : public Processor {
+class CCPDv4HitMapper : public SensorProcessor {
 public:
-  CCPDv4HitMapper(Index sensorId);
+  CCPDv4HitMapper() = default;
 
   std::string name() const;
-  void execute(Event& event) const;
-
-private:
-  Index m_sensorId;
+  void execute(SensorEvent& sensorEvent) const;
 };
 
 } // namespace proteus

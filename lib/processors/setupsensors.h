@@ -13,10 +13,11 @@ namespace proteus {
 class Device;
 class EventLoop;
 
-/** Add hit mapper and region selection processors to the event loop. */
-void setupHitPreprocessing(const Device& device, EventLoop& loop);
-
-/** Select and add clusterizer for all configured sensors. */
-void setupClusterizers(const Device& device, EventLoop& loop);
+/** Add per-sensor processors to the event loop.
+ *
+ * Depending on the device configuration this can include hit mapping,
+ * hit region identification, clustering, and digital-to-local transformation.
+ */
+void setupPerSensorProcessing(const Device& device, EventLoop& loop);
 
 } // namespace proteus

@@ -18,6 +18,11 @@ class Device;
  * a local state on the selected sensor to be considered for matching. The
  * matching is unique, i.e. every track and every cluster is matched at most
  * once.
+ *
+ * \note This algorithm processes only a single sensor, but it can not be
+ *       implemented as a `SensorProcessor`. It needs to run after the tracking,
+ *       but all `SensorProcessor`s are executed before any regular
+ *       `Processor` such as the tracking-related ones.
  */
 class Matcher : public Processor {
 public:

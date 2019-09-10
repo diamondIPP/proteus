@@ -16,7 +16,6 @@
 #include "io/match.h"
 #include "loop/eventloop.h"
 #include "mechanics/device.h"
-#include "processors/applygeometry.h"
 #include "processors/matcher.h"
 #include "processors/setupsensors.h"
 #include "storage/event.h"
@@ -63,9 +62,7 @@ int main(int argc, char const* argv[])
   auto loop = app.makeEventLoop();
 
   // local per-sensor processing
-  setupHitPreprocessing(app.device(), loop);
-  setupClusterizers(app.device(), loop);
-  loop.addProcessor(std::make_shared<ApplyGeometry>(app.device()));
+  setupPerSensorProcessing(app.device(), loop);
   loop.addAnalyzer(std::make_shared<Hits>(hists.get(), app.device()));
   loop.addAnalyzer(std::make_shared<Clusters>(hists.get(), app.device()));
 

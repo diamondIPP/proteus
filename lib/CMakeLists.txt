@@ -22,7 +22,7 @@ set(proteus_SOURCES
     mechanics/geometry.cpp
     mechanics/pixelmasks.cpp
     mechanics/sensor.cpp
-    processors/applygeometry.cpp
+    processors/applylocaltransform.cpp
     processors/applyregions.cpp
     processors/clusterizer.cpp
     processors/hitmapper.cpp

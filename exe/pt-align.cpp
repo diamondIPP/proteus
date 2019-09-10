@@ -19,7 +19,6 @@
 #include "analyzers/tracks.h"
 #include "loop/eventloop.h"
 #include "mechanics/device.h"
-#include "processors/applygeometry.h"
 #include "processors/setupsensors.h"
 #include "storage/event.h"
 #include "tracking/straightfitter.h"
@@ -201,9 +200,7 @@ int main(int argc, char const* argv[])
 
     // common event loop elements for all alignment methods
     auto loop = app.makeEventLoop();
-    setupHitPreprocessing(dev, loop);
-    setupClusterizers(dev, loop);
-    loop.addProcessor(std::make_shared<ApplyGeometry>(dev));
+    setupPerSensorProcessing(dev, loop);
 
     // setup aligment method specific loop logic
     std::shared_ptr<Tracks> tracks;
@@ -271,9 +268,7 @@ int main(int argc, char const* argv[])
     auto loop = app.makeEventLoop();
 
     // minimal processors for tracking
-    setupHitPreprocessing(dev, loop);
-    setupClusterizers(dev, loop);
-    loop.addProcessor(std::make_shared<ApplyGeometry>(dev));
+    setupPerSensorProcessing(dev, loop);
     loop.addProcessor(std::make_shared<TrackFinder>(
         dev, sensorIds, searchSpatialSigmaMax, searchTemporalSigmaMax,
         sensorIds.size(), redChi2Max));

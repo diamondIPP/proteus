@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "loop/processor.h"
+#include "loop/sensorprocessor.h"
 
 namespace proteus {
 
@@ -18,12 +18,12 @@ class Sensor;
  *
  * The fastest hit time is used as the cluster time.
  */
-class BinaryClusterizer : public Processor {
+class BinaryClusterizer : public SensorProcessor {
 public:
   BinaryClusterizer(const Sensor& sensor) : m_sensor(sensor) {}
 
   std::string name() const;
-  void execute(Event& event) const;
+  void execute(SensorEvent& sensorEvent) const;
 
 private:
   const Sensor& m_sensor;
@@ -33,24 +33,24 @@ private:
  *
  * The fastest hit time is used as the cluster time.
  */
-class ValueWeightedClusterizer : public Processor {
+class ValueWeightedClusterizer : public SensorProcessor {
 public:
   ValueWeightedClusterizer(const Sensor& sensor) : m_sensor(sensor) {}
 
   std::string name() const;
-  void execute(Event& event) const;
+  void execute(SensorEvent& sensorEvent) const;
 
 private:
   const Sensor& m_sensor;
 };
 
 /** Cluster hits and take position and timing only from the fastest hit. */
-class FastestHitClusterizer : public Processor {
+class FastestHitClusterizer : public SensorProcessor {
 public:
   FastestHitClusterizer(const Sensor& sensor) : m_sensor(sensor) {}
 
   std::string name() const;
-  void execute(Event& event) const;
+  void execute(SensorEvent& sensorEvent) const;
 
 private:
   const Sensor& m_sensor;
