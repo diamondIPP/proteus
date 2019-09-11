@@ -117,6 +117,13 @@ User-visible changes
     ``Warning`` for non-fatal, but significant issues, ``Info`` for regular
     information, and ``Verbose`` for additional or debug information.
 
+*   Add resolution estimation tool ``pt-resolution``.
+
+    This tool uses the device and geometry information to estimate the
+    expected reconstruction resolution for a given configuration. The
+    functionality is similar to the ``GBL Track Resolution Calculator,
+    doi:10.5281/zenodo.48795`` software but requires no further setup.
+
 Bugfixes
 --------
 
