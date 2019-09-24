@@ -193,7 +193,8 @@ Vector6 Plane::asParams() const
 Geometry::Geometry()
     : m_beamSlope(Vector2::Zero())
     , m_beamSlopeStdev(Vector2::Zero())
-    , m_beamEnergy(0)
+    , m_particleMass(0.0)
+    , m_particleMomentum(0.0)
 {
 }
 
@@ -233,12 +234,33 @@ Geometry Geometry::fromConfig(const toml::Value& cfg)
       FAIL("beam.divergence has ", div.size(), " != 2 entries");
     }
     if ((div[0] < 0) or (div[1] < 0)) {
-      FAIL("beam.divergence must have non-negative values");
+      FAIL("beam.divergence must be non-negative");
     }
     geo.setBeamDivergence({div[0], div[1]});
   }
   if (cfg.has("beam.energy")) {
-    geo.m_beamEnergy = cfg.get<double>("beam.energy");
+    if (cfg.has("beam.particle_momentum") and cfg.has("beam.particle_mass")) {
+      FAIL("Invalid beam configuration. Set either energy or "
+           "particle_{mass,momentum} but not both.");
+    }
+    geo.m_particleMass = 0.0;
+    geo.m_particleMomentum = cfg.get<double>("beam.energy");
+    // zero is a non-sensible but valid value
+    if (geo.m_particleMomentum < 0.0) {
+      FAIL("beam.energy must be non-negative");
+    }
+  } else if (cfg.has("beam.particle_momentum") and
+             cfg.has("beam.particle_mass")) {
+    // for now flag invalid settings with unphysical numbers (Florian)
+    geo.m_particleMass = cfg.get<double>("beam.particle_mass");
+    geo.m_particleMomentum = cfg.get<double>("beam.particle_momentum");
+    // zero is a non-sensible but valid value
+    if (geo.m_particleMass < 0.0) {
+      FAIL("beam.particle_mass must be non-negative");
+    }
+    if (geo.m_particleMomentum < 0.0) {
+      FAIL("beam.particle_momentum must be non-negative");
+    }
   }
 
   auto sensors = cfg.get<toml::Array>("sensors");
@@ -255,7 +277,7 @@ Geometry Geometry::fromConfig(const toml::Value& cfg)
       if (unU.size() != 3)
         FAIL("sensor ", sensorId, " has unit_u number of entries != 3");
       if (unV.size() != 3)
-        FAIL("sensor ", sensorId, " has unitv_ number of entries != 3");
+        FAIL("sensor ", sensorId, " has unit_v number of entries != 3");
 
       Vector3 unitU(unU[0], unU[1], unU[2]);
       Vector3 unitV(unV[0], unV[1], unV[2]);
@@ -293,7 +315,8 @@ toml::Value Geometry::toConfig() const
   cfg["beam"]["slope"] = toml::Array{m_beamSlope[0], m_beamSlope[1]};
   cfg["beam"]["divergence"] =
       toml::Array{m_beamSlopeStdev[0], m_beamSlopeStdev[1]};
-  cfg["beam"]["energy"] = m_beamEnergy;
+  cfg["beam"]["particle_mass"] = m_particleMass;
+  cfg["beam"]["particle_momentum"] = m_particleMomentum;
 
   cfg["sensors"] = toml::Array();
   for (const auto& ip : m_planes) {
@@ -390,6 +413,12 @@ Vector4 Geometry::beamTangent() const
   return tangent;
 }
 
+Scalar Geometry::particleEnergy() const
+{
+  // assumes consistent mass/momentum units with c==1
+  return std::hypot(m_particleMass, m_particleMomentum);
+}
+
 SymMatrix2 Geometry::beamSlopeCovariance() const
 {
   return m_beamSlopeStdev.cwiseProduct(m_beamSlopeStdev).asDiagonal();
@@ -423,7 +452,9 @@ SymMatrix2 Geometry::getBeamSlopeCovariance(Index sensorId) const
 void Geometry::print(std::ostream& os, const std::string& prefix) const
 {
   os << prefix << "beam:\n";
-  os << prefix << "  energy: " << m_beamEnergy << '\n';
+  os << prefix << "  particle mass: " << m_particleMass << '\n';
+  os << prefix << "  particle momentum: " << m_particleMomentum << '\n';
+  os << prefix << "  particle energy: " << particleEnergy() << '\n';
   os << prefix << "  slope: " << format(m_beamSlope) << '\n';
   os << prefix << "  divergence: " << format(m_beamSlopeStdev) << '\n';
   for (const auto& ip : m_planes) {

@@ -213,9 +213,8 @@ void Sensor::updateGeometry(const Geometry& geometry)
   // update expected scattering angle
   // scaling due to non-zero incidence
   auto incidence = std::sqrt(1 + m_beamSlope.squaredNorm());
-  // TODO store beam momentum + mass not energy
-  // For now this assumes massless beam particles
-  m_theta0 = scatteringStdev(m_xX0 * incidence, geometry.beamEnergy(), 0);
+  m_theta0 = scatteringStdev(m_xX0 * incidence, geometry.particleMomentum(),
+                             geometry.particleMass());
 
   // brute-force bounding box projection of the sensor in global coordinates by
   // transforming each corner into the global system
