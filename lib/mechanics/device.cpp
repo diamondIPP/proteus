@@ -189,7 +189,7 @@ void Device::setGeometry(const Geometry& geometry)
 
 void Device::applyPixelMasks(const PixelMasks& pixelMasks)
 {
-  m_pixelMasks = pixelMasks;
+  m_pixelMasks.merge(pixelMasks);
 
   for (auto id : m_sensorIds) {
     getSensor(id).m_pixelMask = DenseMask(m_pixelMasks.getMaskedPixels(id));

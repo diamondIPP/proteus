@@ -124,6 +124,7 @@ Bugfixes
     corruption a high hit multiplicities.
 *   Fix an invalid comparison function during the track candidate selection
     that lead to heap corruption at high event multiplicities.
+*   Fix `Device::applyPixelMask`: it used to replace masks instead of merging the new one with the existing one
 
 Internal changes
 ----------------
