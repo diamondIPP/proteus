@@ -54,9 +54,10 @@ TrackFinder::TrackFinder(const Device& device,
 
   // Build the search steps along the beam direction.
   //
-  // Ingore sensors before and after, but keep unused intermediates onces.
-  // These are e.g. devices-under-test that do not provide measurements but
-  // give rise to additional uncertainty from material interactions.
+  // Ignore sensors before/after the requested set of tracking sensors, but
+  // keep unused intermediates. These are e.g. devices-under-test that do not
+  // provide measurements but give rise to additional uncertainty from material
+  // interactions.
 
   // Determine the range of sensors to be searched/propagated to.
   sortAlongBeam(device.geometry(), trackingIds);
@@ -123,6 +124,7 @@ TrackFinder::TrackFinder(const Device& device,
 std::string TrackFinder::name() const { return "TrackFinder"; }
 
 // Propagate all states from the previous plane to the current plane.
+//
 // This incorporates uncertainties from material interactions.
 static void propagateToCurrent(const SymMatrix6& processNoise,
                                const Plane& previousPlane,
@@ -139,6 +141,8 @@ static void propagateToCurrent(const SymMatrix6& processNoise,
 }
 
 // Propagate all states from the local plane into the global plane.
+//
+// This only computes the equivalent state representation w/o extra noise.
 static void propagateToGlobal(const Plane& local,
                               std::vector<Track>& candidates)
 {
@@ -413,7 +417,7 @@ void TrackFinder::execute(Event& event) const
     }
 
     // search for compatible clusters only on tracking planes.
-    // by design, there are no candidates on the first one plane.
+    // by design, there are no candidates on the first plane.
     if ((0 < istep) and (curr.useForTracking)) {
       // updates/extends candidates and sets clustersUsed flags
       searchSensor(m_d2LocMax, m_d2TimeMax, curr.sensorId, sensorEvent,
