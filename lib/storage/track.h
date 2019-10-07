@@ -32,7 +32,6 @@ public:
   /** Update the goodness-of-fit via χ² and degrees-of-freedom. */
   void setGoodnessOfFit(Scalar chi2, int dof) { m_chi2 = chi2, m_dof = dof; }
   Scalar chi2() const { return m_chi2; }
-  Scalar reducedChi2() const { return m_chi2 / m_dof; }
   int degreesOfFreedom() const { return m_dof; }
   /** Track fit probability.
    *
