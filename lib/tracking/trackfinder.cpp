@@ -327,11 +327,13 @@ static void removeBadCandidates(Scalar reducedChi2Max,
     if (not std::isfinite(t.chi2())) {
       return true;
     }
-    if (not std::isfinite(t.reducedChi2())) {
-      return true;
-    }
     // negative value disables the cut
-    if ((0 < reducedChi2Max) and (reducedChi2Max <= t.reducedChi2())) {
+    // we check (dof * cut < chi2) instead of (cut < chi2/dof) so the case
+    // of 2-hit tracks w/ dof=0 does not lead to numerical issues due to the
+    // division by zero. also means that 2-hit tracks are only accepted if
+    // chi2=0 or the chi2 cut is disabled altogether.
+    if ((0 < reducedChi2Max) and
+        ((t.degreesOfFreedom() * reducedChi2Max) <= t.chi2())) {
       return true;
     }
     return false;
