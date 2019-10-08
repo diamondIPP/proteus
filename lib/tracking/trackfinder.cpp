@@ -54,9 +54,10 @@ TrackFinder::TrackFinder(const Device& device,
 
   // Build the search steps along the beam direction.
   //
-  // Ingore sensors before and after, but keep unused intermediates onces.
-  // These are e.g. devices-under-test that do not provide measurements but
-  // give rise to additional uncertainty from material interactions.
+  // Ignore sensors before/after the requested set of tracking sensors, but
+  // keep unused intermediates. These are e.g. devices-under-test that do not
+  // provide measurements but give rise to additional uncertainty from material
+  // interactions.
 
   // Determine the range of sensors to be searched/propagated to.
   sortAlongBeam(device.geometry(), trackingIds);
@@ -123,6 +124,7 @@ TrackFinder::TrackFinder(const Device& device,
 std::string TrackFinder::name() const { return "TrackFinder"; }
 
 // Propagate all states from the previous plane to the current plane.
+//
 // This incorporates uncertainties from material interactions.
 static void propagateToCurrent(const SymMatrix6& processNoise,
                                const Plane& previousPlane,
@@ -139,6 +141,8 @@ static void propagateToCurrent(const SymMatrix6& processNoise,
 }
 
 // Propagate all states from the local plane into the global plane.
+//
+// This only computes the equivalent state representation w/o extra noise.
 static void propagateToGlobal(const Plane& local,
                               std::vector<Track>& candidates)
 {
@@ -323,11 +327,13 @@ static void removeBadCandidates(Scalar reducedChi2Max,
     if (not std::isfinite(t.chi2())) {
       return true;
     }
-    if (not std::isfinite(t.reducedChi2())) {
-      return true;
-    }
     // negative value disables the cut
-    if ((0 < reducedChi2Max) and (reducedChi2Max <= t.reducedChi2())) {
+    // we check (dof * cut < chi2) instead of (cut < chi2/dof) so the case
+    // of 2-hit tracks w/ dof=0 does not lead to numerical issues due to the
+    // division by zero. also means that 2-hit tracks are only accepted if
+    // chi2=0 or the chi2 cut is disabled altogether.
+    if ((0 < reducedChi2Max) and
+        ((t.degreesOfFreedom() * reducedChi2Max) <= t.chi2())) {
       return true;
     }
     return false;
@@ -413,7 +419,7 @@ void TrackFinder::execute(Event& event) const
     }
 
     // search for compatible clusters only on tracking planes.
-    // by design, there are no candidates on the first one plane.
+    // by design, there are no candidates on the first plane.
     if ((0 < istep) and (curr.useForTracking)) {
       // updates/extends candidates and sets clustersUsed flags
       searchSensor(m_d2LocMax, m_d2TimeMax, curr.sensorId, sensorEvent,

@@ -72,7 +72,7 @@ void Tracks::execute(const Event& event)
     const TrackState& state = track.globalState();
 
     m_size->Fill(track.size());
-    m_reducedChi2->Fill(track.reducedChi2());
+    m_reducedChi2->Fill(track.chi2() / track.degreesOfFreedom());
     m_prob->Fill(track.probability());
     m_posX->Fill(state.loc0());
     m_posY->Fill(state.loc1());
