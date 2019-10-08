@@ -39,7 +39,7 @@ public:
   Sensor& getSensor(Index i) { return m_sensors.at(i); }
   const Sensor& getSensor(Index i) const { return m_sensors.at(i); }
 
-  /** The minimum pitch over all sensitive elemetns in the global system. */
+  /** The minimum pitch over all sensitive elements in the global system. */
   Vector4 minimumPitch() const;
   /** The bounding box of all sensitive elements in the global system. */
   Sensor::Volume boundingBox() const;
@@ -48,7 +48,8 @@ public:
   void setGeometry(const Geometry& geometry);
   const Geometry& geometry() const { return m_geometry; }
 
-  /** Store the pixel masks and apply to all configured sensors. */
+  /** Store the pixel masks, merging it with the already existing one,
+   *  and apply to all configured sensors. */
   void applyPixelMasks(const PixelMasks& masks);
   const PixelMasks& pixelMasks() const { return m_pixelMasks; }
 
