@@ -82,6 +82,7 @@ void Arguments::printHelp(const std::string& arg0) const
 {
   using std::cerr;
 
+  std::size_t column0 = 20;
   std::string name(arg0.substr(arg0.find_last_of('/') + 1));
 
   cerr << "usage: " << name << " [options]";
@@ -97,22 +98,22 @@ void Arguments::printHelp(const std::string& arg0) const
   if (!m_requireds.empty())
     cerr << "required arguments:\n";
   for (const auto& arg : m_requireds) {
-    cerr << "  " << std::left << std::setw(17) << arg.name;
+    cerr << "  " << std::left << std::setw(column0) << arg.name;
     cerr << " " << arg.help << "\n";
   }
   if (!m_optionals.empty())
     cerr << "optional arguments:\n";
   for (const auto& arg : m_optionals) {
-    cerr << "  " << std::left << std::setw(17) << arg.name;
+    cerr << "  " << std::left << std::setw(column0) << arg.name;
     cerr << " " << arg.help << " (default=" << arg.defaultValue << ")\n";
   }
   if (!m_variable.name.empty()) {
-    cerr << "  " << std::left << std::setw(17) << m_variable.name;
+    cerr << "  " << std::left << std::setw(column0) << m_variable.name;
     cerr << " " << m_variable.help << "\n";
   }
   cerr << "options:\n";
   for (const auto& opt : m_options) {
-    cerr << "  " << std::left << std::setw(17) << opt.description();
+    cerr << "  " << std::left << std::setw(column0) << opt.description();
     cerr << " " << opt.help;
     if (!opt.defaultValue.empty()) {
       cerr << " (default=" << opt.defaultValue << ")";
