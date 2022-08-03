@@ -14,6 +14,8 @@ build/
 *.lo
 *.o
 *.obj
+bin/
+activate.sh
 
 # Precompiled Headers
 *.gch
@@ -48,3 +50,4 @@ Makefile
 
 # CLion folder
 .idea
+cmake-build-relwithdebinfo/
