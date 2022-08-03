@@ -219,10 +219,10 @@ int main(int argc, char const* argv[])
           sensorIds.size(), redChi2Max));
       loop.addProcessor(std::make_shared<UnbiasedStraight3dFitter>(dev));
       loop.addAnalyzer(std::make_shared<Residuals>(stepDir, dev, sensorIds,
-                                                   "unbiased_residuals"));
+                                                   "unbiased_residuals", 20));
       tracks = std::make_shared<Tracks>(stepDir, dev);
       aligner =
-          std::make_shared<ResidualsAligner>(stepDir, dev, alignIds, damping);
+          std::make_shared<ResidualsAligner>(stepDir, dev, alignIds, damping, 4);
 
     } else if (method == "localchi2") {
       // use unbiased track residuals to align. this means we need a specific
@@ -232,7 +232,7 @@ int main(int argc, char const* argv[])
           sensorIds.size(), redChi2Max));
       loop.addProcessor(std::make_shared<UnbiasedStraight3dFitter>(dev));
       loop.addAnalyzer(std::make_shared<Residuals>(stepDir, dev, sensorIds,
-                                                   "unbiased_residuals"));
+                                                   "unbiased_residuals", 20));
       tracks = std::make_shared<Tracks>(stepDir, dev);
       aligner = std::make_shared<LocalChi2Aligner>(dev, alignIds, damping);
 
@@ -282,7 +282,7 @@ int main(int argc, char const* argv[])
     auto tracks = std::make_shared<Tracks>(subDir, dev);
     loop.addAnalyzer(tracks);
     loop.addAnalyzer(
-        std::make_shared<Residuals>(subDir, dev, sensorIds, "residuals"));
+        std::make_shared<Residuals>(subDir, dev, sensorIds, "residuals", 20));
 
     loop.run();
 
