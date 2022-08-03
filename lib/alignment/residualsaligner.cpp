@@ -6,6 +6,7 @@
 #include <TDirectory.h>
 #include <TH1.h>
 #include <TH2.h>
+#include <TString.h>
 
 #include "mechanics/device.h"
 #include "storage/event.h"
@@ -98,9 +99,12 @@ Geometry ResidualsAligner::updatedGeometry() const
     const Sensor& sensor = m_device.getSensor(hists.sensorId);
     const Plane& plane = geo.getPlane(hists.sensorId);
 
-    auto resDU = getRestrictedMean(hists.corrU, kBinsRestricted);
-    auto resDV = getRestrictedMean(hists.corrV, kBinsRestricted);
-    auto resDGamma = getRestrictedMean(hists.corrGamma, kBinsRestricted);
+//    auto resDU = getRestrictedMean(hists.corrU, kBinsRestricted);
+//    auto resDV = getRestrictedMean(hists.corrV, kBinsRestricted);
+//    auto resDGamma = getRestrictedMean(hists.corrGamma, kBinsRestricted);
+    auto resDU = getGaussMean(hists.corrU, .8);
+    auto resDV = getGaussMean(hists.corrV, .8);
+    auto resDGamma = getGaussMean(hists.corrGamma, .8);
     auto du = resDU.first;
     auto varDU = resDU.second;
     auto dv = resDV.first;
