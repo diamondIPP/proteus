@@ -121,6 +121,8 @@ void fillDist(const TH2D* values, TH1D* dist);
  */
 std::pair<double, double> getRestrictedMean(const TH1D* h1, int offset);
 
+std::pair<double, double> getGaussMean(TH1D*, float=.3);
+
 // inline implementations
 
 template <typename Interval>

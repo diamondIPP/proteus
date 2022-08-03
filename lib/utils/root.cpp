@@ -12,6 +12,7 @@
 #include <stdexcept>
 
 #include <Compression.h>
+#include <TF1.h>
 
 #include "utils/logger.h"
 
@@ -196,6 +197,16 @@ std::pair<double, double> getRestrictedMean(const TH1D* h1, int offset)
   tmp.GetXaxis()->SetRange(maxBin - offset, maxBin + offset);
 
   return std::make_pair(tmp.GetMean(), tmp.GetMeanError() * tmp.GetMeanError());
+}
+
+std::pair<double, double> getGaussMean(TH1D* h, float threshold){
+  /** fit distribution with a Gaussian and to extract the mean */
+  double max_val = h->GetMaximum();
+  double xmin = h->GetBinCenter(h->FindFirstBinAbove(threshold * max_val));
+  double xmax = h->GetBinCenter(h->FindLastBinAbove(threshold * max_val));
+  TF1 f("fg", "gaus");
+  h->Fit("fg", "Q0", "", xmin, xmax);
+  return std::make_pair(f.GetParameter(1), pow(f.GetParError(1), 2));
 }
 
 } // namespace proteus
