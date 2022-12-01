@@ -219,7 +219,7 @@ int main(int argc, char const* argv[])
           sensorIds.size(), redChi2Max));
       loop.addProcessor(std::make_shared<UnbiasedStraight3dFitter>(dev));
       loop.addAnalyzer(std::make_shared<Residuals>(stepDir, dev, sensorIds,
-                                                   "unbiased_residuals", 20));
+                                                   "unbiased_residuals", 40, 255));
       tracks = std::make_shared<Tracks>(stepDir, dev);
       aligner =
           std::make_shared<ResidualsAligner>(stepDir, dev, alignIds, damping, 4);
@@ -232,7 +232,7 @@ int main(int argc, char const* argv[])
           sensorIds.size(), redChi2Max));
       loop.addProcessor(std::make_shared<UnbiasedStraight3dFitter>(dev));
       loop.addAnalyzer(std::make_shared<Residuals>(stepDir, dev, sensorIds,
-                                                   "unbiased_residuals", 20));
+                                                   "unbiased_residuals", 40, 255));
       tracks = std::make_shared<Tracks>(stepDir, dev);
       aligner = std::make_shared<LocalChi2Aligner>(dev, alignIds, damping);
 
@@ -282,7 +282,7 @@ int main(int argc, char const* argv[])
     auto tracks = std::make_shared<Tracks>(subDir, dev);
     loop.addAnalyzer(tracks);
     loop.addAnalyzer(
-        std::make_shared<Residuals>(subDir, dev, sensorIds, "residuals", 20));
+        std::make_shared<Residuals>(subDir, dev, sensorIds, "residuals", 40, 255));
 
     loop.run();
 
