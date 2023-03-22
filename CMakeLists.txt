@@ -15,7 +15,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
-
+set(MACOSX_RPATH false)
 # dependencies
 set(EIGEN_PREFER_EXPORTED_EIGEN_CMAKE_CONFIGURATION ON)
 find_package(Eigen 3.2.9 REQUIRED)
@@ -37,6 +37,17 @@ file(GLOB_RECURSE
 include("cmake/clang-cpp-checks.cmake")
 
 include_directories(external/tinytoml/include)
+
+# see http://www.cmake.org/Wiki/CMake_RPATH_handling
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	set(PROTEUS_INSTALL_RPATH "@loader_path/../lib;@loader_path/../extern/lib")
+else()
+	set(PROTEUS_INSTALL_RPATH "\$ORIGIN/../lib:\$ORIGIN/../extern/lib")
+endif()
+set(CMAKE_SKIP_BUILD_RPATH  FALSE)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+set(CMAKE_INSTALL_RPATH ${EUDAQ_INSTALL_RPATH})
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 if(PROTEUS_ENABLE_DOC)
   add_subdirectory(doc)
